@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import {
     BarChart,
     Bar,
@@ -27,6 +28,7 @@ const COLORS = [
 ];
 
 export function MonthlyWatchTimeChart({ data }: MonthlyWatchTimeChartProps) {
+    const t = useTranslations('charts');
     const maxHours = Math.max(...data.map((d) => d.hours), 1);
 
     return (
@@ -55,7 +57,7 @@ export function MonthlyWatchTimeChart({ data }: MonthlyWatchTimeChartProps) {
                         borderRadius: "8px",
                         color: "#f4f4f5",
                     }}
-                    formatter={(value: number) => [`${value.toFixed(1)}h`, "Temps de visionnage"]}
+                    formatter={(value: number) => [`${value.toFixed(1)}h`, t('watchTime')]}
                     labelStyle={{ color: "#a1a1aa" }}
                     itemStyle={{ color: "#e4e4e7" }}
                 />

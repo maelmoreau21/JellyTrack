@@ -1,9 +1,15 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   output: "standalone",
   typescript: {
     ignoreBuildErrors: true,
+  },
+  env: {
+    APP_VERSION: require('./package.json').version,
   },
   experimental: {
     serverActions: {
@@ -13,4 +19,4 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['node-cron', 'geoip-country'],
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

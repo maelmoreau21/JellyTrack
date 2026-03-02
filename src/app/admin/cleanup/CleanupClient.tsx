@@ -7,7 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Ghost, HeartCrack, Clock, Film, Tv, Music, BookOpen } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, enUS } from "date-fns/locale";
+import { useTranslations, useLocale } from "next-intl";
+
+const DATE_LOCALES: Record<string, Locale> = { fr, en: enUS };
 
 interface GhostMedia {
     id: string;
@@ -43,13 +46,13 @@ function getTypeIcon(type: string) {
     }
 }
 
-function getTypeLabel(type: string) {
+function getTypeLabel(type: string, t: (key: string) => string) {
     switch (type) {
-        case "Movie": return "Film";
-        case "Series": return "Série";
-        case "MusicAlbum": return "Album";
-        case "Episode": return "Épisode";
-        case "Audio": return "Piste";
+        case "Movie": return t('movieType');
+        case "Series": return t('seriesType');
+        case "MusicAlbum": return t('albumType');
+        case "Episode": return t('episodeType');
+        case "Audio": return t('trackType');
         default: return type;
     }
 }
@@ -61,14 +64,17 @@ function getCompletionColor(pct: number) {
     return "text-amber-400";
 }
 
-function getCompletionLabel(pct: number) {
-    if (pct < 10) return "Zappé";
-    if (pct < 25) return "Essayé";
-    if (pct < 50) return "Mi-parcours";
-    return "Presque";
+function getCompletionLabel(pct: number, t: (key: string) => string) {
+    if (pct < 10) return t('skipped');
+    if (pct < 25) return t('tried');
+    if (pct < 50) return t('halfWay');
+    return t('almost');
 }
 
 export default function CleanupClient({ initialData }: { initialData: CleanupData }) {
+    const t = useTranslations('cleanup');
+    const locale = useLocale();
+    const dateFnsLocale = DATE_LOCALES[locale] || fr;
     const [ghostFilter, setGhostFilter] = useState<string>("all");
     const [abandonFilter, setAbandonFilter] = useState<string>("all");
 
@@ -95,27 +101,27 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
             <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
                 <TabsTrigger value="ghosts" className="flex items-center gap-2">
                     <Ghost className="w-4 h-4" />
-                    Médias Fantômes ({initialData.ghostMedia.length})
+                    {t('ghostMedia')} ({initialData.ghostMedia.length})
                 </TabsTrigger>
                 <TabsTrigger value="abandoned" className="flex items-center gap-2">
                     <HeartCrack className="w-4 h-4" />
-                    Médias Abandonnés ({initialData.abandonedMedia.length})
+                    {t('abandonedMedia')} ({initialData.abandonedMedia.length})
                 </TabsTrigger>
             </TabsList>
 
             <TabsContent value="ghosts" className="mt-6">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle className="text-red-400">Médias Fantômes</CardTitle>
+                        <CardTitle className="text-red-400">{t('ghostMedia')}</CardTitle>
                         <CardDescription>
-                            Contenu ajouté il y a plus de 30 jours mais qui n'a jamais été regardé par personne.
+                            {t('ghostDesc')}
                         </CardDescription>
                         <div className="flex gap-2 pt-2">
                             {[
-                                { key: "all", label: "Tous" },
-                                { key: "Movie", label: `Films (${ghostTypeCounts.Movie})` },
-                                { key: "Series", label: `Séries (${ghostTypeCounts.Series})` },
-                                { key: "MusicAlbum", label: `Albums (${ghostTypeCounts.MusicAlbum})` },
+                                { key: "all", label: t('allFilter') },
+                                { key: "Movie", label: `${t('moviesFilter')} (${ghostTypeCounts.Movie})` },
+                                { key: "Series", label: `${t('seriesFilter')} (${ghostTypeCounts.Series})` },
+                                { key: "MusicAlbum", label: `${t('albumsFilter')} (${ghostTypeCounts.MusicAlbum})` },
                             ].map(f => (
                                 <button key={f.key} onClick={() => setGhostFilter(f.key)}
                                     className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${ghostFilter === f.key ? 'bg-red-500/20 border-red-500/40 text-red-300' : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'}`}>
@@ -129,16 +135,16 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                             <Table>
                                 <TableHeader>
                                     <TableRow className="border-zinc-800 hover:bg-zinc-800/50">
-                                        <TableHead>Titre</TableHead>
-                                        <TableHead className="w-[100px]">Type</TableHead>
-                                        <TableHead className="w-[150px]">Ajouté</TableHead>
+                                        <TableHead>{t('colTitle')}</TableHead>
+                                        <TableHead className="w-[100px]">{t('colType')}</TableHead>
+                                        <TableHead className="w-[150px]">{t('colAdded')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {filteredGhosts.length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={3} className="h-24 text-center text-zinc-500">
-                                                Aucun média fantôme. Votre serveur est propre !
+                                                {t('noGhosts')}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -148,13 +154,13 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                             <TableCell>
                                                 <Badge variant="outline" className="border-zinc-700 flex items-center gap-1.5 w-fit">
                                                     {getTypeIcon(media.type)}
-                                                    {getTypeLabel(media.type)}
+                                                    {getTypeLabel(media.type, t)}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-muted-foreground text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <Clock className="w-3 h-3" />
-                                                    {formatDistanceToNow(new Date(media.dateAdded || media.createdAt), { addSuffix: true, locale: fr })}
+                                                    {formatDistanceToNow(new Date(media.dateAdded || media.createdAt), { addSuffix: true, locale: dateFnsLocale })}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -169,16 +175,16 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
             <TabsContent value="abandoned" className="mt-6">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle className="text-orange-400">Médias Abandonnés</CardTitle>
+                        <CardTitle className="text-orange-400">{t('abandonedMedia')}</CardTitle>
                         <CardDescription>
-                            Contenu commencé mais dont le taux de complétion n'a jamais dépassé 80%.
+                            {t('abandonedDesc')}
                         </CardDescription>
                         <div className="flex gap-2 pt-2">
                             {[
-                                { key: "all", label: "Tous" },
-                                { key: "Movie", label: `Films (${abandonTypeCounts.Movie})` },
-                                { key: "Episode", label: `Épisodes (${abandonTypeCounts.Episode})` },
-                                { key: "Audio", label: `Musique (${abandonTypeCounts.Audio})` },
+                                { key: "all", label: t('allFilter') },
+                                { key: "Movie", label: `${t('moviesFilter')} (${abandonTypeCounts.Movie})` },
+                                { key: "Episode", label: `${t('episodesFilter')} (${abandonTypeCounts.Episode})` },
+                                { key: "Audio", label: `${t('musicFilter')} (${abandonTypeCounts.Audio})` },
                             ].map(f => (
                                 <button key={f.key} onClick={() => setAbandonFilter(f.key)}
                                     className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${abandonFilter === f.key ? 'bg-orange-500/20 border-orange-500/40 text-orange-300' : 'border-zinc-700 text-zinc-400 hover:bg-zinc-800'}`}>
@@ -192,17 +198,17 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                             <Table>
                                 <TableHeader>
                                     <TableRow className="border-zinc-800 hover:bg-zinc-800/50">
-                                        <TableHead>Titre</TableHead>
-                                        <TableHead className="w-[100px]">Type</TableHead>
-                                        <TableHead className="w-[180px]">Complétion Max</TableHead>
-                                        <TableHead className="w-[150px]">Dernier Essai</TableHead>
+                                        <TableHead>{t('colTitle')}</TableHead>
+                                        <TableHead className="w-[100px]">{t('colType')}</TableHead>
+                                        <TableHead className="w-[180px]">{t('colMaxCompletion')}</TableHead>
+                                        <TableHead className="w-[150px]">{t('colLastAttempt')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {filteredAbandoned.length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={4} className="h-24 text-center text-zinc-500">
-                                                Aucun média abandonné. Succès total !
+                                                {t('noAbandoned')}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -212,7 +218,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                             <TableCell>
                                                 <Badge variant="outline" className="border-zinc-700 flex items-center gap-1.5 w-fit">
                                                     {getTypeIcon(media.type)}
-                                                    {getTypeLabel(media.type)}
+                                                    {getTypeLabel(media.type, t)}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
@@ -227,12 +233,12 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                                         {Math.round(media.maxCompletion)}%
                                                     </span>
                                                     <span className="text-[10px] text-zinc-500">
-                                                        {getCompletionLabel(media.maxCompletion)}
+                                                        {getCompletionLabel(media.maxCompletion, t)}
                                                     </span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-muted-foreground text-sm">
-                                                {formatDistanceToNow(new Date(media.lastPlayed), { addSuffix: true, locale: fr })}
+                                                {formatDistanceToNow(new Date(media.lastPlayed), { addSuffix: true, locale: dateFnsLocale })}
                                             </TableCell>
                                         </TableRow>
                                     ))}

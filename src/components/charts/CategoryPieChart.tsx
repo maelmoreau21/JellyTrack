@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 interface CategoryData {
@@ -9,11 +10,13 @@ interface CategoryData {
 
 const COLORS = ['#3b82f6', '#22c55e', '#eab308', '#a855f7', '#64748b'];
 
-const formatTooltipValue = (value: any) => {
-    return [`${Number(value).toFixed(1)}h`, 'Volume de lecture'];
-};
-
 export function CategoryPieChart({ data }: { data: CategoryData[] }) {
+    const t = useTranslations('charts');
+
+    const formatTooltipValue = (value: any) => {
+        return [`${Number(value).toFixed(1)}h`, t('playbackVolume')];
+    };
+
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
             <PieChart>

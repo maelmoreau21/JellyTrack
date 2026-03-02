@@ -1,6 +1,7 @@
 import { Clock, Monitor, Smartphone, PlayCircle, Hash, Film } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
+import { getTranslations } from 'next-intl/server';
 
 export default async function UserInfo({ userId }: { userId: string }) {
     const user = await prisma.user.findUnique({
@@ -20,6 +21,8 @@ export default async function UserInfo({ userId }: { userId: string }) {
     });
 
     if (!user) return null;
+
+    const t = await getTranslations('userProfile');
 
     const clientCounts = new Map<string, number>();
     const deviceCounts = new Map<string, number>();
@@ -66,73 +69,72 @@ export default async function UserInfo({ userId }: { userId: string }) {
     const topDevice = getTopItem(deviceCounts);
     const topGenres = getTop3Items(genreCounts);
     const topFormat = getTopItem(formatCounts);
-    const formatDisplay = topFormat === 'Movie' ? 'Films' : (topFormat === 'Series' || topFormat === 'Episode') ? 'Séries' : topFormat;
 
     return (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Temps de lecture</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('playTime')}</CardTitle>
                     <Clock className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{totalHours}h</div>
-                    <p className="text-xs text-muted-foreground">Total cumulé</p>
+                    <p className="text-xs text-muted-foreground">{t('cumulTotal')}</p>
                 </CardContent>
             </Card>
 
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Session(s)</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('sessions')}</CardTitle>
                     <Hash className="h-4 w-4 text-emerald-500" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{user.playbackHistory.length}</div>
-                    <p className="text-xs text-muted-foreground">Historisées globales</p>
+                    <p className="text-xs text-muted-foreground">{t('globalHistory')}</p>
                 </CardContent>
             </Card>
 
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Top Genres</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('topGenres')}</CardTitle>
                     <PlayCircle className="h-4 w-4 text-pink-500" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-xl font-bold truncate">{topGenres}</div>
-                    <p className="text-xs text-muted-foreground">Prédilections principales</p>
+                    <p className="text-xs text-muted-foreground">{t('mainPreferences')}</p>
                 </CardContent>
             </Card>
 
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Format Favori</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('favFormat')}</CardTitle>
                     <Film className="h-4 w-4 text-indigo-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-xl font-bold truncate">{formatDisplay}</div>
-                    <p className="text-xs text-muted-foreground">Type de média principal</p>
+                    <div className="text-xl font-bold truncate">{topFormat}</div>
+                    <p className="text-xs text-muted-foreground">{t('mainMediaType')}</p>
                 </CardContent>
             </Card>
 
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Client Favori</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('favClient')}</CardTitle>
                     <Monitor className="h-4 w-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-xl font-bold truncate">{topClient}</div>
-                    <p className="text-xs text-muted-foreground">L'application la plus utilisée</p>
+                    <p className="text-xs text-muted-foreground">{t('mostUsedApp')}</p>
                 </CardContent>
             </Card>
 
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Appareil Favori</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('favDevice')}</CardTitle>
                     <Smartphone className="h-4 w-4 text-purple-500" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-xl font-bold truncate">{topDevice}</div>
-                    <p className="text-xs text-muted-foreground">La plateforme la plus utilisée</p>
+                    <p className="text-xs text-muted-foreground">{t('mostUsedPlatform')}</p>
                 </CardContent>
             </Card>
         </div>

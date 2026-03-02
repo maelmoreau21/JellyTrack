@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StandardAreaChart, StandardBarChart, StandardPieChart } from "@/components/charts/StandardMetricsCharts";
 import { TranscodeHourlyChart } from "@/components/charts/TranscodeHourlyChart";
+import { getTranslations } from 'next-intl/server';
 
 const getNetworkData = unstable_cache(
     async (type: string | undefined, timeRange: string, excludedLibraries: string[]) => {
@@ -66,7 +67,7 @@ const getNetworkData = unstable_cache(
             const hourKey = new Date(h.startedAt).getHours().toString().padStart(2, '0') + "h";
             const hourEntry = hourlyMethodMap.get(hourKey);
 
-            const clientName = h.clientName || "Inconnu";
+            const clientName = h.clientName || "?";
 
             // Track client transcode stats
             if (!clientTranscodeMap.has(clientName)) clientTranscodeMap.set(clientName, { total: 0, transcode: 0 });
@@ -84,22 +85,22 @@ const getNetworkData = unstable_cache(
                     // Subtitle burn-in is a very common transcode cause
                     const burninCodecs = ['ass', 'ssa', 'pgssub', 'dvdsub', 'dvbsub', 'pgs'];
                     if (burninCodecs.includes(h.subtitleCodec.toLowerCase())) {
-                        reasons.push("Sous-titres (Burn-in)");
+                        reasons.push("subtitlesBurnIn");
                     } else {
-                        reasons.push("Sous-titres actifs");
+                        reasons.push("subtitlesActive");
                     }
                 }
                 if (h.audioCodec) {
                     const heavyAudioCodecs = ['truehd', 'dts', 'dts-hd', 'eac3', 'flac'];
                     if (heavyAudioCodecs.some(c => h.audioCodec!.toLowerCase().includes(c))) {
-                        reasons.push("Audio HD non supporté");
+                        reasons.push("audioHDNotSupported");
                     }
                 }
                 if (h.media.resolution === "4K") {
-                    reasons.push("Résolution 4K");
+                    reasons.push("resolution4K");
                 }
                 if (reasons.length === 0) {
-                    reasons.push("Compatibilité client");
+                    reasons.push("clientCompat");
                 }
 
                 // Aggregate by media title
@@ -141,7 +142,7 @@ const getNetworkData = unstable_cache(
                 resolution: m.resolution,
                 count: m.count,
                 durationMin: Math.round(m.totalDuration / 60),
-                mainReason: Array.from(m.reasons.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "Inconnu",
+                mainReason: Array.from(m.reasons.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "?",
                 allReasons: Array.from(m.reasons.entries()).map(([r, c]) => `${r} (×${c})`),
                 topClient: Array.from(m.clients.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "?"
             }));
@@ -187,6 +188,7 @@ const getNetworkData = unstable_cache(
 
 export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { type?: string, timeRange: string, excludedLibraries: string[] }) {
     const data = await getNetworkData(type, timeRange, excludedLibraries);
+    const t = await getTranslations('network');
 
     return (
         <div className="space-y-6">
@@ -194,7 +196,7 @@ export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { 
             <div className="grid gap-4 md:grid-cols-4">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Sessions Totales</CardTitle>
+                        <CardTitle className="text-sm font-medium text-zinc-400">{t('totalSessions')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{data.stats.totalSessions}</div>
@@ -203,11 +205,11 @@ export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { 
                 </Card>
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Taux de Transcodage</CardTitle>
+                        <CardTitle className="text-sm font-medium text-zinc-400">{t('transcodeRate')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-amber-500">{data.stats.transcodePercent}%</div>
-                        <p className="text-xs text-muted-foreground mt-1">{data.stats.transcodeSessions} sessions transcodées</p>
+                        <p className="text-xs text-muted-foreground mt-1">{data.stats.transcodeSessions} {t('transcodedSessions')}</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
@@ -216,16 +218,16 @@ export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { 
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-blue-500">{data.stats.directStreamSessions}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Flux vidéo remuxé sans transcodage</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t('remuxed')}</p>
                     </CardContent>
                 </Card>
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Durée Transcodée</CardTitle>
+                        <CardTitle className="text-sm font-medium text-zinc-400">{t('transcodeDuration')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-red-500">{Math.round(data.stats.totalTranscodeDuration / 3600)}h</div>
-                        <p className="text-xs text-muted-foreground mt-1">Temps CPU consacré au transcodage</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t('transcodeDurationDesc')}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -234,8 +236,8 @@ export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { 
             <div className="grid gap-4 md:grid-cols-2">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>DirectPlay vs Transcode (par Heure)</CardTitle>
-                        <CardDescription>Répartition horaire des méthodes de flux sur la période.</CardDescription>
+                        <CardTitle>{t('directVsTranscodeByHour')}</CardTitle>
+                        <CardDescription>{t('directVsTranscodeByHourDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <TranscodeHourlyChart data={data.hourlyData} />
@@ -244,8 +246,8 @@ export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { 
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Profil Transcodage par Client</CardTitle>
-                        <CardDescription>% de sessions transcodées par application/appareil.</CardDescription>
+                        <CardTitle>{t('transcodeByClient')}</CardTitle>
+                        <CardDescription>{t('transcodeByClientDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <StandardBarChart
@@ -264,24 +266,24 @@ export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { 
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <span>🔍</span> Médias les Plus Transcodés — Table des Coupables
+                        <span>🔍</span> {t('mostTranscoded')}
                     </CardTitle>
-                    <CardDescription>Top 10 des médias générant le plus de transcodage, avec la cause probable et le client incriminé.</CardDescription>
+                    <CardDescription>{t('mostTranscodedDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {data.coupableTable.length === 0 ? (
-                        <p className="text-center text-sm text-muted-foreground py-8">Aucune session transcodée sur cette période.</p>
+                        <p className="text-center text-sm text-muted-foreground py-8">{t('noTranscodedSessions')}</p>
                     ) : (
                         <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-[250px]">Média</TableHead>
-                                        <TableHead className="w-[80px]">Résolution</TableHead>
-                                        <TableHead className="w-[80px] text-center">Sessions</TableHead>
-                                        <TableHead className="w-[80px] text-center">Durée</TableHead>
-                                        <TableHead className="w-[200px]">Cause Probable</TableHead>
-                                        <TableHead className="w-[130px]">Client Principal</TableHead>
+                                        <TableHead className="w-[250px]">{t('colMedia')}</TableHead>
+                                        <TableHead className="w-[80px]">{t('colResolution')}</TableHead>
+                                        <TableHead className="w-[80px] text-center">{t('colSessions')}</TableHead>
+                                        <TableHead className="w-[80px] text-center">{t('colDuration')}</TableHead>
+                                        <TableHead className="w-[200px]">{t('colCause')}</TableHead>
+                                        <TableHead className="w-[130px]">{t('colClient')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -307,7 +309,7 @@ export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { 
                                             <TableCell>
                                                 <div className="flex flex-wrap gap-1">
                                                     <Badge className="bg-red-500/10 text-red-400 hover:bg-red-500/20 text-[11px]">
-                                                        {row.mainReason}
+                                                        {t.has(row.mainReason) ? t(row.mainReason) : row.mainReason}
                                                     </Badge>
                                                 </div>
                                             </TableCell>

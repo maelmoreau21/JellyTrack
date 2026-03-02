@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from 'next-intl';
 import { ChevronRight, ChevronLeft, Share2, Play, Star, Calendar, Clock, X, Film, Tv, Music, BarChart3, TrendingUp, Headphones } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -38,8 +39,8 @@ function formatDuration(seconds: number): string {
     return `${m}min`;
 }
 
-function RankedList({ items, gradient }: { items: { title: string; seconds: number }[]; gradient: string }) {
-    if (items.length === 0) return <p className="text-zinc-400 text-center">Aucune donnée.</p>;
+function RankedList({ items, gradient, noDataLabel }: { items: { title: string; seconds: number }[]; gradient: string; noDataLabel: string }) {
+    if (items.length === 0) return <p className="text-zinc-400 text-center">{noDataLabel}</p>;
     const maxSeconds = items[0].seconds;
     return (
         <div className="flex flex-col w-full gap-3">
@@ -57,11 +58,11 @@ function RankedList({ items, gradient }: { items: { title: string; seconds: numb
     );
 }
 
-function CategorySlide({ label, icon, breakdown, gradient }: { label: string; icon: React.ReactNode; breakdown: CategoryBreakdown; gradient: string }) {
+function CategorySlide({ label, icon, breakdown, gradient, noDataLabel, ofLabel }: { label: string; icon: React.ReactNode; breakdown: CategoryBreakdown; gradient: string; noDataLabel: string; ofLabel: string }) {
     if (breakdown.topMedia.length === 0) {
         return (
             <div className="flex flex-col items-center gap-4">
-                <p className="text-zinc-400">Aucune donnée pour {label.toLowerCase()} cette année.</p>
+                <p className="text-zinc-400">{noDataLabel}</p>
             </div>
         );
     }
@@ -72,9 +73,9 @@ function CategorySlide({ label, icon, breakdown, gradient }: { label: string; ic
                 <span className={`text-3xl font-black text-transparent bg-clip-text ${gradient}`}>
                     {breakdown.totalHours}h
                 </span>
-                <span className="text-zinc-300 text-lg">de {label}</span>
+                <span className="text-zinc-300 text-lg">{ofLabel}</span>
             </div>
-            <RankedList items={breakdown.topMedia} gradient={gradient} />
+            <RankedList items={breakdown.topMedia} gradient={gradient} noDataLabel={noDataLabel} />
         </div>
     );
 }
@@ -118,20 +119,35 @@ function GenreChart({ genres }: { genres: { name: string; count: number }[] }) {
 export default function WrappedClient({ data }: { data: WrappedData }) {
     const [currentSlide, setCurrentSlide] = useState(0);
     const router = useRouter();
+    const t = useTranslations('wrapped');
+
+    const monthKeys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
+    const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
+
+    // Translate month names in data
+    const translatedMonthlyHours = data.monthlyHours.map(m => ({
+        ...m,
+        name: t.has(m.name as any) ? t(m.name as any) : m.name,
+    }));
+
+    // Translate day & genre
+    const translatedTopDay = t.has(data.topDay as any) ? t(data.topDay as any) : data.topDay;
+    const translatedTopGenre = data.topGenre === "unknown" ? t('unknown') : data.topGenre;
+    const noDataLabel = t('noData');
 
     const slides = [
         // 0 - Intro
         {
             title: `JellyTulli Wrapped ${data.year}`,
-            subtitle: `C'est l'heure du bilan, ${data.username}.`,
+            subtitle: t('introSubtitle', { username: data.username }),
             icon: <Play className="w-16 h-16 mb-6 text-white animate-pulse" />,
             bgColor: "bg-gradient-to-br from-indigo-900 via-purple-900 to-black",
-            content: <p className="text-xl text-center text-zinc-300 max-w-sm">Prêt à découvrir tes statistiques de cette année ?</p>
+            content: <p className="text-xl text-center text-zinc-300 max-w-sm">{t('introContent')}</p>
         },
         // 1 - Total watch time
         {
-            title: "Un temps infiniment bien dépensé.",
-            subtitle: "Temps total de visionnage",
+            title: t('totalTimeTitle'),
+            subtitle: t('totalTimeSubtitle'),
             icon: <Clock className="w-16 h-16 mb-4 text-emerald-400" />,
             bgColor: "bg-gradient-to-br from-emerald-900 via-teal-900 to-black",
             content: (
@@ -139,24 +155,24 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
                     <span className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2">
                         {data.totalHours}
                     </span>
-                    <span className="text-2xl font-semibold text-zinc-200">Heures</span>
-                    <p className="mt-4 text-zinc-400">réparties sur <span className="text-white font-bold">{data.totalSessions}</span> sessions.</p>
+                    <span className="text-2xl font-semibold text-zinc-200">{t('hours')}</span>
+                    <p className="mt-4 text-zinc-400">{t.rich('acrossSessions', { count: data.totalSessions, bold: (chunks) => <span className="text-white font-bold">{chunks}</span> })}</p>
                 </div>
             )
         },
         // 2 - Monthly breakdown
         {
-            title: "Ton année, mois par mois.",
-            subtitle: "Heures de visionnage",
+            title: t('monthlyTitle'),
+            subtitle: t('monthlySubtitle'),
             icon: <BarChart3 className="w-16 h-16 mb-4 text-fuchsia-400" />,
             bgColor: "bg-gradient-to-br from-fuchsia-900 via-purple-900 to-black",
             content: (
                 <div className="flex flex-col items-center gap-4 w-full">
-                    <MonthlyChart data={data.monthlyHours} />
+                    <MonthlyChart data={translatedMonthlyHours} />
                     {(() => {
-                        const best = data.monthlyHours.reduce((a, b) => b.hours > a.hours ? b : a, data.monthlyHours[0]);
+                        const best = translatedMonthlyHours.reduce((a, b) => b.hours > a.hours ? b : a, translatedMonthlyHours[0]);
                         return best && best.hours > 0
-                            ? <p className="text-zinc-400 text-sm">Ton meilleur mois : <span className="text-white font-bold">{best.name}</span> avec <span className="text-fuchsia-400 font-bold">{best.hours}h</span></p>
+                            ? <p className="text-zinc-400 text-sm">{t.rich('bestMonth', { name: best.name, hours: best.hours, bold: (chunks) => <span className="text-white font-bold">{chunks}</span>, accent: (chunks) => <span className="text-fuchsia-400 font-bold">{chunks}</span> })}</p>
                             : null;
                     })()}
                 </div>
@@ -164,8 +180,8 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
         },
         // 3 - Peak hour
         {
-            title: "Tu es plutôt du genre…",
-            subtitle: "Heure de pointe",
+            title: t('peakTitle'),
+            subtitle: t('peakSubtitle'),
             icon: <TrendingUp className="w-16 h-16 mb-4 text-orange-400" />,
             bgColor: "bg-gradient-to-br from-orange-900 via-red-900 to-black",
             content: (
@@ -174,104 +190,104 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
                         {data.peakHour}
                     </span>
                     <p className="mt-2 text-zinc-400 text-center max-w-sm">
-                        C'est l'heure à laquelle tu lances le plus de sessions (<span className="text-white font-bold">{data.peakHourSessions}</span>).
+                        {t.rich('peakContent', { count: data.peakHourSessions, bold: (chunks) => <span className="text-white font-bold">{chunks}</span> })}
                     </p>
                 </div>
             )
         },
         // 4 - Top genres
         {
-            title: "Ton ADN culturel.",
-            subtitle: "Top genres",
+            title: t('genresTitle'),
+            subtitle: t('genresSubtitle'),
             icon: <Star className="w-16 h-16 mb-4 text-pink-400" />,
             bgColor: "bg-gradient-to-br from-pink-900 via-rose-900 to-black",
             content: (
                 <div className="flex flex-col items-center gap-4 w-full">
                     <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-orange-400 mb-2 text-center uppercase tracking-wider">
-                        {data.topGenre}
+                        {translatedTopGenre}
                     </span>
-                    <p className="text-zinc-400 text-sm mb-2">est ton genre n°1. Voici le top complet :</p>
+                    <p className="text-zinc-400 text-sm mb-2">{t('genreFirst')}</p>
                     <GenreChart genres={data.topGenres} />
                 </div>
             )
         },
         // 5 - Top day
         {
-            title: "Ton marathon personnel.",
-            subtitle: "Jour le plus actif",
+            title: t('dayTitle'),
+            subtitle: t('daySubtitle'),
             icon: <Calendar className="w-16 h-16 mb-4 text-amber-400" />,
             bgColor: "bg-gradient-to-br from-amber-900 via-orange-900 to-black",
             content: (
                 <div className="flex flex-col items-center">
                     <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-400 mb-2">
-                        Le {data.topDay}
+                        {t('theDay', { day: translatedTopDay })}
                     </span>
-                    <p className="mt-4 text-zinc-400 text-center max-w-sm">Ton jour préféré pour te poser devant un bon média.</p>
+                    <p className="mt-4 text-zinc-400 text-center max-w-sm">{t('dayContent')}</p>
                 </div>
             )
         },
         // 6 - Top 5 all media
         {
-            title: "Le Panthéon.",
-            subtitle: "Top 5 — Toutes catégories",
+            title: t('pantheonTitle'),
+            subtitle: t('pantheonSubtitle'),
             icon: <Star className="w-12 h-12 mb-4 text-yellow-500" />,
             bgColor: "bg-gradient-to-br from-blue-900 via-indigo-900 to-black",
             content: (
                 <div className="w-full max-w-md px-6">
-                    <RankedList items={data.topMedia} gradient="bg-gradient-to-r from-indigo-500 to-blue-400" />
+                    <RankedList items={data.topMedia} gradient="bg-gradient-to-r from-indigo-500 to-blue-400" noDataLabel={noDataLabel} />
                 </div>
             )
         },
         // 7 - Top Series (conditional)
         ...(data.topSeries.length > 0 ? [{
-            title: "Binge Watching.",
-            subtitle: "Top Séries",
+            title: t('bingeTitle'),
+            subtitle: t('bingeSubtitle'),
             icon: <Tv className="w-16 h-16 mb-4 text-sky-400" />,
             bgColor: "bg-gradient-to-br from-sky-900 via-blue-900 to-black",
             content: (
                 <div className="w-full max-w-md px-6">
-                    <RankedList items={data.topSeries} gradient="bg-gradient-to-r from-sky-500 to-blue-400" />
+                    <RankedList items={data.topSeries} gradient="bg-gradient-to-r from-sky-500 to-blue-400" noDataLabel={noDataLabel} />
                 </div>
             )
         }] : []),
         // 8 - Top Artists (conditional)
         ...(data.topArtists.length > 0 ? [{
-            title: "Tes Artistes Préférés.",
-            subtitle: "Top Albums / Artistes",
+            title: t('artistsTitle'),
+            subtitle: t('artistsSubtitle'),
             icon: <Headphones className="w-16 h-16 mb-4 text-green-400" />,
             bgColor: "bg-gradient-to-br from-green-900 via-emerald-900 to-black",
             content: (
                 <div className="w-full max-w-md px-6">
-                    <RankedList items={data.topArtists} gradient="bg-gradient-to-r from-green-500 to-emerald-400" />
+                    <RankedList items={data.topArtists} gradient="bg-gradient-to-r from-green-500 to-emerald-400" noDataLabel={noDataLabel} />
                 </div>
             )
         }] : []),
         // Category slides
         {
-            title: "Le Grand Écran.",
-            subtitle: "Top Films",
+            title: t('moviesTitle'),
+            subtitle: t('moviesSubtitle'),
             icon: <Film className="w-16 h-16 mb-4 text-red-400" />,
             bgColor: "bg-gradient-to-br from-red-900 via-rose-900 to-black",
-            content: <CategorySlide label="Films" icon={<Film className="w-8 h-8 text-red-400" />} breakdown={data.categories.movies} gradient="bg-gradient-to-r from-red-400 to-orange-400" />
+            content: <CategorySlide label={t('moviesLabel')} icon={<Film className="w-8 h-8 text-red-400" />} breakdown={data.categories.movies} gradient="bg-gradient-to-r from-red-400 to-orange-400" noDataLabel={t('noDataFor', { label: t('moviesLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('moviesLabel') })} />
         },
         {
-            title: "Épisodes Favoris.",
-            subtitle: "Top Épisodes",
+            title: t('episodesTitle'),
+            subtitle: t('episodesSubtitle'),
             icon: <Tv className="w-16 h-16 mb-4 text-sky-400" />,
             bgColor: "bg-gradient-to-br from-sky-900 via-blue-900 to-black",
-            content: <CategorySlide label="Séries" icon={<Tv className="w-8 h-8 text-sky-400" />} breakdown={data.categories.series} gradient="bg-gradient-to-r from-sky-400 to-blue-400" />
+            content: <CategorySlide label={t('episodesLabel')} icon={<Tv className="w-8 h-8 text-sky-400" />} breakdown={data.categories.series} gradient="bg-gradient-to-r from-sky-400 to-blue-400" noDataLabel={t('noDataFor', { label: t('episodesLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('episodesLabel') })} />
         },
         {
-            title: "La Bande Son.",
-            subtitle: "Top Musique",
+            title: t('musicTitle'),
+            subtitle: t('musicSubtitle'),
             icon: <Music className="w-16 h-16 mb-4 text-green-400" />,
             bgColor: "bg-gradient-to-br from-green-900 via-emerald-900 to-black",
-            content: <CategorySlide label="Musique" icon={<Music className="w-8 h-8 text-green-400" />} breakdown={data.categories.music} gradient="bg-gradient-to-r from-green-400 to-emerald-400" />
+            content: <CategorySlide label={t('musicLabel')} icon={<Music className="w-8 h-8 text-green-400" />} breakdown={data.categories.music} gradient="bg-gradient-to-r from-green-400 to-emerald-400" noDataLabel={t('noDataFor', { label: t('musicLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('musicLabel') })} />
         },
         // Share card
         {
-            title: "C'est dans la boîte.",
-            subtitle: "Raconte-le au monde.",
+            title: t('shareTitle'),
+            subtitle: t('shareSubtitle'),
             icon: <Share2 className="w-16 h-16 mb-4 text-fuchsia-400" />,
             bgColor: "bg-gradient-to-br from-purple-900 via-fuchsia-900 to-black",
             content: (
@@ -279,17 +295,17 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
                     <div className="p-6 bg-black/40 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col items-center text-center max-w-sm">
                         <p className="text-sm text-zinc-400 mb-1">JellyTulli Wrapped {data.year}</p>
                         <h3 className="text-2xl font-bold text-white mb-4">{data.username}</h3>
-                        <p className="text-fuchsia-400 font-bold text-lg">{data.totalHours}h de stream</p>
-                        <p className="text-zinc-300 text-sm mt-1">🏆 Genre : {data.topGenre}</p>
-                        <p className="text-zinc-300 text-sm">⏰ Pic : {data.peakHour}</p>
-                        <p className="text-zinc-300 text-sm">📅 Jour favori : {data.topDay}</p>
+                        <p className="text-fuchsia-400 font-bold text-lg">{data.totalHours}h {t('streaming')}</p>
+                        <p className="text-zinc-300 text-sm mt-1">{t('genreLabel', { genre: translatedTopGenre })}</p>
+                        <p className="text-zinc-300 text-sm">{t('peakLabel', { hour: data.peakHour })}</p>
+                        <p className="text-zinc-300 text-sm">{t('favDayLabel', { day: translatedTopDay })}</p>
                         <div className="flex gap-4 mt-3 text-xs text-zinc-400">
                             {data.categories.movies.totalHours > 0 && <span>🎬 {data.categories.movies.totalHours}h</span>}
                             {data.categories.series.totalHours > 0 && <span>📺 {data.categories.series.totalHours}h</span>}
                             {data.categories.music.totalHours > 0 && <span>🎵 {data.categories.music.totalHours}h</span>}
                         </div>
                     </div>
-                    <p className="text-xs text-zinc-500">Capture cet écran pour partager.</p>
+                    <p className="text-xs text-zinc-500">{t('captureScreen')}</p>
                 </div>
             )
         }
@@ -356,11 +372,11 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
             {/* Bottom controls */}
             <div className="absolute bottom-6 left-0 right-0 flex justify-between items-center z-50 px-8">
                 <button onClick={prevSlide} disabled={currentSlide === 0} className="disabled:opacity-20 hover:text-white transition group items-center gap-1 flex text-sm opacity-50">
-                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Retour
+                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> {t('back')}
                 </button>
                 <span className="text-xs text-zinc-500">{currentSlide + 1} / {slides.length}</span>
                 <button onClick={nextSlide} disabled={currentSlide === slides.length - 1} className="disabled:opacity-20 hover:text-white transition group items-center gap-1 flex text-sm opacity-50">
-                    Suivant <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    {t('next')} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
             </div>
         </div>

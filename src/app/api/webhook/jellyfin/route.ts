@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { getGeoLocation } from "@/lib/geoip";
+import { apiT } from "@/lib/i18n-api";
 
 /**
  * SECURITY: Webhook authentication via shared secret.
@@ -11,10 +12,14 @@ import { getGeoLocation } from "@/lib/geoip";
  */
 function verifyWebhookAuth(req: Request): boolean {
     const secret = process.env.JELLYFIN_WEBHOOK_SECRET;
-    // If no secret is configured, allow all requests (backward compat / dev mode)
-    // In production, this MUST be set.
+    // In production, fail-closed if secret is missing.
+    // In development, keep backward compatibility.
     if (!secret) {
-        console.warn("[Webhook] JELLYFIN_WEBHOOK_SECRET non configuré — webhook non authentifié !");
+        if (process.env.NODE_ENV === "production") {
+            console.error("[Webhook] JELLYFIN_WEBHOOK_SECRET manquant en production — requête rejetée.");
+            return false;
+        }
+        console.warn("[Webhook] JELLYFIN_WEBHOOK_SECRET non configuré (mode dev) — webhook non authentifié !");
         return true;
     }
 
@@ -50,7 +55,7 @@ export async function POST(req: Request) {
         const eventType = payload.NotificationType || payload.Notification_Type || payload.Event;
 
         if (!eventType) {
-            return NextResponse.json({ error: "Payload non reconnu." }, { status: 400 });
+            return NextResponse.json({ error: await apiT('payloadUnrecognized') }, { status: 400 });
         }
 
         console.log(`[Webhook] Événement reçu: ${eventType}`);
@@ -70,19 +75,19 @@ export async function POST(req: Request) {
         if (eventType === "PlaybackStart") {
             // Lecture des données du Webhook
             const jellyfinUserId = payload.UserId || payload.UserId || payload.User_Id;
-            const username = payload.UserName || payload.Username || "Utilisateur Inconnu";
+            const username = payload.UserName || payload.Username || "Unknown";
             const jellyfinMediaId = payload.ItemId || payload.Item_Id || payload.MediaId;
-            const title = payload.Name || payload.Title || payload.ItemName || "Média Inconnu";
+            const title = payload.Name || payload.Title || payload.ItemName || "Unknown";
             const type = payload.ItemType || payload.Type || "Unknown";
-            const clientName = payload.ClientName || payload.Client || "Inconnu";
-            const deviceName = payload.DeviceName || payload.Device || "Inconnu";
+            const clientName = payload.ClientName || payload.Client || "Unknown";
+            const deviceName = payload.DeviceName || payload.Device || "Unknown";
 
             // Prefer real IP from proxy headers, then webhook payload, then fallback
             const ipAddress = resolveIp(realIpHeader || payload.IpAddress || payload.ClientIp);
             const geoData = getGeoLocation(ipAddress);
 
             if (!jellyfinUserId || !jellyfinMediaId) {
-                return NextResponse.json({ message: "Données incomplètes (UserId ou ItemId manquant)" }, { status: 400 });
+                return NextResponse.json({ message: await apiT('incompleteData') }, { status: 400 });
             }
 
             // 1. Mise à jour ou création de l'utilisateur
@@ -150,12 +155,12 @@ export async function POST(req: Request) {
                         const discordPayload = {
                             embeds: [
                                 {
-                                    title: `🎬 Nouvelle lecture : ${title}`,
+                                    title: `\uD83C\uDFAC Now Playing: ${title}`,
                                     color: 10181046, // Jellyfin Purple
                                     fields: [
-                                        { name: "👤 Utilisateur", value: username, inline: true },
-                                        { name: "📱 Appareil", value: `${clientName} (${deviceName})`, inline: true },
-                                        { name: "🌍 Localisation", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Inconnue", inline: true }
+                                        { name: "\uD83D\uDC64 User", value: username, inline: true },
+                                        { name: "\uD83D\uDCF1 Device", value: `${clientName} (${deviceName})`, inline: true },
+                                        { name: "\uD83C\uDF0D Location", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Unknown", inline: true }
                                     ],
                                     thumbnail: { url: posterUrl },
                                     timestamp: new Date().toISOString()
@@ -216,6 +221,19 @@ export async function POST(req: Request) {
                             where: { id: lastPlayback.id },
                             data: { endedAt, durationWatched: durationS },
                         });
+
+                        // Record stop position as telemetry event
+                        const stopPositionMs = positionTicks > 0 ? BigInt(Math.floor(positionTicks / 10_000)) : BigInt(0);
+                        if (stopPositionMs > 0) {
+                            await prisma.telemetryEvent.create({
+                                data: {
+                                    playbackId: lastPlayback.id,
+                                    eventType: "stop",
+                                    positionMs: stopPositionMs,
+                                },
+                            });
+                        }
+
                         console.log(`[Webhook] PlaybackStop: Session ${lastPlayback.id} closed, duration=${durationS}s`);
                     }
 
@@ -238,6 +256,8 @@ export async function POST(req: Request) {
             const isPaused = payload.IsPaused === true || payload.PlayState?.IsPaused === true;
             const currentAudioIndex = payload.PlayState?.AudioStreamIndex ?? payload.AudioStreamIndex;
             const currentSubIndex = payload.PlayState?.SubtitleStreamIndex ?? payload.SubtitleStreamIndex;
+            const positionTicks = payload.PlaybackPositionTicks || payload.PositionTicks || payload.PlayState?.PositionTicks || 0;
+            const positionMs = positionTicks > 0 ? BigInt(Math.floor(positionTicks / 10_000)) : BigInt(0);
 
             if (jellyfinUserId && jellyfinMediaId) {
                 const user = await prisma.user.findUnique({ where: { jellyfinUserId } });
@@ -251,6 +271,7 @@ export async function POST(req: Request) {
 
                     if (lastPlayback) {
                         const updates: any = {};
+                        const telemetryEvents: { eventType: string; positionMs: bigint; metadata?: string }[] = [];
 
                         // Track pause events: if currently paused and we track transitions
                         // We use a Redis key to store the previous pause state
@@ -259,6 +280,9 @@ export async function POST(req: Request) {
                         if (isPaused && prevPauseState !== "paused") {
                             updates.pauseCount = { increment: 1 };
                             await (await import("@/lib/redis")).default.setex(pauseKey, 3600, "paused");
+                            if (positionMs > 0) {
+                                telemetryEvents.push({ eventType: "pause", positionMs });
+                            }
                         } else if (!isPaused && prevPauseState === "paused") {
                             await (await import("@/lib/redis")).default.setex(pauseKey, 3600, "playing");
                         }
@@ -270,6 +294,13 @@ export async function POST(req: Request) {
                             const prevAudio = await (await import("@/lib/redis")).default.get(audioKey);
                             if (prevAudio !== null && prevAudio !== String(currentAudioIndex)) {
                                 updates.audioChanges = { increment: 1 };
+                                if (positionMs > 0) {
+                                    telemetryEvents.push({
+                                        eventType: "audio_change",
+                                        positionMs,
+                                        metadata: JSON.stringify({ from: prevAudio, to: String(currentAudioIndex) }),
+                                    });
+                                }
                             }
                             await (await import("@/lib/redis")).default.setex(audioKey, 3600, String(currentAudioIndex));
                         }
@@ -277,6 +308,13 @@ export async function POST(req: Request) {
                             const prevSub = await (await import("@/lib/redis")).default.get(subKey);
                             if (prevSub !== null && prevSub !== String(currentSubIndex)) {
                                 updates.subtitleChanges = { increment: 1 };
+                                if (positionMs > 0) {
+                                    telemetryEvents.push({
+                                        eventType: "subtitle_change",
+                                        positionMs,
+                                        metadata: JSON.stringify({ from: prevSub, to: String(currentSubIndex) }),
+                                    });
+                                }
                             }
                             await (await import("@/lib/redis")).default.setex(subKey, 3600, String(currentSubIndex));
                         }
@@ -287,14 +325,26 @@ export async function POST(req: Request) {
                                 data: updates,
                             });
                         }
+
+                        // Write telemetry events with position data
+                        if (telemetryEvents.length > 0) {
+                            await prisma.telemetryEvent.createMany({
+                                data: telemetryEvents.map(e => ({
+                                    playbackId: lastPlayback.id,
+                                    eventType: e.eventType,
+                                    positionMs: e.positionMs,
+                                    metadata: e.metadata || null,
+                                })),
+                            });
+                        }
                     }
                 }
             }
         }
 
-        return NextResponse.json({ success: true, message: `Événement ${eventType} traité.` });
+        return NextResponse.json({ success: true, message: await apiT('eventProcessed', { eventType }) });
     } catch (error) {
         console.error("[Webhook Error]:", error);
-        return NextResponse.json({ error: "Erreur serveur HTTP 500" }, { status: 500 });
+        return NextResponse.json({ error: await apiT('serverError500') }, { status: 500 });
     }
 }

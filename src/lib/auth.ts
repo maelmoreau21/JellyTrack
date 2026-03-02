@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
+import { apiT } from "@/lib/i18n-api";
 
 /**
  * Shared security helpers for API routes.
@@ -20,7 +21,7 @@ export interface AuthResult {
 export async function requireAuth(): Promise<AuthResult | NextResponse> {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
-    return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
+    return NextResponse.json({ error: await apiT('unauthenticated') }, { status: 401 });
   }
   return {
     session,
@@ -36,7 +37,7 @@ export async function requireAdmin(): Promise<AuthResult | NextResponse> {
   const result = await requireAuth();
   if (result instanceof NextResponse) return result;
   if (!result.isAdmin) {
-    return NextResponse.json({ error: "Accès réservé aux administrateurs." }, { status: 403 });
+    return NextResponse.json({ error: await apiT('adminOnly') }, { status: 403 });
   }
   return result;
 }

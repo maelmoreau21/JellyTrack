@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserActivityChart, ActivityData } from "@/components/charts/UserActivityChart";
 import prisma from "@/lib/prisma";
+import { getTranslations } from 'next-intl/server';
 
 export default async function UserActivity({ userId }: { userId: string }) {
     const last30Days = new Date();
@@ -19,6 +20,8 @@ export default async function UserActivity({ userId }: { userId: string }) {
     });
 
     if (!user) return null;
+
+    const t = await getTranslations('userProfile');
 
     const activityMap = new Map<string, number>();
     for (let i = 0; i < 30; i++) {
@@ -43,8 +46,8 @@ export default async function UserActivity({ userId }: { userId: string }) {
     return (
         <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm mt-6">
             <CardHeader className="pb-2">
-                <CardTitle>Activité sur 30 jours</CardTitle>
-                <CardDescription>Visualisez le volume de lecture quotidien de cet utilisateur.</CardDescription>
+                <CardTitle>{t('activity30d')}</CardTitle>
+                <CardDescription>{t('activity30dDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="h-[250px] w-full">

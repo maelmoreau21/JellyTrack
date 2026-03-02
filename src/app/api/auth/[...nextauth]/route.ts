@@ -1,7 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { checkLoginRateLimit, recordFailedLogin, resetLoginRateLimit } from "@/lib/rateLimit";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -14,6 +14,11 @@ export const authOptions: NextAuthOptions = {
             async authorize(credentials, req) {
                 if (!credentials?.username || !credentials?.password) return null;
 
+                // Read locale from cookie for error messages
+                let locale = 'fr';
+                try { const c = await cookies(); locale = c.get('locale')?.value || 'fr'; } catch {}
+                const { apiTSync } = await import("@/lib/i18n-api");
+
                 // SECURITY: Rate-limit login attempts by IP
                 const headersList = await headers();
                 const forwarded = headersList.get("x-forwarded-for");
@@ -21,12 +26,12 @@ export const authOptions: NextAuthOptions = {
                 
                 const { allowed, retryAfterSeconds } = await checkLoginRateLimit(clientIp);
                 if (!allowed) {
-                    throw new Error(`Trop de tentatives de connexion. Réessayez dans ${Math.ceil((retryAfterSeconds || 900) / 60)} minutes.`);
+                    throw new Error(apiTSync(locale, 'tooManyAttempts', { minutes: Math.ceil((retryAfterSeconds || 900) / 60) }));
                 }
 
                 const jellyfinUrl = process.env.JELLYFIN_URL;
                 if (!jellyfinUrl) {
-                    throw new Error("JELLYFIN_URL non configurée dans les variables d'environnement.");
+                    throw new Error(apiTSync(locale, 'jellyfinUrlMissing'));
                 }
 
                 try {
@@ -44,7 +49,7 @@ export const authOptions: NextAuthOptions = {
 
                     if (!res.ok) {
                         await recordFailedLogin(clientIp);
-                        throw new Error("Identifiants Jellyfin incorrects.");
+                        throw new Error(apiTSync(locale, 'badCredentials'));
                     }
 
                     const data = await res.json();
@@ -61,10 +66,10 @@ export const authOptions: NextAuthOptions = {
                     };
                 } catch (error: any) {
                     // Record as failed attempt if it's not already a rate limit error
-                    if (!error.message?.includes("Trop de tentatives")) {
+                    if (!error.message?.includes("Too many") && !error.message?.includes("Trop de tentatives")) {
                         await recordFailedLogin(clientIp);
                     }
-                    throw new Error(error.message || "Erreur de connexion à Jellyfin.");
+                    throw new Error(error.message || apiTSync(locale, 'connectionError'));
                 }
             }
         })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncJellyfinLibrary } from "@/lib/sync";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { apiT } from "@/lib/i18n-api";
 
 export async function POST(req: NextRequest) {
     const auth = await requireAdmin();
@@ -12,10 +13,10 @@ export async function POST(req: NextRequest) {
         const result = await syncJellyfinLibrary({ recentOnly });
 
         if (result.success) {
-            const modeLabel = recentOnly ? 'récente' : 'complète';
+            const modeLabel = recentOnly ? await apiT('syncRecent') : await apiT('syncFull');
             return NextResponse.json({
                 status: "success",
-                message: `Synchronisation ${modeLabel} terminée. ${result.users} utilisateurs et ${result.media} médias à jour.`
+                message: await apiT('syncSuccess', { mode: modeLabel, users: result.users ?? 0, media: result.media ?? 0 })
             }, { status: 200 });
         } else {
             return NextResponse.json({
@@ -24,6 +25,6 @@ export async function POST(req: NextRequest) {
             }, { status: 500 });
         }
     } catch (e) {
-        return NextResponse.json({ status: "error", message: "Erreur Serveur Interne" }, { status: 500 });
+        return NextResponse.json({ status: "error", message: await apiT('internalError') }, { status: 500 });
     }
 }

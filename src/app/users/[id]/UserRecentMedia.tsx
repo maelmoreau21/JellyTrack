@@ -4,8 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import prisma from "@/lib/prisma";
 import { getJellyfinImageUrl } from "@/lib/jellyfin";
 import { FallbackImage } from "@/components/FallbackImage";
+import { getTranslations, getLocale } from 'next-intl/server';
 
 export default async function UserRecentMedia({ userId }: { userId: string }) {
+    const t = await getTranslations('userProfile');
+    const locale = await getLocale();
+
     const user = await prisma.user.findUnique({
         where: { jellyfinUserId: userId },
         include: {
@@ -20,8 +24,8 @@ export default async function UserRecentMedia({ userId }: { userId: string }) {
         return (
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm mt-6">
                 <CardHeader>
-                    <CardTitle>Historique de lecture</CardTitle>
-                    <CardDescription>Aucun historique de lecture.</CardDescription>
+                    <CardTitle>{t('playbackHistory')}</CardTitle>
+                    <CardDescription>{t('noHistory')}</CardDescription>
                 </CardHeader>
             </Card>
         );
@@ -59,27 +63,27 @@ export default async function UserRecentMedia({ userId }: { userId: string }) {
     return (
         <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm mt-6">
             <CardHeader>
-                <CardTitle>Historique de lecture</CardTitle>
-                <CardDescription>Historique complet et agrégé des sessions démarrées.</CardDescription>
+                <CardTitle>{t('playbackHistory')}</CardTitle>
+                <CardDescription>{t('aggregatedDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="rounded-md border">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Média</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Durée</TableHead>
-                                <TableHead>Client</TableHead>
-                                <TableHead>Appareil</TableHead>
-                                <TableHead>IP</TableHead>
-                                <TableHead>Méthode</TableHead>
+                                <TableHead>{t('colMedia')}</TableHead>
+                                <TableHead>{t('colDate')}</TableHead>
+                                <TableHead>{t('colDuration')}</TableHead>
+                                <TableHead>{t('colClient')}</TableHead>
+                                <TableHead>{t('colDevice')}</TableHead>
+                                <TableHead>{t('colIp')}</TableHead>
+                                <TableHead>{t('colMethod')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {uniqueHistory.map((session: any) => {
                                 const minutes = Math.floor(session.totalDurationWatched / 60);
-                                const dateFormat = new Intl.DateTimeFormat("fr-FR", {
+                                const dateFormat = new Intl.DateTimeFormat(locale, {
                                     dateStyle: "medium",
                                     timeStyle: "short",
                                 }).format(new Date(session.lastSessionAt));

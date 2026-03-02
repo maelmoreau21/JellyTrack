@@ -1,193 +1,191 @@
-<div align="center">
-
 # 🍐 JellyTulli
 
-**Le dashboard analytique ultime pour Jellyfin**
-
-*Jellyfin + Tautulli = JellyTulli*
+Dashboard analytique avancé pour Jellyfin  
+Jellyfin + Tautulli = JellyTulli
 
 [![Docker Build](https://github.com/maelmoreau21/JellyTulli/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/maelmoreau21/JellyTulli/actions/workflows/docker-publish.yml)
 [![GHCR Image](https://img.shields.io/badge/GHCR-ghcr.io%2Fmaelmoreau21%2Fjellytulli-blue?logo=github)](https://ghcr.io/maelmoreau21/jellytulli)
-
-</div>
 
 ---
 
 ## Aperçu
 
-JellyTulli est un wrapper analytique autonome pour **Jellyfin**, inspiré de Tautulli (Plex). Il offre un tableau de bord complet avec statistiques en temps réel, historiques de lecture, alertes Discord, récapitulatifs annuels (Wrapped), et bien plus — le tout optimisé pour tourner sur un **Raspberry Pi**.
+JellyTulli est un service autonome d'observabilité pour **Jellyfin** : sessions en direct, historique enrichi, télémétrie de lecture, analyses avancées, backups automatiques et intégration webhook.
 
-### Fonctionnalités principales
+Le projet est optimisé pour un déploiement **Docker Compose** (Raspberry Pi / x86) avec image publiée sur **GHCR**.
 
-| Catégorie | Détail |
-|---|---|
-| **Dashboard temps réel** | Streams actifs (auto-refresh 10s), bande passante, DirectPlay %, pic de charge |
-| **Historique complet** | Logs de toutes les sessions avec Watch Party detection, filtres par type, recherche |
-| **Bibliothèque média** | Grille Films / Séries / Musique avec agrégation épisodes→séries, pistes→albums |
-| **Profil média** | Page dédiée par média : KPIs, télémétrie (pauses, changements audio/sous-titres), drop-off chart, breadcrumbs hiérarchiques |
-| **Profils utilisateurs** | Stats par utilisateur, historique récent, médias favoris |
-| **Analyses détaillées** | Top 5 par catégorie, répartition DirectPlay/Transcode, activité horaire, heatmap annuel |
-| **Réseau** | Taux de transcodage, profil client, "Table des Coupables" (médias les plus transcodés) |
-| **Wrapped** | Récap annuel style Spotify : top médias, genres, séries, artistes, pic d'activité, graphes mensuels |
-| **Newsletter** | Rapport mensuel A4 généré automatiquement |
-| **Webhooks Jellyfin** | Capture `PlaybackStart` / `PlaybackProgress` / `PlaybackStop` pour alertes Discord et télémétrie |
-| **Backups automatiques** | Sauvegarde quotidienne à 3h30, rotation sur 5 fichiers, restauration en un clic |
-| **Hardware Monitor** | CPU, RAM, température en direct sur le dashboard |
-| **RBAC** | Admins : accès total · Utilisateurs : accès limité à leur Wrapped |
+### Fonctionnalités clés
+
+| Domaine | Détails |
+| --- | --- |
+| Dashboard live | Streams actifs, débit, ratio Direct Play/Transcode, charge temps réel |
+| Historique | Sessions complètes, filtres, recherche, logs de lecture |
+| Télémétrie | Événements playback (`start/progress/stop`, pauses, seek, changements audio/sous-titres) |
+| Analytics | KPI globaux, tendances horaires/journalières, top contenus, graphiques de complétion |
+| Wrapped | Récap annuel par utilisateur (style Spotify Wrapped) |
+| Sauvegardes | Exports/imports JSON + backup auto avec rotation |
+| Sécurité | RBAC, NextAuth, webhook avec secret partagé, rate limiting login |
+| i18n | Interface bilingue FR/EN (next-intl) avec sélection de langue |
 
 ---
 
-## Tech Stack
+## Stack
 
 | Couche | Technologie |
-|---|---|
-| Framework | **Next.js 15+** (App Router, Server Components, standalone output) |
-| Base de données | **PostgreSQL** + **Prisma ORM** |
-| Cache temps réel | **Redis** (ioredis) |
-| UI | **TailwindCSS** + **shadcn/ui** + **Lucide Icons** |
-| DataViz | **Recharts** + **react-activity-calendar** |
-| Auth | **NextAuth** (Jellyfin native credentials) |
-| CI/CD | **GitHub Actions** → **GHCR** (ARM64) |
-| Déploiement | **Docker Compose** (Raspberry Pi ready) |
+| --- | --- |
+| Front/Back | Next.js 15 (App Router, Server Components, standalone) |
+| Données | PostgreSQL + Prisma |
+| Temps réel | Redis |
+| UI | TailwindCSS + shadcn/ui + Recharts |
+| Auth | NextAuth |
+| CI/CD | GitHub Actions + GHCR |
 
 ---
 
-## Installation
+## Déploiement Docker (GHCR)
 
-### Prérequis
-
-- **Docker** et **Docker Compose** installés
-- Compte **Jellyfin** avec un utilisateur administrateur
-- (Optionnel) URL de webhook Discord pour les alertes
-
-### 1. Cloner le projet
+### 1) Cloner le dépôt
 
 ```bash
 git clone https://github.com/maelmoreau21/JellyTulli.git
 cd JellyTulli
 ```
 
-### 2. Configurer les variables d'environnement
+### 2) Configurer `docker-compose.yml`
 
-Édite le fichier `docker-compose.yml` et personnalise les variables :
+Adapte les variables sensibles et réseau avant démarrage :
 
 ```yaml
-environment:
-  - DATABASE_URL=postgresql://jellytulli:jellytulli_password@postgres:5432/jellytulli?schema=public&connection_limit=5
-  - REDIS_URL=redis://redis:6379
-  - ADMIN_PASSWORD=ton_mot_de_passe_admin        # ← À changer !
-  - NEXTAUTH_SECRET=ta_clé_secrète_aléatoire     # ← À changer ! (openssl rand -base64 32)
-  - NEXTAUTH_URL=http://ton-ip:3000              # ← Ton IP locale ou domaine
-  - BACKUP_DIR=/data/backups
+services:
+  jellytulli:
+    image: ghcr.io/maelmoreau21/jellytulli:latest
+    environment:
+      # PostgreSQL (DATABASE_URL est construit automatiquement au démarrage)
+      POSTGRES_USER: jellytulli
+      POSTGRES_PASSWORD: "change-me"
+      POSTGRES_IP: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: jellytulli
+
+      # Redis
+      REDIS_URL: redis://redis:6379
+
+      # Jellyfin
+      JELLYFIN_URL: http://jellyfin:8096
+      JELLYFIN_API_KEY: change-me
+
+      # Sécurité
+      ADMIN_PASSWORD: change-me
+      NEXTAUTH_SECRET: change-me
+      NEXTAUTH_URL: http://your-host:3000
+      JELLYFIN_WEBHOOK_SECRET: change-me
+
+      # Runtime
+      PUID: 1000
+      PGID: 1000
+      PORT: 3000
+      BACKUP_DIR: /data/backups
 ```
 
-### 3. Lancer la stack
+> Important : en **production**, si `JELLYFIN_WEBHOOK_SECRET` est absent, les appels webhook sont rejetés (`401`).
+
+### 3) Lancer la stack
 
 ```bash
 docker compose up -d
 ```
 
-L'image ARM64 pré-compilée sera automatiquement téléchargée depuis le GitHub Container Registry. Plus besoin de build sur le Raspberry Pi !
+### 4) Accéder à l'application
 
-### 4. Premier lancement
-
-Accède à `http://ton-ip:3000` — le **Setup Wizard** te guidera pour connecter ton serveur Jellyfin (URL + clé API).
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│                GitHub Actions                    │
-│   push main → Build ARM64 → Push GHCR           │
-└─────────────────────┬───────────────────────────┘
-                      │ docker pull
-┌─────────────────────▼───────────────────────────┐
-│              Raspberry Pi (Docker)               │
-│  ┌───────────────────────────────────────────┐   │
-│  │  JellyTulli (Next.js standalone)          │   │
-│  │  ├── Dashboard (SSR + Client polling)     │   │
-│  │  ├── Webhook receiver (/api/webhook)      │   │
-│  │  ├── Session monitor (heartbeat 5s)       │   │
-│  │  └── Auto-backup (cron 3h30)              │   │
-│  └──────────┬──────────────┬─────────────────┘   │
-│             │              │                      │
-│  ┌──────────▼──┐  ┌───────▼────────┐            │
-│  │  PostgreSQL  │  │     Redis      │            │
-│  │  (données)   │  │ (streams live) │            │
-│  └─────────────┘  └────────────────┘            │
-└─────────────────────────────────────────────────┘
-         │
-         │ API calls
-┌────────▼────────┐
-│  Jellyfin Server │
-│  (Webhooks +     │
-│   Sessions API)  │
-└─────────────────┘
-```
+- URL : `http://<host>:3000`
+- Connexion admin via `ADMIN_PASSWORD`
+- Puis configuration Jellyfin dans l'interface (ou via variables déjà définies)
 
 ---
 
-## Configuration Jellyfin
+## Configuration du webhook Jellyfin
 
-### Webhook (recommandé)
+1. Installer le plugin **Webhook** dans Jellyfin.
+2. Créer un webhook de type **Generic Destination**.
+3. URL : `http://<host-jellytulli>:3000/api/webhook/jellyfin`
+4. Événements : `Playback Start`, `Playback Progress`, `Playback Stop`.
+5. Ajouter un header d'authentification :
+   - `Authorization: Bearer <JELLYFIN_WEBHOOK_SECRET>`
 
-Pour la capture en temps réel des événements de lecture :
-
-1. Installe le plugin **Webhook** dans Jellyfin
-2. Ajoute un webhook de type **Generic Destination**
-3. URL : `http://ton-ip-jellytulli:3000/api/webhook/jellyfin`
-4. Événements : `Playback Start`, `Playback Progress`, `Playback Stop`
-
-### Synchronisation
-
-La synchronisation de la bibliothèque se fait automatiquement via le bouton **Sync** dans les paramètres, ou via l'API `/api/sync`.
+Mode fallback supporté : `?token=<secret>` dans l'URL (moins recommandé que le header).
 
 ---
 
-## Mise à jour
+## Mises à jour
 
 ```bash
-docker compose pull    # Télécharge la dernière image
-docker compose up -d   # Relance avec la nouvelle version
+docker compose pull
+docker compose up -d
 ```
 
-Grâce au CI/CD, chaque push sur `main` génère automatiquement une nouvelle image ARM64 sur GHCR.
+Option recommandée : épingler un tag GHCR explicite (ex: `ghcr.io/maelmoreau21/jellytulli:v1.4.0`) au lieu de `latest` pour des mises à jour contrôlées.
 
 ---
 
 ## Développement local
 
 ```bash
-# Installer les dépendances
 npm ci
-
-# Lancer les services (DB + Redis)
 docker compose up postgres redis -d
+```
 
-# Variables d'environnement (créer un .env.local)
-DATABASE_URL="postgresql://jellytulli:jellytulli_password@localhost:5432/jellytulli?schema=public"
+Créer un `.env.local` :
+
+```bash
+DATABASE_URL="postgresql://jellytulli:jellytulli_password@localhost:5432/jellytulli?schema=public&connection_limit=5"
 REDIS_URL="redis://localhost:6379"
 NEXTAUTH_SECRET="dev-secret"
 NEXTAUTH_URL="http://localhost:3000"
+JELLYFIN_WEBHOOK_SECRET="dev-webhook-secret"
+```
 
-# Pousser le schéma Prisma
+Puis :
+
+```bash
 npx prisma db push
-
-# Lancer le serveur de dev
 npm run dev
 ```
 
 ---
 
+## Variables d'environnement
+
+| Variable | Défaut | Obligatoire | Description |
+| --- | --- | --- | --- |
+| `POSTGRES_USER` | `jellytulli` | Oui (Docker) | Utilisateur PostgreSQL |
+| `POSTGRES_PASSWORD` | `jellytulli_password` | Oui (prod) | Mot de passe PostgreSQL |
+| `POSTGRES_IP` | `postgres` | Oui (Docker) | Hôte PostgreSQL |
+| `POSTGRES_PORT` | `5432` | Oui | Port PostgreSQL |
+| `POSTGRES_DB` | `jellytulli` | Oui | Base PostgreSQL |
+| `DATABASE_URL` | auto-construit | Non* | URL complète si fournie manuellement |
+| `REDIS_URL` | `redis://redis:6379` | Oui | URL Redis |
+| `JELLYFIN_URL` | — | Oui | URL Jellyfin |
+| `JELLYFIN_API_KEY` | — | Oui | Clé API Jellyfin |
+| `JELLYFIN_WEBHOOK_SECRET` | — | Oui (prod) | Secret d'authentification des webhooks |
+| `ADMIN_PASSWORD` | — | Oui | Mot de passe admin JellyTulli |
+| `NEXTAUTH_SECRET` | — | Oui | Secret NextAuth/JWT |
+| `NEXTAUTH_URL` | — | Oui | URL publique de l'application |
+| `PORT` | `3000` | Non | Port d'écoute interne |
+| `PUID` | `1001` | Non | UID runtime du process dans le conteneur |
+| `PGID` | `1001` | Non | GID runtime du process dans le conteneur |
+| `BACKUP_DIR` | `/data/backups` | Non | Répertoire de backup JSON |
+
+\* `DATABASE_URL` est généré automatiquement par l'entrypoint à partir des `POSTGRES_*` si absent.
+
+---
+
 ## Volumes Docker
 
-| Volume | Contenu |
-|---|---|
+| Volume | Description |
+| --- | --- |
 | `jellytulli_pgdata` | Données PostgreSQL |
-| `jellytulli_redisdata` | Données Redis (sessions live) |
-| `jellytulli_backups` | Sauvegardes automatiques JSON |
+| `jellytulli_redisdata` | Données Redis |
+| `jellytulli_backups` | Exports + backups automatiques |
 
 ---
 
@@ -197,6 +195,4 @@ Projet personnel — usage privé.
 
 ---
 
-<div align="center">
-  <sub>Built with Next.js, Prisma, Redis & beaucoup de ☕ — Optimisé pour Raspberry Pi</sub>
-</div>
+Built with Next.js, Prisma, Redis & beaucoup de ☕

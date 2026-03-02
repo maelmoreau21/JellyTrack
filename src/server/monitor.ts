@@ -148,7 +148,11 @@ async function pollJellyfinSessions(): Promise<boolean> {
         return false;
     }
 
-    const response = await fetch(`${baseUrl}/Sessions?api_key=${apiKey}`);
+    const response = await fetch(`${baseUrl}/Sessions`, {
+        headers: {
+            "X-Emby-Token": apiKey,
+        },
+    });
     if (!response.ok) return false;
 
     const sessions = await response.json();
@@ -401,6 +405,8 @@ async function pollJellyfinSessions(): Promise<boolean> {
                 if (openPlayback) {
                     const updates: any = {};
                     const isPaused = PlayState?.IsPaused === true;
+                    const positionMs = PlaybackPositionTicks ? BigInt(Math.floor(Number(PlaybackPositionTicks) / 10_000)) : BigInt(0);
+                    const telemetryEvents: { eventType: string; positionMs: bigint; metadata?: string }[] = [];
 
                     // Track pause state transitions
                     const pauseKey = `pause:${openPlayback.id}`;
@@ -408,6 +414,9 @@ async function pollJellyfinSessions(): Promise<boolean> {
                     if (isPaused && prevPauseState !== "paused") {
                         updates.pauseCount = { increment: 1 };
                         await redis.setex(pauseKey, 3600, "paused");
+                        if (positionMs > 0) {
+                            telemetryEvents.push({ eventType: "pause", positionMs });
+                        }
                     } else if (!isPaused && prevPauseState === "paused") {
                         await redis.setex(pauseKey, 3600, "playing");
                     }
@@ -419,6 +428,13 @@ async function pollJellyfinSessions(): Promise<boolean> {
                         const prevAudio = await redis.get(audioKey);
                         if (prevAudio !== null && prevAudio !== String(audioStreamIndex)) {
                             updates.audioChanges = { increment: 1 };
+                            if (positionMs > 0) {
+                                telemetryEvents.push({
+                                    eventType: "audio_change",
+                                    positionMs,
+                                    metadata: JSON.stringify({ from: prevAudio, to: String(audioStreamIndex) }),
+                                });
+                            }
                         }
                         await redis.setex(audioKey, 3600, String(audioStreamIndex));
                     }
@@ -430,6 +446,13 @@ async function pollJellyfinSessions(): Promise<boolean> {
                         const prevSub = await redis.get(subKey);
                         if (prevSub !== null && prevSub !== String(subtitleStreamIndex)) {
                             updates.subtitleChanges = { increment: 1 };
+                            if (positionMs > 0) {
+                                telemetryEvents.push({
+                                    eventType: "subtitle_change",
+                                    positionMs,
+                                    metadata: JSON.stringify({ from: prevSub, to: String(subtitleStreamIndex) }),
+                                });
+                            }
                         }
                         await redis.setex(subKey, 3600, String(subtitleStreamIndex));
                     }
@@ -438,6 +461,18 @@ async function pollJellyfinSessions(): Promise<boolean> {
                         await prisma.playbackHistory.update({
                             where: { id: openPlayback.id },
                             data: updates,
+                        });
+                    }
+
+                    // Write telemetry events with position data
+                    if (telemetryEvents.length > 0) {
+                        await prisma.telemetryEvent.createMany({
+                            data: telemetryEvents.map(e => ({
+                                playbackId: openPlayback.id,
+                                eventType: e.eventType,
+                                positionMs: e.positionMs,
+                                metadata: e.metadata || null,
+                            })),
                         });
                     }
 
@@ -530,13 +565,13 @@ async function pollJellyfinSessions(): Promise<boolean> {
                     const discordPayload = {
                         embeds: [
                             {
-                                title: `🎬 Nouvelle lecture : ${ItemName || "Média inconnu"}`,
+                                title: `🎬 Now Playing: ${ItemName || "Unknown"}`,
                                 color: 10181046, // Jellyfin Purple
                                 fields: [
-                                    { name: "👤 Utilisateur", value: UserName || "Inconnu", inline: true },
-                                    { name: "📱 Appareil", value: `${ClientName || "Inconnu"} (${DeviceName || "Inconnu"})`, inline: true },
-                                    { name: "🌍 Localisation", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Inconnue", inline: true },
-                                    { name: "⚙️ Qualité", value: PlayMethod || "Inconnue", inline: true }
+                                    { name: "👤 User", value: UserName || "Unknown", inline: true },
+                                    { name: "📱 Device", value: `${ClientName || "Unknown"} (${DeviceName || "Unknown"})`, inline: true },
+                                    { name: "🌍 Location", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Unknown", inline: true },
+                                    { name: "⚙️ Quality", value: PlayMethod || "Unknown", inline: true }
                                 ],
                                 thumbnail: { url: posterUrl },
                                 timestamp: new Date().toISOString()
@@ -589,6 +624,17 @@ async function pollJellyfinSessions(): Promise<boolean> {
                     let durationS: number;
                     if (activeStream.positionTicks && BigInt(activeStream.positionTicks) > 0n) {
                         durationS = Math.floor(Number(BigInt(activeStream.positionTicks)) / 10_000_000);
+                        // Record stop position as telemetry event
+                        const stopPositionMs = BigInt(Math.floor(Number(BigInt(activeStream.positionTicks)) / 10_000));
+                        if (stopPositionMs > 0) {
+                            await prisma.telemetryEvent.create({
+                                data: {
+                                    playbackId: lastPlayback.id,
+                                    eventType: "stop",
+                                    positionMs: stopPositionMs,
+                                },
+                            });
+                        }
                     } else {
                         durationS = Math.floor((endedAt.getTime() - lastPlayback.startedAt.getTime()) / 1000);
                     }

@@ -69,7 +69,7 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
             user = await prisma.user.create({
                 data: {
                     jellyfinUserId: userId,
-                    username: session.user.name || "Utilisateur Supprimé",
+                    username: session.user.name || "?",
                 },
             }) as any;
             user = await prisma.user.findUnique({
@@ -201,13 +201,13 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
         .slice(0, 5)
         .map(([name, count]) => ({ name, count }));
 
-    const topGenre = topGenres[0]?.name || "Inconnu";
+    const topGenre = topGenres[0]?.name || "unknown";
 
     const topDayNumber = Array.from(dayCounts.entries())
         .sort((a, b) => b[1] - a[1])[0]?.[0] ?? 0;
 
-    const days = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-    const topDay = days[topDayNumber];
+    const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const topDay = dayKeys[topDayNumber];
 
     // Peak hour
     const peakHourEntry = Array.from(hourCounts.entries()).sort((a, b) => b[1] - a[1])[0];
@@ -215,8 +215,8 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
     const peakHourSessions = peakHourEntry?.[1] || 0;
 
     // Monthly hours (0-11)
-    const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
-    const monthlyHours = months.map((name, i) => ({
+    const monthKeys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    const monthlyHours = monthKeys.map((name, i) => ({
         name,
         hours: Math.round((monthCounts.get(i) || 0) / 3600),
     }));
@@ -247,7 +247,7 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
     };
 
     const wrappedData = {
-        username: user.username || "Utilisateur Supprimé",
+        username: user.username || "?",
         year: currentYear,
         totalHours,
         topMedia,

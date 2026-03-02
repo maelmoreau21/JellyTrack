@@ -7,8 +7,10 @@ import { Lock, User, AlertCircle, Loader2, ArrowRight } from "lucide-react";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
 
 export default function LoginForm() {
+    const t = useTranslations('login');
     const router = useRouter();
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -39,7 +41,7 @@ export default function LoginForm() {
                 router.refresh(); // Required in App Router to trigger middleware reload
             }
         } catch (err) {
-            setError("Erreur inattendue lors de la connexion.");
+            setError(t('unexpectedError'));
             setIsLoading(false);
         }
     };
@@ -55,7 +57,7 @@ export default function LoginForm() {
                 )}
 
                 <div className="space-y-2">
-                    <Label htmlFor="username" className="text-zinc-300 font-medium">Nom d'utilisateur</Label>
+                    <Label htmlFor="username" className="text-zinc-300 font-medium">{t('username')}</Label>
                     <div className="relative">
                         <User className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
                         <Input
@@ -70,7 +72,7 @@ export default function LoginForm() {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="password" className="text-zinc-300 font-medium">Mot de passe</Label>
+                    <Label htmlFor="password" className="text-zinc-300 font-medium">{t('password')}</Label>
                     <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
                         <Input
@@ -95,11 +97,11 @@ export default function LoginForm() {
                     {isLoading ? (
                         <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Vérification...
+                            {t('verifying')}
                         </>
                     ) : (
                         <>
-                            Se connecter
+                            {t('signIn')}
                             <ArrowRight className="w-4 h-4 ml-1" />
                         </>
                     )}

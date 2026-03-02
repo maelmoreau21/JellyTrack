@@ -2,12 +2,13 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
-const COLORS = {
+const COLORS: Record<string, string> = {
     "DirectPlay": "#10b981", // Emerald 500
     "Transcode": "#f97316", // Orange 500
     "DirectStream": "#3b82f6", // Blue 500
-    "Inconnu": "#71717a" // Zinc 500
 };
+
+const DEFAULT_COLOR = "#71717a"; // Zinc 500
 
 export function StreamProportionsChart({ data }: { data: { name: string, value: number }[] }) {
     return (
@@ -24,7 +25,7 @@ export function StreamProportionsChart({ data }: { data: { name: string, value: 
                     stroke="none"
                 >
                     {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS] || COLORS.Inconnu} opacity={0.8} />
+                        <Cell key={`cell-${index}`} fill={COLORS[entry.name] || DEFAULT_COLOR} opacity={0.8} />
                     ))}
                 </Pie>
                 <Tooltip

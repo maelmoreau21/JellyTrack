@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 import {
     ComposedChart,
@@ -33,14 +34,15 @@ interface ChartSeries {
     yAxisId?: "left" | "right";
 }
 
-const formatTooltipValue = (value: any, name: any) => {
-    if (name === "Vues (Total)") return [`${value} lectures`, name];
-    if (name === "Serveur") return [`${value} flux actifs max`, name];
-    return [`${Number(value).toFixed(1)}h`, name];
-};
-
 export function ComposedTrendChart({ data, series }: { data: TrendData[], series?: ChartSeries[] }) {
+    const t = useTranslations('charts');
     const [hidden, setHidden] = useState<Set<string>>(new Set());
+
+    const formatTooltipValue = (value: any, name: any) => {
+        if (name === t('viewsTotal')) return [t('playsCount', { count: value }), name];
+        if (name === t('server')) return [t('maxActiveStreams', { count: value }), name];
+        return [`${Number(value).toFixed(1)}h`, name];
+    };
 
     const toggleLegend = (e: any) => {
         const dataKey = e.dataKey;
@@ -107,13 +109,13 @@ export function ComposedTrendChart({ data, series }: { data: TrendData[], series
                 ) : (
                     <>
                         {/* Les Barres pour le nombre total de lectures (Vues) */}
-                        <Bar hide={hidden.has("totalViews")} yAxisId="right" dataKey="totalViews" barSize={20} fill="#3f3f46" radius={[4, 4, 0, 0]} name="Vues (Total)" />
+                        <Bar hide={hidden.has("totalViews")} yAxisId="right" dataKey="totalViews" barSize={20} fill="#3f3f46" radius={[4, 4, 0, 0]} name={t('viewsTotal')} />
 
                         {/* Les zones empilées pour les volumes horaires */}
-                        <Area hide={hidden.has("movieVolume")} yAxisId="left" type="monotone" dataKey="movieVolume" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} name="Films" />
-                        <Area hide={hidden.has("seriesVolume")} yAxisId="left" type="monotone" dataKey="seriesVolume" stackId="1" stroke="#22c55e" fill="#22c55e" fillOpacity={0.6} name="Séries" />
-                        <Area hide={hidden.has("musicVolume")} yAxisId="left" type="monotone" dataKey="musicVolume" stackId="1" stroke="#eab308" fill="#eab308" fillOpacity={0.6} name="Musique" />
-                        <Area hide={hidden.has("booksVolume")} yAxisId="left" type="monotone" dataKey="booksVolume" stackId="1" stroke="#a855f7" fill="#a855f7" fillOpacity={0.6} name="Livres" />
+                        <Area hide={hidden.has("movieVolume")} yAxisId="left" type="monotone" dataKey="movieVolume" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} name={t('movies')} />
+                        <Area hide={hidden.has("seriesVolume")} yAxisId="left" type="monotone" dataKey="seriesVolume" stackId="1" stroke="#22c55e" fill="#22c55e" fillOpacity={0.6} name={t('series')} />
+                        <Area hide={hidden.has("musicVolume")} yAxisId="left" type="monotone" dataKey="musicVolume" stackId="1" stroke="#eab308" fill="#eab308" fillOpacity={0.6} name={t('music')} />
+                        <Area hide={hidden.has("booksVolume")} yAxisId="left" type="monotone" dataKey="booksVolume" stackId="1" stroke="#a855f7" fill="#a855f7" fillOpacity={0.6} name={t('books')} />
                     </>
                 )}
 

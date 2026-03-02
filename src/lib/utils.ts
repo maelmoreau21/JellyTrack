@@ -6,6 +6,20 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Format a 24h hour integer into a locale-appropriate label.
+ * - French: "00h", "01h", ..., "23h"
+ * - English: "12 AM", "1 AM", ..., "12 PM", "1 PM", ..., "11 PM"
+ */
+export function formatHour(hour24: number, locale: string): string {
+    if (locale === "en") {
+        const period = hour24 >= 12 ? "PM" : "AM";
+        const h12 = hour24 % 12 || 12;
+        return `${h12} ${period}`;
+    }
+    return `${hour24.toString().padStart(2, "0")}h`;
+}
+
+/**
  * Categorize a Jellyfin client name into a device category.
  */
 export function categorizeClient(clientName: string): string {

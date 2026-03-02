@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { GenreDistributionChart, GenreData } from "@/components/charts/GenreDistributionChart";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,8 @@ const ITEMS_PER_PAGE = 50;
 
 export default async function MediaPage({ searchParams }: MediaPageProps) {
     const sParams = await searchParams;
+    const t = await getTranslations('media');
+    const tc = await getTranslations('common');
     const sortBy = sParams.sortBy || "plays"; // 'plays', 'duration', ou 'quality'
     const type = sParams.type;
     const currentPage = Math.max(1, parseInt(sParams.page || "1", 10) || 1);
@@ -197,14 +200,14 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                 <div className="flex items-center justify-between space-y-2 mb-6">
                     <div className="flex items-center gap-6">
                         <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                            <Film className="w-8 h-8 opacity-80" /> Bibliothèque
+                            <Film className="w-8 h-8 opacity-80" /> {t('title')}
                         </h2>
                         <Tabs defaultValue={type || "all"} className="w-[400px]">
                             <TabsList className="bg-zinc-900 border border-zinc-800">
-                                <TabsTrigger value="all" asChild><Link href={`/media${sortBy !== 'plays' ? `?sortBy=${sortBy}` : ''}`}>Tous</Link></TabsTrigger>
-                                <TabsTrigger value="movie" asChild><Link href={`/media?type=movie${sortBy !== 'plays' ? `&sortBy=${sortBy}` : ''}`}>Films</Link></TabsTrigger>
-                                <TabsTrigger value="series" asChild><Link href={`/media?type=series${sortBy !== 'plays' ? `&sortBy=${sortBy}` : ''}`}>Séries</Link></TabsTrigger>
-                                <TabsTrigger value="music" asChild><Link href={`/media?type=music${sortBy !== 'plays' ? `&sortBy=${sortBy}` : ''}`}>Musique</Link></TabsTrigger>
+                                <TabsTrigger value="all" asChild><Link href={`/media${sortBy !== 'plays' ? `?sortBy=${sortBy}` : ''}`}>{tc('all')}</Link></TabsTrigger>
+                                <TabsTrigger value="movie" asChild><Link href={`/media?type=movie${sortBy !== 'plays' ? `&sortBy=${sortBy}` : ''}`}>{tc('movies')}</Link></TabsTrigger>
+                                <TabsTrigger value="series" asChild><Link href={`/media?type=series${sortBy !== 'plays' ? `&sortBy=${sortBy}` : ''}`}>{tc('series')}</Link></TabsTrigger>
+                                <TabsTrigger value="music" asChild><Link href={`/media?type=music${sortBy !== 'plays' ? `&sortBy=${sortBy}` : ''}`}>{tc('music')}</Link></TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
@@ -214,7 +217,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
                     <Card className="col-span-2 bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                         <CardHeader>
-                            <CardTitle>Diversité de la bibliothèque (Top Genres)</CardTitle>
+                            <CardTitle>{t('genreDiversity')}</CardTitle>
                         </CardHeader>
                         <CardContent className="pl-0 pb-4">
                             <div className="h-[250px] min-h-[250px] w-full">
@@ -225,8 +228,8 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
                     <Card className="col-span-1 bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                         <CardHeader>
-                            <CardTitle>Qualité Vidéo Globale</CardTitle>
-                            <CardDescription>Répartition par résolution certifiée.</CardDescription>
+                            <CardTitle>{t('videoQuality')}</CardTitle>
+                            <CardDescription>{t('videoQualityDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 mt-4">
                             <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border">
@@ -242,7 +245,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                 <span className="text-xl font-bold">{res720p}</span>
                             </div>
                             <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border">
-                                <span className="font-medium text-zinc-500">Standard / Autre</span>
+                                <span className="font-medium text-zinc-500">{t('standardOther')}</span>
                                 <span className="text-lg font-bold text-zinc-400">{resSD}</span>
                             </div>
                         </CardContent>
@@ -251,33 +254,33 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Tous les Médias</CardTitle>
+                        <CardTitle>{t('allMedia')}</CardTitle>
                         <CardDescription>
-                            Liste des {parentItems.length} contenus disponibles extraits depuis Jellyfin.
+                            {t('availableContent', { count: parentItems.length })}
                         </CardDescription>
                         {/* Barre de tri */}
                         <div className="flex items-center gap-2 pt-4">
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                <ArrowDownUp className="w-4 h-4" /> Trier par :
+                                <ArrowDownUp className="w-4 h-4" /> {t('sortBy')}
                             </span>
                             <div className="flex items-center bg-muted rounded-md p-1">
                                 <Link
                                     href={`/media?sortBy=plays${type ? `&type=${type}` : ''}`}
                                     className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "plays" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/50"}`}
                                 >
-                                    Popularité (Vues)
+                                    {t('sortPopularity')}
                                 </Link>
                                 <Link
                                     href={`/media?sortBy=duration${type ? `&type=${type}` : ''}`}
                                     className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "duration" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/50"}`}
                                 >
-                                    Temps Visionné
+                                    {t('sortWatchTime')}
                                 </Link>
                                 <Link
                                     href={`/media?sortBy=quality${type ? `&type=${type}` : ''}`}
                                     className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "quality" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/50"}`}
                                 >
-                                    Mode de lecture
+                                    {t('sortPlayMode')}
                                 </Link>
                             </div>
                         </div>
@@ -285,7 +288,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                     <CardContent>
                         {displayMedia.length === 0 ? (
                             <p className="text-sm text-center text-muted-foreground py-12">
-                                Aucun média indexé. N'oubliez pas d'exécuter la synchronisation Jellyfin dans les Paramètres.
+                                {t('noMedia')}
                             </p>
                         ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
@@ -303,7 +306,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                             {!type && media.type !== 'Movie' && (
                                                 <div className="absolute top-2 left-2 z-10 transition-opacity duration-300 group-hover:opacity-0">
                                                     <Badge variant="outline" className="text-[10px] bg-black/60 text-white border-white/20 backdrop-blur-sm">
-                                                        {media.type === 'Series' ? 'Série' : 'Album'}
+                                                        {media.type === 'Series' ? t('seriesBadge') : t('albumBadge')}
                                                     </Badge>
                                                 </div>
                                             )}
@@ -332,11 +335,11 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                             <span className="font-semibold text-sm truncate text-zinc-100" title={media.title}>{media.title}</span>
                                             {media.childCount > 0 && (
                                                 <span className="text-xs text-zinc-500">
-                                                    {media.childCount} {media.type === 'Series' ? 'épisodes' : 'pistes'}
+                                                    {media.childCount} {media.type === 'Series' ? tc('episodes') : tc('tracks')}
                                                 </span>
                                             )}
                                             <div className="flex items-center justify-between text-xs text-zinc-400 mt-1">
-                                                <span>{media.plays} {media.plays > 1 ? 'vues' : 'vue'}</span>
+                                                <span>{media.plays} {media.plays > 1 ? tc('views') : tc('view')}</span>
                                                 {media.durationHours > 0 && <span className="font-medium">{media.durationHours}h</span>}
                                             </div>
                                         </div>
@@ -348,7 +351,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                             <div className="flex items-center justify-center gap-2 mt-8 pt-4 border-t border-zinc-800/50">
                                 {safePage > 1 && (
                                     <Link href={buildPageUrl(safePage - 1)} className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
-                                        <ChevronLeft className="w-4 h-4" /> Précédent
+                                        <ChevronLeft className="w-4 h-4" /> {tc('previous')}
                                     </Link>
                                 )}
                                 <div className="flex items-center gap-1">
@@ -379,11 +382,11 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                 </div>
                                 {safePage < totalPages && (
                                     <Link href={buildPageUrl(safePage + 1)} className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
-                                        Suivant <ChevronRight className="w-4 h-4" />
+                                        {tc('next')} <ChevronRight className="w-4 h-4" />
                                     </Link>
                                 )}
                                 <span className="text-xs text-muted-foreground ml-4">
-                                    {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} sur {totalItems}
+                                    {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} {tc('on')} {totalItems}
                                 </span>
                             </div>
                         )}

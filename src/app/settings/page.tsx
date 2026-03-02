@@ -6,8 +6,12 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function SettingsPage() {
+    const t = useTranslations('settings');
+    const tc = useTranslations('common');
+    const locale = useLocale();
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isRestoring, setIsRestoring] = useState(false);
 
@@ -34,6 +38,14 @@ export default function SettingsPage() {
         backup: { loading: false, msg: null },
     });
 
+    // Cron schedule state
+    const [syncCronHour, setSyncCronHour] = useState(3);
+    const [syncCronMinute, setSyncCronMinute] = useState(0);
+    const [backupCronHour, setBackupCronHour] = useState(3);
+    const [backupCronMinute, setBackupCronMinute] = useState(30);
+    const [isSavingCron, setIsSavingCron] = useState(false);
+    const [cronMsg, setCronMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
     // Auto-backup state
     const [autoBackups, setAutoBackups] = useState<{name: string, sizeMb: string, date: string}[]>([]);
     const [isRestoringAuto, setIsRestoringAuto] = useState<string | null>(null);
@@ -53,6 +65,10 @@ export default function SettingsPage() {
                     setExcludedLibraries((data.excludedLibraries || []).join(", "));
                     setMonitorActive(data.monitorIntervalActive ?? 1000);
                     setMonitorIdle(data.monitorIntervalIdle ?? 5000);
+                    setSyncCronHour(data.syncCronHour ?? 3);
+                    setSyncCronMinute(data.syncCronMinute ?? 0);
+                    setBackupCronHour(data.backupCronHour ?? 3);
+                    setBackupCronMinute(data.backupCronMinute ?? 30);
                 }
             } catch (err) {
                 console.error("Failed to load settings");
@@ -91,12 +107,12 @@ export default function SettingsPage() {
                 })
             });
             if (res.ok) {
-                setSettingsMsg({ type: "success", text: "Paramètres enregistrés avec succès." });
+                setSettingsMsg({ type: "success", text: t('savedSuccess') });
             } else {
-                setSettingsMsg({ type: "error", text: "Erreur lors de la sauvegarde." });
+                setSettingsMsg({ type: "error", text: tc('saveError') });
             }
         } catch (error) {
-            setSettingsMsg({ type: "error", text: "Erreur réseau." });
+            setSettingsMsg({ type: "error", text: tc('networkError') });
         } finally {
             setIsSavingSettings(false);
         }
@@ -115,14 +131,36 @@ export default function SettingsPage() {
                 })
             });
             if (res.ok) {
-                setMonitorMsg({ type: "success", text: "Intervalles mis à jour en temps réel." });
+                setMonitorMsg({ type: "success", text: t('monitorSaved') });
             } else {
-                setMonitorMsg({ type: "error", text: "Erreur lors de la sauvegarde." });
+                setMonitorMsg({ type: "error", text: tc('saveError') });
             }
         } catch {
-            setMonitorMsg({ type: "error", text: "Erreur réseau." });
+            setMonitorMsg({ type: "error", text: tc('networkError') });
         } finally {
             setIsSavingMonitor(false);
+        }
+    };
+
+    const handleSaveCron = async () => {
+        setIsSavingCron(true);
+        setCronMsg(null);
+        try {
+            const res = await fetch("/api/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ syncCronHour, syncCronMinute, backupCronHour, backupCronMinute })
+            });
+            if (res.ok) {
+                setCronMsg({ type: "success", text: t('cronSaved') });
+            } else {
+                const data = await res.json();
+                setCronMsg({ type: "error", text: data.error || tc('saveError') });
+            }
+        } catch {
+            setCronMsg({ type: "error", text: tc('networkError') });
+        } finally {
+            setIsSavingCron(false);
         }
     };
 
@@ -136,17 +174,17 @@ export default function SettingsPage() {
             });
             const data = await res.json();
             if (res.ok) {
-                setTaskStatus(prev => ({ ...prev, [taskKey]: { loading: false, msg: { type: "success", text: data.message || "Terminé." } } }));
+                setTaskStatus(prev => ({ ...prev, [taskKey]: { loading: false, msg: { type: "success", text: data.message || tc('success') } } }));
                 // Refresh backup list after backup task
                 if (taskKey === 'backup') {
                     const listRes = await fetch("/api/backup/auto");
                     if (listRes.ok) { const listData = await listRes.json(); setAutoBackups(listData.backups || []); }
                 }
             } else {
-                setTaskStatus(prev => ({ ...prev, [taskKey]: { loading: false, msg: { type: "error", text: data.error || data.message || "Erreur." } } }));
+                setTaskStatus(prev => ({ ...prev, [taskKey]: { loading: false, msg: { type: "error", text: data.error || data.message || tc('error') } } }));
             }
         } catch {
-            setTaskStatus(prev => ({ ...prev, [taskKey]: { loading: false, msg: { type: "error", text: "Erreur réseau." } } }));
+            setTaskStatus(prev => ({ ...prev, [taskKey]: { loading: false, msg: { type: "error", text: tc('networkError') } } }));
         }
     };
 
@@ -173,20 +211,20 @@ export default function SettingsPage() {
                     });
                     const data = await res.json();
                     if (res.ok) {
-                        setBackupMsg({ type: "success", text: "Restauration terminée avec succès ! La page va redémarrer dans 3 secondes..." });
+                        setBackupMsg({ type: "success", text: t('restoreSuccess') });
                         setTimeout(() => window.location.reload(), 3000);
                     } else {
-                        setBackupMsg({ type: "error", text: data.error || "Le fichier de sauvegarde est invalide ou corrompu." });
+                        setBackupMsg({ type: "error", text: data.error || t('invalidBackup') });
                         setIsRestoring(false);
                     }
                 } catch (err) {
-                    setBackupMsg({ type: "error", text: "Erreur lors de l'analyse du fichier JSON." });
+                    setBackupMsg({ type: "error", text: t('jsonParseError') });
                     setIsRestoring(false);
                 }
             };
             fileReader.readAsText(file);
         } catch (error) {
-            setBackupMsg({ type: "error", text: "Impossible de lire le fichier." });
+            setBackupMsg({ type: "error", text: t('fileReadError') });
             setIsRestoring(false);
         }
         if (fileInputRef.current) { fileInputRef.current.value = ""; }
@@ -196,15 +234,15 @@ export default function SettingsPage() {
         <div className="flex-col md:flex">
             <div className="flex-1 space-y-6 p-8 pt-6 max-w-4xl mx-auto w-full">
                 <div className="flex items-center justify-between space-y-2 mb-6">
-                    <h2 className="text-3xl font-bold tracking-tight">Configuration</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
                 </div>
 
                 {/* ACTIVITY MONITORING CARD */}
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" /> Surveillance d&apos;activité</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" /> {t('monitorTitle')}</CardTitle>
                         <CardDescription>
-                            Configurez la fréquence de vérification des sessions Jellyfin. Les modifications sont appliquées en temps réel sans redémarrage du serveur.
+                            {t('monitorDesc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -216,7 +254,7 @@ export default function SettingsPage() {
                         )}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="monitor-active">Intervalle avec sessions actives (ms)</Label>
+                                <Label htmlFor="monitor-active">{t('activeInterval')}</Label>
                                 <Input
                                     id="monitor-active"
                                     type="number"
@@ -226,10 +264,10 @@ export default function SettingsPage() {
                                     onChange={(e) => setMonitorActive(parseInt(e.target.value) || 1000)}
                                     className="font-mono text-sm"
                                 />
-                                <p className="text-xs text-muted-foreground">Fréquence de vérification quand des utilisateurs regardent du contenu (recommandé: 1000ms)</p>
+                                <p className="text-xs text-muted-foreground">{t('activeIntervalDesc')}</p>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="monitor-idle">Intervalle en veille (ms)</Label>
+                                <Label htmlFor="monitor-idle">{t('idleInterval')}</Label>
                                 <Input
                                     id="monitor-idle"
                                     type="number"
@@ -239,14 +277,14 @@ export default function SettingsPage() {
                                     onChange={(e) => setMonitorIdle(parseInt(e.target.value) || 5000)}
                                     className="font-mono text-sm"
                                 />
-                                <p className="text-xs text-muted-foreground">Fréquence de vérification quand aucune session active (recommandé: 5000ms)</p>
+                                <p className="text-xs text-muted-foreground">{t('idleIntervalDesc')}</p>
                             </div>
                         </div>
                     </CardContent>
                     <CardFooter>
                         <button onClick={handleSaveMonitor} disabled={isSavingMonitor} className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${isSavingMonitor ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>
                             <Save className={`w-4 h-4 ${isSavingMonitor ? 'animate-pulse' : ''}`} />
-                            {isSavingMonitor ? 'Enregistrement...' : 'Appliquer'}
+                            {isSavingMonitor ? tc('saving') : tc('apply')}
                         </button>
                     </CardFooter>
                 </Card>
@@ -254,20 +292,26 @@ export default function SettingsPage() {
                 {/* TASK SCHEDULER CARD */}
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Zap className="w-5 h-5" /> Planificateur de tâches</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><Zap className="w-5 h-5" /> {t('taskScheduler')}</CardTitle>
                         <CardDescription>
-                            Lancez manuellement les tâches de maintenance ou attendez leur exécution automatique programmée.
+                            {t('taskSchedulerDesc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
+                        {cronMsg && (
+                            <div className={`p-4 rounded-md flex items-center gap-3 text-sm ${cronMsg.type === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                                {cronMsg.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                                {cronMsg.text}
+                            </div>
+                        )}
                         {/* Task 1: Recent Sync */}
                         <div className="flex items-center justify-between p-4 border border-zinc-800/50 rounded-lg bg-black/20">
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <RefreshCw className="w-4 h-4 text-sky-400 shrink-0" />
-                                    <span className="font-medium text-sm">Synchronisation du contenu récent</span>
+                                    <span className="font-medium text-sm">{t('recentSync')}</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-1 ml-6">Synchronise les médias ajoutés dans les 7 derniers jours.</p>
+                                <p className="text-xs text-muted-foreground mt-1 ml-6">{t('recentSyncDesc')}</p>
                                 {taskStatus.recentSync.msg && (
                                     <div className={`mt-2 ml-6 text-xs ${taskStatus.recentSync.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
                                         {taskStatus.recentSync.msg.text}
@@ -280,7 +324,7 @@ export default function SettingsPage() {
                                 className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${taskStatus.recentSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-sky-600 text-white hover:bg-sky-500'}`}
                             >
                                 <Play className={`w-3 h-3 ${taskStatus.recentSync.loading ? 'animate-spin' : ''}`} />
-                                {taskStatus.recentSync.loading ? 'En cours...' : 'Lancer'}
+                                {taskStatus.recentSync.loading ? tc('running') : tc('run')}
                             </button>
                         </div>
 
@@ -289,9 +333,16 @@ export default function SettingsPage() {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <Database className="w-4 h-4 text-violet-400 shrink-0" />
-                                    <span className="font-medium text-sm">Synchronisation complète avec Jellyfin</span>
+                                    <span className="font-medium text-sm">{t('fullSync')}</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-1 ml-6">Synchronise tous les utilisateurs et médias. Automatique chaque nuit à 3h00.</p>
+                                <div className="flex items-center gap-2 mt-1 ml-6">
+                                    <p className="text-xs text-muted-foreground">{t('autoNightlyAt')}</p>
+                                    <div className="flex items-center gap-1">
+                                        <Input type="number" min={0} max={23} value={syncCronHour} onChange={(e) => setSyncCronHour(Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))} className="w-14 h-7 text-xs text-center font-mono px-1" />
+                                        <span className="text-xs text-muted-foreground">:</span>
+                                        <Input type="number" min={0} max={59} value={syncCronMinute} onChange={(e) => setSyncCronMinute(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))} className="w-14 h-7 text-xs text-center font-mono px-1" />
+                                    </div>
+                                </div>
                                 {taskStatus.fullSync.msg && (
                                     <div className={`mt-2 ml-6 text-xs ${taskStatus.fullSync.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
                                         {taskStatus.fullSync.msg.text}
@@ -304,7 +355,7 @@ export default function SettingsPage() {
                                 className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${taskStatus.fullSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-violet-600 text-white hover:bg-violet-500'}`}
                             >
                                 <Play className={`w-3 h-3 ${taskStatus.fullSync.loading ? 'animate-spin' : ''}`} />
-                                {taskStatus.fullSync.loading ? 'En cours...' : 'Lancer'}
+                                {taskStatus.fullSync.loading ? tc('running') : tc('run')}
                             </button>
                         </div>
 
@@ -313,9 +364,16 @@ export default function SettingsPage() {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <Save className="w-4 h-4 text-amber-400 shrink-0" />
-                                    <span className="font-medium text-sm">Sauvegarde de JellyTulli</span>
+                                    <span className="font-medium text-sm">{t('backupTask')}</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-1 ml-6">Sauvegarde complète de la base de données. Automatique chaque nuit à 3h30.</p>
+                                <div className="flex items-center gap-2 mt-1 ml-6">
+                                    <p className="text-xs text-muted-foreground">{t('autoNightlyAt')}</p>
+                                    <div className="flex items-center gap-1">
+                                        <Input type="number" min={0} max={23} value={backupCronHour} onChange={(e) => setBackupCronHour(Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))} className="w-14 h-7 text-xs text-center font-mono px-1" />
+                                        <span className="text-xs text-muted-foreground">:</span>
+                                        <Input type="number" min={0} max={59} value={backupCronMinute} onChange={(e) => setBackupCronMinute(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))} className="w-14 h-7 text-xs text-center font-mono px-1" />
+                                    </div>
+                                </div>
                                 {taskStatus.backup.msg && (
                                     <div className={`mt-2 ml-6 text-xs ${taskStatus.backup.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
                                         {taskStatus.backup.msg.text}
@@ -328,18 +386,24 @@ export default function SettingsPage() {
                                 className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${taskStatus.backup.loading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-amber-600 text-white hover:bg-amber-500'}`}
                             >
                                 <Play className={`w-3 h-3 ${taskStatus.backup.loading ? 'animate-spin' : ''}`} />
-                                {taskStatus.backup.loading ? 'En cours...' : 'Lancer'}
+                                {taskStatus.backup.loading ? tc('running') : tc('run')}
                             </button>
                         </div>
                     </CardContent>
+                    <CardFooter>
+                        <button onClick={handleSaveCron} disabled={isSavingCron} className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${isSavingCron ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>
+                            <Save className={`w-4 h-4 ${isSavingCron ? 'animate-pulse' : ''}`} />
+                            {isSavingCron ? tc('saving') : t('saveSchedules')}
+                        </button>
+                    </CardFooter>
                 </Card>
 
                 {/* DISCORD SETTINGS CARD */}
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm mt-6">
                     <CardHeader>
-                        <CardTitle>Notifications & Alertes Extérieures</CardTitle>
+                        <CardTitle>{t('notifications')}</CardTitle>
                         <CardDescription>
-                            Gérez les alertes externes (Discord, Slack via webhook) lors du lancement d'une nouvelle session de lecture sur votre serveur.
+                            {t('notificationsDesc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -351,37 +415,37 @@ export default function SettingsPage() {
                         )}
                         <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg">
                             <div className="space-y-0.5 mt-0.5">
-                                <Label htmlFor="discord-alerts" className="text-base">Activer les notifications Discord</Label>
-                                <p className="text-sm text-muted-foreground">Envoie un message visuel sur ton serveur Discord à chaque nouvelle lecture.</p>
+                                <Label htmlFor="discord-alerts" className="text-base">{t('enableDiscord')}</Label>
+                                <p className="text-sm text-muted-foreground">{t('enableDiscordDesc')}</p>
                             </div>
                             <Switch id="discord-alerts" checked={discordEnabled} onCheckedChange={setDiscordEnabled} />
                         </div>
                         {discordEnabled && (
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <div className="space-y-2">
-                                    <Label htmlFor="discord-url">URL du Webhook Discord</Label>
+                                    <Label htmlFor="discord-url">{t('discordWebhookUrl')}</Label>
                                     <Input id="discord-url" type="url" placeholder="https://discord.com/api/webhooks/..." value={discordUrl} onChange={(e) => setDiscordUrl(e.target.value)} className="font-mono text-sm" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="discord-condition">Conditions de notification</Label>
+                                    <Label htmlFor="discord-condition">{t('notifConditions')}</Label>
                                     <select id="discord-condition" value={discordAlertCondition} onChange={(e) => setDiscordAlertCondition(e.target.value)} className="flex h-9 w-full rounded-md border border-zinc-700 bg-zinc-900/50 px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                                        <option value="ALL">Toutes les lectures</option>
-                                        <option value="TRANSCODE_ONLY">Uniquement les transcodages</option>
-                                        <option value="NEW_IP_ONLY">Uniquement les nouvelles adresses IP</option>
+                                        <option value="ALL">{t('notifAll')}</option>
+                                        <option value="TRANSCODE_ONLY">{t('notifTranscode')}</option>
+                                        <option value="NEW_IP_ONLY">{t('notifNewIp')}</option>
                                     </select>
                                 </div>
                             </div>
                         )}
                         <div className="border-t border-zinc-800/50 pt-6 mt-6">
-                            <Label htmlFor="excluded-libraries" className="text-base">Filtrage des collections</Label>
-                            <p className="text-sm text-muted-foreground mb-4">Exclus certains types de médias (ex: Photo, HomeVideos) des statistiques. Séparé par des virgules.</p>
+                            <Label htmlFor="excluded-libraries" className="text-base">{t('collectionFilter')}</Label>
+                            <p className="text-sm text-muted-foreground mb-4">{t('collectionFilterDesc')}</p>
                             <Input id="excluded-libraries" placeholder="Photo, HomeVideos" value={excludedLibraries} onChange={(e) => setExcludedLibraries(e.target.value)} className="font-mono text-sm" />
                         </div>
                     </CardContent>
                     <CardFooter>
                         <button onClick={handleSaveSettings} disabled={isSavingSettings} className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${isSavingSettings ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>
                             <Save className={`w-4 h-4 ${isSavingSettings ? 'animate-pulse' : ''}`} />
-                            {isSavingSettings ? 'Enregistrement...' : 'Enregistrer les paramètres'}
+                            {isSavingSettings ? tc('saving') : t('saveSettings')}
                         </button>
                     </CardFooter>
                 </Card>
@@ -389,8 +453,8 @@ export default function SettingsPage() {
                 {/* BACKUP & RESTORE CARD */}
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm mt-6">
                     <CardHeader>
-                        <CardTitle>Données & Sauvegardes</CardTitle>
-                        <CardDescription>Exportez l'ensemble de votre base de données, ou restaurez une configuration précédente.</CardDescription>
+                        <CardTitle>{t('dataBackups')}</CardTitle>
+                        <CardDescription>{t('dataBackupsDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {backupMsg && (
@@ -403,11 +467,11 @@ export default function SettingsPage() {
                     </CardContent>
                     <CardFooter className="flex flex-col sm:flex-row gap-4">
                         <button onClick={handleExportBackup} className="flex-1 flex justify-center items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors border border-zinc-700 hover:bg-zinc-800">
-                            <Download className="w-4 h-4" /> Exporter la sauvegarde
+                            <Download className="w-4 h-4" /> {t('exportBackup')}
                         </button>
                         <button onClick={() => fileInputRef.current?.click()} disabled={isRestoring} className={`flex-1 flex justify-center items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${isRestoring ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>
                             <UploadCloud className={`w-4 h-4 ${isRestoring ? 'animate-bounce' : ''}`} />
-                            {isRestoring ? 'Restauration en cours...' : 'Importer une sauvegarde'}
+                            {isRestoring ? t('importing') : t('importBackup')}
                         </button>
                     </CardFooter>
                 </Card>
@@ -415,9 +479,9 @@ export default function SettingsPage() {
                 {/* AUTO-BACKUPS CARD */}
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm mt-6">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5" /> Gestion des Sauvegardes</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5" /> {t('backupManagement')}</CardTitle>
                         <CardDescription>
-                            JellyTulli effectue une sauvegarde automatique chaque nuit à 3h30. Les 5 plus récentes sont conservées.
+                            {t('backupManagementDesc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -434,23 +498,23 @@ export default function SettingsPage() {
                                     const res = await fetch("/api/backup/auto/trigger", { method: "POST" });
                                     const data = await res.json();
                                     if (res.ok) {
-                                        setAutoBackupMsg({ type: "success", text: data.message || "Sauvegarde créée." });
+                                        setAutoBackupMsg({ type: "success", text: data.message || tc('success') });
                                         const listRes = await fetch("/api/backup/auto"); if (listRes.ok) { const listData = await listRes.json(); setAutoBackups(listData.backups || []); }
-                                    } else { setAutoBackupMsg({ type: "error", text: data.error || "Erreur." }); }
-                                } catch { setAutoBackupMsg({ type: "error", text: "Erreur réseau." }); }
+                                    } else { setAutoBackupMsg({ type: "error", text: data.error || tc('error') }); }
+                                } catch { setAutoBackupMsg({ type: "error", text: tc('networkError') }); }
                                 finally { setIsTriggering(false); }
                             }}
                             disabled={isTriggering}
                             className={`w-full flex justify-center items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${isTriggering ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
                         >
                             <Save className={`w-4 h-4 ${isTriggering ? 'animate-pulse' : ''}`} />
-                            {isTriggering ? 'Sauvegarde en cours...' : 'Sauvegarder maintenant'}
+                            {isTriggering ? t('backingUp') : t('backupNow')}
                         </button>
                         {autoBackups.length === 0 ? (
                             <div className="text-center py-8 text-muted-foreground text-sm">
                                 <Clock className="w-8 h-8 mx-auto mb-3 opacity-50" />
-                                <p>Aucune sauvegarde automatique disponible.</p>
-                                <p className="text-xs mt-1">La première sera créée cette nuit à 3h30.</p>
+                                <p>{t('noAutoBackups')}</p>
+                                <p className="text-xs mt-1">{t('firstBackupTonight')}</p>
                             </div>
                         ) : (
                             <div className="space-y-2">
@@ -459,46 +523,46 @@ export default function SettingsPage() {
                                         <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                                             <span className="text-sm font-medium truncate">{backup.name}</span>
                                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                <span>{new Date(backup.date).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                                <span>{backup.sizeMb} Mo</span>
+                                                <span>{new Date(backup.date).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span>{backup.sizeMb} {tc('mb')}</span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 ml-3 shrink-0">
                                             <button
                                                 onClick={async () => {
-                                                    if (!confirm(`Restaurer la sauvegarde ${backup.name} ?`)) return;
+                                                    if (!confirm(t('confirmRestore', { name: backup.name }))) return;
                                                     setIsRestoringAuto(backup.name); setAutoBackupMsg(null);
                                                     try {
                                                         const res = await fetch("/api/backup/auto/restore", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fileName: backup.name }) });
                                                         const data = await res.json();
-                                                        if (res.ok) { setAutoBackupMsg({ type: "success", text: "Restauration réussie ! Rechargement..." }); setTimeout(() => window.location.reload(), 3000); }
-                                                        else { setAutoBackupMsg({ type: "error", text: data.error || "Erreur." }); }
-                                                    } catch { setAutoBackupMsg({ type: "error", text: "Erreur réseau." }); }
+                                                        if (res.ok) { setAutoBackupMsg({ type: "success", text: t('restoreOk') }); setTimeout(() => window.location.reload(), 3000); }
+                                                        else { setAutoBackupMsg({ type: "error", text: data.error || tc('error') }); }
+                                                    } catch { setAutoBackupMsg({ type: "error", text: tc('networkError') }); }
                                                     finally { setIsRestoringAuto(null); }
                                                 }}
                                                 disabled={isRestoringAuto !== null || isDeletingAuto !== null}
                                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${isRestoringAuto === backup.name ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
                                             >
                                                 <UploadCloud className={`w-3 h-3 ${isRestoringAuto === backup.name ? 'animate-bounce' : ''}`} />
-                                                {isRestoringAuto === backup.name ? 'Restauration...' : 'Restaurer'}
+                                                {isRestoringAuto === backup.name ? t('restoring') : tc('restore')}
                                             </button>
                                             <button
                                                 onClick={async () => {
-                                                    if (!confirm(`Supprimer la sauvegarde ${backup.name} ?`)) return;
+                                                    if (!confirm(t('confirmDelete', { name: backup.name }))) return;
                                                     setIsDeletingAuto(backup.name); setAutoBackupMsg(null);
                                                     try {
                                                         const res = await fetch("/api/backup/auto/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fileName: backup.name }) });
                                                         const data = await res.json();
-                                                        if (res.ok) { setAutoBackupMsg({ type: "success", text: "Supprimée." }); setAutoBackups(prev => prev.filter(b => b.name !== backup.name)); }
-                                                        else { setAutoBackupMsg({ type: "error", text: data.error || "Erreur." }); }
-                                                    } catch { setAutoBackupMsg({ type: "error", text: "Erreur réseau." }); }
+                                                        if (res.ok) { setAutoBackupMsg({ type: "success", text: t('deleted') }); setAutoBackups(prev => prev.filter(b => b.name !== backup.name)); }
+                                                        else { setAutoBackupMsg({ type: "error", text: data.error || tc('error') }); }
+                                                    } catch { setAutoBackupMsg({ type: "error", text: tc('networkError') }); }
                                                     finally { setIsDeletingAuto(null); }
                                                 }}
                                                 disabled={isRestoringAuto !== null || isDeletingAuto !== null}
                                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${isDeletingAuto === backup.name ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'border border-red-500/30 text-red-400 hover:bg-red-500/10'}`}
                                             >
                                                 <Trash2 className={`w-3 h-3 ${isDeletingAuto === backup.name ? 'animate-pulse' : ''}`} />
-                                                {isDeletingAuto === backup.name ? '...' : 'Supprimer'}
+                                                {isDeletingAuto === backup.name ? '...' : tc('delete')}
                                             </button>
                                         </div>
                                     </div>

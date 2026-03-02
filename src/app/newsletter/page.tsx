@@ -2,11 +2,17 @@ import prisma from "@/lib/prisma";
 import Image from "next/image";
 import { subDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { PlayCircle, Clock, Users, Trophy, Sparkles } from "lucide-react";
+import { getTranslations, getLocale } from 'next-intl/server';
 
 export const dynamic = "force-dynamic";
 
 export default async function NewsletterPage() {
+    const t = await getTranslations('newsletter');
+    const tc = await getTranslations('common');
+    const locale = await getLocale();
+    const dateFnsLocale = locale === 'fr' ? fr : enUS;
     const today = new Date();
     const thirtyDaysAgo = subDays(today, 30);
 
@@ -33,7 +39,7 @@ export default async function NewsletterPage() {
             if (!agg.mediaId) return null;
             const m = await prisma.media.findUnique({ where: { id: agg.mediaId } });
             return {
-                title: m?.title || "Média inconnu",
+                title: m?.title || tc('unknownMedia'),
                 type: m?.type || "Unknown",
                 jellyfinId: m?.jellyfinMediaId,
                 hours: ((agg._sum.durationWatched || 0) / 3600).toFixed(1)
@@ -55,7 +61,7 @@ export default async function NewsletterPage() {
     if (topUserAgg.length > 0 && topUserAgg[0].userId) {
         const u = await prisma.user.findUnique({ where: { id: topUserAgg[0].userId } });
         topUser = {
-            name: u?.username || "Utilisateur Supprimé",
+            name: u?.username || tc('deletedUser'),
             hours: ((topUserAgg[0]._sum.durationWatched || 0) / 3600).toFixed(0)
         };
     }
@@ -71,10 +77,10 @@ export default async function NewsletterPage() {
                         JellyTulli Rewind
                     </h1>
                     <p className="text-zinc-300 font-medium relative z-10">
-                        Votre récapitulatif des 30 derniers jours
+                        {t('monthlyRecap')}
                     </p>
                     <p className="text-xs text-zinc-500 mt-2 relative z-10 font-mono">
-                        {format(thirtyDaysAgo, 'dd MMM yyyy', { locale: fr })} - {format(today, 'dd MMM yyyy', { locale: fr })}
+                        {format(thirtyDaysAgo, 'dd MMM yyyy', { locale: dateFnsLocale })} - {format(today, 'dd MMM yyyy', { locale: dateFnsLocale })}
                     </p>
                 </div>
 
@@ -85,12 +91,12 @@ export default async function NewsletterPage() {
                         <div className="bg-zinc-800/50 rounded-2xl p-6 text-center border border-zinc-700/50">
                             <Clock className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
                             <div className="text-4xl font-black text-white">{totalHours}h</div>
-                            <div className="text-sm text-zinc-400 mt-1 font-medium pb-2 border-b border-zinc-700/50">Visionnées</div>
+                            <div className="text-sm text-zinc-400 mt-1 font-medium pb-2 border-b border-zinc-700/50">{t('hoursWatched')}</div>
                         </div>
                         <div className="bg-zinc-800/50 rounded-2xl p-6 text-center border border-zinc-700/50">
                             <PlayCircle className="w-8 h-8 text-blue-400 mx-auto mb-3" />
                             <div className="text-4xl font-black text-white">{totalPlays}</div>
-                            <div className="text-sm text-zinc-400 mt-1 font-medium pb-2 border-b border-zinc-700/50">Lectures Totales</div>
+                            <div className="text-sm text-zinc-400 mt-1 font-medium pb-2 border-b border-zinc-700/50">{t('totalPlays')}</div>
                         </div>
                     </div>
 
@@ -98,7 +104,7 @@ export default async function NewsletterPage() {
                     <div>
                         <div className="flex items-center gap-3 mb-6">
                             <Trophy className="w-6 h-6 text-yellow-500" />
-                            <h2 className="text-2xl font-bold">Le Podium Vidéo</h2>
+                            <h2 className="text-2xl font-bold">{t('videoPodium')}</h2>
                         </div>
                         <div className="space-y-4">
                             {validTopMedia.map((media, i) => (
@@ -128,12 +134,12 @@ export default async function NewsletterPage() {
                                 <Users className="w-8 h-8 text-indigo-400" />
                             </div>
                             <div className="text-center sm:text-left flex-1 border-b sm:border-b-0 sm:border-r border-indigo-500/20 pb-4 sm:pb-0 sm:pr-6">
-                                <p className="text-sm text-indigo-300 font-medium mb-1">Meilleur Spectateur</p>
+                                <p className="text-sm text-indigo-300 font-medium mb-1">{t('bestViewer')}</p>
                                 <p className="text-2xl font-black text-white truncate">{topUser.name}</p>
                             </div>
                             <div className="text-center sm:text-right pt-4 sm:pt-0 sm:pl-2">
                                 <div className="text-3xl font-black text-white">{topUser.hours}h</div>
-                                <p className="text-sm text-indigo-300 font-medium">Visionnées</p>
+                                <p className="text-sm text-indigo-300 font-medium">{t('hoursWatched')}</p>
                             </div>
                         </div>
                     )}
@@ -141,7 +147,7 @@ export default async function NewsletterPage() {
             </div>
 
             <p className="text-zinc-500 text-sm flex items-center gap-2">
-                <Sparkles className="w-4 h-4" /> Imprimez ou capturez cet écran pour le partager !
+                <Sparkles className="w-4 h-4" /> {t('shareHint')}
             </p>
         </div>
     );

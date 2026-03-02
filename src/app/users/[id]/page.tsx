@@ -7,6 +7,7 @@ import UserRecentMedia from "./UserRecentMedia";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = "force-dynamic";
 
@@ -34,23 +35,26 @@ export default async function UserDetailPage({ params }: UserPageProps) {
 
     if (!user) notFound();
 
+    const t = await getTranslations('userProfile');
+    const tc = await getTranslations('common');
+
     return (
         <div className="flex-col md:flex">
             <div className="flex-1 space-y-6 p-8 pt-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0 mb-6">
                     <div className="flex flex-col space-y-2">
                         <h2 className="text-3xl font-bold tracking-tight">
-                            Profil: {user.username || "Utilisateur Supprimé"}
+                            {t('profile', { name: user.username || tc('deletedUser') })}
                         </h2>
                         <p className="text-muted-foreground text-sm">
-                            ID Jellyfin: {user.jellyfinUserId}
+                            {t('jellyfinId')} {user.jellyfinUserId}
                         </p>
                     </div>
                     <a
                         href={`/wrapped/${jellyfinUserId}`}
                         className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25"
                     >
-                        🎁 Voir le JellyTulli Wrapped
+                        🎁 {t('viewWrapped')}
                     </a>
                 </div>
 

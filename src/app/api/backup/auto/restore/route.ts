@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { readFileSync, existsSync } from "fs";
 import path from "path";
+import { apiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
         const { fileName } = await req.json();
 
         if (!fileName || typeof fileName !== "string") {
-            return NextResponse.json({ error: "Nom de fichier invalide." }, { status: 400 });
+            return NextResponse.json({ error: await apiT('fileNameInvalid') }, { status: 400 });
         }
 
         // Security: prevent path traversal
@@ -24,23 +25,23 @@ export async function POST(req: NextRequest) {
 
         // Security: only allow restoring auto-backup files
         if (!sanitized.startsWith("jellytulli-auto-") || !sanitized.endsWith(".json")) {
-            return NextResponse.json({ error: "Fichier invalide — seuls les fichiers de sauvegarde automatiques sont autorisés." }, { status: 400 });
+            return NextResponse.json({ error: await apiT('fileAutoOnly') }, { status: 400 });
         }
 
         const filePath = path.join(BACKUP_DIR, sanitized);
 
         if (!existsSync(filePath)) {
-            return NextResponse.json({ error: "Fichier de sauvegarde introuvable." }, { status: 404 });
+            return NextResponse.json({ error: await apiT('fileNotFound') }, { status: 404 });
         }
 
         const raw = readFileSync(filePath, "utf-8");
         const backup = JSON.parse(raw);
 
         if (!backup.data) {
-            return NextResponse.json({ error: "Format de sauvegarde invalide." }, { status: 400 });
+            return NextResponse.json({ error: await apiT('backupFormatInvalid') }, { status: 400 });
         }
 
-        const { users, media, playbackHistory, settings } = backup.data;
+        const { users, media, playbackHistory, telemetryEvents, settings } = backup.data;
 
         // Restore using transaction
         await prisma.$transaction(async (tx) => {
@@ -114,32 +115,64 @@ export async function POST(req: NextRequest) {
                 }
             }
 
+            // Restore telemetry events (if present in backup)
+            if (telemetryEvents?.length > 0) {
+                for (const ev of telemetryEvents) {
+                    await (tx as any).telemetryEvent.create({
+                        data: {
+                            id: ev.id,
+                            playbackId: ev.playbackId,
+                            eventType: ev.eventType,
+                            positionMs: ev.positionMs != null ? BigInt(ev.positionMs) : BigInt(0),
+                            metadata: ev.metadata || null,
+                            createdAt: ev.createdAt ? new Date(ev.createdAt) : new Date(),
+                        }
+                    });
+                }
+            }
+
             // Restore settings
             if (settings) {
                 await tx.globalSettings.upsert({
                     where: { id: "global" },
                     update: {
-                        discordWebhookUrl: settings.discordWebhookUrl,
-                        discordAlertsEnabled: settings.discordAlertsEnabled,
-                        discordAlertCondition: settings.discordAlertCondition,
-                        excludedLibraries: settings.excludedLibraries,
+                        discordWebhookUrl: settings.discordWebhookUrl ?? null,
+                        discordAlertsEnabled: settings.discordAlertsEnabled ?? false,
+                        discordAlertCondition: settings.discordAlertCondition ?? "ALL",
+                        excludedLibraries: settings.excludedLibraries ?? [],
+                        monitorIntervalActive: settings.monitorIntervalActive ?? 1000,
+                        monitorIntervalIdle: settings.monitorIntervalIdle ?? 5000,
+                        syncCronHour: settings.syncCronHour ?? 3,
+                        syncCronMinute: settings.syncCronMinute ?? 0,
+                        backupCronHour: settings.backupCronHour ?? 3,
+                        backupCronMinute: settings.backupCronMinute ?? 30,
+                        defaultLocale: settings.defaultLocale ?? "fr",
+                        timeFormat: settings.timeFormat ?? "24h",
                     },
                     create: {
                         id: "global",
-                        discordWebhookUrl: settings.discordWebhookUrl,
-                        discordAlertsEnabled: settings.discordAlertsEnabled,
-                        discordAlertCondition: settings.discordAlertCondition,
-                        excludedLibraries: settings.excludedLibraries,
+                        discordWebhookUrl: settings.discordWebhookUrl ?? null,
+                        discordAlertsEnabled: settings.discordAlertsEnabled ?? false,
+                        discordAlertCondition: settings.discordAlertCondition ?? "ALL",
+                        excludedLibraries: settings.excludedLibraries ?? [],
+                        monitorIntervalActive: settings.monitorIntervalActive ?? 1000,
+                        monitorIntervalIdle: settings.monitorIntervalIdle ?? 5000,
+                        syncCronHour: settings.syncCronHour ?? 3,
+                        syncCronMinute: settings.syncCronMinute ?? 0,
+                        backupCronHour: settings.backupCronHour ?? 3,
+                        backupCronMinute: settings.backupCronMinute ?? 30,
+                        defaultLocale: settings.defaultLocale ?? "fr",
+                        timeFormat: settings.timeFormat ?? "24h",
                     }
                 });
             }
         }, { timeout: 120000 });
 
         console.log(`[Auto-Backup Restore] Successfully restored from ${sanitized}`);
-        return NextResponse.json({ success: true, message: `Restauration depuis ${sanitized} terminée avec succès.` });
+        return NextResponse.json({ success: true, message: await apiT('restoreSuccess', { fileName: sanitized }) });
 
     } catch (e: any) {
         console.error("[Auto-Backup Restore] Error:", e);
-        return NextResponse.json({ error: e.message || "Erreur lors de la restauration." }, { status: 500 });
+        return NextResponse.json({ error: e.message || await apiT('restoreError') }, { status: 500 });
     }
 }

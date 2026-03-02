@@ -1,5 +1,6 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { apiTSync } from "@/lib/i18n-api";
 
 // Routes API réservées strictement aux administrateurs (defense-in-depth, les routes ont aussi leurs propres checks)
 const ADMIN_API_PATHS = [
@@ -28,7 +29,8 @@ export default withAuth(
         // Non-admin → API admin bloquées (403)
         const isAdminApi = ADMIN_API_PATHS.some(p => pathname.startsWith(p));
         if (isAdminApi) {
-            return NextResponse.json({ error: "Accès réservé aux administrateurs." }, { status: 403 });
+            const locale = req.cookies.get('locale')?.value || 'fr';
+            return NextResponse.json({ error: apiTSync(locale, 'adminOnly') }, { status: 403 });
         }
 
         // Non-admin → Pages admin redirigées vers profil utilisateur

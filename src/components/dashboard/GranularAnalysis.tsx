@@ -4,9 +4,11 @@ import { unstable_cache } from "next/cache";
 import { format } from "date-fns";
 import { StandardAreaChart, StandardBarChart, StandardPieChart } from "@/components/charts/StandardMetricsCharts";
 import { StackedBarChart, StackedAreaChart } from "@/components/charts/StackedMetricsCharts";
+import { getTranslations, getLocale } from 'next-intl/server';
+import { formatHour } from "@/lib/utils";
 
 const getGranularData = unstable_cache(
-    async (type: string | undefined, timeRange: string, excludedLibraries: string[]) => {
+    async (type: string | undefined, timeRange: string, excludedLibraries: string[], locale: string) => {
         let currentStartDate = new Date();
         if (timeRange === "24h") currentStartDate.setDate(currentStartDate.getDate() - 1);
         else if (timeRange === "7d") currentStartDate.setDate(currentStartDate.getDate() - 7);
@@ -45,19 +47,19 @@ const getGranularData = unstable_cache(
 
         // Init 0-23 hours
         for (let i = 0; i < 24; i++) {
-            const h = i.toString().padStart(2, '0') + "h";
+            const h = formatHour(i, locale);
             hourlyMap.set(h, { time: h, plays: 0, duration: 0 });
         }
 
         history.forEach(h => {
             if (!h.media) return;
-            const lib = h.media.collectionType || h.media.type || "Inconnu";
+            const lib = h.media.collectionType || h.media.type || "?";
             if (excludedLibraries.includes(lib)) return;
 
             collections.add(lib);
             const date = new Date(h.startedAt);
             const dayKey = format(date, "dd MMM");
-            const hourKey = date.getHours().toString().padStart(2, '0') + "h";
+            const hourKey = formatHour(date.getHours(), locale);
             const durationH = h.durationWatched / 3600;
 
             // Daily Aggregation
@@ -75,9 +77,9 @@ const getGranularData = unstable_cache(
 
             // Completion Rate Aggregation
             if (h.media.durationMs) {
-                const durationTicks = Number(h.media.durationMs);
-                if (durationTicks > 0) {
-                    const durationSecs = durationTicks / 10000000;
+                const durationMs = Number(h.media.durationMs);
+                if (durationMs > 0) {
+                    const durationSecs = durationMs / 1000;
                     let comp = (h.durationWatched / durationSecs) * 100;
                     if (comp > 100) comp = 100;
 
@@ -113,7 +115,7 @@ const getGranularData = unstable_cache(
             }
 
             // For subtitles, we count "None" if null/undefined, otherwise the language
-            const sKey = h.subtitleLanguage ? h.subtitleLanguage.toUpperCase() : "Désactivés";
+            const sKey = h.subtitleLanguage ? h.subtitleLanguage.toUpperCase() : "OFF";
             subMap.set(sKey, (subMap.get(sKey) || 0) + 1);
         });
 
@@ -139,10 +141,10 @@ const getGranularData = unstable_cache(
 
         // Finalize Segment Data
         const dropSegments = [
-            { name: "< 10% (Zappé)", value: drop10, fill: "#ef4444" },
-            { name: "10-25% (Essayé)", value: drop25, fill: "#f97316" },
-            { name: "25-80% (Moitié)", value: drop50, fill: "#eab308" },
-            { name: "> 80% (Terminé)", value: drop90, fill: "#22c55e" },
+            { name: "skipped", value: drop10, fill: "#ef4444" },
+            { name: "tried", value: drop25, fill: "#f97316" },
+            { name: "half", value: drop50, fill: "#eab308" },
+            { name: "finished", value: drop90, fill: "#22c55e" },
         ];
 
         // Finalize Top 5 Abandonnés
@@ -174,25 +176,27 @@ const getGranularData = unstable_cache(
 );
 
 export async function GranularAnalysis({ type, timeRange, excludedLibraries }: { type?: string, timeRange: string, excludedLibraries: string[] }) {
-    const data = await getGranularData(type, timeRange, excludedLibraries);
+    const locale = await getLocale();
+    const data = await getGranularData(type, timeRange, excludedLibraries, locale);
+    const t = await getTranslations('granular');
 
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Lectures par Jour</CardTitle>
-                        <CardDescription>Volume brut des lancements.</CardDescription>
+                        <CardTitle>{t('playsPerDay')}</CardTitle>
+                        <CardDescription>{t('playsPerDayDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardBarChart data={data.dailyData} dataKey="totalPlays" fill="#3b82f6" name="Lectures" />
+                        <StandardBarChart data={data.dailyData} dataKey="totalPlays" fill="#3b82f6" name={t('playsPerDay')} />
                     </CardContent>
                 </Card>
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Lectures par Médiathèque</CardTitle>
-                        <CardDescription>Répartition par types ou dossiers d'origine.</CardDescription>
+                        <CardTitle>{t('playsByLibrary')}</CardTitle>
+                        <CardDescription>{t('playsByLibraryDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <StackedBarChart data={data.dailyData} keys={data.collections} suffix="_plays" />
@@ -203,18 +207,18 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
             <div className="grid gap-4 md:grid-cols-2">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Durée lue par Jour</CardTitle>
-                        <CardDescription>Volume horaire (en heures).</CardDescription>
+                        <CardTitle>{t('durationPerDay')}</CardTitle>
+                        <CardDescription>{t('durationPerDayDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardAreaChart data={data.dailyData} dataKey="totalDuration" stroke="#a855f7" name="Heures" />
+                        <StandardAreaChart data={data.dailyData} dataKey="totalDuration" stroke="#a855f7" name={t('durationPerDay')} />
                     </CardContent>
                 </Card>
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Durée par Médiathèque</CardTitle>
-                        <CardDescription>Répartition horaire par bibliothèques.</CardDescription>
+                        <CardTitle>{t('durationByLibrary')}</CardTitle>
+                        <CardDescription>{t('durationByLibraryDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <StackedAreaChart data={data.dailyData} keys={data.collections} suffix="_duration" />
@@ -225,21 +229,21 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
             <div className="grid gap-4 md:grid-cols-2">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Lectures (Moy. Horaire)</CardTitle>
-                        <CardDescription>Nombre de lancements selon l'heure de la journée.</CardDescription>
+                        <CardTitle>{t('playsHourlyAvg')}</CardTitle>
+                        <CardDescription>{t('playsHourlyAvgDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardBarChart data={data.hourlyData} dataKey="plays" fill="#eab308" name="Lectures" />
+                        <StandardBarChart data={data.hourlyData} dataKey="plays" fill="#eab308" name={t('playsHourlyAvg')} />
                     </CardContent>
                 </Card>
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Durées (Moy. Horaire)</CardTitle>
-                        <CardDescription>Temps visionné selon l'heure de la journée.</CardDescription>
+                        <CardTitle>{t('durationHourlyAvg')}</CardTitle>
+                        <CardDescription>{t('durationHourlyAvgDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardAreaChart data={data.hourlyData} dataKey="duration" stroke="#22c55e" name="Heures" />
+                        <StandardAreaChart data={data.hourlyData} dataKey="duration" stroke="#22c55e" name={t('durationHourlyAvg')} />
                     </CardContent>
                 </Card>
             </div>
@@ -247,18 +251,18 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm lg:col-span-1">
                     <CardHeader>
-                        <CardTitle>Segments d'Abandons</CardTitle>
-                        <CardDescription>Où les utilisateurs s'arrêtent-ils ?</CardDescription>
+                        <CardTitle>{t('abandonSegments')}</CardTitle>
+                        <CardDescription>{t('abandonSegmentsDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        <StandardBarChart data={data.dropSegments} dataKey="value" fill="#ec4899" name="Vues" horizontal />
+                        <StandardBarChart data={data.dropSegments.map((s: any) => ({ ...s, name: t(s.name) }))} dataKey="value" fill="#ec4899" name={t('abandonSegments')} horizontal />
                     </CardContent>
                 </Card>
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>Taux de Complétion Moyen par Bibliothèque</CardTitle>
-                        <CardDescription>Pourcentage moyen de visionnage des médias (100% = Terminés).</CardDescription>
+                        <CardTitle>{t('avgCompletionByLib')}</CardTitle>
+                        <CardDescription>{t('avgCompletionByLibDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <StandardBarChart data={data.dropOffData} dataKey="completion" fill="#8b5cf6" name="% Moyen" />
@@ -269,18 +273,18 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Pires Taux de Complétion</CardTitle>
-                        <CardDescription>Top 5 des médias abandonnés à répétition.</CardDescription>
+                        <CardTitle>{t('worstCompletion')}</CardTitle>
+                        <CardDescription>{t('worstCompletionDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        <StandardBarChart data={data.topAbandoned} dataKey="completion" fill="#ef4444" name="% Complétion" horizontal xAxisKey="title" />
+                        <StandardBarChart data={data.topAbandoned} dataKey="completion" fill="#ef4444" name={t('completionPct')} horizontal xAxisKey="title" />
                     </CardContent>
                 </Card>
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Répartition Audio</CardTitle>
-                        <CardDescription>Langues écoutées sur cette période.</CardDescription>
+                        <CardTitle>{t('audioBreakdown')}</CardTitle>
+                        <CardDescription>{t('audioBreakdownDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         <StandardPieChart data={data.audioData} nameKey="name" dataKey="value" />
@@ -289,8 +293,8 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Sous-titres</CardTitle>
-                        <CardDescription>Activés vs Désactivés et langues.</CardDescription>
+                        <CardTitle>{t('subtitles')}</CardTitle>
+                        <CardDescription>{t('subtitlesDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         <StandardPieChart data={data.subtitleData} nameKey="name" dataKey="value" />

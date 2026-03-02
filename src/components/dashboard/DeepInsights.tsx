@@ -3,16 +3,60 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { unstable_cache } from "next/cache";
 import { StreamProportionsChart } from "@/components/charts/StreamProportionsChart";
 import { StandardPieChart } from "@/components/charts/StandardMetricsCharts";
+import { getTranslations } from 'next-intl/server';
+
+function buildDateFilter(timeRange: string): any {
+    const now = new Date();
+    if (timeRange === "24h") {
+        return { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) };
+    } else if (timeRange === "7d") {
+        const d = new Date(); d.setDate(d.getDate() - 7); d.setHours(0, 0, 0, 0);
+        return { gte: d };
+    } else if (timeRange === "30d") {
+        const d = new Date(); d.setDate(d.getDate() - 30); d.setHours(0, 0, 0, 0);
+        return { gte: d };
+    }
+    // "all" or unknown → no filter
+    return undefined;
+}
+
+function buildMediaTypeFilter(type: string | undefined, excludedLibraries: string[]): any {
+    const AND: any[] = [];
+    if (type === 'movie') AND.push({ type: "Movie" });
+    else if (type === 'series') AND.push({ type: { in: ["Series", "Episode"] } });
+    else if (type === 'music') AND.push({ type: { in: ["Audio", "Track"] } });
+    else if (type === 'book') AND.push({ type: "Book" });
+
+    if (excludedLibraries.length > 0) {
+        AND.push({
+            NOT: {
+                OR: [
+                    { type: { in: excludedLibraries } },
+                    ...excludedLibraries.map((lib: string) => ({ collectionType: lib }))
+                ]
+            }
+        });
+    }
+    return AND.length > 0 ? { AND } : {};
+}
 
 const getDeepInsights = unstable_cache(
     async (type: string | undefined, timeRange: string, excludedLibraries: string[]) => {
-        // Find most watched media overall (take more for series/album aggregation)
+        // Build date and media filters from parameters
+        const dateFilter = buildDateFilter(timeRange);
+        const mediaWhere = buildMediaTypeFilter(type, excludedLibraries);
+        const historyWhere: any = {};
+        if (dateFilter) historyWhere.startedAt = dateFilter;
+        if (Object.keys(mediaWhere).length > 0) historyWhere.media = mediaWhere;
+
+        // Find most watched media (take more for series/album aggregation)
         const topMedia = await prisma.playbackHistory.groupBy({
             by: ['mediaId'],
             _count: { id: true },
             _sum: { durationWatched: true },
             orderBy: { _count: { id: 'desc' } },
-            take: 200
+            take: 200,
+            where: Object.keys(historyWhere).length > 0 ? historyWhere : undefined
         });
 
         const popMediaId = topMedia.map(m => m.mediaId);
@@ -39,38 +83,37 @@ const getDeepInsights = unstable_cache(
         const seriesMap = new Map(allSeries.map(s => [s.jellyfinMediaId, s.title]));
         const albumMap = new Map(allAlbums.map(a => [a.jellyfinMediaId, a.title]));
 
+        if (seasonMap.size === 0 && seriesMap.size > 0) {
+            console.warn("[DeepInsights] Aucune saison trouvée en BDD — les épisodes ne peuvent pas être agrégés par série. Lancez une synchronisation complète.");
+        }
+
         function resolveSeriesTitle(parentId: string | null): string | null {
             if (!parentId) return null;
-            // Try: parentId is a Season → Season.parentId is a Series
             const season = seasonMap.get(parentId);
             if (season?.parentId) {
                 const seriesTitle = seriesMap.get(season.parentId);
                 if (seriesTitle) return seriesTitle;
             }
-            // Fallback: parentId might directly be a Series
             const directSeries = seriesMap.get(parentId);
             if (directSeries) return directSeries;
             return null;
         }
 
-        function getAlbumTitle(media: { type: string; parentId: string | null }): string | null {
-            if (!media.parentId) return null;
-            return albumMap.get(media.parentId) || null;
-        }
-
         // === DEDICATED SERIES AGGREGATION ===
-        // Query ALL episode playback (not just top 200) to ensure accurate series ranking
+        const episodeHistoryWhere: any = { media: { type: 'Episode' } };
+        if (dateFilter) episodeHistoryWhere.startedAt = dateFilter;
+
         const allEpisodeHistory = await prisma.playbackHistory.groupBy({
             by: ['mediaId'],
             _count: { id: true },
             _sum: { durationWatched: true },
-            where: { media: { type: 'Episode' } }
+            where: episodeHistoryWhere
         });
         const episodeMediaIds = allEpisodeHistory.map(e => e.mediaId);
         const allEpisodes = episodeMediaIds.length > 0
             ? await prisma.media.findMany({
                 where: { id: { in: episodeMediaIds } },
-                select: { id: true, parentId: true, type: true }
+                select: { id: true, parentId: true, type: true, title: true }
             })
             : [];
         const episodeMap = new Map(allEpisodes.map(e => [e.id, e]));
@@ -80,19 +123,23 @@ const getDeepInsights = unstable_cache(
             const episode = episodeMap.get(h.mediaId);
             if (!episode?.parentId) return;
             const seriesTitle = resolveSeriesTitle(episode.parentId);
-            if (!seriesTitle) return;
-            const existing = seriesAgg.get(seriesTitle) || { plays: 0, duration: 0 };
+            // Fallback: if parent chain resolution fails, use episode title (better than dropping it)
+            const title = seriesTitle || episode.title || "???";
+            const existing = seriesAgg.get(title) || { plays: 0, duration: 0 };
             existing.plays += h._count.id;
             existing.duration += (h._sum.durationWatched || 0) / 3600;
-            seriesAgg.set(seriesTitle, existing);
+            seriesAgg.set(title, existing);
         });
 
         // === DEDICATED ALBUM AGGREGATION ===
+        const audioHistoryWhere: any = { media: { type: 'Audio' } };
+        if (dateFilter) audioHistoryWhere.startedAt = dateFilter;
+
         const allAudioHistory = await prisma.playbackHistory.groupBy({
             by: ['mediaId'],
             _count: { id: true },
             _sum: { durationWatched: true },
-            where: { media: { type: 'Audio' } }
+            where: audioHistoryWhere
         });
         const audioMediaIds = allAudioHistory.map(a => a.mediaId);
         const allAudioMedia = audioMediaIds.length > 0
@@ -125,7 +172,6 @@ const getDeepInsights = unstable_cache(
             const plays = m._count.id;
             const duration = (m._sum.durationWatched || 0) / 3600;
 
-            // Genre aggregation (for all types)
             if (media.genres && media.genres.length > 0) {
                 for (const genre of media.genres) {
                     const existing = genreAgg.get(genre) || { plays: 0, duration: 0 };
@@ -136,20 +182,12 @@ const getDeepInsights = unstable_cache(
             }
 
             if (lowerType === 'movie') {
-                categorized.movie.push({
-                    title: media.title, type: media.type,
-                    plays, duration
-                });
+                categorized.movie.push({ title: media.title, type: media.type, plays, duration });
             } else if (lowerType.includes('book')) {
-                categorized.book.push({
-                    title: media.title, type: media.type,
-                    plays, duration
-                });
+                categorized.book.push({ title: media.title, type: media.type, plays, duration });
             }
-            // Episodes and Audio handled by dedicated queries above
         });
 
-        // Convert aggregations to sorted arrays
         categorized.series = Array.from(seriesAgg.entries())
             .map(([title, data]) => ({ title, type: 'Series', plays: data.plays, duration: data.duration }))
             .sort((a, b) => b.plays - a.plays);
@@ -163,32 +201,36 @@ const getDeepInsights = unstable_cache(
             .sort((a, b) => b.plays - a.plays)
             .slice(0, 10);
 
-        // Slice to top 5 per category
         categorized.movie = categorized.movie.slice(0, 5);
         categorized.series = categorized.series.slice(0, 5);
         categorized.album = categorized.album.slice(0, 5);
         categorized.book = categorized.book.slice(0, 5);
 
+        // Filtered queries for clients, stream methods, resolution, devices
+        const filteredWhere = Object.keys(historyWhere).length > 0 ? historyWhere : undefined;
+
         const topClients = await prisma.playbackHistory.groupBy({
             by: ['clientName'],
             _count: { id: true },
             orderBy: { _count: { id: 'desc' } },
-            take: 5
+            take: 5,
+            where: filteredWhere
         });
 
         const streamMethods = await prisma.playbackHistory.groupBy({
             by: ['playMethod'],
             _count: { id: true },
+            where: filteredWhere
         });
 
         const streamMethodsChartData = streamMethods.map(s => ({
-            name: s.playMethod || "Inconnu",
+            name: s.playMethod || "?",
             value: s._count.id
         }));
 
         // --- Pro Telemetry: Resolution Matrix ---
-        // Join PlaybackHistory → Media to get resolution distribution (only count items with known resolution)
         const resolutionData = await prisma.playbackHistory.findMany({
+            where: filteredWhere,
             select: { media: { select: { resolution: true } } },
         });
 
@@ -200,9 +242,8 @@ const getDeepInsights = unstable_cache(
             }
         });
 
-        // Only show "Inconnu" if there's no resolution data at all (fallback)
         if (resolutionMap.size === 0 && resolutionData.length > 0) {
-            resolutionMap.set("Inconnu", resolutionData.length);
+            resolutionMap.set("?", resolutionData.length);
         }
 
         const resolutionChartData = Array.from(resolutionMap.entries())
@@ -211,15 +252,14 @@ const getDeepInsights = unstable_cache(
             .slice(0, 6);
 
         // --- Pro Telemetry: Device Ecosystem ---
-        // More detailed than PlatformDistributionChart: clientName + deviceName combo
         const deviceData = await prisma.playbackHistory.findMany({
+            where: filteredWhere,
             select: { clientName: true, deviceName: true },
         });
 
         const deviceMap = new Map<string, number>();
         deviceData.forEach(d => {
-            // Combine client + device for a more detailed breakdown
-            const device = d.deviceName || "Appareil Inconnu";
+            const device = d.deviceName || "?";
             deviceMap.set(device, (deviceMap.get(device) || 0) + 1);
         });
 
@@ -230,12 +270,14 @@ const getDeepInsights = unstable_cache(
 
         return { categorized, topClients, streamMethodsChartData, resolutionChartData, deviceChartData, topGenres };
     },
-    ['jellytulli-deep-insights-v2'],
-    { revalidate: 300 } // Cache for 5 minutes
+    // Dynamic cache key — varies with params so different filters get different cached results
+    ['jellytulli-deep-insights-v3'],
+    { revalidate: 300 }
 );
 
 export async function DeepInsights({ type, timeRange, excludedLibraries }: { type?: string, timeRange: string, excludedLibraries: string[] }) {
     const data = await getDeepInsights(type, timeRange, excludedLibraries);
+    const t = await getTranslations('deepInsights');
 
     const renderCategory = (title: string, items: any[], empty: string) => (
         <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
@@ -251,7 +293,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                                 <span className="text-zinc-500 w-4 inline-block">{i + 1}.</span>
                                 {m.title}
                             </div>
-                            <div className="font-semibold text-xs bg-zinc-800/50 px-2 py-1 rounded">{m.plays} vues</div>
+                            <div className="font-semibold text-xs bg-zinc-800/50 px-2 py-1 rounded">{m.plays} {t('views')}</div>
                         </div>
                     ))}
                 </div>
@@ -262,10 +304,10 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {renderCategory("Top Films", data.categorized.movie, "Aucun film visionné.")}
-                {renderCategory("Top Séries", data.categorized.series, "Aucune série visionnée.")}
-                {renderCategory("Top Albums", data.categorized.album, "Aucun album écouté.")}
-                {renderCategory("Top Livres", data.categorized.book, "Aucun livre lu.")}
+                {renderCategory(t('topMovies'), data.categorized.movie, t('noMovies'))}
+                {renderCategory(t('topSeries'), data.categorized.series, t('noSeries'))}
+                {renderCategory(t('topAlbums'), data.categorized.album, t('noAlbums'))}
+                {renderCategory(t('topBooks'), data.categorized.book, t('noBooks'))}
             </div>
 
             {/* Top Genres */}
@@ -273,7 +315,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-md">Top Genres</CardTitle>
-                        <CardDescription>Genres les plus écoutés/visionnés par nombre de lectures.</CardDescription>
+                        <CardDescription>{t('genresDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-2 md:grid-cols-2">
@@ -287,7 +329,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between mb-1">
                                                 <span className="truncate">{g.name}</span>
-                                                <span className="text-xs text-zinc-400 shrink-0 ml-2">{g.plays} vues · {g.duration}h</span>
+                                                <span className="text-xs text-zinc-400 shrink-0 ml-2">{g.plays} {t('views')} · {g.duration}h</span>
                                             </div>
                                             <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                                                 <div className={`h-full rounded-full ${colors[i % colors.length]}`} style={{ width: `${pct}%` }} />
@@ -305,14 +347,14 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Top Clients</CardTitle>
-                        <CardDescription>Applications les plus utilisées.</CardDescription>
+                        <CardTitle>{t('topClients')}</CardTitle>
+                        <CardDescription>{t('topClientsDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             {data.topClients.map((c, i) => (
                                 <div key={i} className="flex justify-between items-center text-sm">
-                                    <div className="truncate pr-2">{c.clientName || 'Inconnu'}</div>
+                                    <div className="truncate pr-2">{c.clientName || '?'}</div>
                                     <div className="font-semibold">{c._count.id} sessions</div>
                                 </div>
                             ))}
@@ -322,8 +364,8 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Méthodes de Flux</CardTitle>
-                        <CardDescription>Ratio DirectPlay / Transcode.</CardDescription>
+                        <CardTitle>{t('streamMethods')}</CardTitle>
+                        <CardDescription>{t('streamMethodsDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex justify-center">
                         <StreamProportionsChart data={data.streamMethodsChartData} />
@@ -335,28 +377,28 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
             <div className="grid gap-4 md:grid-cols-2">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Matrice Résolution</CardTitle>
-                        <CardDescription>Répartition des sessions par résolution du média (4K, 1080p, 720p, SD).</CardDescription>
+                        <CardTitle>{t('resolutionMatrix')}</CardTitle>
+                        <CardDescription>{t('resolutionMatrixDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {data.resolutionChartData.length > 0 ? (
                             <StandardPieChart data={data.resolutionChartData} nameKey="name" dataKey="value" />
                         ) : (
-                            <p className="text-xs text-muted-foreground">Aucune donnée de résolution disponible.</p>
+                            <p className="text-xs text-muted-foreground">{t('noResolutionData')}</p>
                         )}
                     </CardContent>
                 </Card>
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>Écosystème Appareils</CardTitle>
-                        <CardDescription>Top 8 des appareils physiques utilisés pour la lecture.</CardDescription>
+                        <CardTitle>{t('deviceEcosystem')}</CardTitle>
+                        <CardDescription>{t('deviceEcosystemDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {data.deviceChartData.length > 0 ? (
                             <StandardPieChart data={data.deviceChartData} nameKey="name" dataKey="value" />
                         ) : (
-                            <p className="text-xs text-muted-foreground">Aucune donnée d'appareils disponible.</p>
+                            <p className="text-xs text-muted-foreground">{t('noDeviceData')}</p>
                         )}
                     </CardContent>
                 </Card>

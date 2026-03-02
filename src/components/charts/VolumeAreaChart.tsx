@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
 export type VolumeHourData = {
@@ -11,6 +12,8 @@ export type VolumeHourData = {
 };
 
 export function VolumeAreaChart({ data }: { data: VolumeHourData[] }) {
+    const t = useTranslations('charts');
+
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
             <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -55,10 +58,10 @@ export function VolumeAreaChart({ data }: { data: VolumeHourData[] }) {
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
 
-                <Area type="monotone" dataKey="Other" stackId="1" stroke="#a855f7" fill="url(#colorOther)" name="Autre/Livres" />
-                <Area type="monotone" dataKey="Music" stackId="1" stroke="#eab308" fill="url(#colorMusic)" name="Musique" />
-                <Area type="monotone" dataKey="Series" stackId="1" stroke="#10b981" fill="url(#colorSeries)" name="Séries" />
-                <Area type="monotone" dataKey="Movies" stackId="1" stroke="#3b82f6" fill="url(#colorMovies)" name="Films" />
+                <Area type="monotone" dataKey="Other" stackId="1" stroke="#a855f7" fill="url(#colorOther)" name={t('otherBooks')} />
+                <Area type="monotone" dataKey="Music" stackId="1" stroke="#eab308" fill="url(#colorMusic)" name={t('music')} />
+                <Area type="monotone" dataKey="Series" stackId="1" stroke="#10b981" fill="url(#colorSeries)" name={t('series')} />
+                <Area type="monotone" dataKey="Movies" stackId="1" stroke="#3b82f6" fill="url(#colorMovies)" name={t('movies')} />
             </AreaChart>
         </ResponsiveContainer>
     );

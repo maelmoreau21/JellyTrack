@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 
 export type ActivityData = {
@@ -8,6 +9,8 @@ export type ActivityData = {
 };
 
 export function UserActivityChart({ data }: { data: ActivityData[] }) {
+    const t = useTranslations('charts');
+
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
             <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -33,7 +36,7 @@ export function UserActivityChart({ data }: { data: ActivityData[] }) {
                     itemStyle={{ color: '#e4e4e7' }}
                     cursor={{ fill: '#27272a', opacity: 0.4 }}
                 />
-                <Bar dataKey="hours" fill="#0ea5e9" radius={[4, 4, 0, 0]} name="Heures" />
+                <Bar dataKey="hours" fill="#0ea5e9" radius={[4, 4, 0, 0]} name={t('hours')} />
             </BarChart>
         </ResponsiveContainer>
     );

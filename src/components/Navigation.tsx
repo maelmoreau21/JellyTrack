@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from 'next-intl';
 
 export function Navigation() {
     const pathname = usePathname();
+    const t = useTranslations('nav');
 
     const isActive = (path: string) => {
         if (path === "/" && pathname !== "/") return false;
@@ -23,13 +25,13 @@ export function Navigation() {
                 href="/media"
                 className={`text-sm font-medium transition-colors ${isActive('/media') ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
             >
-                Médias
+                {t('library')}
             </Link>
             <Link
                 href="/logs"
                 className={`text-sm font-medium transition-colors ${isActive('/logs') ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
             >
-                Logs
+                {t('logs')}
             </Link>
             <Link
                 href="/newsletter"
@@ -41,7 +43,7 @@ export function Navigation() {
                 href="/settings"
                 className={`text-sm font-medium transition-colors ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
             >
-                Paramètres
+                {t('settings')}
             </Link>
         </nav>
     );

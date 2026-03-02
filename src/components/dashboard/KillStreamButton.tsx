@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { OctagonX, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function KillStreamButton({ sessionId, mediaTitle }: { sessionId: string; mediaTitle: string }) {
+    const t = useTranslations('killStream');
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
     const handleKillStream = async () => {
-        if (!confirm(`Voulez-vous vraiment forcer l'arrêt de la lecture de "${mediaTitle}" ?`)) {
+        if (!confirm(t('confirm', { title: mediaTitle }))) {
             return;
         }
 
@@ -35,7 +37,7 @@ export function KillStreamButton({ sessionId, mediaTitle }: { sessionId: string;
     };
 
     if (status === "success") {
-        return <span className="text-[10px] text-red-500 font-bold px-2 py-1 bg-red-500/10 rounded">Arrêté</span>;
+        return <span className="text-[10px] text-red-500 font-bold px-2 py-1 bg-red-500/10 rounded">{t('stopped')}</span>;
     }
 
     return (
@@ -43,7 +45,7 @@ export function KillStreamButton({ sessionId, mediaTitle }: { sessionId: string;
             onClick={handleKillStream}
             disabled={isLoading}
             className="flex items-center justify-center p-1.5 ml-2 hover:bg-red-500/20 text-red-500 rounded-md transition-colors opacity-70 hover:opacity-100 disabled:opacity-50"
-            title="Couper à distance"
+            title={t('tooltip')}
         >
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <OctagonX className="w-4 h-4" />}
         </button>

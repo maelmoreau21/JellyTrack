@@ -3,12 +3,14 @@
 import { useState, useEffect, ReactNode } from "react";
 import { ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 interface DraggableDashboardProps {
     blocks: ReactNode[];
 }
 
 export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
+    const t = useTranslations('draggable');
     const [order, setOrder] = useState<number[]>([]);
     const [isEditMode, setIsEditMode] = useState(false);
 
@@ -59,7 +61,7 @@ export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
                     className="gap-2 shadow-sm"
                 >
                     <GripVertical className="w-4 h-4" />
-                    {isEditMode ? "Terminer l'édition" : "Modifier l'ordre"}
+                    {isEditMode ? t('finishEdit') : t('editOrder')}
                 </Button>
             </div>
 

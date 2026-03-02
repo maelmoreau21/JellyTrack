@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import {
     PieChart,
     Pie,
@@ -21,10 +22,12 @@ interface PlatformDistributionChartProps {
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#10b981', '#0ea5e9'];
 
 export function PlatformDistributionChart({ data }: PlatformDistributionChartProps) {
+    const t = useTranslations('charts');
+
     if (!data || data.length === 0) {
         return (
             <div className="flex h-[300px] w-full items-center justify-center text-sm text-muted-foreground">
-                Aucune donnée plateforme
+                {t('noPlatformData')}
             </div>
         );
     }

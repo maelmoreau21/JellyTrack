@@ -15,13 +15,17 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
     if (!baseUrl || !apiKey) {
         console.error("[Sync Error] JELLYFIN_URL ou JELLYFIN_API_KEY manquants dans les variables d'environnement.");
-        return { success: false, error: "Serveur non configuré (JELLYFIN_URL/JELLYFIN_API_KEY env vars manquants)." };
+        return { success: false, error: "Server not configured (JELLYFIN_URL/JELLYFIN_API_KEY env vars missing)." };
     }
+
+    const jellyfinHeaders = {
+        "X-Emby-Token": apiKey,
+    };
 
     try {
         // 1. Synchronisation des Utilisateurs
         console.log("[Sync] Fetching Users...");
-        const usersRes = await fetch(`${baseUrl}/Users?api_key=${apiKey}`);
+        const usersRes = await fetch(`${baseUrl}/Users`, { headers: jellyfinHeaders });
         if (!usersRes.ok) throw new Error("Erreur de récupération des utilisateurs");
         const users = await usersRes.json();
 
@@ -39,7 +43,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
         // 2. Fetch library views to map CollectionType per library
         console.log("[Sync] Fetching Library Views...");
-        const viewsRes = await fetch(`${baseUrl}/Library/VirtualFolders?api_key=${apiKey}`);
+        const viewsRes = await fetch(`${baseUrl}/Library/VirtualFolders`, { headers: jellyfinHeaders });
         const libraryCollectionMap = new Map<string, string>();
         if (viewsRes.ok) {
             const views = await viewsRes.json();
@@ -51,7 +55,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         }
 
         // Also fetch user views for parent mapping
-        const userViewsRes = await fetch(`${baseUrl}/UserViews?api_key=${apiKey}`);
+        const userViewsRes = await fetch(`${baseUrl}/UserViews`, { headers: jellyfinHeaders });
         const parentCollectionMap = new Map<string, string>();
         if (userViewsRes.ok) {
             const userViews = await userViewsRes.json();
@@ -63,14 +67,14 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         }
 
         // 3. Sync Media (Movies, Series, Episodes, Audio, MusicAlbum) with Genres and MediaSources
-        let itemsUrl = `${baseUrl}/Items?api_key=${apiKey}&IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId`;
+        let itemsUrl = `${baseUrl}/Items?IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId`;
         if (options?.recentOnly) {
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
             itemsUrl += `&MinDateCreated=${sevenDaysAgo.toISOString()}&SortBy=DateCreated&SortOrder=Descending`;
         }
         console.log(`[Sync] Fetching Media Items${options?.recentOnly ? ' (recent only)' : ''}...`);
-        const itemsRes = await fetch(itemsUrl);
+        const itemsRes = await fetch(itemsUrl, { headers: jellyfinHeaders });
         if (!itemsRes.ok) throw new Error("Erreur de récupération des médias");
         const itemsData = await itemsRes.json();
         const items = itemsData.Items || [];

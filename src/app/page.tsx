@@ -13,9 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
+import { getTranslations } from 'next-intl/server';
 
 // Charts
 import { ActivityByHourChart, ActivityHourData } from "@/components/charts/ActivityByHourChart";
+import { DayOfWeekChart, DayOfWeekData } from "@/components/charts/DayOfWeekChart";
 import { PlatformDistributionChart, PlatformData } from "@/components/charts/PlatformDistributionChart";
 import { TimeRangeSelector } from "@/components/TimeRangeSelector";
 import { ComposedTrendChart } from "@/components/charts/ComposedTrendChart";
@@ -237,10 +239,10 @@ const getDashboardMetrics = unstable_cache(
     });
 
     const categoryPieData = [
-      { name: 'Films', value: parseFloat(movieHours.toFixed(2)) },
-      { name: 'Séries', value: parseFloat(seriesHours.toFixed(2)) },
-      { name: 'Musique', value: parseFloat(musicHours.toFixed(2)) },
-      { name: 'Livres', value: parseFloat(booksHours.toFixed(2)) },
+      { name: 'movies', value: parseFloat(movieHours.toFixed(2)) },
+      { name: 'series', value: parseFloat(seriesHours.toFixed(2)) },
+      { name: 'music', value: parseFloat(musicHours.toFixed(2)) },
+      { name: 'books', value: parseFloat(booksHours.toFixed(2)) },
     ].filter(item => item.value > 0);
 
     const trendData = Array.from(trendMap.values()).map(v => ({
@@ -270,7 +272,7 @@ const getDashboardMetrics = unstable_cache(
     const topUsers = await Promise.all(topUsersAgg.map(async (agg: any) => {
       const u = await prisma.user.findUnique({ where: { id: agg.userId } });
       return {
-        username: u?.username || "Utilisateur Supprimé",
+        username: u?.username || "?",
         jellyfinUserId: u?.jellyfinUserId || "",
         hours: parseFloat(((agg._sum.durationWatched || 0) / 3600).toFixed(1))
       };
@@ -286,10 +288,19 @@ const getDashboardMetrics = unstable_cache(
       hour: `${index.toString().padStart(2, '0')}:00`, count
     }));
 
+    // Day of week
+    const dayCounts = new Array(7).fill(0);
+    histories.forEach((h: any) => {
+      dayCounts[h.startedAt.getDay()]++;
+    });
+    const dayOfWeekChartData: DayOfWeekData[] = dayCounts.map((count, index) => ({
+      day: String(index), count
+    }));
+
     // Clients Platform Distro
     const platformCounts = new Map<string, number>();
     histories.forEach((h: any) => {
-      const pName = h.clientName || "Inconnu";
+      const pName = h.clientName || "?";
       platformCounts.set(pName, (platformCounts.get(pName) || 0) + 1);
     });
     const platformChartData: PlatformData[] = Array.from(platformCounts.entries())
@@ -335,17 +346,17 @@ const getDashboardMetrics = unstable_cache(
     }));
 
     // Monthly watch time (last 12 months)
-    const MONTH_NAMES = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+    const MONTH_IDX = ["0","1","2","3","4","5","6","7","8","9","10","11"];
     const monthlyMap = new Map<string, number>();
     const nowMonth = new Date();
     for (let i = 11; i >= 0; i--) {
       const d = new Date(nowMonth.getFullYear(), nowMonth.getMonth() - i, 1);
-      const key = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear().toString().slice(-2)}`;
+      const key = `${d.getMonth()}_${d.getFullYear().toString().slice(-2)}`;
       monthlyMap.set(key, 0);
     }
     histories.forEach((h: any) => {
       const d = new Date(h.startedAt);
-      const key = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear().toString().slice(-2)}`;
+      const key = `${d.getMonth()}_${d.getFullYear().toString().slice(-2)}`;
       if (monthlyMap.has(key)) {
         monthlyMap.set(key, (monthlyMap.get(key) || 0) + h.durationWatched / 3600);
       }
@@ -387,9 +398,9 @@ const getDashboardMetrics = unstable_cache(
       else abandoned++;
     });
     const completionData: CompletionData[] = [
-      { name: "Terminé", value: completed },
-      { name: "Partiel", value: partial },
-      { name: "Abandonné", value: abandoned },
+      { name: "completed", value: completed },
+      { name: "partial", value: partial },
+      { name: "abandoned", value: abandoned },
     ].filter(d => d.value > 0);
 
     // Client categories
@@ -438,6 +449,7 @@ const getDashboardMetrics = unstable_cache(
       trendData,
       categoryPieData,
       hourlyChartData,
+      dayOfWeekChartData,
       platformChartData,
       serverLoadData,
       topUsers,
@@ -508,6 +520,38 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
   const metrics = await getDashboardMetrics(type, timeRange, excludedLibraries, from, to);
 
+  const t = await getTranslations('dashboard');
+  const tc = await getTranslations('common');
+
+  // Post-process cached data with translations
+  const DAY_NAMES = t('dayNames').split(',');
+  const MONTH_NAMES = t('monthNames').split(',');
+  
+  // Translate day of week labels
+  metrics.dayOfWeekChartData = metrics.dayOfWeekChartData.map((d: any) => ({
+    ...d,
+    day: DAY_NAMES[parseInt(d.day)] || d.day,
+  }));
+  
+  // Translate monthly watch data labels  
+  metrics.monthlyWatchData = metrics.monthlyWatchData.map((d: any) => {
+    const parts = d.month.split('_');
+    const monthIdx = parseInt(parts[0]);
+    const yearSuffix = parts[1];
+    return { ...d, month: `${MONTH_NAMES[monthIdx]} ${yearSuffix}` };
+  });
+  
+  // Translate completion data labels  
+  const completionLabels: Record<string, string> = {
+    completed: t('completed'),
+    partial: t('partial'),
+    abandoned: t('abandoned'),
+  };
+  metrics.completionData = metrics.completionData.map((d: any) => ({
+    ...d,
+    name: completionLabels[d.name] || d.name,
+  }));
+
   // Redis Live Streams
   const keys = await redis.keys("stream:*");
   const activeStreamsCount = keys.length;
@@ -567,17 +611,17 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
             <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
             <Tabs defaultValue={type || "all"} className="w-[380px]">
               <TabsList className="bg-zinc-900 border border-zinc-800">
-                <TabsTrigger value="all" asChild><Link href={`/?timeRange=${timeRange}`}>Tous</Link></TabsTrigger>
-                <TabsTrigger value="movie" asChild><Link href={`/?type=movie&timeRange=${timeRange}`}>Films</Link></TabsTrigger>
-                <TabsTrigger value="series" asChild><Link href={`/?type=series&timeRange=${timeRange}`}>Séries</Link></TabsTrigger>
-                <TabsTrigger value="music" asChild><Link href={`/?type=music&timeRange=${timeRange}`}>Musique</Link></TabsTrigger>
-                <TabsTrigger value="book" asChild><Link href={`/?type=book&timeRange=${timeRange}`}>Livres</Link></TabsTrigger>
+                <TabsTrigger value="all" asChild><Link href={`/?timeRange=${timeRange}`}>{tc('all')}</Link></TabsTrigger>
+                <TabsTrigger value="movie" asChild><Link href={`/?type=movie&timeRange=${timeRange}`}>{tc('movies')}</Link></TabsTrigger>
+                <TabsTrigger value="series" asChild><Link href={`/?type=series&timeRange=${timeRange}`}>{tc('series')}</Link></TabsTrigger>
+                <TabsTrigger value="music" asChild><Link href={`/?type=music&timeRange=${timeRange}`}>{tc('music')}</Link></TabsTrigger>
+                <TabsTrigger value="book" asChild><Link href={`/?type=book&timeRange=${timeRange}`}>{tc('books')}</Link></TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-xs text-zinc-400 bg-zinc-900/80 px-2 py-1.5 rounded-md border border-zinc-800 hidden sm:block">
-              Données Database en cache (60s)
+              {t('cachedData')}
             </span>
             <TimeRangeSelector />
           </div>
@@ -588,31 +632,31 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
         {/* Today Stats Banner */}
         <div className="flex items-center gap-3 px-4 py-3 bg-zinc-900/60 border border-zinc-800/50 rounded-xl backdrop-blur-sm">
           <CalendarDays className="h-5 w-5 text-primary shrink-0" />
-          <span className="text-sm font-medium text-zinc-300">Aujourd&apos;hui</span>
+          <span className="text-sm font-medium text-zinc-300">{t('today')}</span>
           <div className="flex items-center gap-6 ml-2">
             <div className="flex items-center gap-1.5">
               <PlayCircle className="h-3.5 w-3.5 text-blue-400" />
               <span className="text-sm font-semibold text-white">{metrics.todayPlays}</span>
-              <span className="text-xs text-zinc-500">lectures</span>
+              <span className="text-xs text-zinc-500">{t('readings')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 text-orange-400" />
               <span className="text-sm font-semibold text-white">{metrics.todayHours}h</span>
-              <span className="text-xs text-zinc-500">visionnées</span>
+              <span className="text-xs text-zinc-500">{t('watched')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 text-emerald-400" />
               <span className="text-sm font-semibold text-white">{metrics.todayActiveUsers}</span>
-              <span className="text-xs text-zinc-500">utilisateur{metrics.todayActiveUsers !== 1 ? 's' : ''} actif{metrics.todayActiveUsers !== 1 ? 's' : ''}</span>
+              <span className="text-xs text-zinc-500">{t('activeUsers')}</span>
             </div>
           </div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-zinc-900 border border-zinc-800">
-            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="analytics">Analyses Détaillées</TabsTrigger>
-            <TabsTrigger value="network">Réseau</TabsTrigger>
+            <TabsTrigger value="overview">{t('overviewTab')}</TabsTrigger>
+            <TabsTrigger value="analytics">{t('detailedTab')}</TabsTrigger>
+            <TabsTrigger value="network">{t('networkTab')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -621,20 +665,20 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
               <div key="metrics" className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Streams Actifs</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('activeStreams')}</CardTitle>
                     <Activity className="h-4 w-4 text-emerald-500" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{activeStreamsCount}</div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                      Actuellement gérés par le serveur
+                      {t('managedByServer')}
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Lectures</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('totalPlays')}</CardTitle>
                     <PlayCircle className="h-4 w-4 text-cyan-500" />
                   </CardHeader>
                   <CardContent>
@@ -648,26 +692,26 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {timeRange !== "all" && metrics.previousPlays > 0 ? `vs ${metrics.previousPlays} période préc.` : "Sur la période sélectionnée"}
+                      {timeRange !== "all" && metrics.previousPlays > 0 ? t('vsPrevPeriod', { count: metrics.previousPlays }) : t('onSelectedPeriod')}
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">DirectPlay</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('directPlay')}</CardTitle>
                     <MonitorPlay className="h-4 w-4 text-purple-500" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{metrics.directPlayPercent}%<span className="text-xs font-normal text-zinc-400 ml-1">DP</span></div>
-                    <p className="text-xs text-muted-foreground mt-1">Lecture sans transcodage (Période)</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t('directPlayDesc')}</p>
                   </CardContent>
                 </Card>
 
                 <Link href="/logs" className="block group">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm transition-colors group-hover:border-orange-500/40 cursor-pointer">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Temps Global</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('globalTime')}</CardTitle>
                     <Clock className="h-4 w-4 text-orange-500" />
                   </CardHeader>
                   <CardContent>
@@ -681,7 +725,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 text-ellipsis overflow-hidden whitespace-nowrap">
-                      {timeRange !== "all" ? `Cumulé par rapport à la période précédente (${metrics.previousHoursWatched}h)` : `Cumulé dans toute l'histoire pour ${metrics.totalUsers} Utilisateurs`}
+                      {timeRange !== "all" ? t('cumulVsPrev', { count: metrics.previousHoursWatched }) : t('cumulAllTime', { count: metrics.totalUsers })}
                     </p>
                   </CardContent>
                 </Card>
@@ -689,7 +733,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Utilisateurs Actifs</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('activeUsersTitle')}</CardTitle>
                     <Users className="h-4 w-4 text-red-500" />
                   </CardHeader>
                   <CardContent>
@@ -703,7 +747,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {timeRange !== "all" && metrics.previousActiveUsers > 0 ? `vs ${metrics.previousActiveUsers} période préc.` : `Sur ${metrics.totalUsers} inscrits`}
+                      {timeRange !== "all" && metrics.previousActiveUsers > 0 ? t('vsUsersOnPeriod', { count: metrics.previousActiveUsers }) : t('onTotalRegistered', { count: metrics.totalUsers })}
                     </p>
                   </CardContent>
                 </Card>
@@ -714,12 +758,12 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                 <Link href="/logs?type=Movie" className="block group">
                   <Card className="bg-zinc-900/30 border-zinc-800/40 transition-colors group-hover:border-blue-500/40 group-hover:bg-zinc-900/50 cursor-pointer">
                     <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-                      <CardTitle className="text-sm font-medium text-zinc-400">Films</CardTitle>
+                      <CardTitle className="text-sm font-medium text-zinc-400">{t('moviesCard')}</CardTitle>
                       <Film className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-2xl font-bold text-white">{metrics.breakdown.movieViews} <span className="text-sm font-normal text-zinc-500">vues</span></div>
-                      <p className="text-xs text-blue-500 font-medium">{metrics.breakdown.movieHours}h visionnées</p>
+                      <div className="text-2xl font-bold text-white">{metrics.breakdown.movieViews} <span className="text-sm font-normal text-zinc-500">{t('moviesViews')}</span></div>
+                      <p className="text-xs text-blue-500 font-medium">{metrics.breakdown.movieHours}h {t('moviesWatched')}</p>
                     </CardContent>
                   </Card>
                 </Link>
@@ -727,12 +771,12 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                 <Link href="/logs?type=Episode" className="block group">
                   <Card className="bg-zinc-900/30 border-zinc-800/40 transition-colors group-hover:border-green-500/40 group-hover:bg-zinc-900/50 cursor-pointer">
                     <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-                      <CardTitle className="text-sm font-medium text-zinc-400">Séries & Episodes</CardTitle>
+                      <CardTitle className="text-sm font-medium text-zinc-400">{t('seriesCard')}</CardTitle>
                       <Tv className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-2xl font-bold text-white">{metrics.breakdown.seriesViews} <span className="text-sm font-normal text-zinc-500">lectures</span></div>
-                      <p className="text-xs text-green-500 font-medium">{metrics.breakdown.seriesHours}h englouties</p>
+                      <div className="text-2xl font-bold text-white">{metrics.breakdown.seriesViews} <span className="text-sm font-normal text-zinc-500">{t('seriesPlays')}</span></div>
+                      <p className="text-xs text-green-500 font-medium">{metrics.breakdown.seriesHours}h {t('seriesWatched')}</p>
                     </CardContent>
                   </Card>
                 </Link>
@@ -740,12 +784,12 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                 <Link href="/logs?type=Audio" className="block group">
                   <Card className="bg-zinc-900/30 border-zinc-800/40 transition-colors group-hover:border-yellow-500/40 group-hover:bg-zinc-900/50 cursor-pointer">
                     <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-                      <CardTitle className="text-sm font-medium text-zinc-400">Musique</CardTitle>
+                      <CardTitle className="text-sm font-medium text-zinc-400">{t('musicCard')}</CardTitle>
                       <Music className="h-4 w-4 text-yellow-500" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-2xl font-bold text-white">{metrics.breakdown.musicViews} <span className="text-sm font-normal text-zinc-500">titres</span></div>
-                      <p className="text-xs text-yellow-500 font-medium">{metrics.breakdown.musicHours}h écoutées</p>
+                      <div className="text-2xl font-bold text-white">{metrics.breakdown.musicViews} <span className="text-sm font-normal text-zinc-500">{t('musicTitles')}</span></div>
+                      <p className="text-xs text-yellow-500 font-medium">{metrics.breakdown.musicHours}h {t('musicListened')}</p>
                     </CardContent>
                   </Card>
                 </Link>
@@ -753,12 +797,12 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                 <Link href="/logs?type=AudioBook" className="block group">
                   <Card className="bg-zinc-900/30 border-zinc-800/40 transition-colors group-hover:border-purple-500/40 group-hover:bg-zinc-900/50 cursor-pointer">
                     <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-                      <CardTitle className="text-sm font-medium text-zinc-400">Livres & Audios</CardTitle>
+                      <CardTitle className="text-sm font-medium text-zinc-400">{t('booksCard')}</CardTitle>
                       <BookOpen className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-2xl font-bold text-white">{metrics.breakdown.booksViews} <span className="text-sm font-normal text-zinc-500">ouvertures</span></div>
-                      <p className="text-xs text-purple-500 font-medium">{metrics.breakdown.booksHours}h passées</p>
+                      <div className="text-2xl font-bold text-white">{metrics.breakdown.booksViews} <span className="text-sm font-normal text-zinc-500">{t('booksOpened')}</span></div>
+                      <p className="text-xs text-purple-500 font-medium">{metrics.breakdown.booksHours}h {t('booksSpent')}</p>
                     </CardContent>
                   </Card>
                 </Link>
@@ -768,8 +812,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
               <div key="volumes" className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <Card className="col-span-1 lg:col-span-5 bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader className="pb-1">
-                    <CardTitle>Volumes et Vues Historiques</CardTitle>
-                    <CardDescription>Croisement temporel des Vues & Heures de visionnages par Bibliothèque.</CardDescription>
+                    <CardTitle>{t('volumeHistory')}</CardTitle>
+                    <CardDescription>{t('volumeHistoryDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pl-0 pb-4 pr-1">
                     <div className="h-[300px] min-h-[300px] w-full">
@@ -780,16 +824,16 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
                 <Card className="col-span-1 lg:col-span-2 bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle>Répartition Catégorique</CardTitle>
-                    <CardDescription>Part du volume global de lecture (Heures).</CardDescription>
+                    <CardTitle>{t('categoryBreakdown')}</CardTitle>
+                    <CardDescription>{t('categoryBreakdownDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pl-0 pb-4">
                     <div className="h-[300px] min-h-[300px] w-full">
                       {metrics.categoryPieData.length > 0 ? (
-                        <CategoryPieChart data={metrics.categoryPieData} />
+                        <CategoryPieChart data={metrics.categoryPieData.map((d: any) => ({ ...d, name: tc(d.name) }))} />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">
-                          Aucune donnée pour générer le graphique
+                          {t('noCategoryData')}
                         </div>
                       )}
                     </div>
@@ -800,8 +844,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
               /* Daily Plays by Library */
               <Card key="libraryPlays" className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader className="pb-1">
-                  <CardTitle>Lectures par Bibliothèque</CardTitle>
-                  <CardDescription>Nombre de lectures quotidiennes par type de bibliothèque. Cliquez sur la légende pour masquer/afficher une courbe.</CardDescription>
+                  <CardTitle>{t('libraryPlays')}</CardTitle>
+                  <CardDescription>{t('libraryPlaysDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-0 pb-4 pr-1">
                   <div className="h-[300px] min-h-[300px] w-full">
@@ -820,12 +864,12 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
                 <Card className="col-span-2 bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle className="flex gap-2"><Award className="w-5 h-5 text-yellow-500" /> Les Fidèles</CardTitle>
-                    <CardDescription>Top Utilisateurs.</CardDescription>
+                    <CardTitle className="flex gap-2"><Award className="w-5 h-5 text-yellow-500" /> {t('loyalUsers')}</CardTitle>
+                    <CardDescription>{t('loyalUsersDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6 mt-4">
-                      {metrics.topUsers.length === 0 && <span className="text-muted-foreground text-sm">Aucune activité</span>}
+                      {metrics.topUsers.length === 0 && <span className="text-muted-foreground text-sm">{t('noActivity')}</span>}
                       {metrics.topUsers.map((u, i) => (
                         <Link key={i} href={`/users/${u.jellyfinUserId}`} className="flex items-center gap-4 group hover:bg-zinc-800/50 rounded-lg p-1 -m-1 transition-colors">
                           <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">
@@ -845,8 +889,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
                 <Card className="col-span-3 bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle>Écosystème Clients</CardTitle>
-                    <CardDescription>Répartition des plateformes de lecture (Top 8).</CardDescription>
+                    <CardTitle>{t('clientEcosystem')}</CardTitle>
+                    <CardDescription>{t('clientEcosystemDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex justify-center items-center pb-4">
                     <div className="h-[300px] w-full max-w-[400px]">
@@ -858,16 +902,27 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                 <LiveStreamsPanel initialStreams={liveStreams} initialBandwidth={totalBandwidthMbps} />
               </div>,
 
-              /* Third Row Analytics - Hourly Activity Heatmap Backup */
-              <div key="hourly" className="grid gap-4 md:grid-cols-1">
+              /* Third Row Analytics - Hourly + Day of Week */
+              <div key="hourly" className="grid gap-4 md:grid-cols-2">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle>Moyenne d'Activité Horaire</CardTitle>
-                    <CardDescription>Heure de démarrage des sessions sur la période donnée.</CardDescription>
+                    <CardTitle>{t('hourlyActivity')}</CardTitle>
+                    <CardDescription>{t('hourlyActivityDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pl-0 pb-4">
                     <div className="h-[250px] min-h-[250px] w-full">
                       <ActivityByHourChart data={metrics.hourlyChartData} />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle>{t('dayOfWeekActivity')}</CardTitle>
+                    <CardDescription>{t('dayOfWeekActivityDesc')}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pl-0 pb-4">
+                    <div className="h-[250px] min-h-[250px] w-full">
+                      <DayOfWeekChart data={metrics.dayOfWeekChartData} />
                     </div>
                   </CardContent>
                 </Card>
@@ -877,15 +932,15 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
               <div key="new-stats" className="grid gap-4 md:grid-cols-3">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle>Temps Mensuel</CardTitle>
-                    <CardDescription>Heures de visionnage par mois (12 derniers mois).</CardDescription>
+                    <CardTitle>{t('monthlyTime')}</CardTitle>
+                    <CardDescription>{t('monthlyTimeDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="pl-0 pb-4">
                     <div className="h-[300px] w-full">
                       {metrics.monthlyWatchData.length > 0 ? (
                         <MonthlyWatchTimeChart data={metrics.monthlyWatchData} />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">Aucune donnée</div>
+                        <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">{tc('noData')}</div>
                       )}
                     </div>
                   </CardContent>
@@ -893,15 +948,15 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle>Taux de Complétion</CardTitle>
-                    <CardDescription>Ratio sessions terminées vs abandonnées vs partielles.</CardDescription>
+                    <CardTitle>{t('completionRate')}</CardTitle>
+                    <CardDescription>{t('completionRateDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[280px] w-full">
                       {metrics.completionData.length > 0 ? (
                         <CompletionRatioChart data={metrics.completionData} />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">Aucune donnée de durée</div>
+                        <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">{t('noDurationData')}</div>
                       )}
                     </div>
                   </CardContent>
@@ -909,15 +964,15 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle>Familles de Clients</CardTitle>
-                    <CardDescription>TV, Web, Mobile, Desktop — catégorisation automatique.</CardDescription>
+                    <CardTitle>{t('clientFamilies')}</CardTitle>
+                    <CardDescription>{t('clientFamiliesDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[280px] w-full">
                       {metrics.clientCategoryData.length > 0 ? (
                         <ClientCategoryChart data={metrics.clientCategoryData} />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">Aucun client</div>
+                        <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">{t('noClient')}</div>
                       )}
                     </div>
                   </CardContent>
@@ -928,11 +983,11 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
               <div key="server-load" className="grid gap-4 md:grid-cols-1">
                 <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle>Charge Serveur (Concurrent Streams)</CardTitle>
-                    <CardDescription>Évolution temporelle absolue du nombre de flux actifs simultanés enregistrés.</CardDescription>
+                    <CardTitle>{t('serverLoad')}</CardTitle>
+                    <CardDescription>{t('serverLoadDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ComposedTrendChart data={metrics.serverLoadData} series={[{ key: "peakStreams", color: "#ef4444", name: "Serveur", type: "line" }]} />
+                    <ComposedTrendChart data={metrics.serverLoadData} series={[{ key: "peakStreams", color: "#ef4444", name: t('activeStreams'), type: "line" }]} />
                   </CardContent>
                 </Card>
               </div>

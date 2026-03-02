@@ -5,6 +5,7 @@ import { PlayCircle, LayoutList, Rows3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FallbackImage } from "@/components/FallbackImage";
 import { KillStreamButton } from "@/components/dashboard/KillStreamButton";
+import { useTranslations } from "next-intl";
 
 interface LiveStream {
     sessionId: string;
@@ -152,6 +153,7 @@ function StreamTimeline({ stream, colorIndex }: { stream: LiveStream; colorIndex
 }
 
 export function LiveStreamsPanel({ initialStreams, initialBandwidth }: { initialStreams: LiveStream[]; initialBandwidth: number }) {
+    const t = useTranslations('liveStreams');
     const [streams, setStreams] = useState<LiveStream[]>(initialStreams);
     const [bandwidth, setBandwidth] = useState(initialBandwidth);
     const [forceCards, setForceCards] = useState(false);
@@ -181,9 +183,9 @@ export function LiveStreamsPanel({ initialStreams, initialBandwidth }: { initial
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="flex gap-2"> En Direct <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse mt-1.5" /></CardTitle>
+                        <CardTitle className="flex gap-2"> {t('title')} <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse mt-1.5" /></CardTitle>
                         <CardDescription>
-                            Actuellement {streams.length} stream(s) en cours.{bandwidth > 0 ? ` ~${bandwidth} Mbps` : ''}
+                            {t('description', { count: streams.length })}{bandwidth > 0 ? ` ~${bandwidth} Mbps` : ''}
                         </CardDescription>
                     </div>
                     {streams.length >= 3 && (
@@ -201,7 +203,7 @@ export function LiveStreamsPanel({ initialStreams, initialBandwidth }: { initial
                 <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
                     {streams.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-8">
-                            Aucun stream en cours de lecture.
+                            {t('noStreams')}
                         </p>
                     ) : useTimeline ? (
                         streams.map((stream, i) => (

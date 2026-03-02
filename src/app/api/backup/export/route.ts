@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
         const users = await prisma.user.findMany();
         const media = await prisma.media.findMany();
         const playbackHistory = await prisma.playbackHistory.findMany();
+        const telemetryEvents = await (prisma as any).telemetryEvent.findMany();
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
 
         const backupContent = {
@@ -22,6 +23,7 @@ export async function GET(req: NextRequest) {
                 users,
                 media,
                 playbackHistory,
+                telemetryEvents,
                 settings,
             }
         };

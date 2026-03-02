@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations, useLocale } from 'next-intl';
 import { ActivityCalendar, ThemeInput } from "react-activity-calendar";
 import { format, eachDayOfInterval, startOfYear, endOfYear } from "date-fns";
 import { fr } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -25,8 +27,37 @@ const customTheme: ThemeInput = {
 };
 
 export function YearlyHeatmap({ data, availableYears }: YearlyHeatmapProps) {
+    const t = useTranslations('charts');
+    const locale = useLocale();
+    const dateFnsLocale = locale === 'fr' ? fr : enUS;
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState(currentYear);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [containerWidth, setContainerWidth] = useState(0);
+
+    // Measure container width with ResizeObserver for responsive blockSize
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const ro = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                setContainerWidth(entry.contentRect.width);
+            }
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
+    // Dynamic block size: fill the container width (53 weeks + ~40px label margin)
+    const blockSize = useMemo(() => {
+        if (containerWidth <= 0) return 14; // default before measurement
+        const WEEKS = 53;
+        const LABEL_MARGIN = 45; // space for weekday labels on the left
+        const BLOCK_MARGIN = 3;
+        const available = containerWidth - LABEL_MARGIN;
+        const computed = Math.floor(available / WEEKS) - BLOCK_MARGIN;
+        return Math.max(8, Math.min(22, computed)); // clamp 8..22
+    }, [containerWidth]);
 
     const sortedYears = useMemo(() => {
         const years = [...new Set([...availableYears, currentYear])].sort((a, b) => b - a);
@@ -76,7 +107,7 @@ export function YearlyHeatmap({ data, availableYears }: YearlyHeatmapProps) {
         <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm overflow-hidden flex flex-col">
             <CardHeader className="w-full pb-2">
                 <CardTitle className="text-zinc-100 flex items-center justify-between">
-                    <span>Activité Annuelle</span>
+                    <span>{t('yearlyActivity')}</span>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => {
@@ -85,7 +116,7 @@ export function YearlyHeatmap({ data, availableYears }: YearlyHeatmapProps) {
                             }}
                             disabled={!canGoPrev}
                             className="p-1 rounded-md hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            title="Année précédente"
+                            title={t('previousYear')}
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </button>
@@ -99,33 +130,33 @@ export function YearlyHeatmap({ data, availableYears }: YearlyHeatmapProps) {
                             }}
                             disabled={!canGoNext}
                             className="p-1 rounded-md hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            title="Année suivante"
+                            title={t('nextYear')}
                         >
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
                 </CardTitle>
                 <CardDescription className="text-zinc-400">
-                    {totalPlays} lecture{totalPlays !== 1 ? 's' : ''} en {selectedYear}
+                    {t('playsInYear', { count: totalPlays, year: selectedYear })}
                 </CardDescription>
             </CardHeader>
-            <CardContent className="w-full overflow-x-auto pb-6 pt-4 px-4 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+            <CardContent className="w-full pb-6 pt-4 px-4" ref={containerRef}>
                 <div className="w-full">
                     <ActivityCalendar
                         data={processedData}
                         theme={customTheme}
                         colorScheme="dark"
-                        blockSize={14}
+                        blockSize={blockSize}
                         blockRadius={3}
                         blockMargin={3}
-                        fontSize={12}
+                        fontSize={blockSize < 11 ? 10 : 12}
                         labels={{
-                            months: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
-                            weekdays: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'],
-                            totalCount: '{{count}} lectures en {{year}}',
+                            months: t('months').split(','),
+                            weekdays: t('weekdays').split(','),
+                            totalCount: t('playsTotal'),
                             legend: {
-                                less: 'Moins',
-                                more: 'Plus'
+                                less: t('less'),
+                                more: t('more')
                             }
                         }}
                         renderBlock={(block: any, activity: any) => (
@@ -134,9 +165,9 @@ export function YearlyHeatmap({ data, availableYears }: YearlyHeatmapProps) {
                                     <TooltipTrigger asChild>{block}</TooltipTrigger>
                                     <TooltipContent className="bg-zinc-800 text-zinc-100 border-zinc-700 pointer-events-none">
                                         <div className="flex flex-col text-xs space-y-1">
-                                            <span className="font-semibold">{activity.count} {activity.count === 1 ? 'lecture' : 'lectures'}</span>
+                                            <span className="font-semibold">{t('playsCount', { count: activity.count })}</span>
                                             <span className="text-zinc-400">
-                                                {format(new Date(activity.date), "EEEE d MMMM yyyy", { locale: fr })}
+                                                {format(new Date(activity.date), "EEEE d MMMM yyyy", { locale: dateFnsLocale })}
                                             </span>
                                         </div>
                                     </TooltipContent>

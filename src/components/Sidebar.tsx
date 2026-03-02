@@ -13,24 +13,28 @@ import {
     Eraser,
     UserCircle,
     Gift,
-    Sparkles
+    Sparkles,
+    Info
 } from "lucide-react";
 import { LogoutButton } from "./LogoutButton";
 import { SearchBar } from "./SearchBar";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useTranslations } from 'next-intl';
 
-const adminNavigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Récemment Ajouté', href: '/recent', icon: Sparkles },
-    { name: 'Bibliothèque', href: '/media', icon: Film },
-    { name: 'Logs', href: '/logs', icon: ScrollText },
-    { name: 'Utilisateurs', href: '/users', icon: Users },
-    { name: 'Nettoyage', href: '/admin/cleanup', icon: Eraser },
-    { name: 'Paramètres', href: '/settings', icon: Settings },
+const adminNavigationKeys = [
+    { key: 'dashboard', href: '/', icon: LayoutDashboard },
+    { key: 'recentlyAdded', href: '/recent', icon: Sparkles },
+    { key: 'library', href: '/media', icon: Film },
+    { key: 'logs', href: '/logs', icon: ScrollText },
+    { key: 'users', href: '/users', icon: Users },
+    { key: 'cleanup', href: '/admin/cleanup', icon: Eraser },
+    { key: 'settings', href: '/settings', icon: Settings },
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
     const { data: session } = useSession();
+    const t = useTranslations('nav');
 
     // Hide sidebar on login page only (Wrapped uses fullscreen overlay)
     if (pathname === '/login' || pathname?.startsWith('/wrapped')) {
@@ -42,10 +46,10 @@ export function Sidebar() {
 
     // Build navigation based on role
     const navigation = isAdmin
-        ? adminNavigation
+        ? adminNavigationKeys.map(item => ({ name: t(item.key as any), href: item.href, icon: item.icon }))
         : [
-            { name: 'Mon Profil', href: `/users/${jellyfinUserId || ''}`, icon: UserCircle },
-            { name: 'Mon Wrapped', href: `/wrapped/${jellyfinUserId || ''}`, icon: Gift },
+            { name: t('myProfile'), href: `/users/${jellyfinUserId || ''}`, icon: UserCircle },
+            { name: t('myWrapped'), href: `/wrapped/${jellyfinUserId || ''}`, icon: Gift },
         ];
 
     return (
@@ -85,8 +89,14 @@ export function Sidebar() {
                 </nav>
             </div>
 
-            <div className="border-t border-zinc-800 p-4">
+            <div className="border-t border-zinc-800 p-4 space-y-3">
+                <LanguageSwitcher />
                 <LogoutButton className="w-full justify-start text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800/50" />
+                <div className="text-center">
+                    <Link href="/about" className="text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors">
+                        JellyTulli v{process.env.APP_VERSION || '1.0.0'}
+                    </Link>
+                </div>
             </div>
         </div>
     );

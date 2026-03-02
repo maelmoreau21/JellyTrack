@@ -8,10 +8,16 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, X } from "lucide-react";
 import { format, parse } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, enUS } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
+import { useTranslations, useLocale } from "next-intl";
+
+const DATE_LOCALES: Record<string, Locale> = { fr, en: enUS };
 
 export function TimeRangeSelector() {
+    const t = useTranslations('timeRange');
+    const locale = useLocale();
+    const dateFnsLocale = DATE_LOCALES[locale] || fr;
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -57,14 +63,14 @@ export function TimeRangeSelector() {
         <div className="flex items-center gap-2">
             <Select value={timeRange} onValueChange={handleValueChange}>
                 <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800 text-sm h-9">
-                    <SelectValue placeholder="Période" />
+                    <SelectValue placeholder={t('period')} />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-800">
-                    <SelectItem value="24h">Dernières 24h</SelectItem>
-                    <SelectItem value="7d">7 derniers jours</SelectItem>
-                    <SelectItem value="30d">30 derniers jours</SelectItem>
-                    <SelectItem value="all">Tout le temps</SelectItem>
-                    <SelectItem value="custom">Personnalisé</SelectItem>
+                    <SelectItem value="24h">{t('last24h')}</SelectItem>
+                    <SelectItem value="7d">{t('last7d')}</SelectItem>
+                    <SelectItem value="30d">{t('last30d')}</SelectItem>
+                    <SelectItem value="all">{t('allTime')}</SelectItem>
+                    <SelectItem value="custom">{t('custom')}</SelectItem>
                 </SelectContent>
             </Select>
 
@@ -79,14 +85,14 @@ export function TimeRangeSelector() {
                             {date?.from ? (
                                 date.to ? (
                                     <>
-                                        {format(date.from, "dd MMM", { locale: fr })} -{" "}
-                                        {format(date.to, "dd MMM", { locale: fr })}
+                                        {format(date.from, "dd MMM", { locale: dateFnsLocale })} -{" "}
+                                        {format(date.to, "dd MMM", { locale: dateFnsLocale })}
                                     </>
                                 ) : (
-                                    format(date.from, "dd MMM yyyy", { locale: fr })
+                                    format(date.from, "dd MMM yyyy", { locale: dateFnsLocale })
                                 )
                             ) : (
-                                <span>Choisir une date</span>
+                                <span>{t('pickDate')}</span>
                             )}
                         </Button>
                     </PopoverTrigger>
@@ -98,7 +104,7 @@ export function TimeRangeSelector() {
                             selected={date}
                             onSelect={handleDateSelect}
                             numberOfMonths={2}
-                            locale={fr}
+                            locale={dateFnsLocale}
                         />
                     </PopoverContent>
                 </Popover>

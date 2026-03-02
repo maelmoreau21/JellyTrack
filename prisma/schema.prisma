@@ -74,12 +74,28 @@ model PlaybackHistory {
   
   user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   media           Media     @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  telemetryEvents TelemetryEvent[]
 
   @@index([userId])
   @@index([mediaId])
   @@index([startedAt])
   @@index([userId, startedAt])
   @@index([mediaId, startedAt])
+}
+
+model TelemetryEvent {
+  id          String   @id @default(uuid())
+  playbackId  String
+  eventType   String   // "pause", "audio_change", "subtitle_change", "stop"
+  positionMs  BigInt   // Position within the media in milliseconds
+  metadata    String?  // Optional JSON (e.g., new language, codec info)
+  createdAt   DateTime @default(now())
+
+  playback    PlaybackHistory @relation(fields: [playbackId], references: [id], onDelete: Cascade)
+
+  @@index([playbackId])
+  @@index([eventType])
+  @@index([playbackId, eventType])
 }
 
 model ActiveStream {
@@ -126,6 +142,12 @@ model GlobalSettings {
   excludedLibraries     String[] @default([]) // Filtre les types de collection (ex: Photo, HomeVideos)
   monitorIntervalActive Int      @default(1000)  // Polling interval when sessions active (ms)
   monitorIntervalIdle   Int      @default(5000)  // Polling interval when idle (ms)
+  syncCronHour          Int      @default(3)     // Hour (0-23) for daily full sync
+  syncCronMinute        Int      @default(0)     // Minute (0-59) for daily full sync
+  backupCronHour        Int      @default(3)     // Hour (0-23) for daily auto-backup
+  backupCronMinute      Int      @default(30)    // Minute (0-59) for daily auto-backup
+  defaultLocale         String   @default("fr")  // Default language for new users (fr, en)
+  timeFormat            String   @default("24h") // Time display format: "12h" or "24h"
   updatedAt             DateTime @updatedAt
 }
 

@@ -357,3 +357,116 @@ Routes ayant reçu un `requireAdmin()` explicite (9 routes) :
 # À configurer aussi dans le plugin Webhook de Jellyfin (header Authorization: Bearer <secret>)
 JELLYFIN_WEBHOOK_SECRET=un-secret-long-et-aleatoire
 ```
+
+---
+
+## Phase i18n — Internationalisation Complète FR/EN avec next-intl
+
+Conversion intégrale de l'interface utilisateur du français codé en dur vers un système d'internationalisation bilingue (FR/EN) utilisant **next-intl v4.8.3**.
+
+### Architecture i18n
+- **Framework** : `next-intl` v4.8.3 avec détection de locale par cookie (pas de préfixe URL)
+- **Fichiers de traduction** : `messages/fr.json` et `messages/en.json` (~620+ clés chacun)
+- **Configuration** : `src/i18n/request.ts` — lecture du cookie `locale` (défaut: `fr`), chargement dynamique des messages JSON
+- **Plugin Next.js** : `createNextIntlPlugin` intégré dans `next.config.ts`
+- **Provider** : `NextIntlClientProvider` dans `src/app/layout.tsx` avec `locale` et `messages` injectés côté serveur
+- **Sélecteur de langue** : Composant `LanguageSwitcher` intégré dans la sidebar, écrit le cookie `locale` et recharge la page
+- **Préférence utilisateur** : Champ `defaultLocale` dans `GlobalSettings` (Prisma) pour persister la langue par défaut
+
+### Patterns de traduction
+- **Server Components** : `const t = await getTranslations('namespace')` depuis `next-intl/server`
+- **Client Components** : `const t = useTranslations('namespace')` depuis `next-intl`
+- **Locale pour date-fns** : `getLocale()` / `useLocale()` → import dynamique `fr` ou `enUS` depuis `date-fns/locale`
+- **Formatage riche** : `t.rich('key', { count, bold: (chunks) => <span className="...">{chunks}</span> })` pour les tags inline `<bold>`, `<accent>`
+- **Tableaux** : next-intl ne supporte pas les arrays JSON → stockage en chaînes séparées par virgules (`"Lun,Mar,Mer,..."`) et `.split(',')` au runtime
+- **Contrainte `unstable_cache`** : Les fonctions dans `unstable_cache` ne peuvent pas appeler `getTranslations`. Solution : utiliser des clés neutres (indices numériques, clés anglaises courtes) dans les données cachées, puis traduire post-cache au moment du rendu via `.map()`
+
+### Namespaces de traduction (22 namespaces)
+| Namespace | Fichiers couverts |
+|---|---|
+| `common` | Textes partagés (chargement, erreurs, périodes) |
+| `nav` | Navigation sidebar |
+| `search` | Barre de recherche globale |
+| `timeRange` | Sélecteur de période temporelle |
+| `dashboard` | page.tsx (KPIs, stats aujourd'hui, onglets, comparaisons) |
+| `draggable` | DraggableDashboard.tsx |
+| `hardware` | HardwareMonitor.tsx |
+| `liveStreams` | LiveStreamsPanel.tsx |
+| `killStream` | KillStreamButton.tsx |
+| `deepInsights` | DeepInsights.tsx (Top Films/Séries/Albums/Genres) |
+| `granular` | GranularAnalysis.tsx (6 graphiques détaillés) |
+| `network` | NetworkAnalysis.tsx (réseau, transcode) |
+| `charts` | 9 composants graphiques (PlatformDistribution, Genre, UserActivity, CategoryPie, MonthlyWatchTime, ComposedTrend, VolumeArea, LibraryDailyPlays, YearlyHeatmap) + CompletionRatio, StreamProportions |
+| `settings` | settings/page.tsx |
+| `logs` | logs/page.tsx, LogFilters.tsx |
+| `media` | media/page.tsx (bibliothèque) |
+| `mediaProfile` | media/[id]/page.tsx, MediaDropoffChart.tsx |
+| `recent` | recent/page.tsx |
+| `users` | users/page.tsx |
+| `userProfile` | users/[id]/ (UserInfo, UserActivity, UserRecentMedia) |
+| `login` | login/page.tsx, LoginForm.tsx |
+| `newsletter` | newsletter/page.tsx |
+| `about` | about/page.tsx |
+| `cleanup` | admin/cleanup/page.tsx, CleanupClient.tsx |
+| `wrapped` | wrapped/[userId]/page.tsx, WrappedClient.tsx (~65 clés: slides, navigation, partage) |
+
+### Fichiers convertis (liste complète)
+**Pages (Server Components)** :
+- `src/app/page.tsx` — Dashboard principal (DAY_NAMES/MONTH_NAMES via indices numériques dans unstable_cache, traduction post-cache)
+- `src/app/login/page.tsx` et `LoginForm.tsx`
+- `src/app/settings/page.tsx`
+- `src/app/logs/page.tsx` et `LogFilters.tsx`
+- `src/app/media/page.tsx` et `src/app/media/[id]/page.tsx`
+- `src/app/users/page.tsx` et `src/app/users/[id]/` (3 sous-composants)
+- `src/app/recent/page.tsx`
+- `src/app/newsletter/page.tsx`
+- `src/app/admin/cleanup/page.tsx` et `CleanupClient.tsx`
+- `src/app/wrapped/[userId]/page.tsx` et `WrappedClient.tsx`
+
+**Composants Dashboard** :
+- `src/components/dashboard/DeepInsights.tsx`
+- `src/components/dashboard/GranularAnalysis.tsx`
+- `src/components/dashboard/NetworkAnalysis.tsx`
+- `src/components/dashboard/LiveStreamsPanel.tsx`
+- `src/components/dashboard/HardwareMonitor.tsx`
+- `src/components/dashboard/KillStreamButton.tsx`
+- `src/components/dashboard/DraggableDashboard.tsx`
+
+**Composants Graphiques** :
+- `src/components/charts/PlatformDistributionChart.tsx`
+- `src/components/charts/GenreDistributionChart.tsx`
+- `src/components/charts/UserActivityChart.tsx`
+- `src/components/charts/CategoryPieChart.tsx`
+- `src/components/charts/MonthlyWatchTimeChart.tsx`
+- `src/components/charts/ComposedTrendChart.tsx`
+- `src/components/charts/VolumeAreaChart.tsx`
+- `src/components/charts/LibraryDailyPlaysChart.tsx`
+- `src/components/charts/YearlyHeatmap.tsx`
+- `src/components/charts/CompletionRatioChart.tsx`
+- `src/components/charts/StreamProportionsChart.tsx`
+- `src/app/media/[id]/MediaDropoffChart.tsx`
+
+**Composants UI** :
+- `src/components/Navigation.tsx`
+- `src/components/Sidebar.tsx`
+- `src/components/SearchBar.tsx`
+- `src/components/TimeRangeSelector.tsx`
+
+### Problèmes techniques résolus
+1. **`unstable_cache` + traductions** : Les données cachées utilisent des clés neutres (ex: jours = "0"-"6", mois = "0_24"-"11_24", complétion = "completed"/"partial"/"abandoned"), traduites après l'appel cache avec `DAY_NAMES[parseInt(d.day)]` et `MONTH_NAMES[monthIdx] + yearSuffix`
+2. **Carte de couleurs dynamique** : `CompletionRatioChart` utilisait des noms français comme clés du map COLORS. Refactorisé avec `[t('completed')]: "#22c55e"` construit dynamiquement dans le composant
+3. **`formatTooltipValue` hors composant** : Plusieurs charts avaient cette fonction définie hors du composant, empêchant l'accès à `useTranslations`. Déplacée à l'intérieur du corps du composant
+4. **Fallback "Inconnu" dans unstable_cache** : Remplacé par "?" (chaîne neutre) car la traduction n'est pas disponible dans le contexte cache
+5. **Arrays JSON non supportés** : `dayNames` et `monthNames` convertis de `["Lun","Mar",...]` en `"Lun,Mar,..."` avec `.split(',')` au runtime
+
+### Strings backend non converties (priorité basse)
+~40+ chaînes françaises restent dans les routes API serveur et le moniteur — ce sont des messages d'erreur/statut côté serveur non affichés dans l'UI principale :
+- `src/middleware.ts` : "Accès réservé aux administrateurs"
+- `src/lib/auth.ts` : messages d'erreur d'authentification
+- `src/app/api/auth/[...nextauth]/route.ts` : messages de login
+- `src/app/api/sync/route.ts` : messages de statut sync
+- `src/app/api/webhook/jellyfin/route.ts` : traitement webhook
+- `src/app/api/settings/route.ts` : validation des paramètres
+- `src/app/api/backup/` : opérations de sauvegarde
+- `src/server/monitor.ts` : embeds Discord
+- `src/lib/sync.ts` : erreurs de synchronisation

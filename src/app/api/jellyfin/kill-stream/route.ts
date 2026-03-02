@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { apiT } from "@/lib/i18n-api";
 
 export async function POST(req: NextRequest) {
     // Only administrators can kill streams
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
         const apiKey = process.env.JELLYFIN_API_KEY;
 
         if (!baseUrl || !apiKey) {
-            return NextResponse.json({ error: "JELLYFIN_URL ou JELLYFIN_API_KEY non configurées." }, { status: 500 });
+            return NextResponse.json({ error: await apiT('jellyfinNotConfigured') }, { status: 500 });
         }
 
         // SECURITY: Pass API key via header instead of URL query param (avoids proxy/log leaks)
@@ -31,12 +32,12 @@ export async function POST(req: NextRequest) {
 
         if (!res.ok) {
             console.error("[KillStream] Failed to stop session:", res.status, await res.text());
-            return NextResponse.json({ error: "Echec de l'arrêt du flux côté serveur Jellyfin." }, { status: 500 });
+            return NextResponse.json({ error: await apiT('killStreamFailed') }, { status: 500 });
         }
 
-        return NextResponse.json({ success: true, message: "Flux arrêté avec succès." }, { status: 200 });
+        return NextResponse.json({ success: true, message: await apiT('killStreamSuccess') }, { status: 200 });
     } catch (e: any) {
         console.error("[KillStream] Exception:", e);
-        return NextResponse.json({ error: e.message || "Erreur interne" }, { status: 500 });
+        return NextResponse.json({ error: e.message || await apiT('internalError') }, { status: 500 });
     }
 }

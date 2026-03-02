@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import {
     BarChart,
     Bar,
@@ -23,10 +24,12 @@ interface GenreDistributionChartProps {
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308'];
 
 export function GenreDistributionChart({ data }: GenreDistributionChartProps) {
+    const t = useTranslations('charts');
+
     if (!data || data.length === 0) {
         return (
             <div className="flex h-[300px] w-full items-center justify-center text-sm text-muted-foreground">
-                Aucune donnée de genre disponible
+                {t('noGenreData')}
             </div>
         );
     }

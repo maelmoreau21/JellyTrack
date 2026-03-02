@@ -3,6 +3,7 @@
 import { Search, ArrowUpDown, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
 
 interface LogFiltersProps {
     initialQuery: string;
@@ -11,6 +12,8 @@ interface LogFiltersProps {
 
 export function LogFilters({ initialQuery, initialSort }: LogFiltersProps) {
     const router = useRouter();
+    const t = useTranslations('logs');
+    const tc = useTranslations('common');
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -41,13 +44,13 @@ export function LogFilters({ initialQuery, initialSort }: LogFiltersProps) {
                     name="query"
                     type="text"
                     defaultValue={initialQuery}
-                    placeholder="Rechercher par Titre, IP, Client ou Utilisateur..."
+                    placeholder={t('searchPlaceholder')}
                     className="pl-9"
                 />
             </div>
             <div className="flex gap-2">
                 <div className="border rounded-md px-3 py-2 text-sm bg-background flex flex-row items-center cursor-pointer hover:bg-muted relative group">
-                    <span className="font-semibold mr-2 flex items-center gap-2"><ArrowUpDown className="w-4 h-4" /> Trier par</span>
+                    <span className="font-semibold mr-2 flex items-center gap-2"><ArrowUpDown className="w-4 h-4" /> {t('sortBy')}</span>
                     <ChevronDown className="w-4 h-4" />
                     <select
                         name="sort"
@@ -55,14 +58,14 @@ export function LogFilters({ initialQuery, initialSort }: LogFiltersProps) {
                         onChange={handleSortChange}
                         className="absolute w-full h-full opacity-0 cursor-pointer left-0 top-0"
                     >
-                        <option value="date_desc">Date (Récent)</option>
-                        <option value="date_asc">Date (Ancien)</option>
-                        <option value="duration_desc">Durée (Plus long)</option>
-                        <option value="duration_asc">Durée (Plus court)</option>
+                        <option value="date_desc">{t('sortDateDesc')}</option>
+                        <option value="date_asc">{t('sortDateAsc')}</option>
+                        <option value="duration_desc">{t('sortDurationDesc')}</option>
+                        <option value="duration_asc">{t('sortDurationAsc')}</option>
                     </select>
                 </div>
                 <button type="submit" className="bg-primary text-primary-foreground font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
-                    Rechercher
+                    {tc('search')}
                 </button>
             </div>
         </form>

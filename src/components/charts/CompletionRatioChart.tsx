@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
 import {
     PieChart,
     Pie,
@@ -18,13 +19,17 @@ interface CompletionRatioChartProps {
     data: CompletionData[];
 }
 
-const COLORS: Record<string, string> = {
-    "Terminé": "#22c55e",
-    "Abandonné": "#ef4444",
-    "Partiel": "#f59e0b",
-};
+const ORDERED_COLORS = ["#22c55e", "#ef4444", "#f59e0b"]; // completed, abandoned, partial
 
 export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
+    const t = useTranslations('dashboard');
+
+    // Build color map from translated labels
+    const COLORS: Record<string, string> = {
+        [t('completed')]: "#22c55e",
+        [t('abandoned')]: "#ef4444",
+        [t('partial')]: "#f59e0b",
+    };
     return (
         <ResponsiveContainer width="100%" height={280}>
             <PieChart>

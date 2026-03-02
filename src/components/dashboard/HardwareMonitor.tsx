@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Cpu, MemoryStick, Thermometer } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 
 interface HardwareStats {
     cpu: { usagePercent: number };
@@ -11,6 +12,7 @@ interface HardwareStats {
 }
 
 export function HardwareMonitor() {
+    const t = useTranslations('hardware');
     const [stats, setStats] = useState<HardwareStats | null>(null);
 
     useEffect(() => {
@@ -66,7 +68,7 @@ export function HardwareMonitor() {
                         <Thermometer className="w-5 h-5 text-rose-500" />
                     </div>
                     <div>
-                        <p className="text-xs font-medium text-zinc-400">Température</p>
+                        <p className="text-xs font-medium text-zinc-400">{t('temperature')}</p>
                         <p className="text-xl font-bold">
                             {stats.temperature.main > 0 ? `${stats.temperature.main}°C` : 'N/A'}
                         </p>

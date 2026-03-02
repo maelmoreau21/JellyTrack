@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Film, Tv, Music, User, X } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 type MediaResult = { jellyfinMediaId: string; title: string; type: string; parentId: string | null };
 type UserResult = { jellyfinUserId: string; username: string };
@@ -17,6 +18,7 @@ function getTypeIcon(type: string) {
 }
 
 export function SearchBar() {
+  const t = useTranslations('search');
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<{ media: MediaResult[]; users: UserResult[] }>({ media: [], users: [] });
   const [isOpen, setIsOpen] = useState(false);
@@ -79,7 +81,7 @@ export function SearchBar() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => { if (hasResults) setIsOpen(true); }}
-          placeholder="Rechercher…"
+          placeholder={t('placeholder')}
           className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg pl-9 pr-8 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
         />
         {query && (
@@ -93,17 +95,17 @@ export function SearchBar() {
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-zinc-900 border border-zinc-700/50 rounded-lg shadow-xl z-50 max-h-[400px] overflow-y-auto">
           {isLoading && (
-            <div className="px-4 py-3 text-xs text-zinc-500">Recherche…</div>
+            <div className="px-4 py-3 text-xs text-zinc-500">{t('searching')}</div>
           )}
 
           {!isLoading && !hasResults && query.length >= 2 && (
-            <div className="px-4 py-6 text-center text-zinc-500 text-sm">Aucun résultat</div>
+            <div className="px-4 py-6 text-center text-zinc-500 text-sm">{t('noResults')}</div>
           )}
 
           {results.media.length > 0 && (
             <div>
               <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 bg-zinc-800/50">
-                Médias
+                {t('mediaSection')}
               </div>
               {results.media.map((m) => (
                 <Link
@@ -122,7 +124,7 @@ export function SearchBar() {
           {results.users.length > 0 && (
             <div>
               <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 bg-zinc-800/50">
-                Utilisateurs
+                {t('usersSection')}
               </div>
               {results.users.map((u) => (
                 <Link

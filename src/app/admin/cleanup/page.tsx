@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import prisma from "@/lib/prisma";
 import CleanupClient from "./CleanupClient";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = "force-dynamic";
 
@@ -151,11 +152,12 @@ async function getCleanupData() {
 }
 
 export default async function CleanupPage() {
+    const t = await getTranslations('cleanup');
     return (
         <div className="flex-col md:flex">
             <div className="flex-1 space-y-6 p-8 pt-6 max-w-6xl mx-auto w-full">
                 <div className="flex items-center justify-between space-y-2 mb-6">
-                    <h2 className="text-3xl font-bold tracking-tight">Assistant de Nettoyage</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
                 </div>
 
                 <Suspense fallback={<Skeleton className="w-full h-[600px] rounded-xl bg-zinc-900/50" />}>
