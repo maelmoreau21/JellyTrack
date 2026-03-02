@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
+    "@swc/helpers": "0.5.19",
     "@types/papaparse": "^5.5.2",
     "@types/stream-chain": "^2.1.0",
     "@types/stream-json": "^1.7.8",
