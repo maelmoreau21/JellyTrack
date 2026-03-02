@@ -155,7 +155,7 @@
     "noStreams": "当前没有正在播放的流。"
   },
   "killStream": {
-    "confirm": "确定要强制停止播放"{title}"吗？",
+    "confirm": "确定要强制停止播放\"{title}\"吗？",
     "stopped": "已停止",
     "tooltip": "终止远程流"
   },
