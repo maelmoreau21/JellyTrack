@@ -545,3 +545,17 @@ Conversion intégrale de l'interface utilisateur du français codé en dur vers 
    - `src/components/LanguageSwitcher.tsx` passe d'un toggle FR/EN à un sélecteur couvrant toutes les locales disponibles : `fr`, `en`, `de`, `es`, `it`, `nl`, `pl`, `pt-BR`, `ru`, `zh`.
 - **Ajout fonctionnel stats profil utilisateur** :
    - `src/app/users/[id]/UserStatsCharts.tsx` enrichi avec un 3e graphe **Activité horaire** (`ActivityByHourChart`) en plus des graphes hebdomadaire et complétion.
+
+### Phase 40.1 — Fix crash logs, complétion filtrée & hardware i18n
+- **Fix crash page Logs (server-side exception BigInt)** :
+  - Cause racine : `include: { media: true }` retournait `durationMs: BigInt?` qui ne se sérialise pas en RSC production.
+  - Fix : remplacement par `include: { media: { select: { ... } } }` excluant le champ BigInt.
+  - Ajout d'une couche `safeLogs` qui normalise les dates `Date → ISO string` avant le rendu, empêchant les plantages de sérialisation RSC.
+  - Formatage des dates enveloppé dans `try/catch` individuel par ligne de log.
+- **Exclusion des médias zappés du Taux de Complétion** :
+  - Le donut `CompletionRatioChart` du dashboard exclut désormais les sessions < 10% (zappées).
+  - Seuils : ≥ 80% = Terminé, 20-80% = Partiel, 10-20% = Abandonné, < 10% = ignoré.
+- **Hardware Monitor entièrement traduit** :
+  - Ajout des clés `hardware.cpuUsage` et `hardware.ram` (avec paramètre `{total}`) dans les 10 locales.
+  - `HardwareMonitor.tsx` utilise `t('cpuUsage')` et `t('ram', { total })` au lieu de textes anglais codés en dur.
+- **Validation** : build `npm run build` OK, 10/10 locales valides.

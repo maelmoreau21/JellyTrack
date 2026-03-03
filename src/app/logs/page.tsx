@@ -118,8 +118,8 @@ export default async function LogsPage({
     const logs = await prisma.playbackHistory.findMany({
         where: whereClause,
         include: {
-            user: true,
-            media: true,
+            user: { select: { id: true, username: true, jellyfinUserId: true } },
+            media: { select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true } },
         },
         orderBy: orderBy,
         skip: (safePage - 1) * LOGS_PER_PAGE,
@@ -128,7 +128,7 @@ export default async function LogsPage({
 
     // Build parent chain map for enriched media titles (Episode → Season → Series, Track → Album → Artist)
     const parentIds = new Set<string>();
-    logs.forEach((log: any) => {
+    safeLogs.forEach((log: any) => {
         if (log.media?.parentId) parentIds.add(log.media.parentId);
     });
     const parentMedia = parentIds.size > 0
@@ -194,14 +194,14 @@ export default async function LogsPage({
     // Detect Watch Parties
     let watchPartyMap = new Map<string, string>();
     try {
-        watchPartyMap = detectWatchParties(logs);
+        watchPartyMap = detectWatchParties(safeLogs);
     } catch {
         watchPartyMap = new Map<string, string>();
     }
 
     // Build party info for badges
     const partyInfo = new Map<string, { members: Set<string>, mediaTitle: string }>();
-    logs.forEach((log: any) => {
+    safeLogs.forEach((log: any) => {
         const pid = watchPartyMap.get(log.id);
         if (pid) {
             if (!partyInfo.has(pid)) partyInfo.set(pid, { members: new Set(), mediaTitle: log.media?.title || "" });
@@ -211,6 +211,15 @@ export default async function LogsPage({
 
     // Track which partyId has already shown the banner
     const shownPartyBanners = new Set<string>();
+
+    // Sanitize logs to plain objects (avoids BigInt/Date serialization issues in RSC)
+    const safeLogs = logs.map((log: any) => ({
+        ...log,
+        startedAt: log.startedAt instanceof Date ? log.startedAt.toISOString() : String(log.startedAt ?? ''),
+        endedAt: log.endedAt instanceof Date ? log.endedAt.toISOString() : log.endedAt ? String(log.endedAt) : null,
+        media: log.media ? { ...log.media } : null,
+        user: log.user ? { ...log.user } : null,
+    }));
 
     return (
         <div className="flex-col md:flex">
@@ -264,14 +273,14 @@ export default async function LogsPage({
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {logs.length === 0 ? (
+                                    {safeLogs.length === 0 ? (
                                         <TableRow>
                                             <TableCell colSpan={visibleColumns.length} className="text-center h-24 text-muted-foreground">
                                                 {tl('noResults')}
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        logs.map((log: any) => {
+                                        safeLogs.map((log: any) => {
                                             const isTranscode = log.playMethod?.toLowerCase().includes("transcode");
                                             const partyId = watchPartyMap.get(log.id);
                                             const isParty = !!partyId;
@@ -315,12 +324,14 @@ export default async function LogsPage({
                                                                 )}
                                                                 <span>
                                                                     {(() => {
-                                                                        const startedAtTs = toValidTimestamp(log.startedAt);
-                                                                        if (!startedAtTs) return tc('unknown');
-                                                                        return new Date(startedAtTs).toLocaleString(safeLocale, {
-                                                                            day: '2-digit', month: '2-digit', year: 'numeric',
-                                                                            hour: '2-digit', minute: '2-digit'
-                                                                        });
+                                                                        try {
+                                                                            const d = new Date(log.startedAt);
+                                                                            if (isNaN(d.getTime())) return tc('unknown');
+                                                                            return d.toLocaleString(safeLocale, {
+                                                                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                                                                hour: '2-digit', minute: '2-digit'
+                                                                            });
+                                                                        } catch { return tc('unknown'); }
                                                                     })()}
                                                                 </span>
                                                             </div>

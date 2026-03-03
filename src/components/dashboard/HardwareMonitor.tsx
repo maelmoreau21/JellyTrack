@@ -44,7 +44,7 @@ export function HardwareMonitor() {
                         <Cpu className="w-5 h-5 text-blue-500" />
                     </div>
                     <div>
-                        <p className="text-xs font-medium text-zinc-400">CPU Usage</p>
+                        <p className="text-xs font-medium text-zinc-400">{t('cpuUsage')}</p>
                         <p className="text-xl font-bold">{stats.cpu.usagePercent}%</p>
                     </div>
                 </CardContent>
@@ -56,7 +56,7 @@ export function HardwareMonitor() {
                         <MemoryStick className="w-5 h-5 text-purple-500" />
                     </div>
                     <div>
-                        <p className="text-xs font-medium text-zinc-400">RAM ({stats.memory.totalGb}G)</p>
+                        <p className="text-xs font-medium text-zinc-400">{t('ram', { total: stats.memory.totalGb })}</p>
                         <p className="text-xl font-bold">{stats.memory.usagePercent}%</p>
                     </div>
                 </CardContent>

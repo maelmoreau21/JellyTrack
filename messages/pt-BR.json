@@ -147,6 +147,8 @@
     "editOrder": "Editar ordem"
   },
   "hardware": {
+    "cpuUsage": "Uso de CPU",
+    "ram": "RAM ({total}G)",
     "temperature": "Temperatura"
   },
   "liveStreams": {

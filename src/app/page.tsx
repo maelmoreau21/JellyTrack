@@ -366,7 +366,7 @@ const getDashboardMetrics = unstable_cache(
     }));
 
     // Completion ratio (abandoned vs finished)
-    // "Terminé" = watched >= 80% of media duration, "Partiel" = 20-80%, "Abandonné" = < 20%
+    // "Terminé" = watched >= 80% of media duration, "Partiel" = 20-80%, "Abandonné" = < 20% (excludes < 10% zapped)
     let completed = 0, partial = 0, abandoned = 0;
     // We need media durations for this — load them
     const mediaIds = [...new Set(histories.map((h: any) => h.media?.title).filter(Boolean))];
@@ -395,7 +395,8 @@ const getDashboardMetrics = unstable_cache(
       const pct = h.durationWatched / mediaDurS;
       if (pct >= 0.8) completed++;
       else if (pct >= 0.2) partial++;
-      else abandoned++;
+      else if (pct >= 0.1) abandoned++;
+      // pct < 0.1 = "zapped" — excluded from chart
     });
     const completionData: CompletionData[] = [
       { name: "completed", value: completed },

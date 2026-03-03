@@ -147,6 +147,8 @@
     "editOrder": "Volgorde bewerken"
   },
   "hardware": {
+    "cpuUsage": "CPU-gebruik",
+    "ram": "RAM ({total}G)",
     "temperature": "Temperatuur"
   },
   "liveStreams": {
