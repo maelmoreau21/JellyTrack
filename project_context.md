@@ -485,3 +485,50 @@ Conversion intégrale de l'interface utilisateur du français codé en dur vers 
 - `src/app/api/backup/` : opérations de sauvegarde
 - `src/server/monitor.ts` : embeds Discord
 - `src/lib/sync.ts` : erreurs de synchronisation
+
+---
+
+## Phase 39 — Fix logs crash, filtres analytiques & enrichissement profil utilisateur
+
+- **Crash page Logs (écran blanc / server-side exception) corrigé** : `src/app/logs/page.tsx` avait des accès non protégés à `log.media.*` sur des historiques orphelins (média supprimé/introuvable), provoquant un crash SSR. Ajout de garde-fous complets (`log.media?.*`), fallback visuel/texte pour médias inconnus, et neutralisation des watch parties sans `mediaId`.
+- **Pagination Logs robuste** : la pagination conserve désormais `type` et `cols` dans l’URL, évitant les pertes de contexte de filtre/colonnes au changement de page.
+- **Filtres Dashboard propagés à GranularAnalysis** : `src/components/dashboard/GranularAnalysis.tsx` applique maintenant réellement le filtre `type` (`movie`, `series`, `music`, `book`) dans la requête Prisma. Résultat : **Pires Taux de Complétion** et les autres graphes granulaires réagissent bien aux onglets `Tous / Films / Séries / Musique / Livres`.
+- **Durée par Médiathèque corrigée** : `src/components/charts/StackedMetricsCharts.tsx` utilisait des `dataKey` string. Certaines bibliothèques (noms avec caractères spéciaux/points) cassaient la lecture Recharts. Passage à des accessors fonctionnels `dataKey={(entry) => entry[key] || 0}` pour `Bar` et `Area`.
+- **Dashboard volume/history ajusté** :
+   - Suppression de la série **Vues (Total)** dans `src/components/charts/ComposedTrendChart.tsx`.
+   - Renommage FR : `Volumes et Vues Historiques` → `Volumes et Historiques` dans `messages/fr.json`.
+   - Alignement EN : `Volume & Views History` → `Volume History` dans `messages/en.json`.
+- **Profil utilisateur enrichi avec plus de graphiques** : nouveau composant `src/app/users/[id]/UserStatsCharts.tsx` ajouté à la page profil (`src/app/users/[id]/page.tsx`) avec :
+   - Activité par jour de semaine (`DayOfWeekChart`)
+   - Taux de complétion utilisateur (`CompletionRatioChart`)
+- **Validation build** : `npm run build` OK après correctifs (compilation et génération des routes réussies). Warnings Redis non bloquants conservés.
+
+### Addendum UX mobile (Phase 39.1)
+- **Logs mobile lisibilité** : `src/app/logs/page.tsx` passe en mode table responsive avec colonnes secondaires masquées sur petits écrans (`clientIp`, `status`, `codecs`, `duration`) et résumé compact injecté dans la cellule média (méthode, client, durée).
+- **Conservation des filtres** : `src/app/logs/LogFilters.tsx` préserve désormais les paramètres URL existants (`type`, `cols`, `page` etc.) lors des recherches et tris, évitant la perte de contexte utilisateur sur mobile.
+
+### Addendum UX mobile fine (Phase 39.2)
+- **Correctif runtime `LogFilters`** : ajout de `useSearchParams()` dans `src/app/logs/LogFilters.tsx` (la préservation des paramètres utilisait `searchParams` non initialisé).
+- **Ergonomie tactile** : zones cliquables augmentées sur mobile (hauteur des champs/boutons filtres et bouton colonnes), menu colonnes élargi pour interaction doigt plus fiable (`src/app/logs/ColumnToggle.tsx`, `src/app/logs/LogFilters.tsx`).
+- **Densité mobile optimisée** : paddings page/table ajustés, pagination wrap-friendly, typos réduites sur petits écrans, vignette média légèrement compactée (`src/app/logs/page.tsx`).
+
+### Addendum UX global (Phase 39.3)
+- **Déploiement mobile-first transversal** sur les pages principales : `dashboard`, `users`, `users/[id]`, `recent`, `settings`, `admin/cleanup`, `media/[id]`.
+- **Layout harmonisé** : migration systématique des wrappers desktop-only (`p-8 pt-6`) vers un pattern responsive `p-4 md:p-8 pt-4 md:pt-6` + réduction de la densité (`space-y-4 md:space-y-6`) et titres `text-2xl md:text-3xl`.
+- **Tableaux lisibles sur mobile** :
+   - `users/page.tsx` : table leaderboard en `overflow-x-auto` avec `min-w`.
+   - `users/[id]/UserRecentMedia.tsx` : colonnes secondaires masquées en mobile (`duration`, `client`, `device`, `method`) + résumé inline dans la cellule média.
+   - `media/[id]/page.tsx` : tables enfants et historique détaillé rendues responsives (`min-w` + colonnes secondaires masquées selon breakpoint).
+- **Navigation/contrôles mobiles** :
+   - `recent/page.tsx` et `page.tsx` (dashboard) : en-têtes et tabs passent en disposition wrap/stack, largeur tabs adaptée (`w-full` en mobile), et badges/sections densifiés.
+- **Validation** : build de production re-validé (`npm run build` OK) après la passe globale.
+
+### Addendum i18n (Phase 39.4)
+- **Audit de parité des locales** : vérification automatisée des clés `en/fr/nl/zh` (578 clés), aucun manque ni conflit de type.
+- **Harmonisation wording post-chart** : suppression des mentions de vues dans les libellés NL/ZH de `dashboard.volumeHistory` et `dashboard.volumeHistoryDesc` pour refléter la série actuelle (heures de visionnage).
+- **Validation syntaxe locale** : parsing de tous les fichiers `messages/*.json` (10/10 valides).
+
+### Addendum i18n global (Phase 39.5)
+- **Extension de l'harmonisation à toutes les locales restantes** : mise à jour de `de`, `es`, `it`, `pl`, `pt-BR`, `ru` sur `dashboard.volumeHistory` et `dashboard.volumeHistoryDesc`.
+- **Objectif** : aligner le wording produit avec la réalité de la visualisation (trend d'heures de visionnage), sans référence aux vues totales.
+- **Validation** : re-parsing complet des fichiers `messages/*.json` après patch (10/10 valides).

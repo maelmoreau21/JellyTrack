@@ -15,8 +15,17 @@ const getGranularData = unstable_cache(
         else if (timeRange === "30d") currentStartDate.setDate(currentStartDate.getDate() - 30);
         else currentStartDate = new Date(0);
 
+        let mediaTypeFilter: any = {};
+        if (type === 'movie') mediaTypeFilter = { type: 'Movie' };
+        else if (type === 'series') mediaTypeFilter = { type: { in: ['Series', 'Episode'] } };
+        else if (type === 'music') mediaTypeFilter = { type: { in: ['Audio', 'Track', 'MusicAlbum'] } };
+        else if (type === 'book') mediaTypeFilter = { type: { in: ['Book', 'AudioBook'] } };
+
         const history = await prisma.playbackHistory.findMany({
-            where: { startedAt: { gte: currentStartDate } },
+            where: {
+                startedAt: { gte: currentStartDate },
+                media: mediaTypeFilter,
+            },
             select: {
                 startedAt: true,
                 durationWatched: true,
@@ -180,7 +189,7 @@ const getGranularData = unstable_cache(
             dropOffData, dropSegments, topAbandoned, audioData, subtitleData
         };
     },
-    ['jellytulli-granular-analysis-v2'],
+    ['jellytulli-granular-analysis-v3'],
     { revalidate: 300 }
 );
 

@@ -65,10 +65,10 @@ export default async function UsersPage() {
 
     return (
         <div className="flex-col md:flex">
-            <div className="flex-1 space-y-6 p-8 pt-6">
+            <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6">
                 <div className="flex items-center justify-between space-y-2 mb-6">
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
+                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
                         <p className="text-muted-foreground text-sm mt-1">
                             {t('description')}
                         </p>
@@ -88,8 +88,8 @@ export default async function UsersPage() {
                                 {t('noUsers')}
                             </div>
                         ) : (
-                            <div className="rounded-md border border-zinc-800/50 overflow-hidden">
-                                <Table>
+                            <div className="rounded-md border border-zinc-800/50 overflow-x-auto">
+                                <Table className="min-w-[700px]">
                                     <TableHeader className="bg-zinc-900/50">
                                         <TableRow className="border-zinc-800">
                                             <TableHead className="w-[80px]">{t('colRank')}</TableHead>

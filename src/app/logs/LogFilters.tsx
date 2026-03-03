@@ -2,7 +2,7 @@
 
 import { Search, ArrowUpDown, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
 
 interface LogFiltersProps {
@@ -12,6 +12,7 @@ interface LogFiltersProps {
 
 export function LogFilters({ initialQuery, initialSort }: LogFiltersProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const t = useTranslations('logs');
     const tc = useTranslations('common');
 
@@ -21,9 +22,11 @@ export function LogFilters({ initialQuery, initialSort }: LogFiltersProps) {
         const query = formData.get("query") as string;
         const sort = formData.get("sort") as string;
 
-        const params = new URLSearchParams();
+        const params = new URLSearchParams(searchParams.toString());
         if (query) params.set("query", query);
+        else params.delete("query");
         if (sort) params.set("sort", sort);
+        else params.delete("sort");
 
         router.push(`/logs?${params.toString()}`);
     };
@@ -37,7 +40,7 @@ export function LogFilters({ initialQuery, initialSort }: LogFiltersProps) {
     };
 
     return (
-        <form className="flex md:flex-row flex-col gap-4" onSubmit={handleSubmit}>
+        <form className="flex md:flex-row flex-col gap-2 md:gap-4" onSubmit={handleSubmit}>
             <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
@@ -45,11 +48,11 @@ export function LogFilters({ initialQuery, initialSort }: LogFiltersProps) {
                     type="text"
                     defaultValue={initialQuery}
                     placeholder={t('searchPlaceholder')}
-                    className="pl-9"
+                    className="pl-9 h-10 md:h-9"
                 />
             </div>
             <div className="flex gap-2">
-                <div className="border rounded-md px-3 py-2 text-sm bg-background flex flex-row items-center cursor-pointer hover:bg-muted relative group">
+                <div className="border rounded-md px-3 py-2 text-sm bg-background flex flex-row items-center cursor-pointer hover:bg-muted relative group h-10 md:h-9">
                     <span className="font-semibold mr-2 flex items-center gap-2"><ArrowUpDown className="w-4 h-4" /> {t('sortBy')}</span>
                     <ChevronDown className="w-4 h-4" />
                     <select
@@ -64,7 +67,7 @@ export function LogFilters({ initialQuery, initialSort }: LogFiltersProps) {
                         <option value="duration_asc">{t('sortDurationAsc')}</option>
                     </select>
                 </div>
-                <button type="submit" className="bg-primary text-primary-foreground font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+                <button type="submit" className="bg-primary text-primary-foreground font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors h-10 md:h-9">
                     {tc('search')}
                 </button>
             </div>

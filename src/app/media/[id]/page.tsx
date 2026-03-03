@@ -278,7 +278,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
     return (
         <div className="flex-col md:flex">
-            <div className="flex-1 space-y-6 p-8 pt-6 max-w-[1400px] mx-auto w-full">
+            <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1.5 text-sm text-zinc-400 flex-wrap">
                     <Link href="/media" className="flex items-center gap-1 hover:text-white transition-colors">
@@ -366,7 +366,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             </CardHeader>
                             <CardContent>
                                 <div className="border rounded-md overflow-x-auto border-zinc-800/50">
-                                    <Table>
+                                    <Table className="min-w-[700px]">
                                         <TableHeader>
                                             <TableRow className="border-zinc-800">
                                                 <TableHead className="w-12">#</TableHead>
@@ -571,15 +571,15 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     <CardHeader><CardTitle>{t('detailedHistory')}</CardTitle><CardDescription>{t('sessionsTotal', { count: totalViews })}</CardDescription></CardHeader>
                     <CardContent>
                         <div className="border rounded-md overflow-x-auto border-zinc-800/50">
-                            <Table className="min-w-[900px]">
+                            <Table className="min-w-[680px] md:min-w-[900px]">
                                 <TableHeader>
                                     <TableRow className="border-zinc-800">
-                                        <TableHead>{t('colUser')}</TableHead><TableHead>{t('colDate')}</TableHead><TableHead>{t('colMethod')}</TableHead><TableHead>{t('colAudio')}</TableHead>{!isMusic && <TableHead>{t('colSubtitles')}</TableHead>}<TableHead className="text-center">{t('colPauses')}</TableHead><TableHead className="text-right">{t('colDuration')}</TableHead>
+                                        <TableHead>{t('colUser')}</TableHead><TableHead>{t('colDate')}</TableHead><TableHead className="hidden md:table-cell">{t('colMethod')}</TableHead><TableHead>{t('colAudio')}</TableHead>{!isMusic && <TableHead className="hidden lg:table-cell">{t('colSubtitles')}</TableHead>}<TableHead className="text-center hidden md:table-cell">{t('colPauses')}</TableHead><TableHead className="text-right">{t('colDuration')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {effectiveHistory.length === 0 ? (
-                                        <TableRow><TableCell colSpan={isMusic ? 6 : 7} className="text-center h-24 text-muted-foreground">{t('noSession')}</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={isMusic ? 5 : 6} className="text-center h-24 text-muted-foreground">{t('noSession')}</TableCell></TableRow>
                                     ) : effectiveHistory.slice(0, 200).map((h: any) => {
                                         const isTranscode = h.playMethod?.toLowerCase().includes("transcode");
                                         return (
@@ -588,10 +588,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                     {h.user ? <Link href={`/users/${h.user.jellyfinUserId}`} className="hover:underline">{h.user.username || tc('deletedUser')}</Link> : <span className="text-zinc-500">{tc('deletedUser')}</span>}
                                                 </TableCell>
                                                 <TableCell className="text-sm text-zinc-400 whitespace-nowrap">{new Date(h.startedAt).toLocaleString(locale, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</TableCell>
-                                                <TableCell><Badge variant={isTranscode ? "destructive" : "default"} className={isTranscode ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-500"}>{h.playMethod || "DirectPlay"}</Badge></TableCell>
+                                                <TableCell className="hidden md:table-cell"><Badge variant={isTranscode ? "destructive" : "default"} className={isTranscode ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-500"}>{h.playMethod || "DirectPlay"}</Badge></TableCell>
                                                 <TableCell className="text-sm">{h.audioLanguage ? <span className="font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded">{h.audioLanguage}{h.audioCodec ? ` (${h.audioCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>
-                                                {!isMusic && <TableCell className="text-sm">{h.subtitleLanguage ? <span className="font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded">{h.subtitleLanguage}{h.subtitleCodec ? ` (${h.subtitleCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>}
-                                                <TableCell className="text-center">{(h.pauseCount || 0) > 0 ? <span className="text-yellow-400 font-medium">{h.pauseCount}</span> : <span className="text-zinc-500">0</span>}</TableCell>
+                                                {!isMusic && <TableCell className="text-sm hidden lg:table-cell">{h.subtitleLanguage ? <span className="font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded">{h.subtitleLanguage}{h.subtitleCodec ? ` (${h.subtitleCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>}
+                                                <TableCell className="text-center hidden md:table-cell">{(h.pauseCount || 0) > 0 ? <span className="text-yellow-400 font-medium">{h.pauseCount}</span> : <span className="text-zinc-500">0</span>}</TableCell>
                                                 <TableCell className="text-right whitespace-nowrap font-medium">{h.durationWatched > 0 ? `${Math.floor(h.durationWatched / 60)} min` : <span className="text-zinc-500 text-xs">0 min</span>}</TableCell>
                                             </TableRow>
                                         );

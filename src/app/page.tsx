@@ -608,12 +608,12 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
   return (
     <div className="flex-col md:flex">
-      <div className="flex-1 space-y-6 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2 mb-4">
-          <div className="flex items-center gap-6">
-            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-            <Tabs defaultValue={type || "all"} className="w-[380px]">
-              <TabsList className="bg-zinc-900 border border-zinc-800">
+      <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 min-w-0">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h2>
+            <Tabs defaultValue={type || "all"} className="w-full md:w-[380px]">
+              <TabsList className="bg-zinc-900 border border-zinc-800 w-full">
                 <TabsTrigger value="all" asChild><Link href={`/?timeRange=${timeRange}`}>{tc('all')}</Link></TabsTrigger>
                 <TabsTrigger value="movie" asChild><Link href={`/?type=movie&timeRange=${timeRange}`}>{tc('movies')}</Link></TabsTrigger>
                 <TabsTrigger value="series" asChild><Link href={`/?type=series&timeRange=${timeRange}`}>{tc('series')}</Link></TabsTrigger>
@@ -622,7 +622,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
               </TabsList>
             </Tabs>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <span className="text-xs text-zinc-400 bg-zinc-900/80 px-2 py-1.5 rounded-md border border-zinc-800 hidden sm:block">
               {t('cachedData')}
             </span>
@@ -633,10 +633,10 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
         <HardwareMonitor />
 
         {/* Today Stats Banner */}
-        <div className="flex items-center gap-3 px-4 py-3 bg-zinc-900/60 border border-zinc-800/50 rounded-xl backdrop-blur-sm">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 px-3 md:px-4 py-3 bg-zinc-900/60 border border-zinc-800/50 rounded-xl backdrop-blur-sm">
           <CalendarDays className="h-5 w-5 text-primary shrink-0" />
           <span className="text-sm font-medium text-zinc-300">{t('today')}</span>
-          <div className="flex items-center gap-6 ml-2">
+          <div className="flex flex-wrap items-center gap-3 md:gap-6 ml-0 md:ml-2">
             <div className="flex items-center gap-1.5">
               <PlayCircle className="h-3.5 w-3.5 text-blue-400" />
               <span className="text-sm font-semibold text-white">{metrics.todayPlays}</span>

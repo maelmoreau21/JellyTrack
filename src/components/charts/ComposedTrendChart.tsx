@@ -22,7 +22,6 @@ interface TrendData {
     seriesVolume?: number;
     musicVolume?: number;
     booksVolume?: number;
-    totalViews?: number; // Bar chart
     peakStreams?: number; // Server load
 }
 
@@ -39,7 +38,6 @@ export function ComposedTrendChart({ data, series }: { data: TrendData[], series
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
     const formatTooltipValue = (value: any, name: any) => {
-        if (name === t('viewsTotal')) return [t('playsCount', { count: value }), name];
         if (name === t('server')) return [t('maxActiveStreams', { count: value }), name];
         return [`${Number(value).toFixed(1)}h`, name];
     };
@@ -107,9 +105,6 @@ export function ComposedTrendChart({ data, series }: { data: TrendData[], series
                     })
                 ) : (
                     <>
-                        {/* Dashed line for total views instead of bar for better readability */}
-                        <Line hide={hidden.has("totalViews")} yAxisId="right" type="monotone" dataKey="totalViews" stroke="#a1a1aa" strokeWidth={2} strokeDasharray="6 3" dot={false} name={t('viewsTotal')} />
-
                         {/* Stacked areas with lower opacity for clarity */}
                         <Area hide={hidden.has("movieVolume")} yAxisId="left" type="monotone" dataKey="movieVolume" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.25} name={t('movies')} />
                         <Area hide={hidden.has("seriesVolume")} yAxisId="left" type="monotone" dataKey="seriesVolume" stackId="1" stroke="#22c55e" fill="#22c55e" fillOpacity={0.25} name={t('series')} />

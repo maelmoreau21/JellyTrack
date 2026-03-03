@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { PlayCircle, Search, ArrowUpDown, ChevronDown, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ function detectWatchParties(logs: any[]): Map<string, string> {
     const byMedia = new Map<string, any[]>();
     logs.forEach(log => {
         const mId = log.mediaId;
+        if (!mId) return;
         if (!byMedia.has(mId)) byMedia.set(mId, []);
         byMedia.get(mId)!.push(log);
     });
@@ -174,6 +175,8 @@ export default async function LogsPage({
         const p = new URLSearchParams();
         if (query) p.set("query", query);
         if (sort !== "date_desc") p.set("sort", sort);
+        if (typeFilter) p.set("type", typeFilter);
+        if (params.cols) p.set("cols", params.cols);
         if (page > 1) p.set("page", String(page));
         const qs = p.toString();
         return `/logs${qs ? `?${qs}` : ""}`;
@@ -197,11 +200,11 @@ export default async function LogsPage({
 
     return (
         <div className="flex-col md:flex">
-            <div className="flex-1 space-y-6 p-8 pt-6 max-w-[1400px] mx-auto w-full">
+            <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
                 <div className="flex items-center justify-between space-y-2">
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight">{tl('title')}</h2>
-                        <p className="text-muted-foreground mr-12 mt-2">
+                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{tl('title')}</h2>
+                        <p className="text-muted-foreground md:mr-12 mt-2 text-sm md:text-base">
                             {tl('description')}
                             {totalCount > 0 && <span className="text-zinc-500"> — {totalCount} {tl('totalEntries')}</span>}
                         </p>
@@ -214,7 +217,7 @@ export default async function LogsPage({
                         <CardDescription>{tl('searchFiltersDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex items-start gap-2">
+                        <div className="flex items-start gap-2 flex-wrap">
                             <div className="flex-1">
                                 <LogFilters initialQuery={query} initialSort={sort} />
                             </div>
@@ -222,7 +225,7 @@ export default async function LogsPage({
                         </div>
 
                         {typeFilter && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs text-zinc-400">{tl('activeFilter')}</span>
                                 <Badge variant="default" className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20">
                                     {typeFilter === 'Movie' ? tl('moviesFilter') : typeFilter === 'Episode' ? tl('seriesFilter') : typeFilter === 'Audio' ? tl('musicFilter') : typeFilter === 'AudioBook' ? tl('booksFilter') : typeFilter}
@@ -234,16 +237,16 @@ export default async function LogsPage({
                         )}
 
                         <div className="border rounded-md overflow-x-auto w-full mt-6">
-                            <Table className="min-w-[600px] table-fixed">
+                            <Table className="min-w-[540px] md:min-w-[700px] table-fixed">
                                 <TableHeader>
                                     <TableRow>
                                         {visibleColumns.includes('date') && <TableHead className="w-[130px]">{tl('colDate')}</TableHead>}
-                                        {visibleColumns.includes('user') && <TableHead className="w-[120px]">{tl('colUser')}</TableHead>}
+                                        {visibleColumns.includes('user') && <TableHead className="w-[100px] md:w-[120px]">{tl('colUser')}</TableHead>}
                                         {visibleColumns.includes('media') && <TableHead className="w-[250px]">{tl('colMedia')}</TableHead>}
-                                        {visibleColumns.includes('clientIp') && <TableHead className="w-[160px]">{tl('colClientIp')}</TableHead>}
-                                        {visibleColumns.includes('status') && <TableHead className="w-[130px]">{tl('colStatus')}</TableHead>}
-                                        {visibleColumns.includes('codecs') && <TableHead className="w-[100px]">{tl('colCodecs')}</TableHead>}
-                                        {visibleColumns.includes('duration') && <TableHead className="w-[80px] text-right">{tl('colDuration')}</TableHead>}
+                                        {visibleColumns.includes('clientIp') && <TableHead className="w-[160px] hidden lg:table-cell">{tl('colClientIp')}</TableHead>}
+                                        {visibleColumns.includes('status') && <TableHead className="w-[130px] hidden md:table-cell">{tl('colStatus')}</TableHead>}
+                                        {visibleColumns.includes('codecs') && <TableHead className="w-[100px] hidden lg:table-cell">{tl('colCodecs')}</TableHead>}
+                                        {visibleColumns.includes('duration') && <TableHead className="w-[80px] text-right hidden md:table-cell">{tl('colDuration')}</TableHead>}
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -318,20 +321,37 @@ export default async function LogsPage({
                                                         {/* Média */}
                                                         {visibleColumns.includes('media') && (
                                                         <TableCell className="overflow-hidden">
-                                                            <div className="flex items-center gap-3 w-full overflow-hidden" title={log.media.title}>
-                                                                <div className="relative w-12 aspect-[2/3] bg-muted rounded-md shrink-0 overflow-hidden ring-1 ring-white/10">
-                                                                    <FallbackImage
-                                                                        src={`/api/jellyfin/image?itemId=${log.media.jellyfinMediaId}&type=Primary${log.media.parentId ? `&fallbackId=${log.media.parentId}` : ''}`}
-                                                                        alt={log.media.title}
-                                                                        fill
-                                                                        className="object-cover"
-                                                                    />
+                                                            <div className="flex items-center gap-2 md:gap-3 w-full overflow-hidden" title={log.media?.title || tc('unknownMedia')}>
+                                                                <div className="relative w-10 md:w-12 aspect-[2/3] bg-muted rounded-md shrink-0 overflow-hidden ring-1 ring-white/10">
+                                                                    {log.media?.jellyfinMediaId ? (
+                                                                        <FallbackImage
+                                                                            src={`/api/jellyfin/image?itemId=${log.media.jellyfinMediaId}&type=Primary${log.media.parentId ? `&fallbackId=${log.media.parentId}` : ''}`}
+                                                                            alt={log.media?.title || tc('unknownMedia')}
+                                                                            fill
+                                                                            className="object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <FallbackImage
+                                                                            src={undefined}
+                                                                            alt={tc('unknownMedia')}
+                                                                            fill
+                                                                            className="object-cover"
+                                                                        />
+                                                                    )}
                                                                 </div>
                                                                 <div className="flex flex-col min-w-0 flex-1">
-                                                                    <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-100 hover:underline" title={log.media.title}>{log.media.title}</Link>
+                                                                    {log.media?.jellyfinMediaId ? (
+                                                                        <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-100 hover:underline" title={log.media?.title || tc('unknownMedia')}>
+                                                                            {log.media?.title || tc('unknownMedia')}
+                                                                        </Link>
+                                                                    ) : (
+                                                                        <span className="truncate font-medium text-zinc-400" title={tc('unknownMedia')}>
+                                                                            {tc('unknownMedia')}
+                                                                        </span>
+                                                                    )}
                                                                     {(() => {
                                                                         const subtitle = getMediaSubtitle(log.media);
-                                                                        const typeInfo = getMediaTypeLabel(log.media.type);
+                                                                        const typeInfo = getMediaTypeLabel(log.media?.type);
                                                                         if (subtitle) {
                                                                             return (
                                                                                 <span className="text-xs text-zinc-400 truncate flex items-center gap-1" title={subtitle}>
@@ -342,8 +362,17 @@ export default async function LogsPage({
                                                                         }
                                                                         return typeInfo
                                                                             ? <span className="text-xs text-zinc-500">{typeInfo.icon} {typeInfo.label}</span>
-                                                                            : <span className="text-xs text-zinc-500">{log.media.type}</span>;
+                                                                            : <span className="text-xs text-zinc-500">{log.media?.type || tc('unknown')}</span>;
                                                                     })()}
+
+                                                                    <div className="md:hidden mt-1 flex items-center gap-1.5 text-[10px] text-zinc-400 truncate">
+                                                                        <span className={`px-1.5 py-0.5 rounded ${isTranscode ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                                                                            {log.playMethod || 'DirectPlay'}
+                                                                        </span>
+                                                                        <span className="truncate">{log.clientName || tc('unknown')}</span>
+                                                                        <span className="text-zinc-500">·</span>
+                                                                        <span>{Math.floor((log.durationWatched || 0) / 60)} min</span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </TableCell>
@@ -351,7 +380,7 @@ export default async function LogsPage({
 
                                                         {/* Client & IP */}
                                                         {visibleColumns.includes('clientIp') && (
-                                                        <TableCell>
+                                                        <TableCell className="hidden lg:table-cell">
                                                             <div className="flex flex-col">
                                                                 <span className="text-sm font-semibold">{log.clientName || tc('unknown')}</span>
                                                                 <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded-sm w-fit mt-0.5">
@@ -368,7 +397,7 @@ export default async function LogsPage({
 
                                                         {/* Statut (Méthode) */}
                                                         {visibleColumns.includes('status') && (
-                                                        <TableCell>
+                                                        <TableCell className="hidden md:table-cell">
                                                             <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
                                                                 {log.playMethod || "DirectPlay"}
                                                             </Badge>
@@ -377,7 +406,7 @@ export default async function LogsPage({
 
                                                         {/* Codecs */}
                                                         {visibleColumns.includes('codecs') && (
-                                                        <TableCell>
+                                                        <TableCell className="hidden lg:table-cell">
                                                             {isTranscode && log.videoCodec ? (
                                                                 <div className="flex flex-col text-xs text-muted-foreground font-mono">
                                                                     <span>V: {log.videoCodec}</span>
@@ -391,7 +420,7 @@ export default async function LogsPage({
 
                                                         {/* Durée */}
                                                         {visibleColumns.includes('duration') && (
-                                                        <TableCell className="text-right whitespace-nowrap">
+                                                        <TableCell className="text-right whitespace-nowrap hidden md:table-cell">
                                                             {log.durationWatched
                                                                 ? `${Math.floor(log.durationWatched / 60)} min`
                                                                 : (
@@ -411,9 +440,9 @@ export default async function LogsPage({
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-zinc-800/50">
+                            <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-zinc-800/50 flex-wrap">
                                 {safePage > 1 && (
-                                    <Link href={buildPageUrl(safePage - 1)} className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
+                                    <Link href={buildPageUrl(safePage - 1)} className="flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
                                         <ChevronLeft className="w-4 h-4" /> {tc('previous')}
                                     </Link>
                                 )}
@@ -432,7 +461,7 @@ export default async function LogsPage({
                                                 <Link
                                                     key={item}
                                                     href={buildPageUrl(item as number)}
-                                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                                                    className={`px-2.5 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition-colors ${
                                                         item === safePage
                                                             ? "bg-primary text-primary-foreground"
                                                             : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
@@ -444,11 +473,11 @@ export default async function LogsPage({
                                         )}
                                 </div>
                                 {safePage < totalPages && (
-                                    <Link href={buildPageUrl(safePage + 1)} className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
+                                    <Link href={buildPageUrl(safePage + 1)} className="flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
                                         {tc('next')} <ChevronRight className="w-4 h-4" />
                                     </Link>
                                 )}
-                                <span className="text-xs text-muted-foreground ml-4">
+                                <span className="text-xs text-muted-foreground ml-0 md:ml-4 w-full md:w-auto text-center md:text-left">
                                     Page {safePage} / {totalPages}
                                 </span>
                             </div>

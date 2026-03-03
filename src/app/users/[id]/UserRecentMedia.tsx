@@ -116,15 +116,15 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
             </CardHeader>
             <CardContent>
                 <div className="rounded-md border overflow-x-auto">
-                    <Table className="min-w-[800px]">
+                    <Table className="min-w-[560px] md:min-w-[800px]">
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[280px]">{t('colMedia')}</TableHead>
                                 <TableHead className="w-[140px]">{t('colDate')}</TableHead>
-                                <TableHead className="w-[80px]">{t('colDuration')}</TableHead>
-                                <TableHead className="w-[120px]">{t('colClient')}</TableHead>
-                                <TableHead className="w-[120px]">{t('colDevice')}</TableHead>
-                                <TableHead className="w-[100px]">{t('colMethod')}</TableHead>
+                                <TableHead className="w-[80px] hidden md:table-cell">{t('colDuration')}</TableHead>
+                                <TableHead className="w-[120px] hidden lg:table-cell">{t('colClient')}</TableHead>
+                                <TableHead className="w-[120px] hidden lg:table-cell">{t('colDevice')}</TableHead>
+                                <TableHead className="w-[100px] hidden md:table-cell">{t('colMethod')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -171,20 +171,28 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
                                                             <div className={`h-full rounded-full ${progress >= 80 ? 'bg-emerald-500' : progress >= 40 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${progress}%` }} />
                                                         </div>
                                                     )}
+                                                    <div className="md:hidden mt-1 flex items-center gap-1.5 text-[10px] text-zinc-400 truncate">
+                                                        <span className={`px-1.5 py-0.5 rounded ${isTranscode ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                                                            {session.playMethod || "DirectPlay"}
+                                                        </span>
+                                                        <span className="truncate">{session.clientName || "N/A"}</span>
+                                                        <span className="text-zinc-500">·</span>
+                                                        <span>{minutes} min</span>
+                                                    </div>
                                                 </div>
                                             </Link>
                                         </TableCell>
                                         <TableCell className="text-sm whitespace-nowrap">
                                             {dateFormat}
                                         </TableCell>
-                                        <TableCell className="whitespace-nowrap">{minutes} min</TableCell>
-                                        <TableCell className="text-sm">
+                                        <TableCell className="whitespace-nowrap hidden md:table-cell">{minutes} min</TableCell>
+                                        <TableCell className="text-sm hidden lg:table-cell">
                                             <span className="truncate max-w-[120px] inline-block">{session.clientName || "N/A"}</span>
                                         </TableCell>
-                                        <TableCell className="text-sm">
+                                        <TableCell className="text-sm hidden lg:table-cell">
                                             <span className="truncate max-w-[120px] inline-block">{session.deviceName || "N/A"}</span>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="hidden md:table-cell">
                                             <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
                                                 {session.playMethod || "DirectPlay"}
                                             </Badge>

@@ -102,16 +102,16 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="flex-col md:flex">
-      <div className="flex-1 space-y-6 p-8 pt-6">
+      <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 md:gap-4 min-w-0">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
               <Sparkles className="w-7 h-7 text-primary" />
               {t('title')}
             </h2>
-            <Tabs defaultValue={type || "all"} className="w-[380px]">
-              <TabsList className="bg-zinc-900 border border-zinc-800">
+            <Tabs defaultValue={type || "all"} className="w-full md:w-[380px]">
+              <TabsList className="bg-zinc-900 border border-zinc-800 w-full">
                 <TabsTrigger value="all" asChild><Link href={buildUrl({})}>{tc('all')}</Link></TabsTrigger>
                 <TabsTrigger value="movie" asChild><Link href={buildUrl({ type: "movie" })}>{tc('movies')}</Link></TabsTrigger>
                 <TabsTrigger value="series" asChild><Link href={buildUrl({ type: "series" })}>{tc('series')}</Link></TabsTrigger>
@@ -123,7 +123,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-6">
           {recentMedia.map((media) => {
             const badge = getTypeBadge(media.type, tc);
             const Icon = badge.icon;

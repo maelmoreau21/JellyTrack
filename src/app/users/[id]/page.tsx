@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import UserInfo from "./UserInfo";
 import UserActivity from "./UserActivity";
 import UserRecentMedia from "./UserRecentMedia";
+import UserStatsCharts from "./UserStatsCharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -45,10 +46,10 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
 
     return (
         <div className="flex-col md:flex">
-            <div className="flex-1 space-y-6 p-8 pt-6">
+            <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0 mb-6">
                     <div className="flex flex-col space-y-2">
-                        <h2 className="text-3xl font-bold tracking-tight">
+                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
                             {t('profile', { name: user.username || tc('deletedUser') })}
                         </h2>
                         <p className="text-muted-foreground text-sm">
@@ -69,6 +70,10 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
 
                 <Suspense fallback={<Skeleton className="w-full h-[300px] rounded-xl bg-zinc-900/50 mt-6" />}>
                     <UserActivity userId={jellyfinUserId} />
+                </Suspense>
+
+                <Suspense fallback={<Skeleton className="w-full h-[320px] rounded-xl bg-zinc-900/50 mt-6" />}>
+                    <UserStatsCharts userId={jellyfinUserId} />
                 </Suspense>
 
                 <Suspense fallback={<Skeleton className="w-full h-[500px] rounded-xl bg-zinc-900/50 mt-6" />}>

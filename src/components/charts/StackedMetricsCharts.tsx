@@ -14,7 +14,7 @@ export function StackedBarChart({ data, keys, suffix }: { data: any[], keys: str
                 <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' }} labelStyle={{ color: '#a1a1aa' }} itemStyle={{ color: '#e4e4e7' }} />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                 {keys.map((k, i) => (
-                    <Bar key={k} dataKey={`${k}${suffix}`} name={k} stackId="a" fill={COLORS[i % COLORS.length]} />
+                    <Bar key={k} dataKey={(entry: any) => entry?.[`${k}${suffix}`] || 0} name={k} stackId="a" fill={COLORS[i % COLORS.length]} />
                 ))}
             </BarChart>
         </ResponsiveContainer>
@@ -31,7 +31,7 @@ export function StackedAreaChart({ data, keys, suffix }: { data: any[], keys: st
                 <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' }} labelStyle={{ color: '#a1a1aa' }} itemStyle={{ color: '#e4e4e7' }} />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                 {keys.map((k, i) => (
-                    <Area key={k} type="monotone" dataKey={`${k}${suffix}`} name={k} stackId="1" stroke={COLORS[i % COLORS.length]} fill={COLORS[i % COLORS.length]} fillOpacity={0.6} />
+                    <Area key={k} type="monotone" dataKey={(entry: any) => entry?.[`${k}${suffix}`] || 0} name={k} stackId="1" stroke={COLORS[i % COLORS.length]} fill={COLORS[i % COLORS.length]} fillOpacity={0.6} />
                 ))}
             </AreaChart>
         </ResponsiveContainer>
