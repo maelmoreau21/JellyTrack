@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { LogFilters } from "./LogFilters";
 import { ColumnToggle } from "./ColumnToggle";
-import { parseVisibleColumns } from "./columnUtils";
 import { FallbackImage } from "@/components/FallbackImage";
 import prisma from "@/lib/prisma";
 import { getTranslations, getLocale } from 'next-intl/server';
@@ -15,6 +14,17 @@ import Link from "next/link";
 export const dynamic = "force-dynamic"; // Bypass statis rendering for real-time logs
 
 const LOGS_PER_PAGE = 100;
+
+// Column utilities — defined server-side to avoid client/server boundary issues
+const ALL_COLUMNS = ['date', 'user', 'media', 'clientIp', 'status', 'codecs', 'duration'] as const;
+type Column = typeof ALL_COLUMNS[number];
+const DEFAULT_VISIBLE: Column[] = ['date', 'user', 'media', 'clientIp', 'status', 'duration'];
+
+function parseVisibleColumns(colsParam: string | undefined): Column[] {
+    if (!colsParam) return DEFAULT_VISIBLE;
+    const parsed = colsParam.split(',').filter(c => ALL_COLUMNS.includes(c as Column)) as Column[];
+    return parsed.length >= 2 ? parsed : DEFAULT_VISIBLE;
+}
 
 // --- Watch Party Detection Algorithm ---
 // Groups sessions of the same media started by different users within a 5-minute window

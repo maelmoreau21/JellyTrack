@@ -4,7 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Columns3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ALL_COLUMNS, type Column } from './columnUtils';
+
+const ALL_COLUMNS = ['date', 'user', 'media', 'clientIp', 'status', 'codecs', 'duration'] as const;
+type Column = typeof ALL_COLUMNS[number];
 
 export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
     const router = useRouter();
