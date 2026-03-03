@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DayOfWeekChart, DayOfWeekData } from "@/components/charts/DayOfWeekChart";
 import { CompletionRatioChart, CompletionData } from "@/components/charts/CompletionRatioChart";
+import { ActivityByHourChart, ActivityHourData } from "@/components/charts/ActivityByHourChart";
 import { getTranslations } from 'next-intl/server';
 
 export default async function UserStatsCharts({ userId }: { userId: string }) {
@@ -25,13 +26,17 @@ export default async function UserStatsCharts({ userId }: { userId: string }) {
     if (!user || user.playbackHistory.length === 0) return null;
 
     const dayCounts = new Array(7).fill(0);
+    const hourCounts = new Array(24).fill(0);
     let completed = 0;
     let partial = 0;
     let abandoned = 0;
 
     user.playbackHistory.forEach((session: any) => {
-        const day = new Date(session.startedAt).getDay();
+        const startedAt = new Date(session.startedAt);
+        const day = startedAt.getDay();
+        const hour = startedAt.getHours();
         dayCounts[day]++;
+        if (hour >= 0 && hour <= 23) hourCounts[hour]++;
 
         const mediaDurS = session.media?.durationMs ? Number(session.media.durationMs) / 1000 : 0;
         if (mediaDurS <= 0 || session.durationWatched <= 0) {
@@ -57,8 +62,13 @@ export default async function UserStatsCharts({ userId }: { userId: string }) {
         { name: td('abandoned'), value: abandoned },
     ].filter((d) => d.value > 0);
 
+    const hourData: ActivityHourData[] = hourCounts.map((count, hour) => ({
+        hour: `${String(hour).padStart(2, '0')}:00`,
+        count,
+    }));
+
     return (
-        <div className="grid gap-4 md:grid-cols-2 mt-6">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mt-6">
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle>{td('dayOfWeekActivity')}</CardTitle>
@@ -83,6 +93,18 @@ export default async function UserStatsCharts({ userId }: { userId: string }) {
                         ) : (
                             <div className="h-full flex items-center justify-center text-sm text-zinc-500">{td('noDurationData')}</div>
                         )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm md:col-span-2 xl:col-span-1">
+                <CardHeader>
+                    <CardTitle>{td('hourlyActivity')}</CardTitle>
+                    <CardDescription>{td('hourlyActivityDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="h-[260px] w-full">
+                        <ActivityByHourChart data={hourData} />
                     </div>
                 </CardContent>
             </Card>

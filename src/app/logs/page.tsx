@@ -25,17 +25,25 @@ interface WatchPartyGroup {
     logs: any[];
 }
 
+function toValidTimestamp(value: unknown): number | null {
+    const date = value instanceof Date ? value : new Date(String(value ?? ''));
+    const ts = date.getTime();
+    return Number.isFinite(ts) ? ts : null;
+}
+
 function detectWatchParties(logs: any[]): Map<string, string> {
     // Returns a map: logId -> partyId (only for logs that are part of a watch party)
     const WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 
     // Group logs by mediaId
-    const byMedia = new Map<string, any[]>();
+    const byMedia = new Map<string, Array<{ log: any; startedAtMs: number }>>();
     logs.forEach(log => {
         const mId = log.mediaId;
+        const startedAtMs = toValidTimestamp(log.startedAt);
+        if (!startedAtMs) return;
         if (!mId) return;
         if (!byMedia.has(mId)) byMedia.set(mId, []);
-        byMedia.get(mId)!.push(log);
+        byMedia.get(mId)!.push({ log, startedAtMs });
     });
 
     const partyMap = new Map<string, string>(); // logId -> partyId
@@ -43,19 +51,19 @@ function detectWatchParties(logs: any[]): Map<string, string> {
 
     byMedia.forEach((mediaLogs, mediaId) => {
         // Sort by startedAt
-        const sorted = [...mediaLogs].sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
+        const sorted = [...mediaLogs].sort((a, b) => a.startedAtMs - b.startedAtMs);
 
         let clusterStart = 0;
         for (let i = 1; i <= sorted.length; i++) {
             // End of cluster if gap > WINDOW_MS or end of array
-            if (i === sorted.length || sorted[i].startedAt.getTime() - sorted[i - 1].startedAt.getTime() > WINDOW_MS) {
+            if (i === sorted.length || sorted[i].startedAtMs - sorted[i - 1].startedAtMs > WINDOW_MS) {
                 const cluster = sorted.slice(clusterStart, i);
                 // Only count as watch party if 2+ DIFFERENT users
-                const uniqueUsers = new Set(cluster.map((l: any) => l.userId));
+                const uniqueUsers = new Set(cluster.map((item: any) => item.log.userId));
                 if (uniqueUsers.size >= 2) {
                     partyCounter++;
                     const pid = `party-${partyCounter}`;
-                    cluster.forEach((l: any) => partyMap.set(l.id, pid));
+                    cluster.forEach((item: any) => partyMap.set(item.log.id, pid));
                 }
                 clusterStart = i;
             }
@@ -74,6 +82,7 @@ export default async function LogsPage({
     const tl = await getTranslations('logs');
     const tc = await getTranslations('common');
     const locale = await getLocale();
+    const safeLocale = typeof locale === 'string' && locale.trim().length > 0 ? locale : 'fr';
     const query = params.query?.toLowerCase() || "";
     const sort = params.sort || "date_desc";
     const currentPage = Math.max(1, parseInt(params.page || "1", 10) || 1);
@@ -183,7 +192,12 @@ export default async function LogsPage({
     };
 
     // Detect Watch Parties
-    const watchPartyMap = detectWatchParties(logs);
+    let watchPartyMap = new Map<string, string>();
+    try {
+        watchPartyMap = detectWatchParties(logs);
+    } catch {
+        watchPartyMap = new Map<string, string>();
+    }
 
     // Build party info for badges
     const partyInfo = new Map<string, { members: Set<string>, mediaTitle: string }>();
@@ -300,10 +314,14 @@ export default async function LogsPage({
                                                                     <Users className="w-3.5 h-3.5 text-violet-400 shrink-0" />
                                                                 )}
                                                                 <span>
-                                                                    {log.startedAt.toLocaleString(locale, {
-                                                                        day: '2-digit', month: '2-digit', year: 'numeric',
-                                                                        hour: '2-digit', minute: '2-digit'
-                                                                    })}
+                                                                    {(() => {
+                                                                        const startedAtTs = toValidTimestamp(log.startedAt);
+                                                                        if (!startedAtTs) return tc('unknown');
+                                                                        return new Date(startedAtTs).toLocaleString(safeLocale, {
+                                                                            day: '2-digit', month: '2-digit', year: 'numeric',
+                                                                            hour: '2-digit', minute: '2-digit'
+                                                                        });
+                                                                    })()}
                                                                 </span>
                                                             </div>
                                                         </TableCell>

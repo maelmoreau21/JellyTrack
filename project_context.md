@@ -532,3 +532,16 @@ Conversion intégrale de l'interface utilisateur du français codé en dur vers 
 - **Extension de l'harmonisation à toutes les locales restantes** : mise à jour de `de`, `es`, `it`, `pl`, `pt-BR`, `ru` sur `dashboard.volumeHistory` et `dashboard.volumeHistoryDesc`.
 - **Objectif** : aligner le wording produit avec la réalité de la visualisation (trend d'heures de visionnage), sans référence aux vues totales.
 - **Validation** : re-parsing complet des fichiers `messages/*.json` après patch (10/10 valides).
+
+### Phase 40 — Stabilisation Logs, ouverture multi-langues & enrichissement stats profil
+- **Logs crash hardening (`/logs`)** :
+   - Ajout d'une normalisation sûre des dates (`toValidTimestamp`) pour ignorer les entrées malformées/invalides sans faire planter le SSR.
+   - L'algorithme Watch Party devient tolérant aux données incomplètes (sessions sans `startedAt` valide exclues proprement).
+   - Formatage date UI protégé (fallback `unknown` si date invalide) pour éviter les exceptions runtime pendant le rendu.
+- **i18n robuste côté serveur** :
+   - Nouvelle source centralisée des locales (`src/i18n/locales.ts`) avec whitelist.
+   - `src/i18n/request.ts` valide désormais le cookie `locale` contre la whitelist et retombe sur `fr` par défaut (plus d'import dynamique sur locale invalide).
+- **Sélecteur de langue étendu** :
+   - `src/components/LanguageSwitcher.tsx` passe d'un toggle FR/EN à un sélecteur couvrant toutes les locales disponibles : `fr`, `en`, `de`, `es`, `it`, `nl`, `pl`, `pt-BR`, `ru`, `zh`.
+- **Ajout fonctionnel stats profil utilisateur** :
+   - `src/app/users/[id]/UserStatsCharts.tsx` enrichi avec un 3e graphe **Activité horaire** (`ActivityByHourChart`) en plus des graphes hebdomadaire et complétion.
