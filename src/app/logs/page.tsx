@@ -4,7 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LogFilters } from "./LogFilters";
-import { ColumnToggle, parseVisibleColumns } from "./ColumnToggle";
+import { ColumnToggle } from "./ColumnToggle";
+import { parseVisibleColumns } from "./columnUtils";
 import { FallbackImage } from "@/components/FallbackImage";
 import prisma from "@/lib/prisma";
 import { getTranslations, getLocale } from 'next-intl/server';

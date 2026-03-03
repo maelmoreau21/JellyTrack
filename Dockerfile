@@ -40,7 +40,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm install -g prisma@5
+# Update npm to latest to silence "New major version" notice
+RUN npm install -g npm@latest && npm install -g prisma@5
 
 # Default user/group (overridden at runtime via PUID/PGID)
 RUN addgroup --system --gid 1001 nodejs

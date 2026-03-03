@@ -4,10 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Columns3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-
-const ALL_COLUMNS = ['date', 'user', 'media', 'clientIp', 'status', 'codecs', 'duration'] as const;
-type Column = typeof ALL_COLUMNS[number];
-const DEFAULT_VISIBLE: Column[] = ['date', 'user', 'media', 'clientIp', 'status', 'duration'];
+import { ALL_COLUMNS, type Column } from './columnUtils';
 
 export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
     const router = useRouter();
@@ -77,10 +74,4 @@ export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
             )}
         </div>
     );
-}
-
-export function parseVisibleColumns(colsParam: string | undefined): Column[] {
-    if (!colsParam) return DEFAULT_VISIBLE;
-    const parsed = colsParam.split(',').filter(c => ALL_COLUMNS.includes(c as Column)) as Column[];
-    return parsed.length >= 2 ? parsed : DEFAULT_VISIBLE;
 }
