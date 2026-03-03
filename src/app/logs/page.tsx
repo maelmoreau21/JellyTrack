@@ -137,6 +137,15 @@ export default async function LogsPage({
         take: LOGS_PER_PAGE,
     });
 
+    // Sanitize logs to plain objects (avoids BigInt/Date serialization issues in RSC)
+    const safeLogs = logs.map((log: any) => ({
+        ...log,
+        startedAt: log.startedAt instanceof Date ? log.startedAt.toISOString() : String(log.startedAt ?? ''),
+        endedAt: log.endedAt instanceof Date ? log.endedAt.toISOString() : log.endedAt ? String(log.endedAt) : null,
+        media: log.media ? { ...log.media } : null,
+        user: log.user ? { ...log.user } : null,
+    }));
+
     // Build parent chain map for enriched media titles (Episode → Season → Series, Track → Album → Artist)
     const parentIds = new Set<string>();
     safeLogs.forEach((log: any) => {
@@ -222,15 +231,6 @@ export default async function LogsPage({
 
     // Track which partyId has already shown the banner
     const shownPartyBanners = new Set<string>();
-
-    // Sanitize logs to plain objects (avoids BigInt/Date serialization issues in RSC)
-    const safeLogs = logs.map((log: any) => ({
-        ...log,
-        startedAt: log.startedAt instanceof Date ? log.startedAt.toISOString() : String(log.startedAt ?? ''),
-        endedAt: log.endedAt instanceof Date ? log.endedAt.toISOString() : log.endedAt ? String(log.endedAt) : null,
-        media: log.media ? { ...log.media } : null,
-        user: log.user ? { ...log.user } : null,
-    }));
 
     return (
         <div className="flex-col md:flex">
