@@ -148,8 +148,9 @@ export async function POST(req: Request) {
 
                     if (shouldSend) {
                         // Utilisation de notre API proxy interne pour sécuriser l'URL de l'image
-                        // Note: on utilise des requêtes absolues si NEXTAUTH_URL est défini, sinon un fallback minimal
-                        const appUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+                        // Fallback uses runtime PORT to stay correct when app port changes
+                        const fallbackPort = process.env.PORT || "3000";
+                        const appUrl = process.env.NEXTAUTH_URL || `http://localhost:${fallbackPort}`;
                         const posterUrl = `${appUrl}/api/jellyfin/image?itemId=${jellyfinMediaId}&type=Primary`;
 
                         const discordPayload = {

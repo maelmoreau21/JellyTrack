@@ -138,7 +138,7 @@ export function Sidebar() {
             {/* Mobile overlay */}
             {mobileOpen && (
                 <div
-                    className="fixed inset-0 z-50 bg-black/60 md:hidden"
+                    className="fixed inset-0 z-40 bg-black/60 md:hidden"
                     onClick={() => setMobileOpen(false)}
                 />
             )}
@@ -146,7 +146,7 @@ export function Sidebar() {
             {/* Sidebar — desktop: always visible, mobile: slide-over */}
             <div
                 className={`
-                    fixed top-0 left-0 z-50 h-screen w-64 flex flex-col border-r border-zinc-800 bg-zinc-950/95 backdrop-blur-xl
+                    fixed top-0 left-0 z-50 h-screen w-[86vw] max-w-72 md:w-64 flex flex-col border-r border-zinc-800 bg-zinc-950/95 backdrop-blur-xl shadow-2xl md:shadow-none
                     transition-transform duration-200 ease-in-out
                     md:sticky md:translate-x-0
                     ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}

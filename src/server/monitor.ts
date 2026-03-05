@@ -564,7 +564,9 @@ async function pollJellyfinSessions(): Promise<boolean> {
                 }
 
                 if (isEnabled && webhookUrl && shouldSend) {
-                    const posterUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/jellyfin/image?itemId=${ItemId}`;
+                    const fallbackPort = process.env.PORT || "3000";
+                    const appUrl = process.env.NEXTAUTH_URL || `http://localhost:${fallbackPort}`;
+                    const posterUrl = `${appUrl}/api/jellyfin/image?itemId=${ItemId}`;
 
                     const discordPayload = {
                         embeds: [

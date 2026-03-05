@@ -588,3 +588,23 @@ Conversion intégrale de l'interface utilisateur du français codé en dur vers 
   - `layout.tsx` : `pt-14 md:pt-0` sur `<main>` pour compenser le header mobile. Ajout `min-w-0` pour éviter les débordements.
   - Pages `media/page.tsx`, `media/loading.tsx`, `about/page.tsx` : padding responsive (`p-4 md:p-8`). Titres et tabs adaptés mobile (`text-2xl md:text-3xl`, `w-full sm:w-[400px]`).
 - **Validation** : build `npm run build` OK (12.4s), toutes les routes générées.
+
+### Phase 40.4 — DB host-mode fix, port configurable, language menu desktop & mobile polish
+- **Fix DB `postgres:5432` en mode host** :
+   - Cause racine : `docker-entrypoint.sh` construisait `DATABASE_URL` uniquement depuis `POSTGRES_*` avec fallback codé en dur `POSTGRES_IP=postgres`, donc en mode host l'app tentait toujours `postgres:5432` si `DATABASE_URL` n'était pas fourni.
+   - Fix : support complet des aliases `DB_*` avec priorité : `DB_*` > `POSTGRES_*` > defaults.
+      - Variables prises en charge : `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`.
+      - `DATABASE_URL` auto-construit avec ces valeurs et log explicite de la cible DB.
+- **Port applicatif configurable proprement** :
+   - `docker-compose.yml` : mapping changé de `3000:3000` vers `${APP_PORT:-3000}:${PORT:-3000}`.
+   - `PORT` devient configurable via `${PORT:-3000}` dans l'environnement.
+   - `NEXTAUTH_URL` compose documenté pour refléter le port externe.
+   - Fallback URL runtime dans `monitor.ts` et `webhook/jellyfin/route.ts` : `NEXTAUTH_URL || http://localhost:${PORT}` (plus de fallback hardcodé `:3000`).
+- **Language switcher desktop corrigé/embelli** :
+   - Refonte visuelle du dropdown (bouton + panel custom cohérents avec le thème de l'application, états selected/hover, chevron animé).
+   - Ajout de la classe CSS `.emoji-flag` avec stack de polices emoji (`Segoe UI Emoji`, `Apple Color Emoji`, `Noto Color Emoji`) pour corriger l'affichage des drapeaux sur PC.
+- **Ajustements mobile complémentaires** :
+   - Sidebar mobile : largeur adaptée (`w-[86vw] max-w-72`), overlay z-index corrigé, ombre dédiée mobile.
+   - Layout : utilisation de `100dvh` pour éviter les artefacts de viewport mobile, `overflow-x-hidden` global pour supprimer les débordements horizontaux.
+   - Pages `newsletter` et `about` : hiérarchie typographique et paddings rendus responsive (`p-4 md:p-8`, tailles titres adaptées mobile).
+- **Validation** : build `npm run build` OK (Next.js 16.1.6), toutes les routes générées.

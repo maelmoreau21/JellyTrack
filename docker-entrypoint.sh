@@ -3,16 +3,20 @@ set -e
 
 echo "Starting JellyTulli Server..."
 
-# ─── Build DATABASE_URL from individual POSTGRES_* variables ────────
+# ─── Build DATABASE_URL from env vars (DB_* or POSTGRES_*) ──────────
+# Priority order for compatibility:
+# DB_* (host-network friendly) > POSTGRES_* (legacy) > defaults
 if [ -z "$DATABASE_URL" ]; then
-  POSTGRES_USER=${POSTGRES_USER:-jellytulli}
-  POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-jellytulli_password}
-  POSTGRES_IP=${POSTGRES_IP:-postgres}
-  POSTGRES_PORT=${POSTGRES_PORT:-5432}
-  POSTGRES_DB=${POSTGRES_DB:-jellytulli}
-  export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_IP}:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public&connection_limit=5"
+  DB_USER=${DB_USER:-${POSTGRES_USER:-jellytulli}}
+  DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:-jellytulli_password}}
+  DB_HOST=${DB_HOST:-${POSTGRES_IP:-postgres}}
+  DB_PORT=${DB_PORT:-${POSTGRES_PORT:-5432}}
+  DB_NAME=${DB_NAME:-${POSTGRES_DB:-jellytulli}}
+  export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public&connection_limit=5"
+  echo "Database: ${DB_HOST}:${DB_PORT}/${DB_NAME}"
+else
+  echo "Database: using provided DATABASE_URL"
 fi
-echo "Database: ${POSTGRES_IP:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-jellytulli}"
 
 # ─── PUID / PGID Support ───────────────────────────────────────────
 PUID=${PUID:-1001}

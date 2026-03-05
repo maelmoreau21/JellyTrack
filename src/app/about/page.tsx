@@ -18,8 +18,8 @@ export default async function AboutPage() {
             {/* Header */}
             <div className="text-center space-y-4">
                 <div className="flex items-center justify-center gap-3">
-                    <PlayCircle className="w-12 h-12 text-primary" />
-                    <h1 className="text-4xl font-bold tracking-tight">JellyTulli</h1>
+                    <PlayCircle className="w-10 h-10 md:w-12 md:h-12 text-primary" />
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">JellyTulli</h1>
                 </div>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                     {t('description')}

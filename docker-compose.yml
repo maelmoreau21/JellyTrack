@@ -3,7 +3,7 @@ services:
     image: ghcr.io/maelmoreau21/jellytulli:latest
     container_name: jellytulli_app
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:${PORT:-3000}"
     environment:
       # ─── Identifiants PostgreSQL (doivent correspondre au service postgres ci-dessous) ───
       POSTGRES_USER: jellytulli
@@ -11,17 +11,23 @@ services:
       POSTGRES_IP: postgres                        # Nom du service Docker, ou IP (ex: 127.0.0.1 en mode host)
       POSTGRES_PORT: 5432
       POSTGRES_DB: jellytulli
+      # Aliases DB_* (prioritaires si définis) pour mode host/réseau custom
+      DB_HOST: ${DB_HOST:-}
+      DB_PORT: ${DB_PORT:-}
+      DB_USER: ${DB_USER:-}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_NAME: ${DB_NAME:-}
       # ─── Redis ───
       REDIS_URL: redis://redis:6379
       # ─── Port de JellyTulli (changer aussi dans ports: ci-dessus) ───
-      PORT: 3000
+      PORT: ${PORT:-3000}
       # ─── Jellyfin ───
       JELLYFIN_URL: http://jellyfin:8096           # IP réelle du serveur Jellyfin (pas localhost en Docker)
       JELLYFIN_API_KEY: your-jellyfin-api-key
       # ─── Authentification ───
       ADMIN_PASSWORD: supersecretadmin             # ← À changer !
       NEXTAUTH_SECRET: your-generated-random-secret # ← À changer ! (openssl rand -base64 32)
-      NEXTAUTH_URL: http://localhost:3000           # ← Ton IP locale ou domaine
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000} # ← adapter au port externe APP_PORT
       # ─── Divers ───
       PUID: 1000
       PGID: 1000

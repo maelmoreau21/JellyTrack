@@ -138,3 +138,9 @@
 .animate-pulse-slow {
   animation: pulse-slow 3s ease-in-out infinite;
 }
+
+/* Force color emoji fonts for flag rendering consistency on desktop browsers */
+.emoji-flag {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+  line-height: 1;
+}

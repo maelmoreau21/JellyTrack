@@ -23,11 +23,11 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className="dark">
-      <body className={`dark bg-zinc-950 text-zinc-50 antialiased min-h-screen ${inter.className} selection:bg-primary selection:text-primary-foreground flex`}>
+      <body className={`dark bg-zinc-950 text-zinc-50 antialiased min-h-screen overflow-x-hidden ${inter.className} selection:bg-primary selection:text-primary-foreground flex`}>
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
             <Sidebar />
-            <main className="flex-1 min-w-0 h-screen overflow-y-auto pt-14 md:pt-0">
+            <main className="flex-1 min-w-0 h-[calc(100dvh-3.5rem)] md:h-screen overflow-y-auto overflow-x-hidden pt-14 md:pt-0">
               {children}
             </main>
           </AuthProvider>

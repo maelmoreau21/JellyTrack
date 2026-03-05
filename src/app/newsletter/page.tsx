@@ -67,13 +67,13 @@ export default async function NewsletterPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white p-8 flex flex-col items-center justify-center font-sans">
-            <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl relative mb-8">
+        <div className="min-h-screen bg-black text-white p-4 md:p-8 flex flex-col items-center justify-center font-sans">
+            <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl relative mb-6 md:mb-8">
                 {/* Header Section */}
-                <div className="relative h-64 bg-indigo-900/40 overflow-hidden flex flex-col items-center justify-center text-center p-8">
+                <div className="relative h-56 md:h-64 bg-indigo-900/40 overflow-hidden flex flex-col items-center justify-center text-center p-4 md:p-8">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-indigo-500/30 via-transparent to-transparent opacity-80" />
                     <Sparkles className="w-12 h-12 text-indigo-400 mb-4 animate-pulse relative z-10" />
-                    <h1 className="text-4xl font-extrabold tracking-tight text-white mb-2 relative z-10">
+                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-2 relative z-10">
                         JellyTulli Rewind
                     </h1>
                     <p className="text-zinc-300 font-medium relative z-10">
@@ -85,17 +85,17 @@ export default async function NewsletterPage() {
                 </div>
 
                 {/* Main Content */}
-                <div className="p-8 lg:p-12 space-y-12">
+                <div className="p-4 md:p-8 lg:p-12 space-y-8 md:space-y-12">
                     {/* Big Numbers */}
                     <div className="grid grid-cols-2 gap-6">
                         <div className="bg-zinc-800/50 rounded-2xl p-6 text-center border border-zinc-700/50">
                             <Clock className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
-                            <div className="text-4xl font-black text-white">{totalHours}h</div>
+                            <div className="text-3xl md:text-4xl font-black text-white">{totalHours}h</div>
                             <div className="text-sm text-zinc-400 mt-1 font-medium pb-2 border-b border-zinc-700/50">{t('hoursWatched')}</div>
                         </div>
                         <div className="bg-zinc-800/50 rounded-2xl p-6 text-center border border-zinc-700/50">
                             <PlayCircle className="w-8 h-8 text-blue-400 mx-auto mb-3" />
-                            <div className="text-4xl font-black text-white">{totalPlays}</div>
+                            <div className="text-3xl md:text-4xl font-black text-white">{totalPlays}</div>
                             <div className="text-sm text-zinc-400 mt-1 font-medium pb-2 border-b border-zinc-700/50">{t('totalPlays')}</div>
                         </div>
                     </div>

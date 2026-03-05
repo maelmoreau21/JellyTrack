@@ -57,6 +57,8 @@ Adapte les variables sensibles et réseau avant démarrage :
 services:
   jellytulli:
     image: ghcr.io/maelmoreau21/jellytulli:latest
+    ports:
+      - "${APP_PORT:-3000}:${PORT:-3000}"
     environment:
       # PostgreSQL (DATABASE_URL est construit automatiquement au démarrage)
       POSTGRES_USER: jellytulli
@@ -64,6 +66,13 @@ services:
       POSTGRES_IP: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: jellytulli
+
+      # Alias DB_* (prioritaires) utiles en mode host / réseau custom
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USER: jellytulli
+      DB_PASSWORD: "change-me"
+      DB_NAME: jellytulli
 
       # Redis
       REDIS_URL: redis://redis:6379
@@ -95,7 +104,7 @@ docker compose up -d
 
 ### 4) Accéder à l'application
 
-- URL : `http://<host>:3000`
+- URL : `http://<host>:<APP_PORT>`
 - Connexion admin via `ADMIN_PASSWORD`
 - Puis configuration Jellyfin dans l'interface (ou via variables déjà définies)
 
@@ -105,7 +114,7 @@ docker compose up -d
 
 1. Installer le plugin **Webhook** dans Jellyfin.
 2. Créer un webhook de type **Generic Destination**.
-3. URL : `http://<host-jellytulli>:3000/api/webhook/jellyfin`
+3. URL : `http://<host-jellytulli>:<APP_PORT>/api/webhook/jellyfin`
 4. Événements : `Playback Start`, `Playback Progress`, `Playback Stop`.
 5. Ajouter un header d'authentification :
    - `Authorization: Bearer <JELLYFIN_WEBHOOK_SECRET>`
@@ -155,11 +164,16 @@ npm run dev
 
 | Variable | Défaut | Obligatoire | Description |
 | --- | --- | --- | --- |
-| `POSTGRES_USER` | `jellytulli` | Oui (Docker) | Utilisateur PostgreSQL |
-| `POSTGRES_PASSWORD` | `jellytulli_password` | Oui (prod) | Mot de passe PostgreSQL |
-| `POSTGRES_IP` | `postgres` | Oui (Docker) | Hôte PostgreSQL |
-| `POSTGRES_PORT` | `5432` | Oui | Port PostgreSQL |
-| `POSTGRES_DB` | `jellytulli` | Oui | Base PostgreSQL |
+| `POSTGRES_USER` | `jellytulli` | Non | Utilisateur PostgreSQL (legacy, fallback) |
+| `POSTGRES_PASSWORD` | `jellytulli_password` | Non | Mot de passe PostgreSQL (legacy, fallback) |
+| `POSTGRES_IP` | `postgres` | Non | Hôte PostgreSQL (legacy, fallback) |
+| `POSTGRES_PORT` | `5432` | Non | Port PostgreSQL (legacy, fallback) |
+| `POSTGRES_DB` | `jellytulli` | Non | Base PostgreSQL (legacy, fallback) |
+| `DB_USER` | — | Non | Utilisateur PostgreSQL (prioritaire si défini) |
+| `DB_PASSWORD` | — | Non | Mot de passe PostgreSQL (prioritaire si défini) |
+| `DB_HOST` | — | Non | Hôte PostgreSQL (prioritaire, recommandé en mode host) |
+| `DB_PORT` | — | Non | Port PostgreSQL (prioritaire) |
+| `DB_NAME` | — | Non | Base PostgreSQL (prioritaire) |
 | `DATABASE_URL` | auto-construit | Non* | URL complète si fournie manuellement |
 | `REDIS_URL` | `redis://redis:6379` | Oui | URL Redis |
 | `JELLYFIN_URL` | — | Oui | URL Jellyfin |
@@ -168,12 +182,13 @@ npm run dev
 | `ADMIN_PASSWORD` | — | Oui | Mot de passe admin JellyTulli |
 | `NEXTAUTH_SECRET` | — | Oui | Secret NextAuth/JWT |
 | `NEXTAUTH_URL` | — | Oui | URL publique de l'application |
+| `APP_PORT` | `3000` | Non | Port exposé sur l'hôte (mapping Docker) |
 | `PORT` | `3000` | Non | Port d'écoute interne |
 | `PUID` | `1001` | Non | UID runtime du process dans le conteneur |
 | `PGID` | `1001` | Non | GID runtime du process dans le conteneur |
 | `BACKUP_DIR` | `/data/backups` | Non | Répertoire de backup JSON |
 
-\* `DATABASE_URL` est généré automatiquement par l'entrypoint à partir des `POSTGRES_*` si absent.
+\* `DATABASE_URL` est généré automatiquement par l'entrypoint à partir de `DB_*` (prioritaire), puis `POSTGRES_*` en fallback.
 
 ---
 
