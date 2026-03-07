@@ -1,7 +1,10 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { checkLoginRateLimit, recordFailedLogin, resetLoginRateLimit } from "@/lib/rateLimit";
+import { getResolvedAuthSecret } from "@/lib/authSecret";
 import { headers, cookies } from "next/headers";
+
+const authSecret = getResolvedAuthSecret();
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -99,7 +102,7 @@ export const authOptions: NextAuthOptions = {
     pages: {
         signIn: '/login', // Redirection vers notre page custom
     },
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: authSecret.value,
 };
 
 const handler = NextAuth(authOptions);

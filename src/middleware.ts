@@ -1,6 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import { apiTSync } from "@/lib/i18n-api";
+import { getResolvedAuthSecret } from "@/lib/authSecret";
 
 // Routes API réservées strictement aux administrateurs (defense-in-depth, les routes ont aussi leurs propres checks)
 const ADMIN_API_PATHS = [
@@ -57,6 +58,7 @@ export default withAuth(
         return NextResponse.next();
     },
     {
+        secret: getResolvedAuthSecret().value,
         callbacks: {
             // L'utilisateur est autorisé si le token JWT est présent
             authorized: ({ token }) => !!token,
