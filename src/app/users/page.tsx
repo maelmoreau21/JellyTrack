@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Clock, Monitor, Smartphone, PlayCircle } from "lucide-react";
+import { Clock, Monitor } from "lucide-react";
 import { getTranslations, getLocale } from 'next-intl/server';
 
 export const dynamic = "force-dynamic";
@@ -65,7 +65,7 @@ export default async function UsersPage() {
 
     return (
         <div className="flex-col md:flex">
-            <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6">
+            <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1200px] mx-auto w-full">
                 <div className="flex items-center justify-between space-y-2 mb-6">
                     <div>
                         <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
@@ -75,7 +75,7 @@ export default async function UsersPage() {
                     </div>
                 </div>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface">
                     <CardHeader>
                         <CardTitle>{t('leaderboard')}</CardTitle>
                         <CardDescription>
@@ -88,9 +88,9 @@ export default async function UsersPage() {
                                 {t('noUsers')}
                             </div>
                         ) : (
-                            <div className="rounded-md border border-zinc-800/50 overflow-x-auto">
+                            <div className="app-surface-soft rounded-md border border-zinc-700/50 overflow-x-auto">
                                 <Table className="min-w-[700px]">
-                                    <TableHeader className="bg-zinc-900/50">
+                                    <TableHeader className="app-field">
                                         <TableRow className="border-zinc-800">
                                             <TableHead className="w-[80px]">{t('colRank')}</TableHead>
                                             <TableHead>{t('colUser')}</TableHead>
@@ -109,7 +109,7 @@ export default async function UsersPage() {
                                                 "text-muted-foreground";
 
                                             return (
-                                                <TableRow key={stat.id} className="border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                                                <TableRow key={stat.id} className="border-zinc-700/50 hover:bg-slate-800/50 transition-colors">
                                                     <TableCell className={rankColor}>#{index + 1}</TableCell>
                                                     <TableCell className="font-medium">
                                                         <Link 
@@ -131,7 +131,7 @@ export default async function UsersPage() {
                                                             {stat.favoriteClient}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="text-zinc-400 text-sm">
+                                                    <TableCell className="text-zinc-300 text-sm">
                                                         {stat.lastActive 
                                                             ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(stat.lastActive)
                                                             : t('never')

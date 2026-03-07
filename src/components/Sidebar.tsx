@@ -15,7 +15,6 @@ import {
     UserCircle,
     Gift,
     Sparkles,
-    Info,
     Menu,
     X,
     HeartPulse

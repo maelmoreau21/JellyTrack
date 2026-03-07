@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { performAutoBackup } from "@/lib/autoBackup";
 import { apiT } from "@/lib/i18n-api";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: NextRequest) {
+export async function POST() {
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
 

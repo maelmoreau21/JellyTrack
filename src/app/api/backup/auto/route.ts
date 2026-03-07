@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { readdirSync, statSync } from "fs";
 import path from "path";
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const BACKUP_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), "backups");
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
 

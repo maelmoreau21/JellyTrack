@@ -1,4 +1,4 @@
-import { Clock, Monitor, Smartphone, PlayCircle, Hash, Film, BarChart3, Calendar, Zap, Trophy, Percent, Layers } from "lucide-react";
+import { Clock, Monitor, Smartphone, PlayCircle, Hash, Film, Calendar, Zap, Trophy, Percent, Layers } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
 import { getTranslations } from 'next-intl/server';

@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Activity, ActivitySquare, MonitorPlay, Clock, TrendingUp, TrendingDown, Award, Film, Tv, Music, BookOpen, CalendarDays, PlayCircle, Users } from "lucide-react";
+import { Activity, MonitorPlay, Clock, TrendingUp, TrendingDown, Award, Film, Tv, Music, BookOpen, CalendarDays, PlayCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { unstable_cache } from "next/cache";
@@ -25,7 +25,6 @@ import { CategoryPieChart } from "@/components/charts/CategoryPieChart";
 import { YearlyHeatmap, HeatmapData } from "@/components/charts/YearlyHeatmap";
 import { DraggableDashboard } from "@/components/dashboard/DraggableDashboard";
 import { HardwareMonitor } from "@/components/dashboard/HardwareMonitor";
-import { KillStreamButton } from "@/components/dashboard/KillStreamButton";
 import { LiveStreamsPanel } from "@/components/dashboard/LiveStreamsPanel";
 import { MonthlyWatchTimeChart, MonthlyWatchData } from "@/components/charts/MonthlyWatchTimeChart";
 import { CompletionRatioChart, CompletionData } from "@/components/charts/CompletionRatioChart";
@@ -36,27 +35,6 @@ import { ClientCategoryChart, ClientCategoryData } from "@/components/charts/Cli
 import { LibraryDailyPlaysChart } from "@/components/charts/LibraryDailyPlaysChart";
 import { categorizeClient } from "@/lib/utils";
 import { SystemHealthWidgets } from "@/components/dashboard/SystemHealthWidgets";
-
-// Webhook / Redis types
-type WebhookPayload = {
-  ServerId: string;
-  ServerName: string;
-  ServerVersion: string;
-  NotificationType: string;
-  NotificationUsername: string;
-  UserId: string;
-  UserName: string;
-  Client: string;
-  DeviceName: string;
-  DeviceId: string;
-  IsTranscoding?: boolean;
-  PlayMethod?: string;
-  ItemId?: string;
-  ItemName?: string;
-  SessionId: string;
-  Country?: string;
-  City?: string;
-};
 
 type LiveStream = {
   sessionId: string;
@@ -343,7 +321,6 @@ const getDashboardMetrics = unstable_cache(
     }));
 
     // Monthly watch time (last 12 months)
-    const MONTH_IDX = ["0","1","2","3","4","5","6","7","8","9","10","11"];
     const monthlyMap = new Map<string, number>();
     const nowMonth = new Date();
     for (let i = 11; i >= 0; i--) {
@@ -366,7 +343,6 @@ const getDashboardMetrics = unstable_cache(
     // "Terminé" = watched >= 80% of media duration, "Partiel" = 20-80%, "Abandonné" = < 20% (excludes < 10% zapped)
     let completed = 0, partial = 0, abandoned = 0;
     // We need media durations for this — load them
-    const mediaIds = [...new Set(histories.map((h: any) => h.media?.title).filter(Boolean))];
     // Fetch media with durations
     const mediaWithDuration = await prisma.media.findMany({
       where: { durationMs: { not: null } },

@@ -28,13 +28,6 @@ function parseVisibleColumns(colsParam: string | undefined): Column[] {
 
 // --- Watch Party Detection Algorithm ---
 // Groups sessions of the same media started by different users within a 5-minute window
-interface WatchPartyGroup {
-    partyId: string;
-    mediaTitle: string;
-    mediaId: string;
-    members: string[];
-    logs: any[];
-}
 
 function toValidTimestamp(value: unknown): number | null {
     const date = value instanceof Date ? value : new Date(String(value ?? ''));
@@ -60,7 +53,7 @@ function detectWatchParties(logs: any[]): Map<string, string> {
     const partyMap = new Map<string, string>(); // logId -> partyId
     let partyCounter = 0;
 
-    byMedia.forEach((mediaLogs, mediaId) => {
+    byMedia.forEach((mediaLogs) => {
         // Sort by startedAt
         const sorted = [...mediaLogs].sort((a, b) => a.startedAtMs - b.startedAtMs);
 
@@ -237,7 +230,7 @@ export default async function LogsPage({
     const shownPartyBanners = new Set<string>();
 
     return (
-        <div className="flex-col md:flex">
+        <div className="flex-col md:flex dashboard-page">
             <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
                 <div className="flex items-center justify-between space-y-2">
                     <div>
@@ -249,7 +242,7 @@ export default async function LogsPage({
                     </div>
                 </div>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface">
                     <CardHeader>
                         <CardTitle>{tl('searchFilters')}</CardTitle>
                         <CardDescription>{tl('searchFiltersDesc')}</CardDescription>
@@ -265,7 +258,7 @@ export default async function LogsPage({
                         {typeFilter && (
                             <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs text-zinc-400">{tl('activeFilter')}</span>
-                                <Badge variant="default" className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20">
+                                <Badge variant="default" className="app-chip border-violet-500/35 bg-violet-500/15 text-violet-300 hover:bg-violet-500/25">
                                     {typeFilter === 'Movie' ? tl('moviesFilter') : typeFilter === 'Episode' ? tl('seriesFilter') : typeFilter === 'Audio' ? tl('musicFilter') : typeFilter === 'AudioBook' ? tl('booksFilter') : typeFilter}
                                 </Badge>
                                 <Link href="/logs" className="text-xs text-zinc-500 hover:text-zinc-300 underline">
@@ -274,7 +267,7 @@ export default async function LogsPage({
                             </div>
                         )}
 
-                        <div className="border rounded-md overflow-x-auto w-full mt-6">
+                        <div className="app-surface-soft border rounded-md overflow-x-auto w-full mt-6">
                             <Table className="min-w-[540px] md:min-w-[700px] table-fixed">
                                 <TableHeader>
                                     <TableRow>
@@ -330,7 +323,7 @@ export default async function LogsPage({
                                                             </TableCell>
                                                         </TableRow>
                                                     )}
-                                                    <TableRow key={log.id} className={`even:bg-zinc-900/30 hover:bg-zinc-800/50 border-zinc-800/50 transition-colors ${isParty ? 'border-l-2 border-l-violet-500/40' : ''}`}>
+                                                    <TableRow key={log.id} className={`even:bg-slate-900/35 hover:bg-slate-800/55 border-zinc-700/50 transition-colors ${isParty ? 'border-l-2 border-l-violet-500/40' : ''}`}>
                                                         {/* Date */}
                                                         {visibleColumns.includes('date') && (
                                                         <TableCell className="font-medium whitespace-nowrap">
@@ -487,9 +480,9 @@ export default async function LogsPage({
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-zinc-800/50 flex-wrap">
+                            <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-zinc-700/50 flex-wrap">
                                 {safePage > 1 && (
-                                    <Link href={buildPageUrl(safePage - 1)} className="flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
+                                    <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-slate-700/50">
                                         <ChevronLeft className="w-4 h-4" /> {tc('previous')}
                                     </Link>
                                 )}
@@ -511,7 +504,7 @@ export default async function LogsPage({
                                                     className={`px-2.5 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition-colors ${
                                                         item === safePage
                                                             ? "bg-primary text-primary-foreground"
-                                                            : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                                                            : "text-zinc-300 hover:bg-slate-700/50 hover:text-zinc-100"
                                                     }`}
                                                 >
                                                     {item}
@@ -520,7 +513,7 @@ export default async function LogsPage({
                                         )}
                                 </div>
                                 {safePage < totalPages && (
-                                    <Link href={buildPageUrl(safePage + 1)} className="flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
+                                    <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-slate-700/50">
                                         {tc('next')} <ChevronRight className="w-4 h-4" />
                                     </Link>
                                 )}

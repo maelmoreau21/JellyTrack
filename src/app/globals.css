@@ -89,21 +89,21 @@
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.225 0.01 250);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.225 0.01 250);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.76 0.14 205);
   --primary-foreground: oklch(0.16 0.02 210);
-  --secondary: oklch(0.269 0 0);
+  --secondary: oklch(0.3 0.01 250);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --muted: oklch(0.3 0.01 250);
+  --muted-foreground: oklch(0.79 0.01 250);
+  --accent: oklch(0.32 0.02 235);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --border: oklch(1 0 0 / 16%);
+  --input: oklch(1 0 0 / 20%);
   --ring: oklch(0.72 0.12 205);
   --chart-1: oklch(0.74 0.15 205);
   --chart-2: oklch(0.78 0.17 75);
@@ -114,9 +114,9 @@
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.76 0.14 205);
   --sidebar-primary-foreground: oklch(0.16 0.02 210);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.3 0.01 250);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-border: oklch(1 0 0 / 16%);
   --sidebar-ring: oklch(0.72 0.12 205);
 }
 
@@ -134,9 +134,59 @@
         linear-gradient(180deg, rgba(9, 9, 11, 0.98), rgba(9, 11, 18, 1));
     background-attachment: fixed;
   }
+
+  .dark input,
+  .dark select,
+  .dark textarea {
+    background-color: rgba(15, 23, 42, 0.72);
+    border-color: rgba(148, 163, 184, 0.28);
+  }
+
+  .dark [data-slot="card"] {
+    border-color: rgba(148, 163, 184, 0.2);
+    background-image:
+      linear-gradient(180deg, rgba(148, 163, 184, 0.07), rgba(148, 163, 184, 0.015)),
+      radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent 38%);
+  }
 }
 
-  @layer components {
+@layer components {
+    .app-surface {
+      border-color: rgba(148, 163, 184, 0.22);
+      background:
+        linear-gradient(180deg, rgba(30, 41, 59, 0.46), rgba(15, 23, 42, 0.42)),
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.13), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.09), transparent 28%),
+        rgba(9, 12, 18, 0.88);
+      box-shadow:
+        0 16px 40px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(14px);
+    }
+
+    .app-surface-soft {
+      border-color: rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.56);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .app-field {
+      border-color: rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.72);
+    }
+
+    .app-chip {
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(15, 23, 42, 0.68);
+      color: rgba(226, 232, 240, 0.94);
+    }
+
+    .app-chip-success {
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.14);
+      color: #6ee7b7;
+    }
+
     .dashboard-page {
       position: relative;
     }
@@ -221,7 +271,7 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
       backdrop-filter: blur(14px);
     }
-  }
+}
 
 ::selection {
   background: rgba(8, 145, 178, 0.35);

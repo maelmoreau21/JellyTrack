@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { FallbackImage } from "@/components/FallbackImage";
 import Link from "next/link";
-import { PlayCircle, Film, ArrowDownUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { Film, ArrowDownUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { getJellyfinImageUrl } from "@/lib/jellyfin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -196,14 +196,14 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
     return (
         <div className="flex-col md:flex">
-            <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6">
+            <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 md:mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                         <h2 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
                             <Film className="w-6 h-6 md:w-8 md:h-8 opacity-80" /> {t('title')}
                         </h2>
                         <Tabs defaultValue={type || "all"} className="w-full sm:w-[400px]">
-                            <TabsList className="bg-zinc-900 border border-zinc-800 w-full sm:w-auto">
+                            <TabsList className="app-field border-zinc-700/60 w-full sm:w-auto">
                                 <TabsTrigger value="all" asChild><Link href={`/media${sortBy !== 'plays' ? `?sortBy=${sortBy}` : ''}`}>{tc('all')}</Link></TabsTrigger>
                                 <TabsTrigger value="movie" asChild><Link href={`/media?type=movie${sortBy !== 'plays' ? `&sortBy=${sortBy}` : ''}`}>{tc('movies')}</Link></TabsTrigger>
                                 <TabsTrigger value="series" asChild><Link href={`/media?type=series${sortBy !== 'plays' ? `&sortBy=${sortBy}` : ''}`}>{tc('series')}</Link></TabsTrigger>
@@ -215,7 +215,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
                 {/* Section Stats Bibliothèque */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-                    <Card className="col-span-2 bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
+                    <Card className="col-span-2 app-surface">
                         <CardHeader>
                             <CardTitle>{t('genreDiversity')}</CardTitle>
                         </CardHeader>
@@ -226,25 +226,25 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                         </CardContent>
                     </Card>
 
-                    <Card className="col-span-1 bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
+                    <Card className="col-span-1 app-surface">
                         <CardHeader>
                             <CardTitle>{t('videoQuality')}</CardTitle>
                             <CardDescription>{t('videoQualityDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 mt-4">
-                            <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border">
+                            <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border">
                                 <span className="font-semibold text-lg drop-shadow-md bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">4K UHD</span>
                                 <span className="text-xl font-bold">{res4K}</span>
                             </div>
-                            <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border">
+                            <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border">
                                 <span className="font-semibold text-lg text-blue-400 drop-shadow-md">1080p FHD</span>
                                 <span className="text-xl font-bold">{res1080p}</span>
                             </div>
-                            <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border">
+                            <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border">
                                 <span className="font-medium text-lg text-emerald-400">720p HD</span>
                                 <span className="text-xl font-bold">{res720p}</span>
                             </div>
-                            <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border">
+                            <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border">
                                 <span className="font-medium text-zinc-500">{t('standardOther')}</span>
                                 <span className="text-lg font-bold text-zinc-400">{resSD}</span>
                             </div>
@@ -252,7 +252,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                     </Card>
                 </div>
 
-                <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface">
                     <CardHeader>
                         <CardTitle>{t('allMedia')}</CardTitle>
                         <CardDescription>
@@ -263,22 +263,22 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
                                 <ArrowDownUp className="w-4 h-4" /> {t('sortBy')}
                             </span>
-                            <div className="flex items-center bg-muted rounded-md p-1">
+                            <div className="app-field flex items-center rounded-md p-1">
                                 <Link
                                     href={`/media?sortBy=plays${type ? `&type=${type}` : ''}`}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "plays" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/50"}`}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "plays" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-300 hover:bg-slate-700/50"}`}
                                 >
                                     {t('sortPopularity')}
                                 </Link>
                                 <Link
                                     href={`/media?sortBy=duration${type ? `&type=${type}` : ''}`}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "duration" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/50"}`}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "duration" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-300 hover:bg-slate-700/50"}`}
                                 >
                                     {t('sortWatchTime')}
                                 </Link>
                                 <Link
                                     href={`/media?sortBy=quality${type ? `&type=${type}` : ''}`}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "quality" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-background/50"}`}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "quality" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-300 hover:bg-slate-700/50"}`}
                                 >
                                     {t('sortPlayMode')}
                                 </Link>
@@ -294,7 +294,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                                 {displayMedia.map((media: any) => (
                                     <Link href={`/media/${media.jellyfinMediaId}`} key={media.id} className="group flex flex-col space-y-2 relative">
-                                        <div className="relative w-full aspect-[2/3] bg-zinc-900 rounded-md overflow-hidden ring-1 ring-white/10 shadow-lg">
+                                        <div className="app-surface-soft relative w-full aspect-[2/3] rounded-md overflow-hidden ring-1 ring-white/10 shadow-lg">
                                             <FallbackImage
                                                 src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.parentId || undefined)}
                                                 alt={media.title}
@@ -348,9 +348,9 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                             </div>
                         )}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2 mt-8 pt-4 border-t border-zinc-800/50">
+                            <div className="flex items-center justify-center gap-2 mt-8 pt-4 border-t border-zinc-700/50">
                                 {safePage > 1 && (
-                                    <Link href={buildPageUrl(safePage - 1)} className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
+                                    <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-700/50">
                                         <ChevronLeft className="w-4 h-4" /> {tc('previous')}
                                     </Link>
                                 )}
@@ -372,7 +372,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                                                         item === safePage
                                                             ? "bg-primary text-primary-foreground"
-                                                            : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                                                            : "text-zinc-300 hover:bg-slate-700/50 hover:text-zinc-100"
                                                     }`}
                                                 >
                                                     {item}
@@ -381,7 +381,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                         )}
                                 </div>
                                 {safePage < totalPages && (
-                                    <Link href={buildPageUrl(safePage + 1)} className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-zinc-700 hover:bg-zinc-800">
+                                    <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-700/50">
                                         {tc('next')} <ChevronRight className="w-4 h-4" />
                                     </Link>
                                 )}

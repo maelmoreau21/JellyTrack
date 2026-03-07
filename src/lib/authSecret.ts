@@ -76,12 +76,20 @@ export function getResolvedAuthSecret() {
         return cachedSecret;
     }
 
+    const isProduction = process.env.NODE_ENV === "production";
+    const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
+    // Production runtime must have an explicit secret to avoid accidental weak deployments.
+    if (isProduction && !isBuildPhase) {
+        throw new Error("[Auth] NEXTAUTH_SECRET (ou AUTH_SECRET) est obligatoire en production runtime.");
+    }
+
     const derivedSecret = buildDerivedSecret();
     cachedSecret = { value: derivedSecret, source: "derived" };
 
-    if (!warnedAboutDerivedSecret) {
+    if (!isBuildPhase && !warnedAboutDerivedSecret) {
         warnedAboutDerivedSecret = true;
-        console.warn("[Auth] NEXTAUTH_SECRET/AUTH_SECRET absent ou invalide. Un secret dérivé stable est utilisé pour éviter le crash en production. Définissez NEXTAUTH_SECRET pour une configuration propre.");
+        console.warn("[Auth] NEXTAUTH_SECRET/AUTH_SECRET absent ou invalide. Secret derive utilise (mode non-production).");
     }
 
     return cachedSecret;

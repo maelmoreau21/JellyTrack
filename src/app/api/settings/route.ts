@@ -3,14 +3,52 @@ import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { apiT } from "@/lib/i18n-api";
 import { AVAILABLE_LOCALES } from "@/i18n/locales";
-import { getAvailableLibraryKeys } from "@/lib/mediaPolicy";
+import { getAvailableLibraryKeys, normalizeLibraryKey } from "@/lib/mediaPolicy";
 import { loadLibraryRules, saveLibraryRules } from "@/lib/libraryRules";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
+async function fetchJellyfinLibraryKeys() {
+    const jellyfinUrl = process.env.JELLYFIN_URL;
+    const jellyfinApiKey = process.env.JELLYFIN_API_KEY;
+
+    if (!jellyfinUrl || !jellyfinApiKey) {
+        return { keys: [] as string[], source: "database" as const, error: "Jellyfin env vars missing" };
+    }
+
+    try {
+        const response = await fetch(`${jellyfinUrl}/Library/VirtualFolders`, {
+            method: "GET",
+            headers: {
+                "X-Emby-Token": jellyfinApiKey,
+            },
+            cache: "no-store",
+        });
+
+        if (!response.ok) {
+            return { keys: [] as string[], source: "database" as const, error: `Jellyfin returned ${response.status}` };
+        }
+
+        const payload = await response.json();
+        const folders = Array.isArray(payload) ? payload : [];
+
+        const keys = folders
+            .map((folder: any) => normalizeLibraryKey(folder?.CollectionType))
+            .filter((value: string | null): value is string => Boolean(value));
+
+        return {
+            keys: Array.from(new Set(keys)),
+            source: "jellyfin" as const,
+            error: null,
+        };
+    } catch {
+        return { keys: [] as string[], source: "database" as const, error: "Jellyfin fetch failed" };
+    }
+}
+
 // Endpoint to fetch global settings (admin only)
-export async function GET(req: NextRequest) {
+export async function GET() {
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
 
@@ -34,19 +72,29 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        const mediaLibraries = await prisma.media.findMany({
+        const [mediaLibraries, jellyfinScan] = await Promise.all([
+            prisma.media.findMany({
             distinct: ["collectionType"],
             where: { collectionType: { not: null } },
             select: { collectionType: true }
-        });
+            }),
+            fetchJellyfinLibraryKeys(),
+        ]);
 
         const libraryRules = await loadLibraryRules();
         const availableLibraries = getAvailableLibraryKeys([
+            ...jellyfinScan.keys,
             ...mediaLibraries.map((entry) => entry.collectionType),
             ...Object.keys(libraryRules),
         ]);
 
-        return NextResponse.json({ ...settings, availableLibraries, libraryRules }, { status: 200 });
+        return NextResponse.json({
+            ...settings,
+            availableLibraries,
+            libraryRules,
+            libraryScanSource: jellyfinScan.source,
+            libraryScanError: jellyfinScan.error,
+        }, { status: 200 });
     } catch (error) {
         console.error("Failed to fetch settings:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

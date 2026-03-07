@@ -14,7 +14,7 @@ export const authOptions: NextAuthOptions = {
                 username: { label: "Nom d'utilisateur", type: "text", placeholder: "Admin" },
                 password: { label: "Mot de passe Administrateur", type: "password", placeholder: "********" }
             },
-            async authorize(credentials, req) {
+            async authorize(credentials) {
                 if (!credentials?.username || !credentials?.password) return null;
 
                 // Read locale from cookie for error messages

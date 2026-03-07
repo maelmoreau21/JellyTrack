@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { loadLibraryRules } from "@/lib/libraryRules";
@@ -6,7 +6,7 @@ import { readSystemHealthState } from "@/lib/systemHealth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
 

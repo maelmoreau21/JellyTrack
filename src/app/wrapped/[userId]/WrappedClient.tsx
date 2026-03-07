@@ -58,7 +58,7 @@ function RankedList({ items, gradient, noDataLabel }: { items: { title: string; 
     );
 }
 
-function CategorySlide({ label, icon, breakdown, gradient, noDataLabel, ofLabel }: { label: string; icon: React.ReactNode; breakdown: CategoryBreakdown; gradient: string; noDataLabel: string; ofLabel: string }) {
+function CategorySlide({ icon, breakdown, gradient, noDataLabel, ofLabel }: { icon: React.ReactNode; breakdown: CategoryBreakdown; gradient: string; noDataLabel: string; ofLabel: string }) {
     if (breakdown.topMedia.length === 0) {
         return (
             <div className="flex flex-col items-center gap-4">
@@ -120,9 +120,6 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
     const [currentSlide, setCurrentSlide] = useState(0);
     const router = useRouter();
     const t = useTranslations('wrapped');
-
-    const monthKeys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
-    const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
 
     // Translate month names in data
     const translatedMonthlyHours = data.monthlyHours.map(m => ({
@@ -268,21 +265,21 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
             subtitle: t('moviesSubtitle'),
             icon: <Film className="w-16 h-16 mb-4 text-red-400" />,
             bgColor: "bg-gradient-to-br from-red-900 via-rose-900 to-black",
-            content: <CategorySlide label={t('moviesLabel')} icon={<Film className="w-8 h-8 text-red-400" />} breakdown={data.categories.movies} gradient="bg-gradient-to-r from-red-400 to-orange-400" noDataLabel={t('noDataFor', { label: t('moviesLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('moviesLabel') })} />
+            content: <CategorySlide icon={<Film className="w-8 h-8 text-red-400" />} breakdown={data.categories.movies} gradient="bg-gradient-to-r from-red-400 to-orange-400" noDataLabel={t('noDataFor', { label: t('moviesLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('moviesLabel') })} />
         },
         {
             title: t('episodesTitle'),
             subtitle: t('episodesSubtitle'),
             icon: <Tv className="w-16 h-16 mb-4 text-sky-400" />,
             bgColor: "bg-gradient-to-br from-sky-900 via-blue-900 to-black",
-            content: <CategorySlide label={t('episodesLabel')} icon={<Tv className="w-8 h-8 text-sky-400" />} breakdown={data.categories.series} gradient="bg-gradient-to-r from-sky-400 to-blue-400" noDataLabel={t('noDataFor', { label: t('episodesLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('episodesLabel') })} />
+            content: <CategorySlide icon={<Tv className="w-8 h-8 text-sky-400" />} breakdown={data.categories.series} gradient="bg-gradient-to-r from-sky-400 to-blue-400" noDataLabel={t('noDataFor', { label: t('episodesLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('episodesLabel') })} />
         },
         {
             title: t('musicTitle'),
             subtitle: t('musicSubtitle'),
             icon: <Music className="w-16 h-16 mb-4 text-green-400" />,
             bgColor: "bg-gradient-to-br from-green-900 via-emerald-900 to-black",
-            content: <CategorySlide label={t('musicLabel')} icon={<Music className="w-8 h-8 text-green-400" />} breakdown={data.categories.music} gradient="bg-gradient-to-r from-green-400 to-emerald-400" noDataLabel={t('noDataFor', { label: t('musicLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('musicLabel') })} />
+            content: <CategorySlide icon={<Music className="w-8 h-8 text-green-400" />} breakdown={data.categories.music} gradient="bg-gradient-to-r from-green-400 to-emerald-400" noDataLabel={t('noDataFor', { label: t('musicLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('musicLabel') })} />
         },
         // Share card
         {

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
                 message: result.error
             }, { status: 500 });
         }
-    } catch (e) {
+    } catch {
         return NextResponse.json({ status: "error", message: await apiT('internalError') }, { status: 500 });
     }
 }

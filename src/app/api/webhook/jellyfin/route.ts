@@ -207,7 +207,6 @@ export async function POST(req: Request) {
             const jellyfinUserId = payload.UserId || payload.User_Id;
             const jellyfinMediaId = payload.ItemId || payload.Item_Id || payload.MediaId;
             const positionTicks = payload.PlaybackPositionTicks || payload.PositionTicks || 0;
-            const runTimeTicks = payload.RunTimeTicks || payload.Item?.RunTimeTicks || 0;
 
             if (jellyfinUserId && jellyfinMediaId) {
                 // Find the user and media internal IDs

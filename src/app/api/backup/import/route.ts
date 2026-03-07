@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
             }
             if (settings) {
                 // Strip legacy jellyfinUrl/jellyfinApiKey fields (now env vars)
-                const { jellyfinUrl, jellyfinApiKey, ...cleanSettings } = settings as any;
+                const { ...cleanSettings } = settings as any;
                 await tx.globalSettings.create({
                     data: {
                         id: cleanSettings.id || "global",

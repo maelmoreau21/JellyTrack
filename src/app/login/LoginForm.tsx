@@ -40,7 +40,7 @@ export default function LoginForm() {
                 router.push(callbackUrl);
                 router.refresh(); // Required in App Router to trigger middleware reload
             }
-        } catch (err) {
+        } catch {
             setError(t('unexpectedError'));
             setIsLoading(false);
         }

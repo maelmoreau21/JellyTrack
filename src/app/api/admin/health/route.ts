@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { getLogHealthSnapshot } from "@/lib/logHealth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
 

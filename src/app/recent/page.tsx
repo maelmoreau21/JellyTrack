@@ -3,7 +3,7 @@ import { FallbackImage } from "@/components/FallbackImage";
 import Link from "next/link";
 import { Clock, Sparkles, Film, Tv, Music, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { getJellyfinImageUrl } from "@/lib/jellyfin";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getServerSession } from "next-auth";
@@ -102,7 +102,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="flex-col md:flex">
-      <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6">
+      <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3 md:gap-4 min-w-0">
@@ -111,7 +111,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
               {t('title')}
             </h2>
             <Tabs defaultValue={type || "all"} className="w-full md:w-[380px]">
-              <TabsList className="bg-zinc-900 border border-zinc-800 w-full">
+              <TabsList className="app-field border-zinc-700/60 w-full">
                 <TabsTrigger value="all" asChild><Link href={buildUrl({})}>{tc('all')}</Link></TabsTrigger>
                 <TabsTrigger value="movie" asChild><Link href={buildUrl({ type: "movie" })}>{tc('movies')}</Link></TabsTrigger>
                 <TabsTrigger value="series" asChild><Link href={buildUrl({ type: "series" })}>{tc('series')}</Link></TabsTrigger>
@@ -119,7 +119,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
               </TabsList>
             </Tabs>
           </div>
-          <span className="text-sm text-zinc-400">{totalCount} {t('mediaCount')}</span>
+          <span className="app-chip text-sm px-2.5 py-1 rounded-md">{totalCount} {t('mediaCount')}</span>
         </div>
 
         {/* Grid */}
@@ -133,7 +133,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
 
             return (
               <Link key={media.id} href={`/media/${media.jellyfinMediaId}`} className="group flex flex-col space-y-2 relative">
-                <div className="relative w-full aspect-[2/3] bg-zinc-900 rounded-lg overflow-hidden ring-1 ring-white/10 shadow-lg">
+                <div className="app-surface-soft relative w-full aspect-[2/3] rounded-lg overflow-hidden ring-1 ring-white/10 shadow-lg">
                   <FallbackImage
                     src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.parentId || undefined)}
                     alt={media.title}
@@ -198,7 +198,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
         </div>
 
         {recentMedia.length === 0 && (
-          <Card className="bg-zinc-900/50 border-zinc-800/50">
+          <Card className="app-surface">
             <CardContent className="flex flex-col items-center justify-center py-16 text-zinc-500">
               <Sparkles className="w-12 h-12 mb-4 opacity-50" />
               <p className="text-lg font-medium">{t('noMedia')}</p>
@@ -211,13 +211,13 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2">
             {page > 1 && (
-              <Link href={buildUrl({ type, page: String(page - 1) })} className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800/70 transition-colors">
+              <Link href={buildUrl({ type, page: String(page - 1) })} className="app-field flex items-center gap-1 px-3 py-2 text-sm rounded-lg transition-colors hover:bg-slate-700/50">
                 <ChevronLeft className="w-4 h-4" /> {tc('previous')}
               </Link>
             )}
-            <span className="text-sm text-zinc-400 px-4">Page {page} / {totalPages}</span>
+            <span className="app-chip text-sm px-4 py-1 rounded-md">Page {page} / {totalPages}</span>
             {page < totalPages && (
-              <Link href={buildUrl({ type, page: String(page + 1) })} className="flex items-center gap-1 px-3 py-2 text-sm rounded-lg border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800/70 transition-colors">
+              <Link href={buildUrl({ type, page: String(page + 1) })} className="app-field flex items-center gap-1 px-3 py-2 text-sm rounded-lg transition-colors hover:bg-slate-700/50">
                 {tc('next')} <ChevronRight className="w-4 h-4" />
               </Link>
             )}

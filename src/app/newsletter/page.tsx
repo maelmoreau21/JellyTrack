@@ -1,5 +1,4 @@
 import prisma from "@/lib/prisma";
-import Image from "next/image";
 import { subDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { enUS } from "date-fns/locale";

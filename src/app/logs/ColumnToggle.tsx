@@ -50,18 +50,18 @@ export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
         <div className="relative" ref={ref}>
             <button
                 onClick={() => setOpen(!open)}
-                className="flex items-center gap-2 px-3 py-2 h-10 md:h-9 text-sm rounded-md border border-zinc-700 hover:bg-zinc-800 transition-colors"
+                className="app-field flex items-center gap-2 px-3 py-2 h-10 md:h-9 text-sm rounded-md hover:bg-slate-700/50 transition-colors"
                 title={t('toggleColumns')}
             >
                 <Columns3 className="w-4 h-4" />
                 <span className="hidden md:inline">{t('columns')}</span>
             </button>
             {open && (
-                <div className="absolute right-0 top-full mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl p-2 min-w-[220px] md:min-w-[180px]">
+                <div className="app-surface-soft absolute right-0 top-full mt-1 z-50 border border-zinc-700 rounded-lg shadow-xl p-2 min-w-[220px] md:min-w-[180px]">
                     {ALL_COLUMNS.map(col => (
                         <label
                             key={col}
-                            className="flex items-center gap-2 px-2 py-2 rounded hover:bg-zinc-800 cursor-pointer text-sm text-zinc-300"
+                            className="flex items-center gap-2 px-2 py-2 rounded hover:bg-slate-700/45 cursor-pointer text-sm text-zinc-200"
                         >
                             <input
                                 type="checkbox"
