@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { discordWebhookUrl, discordAlertCondition, discordAlertsEnabled, excludedLibraries, monitorIntervalActive, monitorIntervalIdle, syncCronHour, syncCronMinute, backupCronHour, backupCronMinute, defaultLocale, libraryRules } = body;
+        const { discordWebhookUrl, discordAlertCondition, discordAlertsEnabled, excludedLibraries, syncCronHour, syncCronMinute, backupCronHour, backupCronMinute, defaultLocale, libraryRules } = body;
 
         // Input validation â€” Discord webhook URL must be a valid Discord URL or null
         if (discordWebhookUrl !== undefined && discordWebhookUrl !== null && discordWebhookUrl !== "") {
@@ -132,19 +132,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: await apiT('alertConditionInvalid') }, { status: 400 });
         }
 
-        // Input validation â€” intervals must be positive numbers within sane bounds
-        if (monitorIntervalActive !== undefined) {
-            const val = Number(monitorIntervalActive);
-            if (isNaN(val) || val < 500 || val > 60000) {
-                return NextResponse.json({ error: await apiT('intervalActiveRange') }, { status: 400 });
-            }
-        }
-        if (monitorIntervalIdle !== undefined) {
-            const val = Number(monitorIntervalIdle);
-            if (isNaN(val) || val < 1000 || val > 300000) {
-                return NextResponse.json({ error: await apiT('intervalIdleRange') }, { status: 400 });
-            }
-        }
 
         // Input validation â€” cron hours/minutes
         if (syncCronHour !== undefined) {
@@ -175,8 +162,6 @@ export async function POST(req: NextRequest) {
                 discordAlertCondition: discordAlertCondition !== undefined ? discordAlertCondition : undefined,
                 discordAlertsEnabled: discordAlertsEnabled !== undefined ? discordAlertsEnabled : undefined,
                 excludedLibraries: excludedLibraries !== undefined ? excludedLibraries : undefined,
-                monitorIntervalActive: monitorIntervalActive !== undefined ? monitorIntervalActive : undefined,
-                monitorIntervalIdle: monitorIntervalIdle !== undefined ? monitorIntervalIdle : undefined,
                 syncCronHour: syncCronHour !== undefined ? Number(syncCronHour) : undefined,
                 syncCronMinute: syncCronMinute !== undefined ? Number(syncCronMinute) : undefined,
                 backupCronHour: backupCronHour !== undefined ? Number(backupCronHour) : undefined,
@@ -189,8 +174,6 @@ export async function POST(req: NextRequest) {
                 discordAlertCondition: discordAlertCondition || "ALL",
                 discordAlertsEnabled: discordAlertsEnabled || false,
                 excludedLibraries: excludedLibraries || [],
-                monitorIntervalActive: monitorIntervalActive || 1000,
-                monitorIntervalIdle: monitorIntervalIdle || 5000,
                 syncCronHour: syncCronHour !== undefined ? Number(syncCronHour) : 3,
                 syncCronMinute: syncCronMinute !== undefined ? Number(syncCronMinute) : 0,
                 backupCronHour: backupCronHour !== undefined ? Number(backupCronHour) : 3,
@@ -198,19 +181,6 @@ export async function POST(req: NextRequest) {
                 defaultLocale: defaultLocale || "fr",
             }
         });
-
-        // Update monitor intervals in real-time (same Node.js process)
-        if (monitorIntervalActive !== undefined || monitorIntervalIdle !== undefined) {
-            try {
-                const { updateMonitorIntervals } = await import("@/server/monitor");
-                updateMonitorIntervals(
-                    updated.monitorIntervalActive,
-                    updated.monitorIntervalIdle
-                );
-            } catch (err) {
-                console.warn("[Settings] Could not update monitor intervals:", err);
-            }
-        }
 
         // Reschedule cron jobs if schedule changed
         if (syncCronHour !== undefined || syncCronMinute !== undefined || backupCronHour !== undefined || backupCronMinute !== undefined) {

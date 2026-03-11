@@ -142,14 +142,17 @@ model GlobalSettings {
   discordAlertsEnabled  Boolean  @default(false)
   excludedLibraries     String[] @default([]) // Filtre les types de collection (ex: Photo, HomeVideos)
   libraryRules          Json?
-  monitorIntervalActive Int      @default(1000)  // Polling interval when sessions active (ms)
-  monitorIntervalIdle   Int      @default(5000)  // Polling interval when idle (ms)
   syncCronHour          Int      @default(3)     // Hour (0-23) for daily full sync
   syncCronMinute        Int      @default(0)     // Minute (0-59) for daily full sync
   backupCronHour        Int      @default(3)     // Hour (0-23) for daily auto-backup
   backupCronMinute      Int      @default(30)    // Minute (0-59) for daily auto-backup
   defaultLocale         String   @default("fr")  // Default language for new users (fr, en)
   timeFormat            String   @default("24h") // Time display format: "12h" or "24h"
+  // Plugin connection system
+  pluginApiKey          String?  // API key for Jellyfin plugin authentication
+  pluginLastSeen        DateTime? // Last heartbeat from the plugin
+  pluginVersion         String?  // Plugin version reported via heartbeat
+  pluginServerName      String?  // Jellyfin server name reported via heartbeat
   updatedAt             DateTime @updatedAt
 }
 

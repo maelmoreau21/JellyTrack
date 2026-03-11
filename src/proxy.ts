@@ -72,6 +72,6 @@ export default withAuth(
 // Configuration du matcher pour proteger toutes les routes SAUF les API publiques, fichiers statiques, etc.
 export const config = {
     matcher: [
-        "/((?!api/webhook|login|_next|favicon.ico).*)",
+        "/((?!api/plugin|login|_next|favicon.ico).*)",
     ],
 };

@@ -683,3 +683,74 @@ Conversion intégrale de l'interface utilisateur du français codé en dur vers 
   - `PlatformDistributionChart` : légende cliquable pour masquer/afficher des plateformes + bouton "Tout afficher".
   - `CompletionRatioChart` : légende cliquable pour masquer/afficher des segments + bouton "Tout afficher".
 - **Validation** : build `npm run build` OK.
+
+### Phase 47 — Système de Plugin Jellyfin (Architecture Push)
+
+Migration d'une architecture de polling (monitor interroge `/Sessions`) vers un système de **plugin Jellyfin natif** qui pousse les événements en temps réel vers JellyTrack.
+
+#### Nouveau système de connexion Plugin ↔ JellyTrack
+
+1. **API Key Management** :
+   - `GlobalSettings` enrichi de 4 champs : `pluginApiKey` (clé API), `pluginLastSeen` (dernier heartbeat), `pluginVersion`, `pluginServerName`.
+   - Route API `/api/plugin/api-key` (GET/POST/DELETE) : génère une clé `jt_xxxx` (64 hex chars via `crypto.randomBytes`), révoque, ou récupère le statut de connexion.
+   - Migration Prisma `20260311000000_add_plugin_connection_fields`.
+
+2. **Plugin Events Endpoint** (`/api/plugin/events`) :
+   - Point unique de réception pour tous les événements du plugin Jellyfin.
+   - Authentification via `Authorization: Bearer {apiKey}` ou `X-Api-Key: {apiKey}` (vérifié contre `GlobalSettings.pluginApiKey`).
+   - Événements gérés :
+     - **Heartbeat** : met à jour `pluginLastSeen`, `pluginVersion`, `pluginServerName`.
+     - **PlaybackStart** : upsert User + Media (avec données enrichies : genres, résolution, durée, parentId, artist, libraryName), dedup 1h merge window, création activeStream + Redis, notification Discord.
+     - **PlaybackStop** : fermeture PlaybackHistory (duration = min(wallClock, positionTicks)), cleanup ActiveStream + Redis, événement télémétrie stop.
+     - **PlaybackProgress** : tracking pause (Redis `pause:*`), changements audio/subtitle (Redis `audio:*`, `sub:*`), incréments compteurs, événements télémétrie avec position.
+     - **LibraryChanged** : upsert batch des médias ajoutés/modifiés.
+   - Exclu du middleware NextAuth via matcher regex (`api/plugin`).
+
+3. **Settings UI** :
+   - Nouvelle carte "Plugin Jellyfin" en haut de la page `/settings`.
+   - Statut de connexion (indicateur vert pulsant si heartbeat < 2min).
+   - Affichage clé API (masquée/visible, copier dans le presse-papier).
+   - URL JellyTrack affichée (à configurer dans le plugin).
+   - Infos du plugin : nom du serveur, version, dernier signal.
+   - Boutons : générer, régénérer (avec confirmation), révoquer.
+
+4. **Prompt IA pour Plugin Jellyfin** :
+   - Fichier `PLUGIN_AI_PROMPT.md` contenant un prompt complet et détaillé pour qu'une IA crée le plugin C# Jellyfin.
+   - Inclut : structure du projet, modèles d'événements, extraction des données depuis le SDK Jellyfin, page de configuration HTML, gestion des erreurs, build/packaging.
+   - Le prompt demande la création d'un `CONTEXT.md` dans le repo du plugin.
+
+5. **Coexistence Monitor + Plugin** (SUPPRIMÉ en Phase 48) :
+   - Le monitor et le webhook ont été supprimés. Le plugin est désormais la seule source de données temps réel.
+
+### Phase 48 — Migration Plugin-Only : Suppression Monitor & Webhook
+
+Migration définitive vers une architecture **plugin push exclusif**. Tous les systèmes legacy de collecte de données (polling, webhook) ont été supprimés.
+
+#### Fichiers supprimés
+- **`src/server/monitor.ts`** — Système complet de polling Jellyfin (~700 lignes). Interrogeait `GET /Sessions` toutes les 1-5s.
+- **`src/app/api/webhook/jellyfin/route.ts`** — Handler webhook legacy (~500 lignes) pour le plugin Webhook communautaire.
+
+#### Fichiers modifiés
+- **`src/instrumentation.ts`** : Suppression de `import { startMonitoring }` et `await startMonitoring()`. Seuls les cron jobs restent.
+- **`src/app/settings/page.tsx`** : Suppression de la carte "Surveillance d'Activité" (intervalles de polling), des états/handlers associés. La carte "Plugin Jellyfin" reste la première de la page.
+- **`src/app/api/settings/route.ts`** : Suppression des champs `monitorIntervalActive`/`monitorIntervalIdle` du parsing, validation et upsert DB. Suppression de l'import `updateMonitorIntervals`.
+- **`prisma/schema.prisma`** : Suppression des champs `monitorIntervalActive Int @default(1000)` et `monitorIntervalIdle Int @default(5000)` du modèle `GlobalSettings`.
+- **`src/proxy.ts`** : Suppression de `api/webhook` dans le matcher regex.
+- **10 fichiers de traduction (`messages/*.json`)** : Suppression de 7 clés liées au monitoring dans chaque locale (monitorSaved, monitorTitle, monitorDesc, activeInterval, activeIntervalDesc, idleInterval, idleIntervalDesc).
+
+#### Migration Prisma
+- `prisma/migrations/20260311120000_remove_monitor_polling_fields/migration.sql`
+
+#### Enrichissement Heartbeat — Synchronisation des utilisateurs
+- Le handler `Heartbeat` dans `/api/plugin/events` synchronise désormais les utilisateurs Jellyfin. Le plugin envoie un tableau `users` à chaque heartbeat, et JellyTrack fait un upsert pour chaque utilisateur (jellyfinUserId + username).
+
+#### PLUGIN_AI_PROMPT.md réécrit
+- Suppression des références à la coexistence monitor/webhook/plugin.
+- Ajout du tableau `users` dans le payload Heartbeat pour la synchronisation.
+- Ajout de la section "Comment JellyTrack traite les événements" décrivant le traitement serveur de chaque type.
+- Ajout de guidance pour le debounce LibraryChanged (batch 30s).
+
+#### Architecture résultante
+- **Source unique** : Le plugin Jellyfin pousse les événements en temps réel vers `/api/plugin/events`.
+- **`JELLYFIN_URL` + `JELLYFIN_API_KEY`** : Toujours nécessaires pour le proxy d'images (`src/lib/jellyfin.ts`) et la synchronisation de bibliothèque cron (`src/lib/sync.ts`).
+- **Cron jobs** : Synchronisation bibliothèque (3h00) et backup automatique (3h30) inchangés.
