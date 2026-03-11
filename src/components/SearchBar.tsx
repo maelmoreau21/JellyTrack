@@ -82,10 +82,10 @@ export function SearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => { if (hasResults) setIsOpen(true); }}
           placeholder={t('placeholder')}
-          className="w-full bg-zinc-100/60 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/50 rounded-lg pl-9 pr-8 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+          className="w-full bg-zinc-100/60 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/50 rounded-lg pl-9 pr-8 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
         />
         {query && (
-          <button onClick={close} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
+          <button onClick={close} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
             <X className="w-4 h-4" />
           </button>
         )}
@@ -115,7 +115,7 @@ export function SearchBar() {
                   className="flex items-center gap-3 px-3 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 transition-colors"
                 >
                   {getTypeIcon(m.type)}
-                  <span className="text-sm text-zinc-200 truncate">{m.title}</span>
+                  <span className="text-sm text-zinc-700 dark:text-zinc-200 truncate">{m.title}</span>
                 </Link>
               ))}
             </div>
@@ -134,7 +134,7 @@ export function SearchBar() {
                   className="flex items-center gap-3 px-3 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 transition-colors"
                 >
                   <User className="w-4 h-4 text-purple-400" />
-                  <span className="text-sm text-zinc-200 truncate">{u.username}</span>
+                  <span className="text-sm text-zinc-700 dark:text-zinc-200 truncate">{u.username}</span>
                 </Link>
               ))}
             </div>

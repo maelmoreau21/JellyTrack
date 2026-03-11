@@ -590,7 +590,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
             </Tabs>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <span className="dashboard-pill hidden sm:block rounded-md px-2 py-1.5 text-xs text-zinc-300">
+            <span className="dashboard-pill hidden sm:block rounded-md px-2 py-1.5 text-xs text-zinc-600 dark:text-zinc-300">
               {t('cachedData')}
             </span>
             <TimeRangeSelector />
@@ -604,7 +604,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
         {/* Today Stats Banner */}
         <div className="dashboard-banner flex flex-wrap items-center gap-2 rounded-xl px-3 py-3 md:gap-3 md:px-4">
           <CalendarDays className="h-5 w-5 text-primary shrink-0" />
-          <span className="text-sm font-medium text-zinc-300">{t('today')}</span>
+          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{t('today')}</span>
           <div className="flex flex-wrap items-center gap-3 md:gap-6 ml-0 md:ml-2">
             <div className="flex items-center gap-1.5">
               <PlayCircle className="h-3.5 w-3.5 text-blue-400" />
@@ -931,16 +931,16 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <Suspense fallback={<Skeleton className="h-[400px] w-full bg-zinc-900/50 rounded-xl" />}>
+            <Suspense fallback={<Skeleton className="h-[400px] w-full bg-zinc-200/50 dark:bg-zinc-900/50 rounded-xl" />}>
               <DeepInsights type={type} timeRange={timeRange} excludedLibraries={excludedLibraries} />
             </Suspense>
-            <Suspense fallback={<Skeleton className="h-[400px] w-full bg-zinc-900/50 rounded-xl" />}>
+            <Suspense fallback={<Skeleton className="h-[400px] w-full bg-zinc-200/50 dark:bg-zinc-900/50 rounded-xl" />}>
               <GranularAnalysis type={type} timeRange={timeRange} excludedLibraries={excludedLibraries} />
             </Suspense>
           </TabsContent>
 
           <TabsContent value="network" className="space-y-6">
-            <Suspense fallback={<Skeleton className="h-[400px] w-full bg-zinc-900/50 rounded-xl" />}>
+            <Suspense fallback={<Skeleton className="h-[400px] w-full bg-zinc-200/50 dark:bg-zinc-900/50 rounded-xl" />}>
               <NetworkAnalysis type={type} timeRange={timeRange} excludedLibraries={excludedLibraries} />
             </Suspense>
           </TabsContent>

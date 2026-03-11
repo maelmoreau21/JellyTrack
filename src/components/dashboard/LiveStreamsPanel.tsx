@@ -128,7 +128,7 @@ function StreamTimeline({ stream, colorIndex }: { stream: LiveStream; colorIndex
             <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs font-medium text-zinc-200 truncate max-w-[120px]">{stream.user}</span>
+                        <span className="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate max-w-[120px]">{stream.user}</span>
                         <span className="text-[10px] text-zinc-500 truncate max-w-[180px]">{stream.mediaTitle}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">

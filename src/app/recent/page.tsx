@@ -170,12 +170,12 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                     {media.genres.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {media.genres.slice(0, 3).map(g => (
-                          <span key={g} className="text-[10px] bg-white/10 text-zinc-300 px-1.5 py-0.5 rounded-full">{g}</span>
+                          <span key={g} className="text-[10px] bg-zinc-200/60 dark:bg-white/10 text-zinc-600 dark:text-zinc-300 px-1.5 py-0.5 rounded-full">{g}</span>
                         ))}
                       </div>
                     )}
                     {media.resolution && (
-                      <Badge className="mt-1.5 w-fit bg-indigo-500/20 text-indigo-300 border-indigo-500/30 border text-[10px] px-1.5 py-0">
+                      <Badge className="mt-1.5 w-fit bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 border text-[10px] px-1.5 py-0">
                         {media.resolution}
                       </Badge>
                     )}

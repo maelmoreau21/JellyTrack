@@ -62,11 +62,11 @@ export function LanguageSwitcher() {
                         <button
                             key={loc.code}
                             onClick={() => switchLocale(loc.code)}
-                            className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all ${loc.code === selectedLocale ? 'border-cyan-400/20 bg-cyan-400/10 text-cyan-700 dark:text-cyan-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]' : 'border-transparent text-zinc-600 dark:text-zinc-300 hover:border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/90 hover:text-zinc-900 dark:hover:text-zinc-100'}`}
+                            className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all ${loc.code === selectedLocale ? 'border-cyan-400/20 bg-cyan-400/10 text-cyan-700 dark:text-cyan-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]' : 'border-transparent text-zinc-600 dark:text-zinc-300 hover:border-zinc-200 dark:hover:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/90 hover:text-zinc-900 dark:hover:text-zinc-100'}`}
                         >
                             <span className="emoji-flag text-lg leading-none">{loc.flag}</span>
                             <span className="flex-1 text-left">{loc.label}</span>
-                            {loc.code === selectedLocale && <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">Actif</span>}
+                            {loc.code === selectedLocale && <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">Actif</span>}
                         </button>
                     ))}
                 </div>

@@ -90,7 +90,7 @@ export function StandardPieChart({ data, nameKey, dataKey }: { data: any[], name
                     nameKey={nameKey}
                     stroke="none"
                     label={({ name, percent }) => {
-                        const truncated = name && name.length > 12 ? name.substring(0, 12) + 'â€¦' : name;
+                        const truncated = name && name.length > 12 ? name.substring(0, 12) + '…' : name;
                         return `${truncated} ${((percent || 0) * 100).toFixed(0)}%`;
                     }}
                     labelLine={false}

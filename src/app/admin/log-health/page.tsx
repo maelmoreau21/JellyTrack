@@ -125,17 +125,17 @@ export default async function LogHealthPage() {
                     </CardHeader>
                     <CardContent className="grid gap-4 md:grid-cols-3">
                         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                            <div className="flex items-center gap-2 text-sm text-zinc-300"><RadioTower className="h-4 w-4 text-cyan-400" /> Monitor</div>
+                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><RadioTower className="h-4 w-4 text-cyan-400" /> Monitor</div>
                             <div className="mt-2 text-sm text-zinc-500">Dernier succès: {formatDate(snapshot.status.monitor.lastSuccessAt)}</div>
                             <div className="mt-1 text-sm text-zinc-500">Dernière erreur: {snapshot.status.monitor.lastError || 'Aucune'}</div>
                         </div>
                         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                            <div className="flex items-center gap-2 text-sm text-zinc-300"><RefreshCw className="h-4 w-4 text-amber-400" /> Sync</div>
+                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><RefreshCw className="h-4 w-4 text-amber-400" /> Sync</div>
                             <div className="mt-2 text-sm text-zinc-500">Dernier succès: {formatDate(snapshot.status.sync.lastSuccessAt)}</div>
                             <div className="mt-1 text-sm text-zinc-500">Mode: {snapshot.status.sync.mode || '—'}</div>
                         </div>
                         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                            <div className="flex items-center gap-2 text-sm text-zinc-300"><Clock3 className="h-4 w-4 text-emerald-400" /> Backup</div>
+                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Clock3 className="h-4 w-4 text-emerald-400" /> Backup</div>
                             <div className="mt-2 text-sm text-zinc-500">Dernier succès: {formatDate(snapshot.status.backup.lastSuccessAt)}</div>
                             <div className="mt-1 text-sm text-zinc-500">Fichier: {snapshot.status.backup.lastFileName || '—'}</div>
                         </div>

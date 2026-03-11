@@ -60,25 +60,25 @@ export function SystemHealthWidgets({ initialSnapshot }: { initialSnapshot: Snap
                     <Activity className="h-3.5 w-3.5" />
                     Monitor {snapshot.status.monitor.status === 'error' ? 'en erreur' : 'actif'}
                 </div>
-                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-zinc-300">
-                    <Clock3 className="h-3.5 w-3.5 text-cyan-300" />
+                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-300">
+                    <Clock3 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-300" />
                     Dernier poll: {formatRelative(snapshot.status.monitor.lastPollAt)}
                 </div>
-                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-zinc-300">
-                    <RefreshCw className="h-3.5 w-3.5 text-amber-300" />
+                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-300">
+                    <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
                     Dernière synchro: {formatRelative(snapshot.status.sync.lastSuccessAt)}
                 </div>
-                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-zinc-300">
-                    <DatabaseBackup className="h-3.5 w-3.5 text-emerald-300" />
+                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-300">
+                    <DatabaseBackup className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
                     Dernière sauvegarde: {formatRelative(snapshot.status.backup.lastSuccessAt)}
                 </div>
-                <Link href="/admin/log-health" className="ml-auto inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-medium text-cyan-200 hover:bg-cyan-400/15">
+                <Link href="/admin/log-health" className="ml-auto inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-700 dark:text-cyan-200 hover:bg-cyan-500/15">
                     <HeartPulse className="h-3.5 w-3.5" />
                     Santé des logs
                 </Link>
             </div>
 
-            <Card className="border-white/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+            <Card className="border-zinc-200/60 dark:border-white/5 bg-white/80 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] backdrop-blur-xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
                 <CardContent className="grid gap-4 p-5 md:grid-cols-4">
                     <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
                         <div className="flex items-center gap-2 text-sm text-zinc-400"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Streams actifs</div>

@@ -40,7 +40,7 @@ export default async function AboutPage() {
                 <CardContent>
                     <ul className="grid gap-2 md:grid-cols-2">
                         {featuresList.map((feature: string, i: number) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-zinc-300">
+                            <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-300">
                                 <span className="text-primary mt-0.5 shrink-0">•</span>
                                 {feature}
                             </li>
@@ -92,7 +92,7 @@ export default async function AboutPage() {
                             href="https://github.com"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm text-zinc-300 hover:text-primary transition-colors"
+                            className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300 hover:text-primary transition-colors"
                         >
                             <Github className="w-4 h-4" />
                             {t('githubSource')}
@@ -102,7 +102,7 @@ export default async function AboutPage() {
                             href="https://jellyfin.org"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm text-zinc-300 hover:text-primary transition-colors"
+                            className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300 hover:text-primary transition-colors"
                         >
                             <PlayCircle className="w-4 h-4" />
                             {t('jellyfinLink')}

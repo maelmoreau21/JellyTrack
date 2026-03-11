@@ -135,14 +135,14 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
                                     activeTypes.has(type)
                                         ? "border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800"
-                                        : "border-zinc-200 dark:border-zinc-800 bg-zinc-900/50 opacity-40"
+                                        : "border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 opacity-40"
                                 }`}
                             >
                                 <span
                                     className="w-2.5 h-2.5 rounded-full"
                                     style={{ backgroundColor: color }}
                                 />
-                                <span className="text-zinc-300">
+                                <span className="text-zinc-700 dark:text-zinc-300">
                                     {EVENT_ICONS[type]} {t(`timeline_${type}` as any)}
                                 </span>
                             </button>
@@ -152,7 +152,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                         <select
                             value={selectedUser}
                             onChange={(e) => setSelectedUser(e.target.value)}
-                            className="text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md px-2 py-1.5 text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                            className="text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md px-2 py-1.5 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-500"
                         >
                             <option value="all">{t("allUsers")}</option>
                             {uniqueUsers.map(([uid, name]) => (

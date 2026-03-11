@@ -499,7 +499,7 @@ export default async function LogsPage({
                                         }, [])
                                         .map((item, idx) =>
                                             item === "..." ? (
-                                                <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">â€¦</span>
+                                                <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">…</span>
                                             ) : (
                                                 <Link
                                                     key={item}
