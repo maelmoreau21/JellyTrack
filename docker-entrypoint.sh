@@ -38,7 +38,7 @@ chown -R "$PUID:$PGID" /app/.next/cache 2>/dev/null || true
 
 # ─── Prisma Migration ──────────────────────────────────────────────
 echo "Running Prisma db push..."
-su-exec "$PUID:$PGID" node node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate
+su-exec "$PUID:$PGID" npx prisma db push --accept-data-loss --skip-generate
 
 echo "Prisma schema pushed successfully."
 
