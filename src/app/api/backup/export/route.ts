@@ -42,7 +42,7 @@ export async function GET() {
             status: 200,
             headers: {
                 "Content-Type": "application/json",
-                "Content-Disposition": `attachment; filename="jellytulli-backup-${new Date().toISOString().split('T')[0]}.json"`,
+                "Content-Disposition": `attachment; filename="JellyTrack-backup-${new Date().toISOString().split('T')[0]}.json"`,
             }
         });
 

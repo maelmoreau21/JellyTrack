@@ -78,7 +78,7 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
                         <XAxis dataKey="source" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                         <Tooltip contentStyle={chartTooltipStyle} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
-                        <Bar dataKey="value" name="Impact cumulé" radius={[10, 10, 0, 0]} fill="url(#sourceBreakdownGradient)">
+                        <Bar dataKey="value" name="Impact cumulÃ©" radius={[10, 10, 0, 0]} fill="url(#sourceBreakdownGradient)">
                             {breakdown.map((entry, index) => (
                                 <Cell key={`${entry.source}-${index}`} fill={chartPalette[index % chartPalette.length]} fillOpacity={0.92} />
                             ))}

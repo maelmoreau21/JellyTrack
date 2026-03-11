@@ -58,7 +58,7 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
         take: ITEMS_PER_PAGE,
     });
 
-    // Build parent chain for enriched media titles (Episode → Series — Season, Audio → Artist — Album)
+    // Build parent chain for enriched media titles (Episode â†’ Series â€” Season, Audio â†’ Artist â€” Album)
     const parentIds = new Set<string>();
     sessions.forEach((s: any) => {
         if (s.media?.parentId) parentIds.add(s.media.parentId);
@@ -86,13 +86,13 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
         if (!parent) return null;
         if (media.type === 'Episode') {
             const gp = parent.parentId ? grandparentMap.get(parent.parentId) : null;
-            if (gp) return `${gp.title} — ${parent.title}`;
+            if (gp) return `${gp.title} â€” ${parent.title}`;
             return parent.title;
         }
         if (media.type === 'Season') return parent.title;
         if (media.type === 'Audio') {
             const artistName = media.artist || parent.artist || null;
-            if (artistName) return `${artistName} — ${parent.title}`;
+            if (artistName) return `${artistName} â€” ${parent.title}`;
             return parent.title;
         }
         return parent.title;
@@ -111,7 +111,7 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
             <CardHeader>
                 <CardTitle>{t('playbackHistory')}</CardTitle>
                 <CardDescription>
-                    {t('aggregatedDesc')} — {totalCount} session{totalCount > 1 ? 's' : ''}
+                    {t('aggregatedDesc')} â€” {totalCount} session{totalCount > 1 ? 's' : ''}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -161,7 +161,7 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
                                                     <div className="truncate group-hover:underline text-zinc-100">{session.media.title}</div>
                                                     {subtitle ? (
                                                         <div className="text-xs text-zinc-400 truncate" title={subtitle}>
-                                                            {session.media.type === 'Episode' ? '📺' : session.media.type === 'Audio' ? '🎵' : ''} {subtitle}
+                                                            {session.media.type === 'Episode' ? 'ðŸ“º' : session.media.type === 'Audio' ? 'ðŸŽµ' : ''} {subtitle}
                                                         </div>
                                                     ) : (
                                                         <div className="text-xs text-zinc-500">{session.media.type}</div>
@@ -176,7 +176,7 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
                                                             {session.playMethod || "DirectPlay"}
                                                         </span>
                                                         <span className="truncate">{session.clientName || "N/A"}</span>
-                                                        <span className="text-zinc-500">·</span>
+                                                        <span className="text-zinc-500">Â·</span>
                                                         <span>{minutes} min</span>
                                                     </div>
                                                 </div>
@@ -222,7 +222,7 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
                                 }, [])
                                 .map((item, idx) =>
                                     item === "..." ? (
-                                        <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">…</span>
+                                        <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">â€¦</span>
                                     ) : (
                                         <Link
                                             key={item}

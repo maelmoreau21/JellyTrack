@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic"; // Bypass statis rendering for real-time
 
 const LOGS_PER_PAGE = 100;
 
-// Column utilities — defined server-side to avoid client/server boundary issues
+// Column utilities â€” defined server-side to avoid client/server boundary issues
 const ALL_COLUMNS = ['date', 'user', 'media', 'clientIp', 'status', 'codecs', 'duration'] as const;
 type Column = typeof ALL_COLUMNS[number];
 const DEFAULT_VISIBLE: Column[] = ['date', 'user', 'media', 'clientIp', 'status', 'duration'];
@@ -144,7 +144,7 @@ export default async function LogsPage({
         user: log.user ? { ...log.user } : null,
     }));
 
-    // Build parent chain map for enriched media titles (Episode → Season → Series, Track → Album → Artist)
+    // Build parent chain map for enriched media titles (Episode â†’ Season â†’ Series, Track â†’ Album â†’ Artist)
     const parentIds = new Set<string>();
     safeLogs.forEach((log: any) => {
         if (log.media?.parentId) parentIds.add(log.media.parentId);
@@ -152,7 +152,7 @@ export default async function LogsPage({
     const parentMedia = parentIds.size > 0
         ? await prisma.media.findMany({ where: { jellyfinMediaId: { in: Array.from(parentIds) } }, select: { jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true } })
         : [];
-    // Also fetch grandparent IDs (Season → Series)
+    // Also fetch grandparent IDs (Season â†’ Series)
     const grandparentIds = new Set<string>();
     parentMedia.forEach(pm => { if (pm.parentId) grandparentIds.add(pm.parentId); });
     const grandparentMedia = grandparentIds.size > 0
@@ -163,24 +163,24 @@ export default async function LogsPage({
     const grandparentMap = new Map<string, { title: string; type: string; artist: string | null }>();
     grandparentMedia.forEach(gp => grandparentMap.set(gp.jellyfinMediaId, { title: gp.title, type: gp.type, artist: gp.artist }));
 
-    // Helper: build subtitle line for a media (e.g., "Série — Saison" or "Artist — Album")
+    // Helper: build subtitle line for a media (e.g., "SÃ©rie â€” Saison" or "Artist â€” Album")
     function getMediaSubtitle(media: any): string | null {
         if (!media?.parentId) return null;
         const parent = parentMap.get(media.parentId);
         if (!parent) return null;
         if (media.type === 'Episode') {
-            // Episode → parent=Season → grandparent=Series
+            // Episode â†’ parent=Season â†’ grandparent=Series
             const grandparent = parent.parentId ? grandparentMap.get(parent.parentId) : null;
-            if (grandparent) return `${grandparent.title} — ${parent.title}`;
+            if (grandparent) return `${grandparent.title} â€” ${parent.title}`;
             return parent.title;
         }
         if (media.type === 'Season') {
-            return parent.title; // Season → Series
+            return parent.title; // Season â†’ Series
         }
         if (media.type === 'Audio') {
-            // Audio → parent=Album. Show "Artist — Album" if artist is available
+            // Audio â†’ parent=Album. Show "Artist â€” Album" if artist is available
             const artistName = media.artist || parent.artist || null;
-            if (artistName) return `${artistName} — ${parent.title}`;
+            if (artistName) return `${artistName} â€” ${parent.title}`;
             return parent.title;
         }
         return parent.title;
@@ -189,10 +189,10 @@ export default async function LogsPage({
     // Helper: get the media type icon prefix
     function getMediaTypeLabel(type: string): { icon: string; label: string } | null {
         switch (type) {
-            case 'Episode': return { icon: '📺', label: tl('episodeType') };
-            case 'Audio': return { icon: '🎵', label: tl('musicType') };
-            case 'Movie': return { icon: '🎬', label: tl('movieType') };
-            case 'Season': return { icon: '📺', label: tl('seasonType') };
+            case 'Episode': return { icon: 'ðŸ“º', label: tl('episodeType') };
+            case 'Audio': return { icon: 'ðŸŽµ', label: tl('musicType') };
+            case 'Movie': return { icon: 'ðŸŽ¬', label: tl('movieType') };
+            case 'Season': return { icon: 'ðŸ“º', label: tl('seasonType') };
             default: return null;
         }
     }
@@ -238,7 +238,7 @@ export default async function LogsPage({
                         <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{tl('title')}</h2>
                         <p className="text-muted-foreground md:mr-12 mt-2 text-sm md:text-base">
                             {tl('description')}
-                            {totalCount > 0 && <span className="text-zinc-500"> — {totalCount} {tl('totalEntries')}</span>}
+                            {totalCount > 0 && <span className="text-zinc-500"> â€” {totalCount} {tl('totalEntries')}</span>}
                         </p>
                     </div>
                 </div>
@@ -302,17 +302,17 @@ export default async function LogsPage({
 
                                             return (
                                                 <Fragment key={log.id}>
-                                                    {/* Watch Party Banner — first log of each party */}
+                                                    {/* Watch Party Banner â€” first log of each party */}
                                                     {isFirstOfParty && party && (
                                                         <TableRow key={`party-banner-${partyId}`} className="border-none">
                                                             <TableCell colSpan={visibleColumns.length} className="py-1.5 px-3">
                                                                 <div className="flex items-center gap-2 bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-violet-500/10 border border-violet-500/20 rounded-lg px-4 py-2 animate-pulse-slow">
-                                                                    <span className="text-lg" role="img" aria-label="Watch Party">🍿</span>
+                                                                    <span className="text-lg" role="img" aria-label="Watch Party">ðŸ¿</span>
                                                                     <span className="font-bold text-sm bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                                                                         Watch Party
                                                                     </span>
                                                                     <span className="text-xs text-zinc-400 ml-1">
-                                                                        {party.members.size} {tc('viewers')} — <span className="font-medium text-zinc-300">{party.mediaTitle}</span>
+                                                                        {party.members.size} {tc('viewers')} â€” <span className="font-medium text-zinc-300">{party.mediaTitle}</span>
                                                                     </span>
                                                                     <div className="ml-auto flex items-center gap-1">
                                                                         {Array.from(party.members).slice(0, 4).map((m, i) => (
@@ -359,7 +359,7 @@ export default async function LogsPage({
                                                             </TableCell>
                                                         )}
 
-                                                        {/* Média */}
+                                                        {/* MÃ©dia */}
                                                         {visibleColumns.includes('media') && (
                                                             <TableCell className="overflow-hidden">
                                                                 <div className="flex items-center gap-2 md:gap-3 w-full overflow-hidden" title={log.media?.title || tc('unknownMedia')}>
@@ -411,7 +411,7 @@ export default async function LogsPage({
                                                                                 {log.playMethod || 'DirectPlay'}
                                                                             </span>
                                                                             <span className="truncate">{log.clientName || tc('unknown')}</span>
-                                                                            <span className="text-zinc-500">·</span>
+                                                                            <span className="text-zinc-500">Â·</span>
                                                                             <span>{Math.floor((log.durationWatched || 0) / 60)} min</span>
                                                                         </div>
                                                                     </div>
@@ -436,7 +436,7 @@ export default async function LogsPage({
                                                             </TableCell>
                                                         )}
 
-                                                        {/* Statut (Méthode) */}
+                                                        {/* Statut (MÃ©thode) */}
                                                         {visibleColumns.includes('status') && (
                                                             <TableCell className="hidden md:table-cell">
                                                                 <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
@@ -459,7 +459,7 @@ export default async function LogsPage({
                                                             </TableCell>
                                                         )}
 
-                                                        {/* Durée */}
+                                                        {/* DurÃ©e */}
                                                         {visibleColumns.includes('duration') && (
                                                             <TableCell className="text-right whitespace-nowrap hidden md:table-cell">
                                                                 {isActuallyActive
@@ -499,7 +499,7 @@ export default async function LogsPage({
                                         }, [])
                                         .map((item, idx) =>
                                             item === "..." ? (
-                                                <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">…</span>
+                                                <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">â€¦</span>
                                             ) : (
                                                 <Link
                                                     key={item}

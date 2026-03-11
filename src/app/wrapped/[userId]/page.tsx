@@ -47,7 +47,7 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
         }
     });
 
-    // Fallback : si aucune session cette année, charger toutes les données (all-time)
+    // Fallback : si aucune session cette annÃ©e, charger toutes les donnÃ©es (all-time)
     if (user && user.playbackHistory.length === 0) {
         user = await prisma.user.findUnique({
             where: { jellyfinUserId: userId },
@@ -104,10 +104,10 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
     const hourCounts = new Map<number, number>(); // 0-23
     const monthCounts = new Map<number, number>(); // 0-11
 
-    // Series tracking (aggregate episodes by parentId → series title)
-    const seriesCounts = new Map<string, number>(); // seriesTitle → totalSeconds
-    // Artist tracking (aggregate audio by parentId → album/artist)
-    const artistCounts = new Map<string, number>(); // artist → totalSeconds
+    // Series tracking (aggregate episodes by parentId â†’ series title)
+    const seriesCounts = new Map<string, number>(); // seriesTitle â†’ totalSeconds
+    // Artist tracking (aggregate audio by parentId â†’ album/artist)
+    const artistCounts = new Map<string, number>(); // artist â†’ totalSeconds
 
     // Category breakdowns
     const categoryData: Record<string, Map<string, number>> = {
@@ -123,7 +123,7 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
         if (session.media?.parentId) parentIds.add(session.media.parentId);
     });
 
-    // Resolve parent → grandparent chain for episode → season → series
+    // Resolve parent â†’ grandparent chain for episode â†’ season â†’ series
     const parentMedia = parentIds.size > 0
         ? await prisma.media.findMany({ where: { jellyfinMediaId: { in: Array.from(parentIds) } }, select: { jellyfinMediaId: true, title: true, parentId: true, type: true } })
         : [];
@@ -148,7 +148,7 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
                 });
             }
 
-            // Track series (episodes → series name)
+            // Track series (episodes â†’ series name)
             if (session.media.type === "Episode" && session.media.parentId) {
                 const parent = parentMap.get(session.media.parentId);
                 if (parent?.parentId) {
@@ -161,7 +161,7 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
                 }
             }
 
-            // Track artists (audio → album parent title as artist proxy)
+            // Track artists (audio â†’ album parent title as artist proxy)
             if (session.media.type === "Audio" && session.media.parentId) {
                 const parent = parentMap.get(session.media.parentId);
                 if (parent) {

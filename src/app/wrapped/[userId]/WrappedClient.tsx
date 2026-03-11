@@ -297,9 +297,9 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
                         <p className="text-zinc-300 text-sm">{t('peakLabel', { hour: data.peakHour })}</p>
                         <p className="text-zinc-300 text-sm">{t('favDayLabel', { day: translatedTopDay })}</p>
                         <div className="flex gap-4 mt-3 text-xs text-zinc-400">
-                            {data.categories.movies.totalHours > 0 && <span>🎬 {data.categories.movies.totalHours}h</span>}
-                            {data.categories.series.totalHours > 0 && <span>📺 {data.categories.series.totalHours}h</span>}
-                            {data.categories.music.totalHours > 0 && <span>🎵 {data.categories.music.totalHours}h</span>}
+                            {data.categories.movies.totalHours > 0 && <span>ðŸŽ¬ {data.categories.movies.totalHours}h</span>}
+                            {data.categories.series.totalHours > 0 && <span>ðŸ“º {data.categories.series.totalHours}h</span>}
+                            {data.categories.music.totalHours > 0 && <span>ðŸŽµ {data.categories.music.totalHours}h</span>}
                         </div>
                     </div>
                     <p className="text-xs text-zinc-500">{t('captureScreen')}</p>

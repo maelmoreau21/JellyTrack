@@ -667,3 +667,19 @@ Conversion intégrale de l'interface utilisateur du français codé en dur vers 
   - Curseur vertical en pointillé.
   - Animation 1200ms sur toutes les séries Area/Line.
 - **Validation** : build `npm run build` OK.
+
+### Phase 46 — Thème Clair, Renommage JellyTrack, Interactions Charts
+- **Thème Clair** :
+  - Installation de `next-themes` pour gestion light/dark via classe CSS.
+  - `ThemeProvider.tsx` : wrapper client autour de `next-themes`, thème par défaut : dark.
+  - `ThemeToggle.tsx` : bouton Sun/Moon dans la sidebar pour basculer le thème.
+  - `layout.tsx` : suppression du `dark` hardcodé, ajout de `suppressHydrationWarning`, classes responsive light/dark.
+  - `Sidebar.tsx` : classes light/dark adaptatives, bouton ThemeToggle intégré à côté du sélecteur de langue.
+  - `globals.css` : body background adaptatif (gradient clair pour light, gradient sombre pour dark).
+- **Renommage JellyTulli → JellyTrack** :
+  - Renommé dans ~35 fichiers : source `.tsx`/`.ts`, 10 fichiers messages JSON, `package.json`, `Dockerfile`, `docker-compose.yml`, `docker-entrypoint.sh`, `README.md`.
+- **Interactions Charts** :
+  - `ActivityByHourChart` : clic sur une barre → sélection + panneau info (heure, sessions, écart vs moyenne) + ligne de référence moyenne en pointillé. Les barres non-sélectionnées s'estompent.
+  - `PlatformDistributionChart` : légende cliquable pour masquer/afficher des plateformes + bouton "Tout afficher".
+  - `CompletionRatioChart` : légende cliquable pour masquer/afficher des segments + bouton "Tout afficher".
+- **Validation** : build `npm run build` OK.

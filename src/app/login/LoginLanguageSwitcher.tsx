@@ -65,7 +65,7 @@ export function LoginLanguageSwitcher() {
                             <span className="emoji-flag text-base leading-none">{loc.flag}</span>
                             <span className="flex-1 text-left">{loc.label}</span>
                             {loc.code === selectedLocale && (
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">✓</span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">âœ“</span>
                             )}
                         </button>
                     ))}

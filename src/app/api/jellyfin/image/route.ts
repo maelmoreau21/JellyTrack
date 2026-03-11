@@ -5,7 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // Allowed image types for the Jellyfin image proxy (prevent path traversal)
 const ALLOWED_IMAGE_TYPES = ["Primary", "Thumb", "Backdrop", "Banner", "Logo", "Art"];
-// Jellyfin IDs are hex UUIDs — validate format to prevent injection
+// Jellyfin IDs are hex UUIDs â€” validate format to prevent injection
 const UUID_PATTERN = /^[a-f0-9]{32}$/i;
 
 export async function GET(req: NextRequest) {
@@ -52,9 +52,9 @@ export async function GET(req: NextRequest) {
         const buffer = await response.arrayBuffer();
         const headers = new Headers();
 
-        // On récupère le type de contenu depuis le serveur originel pour notre proxy (souvent image/jpeg ou image/webp)
+        // On rÃ©cupÃ¨re le type de contenu depuis le serveur originel pour notre proxy (souvent image/jpeg ou image/webp)
         headers.set('Content-Type', response.headers.get('Content-Type') || 'image/jpeg');
-        // Mise en cache navigateur longue durée pour soulager l'API
+        // Mise en cache navigateur longue durÃ©e pour soulager l'API
         headers.set('Cache-Control', 'public, max-age=604800, immutable');
 
         return new NextResponse(buffer, { headers });

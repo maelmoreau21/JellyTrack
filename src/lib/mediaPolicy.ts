@@ -102,7 +102,7 @@ export function buildExcludedMediaClause(excludedLibraries: string[] | null | un
     const values = Array.from(new Set(excludedLibraries.filter(Boolean)));
     if (values.length === 0) return undefined;
 
-    // Excluded libraries are now actual Jellyfin library names (e.g., "film-2", "Séries TV")
+    // Excluded libraries are now actual Jellyfin library names (e.g., "film-2", "SÃ©ries TV")
     // We filter by libraryName primarily, with fallback to collectionType for backward compat
     const orClauses: Array<Record<string, unknown>> = [
         { libraryName: { in: values } },

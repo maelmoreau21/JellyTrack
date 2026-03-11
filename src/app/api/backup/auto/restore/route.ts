@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
         const sanitized = path.basename(fileName);
 
         // Security: only allow restoring auto-backup files
-        if (!sanitized.startsWith("jellytulli-auto-") || !sanitized.endsWith(".json")) {
+        if (!sanitized.startsWith("JellyTrack-auto-") || !sanitized.endsWith(".json")) {
             return NextResponse.json({ error: await apiT('fileAutoOnly') }, { status: 400 });
         }
 

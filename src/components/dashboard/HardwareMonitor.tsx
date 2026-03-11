@@ -70,7 +70,7 @@ export function HardwareMonitor() {
                     <div>
                         <p className="text-xs font-medium text-zinc-400">{t('temperature')}</p>
                         <p className="text-xl font-bold">
-                            {stats.temperature.main > 0 ? `${stats.temperature.main}°C` : 'N/A'}
+                            {stats.temperature.main > 0 ? `${stats.temperature.main}Â°C` : 'N/A'}
                         </p>
                     </div>
                 </CardContent>

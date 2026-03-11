@@ -1,16 +1,16 @@
 services:
-  jellytulli:
-    image: ghcr.io/maelmoreau21/jellytulli:latest
-    container_name: jellytulli_app
+  JellyTrack:
+    image: ghcr.io/maelmoreau21/JellyTrack:latest
+    container_name: JellyTrack_app
     ports:
       - "${APP_PORT:-3000}:${PORT:-3000}"
     environment:
       # ─── Identifiants PostgreSQL (doivent correspondre au service postgres ci-dessous) ───
-      POSTGRES_USER: jellytulli
-      POSTGRES_PASSWORD: 'jellytulli_password'
+      POSTGRES_USER: JellyTrack
+      POSTGRES_PASSWORD: 'JellyTrack_password'
       POSTGRES_IP: postgres                        # Nom du service Docker, ou IP (ex: 127.0.0.1 en mode host)
       POSTGRES_PORT: 5432
-      POSTGRES_DB: jellytulli
+      POSTGRES_DB: JellyTrack
       # Aliases DB_* (prioritaires si définis) pour mode host/réseau custom
       DB_HOST: ${DB_HOST:-}
       DB_PORT: ${DB_PORT:-}
@@ -19,7 +19,7 @@ services:
       DB_NAME: ${DB_NAME:-}
       # ─── Redis ───
       REDIS_URL: redis://redis:6379
-      # ─── Port de JellyTulli (changer aussi dans ports: ci-dessus) ───
+      # ─── Port de JellyTrack (changer aussi dans ports: ci-dessus) ───
       PORT: ${PORT:-3000}
       # ─── Jellyfin ───
       JELLYFIN_URL: http://jellyfin:8096           # IP réelle du serveur Jellyfin (pas localhost en Docker)
@@ -33,14 +33,14 @@ services:
       PGID: 1000
       BACKUP_DIR: /data/backups
     volumes:
-      - jellytulli_backups:/data/backups
+      - JellyTrack_backups:/data/backups
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - jellytulli_net
+      - JellyTrack_net
     restart: unless-stopped
     # ─── HTTPS via Reverse Proxy (Traefik) ───────────────────────────────────
     # Pour activer HTTPS avec Traefik :
@@ -51,19 +51,19 @@ services:
     #
     # labels:
     #   - "traefik.enable=true"
-    #   - "traefik.http.routers.jellytulli.rule=Host(`jellytulli.your-domain.com`)"
-    #   - "traefik.http.routers.jellytulli.entrypoints=websecure"
-    #   - "traefik.http.routers.jellytulli.tls.certresolver=letsencrypt"
-    #   - "traefik.http.services.jellytulli.loadbalancer.server.port=3000"
+    #   - "traefik.http.routers.JellyTrack.rule=Host(`JellyTrack.your-domain.com`)"
+    #   - "traefik.http.routers.JellyTrack.entrypoints=websecure"
+    #   - "traefik.http.routers.JellyTrack.tls.certresolver=letsencrypt"
+    #   - "traefik.http.services.JellyTrack.loadbalancer.server.port=3000"
     #
     # Alternative : NGINX reverse proxy (dans un fichier séparé) :
     #   server {
     #     listen 443 ssl;
-    #     server_name jellytulli.your-domain.com;
+    #     server_name JellyTrack.your-domain.com;
     #     ssl_certificate /path/to/cert.pem;
     #     ssl_certificate_key /path/to/key.pem;
     #     location / {
-    #       proxy_pass http://jellytulli:3000;
+    #       proxy_pass http://JellyTrack:3000;
     #       proxy_set_header Host $host;
     #       proxy_set_header X-Real-IP $remote_addr;
     #       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -76,17 +76,17 @@ services:
 
   postgres:
     image: postgres:18-alpine
-    container_name: jellytulli_postgres
+    container_name: JellyTrack_postgres
     environment:
-      POSTGRES_USER: jellytulli
-      POSTGRES_PASSWORD: jellytulli_password
-      POSTGRES_DB: jellytulli
+      POSTGRES_USER: JellyTrack
+      POSTGRES_PASSWORD: JellyTrack_password
+      POSTGRES_DB: JellyTrack
     volumes:
-      - jellytulli_pgdata:/var/lib/postgresql
+      - JellyTrack_pgdata:/var/lib/postgresql
     networks:
-      - jellytulli_net
+      - JellyTrack_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jellytulli"]
+      test: ["CMD-SHELL", "pg_isready -U JellyTrack"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -94,12 +94,12 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: jellytulli_redis
+    container_name: JellyTrack_redis
     command: redis-server --save 60 1 --loglevel warning
     volumes:
-      - jellytulli_redisdata:/data
+      - JellyTrack_redisdata:/data
     networks:
-      - jellytulli_net
+      - JellyTrack_net
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -108,10 +108,10 @@ services:
     restart: unless-stopped
 
 networks:
-  jellytulli_net:
+  JellyTrack_net:
     driver: bridge
 
 volumes:
-  jellytulli_pgdata:
-  jellytulli_redisdata:
-  jellytulli_backups:
+  JellyTrack_pgdata:
+  JellyTrack_redisdata:
+  JellyTrack_backups:

@@ -36,7 +36,7 @@ async function getCleanupData() {
     const ghostMedia = [];
     for (const media of parentGhostCandidates) {
         if (media.type === 'Movie') {
-            // Movies have direct playback — already filtered by `none: {}`
+            // Movies have direct playback â€” already filtered by `none: {}`
             ghostMedia.push(media);
         } else {
             // Series/MusicAlbum: check children (episodes via Season chain, or direct tracks)
@@ -84,7 +84,7 @@ async function getCleanupData() {
         }
     });
 
-    // Preload parent info for enriched titles (Episode → Season → Series, Audio → Album)
+    // Preload parent info for enriched titles (Episode â†’ Season â†’ Series, Audio â†’ Album)
     const parentIds = new Set<string>();
     mediaWithHistory.forEach(m => { if (m.parentId) parentIds.add(m.parentId); });
     const parents = parentIds.size > 0
@@ -103,10 +103,10 @@ async function getCleanupData() {
         const parent = parentMap.get(media.parentId);
         if (media.type === 'Episode' && parent) {
             const gp = parent.parentId ? gpMap.get(parent.parentId) : null;
-            return gp ? `${gp} — ${parent.title} — ${media.title}` : `${parent.title} — ${media.title}`;
+            return gp ? `${gp} â€” ${parent.title} â€” ${media.title}` : `${parent.title} â€” ${media.title}`;
         }
         if (media.type === 'Audio' && parent) {
-            return `${parent.title} — ${media.title}`;
+            return `${parent.title} â€” ${media.title}`;
         }
         return media.title;
     }
@@ -116,7 +116,7 @@ async function getCleanupData() {
     for (const media of mediaWithHistory) {
         if (!media.durationMs || Number(media.durationMs) === 0) continue;
 
-        // durationMs is in milliseconds (RunTimeTicks / 10000) — convert to seconds
+        // durationMs is in milliseconds (RunTimeTicks / 10000) â€” convert to seconds
         const maxDurationSecs = Number(media.durationMs) / 1000;
 
         let maxCompletionPercentage = 0;

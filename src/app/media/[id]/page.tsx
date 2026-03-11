@@ -78,7 +78,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
             }
         }
     } catch (err) {
-        console.error("[Media Profile] Erreur récupération métadonnées Jellyfin:", err);
+        console.error("[Media Profile] Erreur rÃ©cupÃ©ration mÃ©tadonnÃ©es Jellyfin:", err);
     }
 
     // Fetch children items (Seasons for Series, Episodes for Season, Tracks for MusicAlbum)
@@ -334,7 +334,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                 {media.resolution && <Badge variant="secondary">{media.resolution}</Badge>}
                                 {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-800 text-zinc-300">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
                                 {productionYear && <Badge variant="secondary" className="bg-zinc-800 text-zinc-300">{productionYear}</Badge>}
-                                {communityRating && <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30">★ {communityRating.toFixed(1)}</Badge>}
+                                {communityRating && <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30">â˜… {communityRating.toFixed(1)}</Badge>}
                             </div>
                             {genres.length > 0 && (
                                 <div className="flex items-center gap-1.5 mt-3 flex-wrap">
@@ -402,7 +402,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                     </TableCell>
                                                     {media.type !== 'MusicAlbum' && (
                                                         <TableCell className="text-center">
-                                                            {child.resolution ? <Badge variant="secondary" className="text-xs">{child.resolution}</Badge> : <span className="text-zinc-500 text-xs">—</span>}
+                                                            {child.resolution ? <Badge variant="secondary" className="text-xs">{child.resolution}</Badge> : <span className="text-zinc-500 text-xs">â€”</span>}
                                                         </TableCell>
                                                     )}
                                                     <TableCell className="text-center font-medium">
@@ -589,8 +589,8 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                 </TableCell>
                                                 <TableCell className="text-sm text-zinc-400 whitespace-nowrap">{new Date(h.startedAt).toLocaleString(locale, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</TableCell>
                                                 <TableCell className="hidden md:table-cell"><Badge variant={isTranscode ? "destructive" : "default"} className={isTranscode ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-500"}>{h.playMethod || "DirectPlay"}</Badge></TableCell>
-                                                <TableCell className="text-sm">{h.audioLanguage ? <span className="font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded">{h.audioLanguage}{h.audioCodec ? ` (${h.audioCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>
-                                                {!isMusic && <TableCell className="text-sm hidden lg:table-cell">{h.subtitleLanguage ? <span className="font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded">{h.subtitleLanguage}{h.subtitleCodec ? ` (${h.subtitleCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>}
+                                                <TableCell className="text-sm">{h.audioLanguage ? <span className="font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded">{h.audioLanguage}{h.audioCodec ? ` (${h.audioCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">â€”</span>}</TableCell>
+                                                {!isMusic && <TableCell className="text-sm hidden lg:table-cell">{h.subtitleLanguage ? <span className="font-mono text-xs bg-zinc-800 px-1.5 py-0.5 rounded">{h.subtitleLanguage}{h.subtitleCodec ? ` (${h.subtitleCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">â€”</span>}</TableCell>}
                                                 <TableCell className="text-center hidden md:table-cell">{(h.pauseCount || 0) > 0 ? <span className="text-yellow-400 font-medium">{h.pauseCount}</span> : <span className="text-zinc-500">0</span>}</TableCell>
                                                 <TableCell className="text-right whitespace-nowrap font-medium">{h.durationWatched > 0 ? `${Math.floor(h.durationWatched / 60)} min` : <span className="text-zinc-500 text-xs">0 min</span>}</TableCell>
                                             </TableRow>

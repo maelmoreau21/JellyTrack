@@ -73,7 +73,7 @@ export default async function NewsletterPage() {
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-indigo-500/30 via-transparent to-transparent opacity-80" />
                     <Sparkles className="w-12 h-12 text-indigo-400 mb-4 animate-pulse relative z-10" />
                     <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-2 relative z-10">
-                        JellyTulli Rewind
+                        JellyTrack Rewind
                     </h1>
                     <p className="text-zinc-300 font-medium relative z-10">
                         {t('monthlyRecap')}

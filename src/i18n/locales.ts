@@ -1,14 +1,14 @@
 export const AVAILABLE_LOCALES = [
-    { code: 'fr', label: 'Français', flag: '🇫🇷' },
-    { code: 'en', label: 'English', flag: '🇬🇧' },
-    { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-    { code: 'es', label: 'Español', flag: '🇪🇸' },
-    { code: 'it', label: 'Italiano', flag: '🇮🇹' },
-    { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
-    { code: 'pl', label: 'Polski', flag: '🇵🇱' },
-    { code: 'pt-BR', label: 'Português (BR)', flag: '🇧🇷' },
-    { code: 'ru', label: 'Русский', flag: '🇷🇺' },
-    { code: 'zh', label: '中文', flag: '🇨🇳' },
+    { code: 'fr', label: 'FranÃ§ais', flag: 'ðŸ‡«ðŸ‡·' },
+    { code: 'en', label: 'English', flag: 'ðŸ‡¬ðŸ‡§' },
+    { code: 'de', label: 'Deutsch', flag: 'ðŸ‡©ðŸ‡ª' },
+    { code: 'es', label: 'EspaÃ±ol', flag: 'ðŸ‡ªðŸ‡¸' },
+    { code: 'it', label: 'Italiano', flag: 'ðŸ‡®ðŸ‡¹' },
+    { code: 'nl', label: 'Nederlands', flag: 'ðŸ‡³ðŸ‡±' },
+    { code: 'pl', label: 'Polski', flag: 'ðŸ‡µðŸ‡±' },
+    { code: 'pt-BR', label: 'PortuguÃªs (BR)', flag: 'ðŸ‡§ðŸ‡·' },
+    { code: 'ru', label: 'Ð ÑƒÑÑÐºÐ¸Ð¹', flag: 'ðŸ‡·ðŸ‡º' },
+    { code: 'zh', label: 'ä¸­æ–‡', flag: 'ðŸ‡¨ðŸ‡³' },
 ] as const;
 
 export type LocaleCode = typeof AVAILABLE_LOCALES[number]['code'];

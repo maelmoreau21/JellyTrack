@@ -20,7 +20,7 @@ const MIN_PLAYBACK_SECONDS = 10;
 export function updateMonitorIntervals(active: number, idle: number) {
     pollIntervalActive = Math.max(500, active);
     pollIntervalIdle = Math.max(1000, idle);
-    console.log(`[Monitor] Intervalles mis à jour: actif=${pollIntervalActive}ms, veille=${pollIntervalIdle}ms`);
+    console.log(`[Monitor] Intervalles mis Ã  jour: actif=${pollIntervalActive}ms, veille=${pollIntervalIdle}ms`);
 }
 
 /** Get current monitor intervals */
@@ -54,7 +54,7 @@ export async function startMonitoring() {
     } catch { /* Use defaults on first run */ }
 
     const jellyfinUrl = process.env.JELLYFIN_URL || '(not set)';
-    console.log(`[Monitor] Démarrage du polling autonome Jellyfin (adaptatif: ${pollIntervalActive}ms actif / ${pollIntervalIdle}ms veille)...`);
+    console.log(`[Monitor] DÃ©marrage du polling autonome Jellyfin (adaptatif: ${pollIntervalActive}ms actif / ${pollIntervalIdle}ms veille)...`);
     console.log(`[Monitor] JELLYFIN_URL = ${jellyfinUrl}`);
 
     // Startup cleanup: close all orphan ActiveStreams and their open PlaybackHistory entries
@@ -62,7 +62,7 @@ export async function startMonitoring() {
     try {
         const orphanStreams = await prisma.activeStream.findMany();
         if (orphanStreams.length > 0) {
-            console.log(`[Monitor] Nettoyage au démarrage: ${orphanStreams.length} session(s) orpheline(s) trouvée(s).`);
+            console.log(`[Monitor] Nettoyage au dÃ©marrage: ${orphanStreams.length} session(s) orpheline(s) trouvÃ©e(s).`);
             for (const orphan of orphanStreams) {
                 const openPlayback = await prisma.playbackHistory.findFirst({
                     where: { userId: orphan.userId, mediaId: orphan.mediaId, endedAt: null },
@@ -88,18 +88,18 @@ export async function startMonitoring() {
                 await prisma.activeStream.delete({ where: { id: orphan.id } });
                 await redis.del(`stream:${orphan.sessionId}`);
             }
-            console.log(`[Monitor] Nettoyage au démarrage terminé.`);
-            await appendHealthEvent({ source: 'monitor', kind: 'startup-orphan-streams', message: `${orphanStreams.length} session(s) active(s) orpheline(s) nettoyée(s) au démarrage.`, details: { count: orphanStreams.length } });
+            console.log(`[Monitor] Nettoyage au dÃ©marrage terminÃ©.`);
+            await appendHealthEvent({ source: 'monitor', kind: 'startup-orphan-streams', message: `${orphanStreams.length} session(s) active(s) orpheline(s) nettoyÃ©e(s) au dÃ©marrage.`, details: { count: orphanStreams.length } });
         }
 
         // Also clean any orphan Redis stream keys left from a previous container
         const redisStreamKeys = await redis.keys("stream:*");
         if (redisStreamKeys.length > 0) {
-            console.log(`[Monitor] Nettoyage Redis: ${redisStreamKeys.length} clé(s) stream orpheline(s) supprimée(s).`);
+            console.log(`[Monitor] Nettoyage Redis: ${redisStreamKeys.length} clÃ©(s) stream orpheline(s) supprimÃ©e(s).`);
             for (const key of redisStreamKeys) {
                 await redis.del(key);
             }
-            await appendHealthEvent({ source: 'monitor', kind: 'startup-redis-orphans', message: `${redisStreamKeys.length} clé(s) Redis stream orpheline(s) supprimée(s).`, details: { count: redisStreamKeys.length } });
+            await appendHealthEvent({ source: 'monitor', kind: 'startup-redis-orphans', message: `${redisStreamKeys.length} clÃ©(s) Redis stream orpheline(s) supprimÃ©e(s).`, details: { count: redisStreamKeys.length } });
         }
 
         // Close any PlaybackHistory entries that have no endedAt (orphan from crash)
@@ -116,10 +116,10 @@ export async function startMonitoring() {
                     data: { endedAt, durationWatched: Math.min(durationS, 86400) }, // Cap at 24h max
                 });
             }
-            await appendHealthEvent({ source: 'monitor', kind: 'startup-open-playbacks', message: `${orphanPlaybacks.length} lecture(s) ouverte(s) fermée(s) automatiquement au démarrage.`, details: { count: orphanPlaybacks.length } });
+            await appendHealthEvent({ source: 'monitor', kind: 'startup-open-playbacks', message: `${orphanPlaybacks.length} lecture(s) ouverte(s) fermÃ©e(s) automatiquement au dÃ©marrage.`, details: { count: orphanPlaybacks.length } });
         }
     } catch (err) {
-        console.error("[Monitor] Erreur nettoyage au démarrage:", err);
+        console.error("[Monitor] Erreur nettoyage au dÃ©marrage:", err);
     }
 
     // Clear previous timeout if any (HMR safety)
@@ -132,7 +132,7 @@ export async function startMonitoring() {
         try {
             const hasActive = await pollJellyfinSessions();
             if (consecutiveErrors > 0) {
-                console.log(`[Monitor] Connexion à Jellyfin rétablie après ${consecutiveErrors} erreur(s).`);
+                console.log(`[Monitor] Connexion Ã  Jellyfin rÃ©tablie aprÃ¨s ${consecutiveErrors} erreur(s).`);
                 consecutiveErrors = 0;
             }
             const interval = hasActive ? pollIntervalActive : pollIntervalIdle;
@@ -145,8 +145,8 @@ export async function startMonitoring() {
                 console.error(`[Monitor] Jellyfin injoignable (${process.env.JELLYFIN_URL}): ${msg}`);
                 await appendHealthEvent({ source: 'monitor', kind: 'error', message: 'Monitor Jellyfin en erreur.', details: { error: msg } });
             } else if (consecutiveErrors % 60 === 0) {
-                // Reminder every ~30 min (60 × 30s)
-                console.warn(`[Monitor] Jellyfin toujours injoignable après ${consecutiveErrors} tentatives.`);
+                // Reminder every ~30 min (60 Ã— 30s)
+                console.warn(`[Monitor] Jellyfin toujours injoignable aprÃ¨s ${consecutiveErrors} tentatives.`);
             }
             await markMonitorPoll({ active: false, sessionCount: 0, consecutiveErrors, error: error instanceof Error ? error.message : String(error), force: true });
             monitorTimeoutId = setTimeout(scheduleNextPoll, POLL_INTERVAL_ERROR);
@@ -224,7 +224,7 @@ async function pollJellyfinSessions(): Promise<boolean> {
         const DeviceName = session.DeviceName;
         const IpAddress = cleanIpAddress(session.RemoteEndPoint);
 
-        // Parent chain metadata (for enriched display: "Episode — Season — Series")
+        // Parent chain metadata (for enriched display: "Episode â€” Season â€” Series")
         const SeriesName = Item?.SeriesName || null;
         const SeasonName = Item?.SeasonName || null;
         const AlbumName = Item?.Album || null;
@@ -518,7 +518,7 @@ async function pollJellyfinSessions(): Promise<boolean> {
                     }
 
                     // Always update audio/subtitle info if available (fills in data that was
-                    // missing on initial create — MediaStreams may not be in first poll response)
+                    // missing on initial create â€” MediaStreams may not be in first poll response)
                     const mediaUpdates: any = {};
                     if (AudioLanguage && !openPlayback.audioLanguage) mediaUpdates.audioLanguage = AudioLanguage;
                     if (AudioCodec && !openPlayback.audioCodec) mediaUpdates.audioCodec = AudioCodec;
@@ -581,7 +581,7 @@ async function pollJellyfinSessions(): Promise<boolean> {
                         orderBy: { endedAt: 'desc' },
                     });
                     if (recentClosed) {
-                        // Reopen the session — clear endedAt so it becomes the active one
+                        // Reopen the session â€” clear endedAt so it becomes the active one
                         await prisma.playbackHistory.update({
                             where: { id: recentClosed.id },
                             data: { endedAt: null },
@@ -633,13 +633,13 @@ async function pollJellyfinSessions(): Promise<boolean> {
                     const discordPayload = {
                         embeds: [
                             {
-                                title: `🎬 Now Playing: ${ItemName || "Unknown"}`,
+                                title: `ðŸŽ¬ Now Playing: ${ItemName || "Unknown"}`,
                                 color: 10181046, // Jellyfin Purple
                                 fields: [
-                                    { name: "👤 User", value: UserName || "Unknown", inline: true },
-                                    { name: "📱 Device", value: `${ClientName || "Unknown"} (${DeviceName || "Unknown"})`, inline: true },
-                                    { name: "🌍 Location", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Unknown", inline: true },
-                                    { name: "⚙️ Quality", value: PlayMethod || "Unknown", inline: true }
+                                    { name: "ðŸ‘¤ User", value: UserName || "Unknown", inline: true },
+                                    { name: "ðŸ“± Device", value: `${ClientName || "Unknown"} (${DeviceName || "Unknown"})`, inline: true },
+                                    { name: "ðŸŒ Location", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Unknown", inline: true },
+                                    { name: "âš™ï¸ Quality", value: PlayMethod || "Unknown", inline: true }
                                 ],
                                 thumbnail: { url: posterUrl },
                                 timestamp: new Date().toISOString()
@@ -733,8 +733,8 @@ async function pollJellyfinSessions(): Promise<boolean> {
     let ghostSessionsCleaned = 0;
     for (const dbStream of allDbStreams) {
         if (!currentSessionIds.has(dbStream.sessionId)) {
-            // This session is in our DB but NOT in Jellyfin — it's a ghost
-            console.log(`[Monitor] Session fantôme détectée: ${dbStream.sessionId} — absente de Jellyfin, nettoyage.`);
+            // This session is in our DB but NOT in Jellyfin â€” it's a ghost
+            console.log(`[Monitor] Session fantÃ´me dÃ©tectÃ©e: ${dbStream.sessionId} â€” absente de Jellyfin, nettoyage.`);
 
             await redis.del(`stream:${dbStream.sessionId}`);
 
@@ -766,7 +766,7 @@ async function pollJellyfinSessions(): Promise<boolean> {
     }
 
     if (ghostSessionsCleaned > 0) {
-        await appendHealthEvent({ source: 'monitor', kind: 'ghost-cleanup', message: `${ghostSessionsCleaned} session(s) fantôme(s) supprimée(s) pendant le polling.`, details: { count: ghostSessionsCleaned } });
+        await appendHealthEvent({ source: 'monitor', kind: 'ghost-cleanup', message: `${ghostSessionsCleaned} session(s) fantÃ´me(s) supprimÃ©e(s) pendant le polling.`, details: { count: ghostSessionsCleaned } });
     }
 
     // Also clean orphan Redis stream keys that have no matching DB record

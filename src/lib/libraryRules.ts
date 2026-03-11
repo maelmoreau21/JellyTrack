@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { readStateFile } from "@/lib/appStateStorage";
 import { sanitizeLibraryRules, type LibraryRuleMap } from "@/lib/mediaPolicy";
 
-const LIBRARY_RULES_FILE = "jellytulli-library-rules.json";
+const LIBRARY_RULES_FILE = "JellyTrack-library-rules.json";
 
 let legacyMigrationPromise: Promise<void> | null = null;
 

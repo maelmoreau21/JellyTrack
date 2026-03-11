@@ -435,7 +435,7 @@ const getDashboardMetrics = unstable_cache(
       }
     };
   },
-  ['jellytulli-dashboard'],
+  ['JellyTrack-dashboard'],
   { revalidate: 60 }
 );
 

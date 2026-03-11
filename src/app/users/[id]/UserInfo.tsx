@@ -209,7 +209,7 @@ export default async function UserInfo({ userId }: { userId: string }) {
                     <Zap className="h-4 w-4 text-yellow-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-lg font-bold">{peakDay} · {peakHour}h</div>
+                    <div className="text-lg font-bold">{peakDay} Â· {peakHour}h</div>
                     <p className="text-xs text-muted-foreground">{t('mostActiveTime')}</p>
                 </CardContent>
             </Card>
@@ -232,7 +232,7 @@ export default async function UserInfo({ userId }: { userId: string }) {
                 </CardHeader>
                 <CardContent>
                     <div className="text-lg font-bold">{uniqueMovies.size + uniqueSeries.size + uniqueMusic.size}</div>
-                    <p className="text-xs text-muted-foreground">🎬 {uniqueMovies.size} · 📺 {uniqueSeries.size} · 🎵 {uniqueMusic.size}</p>
+                    <p className="text-xs text-muted-foreground">ðŸŽ¬ {uniqueMovies.size} Â· ðŸ“º {uniqueSeries.size} Â· ðŸŽµ {uniqueMusic.size}</p>
                 </CardContent>
             </Card>
 
@@ -255,7 +255,7 @@ export default async function UserInfo({ userId }: { userId: string }) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-lg font-bold truncate">{topMedia.title}</div>
-                        <p className="text-xs text-muted-foreground">{topMedia.count} sessions · {Math.round(topMedia.seconds / 60)} min</p>
+                        <p className="text-xs text-muted-foreground">{topMedia.count} sessions Â· {Math.round(topMedia.seconds / 60)} min</p>
                     </CardContent>
                 </Card>
             )}

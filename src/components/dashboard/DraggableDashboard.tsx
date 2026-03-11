@@ -15,7 +15,7 @@ export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
     const [isEditMode, setIsEditMode] = useState(false);
 
     useEffect(() => {
-        const saved = localStorage.getItem("jellytulli-dashboard-order");
+        const saved = localStorage.getItem("JellyTrack-dashboard-order");
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
@@ -38,7 +38,7 @@ export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
             newOrder[index] = newOrder[swapIndex];
             newOrder[swapIndex] = temp;
             setOrder(newOrder);
-            localStorage.setItem("jellytulli-dashboard-order", JSON.stringify(newOrder));
+            localStorage.setItem("JellyTrack-dashboard-order", JSON.stringify(newOrder));
         }
     };
 

@@ -182,7 +182,7 @@ const getNetworkData = unstable_cache(
             }
         };
     },
-    ['jellytulli-network-analysis-v1'],
+    ['JellyTrack-network-analysis-v1'],
     { revalidate: 300 }
 );
 
@@ -266,7 +266,7 @@ export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { 
             <Card className="bg-zinc-900/50 border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <span>🔍</span> {t('mostTranscoded')}
+                        <span>??</span> {t('mostTranscoded')}
                     </CardTitle>
                     <CardDescription>{t('mostTranscodedDesc')}</CardDescription>
                 </CardHeader>

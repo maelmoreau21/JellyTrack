@@ -22,9 +22,9 @@ export async function GET() {
 
                     let mediaSubtitle: string | null = null;
                     if (payload.SeriesName) {
-                        mediaSubtitle = payload.SeriesName + (payload.SeasonName ? ` — ${payload.SeasonName}` : '');
+                        mediaSubtitle = payload.SeriesName + (payload.SeasonName ? ` â€” ${payload.SeasonName}` : '');
                     } else if (payload.AlbumName) {
-                        mediaSubtitle = (payload.AlbumArtist ? `${payload.AlbumArtist} — ` : '') + payload.AlbumName;
+                        mediaSubtitle = (payload.AlbumArtist ? `${payload.AlbumArtist} â€” ` : '') + payload.AlbumName;
                     }
 
                     let progressPercent = 0;

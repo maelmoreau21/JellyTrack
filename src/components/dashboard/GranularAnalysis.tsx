@@ -48,7 +48,7 @@ const getGranularData = unstable_cache(
         let dropSkipped = 0;   // <10% "Zappé"
         let dropAbandoned = 0; // 10-50% "Abandonné"
         let dropAlmost = 0;    // 50-80% "Presque"
-        let dropFinished = 0;  // ≥80% "Terminé"
+        let dropFinished = 0;  // =80% "Terminé"
 
         // Media specific Drop-off
         const mediaDropMap = new Map<string, { title: string, mediaId: string, completion: number, count: number }>();
@@ -183,7 +183,7 @@ const getGranularData = unstable_cache(
             dropOffData, dropSegments, topAbandoned, audioData, subtitleData
         };
     },
-    ['jellytulli-granular-analysis-v3'],
+    ['JellyTrack-granular-analysis-v3'],
     { revalidate: 300 }
 );
 

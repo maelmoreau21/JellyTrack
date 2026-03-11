@@ -29,7 +29,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const type = sParams.type;
     const currentPage = Math.max(1, parseInt(sParams.page || "1", 10) || 1);
 
-    // 0. Récupérer les Settings globaux
+    // 0. RÃ©cupÃ©rer les Settings globaux
     const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } });
     const excludedLibraries = settings?.excludedLibraries || [];
 
@@ -69,7 +69,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         },
     });
 
-    // 2. Aggregate child stats for Series (via Seasons → Episodes)
+    // 2. Aggregate child stats for Series (via Seasons â†’ Episodes)
     const seriesIdList = parentItems.filter((m: any) => m.type === 'Series').map((m: any) => m.jellyfinMediaId);
     const seriesChildStats = new Map<string, { plays: number; dur: number; dp: number; childCount: number }>();
 
@@ -141,7 +141,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         return { ...media, plays, durationHours, qualityPercent, childCount };
     });
 
-    // 3. Extraction des Stats Globales (Genres et Résolution)
+    // 3. Extraction des Stats Globales (Genres et RÃ©solution)
     const genreCounts = new Map<string, number>();
     const resolutionCounts = new Map<string, number>();
 
@@ -170,10 +170,10 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     if (sortBy === "duration") {
         processedMedia.sort((a: any, b: any) => b.durationHours - a.durationHours);
     } else if (sortBy === "quality") {
-        // Trie par qualité décroissante (ceux qui ont le plus gros % de DirectPlay)
+        // Trie par qualitÃ© dÃ©croissante (ceux qui ont le plus gros % de DirectPlay)
         processedMedia.sort((a: any, b: any) => b.qualityPercent - a.qualityPercent);
     } else {
-        // Défaut: Tri par nombre de vues "plays"
+        // DÃ©faut: Tri par nombre de vues "plays"
         processedMedia.sort((a: any, b: any) => b.plays - a.plays);
     }
 
@@ -213,7 +213,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                     </div>
                 </div>
 
-                {/* Section Stats Bibliothèque */}
+                {/* Section Stats BibliothÃ¨que */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
                     <Card className="col-span-2 app-surface">
                         <CardHeader>
@@ -364,7 +364,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                         }, [])
                                         .map((item, idx) =>
                                             item === "..." ? (
-                                                <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">…</span>
+                                                <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">â€¦</span>
                                             ) : (
                                                 <Link
                                                     key={item}
@@ -386,7 +386,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                     </Link>
                                 )}
                                 <span className="text-xs text-muted-foreground ml-4">
-                                    {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} {tc('on')} {totalItems}
+                                    {startIndex + 1}â€“{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} {tc('on')} {totalItems}
                                 </span>
                             </div>
                         )}

@@ -11,7 +11,7 @@ export default async function UsersPage() {
     const t = await getTranslations('users');
     const tc = await getTranslations('common');
     const locale = await getLocale();
-    // Récupérer tous les utilisateurs
+    // RÃ©cupÃ©rer tous les utilisateurs
     const users = await prisma.user.findMany({
         include: {
             playbackHistory: {
@@ -42,7 +42,7 @@ export default async function UsersPage() {
             }
         });
 
-        // Trouver le client préféré
+        // Trouver le client prÃ©fÃ©rÃ©
         let topClient = tc('unknown');
         let topClientCount = 0;
         clientCounts.forEach((count, name) => {

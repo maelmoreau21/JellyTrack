@@ -13,7 +13,7 @@ export async function GET() {
 
     try {
         const files = readdirSync(BACKUP_DIR)
-            .filter(f => f.endsWith(".json") && f.startsWith("jellytulli-auto-"))
+            .filter(f => f.endsWith(".json") && f.startsWith("JellyTrack-auto-"))
             .map(f => {
                 const stats = statSync(path.join(BACKUP_DIR, f));
                 return {

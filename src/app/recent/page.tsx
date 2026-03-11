@@ -51,7 +51,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
   const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } });
   const excludedLibraries = settings?.excludedLibraries || [];
 
-  // Build type filter — show parent-level items (Movie, Series, MusicAlbum) by default
+  // Build type filter â€” show parent-level items (Movie, Series, MusicAlbum) by default
   const displayTypes = type === "movie" ? ["Movie"]
     : type === "series" ? ["Series"]
     : type === "music" ? ["MusicAlbum"]
@@ -140,7 +140,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50"
                   />
-                  {/* NOUVEAU badge — animated glow */}
+                  {/* NOUVEAU badge â€” animated glow */}
                   {isRecent && (
                     <div className="absolute top-2 left-2 z-10">
                       <Badge className="bg-primary text-white border-0 text-[10px] px-2 py-0.5 font-bold shadow-lg shadow-primary/30 animate-pulse">
@@ -189,7 +189,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                   <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
                     <Clock className="w-3 h-3" />
                     {dateAdded.toLocaleDateString(locale, { day: "numeric", month: "short" })}
-                    {plays > 0 && <span className="text-zinc-400 ml-1">· {plays} {plays > 1 ? tc('views') : tc('view')}</span>}
+                    {plays > 0 && <span className="text-zinc-400 ml-1">Â· {plays} {plays > 1 ? tc('views') : tc('view')}</span>}
                   </p>
                 </div>
               </Link>

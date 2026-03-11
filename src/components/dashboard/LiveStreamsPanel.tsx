@@ -58,18 +58,18 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                     <p className="text-[11px] text-zinc-400 truncate">{stream.mediaSubtitle}</p>
                 )}
                 <p className="text-xs text-muted-foreground flex flex-col gap-0.5">
-                    <span className="truncate">{stream.user} • {stream.device}</span>
+                    <span className="truncate">{stream.user} â€¢ {stream.device}</span>
                     {(stream.audioLanguage || stream.subtitleLanguage) && (
                         <span className="text-[10px] opacity-70 truncate">
-                            {stream.audioLanguage ? `🔊 ${stream.audioLanguage.toUpperCase()}` : ''}
+                            {stream.audioLanguage ? `ðŸ”Š ${stream.audioLanguage.toUpperCase()}` : ''}
                             {stream.audioCodec ? ` (${stream.audioCodec})` : ''}
-                            {stream.subtitleLanguage ? ` • 💬 ${stream.subtitleLanguage.toUpperCase()}` : ''}
+                            {stream.subtitleLanguage ? ` â€¢ ðŸ’¬ ${stream.subtitleLanguage.toUpperCase()}` : ''}
                             {stream.subtitleCodec ? ` (${stream.subtitleCodec})` : ''}
                         </span>
                     )}
                     {(stream.city !== "Unknown" || stream.country !== "Unknown") && (
                         <span className="text-[10px] opacity-70 truncate">
-                            📍 {stream.city !== "Unknown" ? `${stream.city}, ` : ''}{stream.country}
+                            ðŸ“ {stream.city !== "Unknown" ? `${stream.city}, ` : ''}{stream.country}
                         </span>
                     )}
                 </p>
@@ -82,7 +82,7 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                             />
                         </div>
                         <span className="text-[10px] text-zinc-500 w-8 text-right shrink-0">
-                            {stream.isPaused ? '⏸' : ''}{stream.progressPercent}%
+                            {stream.isPaused ? 'â¸' : ''}{stream.progressPercent}%
                         </span>
                     </div>
                 )}
@@ -135,7 +135,7 @@ function StreamTimeline({ stream, colorIndex }: { stream: LiveStream; colorIndex
                         <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${stream.playMethod === "Transcode" ? "bg-orange-500/10 text-orange-400" : "bg-emerald-500/10 text-emerald-400"}`}>
                             {stream.playMethod === "Transcode" ? "TC" : "DP"}
                         </span>
-                        {stream.isPaused && <span className="text-[10px] text-yellow-500">⏸</span>}
+                        {stream.isPaused && <span className="text-[10px] text-yellow-500">â¸</span>}
                         <span className="text-[10px] text-zinc-500">{stream.progressPercent}%</span>
                         <KillStreamButton sessionId={stream.sessionId} mediaTitle={stream.mediaTitle} />
                     </div>

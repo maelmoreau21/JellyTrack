@@ -36,7 +36,7 @@ function buildDerivedSecret() {
 
     const seed = entropyParts.length > 0
         ? entropyParts.join("|")
-        : "jellytulli|standalone|fallback-secret";
+        : "JellyTrack|standalone|fallback-secret";
 
     const hashFragment = (input: string, salt: string) => {
         let hash = 2166136261;

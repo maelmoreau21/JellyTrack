@@ -17,10 +17,10 @@ function verifyWebhookAuth(req: Request): boolean {
     // In development, keep backward compatibility.
     if (!secret) {
         if (process.env.NODE_ENV === "production") {
-            console.error("[Webhook] JELLYFIN_WEBHOOK_SECRET manquant en production — requête rejetée.");
+            console.error("[Webhook] JELLYFIN_WEBHOOK_SECRET manquant en production â€” requÃªte rejetÃ©e.");
             return false;
         }
-        console.warn("[Webhook] JELLYFIN_WEBHOOK_SECRET non configuré (mode dev) — webhook non authentifié !");
+        console.warn("[Webhook] JELLYFIN_WEBHOOK_SECRET non configurÃ© (mode dev) â€” webhook non authentifiÃ© !");
         return true;
     }
 
@@ -44,14 +44,14 @@ function verifyWebhookAuth(req: Request): boolean {
 export async function POST(req: Request) {
     // Authenticate the webhook request
     if (!verifyWebhookAuth(req)) {
-        console.warn("[Webhook] Requête rejetée — token invalide.");
+        console.warn("[Webhook] RequÃªte rejetÃ©e â€” token invalide.");
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
         const payload = await req.json();
 
-        // Type d'événement envoyé par le plugin Webhook de Jellyfin
+        // Type d'Ã©vÃ©nement envoyÃ© par le plugin Webhook de Jellyfin
         // ex: "PlaybackStart", "PlaybackStop", "PlaybackProgress", "ItemAdded"
         const eventType = payload.NotificationType || payload.Notification_Type || payload.Event;
 
@@ -59,13 +59,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: await apiT('payloadUnrecognized') }, { status: 400 });
         }
 
-        console.log(`[Webhook] Événement reçu: ${eventType}`);
+        console.log(`[Webhook] Ã‰vÃ©nement reÃ§u: ${eventType}`);
 
         // Extract real client IP from proxy headers (Docker / reverse proxy)
         const forwardedFor = req.headers.get('x-forwarded-for');
         const realIpHeader = forwardedFor?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null;
 
-        // Helper: clean IPs — keep raw value, just strip IPv6-mapped prefix
+        // Helper: clean IPs â€” keep raw value, just strip IPv6-mapped prefix
         const resolveIp = (ip: string | null | undefined): string => {
             if (!ip) return "Unknown";
             let cleaned = ip.trim();
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
         };
 
         if (eventType === "PlaybackStart") {
-            // Lecture des données du Webhook
+            // Lecture des donnÃ©es du Webhook
             const jellyfinUserId = payload.UserId || payload.UserId || payload.User_Id;
             const username = payload.UserName || payload.Username || "Unknown";
             const jellyfinMediaId = payload.ItemId || payload.Item_Id || payload.MediaId;
@@ -108,14 +108,14 @@ export async function POST(req: Request) {
                 return NextResponse.json({ message: await apiT('incompleteData') }, { status: 400 });
             }
 
-            // 1. Mise à jour ou création de l'utilisateur
+            // 1. Mise Ã  jour ou crÃ©ation de l'utilisateur
             await prisma.user.upsert({
                 where: { jellyfinUserId: jellyfinUserId },
                 update: { username },
                 create: { jellyfinUserId, username }
             });
 
-            // 2. Mise à jour ou création du média
+            // 2. Mise Ã  jour ou crÃ©ation du mÃ©dia
             await prisma.media.upsert({
                 where: { jellyfinMediaId: jellyfinMediaId },
                 update: { title, type, collectionType: effectiveCollectionType || undefined },
@@ -184,7 +184,7 @@ export async function POST(req: Request) {
                     }
 
                     if (shouldSend) {
-                        // Utilisation de notre API proxy interne pour sécuriser l'URL de l'image
+                        // Utilisation de notre API proxy interne pour sÃ©curiser l'URL de l'image
                         // Fallback uses runtime PORT to stay correct when app port changes
                         const fallbackPort = process.env.PORT || "3000";
                         const appUrl = process.env.NEXTAUTH_URL || `http://localhost:${fallbackPort}`;
@@ -211,7 +211,7 @@ export async function POST(req: Request) {
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify(discordPayload)
                         });
-                        console.log(`[Webhook] Alerte Discord envoyée pour ${title}.`);
+                        console.log(`[Webhook] Alerte Discord envoyÃ©e pour ${title}.`);
                     }
                 }
             } catch (err) {
@@ -220,7 +220,7 @@ export async function POST(req: Request) {
         }
 
         else if (eventType === "PlaybackStop") {
-            console.log(`[Webhook] Fin de lecture interceptée.`);
+            console.log(`[Webhook] Fin de lecture interceptÃ©e.`);
             const jellyfinUserId = payload.UserId || payload.User_Id;
             const jellyfinMediaId = payload.ItemId || payload.Item_Id || payload.MediaId;
             const positionTicks = payload.PlaybackPositionTicks || payload.PositionTicks || 0;
@@ -277,7 +277,7 @@ export async function POST(req: Request) {
                     if (activeStream) {
                         await redis.del(`stream:${activeStream.sessionId}`);
                         await prisma.activeStream.delete({ where: { id: activeStream.id } });
-                        console.log(`[Webhook] PlaybackStop: ActiveStream ${activeStream.sessionId} nettoyé.`);
+                        console.log(`[Webhook] PlaybackStop: ActiveStream ${activeStream.sessionId} nettoyÃ©.`);
                     }
                 }
             }

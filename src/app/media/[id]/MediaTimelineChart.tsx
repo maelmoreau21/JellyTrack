@@ -37,10 +37,10 @@ const EVENT_COLORS: Record<string, string> = {
 };
 
 const EVENT_ICONS: Record<string, string> = {
-    stop:            "⏹",
-    pause:           "⏸",
-    audio_change:    "🔊",
-    subtitle_change: "💬",
+    stop:            "â¹",
+    pause:           "â¸",
+    audio_change:    "ðŸ”Š",
+    subtitle_change: "ðŸ’¬",
 };
 
 // --- Helpers ---
@@ -214,7 +214,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                     {total > 0 && (
                                         <TooltipContent className="bg-zinc-800 text-zinc-100 border-zinc-700 text-xs space-y-1">
                                             <p className="font-semibold text-zinc-300">
-                                                {formatMs(bucket.startMs)} – {formatMs(bucket.endMs)}
+                                                {formatMs(bucket.startMs)} â€“ {formatMs(bucket.endMs)}
                                             </p>
                                             {segments.map(seg => (
                                                 <div key={seg.type} className="flex items-center gap-1.5">
@@ -257,7 +257,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                         <TooltipContent className="bg-zinc-800 text-zinc-100 border-zinc-700 text-xs">
                                             <p>{session.username}</p>
                                             <p className="text-zinc-400">{new Date(session.startedAt).toLocaleDateString(undefined, { day: "2-digit", month: "2-digit", year: "numeric" })}</p>
-                                            <p className="text-zinc-400">{Math.round(session.durationWatched / 60)} min • {session.events.length} {t("eventsCount")}</p>
+                                            <p className="text-zinc-400">{Math.round(session.durationWatched / 60)} min â€¢ {session.events.length} {t("eventsCount")}</p>
                                         </TooltipContent>
                                     </Tooltip>
                                     <div className="relative flex-1 h-5 bg-zinc-800/30 rounded border border-zinc-800/50 group-hover:border-zinc-700/50 transition-colors">

@@ -16,7 +16,7 @@ function buildDateFilter(timeRange: string): any {
         const d = new Date(); d.setDate(d.getDate() - 30); d.setHours(0, 0, 0, 0);
         return { gte: d };
     }
-    // "all" or unknown → no filter
+    // "all" or unknown ? no filter
     return undefined;
 }
 
@@ -271,7 +271,7 @@ const getDeepInsights = unstable_cache(
         return { categorized, topClients, streamMethodsChartData, resolutionChartData, deviceChartData, topGenres };
     },
     // Dynamic cache key — varies with params so different filters get different cached results
-    ['jellytulli-deep-insights-v3'],
+    ['JellyTrack-deep-insights-v3'],
     { revalidate: 300 }
 );
 

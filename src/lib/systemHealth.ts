@@ -45,7 +45,7 @@ export interface SystemHealthState {
     events: HealthEvent[];
 }
 
-const STATE_FILE = "jellytulli-system-health.json";
+const STATE_FILE = "JellyTrack-system-health.json";
 const MAX_EVENTS = 60;
 
 const defaultState = (): SystemHealthState => ({

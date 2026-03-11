@@ -22,6 +22,7 @@ import {
 import { LogoutButton } from "./LogoutButton";
 import { SearchBar } from "./SearchBar";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeToggle } from "./ThemeToggle";
 import { useTranslations } from 'next-intl';
 
 const adminNavigationKeys = [
@@ -29,7 +30,7 @@ const adminNavigationKeys = [
     { key: 'recentlyAdded', href: '/recent', icon: Sparkles },
     { key: 'library', href: '/media', icon: Film },
     { key: 'logs', href: '/logs', icon: ScrollText },
-    { label: 'Santé des logs', href: '/admin/log-health', icon: HeartPulse },
+    { label: 'SantÃ© des logs', href: '/admin/log-health', icon: HeartPulse },
     { key: 'users', href: '/users', icon: Users },
     { key: 'cleanup', href: '/admin/cleanup', icon: Eraser },
     { key: 'settings', href: '/settings', icon: Settings },
@@ -64,14 +65,14 @@ export function Sidebar() {
 
     const sidebarContent = (
         <>
-            <div className="flex h-16 shrink-0 items-center px-6 border-b border-white/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
-                <Link href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`} className="text-xl font-bold tracking-tight text-zinc-50 flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,rgba(8,145,178,0.24),rgba(245,158,11,0.18))] ring-1 ring-white/10">
-                        <PlayCircle className="w-5 h-5 text-cyan-300" />
+            <div className="flex h-16 shrink-0 items-center px-6 border-b border-zinc-200 dark:border-white/5 bg-white/50 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
+                <Link href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`} className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,rgba(8,145,178,0.24),rgba(245,158,11,0.18))] ring-1 ring-black/5 dark:ring-white/10">
+                        <PlayCircle className="w-5 h-5 text-cyan-500 dark:text-cyan-300" />
                     </div>
-                    <span>JellyTulli</span>
+                    <span>JellyTrack</span>
                 </Link>
-                {/* Close button — mobile only */}
+                {/* Close button â€” mobile only */}
                 <button
                     onClick={() => setMobileOpen(false)}
                     className="ml-auto md:hidden p-1 text-zinc-400 hover:text-zinc-200"
@@ -93,8 +94,8 @@ export function Sidebar() {
                                 key={item.name}
                                 href={item.href}
                                 className={`group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${isActive
-                                    ? "bg-[linear-gradient(135deg,rgba(8,145,178,0.16),rgba(245,158,11,0.08))] text-zinc-50 ring-1 ring-cyan-400/15"
-                                    : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-50"
+                                    ? "bg-[linear-gradient(135deg,rgba(8,145,178,0.16),rgba(245,158,11,0.08))] text-zinc-900 dark:text-zinc-50 ring-1 ring-cyan-400/15"
+                                    : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200/60 dark:hover:bg-zinc-800/60 hover:text-zinc-900 dark:hover:text-zinc-50"
                                     }`}
                             >
                                 <item.icon
@@ -109,12 +110,15 @@ export function Sidebar() {
                 </nav>
             </div>
 
-            <div className="border-t border-white/5 p-4 space-y-3 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))]">
-                <LanguageSwitcher />
-                <LogoutButton className="w-full justify-start text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800/50" />
+            <div className="border-t border-zinc-200 dark:border-white/5 p-4 space-y-3 bg-white/30 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))]">
+                <div className="flex items-center gap-2">
+                    <div className="flex-1"><LanguageSwitcher /></div>
+                    <ThemeToggle />
+                </div>
+                <LogoutButton className="w-full justify-start text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50" />
                 <div className="text-center">
-                    <Link href="/about" className="text-[11px] text-zinc-600 hover:text-zinc-400 transition-colors">
-                        JellyTulli v{process.env.APP_VERSION || '1.0.0'}
+                    <Link href="/about" className="text-[11px] text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
+                        JellyTrack v{process.env.APP_VERSION || '1.0.0'}
                     </Link>
                 </div>
             </div>
@@ -124,17 +128,17 @@ export function Sidebar() {
     return (
         <>
             {/* Mobile header bar */}
-            <div className="fixed top-0 left-0 right-0 z-40 flex md:hidden items-center h-14 px-4 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur-xl">
+            <div className="fixed top-0 left-0 right-0 z-40 flex md:hidden items-center h-14 px-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl">
                 <button
                     onClick={() => setMobileOpen(true)}
-                    className="p-1.5 text-zinc-400 hover:text-zinc-200 transition-colors"
+                    className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
                     aria-label="Open menu"
                 >
                     <Menu className="w-6 h-6" />
                 </button>
                 <Link href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`} className="ml-3 text-lg font-bold tracking-tight text-primary flex items-center gap-2">
                     <PlayCircle className="w-5 h-5 text-primary" />
-                    <span>JellyTulli</span>
+                    <span>JellyTrack</span>
                 </Link>
             </div>
 
@@ -146,10 +150,10 @@ export function Sidebar() {
                 />
             )}
 
-            {/* Sidebar — desktop: always visible, mobile: slide-over */}
+            {/* Sidebar â€” desktop: always visible, mobile: slide-over */}
             <div
                 className={`
-                    fixed top-0 left-0 z-50 h-screen w-[86vw] max-w-72 md:w-64 flex flex-col border-r border-zinc-800 bg-zinc-950/95 backdrop-blur-xl shadow-2xl md:shadow-none
+                    fixed top-0 left-0 z-50 h-screen w-[86vw] max-w-72 md:w-64 flex flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl shadow-2xl md:shadow-none
                     transition-transform duration-200 ease-in-out
                     md:sticky md:translate-x-0
                     ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}

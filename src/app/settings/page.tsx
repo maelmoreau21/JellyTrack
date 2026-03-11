@@ -486,7 +486,7 @@ export default function SettingsPage() {
                                 </span>
                                 {libraryScanError && (
                                     <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-200">
-                                        Jellyfin non joignable, affichage basé sur les médias déjà synchronisés.
+                                        Jellyfin non joignable, affichage basÃ© sur les mÃ©dias dÃ©jÃ  synchronisÃ©s.
                                     </span>
                                 )}
                             </div>
@@ -509,7 +509,7 @@ export default function SettingsPage() {
                                                     <div className="text-xs text-zinc-400 font-mono mt-1">{libraryKey}</div>
                                                 </div>
                                                 <div className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${enabled ? 'app-chip-success' : 'app-chip'}`}>
-                                                    {enabled ? 'Suivi' : 'Ignoré'}
+                                                    {enabled ? 'Suivi' : 'IgnorÃ©'}
                                                 </div>
                                             </div>
                                         </button>
@@ -528,8 +528,8 @@ export default function SettingsPage() {
 
                 <Card className="app-surface mt-6">
                     <CardHeader>
-                        <CardTitle>Règles par bibliothèque</CardTitle>
-                        <CardDescription>Contrôlez les abandons et le taux de complétion par bibliothèque. Vous pouvez désactiver complètement la complétion pour une bibliothèque, comme la musique.</CardDescription>
+                        <CardTitle>RÃ¨gles par bibliothÃ¨que</CardTitle>
+                        <CardDescription>ContrÃ´lez les abandons et le taux de complÃ©tion par bibliothÃ¨que. Vous pouvez dÃ©sactiver complÃ¨tement la complÃ©tion pour une bibliothÃ¨que, comme la musique.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {availableLibraries.map((libraryKey) => {
@@ -548,21 +548,21 @@ export default function SettingsPage() {
                                             <div className="mt-1 text-xs text-zinc-500 font-mono">{libraryKey}</div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <Label htmlFor={`rule-${libraryKey}`} className="text-sm text-zinc-300">Analyser la complétion</Label>
+                                            <Label htmlFor={`rule-${libraryKey}`} className="text-sm text-zinc-300">Analyser la complÃ©tion</Label>
                                             <Switch id={`rule-${libraryKey}`} checked={rule.completionEnabled} onCheckedChange={(checked) => updateRule(libraryKey, { completionEnabled: checked })} />
                                         </div>
                                     </div>
                                     <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
                                         <div className="space-y-2">
-                                            <Label>Terminé à partir de (%)</Label>
+                                            <Label>TerminÃ© Ã  partir de (%)</Label>
                                             <Input type="number" min={1} max={100} disabled={!rule.completionEnabled} value={rule.completedThreshold} onChange={(e) => updateRule(libraryKey, { completedThreshold: parseInt(e.target.value, 10) || 0 })} className="font-mono" />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Partiel à partir de (%)</Label>
+                                            <Label>Partiel Ã  partir de (%)</Label>
                                             <Input type="number" min={1} max={99} disabled={!rule.completionEnabled} value={rule.partialThreshold} onChange={(e) => updateRule(libraryKey, { partialThreshold: parseInt(e.target.value, 10) || 0 })} className="font-mono" />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Abandonné à partir de (%)</Label>
+                                            <Label>AbandonnÃ© Ã  partir de (%)</Label>
                                             <Input type="number" min={0} max={98} disabled={!rule.completionEnabled} value={rule.abandonedThreshold} onChange={(e) => updateRule(libraryKey, { abandonedThreshold: parseInt(e.target.value, 10) || 0 })} className="font-mono" />
                                         </div>
                                     </div>
@@ -571,7 +571,7 @@ export default function SettingsPage() {
                         })}
                     </CardContent>
                     <CardFooter>
-                        <p className="text-xs text-zinc-500">Ces seuils s’appliquent au dashboard, aux statistiques utilisateur et au nettoyage des médias abandonnés.</p>
+                        <p className="text-xs text-zinc-500">Ces seuils sâ€™appliquent au dashboard, aux statistiques utilisateur et au nettoyage des mÃ©dias abandonnÃ©s.</p>
                     </CardFooter>
                 </Card>
 

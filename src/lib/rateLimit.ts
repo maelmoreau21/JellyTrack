@@ -42,7 +42,7 @@ export async function recordFailedLogin(ip: string): Promise<void> {
     try {
         const count = await redis.incr(key);
         if (count === 1) {
-            // First attempt — set the expiry window
+            // First attempt â€” set the expiry window
             await redis.expire(key, WINDOW_SECONDS);
         }
         // If the user hit the limit, extend the block

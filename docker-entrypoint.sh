@@ -1,17 +1,17 @@
 #!/bin/sh
 set -e
 
-echo "Starting JellyTulli Server..."
+echo "Starting JellyTrack Server..."
 
 # ─── Build DATABASE_URL from env vars (DB_* or POSTGRES_*) ──────────
 # Priority order for compatibility:
 # DB_* (host-network friendly) > POSTGRES_* (legacy) > defaults
 if [ -z "$DATABASE_URL" ]; then
-  DB_USER=${DB_USER:-${POSTGRES_USER:-jellytulli}}
-  DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:-jellytulli_password}}
+  DB_USER=${DB_USER:-${POSTGRES_USER:-JellyTrack}}
+  DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:-JellyTrack_password}}
   DB_HOST=${DB_HOST:-${POSTGRES_IP:-postgres}}
   DB_PORT=${DB_PORT:-${POSTGRES_PORT:-5432}}
-  DB_NAME=${DB_NAME:-${POSTGRES_DB:-jellytulli}}
+  DB_NAME=${DB_NAME:-${POSTGRES_DB:-JellyTrack}}
   export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public&connection_limit=5"
   echo "Database: ${DB_HOST}:${DB_PORT}/${DB_NAME}"
 else

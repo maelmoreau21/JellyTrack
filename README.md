@@ -1,16 +1,16 @@
-# 🍐 JellyTulli
+# 🍐 JellyTrack
 
 Dashboard analytique avancé pour Jellyfin  
-Jellyfin + Tautulli = JellyTulli
+Jellyfin + Tautulli = JellyTrack
 
-[![Docker Build](https://github.com/maelmoreau21/JellyTulli/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/maelmoreau21/JellyTulli/actions/workflows/docker-publish.yml)
-[![GHCR Image](https://img.shields.io/badge/GHCR-ghcr.io%2Fmaelmoreau21%2Fjellytulli-blue?logo=github)](https://ghcr.io/maelmoreau21/jellytulli)
+[![Docker Build](https://github.com/maelmoreau21/JellyTrack/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/maelmoreau21/JellyTrack/actions/workflows/docker-publish.yml)
+[![GHCR Image](https://img.shields.io/badge/GHCR-ghcr.io%2Fmaelmoreau21%2FJellyTrack-blue?logo=github)](https://ghcr.io/maelmoreau21/JellyTrack)
 
 ---
 
 ## Aperçu
 
-JellyTulli est un service autonome d'observabilité pour **Jellyfin** : sessions en direct, historique enrichi, télémétrie de lecture, analyses avancées, backups automatiques et intégration webhook.
+JellyTrack est un service autonome d'observabilité pour **Jellyfin** : sessions en direct, historique enrichi, télémétrie de lecture, analyses avancées, backups automatiques et intégration webhook.
 
 ### Fonctionnalités clés
 
@@ -45,8 +45,8 @@ JellyTulli est un service autonome d'observabilité pour **Jellyfin** : sessions
 ### 1) Cloner le dépôt
 
 ```bash
-git clone https://github.com/maelmoreau21/JellyTulli.git
-cd JellyTulli
+git clone https://github.com/maelmoreau21/JellyTrack.git
+cd JellyTrack
 ```
 
 ### 2) Configurer `docker-compose.yml`
@@ -55,24 +55,24 @@ Adapte les variables sensibles et réseau avant démarrage :
 
 ```yaml
 services:
-  jellytulli:
-    image: ghcr.io/maelmoreau21/jellytulli:latest
+  JellyTrack:
+    image: ghcr.io/maelmoreau21/JellyTrack:latest
     ports:
       - "${APP_PORT:-3000}:${PORT:-3000}"
     environment:
       # PostgreSQL (DATABASE_URL est construit automatiquement au démarrage)
-      POSTGRES_USER: jellytulli
+      POSTGRES_USER: JellyTrack
       POSTGRES_PASSWORD: "change-me"
       POSTGRES_IP: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_DB: jellytulli
+      POSTGRES_DB: JellyTrack
 
       # Alias DB_* (prioritaires) utiles en mode host / réseau custom
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
-      DB_USER: jellytulli
+      DB_USER: JellyTrack
       DB_PASSWORD: "change-me"
-      DB_NAME: jellytulli
+      DB_NAME: JellyTrack
 
       # Redis
       REDIS_URL: redis://redis:6379
@@ -114,7 +114,7 @@ docker compose up -d
 
 1. Installer le plugin **Webhook** dans Jellyfin.
 2. Créer un webhook de type **Generic Destination**.
-3. URL : `http://<host-jellytulli>:<APP_PORT>/api/webhook/jellyfin`
+3. URL : `http://<host-JellyTrack>:<APP_PORT>/api/webhook/jellyfin`
 4. Événements : `Playback Start`, `Playback Progress`, `Playback Stop`.
 5. Ajouter un header d'authentification :
    - `Authorization: Bearer <JELLYFIN_WEBHOOK_SECRET>`
@@ -130,7 +130,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Option recommandée : épingler un tag GHCR explicite (ex: `ghcr.io/maelmoreau21/jellytulli:v1.4.0`) au lieu de `latest` pour des mises à jour contrôlées.
+Option recommandée : épingler un tag GHCR explicite (ex: `ghcr.io/maelmoreau21/JellyTrack:v1.4.0`) au lieu de `latest` pour des mises à jour contrôlées.
 
 ---
 
@@ -144,7 +144,7 @@ docker compose up postgres redis -d
 Créer un `.env.local` :
 
 ```bash
-DATABASE_URL="postgresql://jellytulli:jellytulli_password@localhost:5432/jellytulli?schema=public&connection_limit=5"
+DATABASE_URL="postgresql://JellyTrack:JellyTrack_password@localhost:5432/JellyTrack?schema=public&connection_limit=5"
 REDIS_URL="redis://localhost:6379"
 NEXTAUTH_SECRET="dev-secret"
 NEXTAUTH_URL="http://localhost:3000"
@@ -164,11 +164,11 @@ npm run dev
 
 | Variable | Défaut | Obligatoire | Description |
 | --- | --- | --- | --- |
-| `POSTGRES_USER` | `jellytulli` | Non | Utilisateur PostgreSQL (legacy, fallback) |
-| `POSTGRES_PASSWORD` | `jellytulli_password` | Non | Mot de passe PostgreSQL (legacy, fallback) |
+| `POSTGRES_USER` | `JellyTrack` | Non | Utilisateur PostgreSQL (legacy, fallback) |
+| `POSTGRES_PASSWORD` | `JellyTrack_password` | Non | Mot de passe PostgreSQL (legacy, fallback) |
 | `POSTGRES_IP` | `postgres` | Non | Hôte PostgreSQL (legacy, fallback) |
 | `POSTGRES_PORT` | `5432` | Non | Port PostgreSQL (legacy, fallback) |
-| `POSTGRES_DB` | `jellytulli` | Non | Base PostgreSQL (legacy, fallback) |
+| `POSTGRES_DB` | `JellyTrack` | Non | Base PostgreSQL (legacy, fallback) |
 | `DB_USER` | — | Non | Utilisateur PostgreSQL (prioritaire si défini) |
 | `DB_PASSWORD` | — | Non | Mot de passe PostgreSQL (prioritaire si défini) |
 | `DB_HOST` | — | Non | Hôte PostgreSQL (prioritaire, recommandé en mode host) |
@@ -179,7 +179,7 @@ npm run dev
 | `JELLYFIN_URL` | — | Oui | URL Jellyfin |
 | `JELLYFIN_API_KEY` | — | Oui | Clé API Jellyfin |
 | `JELLYFIN_WEBHOOK_SECRET` | — | Oui (prod) | Secret d'authentification des webhooks |
-| `ADMIN_PASSWORD` | — | Oui | Mot de passe admin JellyTulli |
+| `ADMIN_PASSWORD` | — | Oui | Mot de passe admin JellyTrack |
 | `NEXTAUTH_SECRET` | — | Oui | Secret NextAuth/JWT |
 | `NEXTAUTH_URL` | — | Oui | URL publique de l'application |
 | `APP_PORT` | `3000` | Non | Port exposé sur l'hôte (mapping Docker) |
@@ -196,9 +196,9 @@ npm run dev
 
 | Volume | Description |
 | --- | --- |
-| `jellytulli_pgdata` | Données PostgreSQL |
-| `jellytulli_redisdata` | Données Redis |
-| `jellytulli_backups` | Exports + backups automatiques |
+| `JellyTrack_pgdata` | Données PostgreSQL |
+| `JellyTrack_redisdata` | Données Redis |
+| `JellyTrack_backups` | Exports + backups automatiques |
 
 ---
 

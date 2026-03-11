@@ -79,7 +79,7 @@ export default function LoginForm() {
                             id="password"
                             type="password"
                             required
-                            placeholder="••••••••••"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                             className="pl-10 bg-black/50 border-zinc-700 text-white focus-visible:ring-indigo-500 placeholder:text-zinc-600 h-10"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}

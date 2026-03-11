@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
         const safeName = path.basename(fileName);
 
         // Validate it's an auto-backup file
-        if (!safeName.startsWith("jellytulli-auto-") || !safeName.endsWith(".json")) {
+        if (!safeName.startsWith("JellyTrack-auto-") || !safeName.endsWith(".json")) {
             return NextResponse.json({ error: await apiT('fileInvalid') }, { status: 400 });
         }
 

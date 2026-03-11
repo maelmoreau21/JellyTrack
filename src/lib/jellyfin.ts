@@ -9,7 +9,7 @@ export async function fetchJellyfinImage(itemId: string, type: string) {
     const apiKey = process.env.JELLYFIN_API_KEY;
 
     if (!baseUrl || !apiKey) {
-        throw new Error("JELLYFIN_URL ou JELLYFIN_API_KEY non configurées dans les variables d'environnement.");
+        throw new Error("JELLYFIN_URL ou JELLYFIN_API_KEY non configurÃ©es dans les variables d'environnement.");
     }
 
     // SECURITY: Pass API key via header instead of URL query parameter

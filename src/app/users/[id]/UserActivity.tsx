@@ -8,7 +8,7 @@ export default async function UserActivity({ userId }: { userId: string }) {
     last30Days.setDate(last30Days.getDate() - 29);
     last30Days.setHours(0, 0, 0, 0);
 
-    // Requête Prisma limitée aux 30 derniers jours pour éviter de surcharger
+    // RequÃªte Prisma limitÃ©e aux 30 derniers jours pour Ã©viter de surcharger
     const user = await prisma.user.findUnique({
         where: { jellyfinUserId: userId },
         include: {

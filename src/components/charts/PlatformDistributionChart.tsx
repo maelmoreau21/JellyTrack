@@ -24,12 +24,11 @@ interface PlatformDistributionChartProps {
 
 const COLORS = chartPalette;
 
-/* Animated active shape — sector expands + center label */
+/* Animated active shape â€” sector expands + center label */
 function renderActiveShape(props: any) {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value, percent } = props;
     return (
         <g>
-            {/* Expanded sector */}
             <Sector
                 cx={cx} cy={cy}
                 innerRadius={innerRadius - 2}
@@ -38,11 +37,9 @@ function renderActiveShape(props: any) {
                 fill={fill}
                 style={{ filter: "drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))", transition: "all 200ms ease" }}
             />
-            {/* Center label — name */}
             <text x={cx} y={cy - 8} textAnchor="middle" fill="#e5eefb" fontSize={13} fontWeight={600}>
                 {payload.name}
             </text>
-            {/* Center label — value + percent */}
             <text x={cx} y={cy + 12} textAnchor="middle" fill="#94a3b8" fontSize={11}>
                 {value} ({(percent * 100).toFixed(0)}%)
             </text>
@@ -53,6 +50,7 @@ function renderActiveShape(props: any) {
 export function PlatformDistributionChart({ data }: PlatformDistributionChartProps) {
     const t = useTranslations('charts');
     const [activeIndex, setActiveIndex] = useState<number>(-1);
+    const [hidden, setHidden] = useState<Set<string>>(new Set());
 
     if (!data || data.length === 0) {
         return (
@@ -62,45 +60,82 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
         );
     }
 
+    const filteredData = data.filter(d => !hidden.has(d.name));
+    const total = filteredData.reduce((sum, d) => sum + d.value, 0);
+
+    const toggleLegend = (e: any) => {
+        const name = e.value;
+        setHidden(prev => {
+            const next = new Set(prev);
+            if (next.has(name)) next.delete(name);
+            else if (next.size < data.length - 1) next.add(name); // keep at least 1
+            return next;
+        });
+    };
+
+    const legendFormatter = (value: string) => {
+        const isHidden = hidden.has(value);
+        return <span style={{ color: isHidden ? '#52525b' : '#e5eefb', textDecoration: isHidden ? 'line-through' : 'none', cursor: 'pointer' }}>{value}</span>;
+    };
+
     return (
-        <ResponsiveContainer width="100%" height={300} minHeight={300}>
-            <PieChart>
-                <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                    animationDuration={1000}
-                    animationBegin={0}
-                    animationEasing="ease-out"
-                    {...{
-                        activeIndex: activeIndex >= 0 ? activeIndex : undefined,
-                        activeShape: renderActiveShape,
-                        onMouseEnter: (_: any, index: number) => setActiveIndex(index),
-                        onMouseLeave: () => setActiveIndex(-1),
-                    } as any}
-                >
-                    {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} style={{ cursor: "pointer" }} />
-                    ))}
-                </Pie>
-                <Tooltip
-                    contentStyle={chartTooltipStyle}
-                    labelStyle={chartLabelStyle}
-                    itemStyle={chartItemStyle}
-                    animationDuration={200}
-                />
-                <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                    wrapperStyle={{ fontSize: '12px', cursor: 'pointer' }}
-                />
-            </PieChart>
-        </ResponsiveContainer>
+        <div className="flex flex-col h-full">
+            {hidden.size > 0 && (
+                <div className="mb-1 text-center">
+                    <button onClick={() => setHidden(new Set())} className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors">
+                        Tout afficher
+                    </button>
+                </div>
+            )}
+            <ResponsiveContainer width="100%" height={300} minHeight={300}>
+                <PieChart>
+                    <Pie
+                        data={filteredData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={90}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                        animationDuration={1000}
+                        animationBegin={0}
+                        animationEasing="ease-out"
+                        {...{
+                            activeIndex: activeIndex >= 0 ? activeIndex : undefined,
+                            activeShape: renderActiveShape,
+                            onMouseEnter: (_: any, index: number) => setActiveIndex(index),
+                            onMouseLeave: () => setActiveIndex(-1),
+                        } as any}
+                    >
+                        {filteredData.map((entry, index) => {
+                            const originalIdx = data.findIndex(d => d.name === entry.name);
+                            return (
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={COLORS[originalIdx % COLORS.length]}
+                                    style={{ cursor: "pointer" }}
+                                />
+                            );
+                        })}
+                    </Pie>
+                    <Tooltip
+                        contentStyle={chartTooltipStyle}
+                        labelStyle={chartLabelStyle}
+                        itemStyle={chartItemStyle}
+                        animationDuration={200}
+                        formatter={(value: any, name: any) => [`${value} (${total > 0 ? ((value / total) * 100).toFixed(0) : 0}%)`, name]}
+                    />
+                    <Legend
+                        verticalAlign="bottom"
+                        height={36}
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '12px', cursor: 'pointer' }}
+                        onClick={toggleLegend}
+                        formatter={legendFormatter}
+                    />
+                </PieChart>
+            </ResponsiveContainer>
+        </div>
     );
 }

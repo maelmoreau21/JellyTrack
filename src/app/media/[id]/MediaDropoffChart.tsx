@@ -61,7 +61,7 @@ export default function MediaDropoffChart({ data }: { data: DropoffData[] }) {
                         style={{ fill: '#a1a1aa', fontSize: 10 }}
                     />
                     {enrichedData.map((_, index) => {
-                        // Gradient: rouge (arrêt tôt) → vert (terminé)
+                        // Gradient: rouge (arrÃªt tÃ´t) â†’ vert (terminÃ©)
                         const ratio = index / Math.max(enrichedData.length - 1, 1);
                         const r = Math.round(239 + (34 - 239) * ratio);
                         const g = Math.round(68 + (197 - 68) * ratio);

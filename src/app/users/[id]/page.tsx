@@ -60,7 +60,7 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
                         href={`/wrapped/${jellyfinUserId}`}
                         className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25"
                     >
-                        🎁 {t('viewWrapped')}
+                        ðŸŽ {t('viewWrapped')}
                     </a>
                 </div>
 

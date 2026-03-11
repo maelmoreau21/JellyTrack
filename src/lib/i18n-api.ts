@@ -9,53 +9,53 @@ import { AVAILABLE_LOCALES, DEFAULT_LOCALE, isSupportedLocale } from "@/i18n/loc
 
 const messages: Record<string, Record<string, string>> = {
   fr: {
-    adminOnly: "Accès réservé aux administrateurs.",
-    unauthenticated: "Non authentifié.",
+    adminOnly: "AccÃ¨s rÃ©servÃ© aux administrateurs.",
+    unauthenticated: "Non authentifiÃ©.",
     internalError: "Erreur Serveur Interne",
     // Sync
-    syncSuccess: "Synchronisation {mode} terminée. {users} utilisateurs et {media} médias à jour.",
-    syncRecent: "récente",
-    syncFull: "complète",
-    serverNotConfigured: "Serveur non configuré (JELLYFIN_URL/JELLYFIN_API_KEY env vars manquants).",
+    syncSuccess: "Synchronisation {mode} terminÃ©e. {users} utilisateurs et {media} mÃ©dias Ã  jour.",
+    syncRecent: "rÃ©cente",
+    syncFull: "complÃ¨te",
+    serverNotConfigured: "Serveur non configurÃ© (JELLYFIN_URL/JELLYFIN_API_KEY env vars manquants).",
     // Settings validation
     discordUrlDomain: "L'URL du webhook Discord doit pointer vers discord.com",
     discordUrlHttps: "L'URL du webhook doit utiliser HTTPS",
     discordUrlInvalid: "URL du webhook invalide.",
     alertConditionInvalid: "Condition d'alerte invalide.",
-    intervalActiveRange: "monitorIntervalActive doit être entre 500ms et 60000ms.",
-    intervalIdleRange: "monitorIntervalIdle doit être entre 1000ms et 300000ms.",
-    syncCronHourRange: "syncCronHour doit être entre 0 et 23.",
-    syncCronMinuteRange: "syncCronMinute doit être entre 0 et 59.",
-    backupCronHourRange: "backupCronHour doit être entre 0 et 23.",
-    backupCronMinuteRange: "backupCronMinute doit être entre 0 et 59.",
-    localeInvalid: `Langue invalide. Valeurs acceptées: ${AVAILABLE_LOCALES.map((locale) => locale.code).join(', ')}`,
+    intervalActiveRange: "monitorIntervalActive doit Ãªtre entre 500ms et 60000ms.",
+    intervalIdleRange: "monitorIntervalIdle doit Ãªtre entre 1000ms et 300000ms.",
+    syncCronHourRange: "syncCronHour doit Ãªtre entre 0 et 23.",
+    syncCronMinuteRange: "syncCronMinute doit Ãªtre entre 0 et 59.",
+    backupCronHourRange: "backupCronHour doit Ãªtre entre 0 et 23.",
+    backupCronMinuteRange: "backupCronMinute doit Ãªtre entre 0 et 59.",
+    localeInvalid: `Langue invalide. Valeurs acceptÃ©es: ${AVAILABLE_LOCALES.map((locale) => locale.code).join(', ')}`,
     // Kill stream
-    jellyfinNotConfigured: "JELLYFIN_URL ou JELLYFIN_API_KEY non configurées.",
-    killStreamFailed: "Echec de l'arrêt du flux côté serveur Jellyfin.",
-    killStreamSuccess: "Flux arrêté avec succès.",
+    jellyfinNotConfigured: "JELLYFIN_URL ou JELLYFIN_API_KEY non configurÃ©es.",
+    killStreamFailed: "Echec de l'arrÃªt du flux cÃ´tÃ© serveur Jellyfin.",
+    killStreamSuccess: "Flux arrÃªtÃ© avec succÃ¨s.",
     // Backup
-    backupCreated: "Sauvegarde manuelle créée : {fileName}",
+    backupCreated: "Sauvegarde manuelle crÃ©Ã©e : {fileName}",
     backupError: "Erreur lors de la sauvegarde.",
     fileNameMissing: "Nom de fichier manquant.",
     fileNameInvalid: "Nom de fichier invalide.",
     fileInvalid: "Fichier invalide.",
-    fileAutoOnly: "Fichier invalide — seuls les fichiers de sauvegarde automatiques sont autorisés.",
+    fileAutoOnly: "Fichier invalide â€” seuls les fichiers de sauvegarde automatiques sont autorisÃ©s.",
     fileNotFound: "Fichier de sauvegarde introuvable.",
     backupFormatInvalid: "Format de sauvegarde invalide.",
-    backupDeleted: "Sauvegarde {fileName} supprimée.",
+    backupDeleted: "Sauvegarde {fileName} supprimÃ©e.",
     deleteError: "Erreur lors de la suppression.",
-    restoreSuccess: "Restauration depuis {fileName} terminée avec succès.",
+    restoreSuccess: "Restauration depuis {fileName} terminÃ©e avec succÃ¨s.",
     restoreError: "Erreur lors de la restauration.",
     // Webhook
     payloadUnrecognized: "Payload non reconnu.",
-    incompleteData: "Données incomplètes (UserId ou ItemId manquant)",
-    eventProcessed: "Événement {eventType} traité.",
+    incompleteData: "DonnÃ©es incomplÃ¨tes (UserId ou ItemId manquant)",
+    eventProcessed: "Ã‰vÃ©nement {eventType} traitÃ©.",
     serverError500: "Erreur serveur HTTP 500",
     // Auth
-    tooManyAttempts: "Trop de tentatives de connexion. Réessayez dans {minutes} minutes.",
-    jellyfinUrlMissing: "JELLYFIN_URL non configurée dans les variables d'environnement.",
+    tooManyAttempts: "Trop de tentatives de connexion. RÃ©essayez dans {minutes} minutes.",
+    jellyfinUrlMissing: "JELLYFIN_URL non configurÃ©e dans les variables d'environnement.",
     badCredentials: "Identifiants Jellyfin incorrects.",
-    connectionError: "Erreur de connexion à Jellyfin.",
+    connectionError: "Erreur de connexion Ã  Jellyfin.",
   },
   en: {
     adminOnly: "Admin access only.",
@@ -88,7 +88,7 @@ const messages: Record<string, Record<string, string>> = {
     fileNameMissing: "File name missing.",
     fileNameInvalid: "Invalid file name.",
     fileInvalid: "Invalid file.",
-    fileAutoOnly: "Invalid file — only automatic backup files are allowed.",
+    fileAutoOnly: "Invalid file â€” only automatic backup files are allowed.",
     fileNotFound: "Backup file not found.",
     backupFormatInvalid: "Invalid backup format.",
     backupDeleted: "Backup {fileName} deleted.",
@@ -137,7 +137,7 @@ export async function apiT(key: string, params?: Record<string, string | number>
 }
 
 /**
- * Synchronous version — pass locale explicitly (for middleware / authorize where cookies() is unavailable).
+ * Synchronous version â€” pass locale explicitly (for middleware / authorize where cookies() is unavailable).
  */
 export function apiTSync(locale: string, key: string, params?: Record<string, string | number>): string {
   let msg = messages[locale]?.[key] || messages["fr"][key] || key;

@@ -22,12 +22,12 @@ export async function initCronJobs(schedule: CronSchedule) {
     console.log(`[CronManager] Planification backup: ${backupCronExpr} (${String(schedule.backupCronHour).padStart(2, '0')}:${String(schedule.backupCronMinute).padStart(2, '0')})`);
 
     syncTask = cron.schedule(syncCronExpr, async () => {
-        console.log(`[Cron] Déclenchement automatique de la synchronisation (${String(schedule.syncCronHour).padStart(2, '0')}:${String(schedule.syncCronMinute).padStart(2, '0')})`);
+        console.log(`[Cron] DÃ©clenchement automatique de la synchronisation (${String(schedule.syncCronHour).padStart(2, '0')}:${String(schedule.syncCronMinute).padStart(2, '0')})`);
         await syncJellyfinLibrary();
     });
 
     backupTask = cron.schedule(backupCronExpr, async () => {
-        console.log(`[Cron] Déclenchement de la sauvegarde automatique (${String(schedule.backupCronHour).padStart(2, '0')}:${String(schedule.backupCronMinute).padStart(2, '0')})`);
+        console.log(`[Cron] DÃ©clenchement de la sauvegarde automatique (${String(schedule.backupCronHour).padStart(2, '0')}:${String(schedule.backupCronMinute).padStart(2, '0')})`);
         try {
             await performAutoBackup();
         } catch (err) {

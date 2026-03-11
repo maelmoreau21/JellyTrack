@@ -72,8 +72,8 @@ COPY --from=builder /app/node_modules/geoip-country ./node_modules/geoip-country
 COPY --from=builder /app/node_modules/node-cron ./node_modules/node-cron
 
 # OCI labels — links the GHCR package to the GitHub repo
-LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTulli"
-LABEL org.opencontainers.image.description="JellyTulli — Dashboard analytique pour Jellyfin"
+LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTrack"
+LABEL org.opencontainers.image.description="JellyTrack — Dashboard analytique pour Jellyfin"
 LABEL org.opencontainers.image.licenses="MIT"
 
 # Expose port and configure entrypoint

@@ -58,7 +58,7 @@ export const authOptions: NextAuthOptions = {
                     const data = await res.json();
                     const isAdmin = !!data.User?.Policy?.IsAdministrator;
 
-                    // Successful login — reset rate limit counter
+                    // Successful login â€” reset rate limit counter
                     await resetLoginRateLimit(clientIp);
 
                     return {
@@ -79,7 +79,7 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async jwt({ token, user }) {
-            // On first sign-in, `user` is defined — persist custom fields into the JWT
+            // On first sign-in, `user` is defined â€” persist custom fields into the JWT
             if (user) {
                 token.isAdmin = (user as any).isAdmin ?? false;
                 token.jellyfinUserId = (user as any).jellyfinUserId ?? user.id;
@@ -97,7 +97,7 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: "jwt",
-        maxAge: 7 * 24 * 60 * 60, // 7 jours (réduit depuis 30 pour limiter l'exploitation d'un JWT compromis)
+        maxAge: 7 * 24 * 60 * 60, // 7 jours (rÃ©duit depuis 30 pour limiter l'exploitation d'un JWT compromis)
     },
     pages: {
         signIn: '/login', // Redirection vers notre page custom

@@ -50,7 +50,7 @@ export async function performAutoBackup(): Promise<string> {
     // Generate filename with date
     const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const timeStr = new Date().toISOString().split('T')[1].replace(/:/g, '-').split('.')[0]; // HH-MM-SS
-    const fileName = `jellytulli-auto-${dateStr}_${timeStr}.json`;
+    const fileName = `JellyTrack-auto-${dateStr}_${timeStr}.json`;
     const filePath = path.join(BACKUP_DIR, fileName);
 
     // BigInt-safe JSON serializer (Prisma returns BigInt for durationMs, positionTicks, etc.)
@@ -63,7 +63,7 @@ export async function performAutoBackup(): Promise<string> {
 
     // Rolling rotation: delete oldest files if we exceed MAX_BACKUPS
     const backupFiles = readdirSync(BACKUP_DIR)
-        .filter(f => f.endsWith(".json") && f.startsWith("jellytulli-auto-"))
+        .filter(f => f.endsWith(".json") && f.startsWith("JellyTrack-auto-"))
         .map(f => ({
             name: f,
             time: statSync(path.join(BACKUP_DIR, f)).mtime.getTime(),
