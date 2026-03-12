@@ -178,12 +178,23 @@ export default function SettingsPage() {
         }
     };
 
-    const handleCopyApiKey = () => {
-        if (pluginApiKey) {
-            navigator.clipboard.writeText(pluginApiKey);
-            setApiKeyCopied(true);
-            setTimeout(() => setApiKeyCopied(false), 2000);
+    const handleCopyApiKey = async () => {
+        if (!pluginApiKey) return;
+        try {
+            await navigator.clipboard.writeText(pluginApiKey);
+        } catch {
+            // Fallback for non-secure contexts (HTTP)
+            const textarea = document.createElement('textarea');
+            textarea.value = pluginApiKey;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
         }
+        setApiKeyCopied(true);
+        setTimeout(() => setApiKeyCopied(false), 2000);
     };
 
     const handleSaveSettings = async () => {

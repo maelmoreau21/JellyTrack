@@ -65,7 +65,7 @@ export function Sidebar() {
 
     const sidebarContent = (
         <>
-            <div className="flex h-16 shrink-0 items-center px-6 border-b border-zinc-200 dark:border-white/5 bg-white/50 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0))]">
+            <div className="flex h-16 shrink-0 items-center px-6 border-b border-zinc-200 dark:border-white/5 bg-white/50 dark:bg-zinc-950">
                 <Link href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`} className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,rgba(8,145,178,0.24),rgba(245,158,11,0.18))] ring-1 ring-black/5 dark:ring-white/10">
                         <PlayCircle className="w-5 h-5 text-cyan-500 dark:text-cyan-300" />
@@ -110,7 +110,7 @@ export function Sidebar() {
                 </nav>
             </div>
 
-            <div className="border-t border-zinc-200 dark:border-white/5 p-4 space-y-3 bg-white/30 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))]">
+            <div className="border-t border-zinc-200 dark:border-white/5 p-4 space-y-3 bg-white/30 dark:bg-zinc-950">
                 <LanguageSwitcher />
                 <ThemeToggle />
                 <LogoutButton className="w-full justify-start text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50" />
