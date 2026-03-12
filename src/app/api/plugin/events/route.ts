@@ -23,18 +23,19 @@ async function verifyPluginAuth(req: Request): Promise<boolean> {
         where: { id: "global" },
         select: { pluginApiKey: true },
     });
-    if (!settings?.pluginApiKey) return false;
+    const configuredKey = settings?.pluginApiKey?.trim();
+    if (!configuredKey) return false;
 
     // Check Authorization header: "Bearer <apiKey>"
     const authHeader = req.headers.get("authorization");
     if (authHeader) {
         const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-        if (token === settings.pluginApiKey) return true;
+        if (token === configuredKey) return true;
     }
 
     // Check X-Api-Key header
     const apiKeyHeader = req.headers.get("x-api-key");
-    if (apiKeyHeader === settings.pluginApiKey) return true;
+    if (apiKeyHeader?.trim() === configuredKey) return true;
 
     return false;
 }
@@ -82,9 +83,15 @@ export async function POST(req: Request) {
 
         // ────── Heartbeat ──────
         if (event === "Heartbeat") {
-            await prisma.globalSettings.update({
+            await prisma.globalSettings.upsert({
                 where: { id: "global" },
-                data: {
+                update: {
+                    pluginLastSeen: new Date(),
+                    pluginVersion: payload.pluginVersion || payload.PluginVersion || null,
+                    pluginServerName: payload.serverName || payload.ServerName || null,
+                },
+                create: {
+                    id: "global",
                     pluginLastSeen: new Date(),
                     pluginVersion: payload.pluginVersion || payload.PluginVersion || null,
                     pluginServerName: payload.serverName || payload.ServerName || null,
