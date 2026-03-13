@@ -534,11 +534,17 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
       .filter((p): p is string => p !== null)
       .map((p) => {
         const payload: any = JSON.parse(p);
-        totalBandwidthMbps += payload.IsTranscoding ? 12 : 6;
+        const isTranscoding = payload.isTranscoding === true
+          || payload.IsTranscoding === true
+          || payload.playMethod === "Transcode"
+          || payload.PlayMethod === "Transcode";
+        totalBandwidthMbps += isTranscoding ? 12 : 6;
 
         // Build enriched subtitle for hierarchical display
         let mediaSubtitle: string | null = null;
-        if (payload.SeriesName) {
+        if (payload.mediaSubtitle) {
+          mediaSubtitle = payload.mediaSubtitle;
+        } else if (payload.SeriesName) {
           // TV: "SeriesName — SeasonName"
           mediaSubtitle = payload.SeriesName + (payload.SeasonName ? ` — ${payload.SeasonName}` : '');
         } else if (payload.AlbumName) {
@@ -548,29 +554,47 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
         // Calculate progress percentage
         let progressPercent = 0;
-        if (payload.PlaybackPositionTicks && payload.RunTimeTicks && payload.RunTimeTicks > 0) {
+        if (typeof payload.progressPercent === "number") {
+          progressPercent = payload.progressPercent;
+        } else if (payload.PlaybackPositionTicks && payload.RunTimeTicks && payload.RunTimeTicks > 0) {
           progressPercent = Math.min(100, Math.round((payload.PlaybackPositionTicks / payload.RunTimeTicks) * 100));
         }
 
+        const sessionId = payload.sessionId || payload.SessionId;
+        const itemId = payload.itemId || payload.ItemId || null;
+        const user = payload.username || payload.UserName || payload.userId || payload.UserId || "Unknown";
+        const mediaTitle = payload.title || payload.ItemName || "Unknown";
+        const playMethod = payload.playMethod || payload.PlayMethod || (isTranscoding ? "Transcode" : "DirectPlay");
+        const device = payload.deviceName || payload.DeviceName || payload.device || "Unknown";
+        const country = payload.country || payload.Country || "Unknown";
+        const city = payload.city || payload.City || "Unknown";
+        const isPaused = payload.isPaused === true || payload.IsPaused === true;
+        const parentItemId = payload.parentItemId || payload.AlbumId || payload.SeriesId || payload.SeasonId || null;
+        const audioLanguage = payload.audioLanguage || payload.AudioLanguage || null;
+        const audioCodec = payload.audioCodec || payload.AudioCodec || null;
+        const subtitleLanguage = payload.subtitleLanguage || payload.SubtitleLanguage || null;
+        const subtitleCodec = payload.subtitleCodec || payload.SubtitleCodec || null;
+
         return {
-          sessionId: payload.SessionId,
-          itemId: payload.ItemId || null,
-          user: payload.UserName || payload.UserId || "Unknown",
-          mediaTitle: payload.ItemName || "Unknown",
+          sessionId,
+          itemId,
+          user,
+          mediaTitle,
           mediaSubtitle,
-          playMethod: payload.PlayMethod || (payload.IsTranscoding ? "Transcode" : "DirectPlay"),
-          device: payload.DeviceName || "Unknown",
-          country: payload.Country || "Unknown",
-          city: payload.City || "Unknown",
+          playMethod,
+          device,
+          country,
+          city,
           progressPercent,
-          isPaused: payload.IsPaused === true,
-          parentItemId: payload.AlbumId || payload.SeriesId || payload.SeasonId || null,
-          audioLanguage: payload.AudioLanguage || null,
-          audioCodec: payload.AudioCodec || null,
-          subtitleLanguage: payload.SubtitleLanguage || null,
-          subtitleCodec: payload.SubtitleCodec || null,
+          isPaused,
+          parentItemId,
+          audioLanguage,
+          audioCodec,
+          subtitleLanguage,
+          subtitleCodec,
         };
-      });
+      })
+      .filter((stream) => Boolean(stream.sessionId));
   }
 
   return (

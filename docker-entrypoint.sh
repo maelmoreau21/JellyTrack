@@ -34,7 +34,8 @@ fi
 
 # Fix ownership of runtime-writable directories only (not all of /app — avoids slow chown -R)
 chown -R "$PUID:$PGID" /data/backups 2>/dev/null || true
-chown -R "$PUID:$PGID" /app/.next/cache 2>/dev/null || true
+mkdir -p /app/.next/cache 2>/dev/null || true
+chown -R "$PUID:$PGID" /app/.next 2>/dev/null || true
 
 # ─── Prisma Migration ──────────────────────────────────────────────
 echo "Running Prisma db push..."
