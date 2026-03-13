@@ -27,6 +27,54 @@ function parseVisibleColumns(colsParam: string | undefined): Column[] {
     return parsed.length >= 2 ? parsed : DEFAULT_VISIBLE;
 }
 
+type JellyfinSubtitleMeta = {
+    parentId: string | null;
+    seriesName: string | null;
+    seasonName: string | null;
+    albumName: string | null;
+    albumArtist: string | null;
+    artist: string | null;
+};
+
+async function fetchJellyfinSubtitleMeta(itemIds: string[]): Promise<Map<string, JellyfinSubtitleMeta>> {
+    const uniqueIds = Array.from(new Set(itemIds.filter(Boolean)));
+    const metaMap = new Map<string, JellyfinSubtitleMeta>();
+    if (uniqueIds.length === 0) return metaMap;
+
+    const jellyfinUrl = process.env.JELLYFIN_URL;
+    const jellyfinApiKey = process.env.JELLYFIN_API_KEY;
+    if (!jellyfinUrl || !jellyfinApiKey) return metaMap;
+
+    try {
+        const ids = uniqueIds.map(encodeURIComponent).join(',');
+        const url = `${jellyfinUrl}/Items?Ids=${ids}&Fields=ParentId,SeriesName,SeasonName,Album,AlbumArtist,AlbumArtists,Artists`;
+        const res = await fetch(url, {
+            headers: { "X-Emby-Token": jellyfinApiKey },
+            next: { revalidate: 300 },
+        });
+        if (!res.ok) return metaMap;
+
+        const data = await res.json();
+        const items = Array.isArray(data?.Items) ? data.Items : [];
+        for (const item of items) {
+            const id = typeof item?.Id === 'string' ? item.Id : null;
+            if (!id) continue;
+            metaMap.set(id, {
+                parentId: item?.ParentId || null,
+                seriesName: item?.SeriesName || null,
+                seasonName: item?.SeasonName || null,
+                albumName: item?.Album || null,
+                albumArtist: item?.AlbumArtist || item?.AlbumArtists?.[0]?.Name || item?.AlbumArtists?.[0] || null,
+                artist: item?.Artists?.[0] || null,
+            });
+        }
+    } catch {
+        // Keep logs page resilient if Jellyfin metadata lookup fails.
+    }
+
+    return metaMap;
+}
+
 // --- Watch Party Detection Algorithm ---
 // Groups sessions of the same media started by different users within a 5-minute window
 
@@ -144,10 +192,17 @@ export default async function LogsPage({
         user: log.user ? { ...log.user } : null,
     }));
 
+    const mediaIds = safeLogs
+        .map((log: any) => log.media?.jellyfinMediaId)
+        .filter((id: string | null | undefined): id is string => Boolean(id));
+    const jellyfinMetaMap = await fetchJellyfinSubtitleMeta(mediaIds);
+
     // Build parent chain map for enriched media titles (Episode â†’ Season â†’ Series, Track â†’ Album â†’ Artist)
     const parentIds = new Set<string>();
     safeLogs.forEach((log: any) => {
-        if (log.media?.parentId) parentIds.add(log.media.parentId);
+        const metadata = log.media?.jellyfinMediaId ? jellyfinMetaMap.get(log.media.jellyfinMediaId) : null;
+        const resolvedParentId = log.media?.parentId || metadata?.parentId;
+        if (resolvedParentId) parentIds.add(resolvedParentId);
     });
     const parentMedia = parentIds.size > 0
         ? await prisma.media.findMany({ where: { jellyfinMediaId: { in: Array.from(parentIds) } }, select: { jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true } })
@@ -166,8 +221,19 @@ export default async function LogsPage({
     // Helper: build subtitle line for a media (e.g., "Série — Saison" or "Artist — Album")
     function getMediaSubtitle(media: any): string | null {
         if (!media) return null;
-        const parent = media.parentId ? parentMap.get(media.parentId) : null;
+        const metadata = media.jellyfinMediaId ? jellyfinMetaMap.get(media.jellyfinMediaId) : null;
+        const resolvedParentId = media.parentId || metadata?.parentId || null;
+        const parent = resolvedParentId ? parentMap.get(resolvedParentId) : null;
+
         if (media.type === 'Episode') {
+            const fallbackSeriesName = metadata?.seriesName || null;
+            const fallbackSeasonName = metadata?.seasonName || null;
+            if (fallbackSeriesName && fallbackSeasonName) {
+                return `${fallbackSeriesName} — ${fallbackSeasonName}`;
+            }
+            if (fallbackSeriesName) {
+                return fallbackSeriesName;
+            }
             if (!parent) return null;
             // Episode â†’ parent=Season â†’ grandparent=Series
             const grandparent = parent.parentId ? grandparentMap.get(parent.parentId) : null;
@@ -180,6 +246,12 @@ export default async function LogsPage({
         }
         if (media.type === 'Audio') {
             // Audio â†’ parent=Album. Show "Artist — Album" if artist is available
+            const metaAlbumName = metadata?.albumName || null;
+            const metaArtistName = metadata?.albumArtist || metadata?.artist || null;
+            if (metaAlbumName || metaArtistName) {
+                if (metaArtistName && metaAlbumName) return `${metaArtistName} — ${metaAlbumName}`;
+                return metaArtistName || metaAlbumName;
+            }
             const artistName = media.artist || parent?.artist || null;
             if (!parent) return artistName;
             if (artistName) return `${artistName} — ${parent.title}`;
@@ -300,6 +372,8 @@ export default async function LogsPage({
                                             const isParty = !!partyId;
                                             const party = partyId ? partyInfo.get(partyId) : null;
                                             const isFirstOfParty = partyId && !shownPartyBanners.has(partyId);
+                                            const mediaMeta = log.media?.jellyfinMediaId ? jellyfinMetaMap.get(log.media.jellyfinMediaId) : null;
+                                            const fallbackImageParentId = log.media?.parentId || mediaMeta?.parentId || undefined;
                                             if (isFirstOfParty && partyId) shownPartyBanners.add(partyId);
 
                                             return (
@@ -368,7 +442,7 @@ export default async function LogsPage({
                                                                     <div className="relative w-10 md:w-12 aspect-[2/3] bg-muted rounded-md shrink-0 overflow-hidden ring-1 ring-white/10">
                                                                         {log.media?.jellyfinMediaId ? (
                                                                             <FallbackImage
-                                                                                src={`/api/jellyfin/image?itemId=${log.media.jellyfinMediaId}&type=Primary${log.media.parentId ? `&fallbackId=${log.media.parentId}` : ''}`}
+                                                                                src={`/api/jellyfin/image?itemId=${log.media.jellyfinMediaId}&type=Primary${fallbackImageParentId ? `&fallbackId=${fallbackImageParentId}` : ''}`}
                                                                                 alt={log.media?.title || tc('unknownMedia')}
                                                                                 fill
                                                                                 className="object-cover"

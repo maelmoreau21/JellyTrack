@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { getGeoLocation } from "@/lib/geoip";
 import { inferLibraryKey, isLibraryExcluded } from "@/lib/mediaPolicy";
+import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -63,7 +64,173 @@ function computeProgressPercent(positionTicks: number, runTimeTicks: number | nu
     return Math.min(100, Math.max(0, Math.round((positionTicks / runTimeTicks) * 100)));
 }
 
-const MERGE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+async function upsertCanonicalUser(rawJellyfinUserId: unknown, rawUsername: unknown) {
+    const jellyfinUserId = normalizeJellyfinId(rawJellyfinUserId);
+    if (!jellyfinUserId) return null;
+
+    const compactId = compactJellyfinId(jellyfinUserId);
+    const candidates = Array.from(new Set([jellyfinUserId, compactId]));
+    const username = typeof rawUsername === "string" && rawUsername.trim() && rawUsername !== "Unknown"
+        ? rawUsername.trim()
+        : null;
+
+    return prisma.$transaction(async (tx) => {
+        const matches = await tx.user.findMany({
+            where: { jellyfinUserId: { in: candidates } },
+            orderBy: { createdAt: "asc" },
+        });
+
+        let primary = matches.find((u) => u.jellyfinUserId === jellyfinUserId) || matches[0] || null;
+
+        if (!primary) {
+            primary = await tx.user.create({
+                data: {
+                    jellyfinUserId,
+                    username: username || jellyfinUserId,
+                },
+            });
+        } else {
+            const updates: { jellyfinUserId?: string; username?: string } = {};
+            if (primary.jellyfinUserId !== jellyfinUserId) updates.jellyfinUserId = jellyfinUserId;
+            if (username && username !== primary.username) updates.username = username;
+            if (Object.keys(updates).length > 0) {
+                primary = await tx.user.update({ where: { id: primary.id }, data: updates });
+            }
+        }
+
+        const duplicates = matches.filter((u) => u.id !== primary!.id);
+        for (const duplicate of duplicates) {
+            await tx.playbackHistory.updateMany({ where: { userId: duplicate.id }, data: { userId: primary!.id } });
+            await tx.activeStream.updateMany({ where: { userId: duplicate.id }, data: { userId: primary!.id } });
+            await tx.user.delete({ where: { id: duplicate.id } });
+            console.warn("[Plugin] User merged after ID normalization", {
+                kept: primary!.jellyfinUserId,
+                removed: duplicate.jellyfinUserId,
+            });
+        }
+
+        return primary;
+    });
+}
+
+async function upsertCanonicalMedia(input: {
+    rawJellyfinMediaId: unknown;
+    title: string;
+    type: string;
+    collectionType?: string | null;
+    genres?: string[];
+    resolution?: string | null;
+    durationMs?: bigint | null;
+    parentId?: string | null;
+    artist?: string | null;
+    libraryName?: string | null;
+}) {
+    const jellyfinMediaId = normalizeJellyfinId(input.rawJellyfinMediaId);
+    if (!jellyfinMediaId) return null;
+
+    const compactId = compactJellyfinId(jellyfinMediaId);
+    const candidates = Array.from(new Set([jellyfinMediaId, compactId]));
+
+    return prisma.$transaction(async (tx) => {
+        const matches = await tx.media.findMany({
+            where: { jellyfinMediaId: { in: candidates } },
+            orderBy: { createdAt: "asc" },
+        });
+
+        let primary = matches.find((m) => m.jellyfinMediaId === jellyfinMediaId) || matches[0] || null;
+
+        if (!primary) {
+            primary = await tx.media.create({
+                data: {
+                    jellyfinMediaId,
+                    title: input.title,
+                    type: input.type,
+                    collectionType: input.collectionType ?? null,
+                    genres: input.genres || [],
+                    resolution: input.resolution ?? null,
+                    durationMs: input.durationMs ?? null,
+                    parentId: input.parentId ?? null,
+                    artist: input.artist ?? null,
+                    libraryName: input.libraryName ?? null,
+                },
+            });
+        } else {
+            primary = await tx.media.update({
+                where: { id: primary.id },
+                data: {
+                    jellyfinMediaId,
+                    title: input.title,
+                    type: input.type,
+                    collectionType: input.collectionType ?? undefined,
+                    genres: input.genres ?? undefined,
+                    resolution: input.resolution ?? undefined,
+                    durationMs: input.durationMs ?? undefined,
+                    parentId: input.parentId ?? undefined,
+                    artist: input.artist ?? undefined,
+                    libraryName: input.libraryName ?? undefined,
+                },
+            });
+        }
+
+        const duplicates = matches.filter((m) => m.id !== primary!.id);
+        for (const duplicate of duplicates) {
+            await tx.playbackHistory.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primary!.id } });
+            await tx.activeStream.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primary!.id } });
+            await tx.media.delete({ where: { id: duplicate.id } });
+            console.warn("[Plugin] Media merged after ID normalization", {
+                kept: primary!.jellyfinMediaId,
+                removed: duplicate.jellyfinMediaId,
+            });
+        }
+
+        return primary;
+    });
+}
+
+async function buildMediaSubtitle(input: {
+    type: string;
+    seriesName?: string | null;
+    seasonName?: string | null;
+    albumArtist?: string | null;
+    albumName?: string | null;
+    artist?: string | null;
+    parentItemId?: string | null;
+}) {
+    if (input.seriesName) {
+        return `${input.seriesName}${input.seasonName ? ` — ${input.seasonName}` : ""}`;
+    }
+
+    const directArtist = input.albumArtist || input.artist || null;
+    if (input.albumName || directArtist) {
+        if (directArtist && input.albumName) return `${directArtist} — ${input.albumName}`;
+        return directArtist || input.albumName;
+    }
+
+    if (!input.parentItemId) return null;
+
+    const parent = await prisma.media.findUnique({
+        where: { jellyfinMediaId: input.parentItemId },
+        select: { title: true, parentId: true, artist: true },
+    });
+
+    if (!parent) return null;
+
+    if (input.type === "Audio" || input.type === "Track") {
+        const artist = directArtist || parent.artist;
+        if (artist) return `${artist} — ${parent.title}`;
+        return parent.title;
+    }
+
+    if (input.type === "Episode" && parent.parentId) {
+        const grandparent = await prisma.media.findUnique({
+            where: { jellyfinMediaId: parent.parentId },
+            select: { title: true },
+        });
+        if (grandparent?.title) return `${grandparent.title} — ${parent.title}`;
+    }
+
+    return parent.title;
+}
 
 function corsJson(body: unknown, init?: { status?: number }) {
     return NextResponse.json(body, { ...init, headers: CORS_HEADERS });
@@ -117,14 +284,10 @@ export async function POST(req: Request) {
             const users = payload.users || payload.Users || [];
             let syncedUsers = 0;
             for (const u of users) {
-                const jellyfinUserId = u.jellyfinUserId || u.JellyfinUserId || u.id || u.Id;
+                const jellyfinUserId = normalizeJellyfinId(u.jellyfinUserId || u.JellyfinUserId || u.id || u.Id);
                 const username = u.username || u.Username || u.name || u.Name;
                 if (!jellyfinUserId || !username) continue;
-                await prisma.user.upsert({
-                    where: { jellyfinUserId },
-                    update: { username },
-                    create: { jellyfinUserId, username },
-                });
+                await upsertCanonicalUser(jellyfinUserId, username);
                 syncedUsers++;
             }
 
@@ -137,11 +300,12 @@ export async function POST(req: Request) {
             const media = payload.media || payload.Media || {};
             const session = payload.session || payload.Session || {};
 
-            const jellyfinUserId = user.jellyfinUserId || user.JellyfinUserId || user.id || user.Id;
+            const jellyfinUserId = normalizeJellyfinId(user.jellyfinUserId || user.JellyfinUserId || user.id || user.Id);
             const username = user.username || user.Username || user.name || user.Name || "Unknown";
-            const jellyfinMediaId = media.jellyfinMediaId || media.JellyfinMediaId || media.id || media.Id;
+            const jellyfinMediaId = normalizeJellyfinId(media.jellyfinMediaId || media.JellyfinMediaId || media.id || media.Id);
             const title = media.title || media.Title || media.name || media.Name || "Unknown";
             const type = media.type || media.Type || "Unknown";
+            const parentItemId = normalizeJellyfinId(media.parentId || media.ParentId || null);
             const clientName = session.clientName || session.ClientName || "Unknown";
             const deviceName = session.deviceName || session.DeviceName || "Unknown";
             const playMethod = session.playMethod || session.PlayMethod || "Unknown";
@@ -157,40 +321,20 @@ export async function POST(req: Request) {
                 return corsJson({ error: "Missing userId or mediaId." }, { status: 400 });
             }
 
-            // Upsert user
-            await prisma.user.upsert({
-                where: { jellyfinUserId },
-                update: { username },
-                create: { jellyfinUserId, username },
-            });
-
-            // Upsert media with all rich data from the plugin
+            // Upsert canonical user/media and merge legacy compact IDs when needed.
+            const dbUser = await upsertCanonicalUser(jellyfinUserId, username);
             const collectionType = media.collectionType || media.CollectionType || inferLibraryKey({ type });
-            await prisma.media.upsert({
-                where: { jellyfinMediaId },
-                update: {
-                    title,
-                    type,
-                    collectionType: collectionType || undefined,
-                    genres: media.genres || media.Genres || undefined,
-                    resolution: media.resolution || media.Resolution || undefined,
-                    durationMs: media.durationMs != null ? BigInt(media.durationMs) : undefined,
-                    parentId: media.parentId || media.ParentId || undefined,
-                    artist: media.artist || media.Artist || media.albumArtist || media.AlbumArtist || undefined,
-                    libraryName: media.libraryName || media.LibraryName || undefined,
-                },
-                create: {
-                    jellyfinMediaId,
-                    title,
-                    type,
-                    collectionType,
-                    genres: media.genres || media.Genres || [],
-                    resolution: media.resolution || media.Resolution || null,
-                    durationMs: media.durationMs != null ? BigInt(media.durationMs) : null,
-                    parentId: media.parentId || media.ParentId || null,
-                    artist: media.artist || media.Artist || media.albumArtist || media.AlbumArtist || null,
-                    libraryName: media.libraryName || media.LibraryName || null,
-                },
+            const dbMedia = await upsertCanonicalMedia({
+                rawJellyfinMediaId: jellyfinMediaId,
+                title,
+                type,
+                collectionType,
+                genres: media.genres || media.Genres || [],
+                resolution: media.resolution || media.Resolution || null,
+                durationMs: media.durationMs != null ? BigInt(media.durationMs) : null,
+                parentId: parentItemId,
+                artist: media.artist || media.Artist || media.albumArtist || media.AlbumArtist || null,
+                libraryName: media.libraryName || media.LibraryName || null,
             });
 
             // Library exclusion check
@@ -211,44 +355,28 @@ export async function POST(req: Request) {
             // GeoIP
             const geoData = getGeoLocation(ipAddress);
 
-            // Dedup: reuse open or recently-closed session
-            const dbUser = await prisma.user.findUnique({ where: { jellyfinUserId } });
-            const dbMedia = await prisma.media.findUnique({ where: { jellyfinMediaId } });
             if (dbUser && dbMedia) {
                 const existingOpen = await prisma.playbackHistory.findFirst({
                     where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: null },
                 });
                 if (!existingOpen) {
-                    const mergeWindow = new Date(Date.now() - MERGE_WINDOW_MS);
-                    const recentClosed = await prisma.playbackHistory.findFirst({
-                        where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: { not: null, gte: mergeWindow } },
-                        orderBy: { endedAt: "desc" },
+                    await prisma.playbackHistory.create({
+                        data: {
+                            userId: dbUser.id,
+                            mediaId: dbMedia.id,
+                            playMethod,
+                            clientName,
+                            deviceName,
+                            ipAddress,
+                            country: geoData.country,
+                            city: geoData.city,
+                            audioLanguage: session.audioLanguage || session.AudioLanguage || null,
+                            audioCodec: session.audioCodec || session.AudioCodec || null,
+                            subtitleLanguage: session.subtitleLanguage || session.SubtitleLanguage || null,
+                            subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                        },
                     });
-                    if (recentClosed) {
-                        await prisma.playbackHistory.update({
-                            where: { id: recentClosed.id },
-                            data: { endedAt: null },
-                        });
-                        console.log(`[Plugin] Merged session for ${title} (reopened ${recentClosed.id})`);
-                    } else {
-                        await prisma.playbackHistory.create({
-                            data: {
-                                user: { connect: { jellyfinUserId } },
-                                media: { connect: { jellyfinMediaId } },
-                                playMethod,
-                                clientName,
-                                deviceName,
-                                ipAddress,
-                                country: geoData.country,
-                                city: geoData.city,
-                                audioLanguage: session.audioLanguage || session.AudioLanguage || null,
-                                audioCodec: session.audioCodec || session.AudioCodec || null,
-                                subtitleLanguage: session.subtitleLanguage || session.SubtitleLanguage || null,
-                                subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
-                            },
-                        });
-                        console.log(`[Plugin] PlaybackStart: Created session for ${title}`);
-                    }
+                    console.log(`[Plugin] PlaybackStart: Created session for ${title}`);
                 }
             }
 
@@ -258,6 +386,15 @@ export async function POST(req: Request) {
                 const runTimeTicks = media.durationMs ? Number(media.durationMs) * 10_000 : null;
                 const playbackPositionTicks = Number(session.positionTicks || 0);
                 const progressPercent = computeProgressPercent(playbackPositionTicks, runTimeTicks);
+                const mediaSubtitle = await buildMediaSubtitle({
+                    type,
+                    seriesName: media.seriesName || media.SeriesName || null,
+                    seasonName: media.seasonName || media.SeasonName || null,
+                    albumArtist: media.albumArtist || media.AlbumArtist || null,
+                    albumName: media.albumName || media.AlbumName || null,
+                    artist: media.artist || media.Artist || null,
+                    parentItemId,
+                });
                 await prisma.activeStream.upsert({
                     where: { sessionId },
                     update: {
@@ -308,7 +445,7 @@ export async function POST(req: Request) {
                     mediaId: dbMedia.id,
                     itemId: jellyfinMediaId,
                     ItemId: jellyfinMediaId,
-                    parentItemId: media.parentId || null,
+                    parentItemId: parentItemId || null,
                     title,
                     ItemName: title,
                     username,
@@ -330,7 +467,7 @@ export async function POST(req: Request) {
                     PlaybackPositionTicks: playbackPositionTicks,
                     runTimeTicks,
                     RunTimeTicks: runTimeTicks,
-                    mediaSubtitle: media.seriesName ? `${media.seriesName} — ${media.seasonName || ""}` : media.albumArtist ? `${media.albumArtist} — ${media.albumName || ""}` : null,
+                    mediaSubtitle,
                     progressPercent,
                     isPaused: false,
                     IsPaused: false,
@@ -354,10 +491,12 @@ export async function POST(req: Request) {
                     if (condition === "TRANSCODE_ONLY") {
                         shouldSend = playMethod === "Transcode";
                     } else if (condition === "NEW_IP_ONLY") {
-                        const pastCount = await prisma.playbackHistory.count({
-                            where: { user: { jellyfinUserId }, ipAddress },
-                        });
-                        shouldSend = pastCount === 0;
+                        if (dbUser) {
+                            const pastCount = await prisma.playbackHistory.count({
+                                where: { userId: dbUser.id, ipAddress },
+                            });
+                            shouldSend = pastCount === 0;
+                        }
                     }
                     if (shouldSend) {
                         const fallbackPort = process.env.PORT || "3000";
@@ -393,13 +532,13 @@ export async function POST(req: Request) {
         if (event === "PlaybackStop") {
             const userPayload = payload.user || payload.User || {};
             const mediaPayload = payload.media || payload.Media || {};
-            const jellyfinUserId = userPayload.jellyfinUserId || userPayload.JellyfinUserId || userPayload.id || payload.userId;
-            const jellyfinMediaId = mediaPayload.jellyfinMediaId || mediaPayload.JellyfinMediaId || mediaPayload.id || payload.mediaId;
+            const jellyfinUserId = normalizeJellyfinId(userPayload.jellyfinUserId || userPayload.JellyfinUserId || userPayload.id || payload.userId);
+            const jellyfinMediaId = normalizeJellyfinId(mediaPayload.jellyfinMediaId || mediaPayload.JellyfinMediaId || mediaPayload.id || payload.mediaId);
             const positionTicks = payload.positionTicks || payload.PositionTicks || 0;
             const sessionId = payload.sessionId || payload.SessionId;
 
             if (!jellyfinUserId || !jellyfinMediaId) {
-                console.warn("[Plugin] PlaybackProgress rejected: missing userId or mediaId", {
+                console.warn("[Plugin] PlaybackStop rejected: missing userId or mediaId", {
                     event,
                     hasUser: Boolean(jellyfinUserId),
                     hasMedia: Boolean(jellyfinMediaId),
@@ -409,8 +548,14 @@ export async function POST(req: Request) {
                 return corsJson({ error: "Missing userId or mediaId." }, { status: 400 });
             }
 
-            const user = await prisma.user.findUnique({ where: { jellyfinUserId } });
-            const media = await prisma.media.findUnique({ where: { jellyfinMediaId } });
+            const userCandidates = jellyfinUserId ? Array.from(new Set([jellyfinUserId, compactJellyfinId(jellyfinUserId)])) : [];
+            const mediaCandidates = jellyfinMediaId ? Array.from(new Set([jellyfinMediaId, compactJellyfinId(jellyfinMediaId)])) : [];
+            const user = userCandidates.length > 0
+                ? await prisma.user.findFirst({ where: { jellyfinUserId: { in: userCandidates } }, orderBy: { createdAt: "asc" } })
+                : null;
+            const media = mediaCandidates.length > 0
+                ? await prisma.media.findFirst({ where: { jellyfinMediaId: { in: mediaCandidates } }, orderBy: { createdAt: "asc" } })
+                : null;
 
             if (user && media) {
                 const lastPlayback = await prisma.playbackHistory.findFirst({
@@ -474,8 +619,8 @@ export async function POST(req: Request) {
             const userPayload = payload.user || payload.User || {};
             const mediaPayload = payload.media || payload.Media || {};
             const sessionPayload = payload.session || payload.Session || {};
-            const jellyfinUserId = userPayload.jellyfinUserId || userPayload.JellyfinUserId || userPayload.id || payload.userId;
-            const jellyfinMediaId = mediaPayload.jellyfinMediaId || mediaPayload.JellyfinMediaId || mediaPayload.id || payload.mediaId;
+            const jellyfinUserId = normalizeJellyfinId(userPayload.jellyfinUserId || userPayload.JellyfinUserId || userPayload.id || payload.userId);
+            const jellyfinMediaId = normalizeJellyfinId(mediaPayload.jellyfinMediaId || mediaPayload.JellyfinMediaId || mediaPayload.id || payload.mediaId);
             const username = userPayload.username || userPayload.Username || userPayload.name || userPayload.Name || "Unknown";
             const title = mediaPayload.title || mediaPayload.Title || mediaPayload.name || mediaPayload.Name || "Unknown";
             const type = mediaPayload.type || mediaPayload.Type || "Unknown";
@@ -506,7 +651,7 @@ export async function POST(req: Request) {
             const seasonName = mediaPayload.seasonName || mediaPayload.SeasonName || null;
             const albumArtist = mediaPayload.albumArtist || mediaPayload.AlbumArtist || null;
             const albumName = mediaPayload.albumName || mediaPayload.AlbumName || null;
-            const parentItemId = mediaPayload.parentId || mediaPayload.ParentId || null;
+            const parentItemId = normalizeJellyfinId(mediaPayload.parentId || mediaPayload.ParentId || null);
             const runTimeTicksRaw = mediaPayload.runTimeTicks ?? mediaPayload.RunTimeTicks;
             let runTimeTicks = Number(runTimeTicksRaw);
             if (!Number.isFinite(runTimeTicks) || runTimeTicks <= 0) {
@@ -517,8 +662,10 @@ export async function POST(req: Request) {
                 return corsJson({ error: "Missing userId or mediaId." }, { status: 400 });
             }
 
-            const existingMedia = await prisma.media.findUnique({
-                where: { jellyfinMediaId },
+            const mediaCandidates = Array.from(new Set([jellyfinMediaId, compactJellyfinId(jellyfinMediaId)]));
+            const existingMedia = await prisma.media.findFirst({
+                where: { jellyfinMediaId: { in: mediaCandidates } },
+                orderBy: { createdAt: "asc" },
                 select: { title: true, type: true, collectionType: true, durationMs: true, artist: true, libraryName: true, parentId: true },
             });
             const existingStream = sessionId
@@ -572,36 +719,23 @@ export async function POST(req: Request) {
                 return corsJson({ success: true, ignored: true, message: "Library excluded." });
             }
 
-            const user = await prisma.user.upsert({
-                where: { jellyfinUserId },
-                update: { username: username !== "Unknown" ? username : undefined },
-                create: { jellyfinUserId, username: username !== "Unknown" ? username : jellyfinUserId },
+            const user = await upsertCanonicalUser(jellyfinUserId, username);
+            const media = await upsertCanonicalMedia({
+                rawJellyfinMediaId: jellyfinMediaId,
+                title: resolvedTitle,
+                type: resolvedType,
+                collectionType: resolvedCollectionType,
+                genres: mediaPayload.genres || mediaPayload.Genres || [],
+                resolution: mediaPayload.resolution || mediaPayload.Resolution || null,
+                durationMs: Number.isFinite(mediaDurationMs) && mediaDurationMs > 0 ? BigInt(mediaDurationMs) : null,
+                parentId: parentItemId || existingMedia?.parentId || null,
+                artist: mediaPayload.artist || mediaPayload.Artist || albumArtist || existingMedia?.artist || null,
+                libraryName: mediaPayload.libraryName || mediaPayload.LibraryName || existingMedia?.libraryName || null,
             });
 
-            const media = await prisma.media.upsert({
-                where: { jellyfinMediaId },
-                update: {
-                    title: resolvedTitle,
-                    type: resolvedType,
-                    collectionType: resolvedCollectionType || undefined,
-                    durationMs: Number.isFinite(mediaDurationMs) && mediaDurationMs > 0 ? BigInt(mediaDurationMs) : undefined,
-                    parentId: parentItemId || existingMedia?.parentId || undefined,
-                    artist: mediaPayload.artist || mediaPayload.Artist || albumArtist || existingMedia?.artist || undefined,
-                    libraryName: mediaPayload.libraryName || mediaPayload.LibraryName || existingMedia?.libraryName || undefined,
-                },
-                create: {
-                    jellyfinMediaId,
-                    title: resolvedTitle,
-                    type: resolvedType,
-                    collectionType: resolvedCollectionType,
-                    genres: mediaPayload.genres || mediaPayload.Genres || [],
-                    resolution: mediaPayload.resolution || mediaPayload.Resolution || null,
-                    durationMs: Number.isFinite(mediaDurationMs) && mediaDurationMs > 0 ? BigInt(mediaDurationMs) : null,
-                    parentId: parentItemId || existingMedia?.parentId || null,
-                    artist: mediaPayload.artist || mediaPayload.Artist || albumArtist || existingMedia?.artist || null,
-                    libraryName: mediaPayload.libraryName || mediaPayload.LibraryName || existingMedia?.libraryName || null,
-                },
-            });
+            if (!user || !media) {
+                return corsJson({ error: "Unable to resolve canonical user/media." }, { status: 400 });
+            }
 
             if (runTimeTicks <= 0 && media.durationMs) {
                 runTimeTicks = Number(media.durationMs) * 10_000;
@@ -741,11 +875,15 @@ export async function POST(req: Request) {
                     }
                 }
 
-                const mediaSubtitle = seriesName
-                    ? `${seriesName}${seasonName ? ` — ${seasonName}` : ""}`
-                    : albumArtist
-                        ? `${albumArtist}${albumName ? ` — ${albumName}` : ""}`
-                        : null;
+                const mediaSubtitle = await buildMediaSubtitle({
+                    type: resolvedType,
+                    seriesName,
+                    seasonName,
+                    albumArtist,
+                    albumName,
+                    artist: media.artist,
+                    parentItemId: parentItemId || media.parentId,
+                });
 
                 const redisPayload = {
                     ...parsed,
@@ -803,36 +941,22 @@ export async function POST(req: Request) {
             const items = payload.items || payload.Items || [];
             let synced = 0;
             for (const item of items) {
-                const jellyfinMediaId = item.jellyfinMediaId || item.JellyfinMediaId || item.id || item.Id;
+                const jellyfinMediaId = normalizeJellyfinId(item.jellyfinMediaId || item.JellyfinMediaId || item.id || item.Id);
                 const title = item.title || item.Title || item.name || item.Name || "Unknown";
                 const type = item.type || item.Type || "Unknown";
                 if (!jellyfinMediaId) continue;
                 const collectionType = item.collectionType || item.CollectionType || inferLibraryKey({ type });
-                await prisma.media.upsert({
-                    where: { jellyfinMediaId },
-                    update: {
-                        title,
-                        type,
-                        collectionType: collectionType || undefined,
-                        genres: item.genres || item.Genres || undefined,
-                        resolution: item.resolution || item.Resolution || undefined,
-                        durationMs: item.durationMs != null ? BigInt(item.durationMs) : undefined,
-                        parentId: item.parentId || item.ParentId || undefined,
-                        artist: item.artist || item.Artist || undefined,
-                        libraryName: item.libraryName || item.LibraryName || undefined,
-                    },
-                    create: {
-                        jellyfinMediaId,
-                        title,
-                        type,
-                        collectionType,
-                        genres: item.genres || item.Genres || [],
-                        resolution: item.resolution || item.Resolution || null,
-                        durationMs: item.durationMs != null ? BigInt(item.durationMs) : null,
-                        parentId: item.parentId || item.ParentId || null,
-                        artist: item.artist || item.Artist || null,
-                        libraryName: item.libraryName || item.LibraryName || null,
-                    },
+                await upsertCanonicalMedia({
+                    rawJellyfinMediaId: jellyfinMediaId,
+                    title,
+                    type,
+                    collectionType,
+                    genres: item.genres || item.Genres || [],
+                    resolution: item.resolution || item.Resolution || null,
+                    durationMs: item.durationMs != null ? BigInt(item.durationMs) : null,
+                    parentId: normalizeJellyfinId(item.parentId || item.ParentId || null),
+                    artist: item.artist || item.Artist || null,
+                    libraryName: item.libraryName || item.LibraryName || null,
                 });
                 synced++;
             }

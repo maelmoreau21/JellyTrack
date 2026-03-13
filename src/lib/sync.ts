@@ -1,5 +1,6 @@
 import prisma from "./prisma";
 import { appendHealthEvent, markSyncFinished, markSyncStarted } from "@/lib/systemHealth";
+import { normalizeJellyfinId } from "@/lib/jellyfinId";
 
 /**
  * Fonction maîtresse de synchronisation de la librairie Jellyfin.
@@ -34,10 +35,12 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         // Upsert massifs utilisateurs
         let usersCount = 0;
         for (const user of users) {
+            const jellyfinUserId = normalizeJellyfinId(user.Id);
+            if (!jellyfinUserId) continue;
             await prisma.user.upsert({
-                where: { jellyfinUserId: user.Id },
+                where: { jellyfinUserId },
                 update: { username: user.Name },
-                create: { jellyfinUserId: user.Id, username: user.Name },
+                create: { jellyfinUserId, username: user.Name },
             });
             usersCount++;
         }
@@ -91,6 +94,8 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
         let mediaCount = 0;
         for (const item of items) {
+            const jellyfinMediaId = normalizeJellyfinId(item.Id);
+            if (!jellyfinMediaId) continue;
             const genres = item.Genres || [];
 
             // Determine collectionType from library parent chain
@@ -133,14 +138,14 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             }
 
             const durationMs = item.RunTimeTicks ? BigInt(Math.floor(item.RunTimeTicks / 10000)) : null;
-            const parentId = item.AlbumId || item.SeasonId || item.SeriesId || item.ParentId || null;
+            const parentId = normalizeJellyfinId(item.AlbumId || item.SeasonId || item.SeriesId || item.ParentId || null);
             const artist = item.AlbumArtist || item.AlbumArtists?.[0]?.Name || item.Artists?.[0] || null;
             const dateAdded = item.DateCreated ? new Date(item.DateCreated) : null;
 
             await prisma.media.upsert({
-                where: { jellyfinMediaId: item.Id },
+                where: { jellyfinMediaId },
                 update: { title: item.Name, type: item.Type, genres, resolution, collectionType, durationMs, parentId, artist, dateAdded, libraryName },
-                create: { jellyfinMediaId: item.Id, title: item.Name, type: item.Type, genres, resolution, collectionType, durationMs, parentId, artist, dateAdded, libraryName },
+                create: { jellyfinMediaId, title: item.Name, type: item.Type, genres, resolution, collectionType, durationMs, parentId, artist, dateAdded, libraryName },
             });
             mediaCount++;
         }

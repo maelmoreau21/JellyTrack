@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import redis from "@/lib/redis";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -14,23 +15,66 @@ export async function GET() {
 
         if (keys.length > 0) {
             const payloads = await Promise.all(keys.map((k) => redis.get(k)));
-            liveStreams = payloads
+            const parsedPayloads = payloads
                 .filter((p): p is string => p !== null)
                 .map((p) => {
-                    const payload: any = JSON.parse(p);
+                    try {
+                        return JSON.parse(p);
+                    } catch {
+                        return null;
+                    }
+                })
+                .filter((p): p is any => Boolean(p));
+
+            const relatedIds = new Set<string>();
+            for (const payload of parsedPayloads) {
+                const itemId = payload.itemId || payload.ItemId || null;
+                const parentItemId = payload.parentItemId || payload.AlbumId || payload.SeriesId || payload.SeasonId || null;
+                if (itemId) relatedIds.add(itemId);
+                if (parentItemId) relatedIds.add(parentItemId);
+            }
+
+            const relatedMedia = relatedIds.size > 0
+                ? await prisma.media.findMany({
+                    where: { jellyfinMediaId: { in: Array.from(relatedIds) } },
+                    select: { jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true },
+                })
+                : [];
+            const mediaMap = new Map(relatedMedia.map((m) => [m.jellyfinMediaId, m]));
+
+            liveStreams = parsedPayloads
+                .map((payload: any) => {
                     const isTranscoding = payload.isTranscoding === true
                         || payload.IsTranscoding === true
                         || payload.playMethod === "Transcode"
                         || payload.PlayMethod === "Transcode";
                     totalBandwidthMbps += isTranscoding ? 12 : 6;
 
+                    const itemId = payload.itemId || payload.ItemId || null;
+                    const parentItemId = payload.parentItemId || payload.AlbumId || payload.SeriesId || payload.SeasonId || null;
+                    const itemMedia = itemId ? mediaMap.get(itemId) : null;
+                    const parentMedia = parentItemId ? mediaMap.get(parentItemId) : null;
+                    const grandparentMedia = parentMedia?.parentId ? mediaMap.get(parentMedia.parentId) : null;
+
                     let mediaSubtitle: string | null = null;
                     if (payload.mediaSubtitle) {
                         mediaSubtitle = payload.mediaSubtitle;
+                        if (!mediaSubtitle.includes("—") && parentMedia?.title && (itemMedia?.type === "Audio" || itemMedia?.type === "Track")) {
+                            mediaSubtitle = `${mediaSubtitle} — ${parentMedia.title}`;
+                        }
                     } else if (payload.SeriesName) {
                         mediaSubtitle = payload.SeriesName + (payload.SeasonName ? ` — ${payload.SeasonName}` : '');
                     } else if (payload.AlbumName) {
                         mediaSubtitle = (payload.AlbumArtist ? `${payload.AlbumArtist} — ` : '') + payload.AlbumName;
+                    } else if (itemMedia?.type === "Episode" && parentMedia) {
+                        mediaSubtitle = grandparentMedia?.title
+                            ? `${grandparentMedia.title} — ${parentMedia.title}`
+                            : parentMedia.title;
+                    } else if ((itemMedia?.type === "Audio" || itemMedia?.type === "Track") && parentMedia) {
+                        const resolvedArtist = itemMedia.artist || parentMedia.artist || null;
+                        mediaSubtitle = resolvedArtist ? `${resolvedArtist} — ${parentMedia.title}` : parentMedia.title;
+                    } else if (parentMedia?.title) {
+                        mediaSubtitle = parentMedia.title;
                     }
 
                     let progressPercent = 0;
@@ -41,8 +85,6 @@ export async function GET() {
                     }
 
                     const sessionId = payload.sessionId || payload.SessionId;
-                    const itemId = payload.itemId || payload.ItemId || null;
-                    const parentItemId = payload.parentItemId || payload.AlbumId || payload.SeriesId || payload.SeasonId || null;
                     const user = payload.username || payload.UserName || payload.userId || payload.UserId || "Unknown";
                     const mediaTitle = payload.title || payload.ItemName || "Unknown";
                     const playMethod = payload.playMethod || payload.PlayMethod || (isTranscoding ? "Transcode" : "DirectPlay");
