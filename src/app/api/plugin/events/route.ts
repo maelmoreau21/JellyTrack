@@ -143,6 +143,12 @@ export async function POST(req: Request) {
             const ipAddress = cleanIp(session.ipAddress || session.IpAddress || null);
 
             if (!jellyfinUserId || !jellyfinMediaId) {
+                console.warn("[Plugin] PlaybackStart rejected: missing userId or mediaId", {
+                    event,
+                    hasUser: Boolean(jellyfinUserId),
+                    hasMedia: Boolean(jellyfinMediaId),
+                    sessionId: session.sessionId || session.SessionId || null,
+                });
                 return corsJson({ error: "Missing userId or mediaId." }, { status: 400 });
             }
 
@@ -188,6 +194,12 @@ export async function POST(req: Request) {
                 select: { excludedLibraries: true, discordAlertsEnabled: true, discordWebhookUrl: true, discordAlertCondition: true },
             });
             if (isLibraryExcluded({ collectionType, type }, settings?.excludedLibraries || [])) {
+                console.log("[Plugin] PlaybackStart ignored due excluded library", {
+                    jellyfinUserId,
+                    jellyfinMediaId,
+                    collectionType: collectionType || null,
+                    type,
+                });
                 return corsJson({ success: true, ignored: true, message: "Library excluded." });
             }
 
