@@ -7,6 +7,8 @@ import { LogFilters } from "./LogFilters";
 import { LogTypeFilter } from "./LogTypeFilter";
 import { ColumnToggle } from "./ColumnToggle";
 import { FallbackImage } from "@/components/FallbackImage";
+import LogRow from "./LogRow";
+import LogsListClient from "./LogsListClient";
 import prisma from "@/lib/prisma";
 import { getTranslations, getLocale } from 'next-intl/server';
 
@@ -17,9 +19,9 @@ export const dynamic = "force-dynamic"; // Bypass statis rendering for real-time
 const LOGS_PER_PAGE = 100;
 
 // Column utilities — defined server-side to avoid client/server boundary issues
-const ALL_COLUMNS = ['date', 'user', 'media', 'clientIp', 'status', 'codecs', 'duration'] as const;
+const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'client', 'ip', 'country', 'status', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
 type Column = typeof ALL_COLUMNS[number];
-const DEFAULT_VISIBLE: Column[] = ['date', 'user', 'media', 'clientIp', 'status', 'duration'];
+const DEFAULT_VISIBLE: Column[] = ['date', 'user', 'media', 'client', 'ip', 'country', 'status', 'duration'];
 
 function parseVisibleColumns(colsParam: string | undefined): Column[] {
     if (!colsParam) return DEFAULT_VISIBLE;
@@ -172,7 +174,8 @@ export default async function LogsPage({
         where: whereClause,
         include: {
             user: { select: { id: true, username: true, jellyfinUserId: true } },
-            media: { select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true } },
+            media: { select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true, resolution: true } },
+            telemetryEvents: { select: { eventType: true, positionMs: true, createdAt: true } },
         },
         orderBy: orderBy,
         skip: (safePage - 1) * LOGS_PER_PAGE,
@@ -190,6 +193,12 @@ export default async function LogsPage({
         endedAt: log.endedAt instanceof Date ? log.endedAt.toISOString() : log.endedAt ? String(log.endedAt) : null,
         media: log.media ? { ...log.media } : null,
         user: log.user ? { ...log.user } : null,
+        telemetryEvents: Array.isArray(log.telemetryEvents) ? log.telemetryEvents.map((e: any) => ({
+            ...e,
+            createdAt: e.createdAt instanceof Date ? e.createdAt.toISOString() : String(e.createdAt ?? ''),
+            positionMs: typeof e.positionMs === 'bigint' || typeof e.positionMs === 'number' ? String(e.positionMs) : e.positionMs,
+        })) : [],
+        isActuallyActive: !log.endedAt && activePairSet.has(`${log.userId}:${log.mediaId}`),
     }));
 
     const mediaIds = safeLogs
@@ -345,223 +354,14 @@ export default async function LogsPage({
                         )}
 
                         <div className="app-surface-soft border rounded-md overflow-x-auto w-full mt-6">
-                            <Table className="min-w-[540px] md:min-w-[700px] table-fixed">
-                                <TableHeader>
-                                    <TableRow>
-                                        {visibleColumns.includes('date') && <TableHead className="w-[130px]">{tl('colDate')}</TableHead>}
-                                        {visibleColumns.includes('user') && <TableHead className="w-[100px] md:w-[120px]">{tl('colUser')}</TableHead>}
-                                        {visibleColumns.includes('media') && <TableHead className="w-[250px]">{tl('colMedia')}</TableHead>}
-                                        {visibleColumns.includes('clientIp') && <TableHead className="w-[160px] hidden lg:table-cell">{tl('colClientIp')}</TableHead>}
-                                        {visibleColumns.includes('status') && <TableHead className="w-[130px] hidden md:table-cell">{tl('colStatus')}</TableHead>}
-                                        {visibleColumns.includes('codecs') && <TableHead className="w-[100px] hidden lg:table-cell">{tl('colCodecs')}</TableHead>}
-                                        {visibleColumns.includes('duration') && <TableHead className="w-[80px] text-right hidden md:table-cell">{tl('colDuration')}</TableHead>}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {safeLogs.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={visibleColumns.length} className="text-center h-24 text-muted-foreground">
-                                                {tl('noResults')}
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        safeLogs.map((log: any) => {
-                                            const isTranscode = log.playMethod?.toLowerCase().includes("transcode");
-                                            const isActuallyActive = !log.endedAt && activePairSet.has(`${log.userId}:${log.mediaId}`);
-                                            const partyId = watchPartyMap.get(log.id);
-                                            const isParty = !!partyId;
-                                            const party = partyId ? partyInfo.get(partyId) : null;
-                                            const isFirstOfParty = partyId && !shownPartyBanners.has(partyId);
-                                            const mediaMeta = log.media?.jellyfinMediaId ? jellyfinMetaMap.get(log.media.jellyfinMediaId) : null;
-                                            const fallbackImageParentId = log.media?.parentId || mediaMeta?.parentId || undefined;
-                                            if (isFirstOfParty && partyId) shownPartyBanners.add(partyId);
-
-                                            return (
-                                                <Fragment key={log.id}>
-                                                    {/* Watch Party Banner — first log of each party */}
-                                                    {isFirstOfParty && party && (
-                                                        <TableRow key={`party-banner-${partyId}`} className="border-none">
-                                                            <TableCell colSpan={visibleColumns.length} className="py-1.5 px-3">
-                                                                <div className="flex items-center gap-2 bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-violet-500/10 border border-violet-500/20 rounded-lg px-4 py-2 animate-pulse-slow">
-                                                                    <span className="text-lg" role="img" aria-label="Watch Party">🍿</span>
-                                                                    <span className="font-bold text-sm bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                                                                        Watch Party
-                                                                    </span>
-                                                                    <span className="text-xs text-zinc-400 ml-1">
-                                                                        {party.members.size} {tc('viewers')} — <span className="font-medium text-zinc-300">{party.mediaTitle}</span>
-                                                                    </span>
-                                                                    <div className="ml-auto flex items-center gap-1">
-                                                                        {Array.from(party.members).slice(0, 4).map((m, i) => (
-                                                                            <span key={i} className="text-[10px] bg-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded-full">{m}</span>
-                                                                        ))}
-                                                                        {party.members.size > 4 && (
-                                                                            <span className="text-[10px] text-zinc-500">+{party.members.size - 4}</span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
-                                                    <TableRow key={log.id} className={`even:bg-zinc-100/50 dark:even:bg-slate-900/35 hover:bg-zinc-100 dark:hover:bg-slate-800/55 border-zinc-200/50 dark:border-zinc-700/50 transition-colors ${isParty ? 'border-l-2 border-l-violet-500/40' : ''}`}>
-                                                        {/* Date */}
-                                                        {visibleColumns.includes('date') && (
-                                                            <TableCell className="font-medium whitespace-nowrap">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    {isParty && (
-                                                                        <Users className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-                                                                    )}
-                                                                    <span>
-                                                                        {(() => {
-                                                                            try {
-                                                                                const d = new Date(log.startedAt);
-                                                                                if (isNaN(d.getTime())) return tc('unknown');
-                                                                                return d.toLocaleString(safeLocale, {
-                                                                                    day: '2-digit', month: '2-digit', year: 'numeric',
-                                                                                    hour: '2-digit', minute: '2-digit'
-                                                                                });
-                                                                            } catch { return tc('unknown'); }
-                                                                        })()}
-                                                                    </span>
-                                                                </div>
-                                                            </TableCell>
-                                                        )}
-
-                                                        {/* Utilisateur */}
-                                                        {visibleColumns.includes('user') && (
-                                                            <TableCell className="font-semibold text-primary">
-                                                                {log.user ? (
-                                                                    <Link href={`/users/${log.user.jellyfinUserId}`} className="hover:underline">{log.user.username}</Link>
-                                                                ) : tc('deletedUser')}
-                                                            </TableCell>
-                                                        )}
-
-                                                        {/* Média */}
-                                                        {visibleColumns.includes('media') && (
-                                                            <TableCell className="overflow-hidden">
-                                                                <div className="flex items-center gap-2 md:gap-3 w-full overflow-hidden" title={log.media?.title || tc('unknownMedia')}>
-                                                                    <div className="relative w-10 md:w-12 aspect-[2/3] bg-muted rounded-md shrink-0 overflow-hidden ring-1 ring-white/10">
-                                                                        {log.media?.jellyfinMediaId ? (
-                                                                            <FallbackImage
-                                                                                src={`/api/jellyfin/image?itemId=${log.media.jellyfinMediaId}&type=Primary${fallbackImageParentId ? `&fallbackId=${fallbackImageParentId}` : ''}`}
-                                                                                alt={log.media?.title || tc('unknownMedia')}
-                                                                                fill
-                                                                                className="object-cover"
-                                                                            />
-                                                                        ) : (
-                                                                            <FallbackImage
-                                                                                src={undefined}
-                                                                                alt={tc('unknownMedia')}
-                                                                                fill
-                                                                                className="object-cover"
-                                                                            />
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="flex flex-col min-w-0 flex-1">
-                                                                        {log.media?.jellyfinMediaId ? (
-                                                                            <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-100 hover:underline" title={log.media?.title || tc('unknownMedia')}>
-                                                                                {log.media?.title || tc('unknownMedia')}
-                                                                            </Link>
-                                                                        ) : (
-                                                                            <span className="truncate font-medium text-zinc-400" title={tc('unknownMedia')}>
-                                                                                {tc('unknownMedia')}
-                                                                            </span>
-                                                                        )}
-                                                                        {(() => {
-                                                                            const subtitle = getMediaSubtitle(log.media);
-                                                                            const typeInfo = getMediaTypeLabel(log.media?.type);
-                                                                            if (subtitle) {
-                                                                                return (
-                                                                                    <span className="text-xs text-zinc-400 truncate flex items-center gap-1" title={subtitle}>
-                                                                                        {typeInfo && <span>{typeInfo.icon}</span>}
-                                                                                        {subtitle}
-                                                                                    </span>
-                                                                                );
-                                                                            }
-                                                                            return typeInfo
-                                                                                ? <span className="text-xs text-zinc-500">{typeInfo.icon} {typeInfo.label}</span>
-                                                                                : <span className="text-xs text-zinc-500">{log.media?.type || tc('unknown')}</span>;
-                                                                        })()}
-
-                                                                        <div className="md:hidden mt-1 flex items-center gap-1.5 text-[10px] text-zinc-400 truncate">
-                                                                            <span className={`px-1.5 py-0.5 rounded ${isTranscode ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                                                                                {log.playMethod || 'DirectPlay'}
-                                                                            </span>
-                                                                            <span className="truncate">{log.clientName || tc('unknown')}</span>
-                                                                            <span className="text-zinc-500">·</span>
-                                                                            <span>{Math.floor((log.durationWatched || 0) / 60)} min</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </TableCell>
-                                                        )}
-
-                                                        {/* Client & IP */}
-                                                        {visibleColumns.includes('clientIp') && (
-                                                            <TableCell className="hidden lg:table-cell">
-                                                                <div className="flex flex-col">
-                                                                    <span className="text-sm font-semibold">{log.clientName || tc('unknown')}</span>
-                                                                    <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded-sm w-fit mt-0.5">
-                                                                        {log.ipAddress || tc('local')}
-                                                                    </span>
-                                                                    {log.country && log.country !== "Unknown" && (
-                                                                        <span className="text-xs text-muted-foreground mt-0.5">
-                                                                            {log.city}, {log.country}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </TableCell>
-                                                        )}
-
-                                                        {/* Statut (Méthode) */}
-                                                        {visibleColumns.includes('status') && (
-                                                            <TableCell className="hidden md:table-cell">
-                                                                <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
-                                                                    {log.playMethod || "DirectPlay"}
-                                                                </Badge>
-                                                            </TableCell>
-                                                        )}
-
-                                                        {/* Codecs */}
-                                                        {visibleColumns.includes('codecs') && (
-                                                            <TableCell className="hidden lg:table-cell">
-                                                                {isTranscode && log.videoCodec ? (
-                                                                    <div className="flex flex-col text-xs text-muted-foreground font-mono">
-                                                                        <span>V: {log.videoCodec}</span>
-                                                                        {log.audioCodec && <span>A: {log.audioCodec}</span>}
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-xs text-muted-foreground italic">{tc('source')}</span>
-                                                                )}
-                                                            </TableCell>
-                                                        )}
-
-                                                        {/* Durée */}
-                                                        {visibleColumns.includes('duration') && (
-                                                            <TableCell className="text-right whitespace-nowrap hidden md:table-cell">
-                                                                {isActuallyActive
-                                                                    ? (
-                                                                        <span className="text-amber-500/80 animate-pulse text-xs uppercase tracking-wider font-semibold flex flex-row items-center justify-end gap-1"><span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>{tc('active')}</span>
-                                                                    )
-                                                                    : log.durationWatched > 0
-                                                                        ? `${Math.floor(log.durationWatched / 60)} min`
-                                                                        : '0 min'
-                                                                }
-                                                            </TableCell>
-                                                        )}
-                                                    </TableRow>
-                                                </Fragment>
-                                            );
-                                        })
-                                    )}
-                                </TableBody>
-                            </Table>
+                            <LogsListClient serverLogs={safeLogs} visibleColumns={visibleColumns as string[]} />
                         </div>
 
                         {/* Pagination */}
                         {totalPages > 1 && (
                             <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-zinc-200/50 dark:border-zinc-700/50 flex-wrap">
                                 {safePage > 1 && (
-                                    <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-slate-700/50">
+                                    <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
                                         <ChevronLeft className="w-4 h-4" /> {tc('previous')}
                                     </Link>
                                 )}
@@ -582,7 +382,7 @@ export default async function LogsPage({
                                                     href={buildPageUrl(item as number)}
                                                     className={`px-2.5 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition-colors ${item === safePage
                                                             ? "bg-primary text-primary-foreground"
-                                                            : "text-zinc-300 hover:bg-slate-700/50 hover:text-zinc-100"
+                                                            : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-zinc-900 dark:hover:text-zinc-100"
                                                         }`}
                                                 >
                                                     {item}
@@ -591,7 +391,7 @@ export default async function LogsPage({
                                         )}
                                 </div>
                                 {safePage < totalPages && (
-                                    <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-slate-700/50">
+                                    <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
                                         {tc('next')} <ChevronRight className="w-4 h-4" />
                                     </Link>
                                 )}

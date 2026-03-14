@@ -317,7 +317,35 @@
     "sortDurationDesc": "Duración (Más larga)",
     "sortDurationAsc": "Duración (Más corta)",
     "columns": "Columnas",
-    "toggleColumns": "Alternar visibilidad de columnas"
+    "toggleColumns": "Alternar visibilidad de columnas",
+    "colStartedAt": "Inicio",
+    "colEndedAt": "Fin",
+    "colClient": "Cliente",
+    "colCountry": "País",
+    "colPauseCount": "Pausas",
+    "colAudioChanges": "Cambios de audio",
+    "colSubtitleChanges": "Cambios de subtítulos",
+    "timeline": {
+      "title": "Línea de tiempo",
+      "legend": {
+        "pause": "Pausas",
+        "audio": "Cambios de audio",
+        "subtitles": "Cambios de subtítulos"
+      },
+      "toggle": {
+        "exact": "Exacto",
+        "5s": "5s",
+        "30s": "30s"
+      },
+      "noEvents": "No se registraron eventos de telemetría.",
+      "label": {
+        "pause": "Pausa",
+        "audio_change": "Cambio de audio",
+        "subtitle_change": "Cambio de subtítulo",
+        "seek": "Salto",
+        "default": "Evento"
+      }
+    }
   },
   "media": {
     "title": "Biblioteca",

@@ -317,7 +317,35 @@
     "sortDurationDesc": "Duur (Langste)",
     "sortDurationAsc": "Duur (Kortste)",
     "columns": "Kolommen",
-    "toggleColumns": "Kolomweergave wisselen"
+    "toggleColumns": "Kolomweergave wisselen",
+    "colStartedAt": "Start",
+    "colEndedAt": "Einde",
+    "colClient": "Client",
+    "colCountry": "Land",
+    "colPauseCount": "Pauzes",
+    "colAudioChanges": "Audiowijzigingen",
+    "colSubtitleChanges": "Ondertitelwijzigingen",
+    "timeline": {
+      "title": "Tijdlijn",
+      "legend": {
+        "pause": "Pauzes",
+        "audio": "Audiowijzigingen",
+        "subtitles": "Ondertitelwijzigingen"
+      },
+      "toggle": {
+        "exact": "Exact",
+        "5s": "5s",
+        "30s": "30s"
+      },
+      "noEvents": "Geen telemetriegebeurtenissen geregistreerd.",
+      "label": {
+        "pause": "Pauze",
+        "audio_change": "Audiowijziging",
+        "subtitle_change": "Ondertitelwijziging",
+        "seek": "Sprong",
+        "default": "Gebeurtenis"
+      }
+    }
   },
   "media": {
     "title": "Bibliotheek",

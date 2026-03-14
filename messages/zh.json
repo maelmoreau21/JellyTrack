@@ -317,7 +317,35 @@
     "sortDurationDesc": "时长（最长）",
     "sortDurationAsc": "时长（最短）",
     "columns": "列",
-    "toggleColumns": "切换列可见性"
+    "toggleColumns": "切换列可见性",
+    "colStartedAt": "开始时间",
+    "colEndedAt": "结束时间",
+    "colClient": "客户端",
+    "colCountry": "国家",
+    "colPauseCount": "暂停次数",
+    "colAudioChanges": "音频更改",
+    "colSubtitleChanges": "字幕更改",
+    "timeline": {
+      "title": "时间线",
+      "legend": {
+        "pause": "暂停",
+        "audio": "音频更改",
+        "subtitles": "字幕更改"
+      },
+      "toggle": {
+        "exact": "精确",
+        "5s": "5s",
+        "30s": "30s"
+      },
+      "noEvents": "未记录任何遥测事件。",
+      "label": {
+        "pause": "暂停",
+        "audio_change": "音轨切换",
+        "subtitle_change": "字幕切换",
+        "seek": "跳转",
+        "default": "事件"
+      }
+    }
   },
   "media": {
     "title": "媒体库",

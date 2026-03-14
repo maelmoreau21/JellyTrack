@@ -87,7 +87,7 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                 <button
                     onClick={() => canGoBack && setSelectedYear(availableYears[yearIndex - 1])}
                     disabled={!canGoBack}
-                    className="p-1 rounded-md hover:bg-zinc-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                     <ChevronLeft className="w-4 h-4 text-zinc-300" />
                 </button>
@@ -97,7 +97,7 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                 <button
                     onClick={() => canGoForward && setSelectedYear(availableYears[yearIndex + 1])}
                     disabled={!canGoForward}
-                    className="p-1 rounded-md hover:bg-zinc-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                     <ChevronRight className="w-4 h-4 text-zinc-300" />
                 </button>

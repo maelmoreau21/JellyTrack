@@ -214,10 +214,10 @@ export function LiveStreamsPanel({ initialStreams, initialBandwidth }: { initial
                     </div>
                     {streams.length >= 3 && (
                         <button
-                            onClick={() => setForceCards(!forceCards)}
-                            className="p-1.5 rounded-md border border-zinc-200/50 dark:border-zinc-700/50 bg-zinc-100/50 dark:bg-zinc-800/50 hover:bg-zinc-700/50 transition-colors"
-                            title={forceCards ? "Vue Timeline" : "Vue Cartes"}
-                        >
+                                onClick={() => setForceCards(!forceCards)}
+                                className="p-1.5 rounded-md border border-zinc-200/50 dark:border-zinc-700/50 bg-zinc-100/50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors"
+                                title={forceCards ? "Vue Timeline" : "Vue Cartes"}
+                            >
                             {forceCards ? <Rows3 className="w-4 h-4 text-zinc-400" /> : <LayoutList className="w-4 h-4 text-zinc-400" />}
                         </button>
                     )}

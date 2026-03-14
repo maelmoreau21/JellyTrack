@@ -317,7 +317,35 @@
     "sortDurationDesc": "Czas trwania (najdłuższe)",
     "sortDurationAsc": "Czas trwania (najkrótsze)",
     "columns": "Kolumny",
-    "toggleColumns": "Przełącz widoczność kolumn"
+    "toggleColumns": "Przełącz widoczność kolumn",
+    "colStartedAt": "Rozpoczęcie",
+    "colEndedAt": "Zakończenie",
+    "colClient": "Klient",
+    "colCountry": "Kraj",
+    "colPauseCount": "Pauzy",
+    "colAudioChanges": "Zmiany audio",
+    "colSubtitleChanges": "Zmiany napisów",
+    "timeline": {
+      "title": "Oś czasu",
+      "legend": {
+        "pause": "Pauzy",
+        "audio": "Zmiany audio",
+        "subtitles": "Zmiany napisów"
+      },
+      "toggle": {
+        "exact": "Dokładnie",
+        "5s": "5s",
+        "30s": "30s"
+      },
+      "noEvents": "Brak zarejestrowanych zdarzeń telemetrycznych.",
+      "label": {
+        "pause": "Pauza",
+        "audio_change": "Zmiana audio",
+        "subtitle_change": "Zmiana napisów",
+        "seek": "Skok",
+        "default": "Zdarzenie"
+      }
+    }
   },
   "media": {
     "title": "Biblioteka",

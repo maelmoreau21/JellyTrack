@@ -317,7 +317,35 @@
     "sortDurationDesc": "Durata (più lunga)",
     "sortDurationAsc": "Durata (più breve)",
     "columns": "Colonne",
-    "toggleColumns": "Mostra/nascondi colonne"
+    "toggleColumns": "Mostra/nascondi colonne",
+    "colStartedAt": "Inizio",
+    "colEndedAt": "Fine",
+    "colClient": "Client",
+    "colCountry": "Paese",
+    "colPauseCount": "Pause",
+    "colAudioChanges": "Modifiche audio",
+    "colSubtitleChanges": "Modifiche sottotitoli",
+    "timeline": {
+      "title": "Timeline",
+      "legend": {
+        "pause": "Pause",
+        "audio": "Modifiche audio",
+        "subtitles": "Modifiche sottotitoli"
+      },
+      "toggle": {
+        "exact": "Esatto",
+        "5s": "5s",
+        "30s": "30s"
+      },
+      "noEvents": "Nessun evento di telemetria registrato.",
+      "label": {
+        "pause": "Pausa",
+        "audio_change": "Cambio audio",
+        "subtitle_change": "Cambio sottotitoli",
+        "seek": "Salto",
+        "default": "Evento"
+      }
+    }
   },
   "media": {
     "title": "Libreria",

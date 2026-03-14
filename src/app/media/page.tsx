@@ -263,22 +263,22 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
                                 <ArrowDownUp className="w-4 h-4" /> {t('sortBy')}
                             </span>
-                            <div className="app-field flex items-center rounded-md p-1">
+                                <div className="app-field flex items-center rounded-md p-1">
                                 <Link
                                     href={`/media?sortBy=plays${type ? `&type=${type}` : ''}`}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "plays" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-300 hover:bg-slate-700/50"}`}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "plays" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100"}`}
                                 >
                                     {t('sortPopularity')}
                                 </Link>
                                 <Link
                                     href={`/media?sortBy=duration${type ? `&type=${type}` : ''}`}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "duration" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-300 hover:bg-slate-700/50"}`}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "duration" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100"}`}
                                 >
                                     {t('sortWatchTime')}
                                 </Link>
                                 <Link
                                     href={`/media?sortBy=quality${type ? `&type=${type}` : ''}`}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "quality" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-300 hover:bg-slate-700/50"}`}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "quality" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100"}`}
                                 >
                                     {t('sortPlayMode')}
                                 </Link>
@@ -350,7 +350,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                         {totalPages > 1 && (
                             <div className="flex items-center justify-center gap-2 mt-8 pt-4 border-t border-zinc-200/50 dark:border-zinc-700/50">
                                 {safePage > 1 && (
-                                    <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-700/50">
+                                    <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
                                         <ChevronLeft className="w-4 h-4" /> {tc('previous')}
                                     </Link>
                                 )}
@@ -372,7 +372,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                                                         item === safePage
                                                             ? "bg-primary text-primary-foreground"
-                                                            : "text-zinc-300 hover:bg-slate-700/50 hover:text-zinc-800 dark:text-zinc-100"
+                                                            : "text-zinc-700 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-zinc-900 dark:hover:text-zinc-100"
                                                     }`}
                                                 >
                                                     {item}
@@ -381,7 +381,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                         )}
                                 </div>
                                 {safePage < totalPages && (
-                                    <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-700/50">
+                                    <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
                                         {tc('next')} <ChevronRight className="w-4 h-4" />
                                     </Link>
                                 )}

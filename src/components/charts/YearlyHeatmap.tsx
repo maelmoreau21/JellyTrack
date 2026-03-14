@@ -166,7 +166,7 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                             className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
                                 selectedLibrary === '_total'
                                     ? 'bg-indigo-600 text-white'
-                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-700'
+                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                             }`}
                         >
                             {t('all')}
@@ -178,7 +178,7 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                                 className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
                                     selectedLibrary === lib
                                         ? 'text-white'
-                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-700'
+                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                                 }`}
                                 style={selectedLibrary === lib ? { backgroundColor: LIBRARY_COLORS[lib] || '#6366f1' } : undefined}
                             >

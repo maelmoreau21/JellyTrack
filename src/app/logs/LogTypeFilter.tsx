@@ -36,7 +36,7 @@ export function LogTypeFilter({ currentType }: { currentType: string }) {
                         onClick={() => handleTypeChange(value)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive
                                 ? "bg-primary text-primary-foreground shadow-sm"
-                                : "app-field hover:bg-zinc-700/50 text-zinc-300"
+                                : "app-field hover:bg-zinc-100 dark:hover:bg-zinc-700/50 text-zinc-700 dark:text-zinc-300"
                             }`}
                     >
                         {Icon && <Icon className="w-3.5 h-3.5" />}

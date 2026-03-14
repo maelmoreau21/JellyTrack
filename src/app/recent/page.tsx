@@ -211,13 +211,13 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2">
             {page > 1 && (
-              <Link href={buildUrl({ type, page: String(page - 1) })} className="app-field flex items-center gap-1 px-3 py-2 text-sm rounded-lg transition-colors hover:bg-slate-700/50">
+              <Link href={buildUrl({ type, page: String(page - 1) })} className="app-field flex items-center gap-1 px-3 py-2 text-sm rounded-lg transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
                 <ChevronLeft className="w-4 h-4" /> {tc('previous')}
               </Link>
             )}
             <span className="app-chip text-sm px-4 py-1 rounded-md">Page {page} / {totalPages}</span>
             {page < totalPages && (
-              <Link href={buildUrl({ type, page: String(page + 1) })} className="app-field flex items-center gap-1 px-3 py-2 text-sm rounded-lg transition-colors hover:bg-slate-700/50">
+              <Link href={buildUrl({ type, page: String(page + 1) })} className="app-field flex items-center gap-1 px-3 py-2 text-sm rounded-lg transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
                 {tc('next')} <ChevronRight className="w-4 h-4" />
               </Link>
             )}

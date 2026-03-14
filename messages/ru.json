@@ -317,7 +317,35 @@
     "sortDurationDesc": "Длительность (убывание)",
     "sortDurationAsc": "Длительность (возрастание)",
     "columns": "Столбцы",
-    "toggleColumns": "Показать/скрыть столбцы"
+    "toggleColumns": "Показать/скрыть столбцы",
+    "colStartedAt": "Начало",
+    "colEndedAt": "Окончание",
+    "colClient": "Клиент",
+    "colCountry": "Страна",
+    "colPauseCount": "Паузы",
+    "colAudioChanges": "Изменения аудио",
+    "colSubtitleChanges": "Изменения субтитров",
+    "timeline": {
+      "title": "Хронология",
+      "legend": {
+        "pause": "Паузы",
+        "audio": "Изменения аудио",
+        "subtitles": "Изменения субтитров"
+      },
+      "toggle": {
+        "exact": "Точно",
+        "5s": "5s",
+        "30s": "30s"
+      },
+      "noEvents": "События телеметрии не зарегистрированы.",
+      "label": {
+        "pause": "Пауза",
+        "audio_change": "Смена аудио",
+        "subtitle_change": "Смена субтитров",
+        "seek": "Перемотка",
+        "default": "Событие"
+      }
+    }
   },
   "media": {
     "title": "Библиотека",

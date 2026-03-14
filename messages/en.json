@@ -337,7 +337,35 @@
     "sortDurationDesc": "Duration (Longest)",
     "sortDurationAsc": "Duration (Shortest)",
     "columns": "Columns",
-    "toggleColumns": "Toggle column visibility"
+    "toggleColumns": "Toggle column visibility",
+    "colStartedAt": "Started",
+    "colEndedAt": "Ended",
+    "colClient": "Client",
+    "colCountry": "Country",
+    "colPauseCount": "Pauses",
+    "colAudioChanges": "Audio changes",
+    "colSubtitleChanges": "Subtitle changes",
+    "timeline": {
+      "title": "Timeline",
+      "legend": {
+        "pause": "Pauses",
+        "audio": "Audio changes",
+        "subtitles": "Subtitle changes"
+      },
+      "toggle": {
+        "exact": "Exact",
+        "5s": "5s",
+        "30s": "30s"
+      },
+      "noEvents": "No telemetry events recorded.",
+      "label": {
+        "pause": "Pause",
+        "audio_change": "Audio change",
+        "subtitle_change": "Subtitle change",
+        "seek": "Seek",
+        "default": "Event"
+      }
+    }
   },
   "media": {
     "title": "Library",

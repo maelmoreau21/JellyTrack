@@ -52,7 +52,7 @@ export function LogFilters({ initialQuery, initialSort }: LogFiltersProps) {
                 />
             </div>
             <div className="flex gap-2">
-                <div className="app-field rounded-md px-3 py-2 text-sm flex flex-row items-center cursor-pointer hover:bg-slate-700/50 relative group h-10 md:h-9">
+                <div className="app-field rounded-md px-3 py-2 text-sm flex flex-row items-center cursor-pointer hover:bg-zinc-100 dark:hover:bg-slate-700/50 relative group h-10 md:h-9">
                     <span className="font-semibold mr-2 flex items-center gap-2"><ArrowUpDown className="w-4 h-4" /> {t('sortBy')}</span>
                     <ChevronDown className="w-4 h-4" />
                     <select
