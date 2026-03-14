@@ -475,10 +475,14 @@ export async function POST(req: Request) {
                     AudioLanguage: session.audioLanguage || session.AudioLanguage || null,
                     audioCodec: session.audioCodec || session.AudioCodec || null,
                     AudioCodec: session.audioCodec || session.AudioCodec || null,
+                    audioStreamIndex: session.audioStreamIndex ?? session.AudioStreamIndex ?? null,
+                    AudioStreamIndex: session.audioStreamIndex ?? session.AudioStreamIndex ?? null,
                     subtitleLanguage: session.subtitleLanguage || session.SubtitleLanguage || null,
                     SubtitleLanguage: session.subtitleLanguage || session.SubtitleLanguage || null,
                     subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
                     SubtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                    subtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
+                    SubtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
                 });
                 await redis.setex(`stream:${sessionId}`, 60, redisPayload);
             }
@@ -924,10 +928,14 @@ export async function POST(req: Request) {
                     AudioLanguage: resolvedAudioLanguage,
                     audioCodec: resolvedAudioCodec,
                     AudioCodec: resolvedAudioCodec,
+                    audioStreamIndex: audioStreamIndex ?? parsed?.audioStreamIndex ?? parsed?.AudioStreamIndex ?? null,
+                    AudioStreamIndex: audioStreamIndex ?? parsed?.AudioStreamIndex ?? parsed?.audioStreamIndex ?? null,
                     subtitleLanguage: resolvedSubtitleLanguage,
                     SubtitleLanguage: resolvedSubtitleLanguage,
                     subtitleCodec: resolvedSubtitleCodec,
                     SubtitleCodec: resolvedSubtitleCodec,
+                    subtitleStreamIndex: subtitleStreamIndex ?? parsed?.subtitleStreamIndex ?? parsed?.SubtitleStreamIndex ?? null,
+                    SubtitleStreamIndex: subtitleStreamIndex ?? parsed?.SubtitleStreamIndex ?? parsed?.subtitleStreamIndex ?? null,
                 };
 
                 await redis.setex(redisKey, 60, JSON.stringify(redisPayload));

@@ -24,6 +24,8 @@ interface LiveStream {
     audioCodec: string | null;
     subtitleLanguage: string | null;
     subtitleCodec: string | null;
+    audioStreamIndex?: number | null;
+    subtitleStreamIndex?: number | null;
     mediaType?: string | null;
     albumArtist?: string | null;
     albumName?: string | null;
@@ -83,8 +85,10 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                         <span className="text-[10px] opacity-70 truncate">
                             {stream.audioLanguage ? `?? ${stream.audioLanguage.toUpperCase()}` : ''}
                             {stream.audioCodec ? ` (${stream.audioCodec})` : ''}
+                            {stream.audioStreamIndex != null ? ` · A:${stream.audioStreamIndex}` : ''}
                             {stream.subtitleLanguage ? ` . ?? ${stream.subtitleLanguage.toUpperCase()}` : ''}
                             {stream.subtitleCodec ? ` (${stream.subtitleCodec})` : ''}
+                            {stream.subtitleStreamIndex != null ? ` · S:${stream.subtitleStreamIndex}` : ''}
                         </span>
                     )}
                     {(stream.city !== "Unknown" || stream.country !== "Unknown") && (

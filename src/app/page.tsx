@@ -71,6 +71,8 @@ type LiveStream = {
   seriesName?: string | null;
   seasonName?: string | null;
   posterItemId?: string | null;
+  audioStreamIndex?: number | null;
+  subtitleStreamIndex?: number | null;
 };
 
 export const dynamic = "force-dynamic";
@@ -621,6 +623,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
         const audioCodec = payload?.audioCodec || payload?.AudioCodec || null;
         const subtitleLanguage = payload?.subtitleLanguage || payload?.SubtitleLanguage || null;
         const subtitleCodec = payload?.subtitleCodec || payload?.SubtitleCodec || null;
+        const audioStreamIndex = payload?.audioStreamIndex ?? payload?.AudioStreamIndex ?? null;
+        const subtitleStreamIndex = payload?.subtitleStreamIndex ?? payload?.SubtitleStreamIndex ?? null;
 
         const mediaType = itemMedia?.type || parentMedia?.type || payload?.type || null;
         const albumArtist = payload?.AlbumArtist || itemMedia?.artist || parentMedia?.artist || null;
@@ -646,6 +650,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
           audioCodec,
           subtitleLanguage,
           subtitleCodec,
+          audioStreamIndex,
+          subtitleStreamIndex,
           mediaType,
           albumArtist,
           albumName,

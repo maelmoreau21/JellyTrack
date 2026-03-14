@@ -96,6 +96,15 @@ export async function GET() {
                     const audioCodec = payload.audioCodec || payload.AudioCodec || null;
                     const subtitleLanguage = payload.subtitleLanguage || payload.SubtitleLanguage || null;
                     const subtitleCodec = payload.subtitleCodec || payload.SubtitleCodec || null;
+                    const audioStreamIndex = payload.audioStreamIndex ?? payload.AudioStreamIndex ?? null;
+                    const subtitleStreamIndex = payload.subtitleStreamIndex ?? payload.SubtitleStreamIndex ?? null;
+
+                    const mediaType = itemMedia?.type || parentMedia?.type || payload.type || null;
+                    const albumArtist = payload.AlbumArtist || itemMedia?.artist || parentMedia?.artist || null;
+                    const albumName = payload.AlbumName || payload.Album || parentMedia?.title || null;
+                    const seriesName = payload.SeriesName || null;
+                    const seasonName = payload.SeasonName || null;
+                    const posterItemId = (itemMedia?.type === 'Audio' || itemMedia?.type === 'Track') ? (parentItemId || itemId) : (itemId || parentItemId);
 
                     return {
                         sessionId,
@@ -114,6 +123,14 @@ export async function GET() {
                         audioCodec,
                         subtitleLanguage,
                         subtitleCodec,
+                        audioStreamIndex,
+                        subtitleStreamIndex,
+                        mediaType,
+                        albumArtist,
+                        albumName,
+                        seriesName,
+                        seasonName,
+                        posterItemId,
                     };
                 })
                 .filter((stream) => Boolean(stream.sessionId));
