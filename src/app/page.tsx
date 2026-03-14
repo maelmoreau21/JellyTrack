@@ -559,31 +559,31 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
     liveStreams = parsedPayloads
       .map((payload: any) => {
-        const isTranscoding = payload.isTranscoding === true
-          || payload.IsTranscoding === true
-          || payload.playMethod === "Transcode"
-          || payload.PlayMethod === "Transcode";
+        const isTranscoding = payload?.isTranscoding === true
+          || payload?.IsTranscoding === true
+          || payload?.playMethod === "Transcode"
+          || payload?.PlayMethod === "Transcode";
         totalBandwidthMbps += isTranscoding ? 12 : 6;
 
-        const itemId = payload.itemId || payload.ItemId || null;
-        const parentItemId = payload.parentItemId || payload.AlbumId || payload.SeriesId || payload.SeasonId || null;
+        const itemId = payload?.itemId || payload?.ItemId || null;
+        const parentItemId = payload?.parentItemId || payload?.AlbumId || payload?.SeriesId || payload?.SeasonId || null;
         const itemMedia = itemId ? mediaMap.get(itemId) : null;
         const parentMedia = parentItemId ? mediaMap.get(parentItemId) : null;
         const grandparentMedia = parentMedia?.parentId ? mediaMap.get(parentMedia.parentId) : null;
 
         // Build enriched subtitle for hierarchical display
         let mediaSubtitle: string | null = null;
-        if (payload.mediaSubtitle) {
+        if (payload?.mediaSubtitle) {
           mediaSubtitle = payload.mediaSubtitle;
           if (!mediaSubtitle.includes("—") && parentMedia?.title && (itemMedia?.type === "Audio" || itemMedia?.type === "Track")) {
             mediaSubtitle = `${mediaSubtitle} — ${parentMedia.title}`;
           }
-        } else if (payload.SeriesName) {
+        } else if (payload?.SeriesName) {
           // TV: "SeriesName — SeasonName"
-          mediaSubtitle = payload.SeriesName + (payload.SeasonName ? ` — ${payload.SeasonName}` : '');
-        } else if (payload.AlbumName) {
+          mediaSubtitle = payload.SeriesName + (payload?.SeasonName ? ` — ${payload.SeasonName}` : '');
+        } else if (payload?.AlbumName) {
           // Music: "Artist — Album"
-          mediaSubtitle = (payload.AlbumArtist ? `${payload.AlbumArtist} — ` : '') + payload.AlbumName;
+          mediaSubtitle = (payload?.AlbumArtist ? `${payload.AlbumArtist} — ` : '') + payload.AlbumName;
         } else if (itemMedia?.type === "Episode" && parentMedia) {
           mediaSubtitle = grandparentMedia?.title
             ? `${grandparentMedia.title} — ${parentMedia.title}`
@@ -597,25 +597,24 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
         // Calculate progress percentage
         let progressPercent = 0;
-        if (typeof payload.progressPercent === "number") {
-          progressPercent = payload.progressPercent;
-        } else if (payload.PlaybackPositionTicks && payload.RunTimeTicks && payload.RunTimeTicks > 0) {
+        if (typeof payload?.progressPercent === "number") {
+          progressPercent = payload?.progressPercent;
+        } else if (payload?.PlaybackPositionTicks && payload?.RunTimeTicks && payload?.RunTimeTicks > 0) {
           progressPercent = Math.min(100, Math.round((payload.PlaybackPositionTicks / payload.RunTimeTicks) * 100));
         }
 
-        const sessionId = payload.sessionId || payload.SessionId;
-        const user = payload.username || payload.UserName || payload.userId || payload.UserId || "Unknown";
-        const mediaTitle = payload.title || payload.ItemName || "Unknown";
-        const playMethod = payload.playMethod || payload.PlayMethod || (isTranscoding ? "Transcode" : "DirectPlay");
-        const device = payload.deviceName || payload.DeviceName || payload.device || "Unknown";
-        const country = payload.country || payload.Country || "Unknown";
-        const city = payload.city || payload.City || "Unknown";
-        const isPaused = payload.isPaused === true || payload.IsPaused === true;
-        const parentItemId = payload.parentItemId || payload.AlbumId || payload.SeriesId || payload.SeasonId || null;
-        const audioLanguage = payload.audioLanguage || payload.AudioLanguage || null;
-        const audioCodec = payload.audioCodec || payload.AudioCodec || null;
-        const subtitleLanguage = payload.subtitleLanguage || payload.SubtitleLanguage || null;
-        const subtitleCodec = payload.subtitleCodec || payload.SubtitleCodec || null;
+        const sessionId = payload?.sessionId || payload?.SessionId;
+        const user = payload?.username || payload?.UserName || payload?.userId || payload?.UserId || "Unknown";
+        const mediaTitle = payload?.title || payload?.ItemName || "Unknown";
+        const playMethod = payload?.playMethod || payload?.PlayMethod || (isTranscoding ? "Transcode" : "DirectPlay");
+        const device = payload?.deviceName || payload?.DeviceName || payload?.device || "Unknown";
+        const country = payload?.country ?? payload?.Country ?? "Unknown";
+        const city = payload?.city ?? payload?.City ?? "Unknown";
+        const isPaused = (payload?.isPaused === true || payload?.IsPaused === true);
+        const audioLanguage = payload?.audioLanguage || payload?.AudioLanguage || null;
+        const audioCodec = payload?.audioCodec || payload?.AudioCodec || null;
+        const subtitleLanguage = payload?.subtitleLanguage || payload?.SubtitleLanguage || null;
+        const subtitleCodec = payload?.subtitleCodec || payload?.SubtitleCodec || null;
 
         return {
           sessionId,
