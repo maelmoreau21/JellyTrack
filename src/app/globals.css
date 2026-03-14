@@ -388,9 +388,10 @@
   color: #18181b;
 }
 
-/* Soften Tailwind `bg-white*` utilities in light mode: map them to the off-white used elsewhere.
-   This ensures many `bg-white` / `bg-white/*` utility usages are visually consistent. */
-[class*="bg-white"] {
+/* Soften Tailwind `bg-white*` utilities in light mode only: map them to the off-white used elsewhere.
+   This ensures many `bg-white` / `bg-white/*` utility usages are visually consistent without
+   affecting dark mode where a global override would produce unwanted white elements. */
+html:not(.dark) [class*="bg-white"] {
   background-color: rgba(250, 250, 252, var(--tw-bg-opacity, 1));
 }
 

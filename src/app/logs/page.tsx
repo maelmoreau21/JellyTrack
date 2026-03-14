@@ -19,9 +19,10 @@ export const dynamic = "force-dynamic"; // Bypass statis rendering for real-time
 const LOGS_PER_PAGE = 100;
 
 // Column utilities — defined server-side to avoid client/server boundary issues
-const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'client', 'ip', 'country', 'status', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
+// Use a single combined `clientIp` column to avoid duplicated client/IP cells.
+const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'clientIp', 'country', 'status', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
 type Column = typeof ALL_COLUMNS[number];
-const DEFAULT_VISIBLE: Column[] = ['date', 'user', 'media', 'client', 'ip', 'country', 'status', 'duration'];
+const DEFAULT_VISIBLE: Column[] = ['date', 'user', 'media', 'clientIp', 'country', 'status', 'duration'];
 
 function parseVisibleColumns(colsParam: string | undefined): Column[] {
     if (!colsParam) return DEFAULT_VISIBLE;

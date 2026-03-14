@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Columns3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'client', 'ip', 'country', 'status', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
+const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'clientIp', 'country', 'status', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
 type Column = typeof ALL_COLUMNS[number];
 
 export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
@@ -21,8 +21,7 @@ export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
         endedAt: t('colEndedAt') || 'Ended',
         user: t('colUser'),
         media: t('colMedia'),
-        client: t('colClient') || 'Client',
-        ip: t('colClientIp'),
+        clientIp: t('colClientIp') || 'Client & IP',
         country: t('colCountry') || 'Country',
         status: t('colStatus'),
         codecs: t('colCodecs'),

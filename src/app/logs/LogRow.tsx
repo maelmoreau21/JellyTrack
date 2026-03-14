@@ -166,17 +166,13 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
           </TableCell>
         )}
 
-        {/* Client */}
-        {visibleColumns.includes('client') && (
+        {/* Combined Client & IP */}
+        {visibleColumns.includes('clientIp') && (
           <TableCell className="hidden lg:table-cell">
-            <div className="text-sm font-semibold">{log.clientName || '—'}</div>
-          </TableCell>
-        )}
-
-        {/* IP */}
-        {visibleColumns.includes('ip') && (
-          <TableCell className="hidden lg:table-cell">
-            <div className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-sm w-fit">{log.ipAddress || '—'}</div>
+            <div className="flex flex-col">
+              <div className="text-sm font-semibold">{log.clientName || '—'}</div>
+              <div className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-sm w-fit mt-1">{log.ipAddress || '—'}</div>
+            </div>
           </TableCell>
         )}
 
