@@ -65,6 +65,12 @@ type LiveStream = {
   audioCodec: string | null;
   subtitleLanguage: string | null;
   subtitleCodec: string | null;
+  mediaType?: string | null;
+  albumArtist?: string | null;
+  albumName?: string | null;
+  seriesName?: string | null;
+  seasonName?: string | null;
+  posterItemId?: string | null;
 };
 
 export const dynamic = "force-dynamic";
@@ -616,6 +622,13 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
         const subtitleLanguage = payload?.subtitleLanguage || payload?.SubtitleLanguage || null;
         const subtitleCodec = payload?.subtitleCodec || payload?.SubtitleCodec || null;
 
+        const mediaType = itemMedia?.type || parentMedia?.type || payload?.type || null;
+        const albumArtist = payload?.AlbumArtist || itemMedia?.artist || parentMedia?.artist || null;
+        const albumName = payload?.AlbumName || payload?.Album || parentMedia?.title || null;
+        const seriesName = payload?.SeriesName || null;
+        const seasonName = payload?.SeasonName || null;
+        const posterItemId = (itemMedia?.type === 'Audio' || itemMedia?.type === 'Track') ? (parentItemId || itemId) : (itemId || parentItemId);
+
         return {
           sessionId,
           itemId,
@@ -633,6 +646,12 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
           audioCodec,
           subtitleLanguage,
           subtitleCodec,
+          mediaType,
+          albumArtist,
+          albumName,
+          seriesName,
+          seasonName,
+          posterItemId,
         };
       })
       .filter((stream) => Boolean(stream.sessionId));

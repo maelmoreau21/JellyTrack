@@ -24,6 +24,12 @@ interface LiveStream {
     audioCodec: string | null;
     subtitleLanguage: string | null;
     subtitleCodec: string | null;
+    mediaType?: string | null;
+    albumArtist?: string | null;
+    albumName?: string | null;
+    seriesName?: string | null;
+    seasonName?: string | null;
+    posterItemId?: string | null;
 }
 
 function getImageUrl(itemId: string, type: string = 'Primary', fallbackId?: string) {
@@ -33,19 +39,33 @@ function getImageUrl(itemId: string, type: string = 'Primary', fallbackId?: stri
 }
 
 function StreamCard({ stream }: { stream: LiveStream }) {
+    const isAudio = stream.mediaType ? (stream.mediaType.toLowerCase().includes('audio') || stream.mediaType.toLowerCase() === 'track') : false;
+    const aspectClass = isAudio ? 'aspect-square' : 'aspect-[2/3]';
+    const posterId = stream.posterItemId || stream.itemId;
+
+    let detail: string | null = null;
+    if (stream.mediaSubtitle) detail = stream.mediaSubtitle;
+    else if (isAudio) {
+        const a = stream.albumArtist ? `${stream.albumArtist}` : '';
+        const b = stream.albumName ? `${stream.albumName}` : '';
+        detail = [a, b].filter(Boolean).join(' — ') || null;
+    } else if (stream.seriesName || stream.seasonName) {
+        detail = `${stream.seriesName || ''}${stream.seasonName ? ` — ${stream.seasonName}` : ''}`.trim() || null;
+    }
+
     return (
         <div className="flex items-center gap-4 p-3 border rounded-lg border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
-            {stream.itemId ? (
-                <div className="relative w-12 aspect-[2/3] bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10">
+            {posterId ? (
+                <div className={`relative w-12 ${aspectClass} bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10`}>
                     <FallbackImage
-                        src={getImageUrl(stream.itemId, 'Primary', stream.parentItemId || undefined)}
+                        src={getImageUrl(posterId, 'Primary', stream.parentItemId || undefined)}
                         alt={stream.mediaTitle}
                         fill
                         className="object-cover"
                     />
                 </div>
             ) : (
-                <div className="w-12 aspect-[2/3] bg-muted rounded shrink-0 flex items-center justify-center ring-1 ring-white/10">
+                <div className={`w-12 ${aspectClass} bg-muted rounded shrink-0 flex items-center justify-center ring-1 ring-white/10`}>
                     <PlayCircle className="w-5 h-5 opacity-50" />
                 </div>
             )}
@@ -54,8 +74,8 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                 <p className="text-sm font-medium leading-none truncate">
                     {stream.mediaTitle}
                 </p>
-                {stream.mediaSubtitle && (
-                    <p className="text-[11px] text-zinc-400 truncate">{stream.mediaSubtitle}</p>
+                {detail && (
+                    <p className="text-[11px] text-zinc-400 truncate">{detail}</p>
                 )}
                 <p className="text-xs text-muted-foreground flex flex-col gap-0.5">
                     <span className="truncate">{stream.user} . {stream.device}</span>
