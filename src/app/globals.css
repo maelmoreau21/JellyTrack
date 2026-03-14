@@ -56,8 +56,8 @@
   --background: oklch(0.98 0 0);
   --foreground: oklch(0.145 0 0);
   /* Make cards slightly darker than the page background to improve contrast in light mode */
-  --card: oklch(0.95 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card: oklch(0.92 0 0);
+  --card-foreground: oklch(0.12 0 0);
   --popover: oklch(0.985 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
@@ -69,9 +69,9 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0 0);
-  --input: oklch(0.95 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.82 0 0);
+  --input: oklch(0.94 0 0);
+  --ring: oklch(0.62 0 0);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -129,8 +129,8 @@
   body {
     @apply bg-zinc-50 text-zinc-900;
     background-image:
-      radial-gradient(circle at top left, rgba(8, 145, 178, 0.06), transparent 28%),
-      radial-gradient(circle at top right, rgba(245, 158, 11, 0.05), transparent 24%),
+      radial-gradient(circle at top left, rgba(8, 145, 178, 0.035), transparent 28%),
+      radial-gradient(circle at top right, rgba(245, 158, 11, 0.03), transparent 24%),
       linear-gradient(180deg, rgba(250, 250, 252, 1), rgba(244, 244, 245, 1));
     background-attachment: fixed;
   }
@@ -160,10 +160,10 @@
   }
 
   [data-slot="card"] {
-    border-color: rgba(212, 212, 216, 0.5);
+    border-color: rgba(212, 212, 216, 0.75);
     background-image:
-      linear-gradient(180deg, rgba(250, 250, 252, 0.6), rgba(250, 250, 252, 0.4));
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      linear-gradient(180deg, rgba(247, 247, 248, 0.95), rgba(245, 245, 246, 0.92));
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.10);
   }
 
   .dark [data-slot="card"] {
@@ -176,16 +176,16 @@
 
 @layer components {
     .app-surface {
-      border-color: rgba(212, 212, 216, 0.7);
+      border-color: rgba(212, 212, 216, 0.85);
       background:
-        linear-gradient(180deg, rgba(245, 245, 247, 0.98), rgba(245, 245, 247, 0.95)),
-        radial-gradient(circle at top right, rgba(8, 145, 178, 0.06), transparent 34%),
-        radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.04), transparent 28%),
+        linear-gradient(180deg, rgba(247, 247, 248, 0.98), rgba(246, 246, 247, 0.96)),
+        radial-gradient(circle at top right, rgba(8, 145, 178, 0.04), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.03), transparent 28%),
         rgba(245, 245, 247, 0.98);
       box-shadow:
-        0 8px 30px rgba(0, 0, 0, 0.08),
+        0 12px 40px rgba(0, 0, 0, 0.12),
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(16px);
+      backdrop-filter: blur(12px);
     }
 
     .dark .app-surface {
@@ -201,9 +201,9 @@
     }
 
     .app-surface-soft {
-      border-color: rgba(212, 212, 216, 0.65);
-      background: rgba(245, 245, 247, 0.92);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      border-color: rgba(212, 212, 216, 0.78);
+      background: rgba(244, 244, 246, 0.96);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64);
     }
 
     .dark .app-surface-soft {
@@ -213,8 +213,8 @@
     }
 
     .app-field {
-      border-color: rgba(212, 212, 216, 0.6);
-      background: rgba(250, 250, 252, 0.8);
+      border-color: rgba(212, 212, 216, 0.78);
+      background: rgba(250, 250, 252, 0.92);
     }
 
     .dark .app-field {
@@ -223,9 +223,9 @@
     }
 
     .app-chip {
-      border: 1px solid rgba(212, 212, 216, 0.5);
-      background: rgba(244, 244, 245, 0.8);
-      color: rgba(39, 39, 42, 0.9);
+      border: 1px solid rgba(212, 212, 216, 0.7);
+      background: rgba(244, 244, 245, 0.92);
+      color: rgba(17, 24, 39, 0.95);
     }
 
     .dark .app-chip {
@@ -279,15 +279,15 @@
     .dashboard-page [data-slot="card"] {
       position: relative;
       overflow: hidden;
-      border-color: rgba(212, 212, 216, 0.7);
+      border-color: rgba(212, 212, 216, 0.85);
       background:
-        linear-gradient(180deg, rgba(245, 245, 247, 0.96), rgba(245, 245, 247, 0.92)),
-        radial-gradient(circle at top right, rgba(8, 145, 178, 0.06), transparent 34%),
-        radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.04), transparent 30%),
-        rgba(245, 245, 247, 0.95);
+        linear-gradient(180deg, rgba(247, 247, 248, 0.98), rgba(246, 246, 247, 0.94)),
+        radial-gradient(circle at top right, rgba(8, 145, 178, 0.04), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.03), transparent 30%),
+        rgba(245, 245, 247, 0.96);
       box-shadow:
-        0 8px 30px rgba(0, 0, 0, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        0 14px 48px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.64);
       backdrop-filter: blur(18px);
     }
 
@@ -308,7 +308,7 @@
       position: absolute;
       inset: 1px;
       border-radius: inherit;
-      border: 1px solid rgba(212, 212, 216, 0.1);
+      border: 1px solid rgba(212, 212, 216, 0.16);
       pointer-events: none;
     }
 
@@ -344,10 +344,10 @@
     }
 
     .dashboard-page .dashboard-banner {
-      border: 1px solid rgba(212, 212, 216, 0.4);
+      border: 1px solid rgba(212, 212, 216, 0.6);
       background:
-        linear-gradient(135deg, rgba(8, 145, 178, 0.08), rgba(249, 115, 22, 0.05), rgba(250, 250, 252, 0.92));
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        linear-gradient(135deg, rgba(8, 145, 178, 0.10), rgba(249, 115, 22, 0.06), rgba(250, 250, 252, 0.94));
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       backdrop-filter: blur(18px);
     }
 
@@ -359,9 +359,9 @@
     }
 
     .dashboard-page .dashboard-tablist {
-      border-color: rgba(212, 212, 216, 0.4);
-      background: linear-gradient(180deg, rgba(250, 250, 252, 0.9), rgba(250, 250, 252, 0.85));
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      border-color: rgba(212, 212, 216, 0.6);
+      background: linear-gradient(180deg, rgba(250, 250, 252, 0.93), rgba(250, 250, 252, 0.9));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64);
     }
 
     .dark .dashboard-page .dashboard-tablist {
@@ -371,9 +371,9 @@
     }
 
     .dashboard-page .dashboard-pill {
-      border: 1px solid rgba(212, 212, 216, 0.4);
-      background: rgba(250, 250, 252, 0.85);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(212, 212, 216, 0.6);
+      background: rgba(250, 250, 252, 0.92);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64);
       backdrop-filter: blur(14px);
     }
 

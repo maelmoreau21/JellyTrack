@@ -274,24 +274,38 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
                 </div>
               </div>
 
-              <div className="w-full h-9 bg-zinc-100 dark:bg-zinc-800 rounded relative">
-                {/* axis labels */}
-                <div className="absolute left-0 -bottom-5 text-[11px] text-zinc-500">0:00</div>
-                <div className="absolute left-1/2 -bottom-5 -translate-x-1/2 text-[11px] text-zinc-500">{formatTime(Math.floor(durationMs/2))}</div>
-                <div className="absolute right-0 -bottom-5 text-[11px] text-zinc-500">{formatTime(durationMs)}</div>
+              <div className="w-full">
+                <div className="w-full h-10 bg-zinc-100 dark:bg-zinc-800 rounded relative overflow-hidden">
+                  {groupedEvents.length === 0 ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-zinc-400">{t('timeline.noEvents')}</div>
+                  ) : (
+                    groupedEvents.map((g: any, idx: number) => {
+                      const pos = Number(g.pos || 0);
+                      const pct = Number.isFinite(durationMs) && durationMs > 0 ? Math.min(99, Math.max(1, Math.round((pos / durationMs) * 100))) : 1;
+                      const meta = getEventMeta(g.repType);
+                      const size = g.count > 1 ? 10 : 8;
+                      return (
+                        <button
+                          key={g.key ?? idx}
+                          title={`${meta.icon} ${meta.label} — ${formatTime(pos)}${g.count > 1 ? ` (${g.count} events)` : ''}`}
+                          aria-label={`${meta.label} at ${formatTime(pos)}`}
+                          className={`absolute top-1/2 ${meta.color} rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1`}
+                          style={{ left: `${pct}%`, width: size, height: size, transform: 'translate(-50%, -50%)' }}
+                        >
+                          {g.count > 1 && (
+                            <span className="text-[10px] text-white leading-none" style={{ fontSize: 9 }}>{g.count}</span>
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
 
-                {groupedEvents.map((g: any, idx: number) => {
-                  const pct = Math.min(100, Math.max(0, Math.round((g.pos / durationMs) * 100)));
-                  const meta = getEventMeta(g.repType);
-                  const size = g.count > 1 ? 9 : 7;
-                  return (
-                    <div key={g.key ?? idx} title={`${meta.icon} ${meta.label} — ${formatTime(g.pos)}${g.count>1 ? ` (${g.count} events)` : ''}`} aria-label={`${meta.label} at ${formatTime(g.pos)}`} className={`absolute top-1/2 -translate-y-1/2 ${meta.color} rounded-full shadow-sm`} style={{ left: `${pct}%`, width: size, height: size, transform: 'translate(-50%, -50%)' }}>
-                      {g.count > 1 && (
-                        <div className="absolute -right-2 -top-2 text-[9px] bg-zinc-800/90 text-white rounded-full w-4 h-4 flex items-center justify-center">{g.count}</div>
-                      )}
-                    </div>
-                  );
-                })}
+                <div className="flex justify-between text-[11px] text-zinc-500 mt-2">
+                  <div>0:00</div>
+                  <div className="text-center">{formatTime(Math.floor(durationMs / 2))}</div>
+                  <div className="text-right">{formatTime(durationMs)}</div>
+                </div>
               </div>
 
               <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">

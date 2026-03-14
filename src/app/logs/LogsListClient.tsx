@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useMemo, useRef, useState } from 'react';
-import { FixedSizeList as List } from 'react-window';
 import LogRow from './LogRow';
 import SessionModal from '@/components/SessionModal';
 import { useTranslations } from 'next-intl';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
 
 export default function LogsListClient({ serverLogs, visibleColumns }: { serverLogs: any[]; visibleColumns: string[] }) {
   const t = useTranslations('logs');
@@ -62,53 +62,52 @@ export default function LogsListClient({ serverLogs, visibleColumns }: { serverL
     return out;
   }, [filtered, watchPartyMap]);
 
-  const threshold = 250;
-
-  // saved filter features removed; keep rendering and session modal only
-
-  // Renderers
-  const Row = ({ index, style }: { index: number; style: any }) => {
-    const item = flattened[index];
-    if (!item) return null;
-    if (item.type === 'party') {
-      return (
-        <div style={style} className="p-2 border-b bg-gradient-to-r from-violet-50 to-fuchsia-50">
-          <div className="font-medium">Watch Party — {item.mediaTitle}</div>
-        </div>
-      );
+  const headingForKey = (k: string) => {
+    switch (k) {
+      case 'date': return t('colDate');
+      case 'startedAt': return t('colStartedAt');
+      case 'endedAt': return t('colEndedAt');
+      case 'user': return t('colUser');
+      case 'media': return t('colMedia');
+      case 'client': return t('colClient');
+      case 'ip': return t('colClientIp');
+      case 'country': return t('colCountry');
+      case 'status': return t('colStatus');
+      case 'codecs': return t('colCodecs');
+      case 'duration': return t('colDuration');
+      case 'pauseCount': return t('colPauseCount');
+      case 'audioChanges': return t('colAudioChanges');
+      case 'subtitleChanges': return t('colSubtitleChanges');
+      default: return k;
     }
-    return (
-      <div style={style} className="border-b">
-        <LogRow log={item.log} visibleColumns={visibleColumns} onOpenDetails={(l: any) => setSelectedLog(l)} />
-      </div>
-    );
   };
 
   return (
-    <div className="space-y-3">
-      {/* Client-side search removed: rely on server-side LogFilters */}
-
-      <div ref={containerRef} className="w-full">
-        {flattened.length === 0 ? (
-          <div className="text-center py-8 text-zinc-400">{t('noResults')}</div>
-        ) : (
-          flattened.length > threshold ? (
-            <List height={600} itemCount={flattened.length} itemSize={84} width={'100%'}>
-              {Row}
-            </List>
+    <div ref={containerRef} className="w-full">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {visibleColumns.map((col) => (
+              <TableHead key={col}>{headingForKey(col)}</TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {flattened.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={visibleColumns.length} className="text-center py-8 text-zinc-400">{t('noResults')}</TableCell>
+            </TableRow>
           ) : (
-            <div>
-              {flattened.map((item, idx) => item.type === 'party' ? (
-                <div key={`party-${idx}`} className="p-2 border-b bg-gradient-to-r from-violet-50 to-fuchsia-50">Watch Party — {item.mediaTitle}</div>
-              ) : (
-                <div key={item.log.id} className="border-b">
-                  <LogRow log={item.log} visibleColumns={visibleColumns} onOpenDetails={(l: any) => setSelectedLog(l)} />
-                </div>
-              ))}
-            </div>
-          )
-        )}
-      </div>
+            flattened.map((item, idx) => item.type === 'party' ? (
+              <TableRow key={`party-${idx}`} className="bg-gradient-to-r from-violet-50 to-fuchsia-50">
+                <TableCell colSpan={visibleColumns.length} className="p-2 font-medium">Watch Party — {item.mediaTitle}</TableCell>
+              </TableRow>
+            ) : (
+              <LogRow key={item.log.id} log={item.log} visibleColumns={visibleColumns} onOpenDetails={(l: any) => setSelectedLog(l)} />
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       {selectedLog && (
         <SessionModal open={true} onClose={() => setSelectedLog(null)} session={selectedLog} />
