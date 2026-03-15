@@ -833,8 +833,27 @@ Cette phase résout l'accumulation de sessions de lecture non fermées dans la b
 
 ## Recent updates — 2026-03-15
 
-- **100% Internationalisation (Multi-langues)** : Couverture totale (0 clé manquante) pour FR, EN, DE, ES, IT, NL, PL, PT-BR, RU, ZH.
-- **Correction des "Lectures Orphelines"** : Implémentation d'un système de nettoyage automatique et raffinement de la logique de session pour garantir l'intégrité des statistiques de lecture.
+- **Build Fix** : Résolution de l'erreur Turbopack dans `LibraryStats.tsx` par l'ajout de `"use client"`.
+- **Workflow CI/CD** : Optimisation du cache GitHub Actions avec des groupes de concurrence pour éviter les échecs.
+- **100% Internationalisation** : Couverture totale (0 clé manquante) validée par audit pour les 10 langues (FR, EN, DE, ES, IT, NL, PL, PT-BR, RU, ZH).
+- **Nettoyage Final** : Suppression des fichiers temporaires, rapports obsolètes et répertoires de merge.
+- **Corrections Techniques** : Système de fermeture automatique des sessions orphelines et correction du bug des durées (1314 min).
+
+---
+
+### Phase 49 — Finalisation et Internationalisation Totale
+
+Cette phase marque l'aboutissement du support multi-langues et la stabilisation du processus de build.
+
+#### 1. Internationalisation (i18n)
+- **Couverture 100%** : Complétion intégrale des fichiers de traduction pour FR, EN, DE, ES, IT, NL, PL, PT-BR, RU, ZH.
+- **Audit Automatisé** : Utilisation de `i18n_audit.py` (v2) supportant les traductions asynchrones pour garantir l'absence de clés manquantes.
+- **Qualité JSON** : Suppression des clés dupliquées et validation syntaxique de toutes les locales.
+
+#### 2. Stabilisation et Clean-up
+- **Correctif Client-Side** : Ajout de `"use client"` dans les composants Next.js utilisant des hooks React pour assurer la compatibilité Turbopack.
+- **Optimisation CI/CD** : Mise en place de `concurrency` dans les workflows GitHub Actions pour fiabiliser les déploiements Docker.
+- **Hygiène du Dépôt** : Suppression des fichiers de travail (`*_todos.txt`, rapports intermédiaires) pour maintenir un environnement de développement propre.
 - i18n audit: static scanner found 707 used translation keys; report written to `i18n_audit_report.json`.
 - Fixed invalid JSON in `messages/it.json` that caused the audit to fail.
 - Added placeholder values for missing keys across `messages/*.json`.

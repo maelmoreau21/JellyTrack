@@ -1,3 +1,4 @@
+"use client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
 import { Database, Package, Clock, ChevronDown, ChevronUp, Library, HardDrive, FileVideo, Music, BookText, Info } from "lucide-react";

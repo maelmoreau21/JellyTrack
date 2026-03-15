@@ -15,6 +15,10 @@ env:
   # L'image sera nommée automatiquement d'après le repo : ghcr.io/<owner>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
