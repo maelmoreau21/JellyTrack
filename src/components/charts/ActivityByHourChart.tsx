@@ -35,11 +35,19 @@ function GlowBar(props: any) {
 }
 
 export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
-    const maxCount = Math.max(...data.map(d => d.count), 0);
+    // Normalize counts to numbers to avoid unexpected NaN or string comparisons
+    const numericCounts = data.map(d => {
+        const n = Number((d as any).count ?? (d as any).value ?? 0);
+        return Number.isFinite(n) ? n : 0;
+    });
+    const maxCount = numericCounts.length ? Math.max(...numericCounts) : 0;
     const [selectedHour, setSelectedHour] = useState<string | null>(null);
     const selectedEntry = data.find(d => d.hour === selectedHour);
 
-    const avg = data.length > 0 ? Math.round(data.reduce((sum, d) => sum + d.count, 0) / data.length) : 0;
+    // Compute average robustly from numeric values only
+    const validCounts = numericCounts.filter(n => Number.isFinite(n));
+    const avg = validCounts.length > 0 ? Math.round(validCounts.reduce((s, v) => s + v, 0) / validCounts.length) : NaN;
+    const showAvg = Number.isFinite(avg) && validCounts.length > 0 && avg > 0;
 
     // Read chart-related CSS variables so charts match light/dark theme
     const root = typeof window !== "undefined" ? getComputedStyle(document.documentElement) : null;
@@ -117,14 +125,16 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         formatter={(value: any) => [`${value} sessions`, "Activité"]}
                         animationDuration={200}
                     />
-                    {/* Average reference line */}
-                    <ReferenceLine
-                        y={avg}
-                        stroke={chartAxisColor}
-                        strokeDasharray="3 4"
-                        strokeOpacity={0.28}
-                        label={{ value: `moy: ${avg}`, position: 'right', fill: chartLabelStyle.color, fontSize: 10 }}
-                    />
+                    {/* Average reference line (only when meaningful) */}
+                    {showAvg && (
+                        <ReferenceLine
+                            y={avg}
+                            stroke={chartAxisColor}
+                            strokeDasharray="3 4"
+                            strokeOpacity={0.32}
+                            label={{ value: `moy: ${avg}`, position: 'right', fill: chartLabelStyle.color, fontSize: 10 }}
+                        />
+                    )}
                     <Bar
                         dataKey="count"
                         radius={[4, 4, 0, 0]}
@@ -132,21 +142,25 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         animationEasing="ease-out"
                         activeBar={<GlowBar />}
                     >
-                        {data.map((entry, index) => (
-                            <Cell
-                                key={`cell-${index}`}
-                                fill={
-                                    selectedHour === entry.hour
-                                        ? "#22d3ee"
-                                        : entry.count === maxCount && maxCount > 0
-                                            ? "#f97316"
-                                            : "url(#activityByHourGradient)"
-                                }
-                                fillOpacity={selectedHour && selectedHour !== entry.hour ? 0.3 : 1}
-                                className="transition-all duration-200"
-                                style={{ cursor: "pointer" }}
-                            />
-                        ))}
+                        {data.map((entry, index) => {
+                            const entryCount = Number((entry as any).count ?? 0);
+                            const isMax = entryCount === maxCount && maxCount > 0;
+                            return (
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={
+                                        selectedHour === entry.hour
+                                            ? "#22d3ee"
+                                            : isMax
+                                                ? "#f97316"
+                                                : "url(#activityByHourGradient)"
+                                    }
+                                    fillOpacity={selectedHour && selectedHour !== entry.hour ? 0.3 : 1}
+                                    className="transition-all duration-200"
+                                    style={{ cursor: "pointer" }}
+                                />
+                            );
+                        })}
                     </Bar>
                 </BarChart>
             </ResponsiveContainer>

@@ -4,8 +4,7 @@ import React, { useMemo, useState } from "react";
 import { TableRow, TableCell } from "@/components/ui/table";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
-import { ChevronDown, Eye } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { FallbackImage } from "@/components/FallbackImage";
 import { useTranslations } from 'next-intl';
 
@@ -16,6 +15,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
 
   const isTranscode = String(log.playMethod || "").toLowerCase().includes("transcode");
   const isParty = !!log.partyId;
+  const isAudioMedia = log.media?.type ? (String(log.media.type).toLowerCase().includes('audio') || String(log.media.type).toLowerCase() === 'track') : false;
 
   const events = useMemo(() => {
     return (log.telemetryEvents || []).slice().sort((a: any, b: any) => {
@@ -82,9 +82,6 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
               <button onClick={() => setOpen(v => !v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setOpen(v=>!v); }} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1" aria-expanded={open} aria-label={open ? 'Collapse' : 'Expand'}>
                 <ChevronDown className={`w-4 h-4 transform ${open ? 'rotate-180' : 'rotate-0'}`} />
               </button>
-              <button onClick={() => onOpenDetails?.(log)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpenDetails?.(log); }} aria-label="Open details" className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1">
-                <Eye className="w-4 h-4" />
-              </button>
               <span>
                 {(() => {
                   try {
@@ -125,7 +122,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
         {visibleColumns.includes('media') && (
           <TableCell className="overflow-hidden">
             <div className="flex items-center gap-2 md:gap-3 w-full overflow-hidden" title={log.media?.title || 'Unknown'}>
-              <div className="relative w-12 md:w-14 aspect-[2/3] bg-muted rounded-md shrink-0 overflow-hidden ring-1 ring-white/10">
+              <div className={`relative w-12 md:w-14 ${isAudioMedia ? 'aspect-square' : 'aspect-[2/3]'} bg-muted rounded-md shrink-0 overflow-hidden ring-1 ring-white/10`}>
                 {log.media?.jellyfinMediaId ? (
                   <FallbackImage
                     src={`/api/jellyfin/image?itemId=${log.media.jellyfinMediaId}&type=Primary${log.fallbackImageParentId ? `&fallbackId=${log.fallbackImageParentId}` : ''}`}

@@ -813,3 +813,23 @@ Correction massive des encodages UTF-8 cassés (mojibake) dans l'ensemble de la 
 - `settings/page.tsx` : boutons d'action, séparateurs
 - `charts/YearlyHeatmap.tsx` : Card, boutons, chips filtres, tooltips
 - `charts/LazyCharts.tsx` : skeleton placeholder
+
+## Recent updates — 2026-03-15
+
+- i18n audit: static scanner found 707 used translation keys; report written to `i18n_audit_report.json`.
+- Fixed invalid JSON in `messages/it.json` that caused the audit to fail.
+- Added placeholder values for missing keys across `messages/*.json` (copied from `en.json` or TODO markers) to avoid runtime missing-key issues when switching locale.
+- New i18n helper scripts added in `scripts/`:
+   - `i18n_audit.py` — collect used keys and compare locales.
+   - `populate_placeholders.py` — fills missing keys from `en.json`.
+   - diagnostic helpers to locate JSON syntax errors.
+- UI tweaks applied:
+   - Restored semantic logs table and widened logs area.
+   - Redesigned timeline in `src/app/logs/LogRow.tsx`.
+   - Chart contrast and tooltip fixes for light mode (e.g., `CompletionRatioChart`, `ActivityByHourChart`).
+   - Audio preview thumbnails made square (`aspect-square`).
+- Work saved locally; pending actions:
+   - Commit & push changes (branch suggestion: `i18n/placeholders`) and open PR.
+   - Visual QA via `npm run dev` (requires `DATABASE_URL` or mocked data).
+
+For details see `i18n_audit_report.json` and the scripts in `scripts/`. If you want, I can commit and open the PR now.
