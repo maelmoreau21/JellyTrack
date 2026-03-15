@@ -63,7 +63,8 @@
     "settings": "Einstellungen",
     "myProfile": "Mein Profil",
     "myWrapped": "Mein Wrapped",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "logHealth": "Log health"
   },
   "search": {
     "placeholder": "Suchen…",
@@ -258,7 +259,9 @@
     "audioBreakdownDesc": "In diesem Zeitraum gehörte Sprachen.",
     "subtitles": "Untertitel",
     "subtitlesDesc": "Aktiviert vs Deaktiviert und Sprachen.",
-    "completionPct": "% Abschluss"
+    "completionPct": "% Abschluss",
+    "attendanceHeatmap": "Attendance Heatmap",
+    "attendanceHeatmapDesc": "Heatmaps showing peak usage days and hours of the server."
   },
   "network": {
     "subtitlesBurnIn": "Untertitel (Einbrennen)",
@@ -312,7 +315,46 @@
     "backingUp": "TODO: settings.backingUp",
     "cronSaved": "TODO: settings.cronSaved",
     "backupManagementDesc": "TODO: settings.backupManagementDesc",
-    "pluginTitle": "TODO: settings.pluginTitle"
+    "pluginTitle": "TODO: settings.pluginTitle",
+    "taskSchedulerDesc": "TODO: settings.taskSchedulerDesc",
+    "pluginVersion": "TODO: settings.pluginVersion",
+    "exportBackup": "TODO: settings.exportBackup",
+    "savedSuccess": "TODO: settings.savedSuccess",
+    "enableDiscordDesc": "TODO: settings.enableDiscordDesc",
+    "backupNow": "TODO: settings.backupNow",
+    "restoring": "TODO: settings.restoring",
+    "pluginCopyKey": "TODO: settings.pluginCopyKey",
+    "saveSettings": "TODO: settings.saveSettings",
+    "dataBackups": "TODO: settings.dataBackups",
+    "pluginServerUrlDesc": "TODO: settings.pluginServerUrlDesc",
+    "recentSyncDesc": "TODO: settings.recentSyncDesc",
+    "pluginDisconnected": "TODO: settings.pluginDisconnected",
+    "taskScheduler": "TODO: settings.taskScheduler",
+    "saveSchedules": "TODO: settings.saveSchedules",
+    "invalidBackup": "TODO: settings.invalidBackup",
+    "fileReadError": "TODO: settings.fileReadError",
+    "pluginConfirmRevoke": "TODO: settings.pluginConfirmRevoke",
+    "pluginDesc": "TODO: settings.pluginDesc",
+    "restoreOk": "TODO: settings.restoreOk",
+    "pluginApiKeyLabel": "TODO: settings.pluginApiKeyLabel",
+    "collectionFilter": "TODO: settings.collectionFilter",
+    "pluginServerUrl": "TODO: settings.pluginServerUrl",
+    "notifTranscode": "TODO: settings.notifTranscode",
+    "importing": "TODO: settings.importing",
+    "pluginRevokeKey": "TODO: settings.pluginRevokeKey",
+    "pluginStatus": "TODO: settings.pluginStatus",
+    "firstBackupTonight": "TODO: settings.firstBackupTonight",
+    "pluginConnected": "TODO: settings.pluginConnected",
+    "pluginGenerateKey": "TODO: settings.pluginGenerateKey",
+    "notifConditions": "TODO: settings.notifConditions",
+    "fullSync": "TODO: settings.fullSync",
+    "pluginApiKeyCopied": "TODO: settings.pluginApiKeyCopied",
+    "pluginConfirmRegenerate": "TODO: settings.pluginConfirmRegenerate",
+    "pluginRegenerateKey": "TODO: settings.pluginRegenerateKey",
+    "maxConcurrentTranscodes": "Concurrent Transcodes Threshold",
+    "maxConcurrentTranscodesDesc": "0 = disabled. Alert if the count exceeds this threshold.",
+    "wrappedVisible": "Wrapped Visibility",
+    "wrappedVisibleDesc": "Allows users to view their annual summary (Wrapped)."
   },
   "logs": {
     "colStartedAt": "TODO: logs.colStartedAt",
@@ -348,7 +390,14 @@
     "sortPlayMode": "Wiedergabemodus",
     "noMedia": "Keine indizierten Medien. Vergessen Sie nicht, die Jellyfin-Synchronisierung in den Einstellungen auszuführen.",
     "seriesBadge": "Serie",
-    "albumBadge": "Album"
+    "albumBadge": "Album",
+    "statsVolume": "Total Volume",
+    "statsVolumeDesc": "Cumulative file size on disk.",
+    "statsContent": "Global Content",
+    "statsContentDesc": "Total indexed items.",
+    "statsTime": "Total Playtime",
+    "statsTimeDesc": "Cumulative duration of all media.",
+    "timeDays": "{days}d {hours}h"
   },
   "recent": {
     "title": "Kürzlich hinzugefügt",
@@ -582,7 +631,8 @@
     "noPlatformData": "Keine Plattformdaten",
     "noGenreData": "Keine Genre-Daten verfügbar",
     "server": "Server",
-    "all": "Alle"
+    "all": "Alle",
+    "sessions": "sessions"
   },
   "wrapped": {
     "noData": "Keine Daten.",
@@ -650,7 +700,17 @@
     "oct": "Okt",
     "nov": "Nov",
     "dec": "Dez",
-    "unknown": "Unbekannt"
+    "unknown": "Unbekannt",
+    "customize": "Customize",
+    "booksTitle": "Bookworm",
+    "booksSubtitle": "Books Retrospective",
+    "booksLabel": "Books",
+    "year": "Year",
+    "type": "Type",
+    "all": "All",
+    "tv": "TV Shows",
+    "introTitle": "{year} Summary",
+    "shareCardYear": "{year} Summary"
   },
   "excludedLibrariesTitle": "TODO: excludedLibrariesTitle",
   "collectionFilterDesc": "TODO: collectionFilterDesc",
@@ -1127,5 +1187,11 @@
   "sessions": "TODO: sessions",
   "favFormat": "TODO: favFormat",
   "peakSubtitle": "TODO: peakSubtitle",
-  "sortWatchTime": "TODO: sortWatchTime"
+  "sortWatchTime": "TODO: sortWatchTime",
+  "stats": {
+    "title": "Deep Analysis",
+    "topDirectors": "Top Directors",
+    "topActors": "Top Actors",
+    "topStudios": "Top Studios"
+  }
 }
