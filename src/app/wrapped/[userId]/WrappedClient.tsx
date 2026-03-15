@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
-import { ChevronRight, ChevronLeft, Share2, Play, Star, Calendar, Clock, X, Film, Tv, Music, BarChart3, TrendingUp, Headphones } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ChevronRight, ChevronLeft, Share2, Play, Star, Calendar, Clock, X, Film, Tv, Music, BarChart3, TrendingUp, Headphones, BookOpen, Filter } from "lucide-react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 interface CategoryBreakdown {
     totalSeconds: number;
@@ -14,6 +14,8 @@ interface CategoryBreakdown {
 interface WrappedData {
     username: string;
     year: number;
+    availableYears: number[];
+    filterType: string;
     totalHours: number;
     topMedia: { title: string; seconds: number }[];
     topGenres: { name: string; count: number }[];
@@ -29,6 +31,7 @@ interface WrappedData {
         movies: CategoryBreakdown;
         series: CategoryBreakdown;
         music: CategoryBreakdown;
+        books: CategoryBreakdown;
     };
 }
 
@@ -41,7 +44,7 @@ function formatDuration(seconds: number): string {
 
 function RankedList({ items, gradient, noDataLabel }: { items: { title: string; seconds: number }[]; gradient: string; noDataLabel: string }) {
     if (items.length === 0) return <p className="text-zinc-400 text-center">{noDataLabel}</p>;
-    const maxSeconds = items[0].seconds;
+    const maxSeconds = items[0].seconds || 1;
     return (
         <div className="flex flex-col w-full gap-3">
             {items.map((m, i) => (
@@ -59,7 +62,7 @@ function RankedList({ items, gradient, noDataLabel }: { items: { title: string; 
 }
 
 function CategorySlide({ icon, breakdown, gradient, noDataLabel, ofLabel }: { icon: React.ReactNode; breakdown: CategoryBreakdown; gradient: string; noDataLabel: string; ofLabel: string }) {
-    if (breakdown.topMedia.length === 0) {
+    if (breakdown.totalSeconds === 0) {
         return (
             <div className="flex flex-col items-center gap-4">
                 <p className="text-zinc-400">{noDataLabel}</p>
@@ -98,7 +101,7 @@ function MonthlyChart({ data }: { data: { name: string; hours: number }[] }) {
 
 function GenreChart({ genres }: { genres: { name: string; count: number }[] }) {
     if (genres.length === 0) return null;
-    const maxCount = genres[0].count;
+    const maxCount = genres[0].count || 1;
     const colors = ["from-pink-500 to-rose-400", "from-purple-500 to-violet-400", "from-sky-500 to-blue-400", "from-emerald-500 to-green-400", "from-amber-500 to-yellow-400"];
     return (
         <div className="flex flex-col gap-3 w-full max-w-md px-6">
@@ -118,7 +121,10 @@ function GenreChart({ genres }: { genres: { name: string; count: number }[] }) {
 
 export default function WrappedClient({ data }: { data: WrappedData }) {
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [showConfig, setShowConfig] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const t = useTranslations('wrapped');
 
     // Translate month names in data
@@ -132,14 +138,36 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
     const translatedTopGenre = data.topGenre === "unknown" ? t('unknown') : data.topGenre;
     const noDataLabel = t('noData');
 
+    const updateParams = (newParams: Record<string, string>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(newParams).forEach(([k, v]) => {
+            if (v) params.set(k, v);
+            else params.delete(k);
+        });
+        router.push(`${pathname}?${params.toString()}`);
+        setShowConfig(false);
+        setCurrentSlide(0);
+    };
+
     const slides = [
         // 0 - Intro
         {
-            title: `JellyTulli Wrapped ${data.year}`,
+            title: `JellyTrack Wrapped ${data.year}`,
             subtitle: t('introSubtitle', { username: data.username }),
             icon: <Play className="w-16 h-16 mb-6 text-white animate-pulse" />,
             bgColor: "bg-gradient-to-br from-indigo-900 via-purple-900 to-black",
-            content: <p className="text-xl text-center text-zinc-300 max-w-sm">{t('introContent')}</p>
+            content: (
+                <div className="flex flex-col items-center gap-6">
+                    <p className="text-xl text-center text-zinc-300 max-w-sm">{t('introContent')}</p>
+                    <button 
+                        onClick={() => setShowConfig(true)}
+                        className="pointer-events-auto flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 transition backdrop-blur-md border border-white/20"
+                    >
+                        <Filter className="w-4 h-4" />
+                        {t('customize')}
+                    </button>
+                </div>
+            )
         },
         // 1 - Total watch time
         {
@@ -281,6 +309,13 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
             bgColor: "bg-gradient-to-br from-green-900 via-emerald-900 to-black",
             content: <CategorySlide icon={<Music className="w-8 h-8 text-green-400" />} breakdown={data.categories.music} gradient="bg-gradient-to-r from-green-400 to-emerald-400" noDataLabel={t('noDataFor', { label: t('musicLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('musicLabel') })} />
         },
+        {
+            title: t('booksTitle'),
+            subtitle: t('booksSubtitle'),
+            icon: <BookOpen className="w-16 h-16 mb-4 text-amber-500" />,
+            bgColor: "bg-gradient-to-br from-amber-900 via-yellow-900 to-black",
+            content: <CategorySlide icon={<BookOpen className="w-8 h-8 text-amber-500" />} breakdown={data.categories.books} gradient="bg-gradient-to-r from-amber-400 to-yellow-400" noDataLabel={t('noDataFor', { label: t('booksLabel').toLowerCase() })} ofLabel={t('ofLabel', { label: t('booksLabel') })} />
+        },
         // Share card
         {
             title: t('shareTitle'),
@@ -290,7 +325,7 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
             content: (
                 <div className="flex flex-col items-center gap-6">
                     <div className="p-6 bg-black/40 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col items-center text-center max-w-sm">
-                        <p className="text-sm text-zinc-400 mb-1">JellyTulli Wrapped {data.year}</p>
+                        <p className="text-sm text-zinc-400 mb-1">{t('introTitle', { year: data.year })}</p>
                         <h3 className="text-2xl font-bold text-white mb-4">{data.username}</h3>
                         <p className="text-fuchsia-400 font-bold text-lg">{data.totalHours}h {t('streaming')}</p>
                         <p className="text-zinc-300 text-sm mt-1">{t('genreLabel', { genre: translatedTopGenre })}</p>
@@ -300,6 +335,7 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
                             {data.categories.movies.totalHours > 0 && <span>🎬 {data.categories.movies.totalHours}h</span>}
                             {data.categories.series.totalHours > 0 && <span>📺 {data.categories.series.totalHours}h</span>}
                             {data.categories.music.totalHours > 0 && <span>🎵 {data.categories.music.totalHours}h</span>}
+                            {data.categories.books.totalHours > 0 && <span>📚 {data.categories.books.totalHours}h</span>}
                         </div>
                     </div>
                     <p className="text-xs text-zinc-500">{t('captureScreen')}</p>
@@ -318,22 +354,77 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
 
     // Auto-advance (stories)
     useEffect(() => {
+        if (showConfig) return;
         const timer = setTimeout(() => {
             if (currentSlide < slides.length - 1) setCurrentSlide(c => c + 1);
         }, 8000);
         return () => clearTimeout(timer);
-    }, [currentSlide, slides.length]);
+    }, [currentSlide, slides.length, showConfig]);
 
     const current = slides[currentSlide];
 
     return (
         <div className={`fixed inset-0 z-50 flex flex-col text-white transition-colors duration-700 ease-in-out ${current.bgColor}`}>
+            <style jsx global>{`
+                @keyframes progress {
+                    from { width: 0%; }
+                    to { width: 100%; }
+                }
+            `}</style>
+
+            {/* Config Overlay */}
+            {showConfig && (
+                <div className="absolute inset-0 z-[60] bg-black/90 backdrop-blur-xl animate-in fade-in duration-300 p-8 flex flex-col items-center justify-center pointer-events-auto">
+                    <button onClick={() => setShowConfig(false)} className="absolute top-8 right-8 p-2 rounded-full bg-white/10 hover:bg-white/20 transition">
+                        <X className="w-6 h-6" />
+                    </button>
+                    <div className="w-full max-w-sm space-y-8">
+                        <div className="space-y-4">
+                            <h3 className="text-xl font-bold flex items-center gap-2"><Calendar className="w-5 h-5 text-purple-400" /> {t('year')}</h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                {data.availableYears.map(y => (
+                                    <button 
+                                        key={y} 
+                                        onClick={() => updateParams({ year: y.toString() })}
+                                        className={`p-3 rounded-xl border transition-all ${data.year === y ? 'bg-purple-600 border-purple-400 font-bold' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                                    >
+                                        {y}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h3 className="text-xl font-bold flex items-center gap-2"><Filter className="w-5 h-5 text-blue-400" /> {t('type')}</h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    { label: t('all'), value: "" },
+                                    { label: t('moviesLabel'), value: "Movies" },
+                                    { label: t('musicLabel'), value: "Music" },
+                                    { label: t('tv'), value: "TV" },
+                                    { label: t('booksLabel'), value: "Books" }
+                                ].map(v => (
+                                    <button 
+                                        key={v.value} 
+                                        onClick={() => updateParams({ type: v.value })}
+                                        className={`p-3 rounded-xl border transition-all ${data.filterType === (v.value || "general") ? 'bg-blue-600 border-blue-400 font-bold' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                                    >
+                                        {v.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Progress Bars */}
             <div className="absolute top-0 left-0 right-0 p-4 flex gap-1.5 z-50">
                 {slides.map((_, i) => (
                     <div key={i} className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
                         <div
-                            className={`h-full bg-white transition-all duration-100 ease-linear ${i === currentSlide ? 'w-full animate-[progress_8s_linear]' : i < currentSlide ? 'w-full' : 'w-0'}`}
+                            key={`${i}-${currentSlide}-${data.year}-${data.filterType}`}
+                            className={`h-full bg-white transition-all duration-100 ease-linear ${i === currentSlide && !showConfig ? 'w-full animate-[progress_8s_linear]' : i < currentSlide ? 'w-full' : 'w-0'}`}
                         />
                     </div>
                 ))}
@@ -352,13 +443,7 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
 
             {/* Content */}
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center z-30 pointer-events-none overflow-y-auto">
-                <style jsx>{`
-                    @keyframes progress {
-                        from { width: 0%; }
-                        to { width: 100%; }
-                    }
-                `}</style>
-                <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out flex flex-col items-center w-full" key={currentSlide}>
+                <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out flex flex-col items-center w-full" key={`${currentSlide}-${data.year}-${data.filterType}`}>
                     {current.icon}
                     <h2 className="text-xl font-bold tracking-widest text-zinc-400 uppercase mb-2">{current.subtitle}</h2>
                     <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-8 leading-tight max-w-2xl">{current.title}</h1>
@@ -368,11 +453,14 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
 
             {/* Bottom controls */}
             <div className="absolute bottom-6 left-0 right-0 flex justify-between items-center z-50 px-8">
-                <button onClick={prevSlide} disabled={currentSlide === 0} className="disabled:opacity-20 hover:text-white transition group items-center gap-1 flex text-sm opacity-50">
+                <button onClick={prevSlide} disabled={currentSlide === 0} className="disabled:opacity-20 hover:text-white transition group items-center gap-1 flex text-sm opacity-50 pointer-events-auto">
                     <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> {t('back')}
                 </button>
-                <span className="text-xs text-zinc-500">{currentSlide + 1} / {slides.length}</span>
-                <button onClick={nextSlide} disabled={currentSlide === slides.length - 1} className="disabled:opacity-20 hover:text-white transition group items-center gap-1 flex text-sm opacity-50">
+                <div className="flex flex-col items-center">
+                    <span className="text-xs text-zinc-500 font-bold">{data.year} • {data.filterType.toUpperCase()}</span>
+                    <span className="text-[10px] text-zinc-600">{currentSlide + 1} / {slides.length}</span>
+                </div>
+                <button onClick={nextSlide} disabled={currentSlide === slides.length - 1} className="disabled:opacity-20 hover:text-white transition group items-center gap-1 flex text-sm opacity-50 pointer-events-auto">
                     {t('next')} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
             </div>

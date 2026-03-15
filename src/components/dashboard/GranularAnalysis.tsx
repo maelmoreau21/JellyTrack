@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { format } from "date-fns";
 import { StandardAreaChart, StandardBarChart, StandardPieChart } from "@/components/charts/StandardMetricsCharts";
 import { StackedBarChart, StackedAreaChart } from "@/components/charts/StackedMetricsCharts";
+import { AttendanceHeatmap } from "@/components/charts/AttendanceHeatmap";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { formatHour } from "@/lib/utils";
 import { getCompletionMetrics } from "@/lib/mediaPolicy";
@@ -39,32 +40,13 @@ const getGranularData = unstable_cache(
             orderBy: { startedAt: 'asc' }
         });
 
-        const dailyMap = new Map<string, any>();
-        const hourlyMap = new Map<string, any>();
-        const collections = new Set<string>();
-        const completionMap = new Map<string, { totalCompletion: number, sessions: number }>();
-
-        // Segments — clearer categories
-        let dropSkipped = 0;   // <10% "Zappé"
-        let dropAbandoned = 0; // 10-50% "Abandonné"
-        let dropAlmost = 0;    // 50-80% "Presque"
-        let dropFinished = 0;  // =80% "Terminé"
-
-        // Media specific Drop-off
-        const mediaDropMap = new Map<string, { title: string, mediaId: string, completion: number, count: number }>();
-
-        // Languages — filter out codec strings (e.g. "FLAC - STEREO", "AAC - 5.1")
-        // Only keep valid ISO 639 language codes (2-3 uppercase letters)
-        const isValidLang = (s: string) => /^[A-Z]{2,3}$/.test(s.trim());
-
-        // Languages
-        const audioMap = new Map<string, number>();
-        const subMap = new Map<string, number>();
-
-        // Init 0-23 hours
-        for (let i = 0; i < 24; i++) {
-            const h = formatHour(i, locale);
-            hourlyMap.set(h, { time: h, plays: 0, duration: 0 });
+        // Heatmap Data (Day of Week vs Hour)
+        // Array of 7 days, each having 24 hours
+        const heatmapData: any[] = [];
+        for (let d = 0; d < 7; d++) {
+            for (let h = 0; h < 24; h++) {
+                heatmapData.push({ day: d, hour: h, value: 0 });
+            }
         }
 
         history.forEach(h => {
@@ -75,8 +57,16 @@ const getGranularData = unstable_cache(
             collections.add(lib);
             const date = new Date(h.startedAt);
             const dayKey = format(date, "dd MMM");
-            const hourKey = formatHour(date.getHours(), locale);
+            const dayOfWeek = date.getDay(); // 0 (Sun) - 6 (Sat)
+            const hour = date.getHours();
+            const hourKey = formatHour(hour, locale);
             const durationH = h.durationWatched / 3600;
+
+            // Heatmap aggregation
+            const heatIdx = dayOfWeek * 24 + hour;
+            if (heatmapData[heatIdx]) {
+                heatmapData[heatIdx].value += 1;
+            }
 
             // Daily Aggregation
             if (!dailyMap.has(dayKey)) dailyMap.set(dayKey, { time: dayKey, totalPlays: 0, totalDuration: 0 });
@@ -180,7 +170,8 @@ const getGranularData = unstable_cache(
 
         return {
             dailyData, hourlyData, collections: Array.from(collections),
-            dropOffData, dropSegments, topAbandoned, audioData, subtitleData
+            dropOffData, dropSegments, topAbandoned, audioData, subtitleData,
+            heatmapData
         };
     },
     ['JellyTrack-granular-analysis-v3'],
@@ -238,6 +229,16 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                     </CardContent>
                 </Card>
             </div>
+
+            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <CardHeader>
+                    <CardTitle>{t('attendanceHeatmap')}</CardTitle>
+                    <CardDescription>{t('attendanceHeatmapDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <AttendanceHeatmap data={data.heatmapData} />
+                </CardContent>
+            </Card>
 
             <div className="grid gap-4 md:grid-cols-2">
                 <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">

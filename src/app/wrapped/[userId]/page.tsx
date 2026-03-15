@@ -10,6 +10,10 @@ interface WrappedPageProps {
     params: Promise<{
         userId: string;
     }>;
+    searchParams: Promise<{
+        year?: string;
+        type?: string;
+    }>;
 }
 
 interface CategoryBreakdown {
@@ -18,10 +22,11 @@ interface CategoryBreakdown {
     topMedia: { title: string; seconds: number }[];
 }
 
-export default async function WrappedPage({ params }: WrappedPageProps) {
+export default async function WrappedPage({ params, searchParams }: WrappedPageProps) {
     const { userId } = await params;
+    const { year, type: filterType } = await searchParams;
 
-    // SECURITY: Verify the requesting user can access this Wrapped page
+    const requestedYear = year ? parseInt(year) : new Date().getFullYear();
     const session = await getServerSession(authOptions);
     const sessionUserId = (session?.user as any)?.jellyfinUserId;
     const isAdmin = (session?.user as any)?.isAdmin === true;
@@ -31,13 +36,20 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
         notFound();
     }
 
+    // Check Global Visibility
+    const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } }) as any;
+    if (!isAdmin && settings?.wrappedVisible === false) {
+        notFound();
+    }
+
     let user = await prisma.user.findUnique({
         where: { jellyfinUserId: userId },
         include: {
             playbackHistory: {
                 where: {
                     startedAt: {
-                        gte: new Date(new Date().getFullYear(), 0, 1),
+                        gte: new Date(requestedYear, 0, 1),
+                        lt: new Date(requestedYear + 1, 0, 1),
                     },
                 },
                 include: {
@@ -47,50 +59,22 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
         }
     });
 
-    // Fallback : si aucune session cette année, charger toutes les données (all-time)
-    if (user && user.playbackHistory.length === 0) {
-        user = await prisma.user.findUnique({
-            where: { jellyfinUserId: userId },
-            include: {
-                playbackHistory: {
-                    include: { media: true }
-                }
-            }
-        });
-    }
-
-    // Auto-create the user in Prisma if they authenticated via Jellyfin but
-    // were never synced/imported.
     if (!user) {
-        const session = await getServerSession(authOptions);
-        const sessionUserId = (session?.user as any)?.jellyfinUserId;
-
-        if (session?.user && sessionUserId === userId) {
-            user = await prisma.user.create({
-                data: {
-                    jellyfinUserId: userId,
-                    username: session.user.name || "?",
-                },
-            }) as any;
+        if (sessionUserId === userId) {
             user = await prisma.user.findUnique({
                 where: { jellyfinUserId: userId },
                 include: {
                     playbackHistory: {
-                        where: { startedAt: { gte: new Date(new Date().getFullYear(), 0, 1) } },
+                        where: { 
+                            startedAt: { 
+                                gte: new Date(requestedYear, 0, 1),
+                                lt: new Date(requestedYear + 1, 0, 1)
+                            } 
+                        },
                         include: { media: true }
                     }
                 }
             });
-            if (user && user.playbackHistory.length === 0) {
-                user = await prisma.user.findUnique({
-                    where: { jellyfinUserId: userId },
-                    include: {
-                        playbackHistory: {
-                            include: { media: true }
-                        }
-                    }
-                });
-            }
         }
     }
 
@@ -104,26 +88,27 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
     const hourCounts = new Map<number, number>(); // 0-23
     const monthCounts = new Map<number, number>(); // 0-11
 
-    // Series tracking (aggregate episodes by parentId â†’ series title)
-    const seriesCounts = new Map<string, number>(); // seriesTitle â†’ totalSeconds
-    // Artist tracking (aggregate audio by parentId â†’ album/artist)
-    const artistCounts = new Map<string, number>(); // artist â†’ totalSeconds
+    // Series tracking (aggregate episodes by parentId → series title)
+    const seriesCounts = new Map<string, number>(); // seriesTitle → totalSeconds
+    // Artist tracking (aggregate audio by parentId → album/artist)
+    const artistCounts = new Map<string, number>(); // artist → totalSeconds
 
     // Category breakdowns
     const categoryData: Record<string, Map<string, number>> = {
         Movie: new Map(),
         Episode: new Map(),
         Audio: new Map(),
+        Book: new Map(),
     };
-    const categoryTotals: Record<string, number> = { Movie: 0, Episode: 0, Audio: 0 };
+    const categoryTotals: Record<string, number> = { Movie: 0, Episode: 0, Audio: 0, Book: 0 };
 
     // Collect unique parent IDs for series/album resolution
     const parentIds = new Set<string>();
-    user.playbackHistory.forEach((session: any) => {
-        if (session.media?.parentId) parentIds.add(session.media.parentId);
+    user.playbackHistory.forEach((sessionItem: any) => {
+        if (sessionItem.media?.parentId) parentIds.add(sessionItem.media.parentId);
     });
 
-    // Resolve parent â†’ grandparent chain for episode â†’ season â†’ series
+    // Resolve parent → grandparent chain for episode → season → series
     const parentMedia = parentIds.size > 0
         ? await prisma.media.findMany({ where: { jellyfinMediaId: { in: Array.from(parentIds) } }, select: { jellyfinMediaId: true, title: true, parentId: true, type: true } })
         : [];
@@ -136,57 +121,74 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
         : [];
     const grandparentMap = new Map(grandparentMedia.map(m => [m.jellyfinMediaId, m]));
 
-    user.playbackHistory.forEach((session: any) => {
-        totalSeconds += session.durationWatched;
+    user.playbackHistory.forEach((sessionItem: any) => {
+        // Filter by type if requested
+        if (filterType) {
+            const mType = sessionItem.media?.type;
+            let shouldSkip = true;
+            if (filterType === "Music" && (mType === "Audio" || mType === "Track")) {
+                shouldSkip = false;
+            } else if (filterType === "TV" && (mType === "Episode" || mType === "Series")) {
+                shouldSkip = false;
+            } else if (filterType === "Books" && mType === "Book") {
+                shouldSkip = false;
+            } else if (filterType === "Movies" && mType === "Movie") {
+                shouldSkip = false;
+            }
+            if (shouldSkip) return;
+        }
 
-        if (session.media) {
-            mediaCounts.set(session.media.title, (mediaCounts.get(session.media.title) || 0) + session.durationWatched);
+        totalSeconds += sessionItem.durationWatched;
 
-            if (session.media.genres) {
-                session.media.genres.forEach((g: string) => {
+        if (sessionItem.media) {
+            mediaCounts.set(sessionItem.media.title, (mediaCounts.get(sessionItem.media.title) || 0) + sessionItem.durationWatched);
+
+            if (sessionItem.media.genres) {
+                sessionItem.media.genres.forEach((g: string) => {
                     genreCounts.set(g, (genreCounts.get(g) || 0) + 1);
                 });
             }
 
-            // Track series (episodes â†’ series name)
-            if (session.media.type === "Episode" && session.media.parentId) {
-                const parent = parentMap.get(session.media.parentId);
+            // Track series (episodes → series name)
+            if (sessionItem.media.type === "Episode" && sessionItem.media.parentId) {
+                const parent = parentMap.get(sessionItem.media.parentId);
                 if (parent?.parentId) {
                     const grandparent = grandparentMap.get(parent.parentId);
                     if (grandparent) {
-                        seriesCounts.set(grandparent.title, (seriesCounts.get(grandparent.title) || 0) + session.durationWatched);
+                        seriesCounts.set(grandparent.title, (seriesCounts.get(grandparent.title) || 0) + sessionItem.durationWatched);
                     }
                 } else if (parent) {
-                    seriesCounts.set(parent.title, (seriesCounts.get(parent.title) || 0) + session.durationWatched);
+                    seriesCounts.set(parent.title, (seriesCounts.get(parent.title) || 0) + sessionItem.durationWatched);
                 }
             }
 
-            // Track artists (audio â†’ album parent title as artist proxy)
-            if (session.media.type === "Audio" && session.media.parentId) {
-                const parent = parentMap.get(session.media.parentId);
+            // Track artists (audio → album parent title as artist proxy)
+            if (sessionItem.media.type === "Audio" && sessionItem.media.parentId) {
+                const parent = parentMap.get(sessionItem.media.parentId);
                 if (parent) {
-                    artistCounts.set(parent.title, (artistCounts.get(parent.title) || 0) + session.durationWatched);
+                    artistCounts.set(parent.title, (artistCounts.get(parent.title) || 0) + sessionItem.durationWatched);
                 }
             }
 
             // Categorize by media type
-            const type = session.media.type;
+            const type = sessionItem.media.type;
             let category: string | null = null;
             if (type === "Movie") category = "Movie";
             else if (type === "Episode") category = "Episode";
-            else if (type === "Audio") category = "Audio";
+            else if (type === "Audio" || type === "Track") category = "Audio";
+            else if (type === "Book") category = "Book";
 
             if (category) {
-                categoryTotals[category] += session.durationWatched;
+                categoryTotals[category] += sessionItem.durationWatched;
                 const map = categoryData[category];
-                map.set(session.media.title, (map.get(session.media.title) || 0) + session.durationWatched);
+                map.set(sessionItem.media.title, (map.get(sessionItem.media.title) || 0) + sessionItem.durationWatched);
             }
         }
 
-        const date = new Date(session.startedAt);
+        const date = new Date(sessionItem.startedAt);
         dayCounts.set(date.getDay(), (dayCounts.get(date.getDay()) || 0) + 1);
         hourCounts.set(date.getHours(), (hourCounts.get(date.getHours()) || 0) + 1);
-        monthCounts.set(date.getMonth(), (monthCounts.get(date.getMonth()) || 0) + session.durationWatched);
+        monthCounts.set(date.getMonth(), (monthCounts.get(date.getMonth()) || 0) + sessionItem.durationWatched);
     });
 
     const totalHours = Math.round(totalSeconds / 3600);
@@ -233,7 +235,12 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
         .slice(0, 5)
         .map(([title, seconds]) => ({ title, seconds }));
 
-    const currentYear = new Date().getFullYear();
+    // Find all available years for this user
+    const yearsRes = await prisma.playbackHistory.findMany({
+        where: { userId: user.id },
+        select: { startedAt: true },
+    });
+    const availableYears = Array.from(new Set(yearsRes.map(p => p.startedAt.getFullYear()))).sort((a, b) => b - a);
 
     // Build category breakdowns
     const buildBreakdown = (key: string): CategoryBreakdown => {
@@ -248,7 +255,9 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
 
     const wrappedData = {
         username: user.username || "?",
-        year: currentYear,
+        year: requestedYear,
+        availableYears,
+        filterType: filterType || "general",
         totalHours,
         topMedia,
         topGenres,
@@ -264,6 +273,7 @@ export default async function WrappedPage({ params }: WrappedPageProps) {
             movies: buildBreakdown("Movie"),
             series: buildBreakdown("Episode"),
             music: buildBreakdown("Audio"),
+            books: buildBreakdown("Book"),
         },
     };
 

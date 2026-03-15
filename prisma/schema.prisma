@@ -29,6 +29,10 @@ model Media {
   genres          String[]          // Tableau des genres (via sync)
   resolution      String?           // Ex: "4K", "1080p", "SD" (via sync)
   durationMs      BigInt?           // Durée totale du média
+  size            BigInt?           // Taille du fichier en octets
+  directors       String[]          @default([])
+  actors          String[]          @default([])
+  studios         String[]          @default([])
   parentId        String?           // Jellyfin ParentId (AlbumId, SeasonId, etc.) for image fallback
   artist          String?           // AlbumArtist (for Audio/MusicAlbum items)
   dateAdded       DateTime?         // Jellyfin DateCreated (real date added to library)
@@ -140,6 +144,7 @@ model GlobalSettings {
   discordWebhookUrl     String?
   discordAlertCondition String   @default("ALL") // Filtre d'envoi ('ALL', 'TRANSCODE_ONLY', 'NEW_IP_ONLY')
   discordAlertsEnabled  Boolean  @default(false)
+  maxConcurrentTranscodes Int      @default(0)     // 0 = désactivé. Alerte si dépassé.
   excludedLibraries     String[] @default([]) // Filtre les types de collection (ex: Photo, HomeVideos)
   libraryRules          Json?
   syncCronHour          Int      @default(3)     // Hour (0-23) for daily full sync
@@ -148,6 +153,7 @@ model GlobalSettings {
   backupCronMinute      Int      @default(30)    // Minute (0-59) for daily auto-backup
   defaultLocale         String   @default("fr")  // Default language for new users (fr, en)
   timeFormat            String   @default("24h") // Time display format: "12h" or "24h"
+  wrappedVisible        Boolean  @default(true)  // Whether the Wrapped feature is visible to users
   // Plugin connection system
   pluginApiKey          String?  // API key for Jellyfin plugin authentication
   pluginLastSeen        DateTime? // Last heartbeat from the plugin

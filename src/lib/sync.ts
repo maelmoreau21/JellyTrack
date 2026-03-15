@@ -79,8 +79,8 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             }
         }
 
-        // 3. Sync Media (Movies, Series, Episodes, Audio, MusicAlbum) with Genres and MediaSources
-        let itemsUrl = `${baseUrl}/Items?IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId`;
+        // 3. Sync Media (Movies, Series, Seasons, Episodes, Audio, MusicAlbums, Books) with Genres and MediaSources
+        let itemsUrl = `${baseUrl}/Items?IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios`;
         if (options?.recentOnly) {
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -97,6 +97,10 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             const jellyfinMediaId = normalizeJellyfinId(item.Id);
             if (!jellyfinMediaId) continue;
             const genres = item.Genres || [];
+            const studios = (item.Studios || []).map((s: any) => s.Name);
+            const people = item.People || [];
+            const directors = people.filter((p: any) => p.Type === "Director").map((p: any) => p.Name);
+            const actors = people.filter((p: any) => p.Type === "Actor").map((p: any) => p.Name);
 
             // Determine collectionType from library parent chain
             let collectionType: string | null = null;
@@ -113,6 +117,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 if (item.Type === 'Movie') collectionType = 'movies';
                 else if (['Series', 'Episode'].includes(item.Type)) collectionType = 'tvshows';
                 else if (['Audio', 'MusicAlbum'].includes(item.Type)) collectionType = 'music';
+                else if (item.Type === 'Book') collectionType = 'books';
             }
 
             // Resolve actual Jellyfin library name from parent chain
@@ -125,8 +130,10 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             }
 
             let resolution = null;
+            let size = null;
             if (item.MediaSources && item.MediaSources.length > 0) {
                 const mediaSource = item.MediaSources[0];
+                size = mediaSource.Size ? BigInt(mediaSource.Size) : null;
                 const videoStream = mediaSource.MediaStreams?.find((s: any) => s.Type === "Video");
                 if (videoStream && videoStream.Width) {
                     const w = videoStream.Width;
@@ -144,8 +151,8 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
             await prisma.media.upsert({
                 where: { jellyfinMediaId },
-                update: { title: item.Name, type: item.Type, genres, resolution, collectionType, durationMs, parentId, artist, dateAdded, libraryName },
-                create: { jellyfinMediaId, title: item.Name, type: item.Type, genres, resolution, collectionType, durationMs, parentId, artist, dateAdded, libraryName },
+                update: { title: item.Name, type: item.Type, genres, directors, actors, studios, resolution, collectionType, durationMs, size, parentId, artist, dateAdded, libraryName },
+                create: { jellyfinMediaId, title: item.Name, type: item.Type, genres, directors, actors, studios, resolution, collectionType, durationMs, size, parentId, artist, dateAdded, libraryName },
             });
             mediaCount++;
         }

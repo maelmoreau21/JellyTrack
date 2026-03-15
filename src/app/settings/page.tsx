@@ -30,6 +30,8 @@ export default function SettingsPage() {
     const [discordEnabled, setDiscordEnabled] = useState(false);
     const [discordUrl, setDiscordUrl] = useState("");
     const [discordAlertCondition, setDiscordAlertCondition] = useState("ALL");
+    const [maxConcurrentTranscodes, setMaxConcurrentTranscodes] = useState(0);
+    const [wrappedVisible, setWrappedVisible] = useState(true);
     const [excludedLibraries, setExcludedLibraries] = useState<string[]>([]);
     const [availableLibraries, setAvailableLibraries] = useState<string[]>([]);
     const [libraryRules, setLibraryRules] = useState<Record<string, LibraryRule>>({});
@@ -99,6 +101,8 @@ export default function SettingsPage() {
                     setDiscordEnabled(data.discordAlertsEnabled || false);
                     setDiscordUrl(data.discordWebhookUrl || "");
                     setDiscordAlertCondition(data.discordAlertCondition || "ALL");
+                    setMaxConcurrentTranscodes(data.maxConcurrentTranscodes ?? 0);
+                    setWrappedVisible(data.wrappedVisible ?? true);
                     setExcludedLibraries(data.excludedLibraries || []);
                     setAvailableLibraries(data.availableLibraries || []);
                     setLibraryRules(data.libraryRules || {});
@@ -229,6 +233,8 @@ export default function SettingsPage() {
                     discordWebhookUrl: discordUrl,
                     discordAlertCondition: discordAlertCondition,
                     discordAlertsEnabled: discordEnabled,
+                    maxConcurrentTranscodes: maxConcurrentTranscodes,
+                    wrappedVisible,
                     excludedLibraries,
                     libraryRules,
                 })
@@ -631,6 +637,15 @@ export default function SettingsPage() {
                             </div>
                             <Switch id="discord-alerts" checked={discordEnabled} onCheckedChange={setDiscordEnabled} />
                         </div>
+
+                        <div className="flex items-center justify-between space-x-2 border p-4 rounded-lg">
+                            <div className="space-y-0.5 mt-0.5">
+                                <Label htmlFor="wrapped-visibility" className="text-base">{t('wrappedVisible')}</Label>
+                                <p className="text-sm text-muted-foreground">{t('wrappedVisibleDesc')}</p>
+                            </div>
+                            <Switch id="wrapped-visibility" checked={wrappedVisible} onCheckedChange={setWrappedVisible} />
+                        </div>
+
                         {discordEnabled && (
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <div className="space-y-2">
@@ -644,6 +659,20 @@ export default function SettingsPage() {
                                         <option value="TRANSCODE_ONLY">{t('notifTranscode')}</option>
                                         <option value="NEW_IP_ONLY">{t('notifNewIp')}</option>
                                     </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="max-transcodes">Seuil de Transcodes Simultanés</Label>
+                                    <div className="flex items-center gap-3">
+                                        <Input
+                                            id="max-transcodes"
+                                            type="number"
+                                            min={0}
+                                            value={maxConcurrentTranscodes}
+                                            onChange={(e) => setMaxConcurrentTranscodes(parseInt(e.target.value) || 0)}
+                                            className="w-24 font-mono"
+                                        />
+                                        <p className="text-xs text-muted-foreground">0 = désactivé. Alerte si le nombre dépasse ce seuil.</p>
+                                    </div>
                                 </div>
                             </div>
                         )}

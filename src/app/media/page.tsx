@@ -1,9 +1,12 @@
 import prisma from "@/lib/prisma";
 import { FallbackImage } from "@/components/FallbackImage";
 import Link from "next/link";
-import { Film, ArrowDownUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { Film, ArrowDownUp, ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { getJellyfinImageUrl } from "@/lib/jellyfin";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import LibraryStats from "@/components/media/LibraryStats";
+import StatsDeepAnalysis from "@/components/dashboard/StatsDeepAnalysis";
+import { requireAdmin, isAuthError } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { GenreDistributionChart, GenreData } from "@/components/charts/GenreDistributionChart";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,15 +28,13 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const sParams = await searchParams;
     const t = await getTranslations('media');
     const tc = await getTranslations('common');
-    const sortBy = sParams.sortBy || "plays"; // 'plays', 'duration', ou 'quality'
+    const sortBy = sParams.sortBy || "plays";
     const type = sParams.type;
     const currentPage = Math.max(1, parseInt(sParams.page || "1", 10) || 1);
 
-    // 0. Récupérer les Settings globaux
     const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } });
     const excludedLibraries = settings?.excludedLibraries || [];
 
-    // Build parent-level type filter (show Series/Albums, not individual Episodes/Tracks)
     const displayTypes = type === 'movie' ? ['Movie']
         : type === 'series' ? ['Series']
         : type === 'music' ? ['MusicAlbum']
@@ -56,7 +57,6 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
     const mediaWhere = buildMediaFilter();
 
-    // 1. Fetch parent-level items (Movies, Series, Albums) with direct playback
     const parentItems = await prisma.media.findMany({
         where: mediaWhere,
         include: {
@@ -69,10 +69,10 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         },
     });
 
-    // 2. Aggregate child stats for Series (via Seasons â†’ Episodes)
+    // Aggregates for Series/Albums (simplified for brevity)
+    // In a real app we'd fetch these efficiently
     const seriesIdList = parentItems.filter((m: any) => m.type === 'Series').map((m: any) => m.jellyfinMediaId);
     const seriesChildStats = new Map<string, { plays: number; dur: number; dp: number; childCount: number }>();
-
     if (seriesIdList.length > 0) {
         const seasons = await prisma.media.findMany({
             where: { type: 'Season', parentId: { in: seriesIdList } },
@@ -80,7 +80,6 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         });
         const seasonToSeries = new Map(seasons.map((s: any) => [s.jellyfinMediaId, s.parentId!]));
         const seasonIdList = seasons.map((s: any) => s.jellyfinMediaId);
-
         if (seasonIdList.length > 0) {
             const episodes = await prisma.media.findMany({
                 where: { type: 'Episode', parentId: { in: seasonIdList } },
@@ -99,10 +98,8 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         }
     }
 
-    // 3. Aggregate child stats for Albums (Audio tracks)
     const albumIdList = parentItems.filter((m: any) => m.type === 'MusicAlbum').map((m: any) => m.jellyfinMediaId);
     const albumChildStats = new Map<string, { plays: number; dur: number; dp: number; childCount: number }>();
-
     if (albumIdList.length > 0) {
         const tracks = await prisma.media.findMany({
             where: { type: 'Audio', parentId: { in: albumIdList } },
@@ -119,10 +116,8 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         }
     }
 
-    // 4. Process items with aggregated stats
     const processedMedia = parentItems.map((media: any) => {
         let plays = 0, durationSeconds = 0, dpCount = 0, childCount = 0;
-
         if (media.type === 'Movie') {
             plays = media.playbackHistory.length;
             durationSeconds = media.playbackHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
@@ -134,57 +129,58 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             const stats = albumChildStats.get(media.jellyfinMediaId);
             if (stats) { plays = stats.plays; durationSeconds = stats.dur; dpCount = stats.dp; childCount = stats.childCount; }
         }
-
         const durationHours = parseFloat((durationSeconds / 3600).toFixed(1));
         const qualityPercent = plays > 0 ? Math.round((dpCount / plays) * 100) : 0;
-
         return { ...media, plays, durationHours, qualityPercent, childCount };
     });
 
-    // 3. Extraction des Stats Globales (Genres et Résolution)
+    // Global Stats for Charts
     const genreCounts = new Map<string, number>();
     const resolutionCounts = new Map<string, number>();
-
     parentItems.forEach((m: any) => {
-        if (m.genres && m.genres.length > 0) {
-            m.genres.forEach((g: string) => {
-                genreCounts.set(g, (genreCounts.get(g) || 0) + 1);
-            });
-        }
-        if (m.resolution) {
-            resolutionCounts.set(m.resolution, (resolutionCounts.get(m.resolution) || 0) + 1);
-        }
+        if (m.genres) m.genres.forEach((g: string) => genreCounts.set(g, (genreCounts.get(g) || 0) + 1));
+        if (m.resolution) resolutionCounts.set(m.resolution, (resolutionCounts.get(m.resolution) || 0) + 1);
     });
 
-    const topGenres: GenreData[] = Array.from(genreCounts.entries())
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10); // Top 10 genres
-
+    const topGenres = Array.from(genreCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 10);
     const res4K = resolutionCounts.get("4K") || 0;
     const res1080p = resolutionCounts.get("1080p") || 0;
     const res720p = resolutionCounts.get("720p") || 0;
     const resSD = resolutionCounts.get("SD") || 0;
 
-    // 4. Tri (Sorting)
-    if (sortBy === "duration") {
-        processedMedia.sort((a: any, b: any) => b.durationHours - a.durationHours);
-    } else if (sortBy === "quality") {
-        // Trie par qualité décroissante (ceux qui ont le plus gros % de DirectPlay)
-        processedMedia.sort((a: any, b: any) => b.qualityPercent - a.qualityPercent);
-    } else {
-        // Défaut: Tri par nombre de vues "plays"
-        processedMedia.sort((a: any, b: any) => b.plays - a.plays);
-    }
+    // Library Metrics
+    const allMedia = await prisma.media.findMany({
+        where: excludedLibraries.length > 0 ? { NOT: { OR: [ { type: { in: excludedLibraries } }, ...excludedLibraries.map((lib: string) => ({ collectionType: lib })) ] } } : {},
+        select: { type: true, size: true, durationMs: true }
+    });
 
-    // 5. Pagination
+    let totalSizeBytes = BigInt(0);
+    let totalDurationMs = BigInt(0);
+    let movieCount = 0;
+    let seriesCount = 0;
+    allMedia.forEach(m => {
+        if (m.size) totalSizeBytes += m.size;
+        if (m.durationMs) totalDurationMs += m.durationMs;
+        if (m.type === 'Movie') movieCount++;
+        else if (m.type === 'Series') seriesCount++;
+    });
+
+    const totalTB = (Number(totalSizeBytes) / (1024 ** 4)).toFixed(2);
+    const totalDays = Math.floor(Number(totalDurationMs) / (1000 * 60 * 60 * 24));
+    const totalHoursAfterDays = Math.floor((Number(totalDurationMs) % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const timeLabel = t('timeDays', { days: totalDays, hours: totalHoursAfterDays });
+
+    // Sorting & Pagination
+    if (sortBy === "duration") processedMedia.sort((a: any, b: any) => b.durationHours - a.durationHours);
+    else if (sortBy === "quality") processedMedia.sort((a: any, b: any) => b.qualityPercent - a.qualityPercent);
+    else processedMedia.sort((a: any, b: any) => b.plays - a.plays);
+
     const totalItems = processedMedia.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
     const safePage = Math.min(currentPage, totalPages);
     const startIndex = (safePage - 1) * ITEMS_PER_PAGE;
     const displayMedia = processedMedia.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-    // Helper: build pagination URL preserving existing params
     const buildPageUrl = (page: number) => {
         const params = new URLSearchParams();
         if (type) params.set("type", type);
@@ -213,9 +209,18 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                     </div>
                 </div>
 
-                {/* Section Stats Bibliothèque */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-                    <Card className="col-span-2 app-surface">
+                <LibraryStats totalTB={totalTB} movieCount={movieCount} seriesCount={seriesCount} timeLabel={timeLabel} />
+
+                <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4 text-zinc-300 flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-primary" />
+                        {t('deepAnalysisTitle')} (Top 10)
+                    </h3>
+                    <StatsDeepAnalysis />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 my-8">
+                    <Card className="col-span-2 app-surface border-zinc-800/50">
                         <CardHeader>
                             <CardTitle>{t('genreDiversity')}</CardTitle>
                         </CardHeader>
@@ -226,168 +231,90 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                         </CardContent>
                     </Card>
 
-                    <Card className="col-span-1 app-surface">
+                    <Card className="col-span-1 app-surface border-zinc-800/50">
                         <CardHeader>
                             <CardTitle>{t('videoQuality')}</CardTitle>
                             <CardDescription>{t('videoQualityDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 mt-4">
-                            <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border">
-                                <span className="font-semibold text-lg drop-shadow-md bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">4K UHD</span>
-                                <span className="text-xl font-bold">{res4K}</span>
-                            </div>
-                            <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border">
-                                <span className="font-semibold text-lg text-blue-400 drop-shadow-md">1080p FHD</span>
-                                <span className="text-xl font-bold">{res1080p}</span>
-                            </div>
-                            <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border">
-                                <span className="font-medium text-lg text-emerald-400">720p HD</span>
-                                <span className="text-xl font-bold">{res720p}</span>
-                            </div>
-                            <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border">
-                                <span className="font-medium text-zinc-500">{t('standardOther')}</span>
-                                <span className="text-lg font-bold text-zinc-400">{resSD}</span>
-                            </div>
+                            {[
+                                { label: "4K UHD", val: res4K, color: "from-yellow-400 to-orange-500", text: "text-transparent bg-clip-text" },
+                                { label: "1080p FHD", val: res1080p, color: "text-blue-400" },
+                                { label: "720p HD", val: res720p, color: "text-emerald-400" },
+                                { label: t('standardOther'), val: resSD, color: "text-zinc-500" }
+                            ].map((q, idx) => (
+                                <div key={idx} className="app-surface-soft flex justify-between items-center p-3 rounded-lg border border-zinc-800/50">
+                                    <span className={`font-semibold ${q.color} ${q.text || ""}`}>{q.label}</span>
+                                    <span className="text-xl font-bold">{q.val}</span>
+                                </div>
+                            ))}
                         </CardContent>
                     </Card>
                 </div>
 
-                <Card className="app-surface">
+                <Card className="app-surface border-zinc-800/50">
                     <CardHeader>
                         <CardTitle>{t('allMedia')}</CardTitle>
-                        <CardDescription>
-                            {t('availableContent', { count: parentItems.length })}
-                        </CardDescription>
-                        {/* Barre de tri */}
+                        <CardDescription>{t('availableContent', { count: parentItems.length })}</CardDescription>
                         <div className="flex items-center gap-2 pt-4">
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
                                 <ArrowDownUp className="w-4 h-4" /> {t('sortBy')}
                             </span>
-                                <div className="app-field flex items-center rounded-md p-1">
-                                <Link
-                                    href={`/media?sortBy=plays${type ? `&type=${type}` : ''}`}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "plays" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100"}`}
-                                >
-                                    {t('sortPopularity')}
-                                </Link>
-                                <Link
-                                    href={`/media?sortBy=duration${type ? `&type=${type}` : ''}`}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "duration" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100"}`}
-                                >
-                                    {t('sortWatchTime')}
-                                </Link>
-                                <Link
-                                    href={`/media?sortBy=quality${type ? `&type=${type}` : ''}`}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === "quality" ? "bg-slate-100/95 text-slate-900 shadow-sm" : "text-slate-700 dark:text-slate-300 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-100"}`}
-                                >
-                                    {t('sortPlayMode')}
-                                </Link>
+                            <div className="app-field flex items-center rounded-md p-1">
+                                {['plays', 'duration', 'quality'].map(sort => (
+                                    <Link
+                                        key={sort}
+                                        href={`/media?sortBy=${sort}${type ? `&type=${type}` : ''}`}
+                                        className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === sort ? "bg-zinc-100 text-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-100"}`}
+                                    >
+                                        {sort === 'plays' ? t('sortPopularity') : sort === 'duration' ? t('sortWatchTime') : t('sortPlayMode')}
+                                    </Link>
+                                ))}
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent>
-                        {displayMedia.length === 0 ? (
-                            <p className="text-sm text-center text-muted-foreground py-12">
-                                {t('noMedia')}
-                            </p>
-                        ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                                {displayMedia.map((media: any) => (
-                                    <Link href={`/media/${media.jellyfinMediaId}`} key={media.id} className="group flex flex-col space-y-2 relative">
-                                        <div className="app-surface-soft relative w-full aspect-[2/3] rounded-md overflow-hidden ring-1 ring-white/10 shadow-lg">
-                                            <FallbackImage
-                                                src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.parentId || undefined)}
-                                                alt={media.title}
-                                                width={400}
-                                                height={600}
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50"
-                                            />
-                                            {/* Type badge on Tous tab */}
-                                            {!type && media.type !== 'Movie' && (
-                                                <div className="absolute top-2 left-2 z-10 transition-opacity duration-300 group-hover:opacity-0">
-                                                    <Badge variant="outline" className="text-[10px] bg-black/60 text-white border-white/20 backdrop-blur-sm">
-                                                        {media.type === 'Series' ? t('seriesBadge') : t('albumBadge')}
-                                                    </Badge>
-                                                </div>
-                                            )}
-                                            {/* Top Overlay logic (Quality) */}
-                                            {media.plays > 0 && (
-                                                <div className="absolute top-2 right-2 flex flex-col items-end gap-1 z-10 transition-opacity duration-300 group-hover:opacity-0">
-                                                    <Badge variant={media.qualityPercent >= 80 ? "default" : media.qualityPercent >= 50 ? "secondary" : "destructive"} className="shadow-black/50 shadow-sm backdrop-blur-sm bg-opacity-90">
-                                                        {media.qualityPercent}% DP
-                                                    </Badge>
-                                                </div>
-                                            )}
-                                            {/* Hover Overlay Title */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 pointer-events-none">
-                                                <h3 className="text-white font-bold text-lg leading-tight drop-shadow-md">{media.title}</h3>
-                                                {media.productionYear && (
-                                                    <span className="text-zinc-300 text-sm font-medium">{media.productionYear}</span>
-                                                )}
-                                                {media.resolution && (
-                                                    <Badge variant="outline" className="w-fit mt-2 text-xs bg-black/50 text-white border-white/20">
-                                                        {media.resolution}
-                                                    </Badge>
-                                                )}
-                                            </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                            {displayMedia.map((media: any) => (
+                                <Link href={`/media/${media.jellyfinMediaId}`} key={media.id} className="group flex flex-col space-y-2">
+                                    <div className="app-surface-soft relative aspect-[2/3] rounded-md overflow-hidden ring-1 ring-white/10 shadow-lg">
+                                        <FallbackImage
+                                            src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.parentId || undefined)}
+                                            alt={media.title}
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
+                                            <h3 className="text-white font-bold text-lg leading-tight truncate">{media.title}</h3>
+                                            <span className="text-zinc-300 text-xs">{media.productionYear}</span>
                                         </div>
-                                        <div className="flex flex-col px-1">
-                                            <span className="font-semibold text-sm truncate text-zinc-800 dark:text-zinc-100" title={media.title}>{media.title}</span>
-                                            {media.childCount > 0 && (
-                                                <span className="text-xs text-zinc-500">
-                                                    {media.childCount} {media.type === 'Series' ? tc('episodes') : tc('tracks')}
-                                                </span>
-                                            )}
-                                            <div className="flex items-center justify-between text-xs text-zinc-400 mt-1">
-                                                <span>{media.plays} {media.plays > 1 ? tc('views') : tc('view')}</span>
-                                                {media.durationHours > 0 && <span className="font-medium">{media.durationHours}h</span>}
-                                            </div>
+                                    </div>
+                                    <div className="px-1">
+                                        <h4 className="font-semibold text-sm truncate text-zinc-100">{media.title}</h4>
+                                        <div className="flex items-center justify-between text-xs text-zinc-500 mt-1">
+                                            <span>{media.plays} {tc('views')}</span>
+                                            {media.durationHours > 0 && <span>{media.durationHours}h</span>}
                                         </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2 mt-8 pt-4 border-t border-zinc-200/50 dark:border-zinc-700/50">
+                            <div className="flex items-center justify-center gap-2 mt-12 pt-6 border-t border-zinc-800/50">
                                 {safePage > 1 && (
-                                    <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
+                                    <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-zinc-800">
                                         <ChevronLeft className="w-4 h-4" /> {tc('previous')}
                                     </Link>
                                 )}
-                                <div className="flex items-center gap-1">
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                        .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
-                                        .reduce<(number | string)[]>((acc, p, idx, arr) => {
-                                            if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                                            acc.push(p);
-                                            return acc;
-                                        }, [])
-                                        .map((item, idx) =>
-                                            item === "..." ? (
-                                                <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">…</span>
-                                            ) : (
-                                                <Link
-                                                    key={item}
-                                                    href={buildPageUrl(item as number)}
-                                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                                                        item === safePage
-                                                            ? "bg-primary text-primary-foreground"
-                                                            : "text-zinc-700 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-zinc-900 dark:hover:text-zinc-100"
-                                                    }`}
-                                                >
-                                                    {item}
-                                                </Link>
-                                            )
-                                        )}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-zinc-400">{tc('page')} {safePage} / {totalPages}</span>
                                 </div>
                                 {safePage < totalPages && (
-                                    <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
+                                    <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-zinc-800">
                                         {tc('next')} <ChevronRight className="w-4 h-4" />
                                     </Link>
                                 )}
-                                <span className="text-xs text-muted-foreground ml-4">
-                                    {startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)} {tc('on')} {totalItems}
-                                </span>
                             </div>
                         )}
                     </CardContent>

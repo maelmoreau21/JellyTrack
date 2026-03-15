@@ -26,8 +26,13 @@ A massive analytical refactoring was introduced focusing on Data Context and Res
 3. **Granular Analysis (`GranularAnalysis.tsx`)**:
   - 6 dedicated charts to handle grouped historical context using `StandardMetricsCharts` wrappers.
   - **Daily**: Raw Plays vs Collections ; Raw Durations vs Collections.
-  - **Hourly Heatmap Equivalent**: Bar / Area grouping plays according to Hour (`00h` to `23h`).
-
+  - **2D Heatmap (Jours vs Heures)** : Visualisation matricielle montrant les pics d'utilisation hebdomadaires.
+  - **Moyenne Horaire** : Graphiques Bar / Area regroupant les lectures selon l'heure (`00h` à `23h`).
+  - **Statistiques de bibliothèque** : Volume total des médias (To), nombre de films/séries, et temps total nécessaire pour tout visionner.
+  - **Filtres profonds** : Statistiques par réalisateur, acteur, studio ou genre le plus populaire.
+  - **Alertes de capacité** : Notification de l'administrateur si le nombre de transcodages simultanés dépasse un seuil critique.
+  - **Gestionnaire de Sauvegardes** : Exportation et Importation manuelle ou automatique de la base de données.
+  
 4. **Dynamic Data Engine**:
   - Time Range Selector now contains a `React-Day-Picker` Custom scope.
   - Query endpoints and URL `searchParams` accept `?from=YYYY-MM-DD&to=YYYY-MM-DD`.
@@ -51,15 +56,6 @@ A massive analytical refactoring was introduced focusing on Data Context and Res
   - **Yearly Heatmap**: Github-style 365-day contribution chart tracking user activity density efficiently.
   - **Newsletter Generator**: `/newsletter` standalone responsive A4-sized report aggregating the month's biggest viewers and top videos with visually immersive backdrops.
   - **Draggable Dashboard**: Utilizes a persistent `localStorage` layout state and a React wrapper `DraggableDashboard` to rearrange Server Components instantly via up/down controls in the UI.
-
-56. 9. **Elite Features: Wrapped, Clean-up & Advanced Stats (Phase 8)**:
-57.   - **JellyTulli Wrapped**: `/wrapped/[userId]` portal dynamically calculating each user's year in review (Total Watch Time, Top 3 Media, Favorite Genre, Most Active Day). Presented in a modern Instagram/Spotify Story format.
-58.   - **Administrator Clean-up Assistant**: `/admin/cleanup` routing featuring a Tabular Dashboard for detecting *Ghost Media* (added >30 days ago, 0 plays) and *Abandoned Media* (started but with <80% average completion rate).
-59.   - **Granular Drop-off Stats**: Detailed Analytics tab now renders average completion rates per library (Movies, Series, Music).
-60.   - **Peak Concurrent Streams KPI**: Dashboard natively plots historic `PlaybackHistory` overlap using timeline events to calculate the absolute peak concurrent stream load since database origin.
-61. 
-66.   - **Funnel segmentation**: Deep dive inside the UX by detecting behaviors like: Zapped (<10%), Tried (10-25%), Halfway (25-80%), Finished (>80%). Coupled with dynamic PieCharts for VF/VO and SRT breakdown.
-67. 
 68. 11. **Large File Support & Streaming Imports (Phase 10)**:
    - **Advanced Configuration**: Next.js `bodySizeLimit` increased to `500mb` via `experimental` settings to handle mass exports.
    - **TSV Support**: Playback Reporting migration now natively handles `.tsv` and `.csv` via automatic delimiter detection in PapaParse.

@@ -64,7 +64,9 @@ export async function GET() {
                     discordWebhookUrl: null,
                     discordAlertCondition: "ALL",
                     discordAlertsEnabled: false,
+                    maxConcurrentTranscodes: 0,
                     excludedLibraries: [],
+                    wrappedVisible: true,
                     monitorIntervalActive: 1000,
                     monitorIntervalIdle: 5000,
                 }
@@ -109,7 +111,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { discordWebhookUrl, discordAlertCondition, discordAlertsEnabled, excludedLibraries, syncCronHour, syncCronMinute, backupCronHour, backupCronMinute, defaultLocale, libraryRules } = body;
+        const { discordWebhookUrl, discordAlertCondition, discordAlertsEnabled, maxConcurrentTranscodes, excludedLibraries, syncCronHour, syncCronMinute, backupCronHour, backupCronMinute, defaultLocale, libraryRules, wrappedVisible } = body;
 
         // Input validation — Discord webhook URL must be a valid Discord URL or null
         if (discordWebhookUrl !== undefined && discordWebhookUrl !== null && discordWebhookUrl !== "") {
@@ -150,6 +152,10 @@ export async function POST(req: NextRequest) {
             const val = Number(backupCronMinute);
             if (isNaN(val) || val < 0 || val > 59) return NextResponse.json({ error: await apiT('backupCronMinuteRange') }, { status: 400 });
         }
+        if (maxConcurrentTranscodes !== undefined) {
+            const val = Number(maxConcurrentTranscodes);
+            if (isNaN(val) || val < 0) return NextResponse.json({ error: await apiT('maxConcurrentTranscodesRange') }, { status: 400 });
+        }
         const validLocales = AVAILABLE_LOCALES.map((locale) => locale.code);
         if (defaultLocale !== undefined && !validLocales.includes(defaultLocale)) {
             return NextResponse.json({ error: await apiT('localeInvalid') }, { status: 400 });
@@ -161,24 +167,28 @@ export async function POST(req: NextRequest) {
                 discordWebhookUrl: discordWebhookUrl !== undefined ? discordWebhookUrl : undefined,
                 discordAlertCondition: discordAlertCondition !== undefined ? discordAlertCondition : undefined,
                 discordAlertsEnabled: discordAlertsEnabled !== undefined ? discordAlertsEnabled : undefined,
+                maxConcurrentTranscodes: maxConcurrentTranscodes !== undefined ? Number(maxConcurrentTranscodes) : undefined,
                 excludedLibraries: excludedLibraries !== undefined ? excludedLibraries : undefined,
                 syncCronHour: syncCronHour !== undefined ? Number(syncCronHour) : undefined,
                 syncCronMinute: syncCronMinute !== undefined ? Number(syncCronMinute) : undefined,
                 backupCronHour: backupCronHour !== undefined ? Number(backupCronHour) : undefined,
                 backupCronMinute: backupCronMinute !== undefined ? Number(backupCronMinute) : undefined,
                 defaultLocale: defaultLocale !== undefined ? defaultLocale : undefined,
+                wrappedVisible: wrappedVisible !== undefined ? Boolean(wrappedVisible) : undefined,
             },
             create: {
                 id: "global",
                 discordWebhookUrl: discordWebhookUrl || null,
                 discordAlertCondition: discordAlertCondition || "ALL",
                 discordAlertsEnabled: discordAlertsEnabled || false,
+                maxConcurrentTranscodes: maxConcurrentTranscodes !== undefined ? Number(maxConcurrentTranscodes) : 0,
                 excludedLibraries: excludedLibraries || [],
                 syncCronHour: syncCronHour !== undefined ? Number(syncCronHour) : 3,
                 syncCronMinute: syncCronMinute !== undefined ? Number(syncCronMinute) : 0,
                 backupCronHour: backupCronHour !== undefined ? Number(backupCronHour) : 3,
                 backupCronMinute: backupCronMinute !== undefined ? Number(backupCronMinute) : 30,
                 defaultLocale: defaultLocale || "fr",
+                wrappedVisible: wrappedVisible !== undefined ? Boolean(wrappedVisible) : true,
             }
         });
 

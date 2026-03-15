@@ -129,6 +129,9 @@ async function upsertCanonicalMedia(input: {
     parentId?: string | null;
     artist?: string | null;
     libraryName?: string | null;
+    directors?: string[];
+    actors?: string[];
+    studios?: string[];
 }) {
     const jellyfinMediaId = normalizeJellyfinId(input.rawJellyfinMediaId);
     if (!jellyfinMediaId) return null;
@@ -157,6 +160,9 @@ async function upsertCanonicalMedia(input: {
                     parentId: input.parentId ?? null,
                     artist: input.artist ?? null,
                     libraryName: input.libraryName ?? null,
+                    directors: input.directors || [],
+                    actors: input.actors || [],
+                    studios: input.studios || [],
                 },
             });
         } else {
@@ -173,6 +179,9 @@ async function upsertCanonicalMedia(input: {
                     parentId: input.parentId ?? undefined,
                     artist: input.artist ?? undefined,
                     libraryName: input.libraryName ?? undefined,
+                    directors: input.directors ?? undefined,
+                    actors: input.actors ?? undefined,
+                    studios: input.studios ?? undefined,
                 },
             });
         }
@@ -362,12 +371,21 @@ export async function POST(req: Request) {
                 parentId: parentItemId,
                 artist: media.artist || media.Artist || media.albumArtist || media.AlbumArtist || null,
                 libraryName: media.libraryName || media.LibraryName || null,
+                directors: (media.people || media.People || []).filter((p: any) => p.type === "Director" || p.Type === "Director").map((p: any) => p.name || p.Name),
+                actors: (media.people || media.People || []).filter((p: any) => p.type === "Actor" || p.Type === "Actor").map((p: any) => p.name || p.Name),
+                studios: (media.studios || media.Studios || []).map((s: any) => s.name || s.Name),
             });
 
             // Library exclusion check
             const settings = await prisma.globalSettings.findUnique({
                 where: { id: "global" },
-                select: { excludedLibraries: true, discordAlertsEnabled: true, discordWebhookUrl: true, discordAlertCondition: true },
+                select: { 
+                    excludedLibraries: true, 
+                    discordAlertsEnabled: true, 
+                    discordWebhookUrl: true, 
+                    discordAlertCondition: true,
+                    maxConcurrentTranscodes: true 
+                },
             });
             if (isLibraryExcluded({ collectionType, type }, settings?.excludedLibraries || [])) {
                 console.log("[Plugin] PlaybackStart ignored due excluded library", {
@@ -626,6 +644,39 @@ export async function POST(req: Request) {
                 }
             } catch (err) {
                 console.error("[Plugin] Discord notification error:", err);
+            }
+
+            // ────── Capacity Alerts (Transcoding) ──────
+            try {
+                if (settings?.maxConcurrentTranscodes && settings.maxConcurrentTranscodes > 0) {
+                    const transcodeCount = await prisma.activeStream.count({
+                        where: { playMethod: "Transcode" }
+                    });
+
+                    if (transcodeCount > settings.maxConcurrentTranscodes) {
+                        console.warn(`[Alert] Critical transcode threshold exceeded: ${transcodeCount}/${settings.maxConcurrentTranscodes}`);
+                        if (settings.discordAlertsEnabled && settings.discordWebhookUrl) {
+                            await fetch(settings.discordWebhookUrl, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    embeds: [{
+                                        title: `\u26A0\uFE0F Capacity Alert: Critical Transcode Usage`,
+                                        color: 16711680, // Red
+                                        description: `The number of simultaneous transcodes has reached a critical level.`,
+                                        fields: [
+                                            { name: "Current Transcodes", value: `${transcodeCount}`, inline: true },
+                                            { name: "Configured Threshold", value: `${settings.maxConcurrentTranscodes}`, inline: true },
+                                        ],
+                                        timestamp: new Date().toISOString(),
+                                    }],
+                                }),
+                            });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("[Alert] Capacity check failed:", err);
             }
 
             return corsJson({ success: true, message: "PlaybackStart processed." });
