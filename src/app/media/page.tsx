@@ -153,24 +153,78 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     // Library Metrics
     const allMedia = await prisma.media.findMany({
         where: excludedLibraries.length > 0 ? { NOT: { OR: [ { type: { in: excludedLibraries } }, ...excludedLibraries.map((lib: string) => ({ collectionType: lib })) ] } } : {},
-        select: { type: true, size: true, durationMs: true }
+        select: { type: true, size: true, durationMs: true, libraryName: true }
     });
+
+    const libraryStatsMap = new Map<string, { size: bigint; duration: bigint; items: number; movies: number; series: number; music: number; books: number }>();
 
     let totalSizeBytes = BigInt(0);
     let totalDurationMs = BigInt(0);
     let movieCount = 0;
     let seriesCount = 0;
+    let albumCount = 0;
+    let bookCount = 0;
+
     allMedia.forEach(m => {
-        if (m.size) totalSizeBytes += m.size;
-        if (m.durationMs) totalDurationMs += m.durationMs;
-        if (m.type === 'Movie') movieCount++;
-        else if (m.type === 'Series') seriesCount++;
+        const libName = m.libraryName || tc('other');
+        if (!libraryStatsMap.has(libName)) {
+            libraryStatsMap.set(libName, { size: BigInt(0), duration: BigInt(0), items: 0, movies: 0, series: 0, music: 0, books: 0 });
+        }
+        const lib = libraryStatsMap.get(libName)!;
+
+        // CRITICAL: Only count size from leaf items to avoid double counting containers (Series/Albums)
+        const isLeaf = ['Movie', 'Episode', 'Audio', 'Book'].includes(m.type);
+        if (isLeaf && m.size) {
+            totalSizeBytes += m.size;
+            lib.size += m.size;
+        }
+
+        if (m.durationMs) {
+            // Only sum duration for leaf items for global "Watch Time"
+            if (isLeaf) {
+                totalDurationMs += m.durationMs;
+                lib.duration += m.durationMs;
+            }
+        }
+
+        if (m.type === 'Movie') { movieCount++; lib.movies++; lib.items++; }
+        else if (m.type === 'Series') { seriesCount++; lib.series++; lib.items++; }
+        else if (m.type === 'MusicAlbum') { albumCount++; lib.music++; lib.items++; }
+        else if (m.type === 'Book') { bookCount++; lib.books++; lib.items++; }
     });
 
-    const totalTB = (Number(totalSizeBytes) / (1024 ** 4)).toFixed(2);
+    const formatSize = (bytes: bigint) => {
+        const tb = Number(bytes) / (1024 ** 4);
+        if (tb >= 1) return { value: tb.toFixed(2), unit: "To" };
+        const gb = Number(bytes) / (1024 ** 3);
+        return { value: gb.toFixed(1), unit: "Go" };
+    };
+
+    const globalSize = formatSize(totalSizeBytes);
+    const totalTB = `${globalSize.value} ${globalSize.unit}`;
+
     const totalDays = Math.floor(Number(totalDurationMs) / (1000 * 60 * 60 * 24));
     const totalHoursAfterDays = Math.floor((Number(totalDurationMs) % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const timeLabel = t('timeDays', { days: totalDays, hours: totalHoursAfterDays });
+
+    const libraryStatsList = Array.from(libraryStatsMap.entries())
+        .map(([name, stats]) => {
+            const size = formatSize(stats.size);
+            const d = Math.floor(Number(stats.duration) / (1000 * 60 * 60 * 24));
+            const h = Math.floor((Number(stats.duration) % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            return {
+                name,
+                size: `${size.value} ${size.unit}`,
+                duration: t('timeDays', { days: d, hours: h }),
+                counts: [
+                    stats.movies > 0 && `${stats.movies} ${tc('movies').toLowerCase()}`,
+                    stats.series > 0 && `${stats.series} ${tc('series').toLowerCase()}`,
+                    stats.music > 0 && `${stats.music} albums`,
+                    stats.books > 0 && `${stats.books} ${tc('books').toLowerCase()}`,
+                ].filter(Boolean).join(', ')
+            };
+        })
+        .sort((a, b) => b.name.localeCompare(a.name));
 
     // Sorting & Pagination
     if (sortBy === "duration") processedMedia.sort((a: any, b: any) => b.durationHours - a.durationHours);
@@ -211,7 +265,15 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                     </div>
                 </div>
 
-                <LibraryStats totalTB={totalTB} movieCount={movieCount} seriesCount={seriesCount} timeLabel={timeLabel} />
+                <LibraryStats
+                    totalTB={totalTB}
+                    movieCount={movieCount}
+                    seriesCount={seriesCount}
+                    albumCount={albumCount}
+                    bookCount={bookCount}
+                    timeLabel={timeLabel}
+                    libraries={libraryStatsList}
+                />
 
                 <div className="mt-8">
                     <h3 className="text-lg font-semibold mb-4 text-zinc-300 flex items-center gap-2">
@@ -279,7 +341,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                             {displayMedia.map((media: any) => (
                                 <Link href={`/media/${media.jellyfinMediaId}`} key={media.id} className="group flex flex-col space-y-2">
-                                    <div className="app-surface-soft relative aspect-[2/3] rounded-md overflow-hidden ring-1 ring-white/10 shadow-lg">
+                                    <div className={`app-surface-soft relative ${media.type === 'MusicAlbum' ? 'aspect-square' : 'aspect-[2/3]'} rounded-md overflow-hidden ring-1 ring-white/10 shadow-lg`}>
                                         <FallbackImage
                                             src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.parentId || undefined)}
                                             alt={media.title}

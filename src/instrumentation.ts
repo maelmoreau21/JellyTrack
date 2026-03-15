@@ -2,8 +2,12 @@ export async function register() {
     if (process.env.NEXT_RUNTIME === 'nodejs') {
         const { initCronJobs } = await import('@/server/cronManager');
         const prisma = (await import('@/lib/prisma')).default;
+        const { cleanupOrphanedSessions } = await import('@/lib/cleanup');
 
         console.log("[Instrumentation] Démarrage des tâches de fond...");
+
+        // Initial cleanup of orphaned sessions on startup
+        cleanupOrphanedSessions().catch(err => console.error("[Instrumentation] Initial cleanup error:", err));
 
         // Lire la planification des tâches depuis la BDD
         let syncCronHour = 3, syncCronMinute = 0, backupCronHour = 3, backupCronMinute = 30;

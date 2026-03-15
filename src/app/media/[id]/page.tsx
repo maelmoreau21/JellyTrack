@@ -325,7 +325,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row gap-8">
-                    <div className="relative w-48 aspect-[2/3] bg-zinc-200 dark:bg-zinc-900 rounded-lg overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-xl shrink-0">
+                    <div className={`relative w-48 ${['MusicAlbum', 'Audio'].includes(media.type) ? 'aspect-square' : 'aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-lg overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-xl shrink-0`}>
                         <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId)} alt={media.title} fill className="object-cover" />
                     </div>
                     <div className="flex-1 space-y-4">

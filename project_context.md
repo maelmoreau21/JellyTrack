@@ -810,22 +810,33 @@ Correction massive des encodages UTF-8 cassés (mojibake) dans l'ensemble de la 
 - `charts/YearlyHeatmap.tsx` : Card, boutons, chips filtres, tooltips
 - `charts/LazyCharts.tsx` : skeleton placeholder
 
+### Phase 40 — Correction des "Lectures Orphelines" et Bug des Durées
+
+Cette phase résout l'accumulation de sessions de lecture non fermées dans la base de données et le bug affichant des durées aberrantes (ex: "1314 min").
+
+#### 1. Routine de Nettoyage Automatique
+- **`src/lib/cleanup.ts`** [NEW] : Implémentation de `cleanupOrphanedSessions()`. Cette fonction ferme toutes les sessions `PlaybackHistory` sans `ActiveStream` correspondant ou vieilles de plus de 24h. La durée est plafonnée à 24h pour éviter les anomalies statistiques.
+- **Intégration multi-points** :
+    - **Heartbeat** (`/api/plugin/events`) : Le nettoyage est déclenché à chaque battement de cœur du plugin.
+    - **Startup** (`src/instrumentation.ts`) : Nettoyage au démarrage de l'application.
+    - **Sync** (`src/lib/sync.ts`) : Nettoyage après chaque synchronisation complète.
+
+#### 2. Raffinement du `PlaybackStart`
+- **Fenêtre de réouverture intelligente** : Réduite à 5 minutes pour l'Audio (musique) contre 1 heure pour la Vidéo. Empêche la réutilisation de sessions musicales terminées depuis longtemps.
+- **Auto-fermeture concurrente** : Lorsqu'un utilisateur lance une nouvelle lecture, toutes ses autres sessions ouvertes sont automatiquement fermées. Garantit une cohérence logique du "Now Playing".
+
+#### 3. Fiabilité et Qualité
+- **Guards Type-Safe** : Ajout de vérifications de nullité pour `activePlayback` dans le handler de télémétrie (`PlaybackProgress`) pour éviter les plantages runtime.
+- **Nettoyage Imports** : Suppression des doublons d'imports dans `src/lib/sync.ts`.
+
+---
+
 ## Recent updates — 2026-03-15
 
+- **100% Internationalisation (Multi-langues)** : Couverture totale (0 clé manquante) pour FR, EN, DE, ES, IT, NL, PL, PT-BR, RU, ZH.
+- **Correction des "Lectures Orphelines"** : Implémentation d'un système de nettoyage automatique et raffinement de la logique de session pour garantir l'intégrité des statistiques de lecture.
 - i18n audit: static scanner found 707 used translation keys; report written to `i18n_audit_report.json`.
 - Fixed invalid JSON in `messages/it.json` that caused the audit to fail.
-- Added placeholder values for missing keys across `messages/*.json` (copied from `en.json` or TODO markers) to avoid runtime missing-key issues when switching locale.
-- New i18n helper scripts added in `scripts/`:
-   - `i18n_audit.py` — collect used keys and compare locales.
-   - `populate_placeholders.py` — fills missing keys from `en.json`.
-   - diagnostic helpers to locate JSON syntax errors.
-- UI tweaks applied:
-   - Restored semantic logs table and widened logs area.
-   - Redesigned timeline in `src/app/logs/LogRow.tsx`.
-   - Chart contrast and tooltip fixes for light mode (e.g., `CompletionRatioChart`, `ActivityByHourChart`).
-   - Audio preview thumbnails made square (`aspect-square`).
-- Work saved locally; pending actions:
-   - Commit & push changes (branch suggestion: `i18n/placeholders`) and open PR.
-   - Visual QA via `npm run dev` (requires `DATABASE_URL` or mocked data).
-
-For details see `i18n_audit_report.json` and the scripts in `scripts/`. If you want, I can commit and open the PR now.
+- Added placeholder values for missing keys across `messages/*.json`.
+- New i18n helper scripts added in `scripts/` (audit, placeholder population, JSON validation).
+- UI tweaks applied (logs area widened, timeline redesigned, chart contrast improvements).

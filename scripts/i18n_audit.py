@@ -43,7 +43,7 @@ for p in root.rglob('*'):
         sources.append(p)
 
 # Patterns to find translation usages
-assign_pattern = re.compile(r"\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*useTranslations\(\s*['\"]([^'\"]+)['\"]\s*\)")
+assign_pattern = re.compile(r"\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*['\"]([^'\"]+)['\"]\s*\)")
 immediate_pattern = re.compile(r"useTranslations\(\s*['\"]([^'\"]+)['\"]\s*\)\s*\(\s*['\"]([^'\"]+)['\"]\s*\)")
 var_call_template = r"\b{var}\(\s*['\"]([^'\"]+)['\"]\s*\)"
 formatted_pattern = re.compile(r"<FormattedMessage[^>]*\bid\s*=\s*['\"]([^'\"]+)['\"]")
@@ -89,8 +89,17 @@ for src in sources:
         used_keys.add(m.group(1))
 
     # fallback: direct t('some.key') where t may be translation function
+    # Only add if it looks like it has a namespace already (contains .)
+    # OR if 't' is not one of the namespaced variables we found.
     for m in t_fallback.finditer(text):
+        var_name = m.group(1).lower()
         key = m.group(2)
+        
+        # If we already found this var as a namespaced one, the namespaced loop already handled it.
+        # We only care if it's a direct t('...') where we don't know the namespace.
+        if m.group(1) in assigns:
+            continue
+            
         used_keys.add(key)
 
 # Normalize used keys: remove duplicates and ensure no empty

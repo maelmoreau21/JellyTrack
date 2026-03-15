@@ -54,7 +54,7 @@ for p in root.rglob('*'):
         sources.append(p)
 
 # Patterns
-assign_pattern = re.compile(r"\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*useTranslations\(\s*['\"]([^'\"]+)['\"]\s*\)")
+assign_pattern = re.compile(r"\b(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:await\s+)?(?:useTranslations|getTranslations)\(\s*['\"]([^'\"]+)['\"]\s*\)")
 immediate_pattern = re.compile(r"useTranslations\(\s*['\"]([^'\"]+)['\"]\s*\)\s*\(\s*['\"]([^'\"]+)['\"]\s*\)")
 var_call_template = r"\b{var}\(\s*['\"]([^'\"]+)['\"]\s*\)"
 formatted_pattern = re.compile(r"<FormattedMessage[^>]*\bid\s*=\s*['\"]([^'\"]+)['\"]")

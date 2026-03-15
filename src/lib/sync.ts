@@ -1,6 +1,7 @@
 import prisma from "./prisma";
 import { appendHealthEvent, markSyncFinished, markSyncStarted } from "@/lib/systemHealth";
 import { normalizeJellyfinId } from "@/lib/jellyfinId";
+import { cleanupOrphanedSessions } from "@/lib/cleanup";
 
 /**
  * Fonction maîtresse de synchronisation de la librairie Jellyfin.
@@ -159,6 +160,10 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         console.log(`[Sync] ${mediaCount} médias synchronisés.`);
 
         console.log("[Sync] Terminée avec succès.");
+
+        // Run background cleanup after successful sync
+        cleanupOrphanedSessions().catch(err => console.error("[Sync] Post-sync cleanup error:", err));
+
         await markSyncFinished({ success: true, mode: options?.recentOnly ? 'recent' : 'full', users: usersCount, media: mediaCount });
         await appendHealthEvent({
             source: 'sync',

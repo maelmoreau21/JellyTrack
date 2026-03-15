@@ -41,7 +41,7 @@ export default function LoadingMediaPage() {
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                             {Array.from({ length: 18 }).map((_, i) => (
                                 <div key={i} className="flex flex-col space-y-2">
-                                    <Skeleton className="aspect-[2/3] w-full rounded-md bg-zinc-200 dark:bg-zinc-800" />
+                                    <Skeleton className="aspect-square w-full rounded-md bg-zinc-200 dark:bg-zinc-800" />
                                     <Skeleton className="h-4 w-3/4 bg-zinc-200 dark:bg-zinc-800" />
                                     <div className="flex justify-between">
                                         <Skeleton className="h-3 w-1/3 bg-zinc-200 dark:bg-zinc-800" />

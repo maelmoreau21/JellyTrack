@@ -4,6 +4,7 @@ import redis from "@/lib/redis";
 import { getGeoLocation } from "@/lib/geoip";
 import { inferLibraryKey, isLibraryExcluded } from "@/lib/mediaPolicy";
 import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
+import { cleanupOrphanedSessions } from "@/lib/cleanup";
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -327,6 +328,9 @@ export async function POST(req: Request) {
                 syncedUsers++;
             }
 
+            // Run background cleanup on heartbeat to keep DB healthy
+            cleanupOrphanedSessions().catch(err => console.error("[Plugin] Heartbeat cleanup error:", err));
+
             return corsJson({ success: true, message: `Heartbeat OK, ${syncedUsers} users synced.` });
         }
 
@@ -409,7 +413,13 @@ export async function POST(req: Request) {
                             });
                             if (!existingOpen) {
                                 // Try to reopen a recently closed session to avoid duplicates
-                                const mergeWindow = new Date(Date.now() - MERGE_WINDOW_MS);
+                                // For Audio (music): only reopen if it was closed within 5 minutes
+                                // For Video: use standard 1 hour window
+                                const recentMergeWindowMs = (type === 'Audio' || type === 'Track') 
+                                    ? 5 * 60 * 1000 
+                                    : MERGE_WINDOW_MS;
+                                
+                                const mergeWindow = new Date(Date.now() - recentMergeWindowMs);
                                 const recentClosed = await prisma.playbackHistory.findFirst({
                                     where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: { not: null, gte: mergeWindow } },
                                     orderBy: { endedAt: "desc" },
@@ -450,6 +460,19 @@ export async function POST(req: Request) {
                                         },
                                     });
                                     console.log(`[Plugin] PlaybackStart: Created session for ${title}`);
+
+                                    // Auto-close any OTHER open sessions for this user (prevent orphans)
+                                    await prisma.playbackHistory.updateMany({
+                                        where: { 
+                                            userId: dbUser.id, 
+                                            endedAt: null, 
+                                            NOT: { mediaId: dbMedia.id } 
+                                        },
+                                        data: { 
+                                            endedAt: new Date(),
+                                            durationWatched: 0 // We don't have accurate duration for missed stops
+                                        }
+                                    });
                                 }
                             }
                         } else {
@@ -458,7 +481,11 @@ export async function POST(req: Request) {
                                 where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: null },
                             });
                             if (!existingOpen) {
-                                const mergeWindow = new Date(Date.now() - MERGE_WINDOW_MS);
+                                const recentMergeWindowMs = (type === 'Audio' || type === 'Track') 
+                                    ? 5 * 60 * 1000 
+                                    : MERGE_WINDOW_MS;
+                                
+                                const mergeWindow = new Date(Date.now() - recentMergeWindowMs);
                                 const recentClosed = await prisma.playbackHistory.findFirst({
                                     where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: { not: null, gte: mergeWindow } },
                                     orderBy: { endedAt: "desc" },
@@ -487,6 +514,19 @@ export async function POST(req: Request) {
                                         },
                                     });
                                     console.log(`[Plugin] PlaybackStart (nolock fallback): Created session for ${title}`);
+
+                                    // Auto-close any OTHER open sessions for this user (prevent orphans)
+                                    await prisma.playbackHistory.updateMany({
+                                        where: { 
+                                            userId: dbUser.id, 
+                                            endedAt: null, 
+                                            NOT: { mediaId: dbMedia.id } 
+                                        },
+                                        data: { 
+                                            endedAt: new Date(),
+                                            durationWatched: 0
+                                        }
+                                    });
                                 }
                             }
                         }
@@ -1008,6 +1048,11 @@ export async function POST(req: Request) {
                         if (lock.acquired) await redis.del(lock.key);
                     } catch {}
                 }
+            }
+
+            if (!activePlayback) {
+                console.warn("[Plugin] PlaybackProgress aborted: No active playback found or created", { jellyfinUserId, jellyfinMediaId });
+                return corsJson({ error: "No active playback session found." }, { status: 404 });
             }
 
             const updates: Record<string, any> = {};

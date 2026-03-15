@@ -149,7 +149,7 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
                                     <TableRow key={session.id} className="even:bg-zinc-100/50 dark:even:bg-zinc-900/30 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 border-zinc-200/50 dark:border-zinc-800/50 transition-colors">
                                         <TableCell className="font-medium">
                                             <Link href={`/media/${session.media.jellyfinMediaId}`} className="flex items-center gap-3 group">
-                                                <div className="relative w-10 aspect-[2/3] bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10">
+                                                <div className={`relative w-10 ${['Audio', 'MusicAlbum'].includes(session.media.type) ? 'aspect-square' : 'aspect-[2/3]'} bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10`}>
                                                     <FallbackImage
                                                         src={getJellyfinImageUrl(session.media.jellyfinMediaId, 'Primary', session.media.parentId || undefined)}
                                                         alt={session.media.title}
