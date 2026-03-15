@@ -143,10 +143,12 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     });
 
     const topGenres = Array.from(genreCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 10);
-    const res4K = resolutionCounts.get("4K") || 0;
-    const res1080p = resolutionCounts.get("1080p") || 0;
-    const res720p = resolutionCounts.get("720p") || 0;
-    const resSD = resolutionCounts.get("SD") || 0;
+    const sumRes = (pattern: RegExp) => Array.from(resolutionCounts.entries()).reduce((acc, [k, v]) => pattern.test(String(k)) ? acc + v : acc, 0);
+
+    const res4K = sumRes(/4k|2160|3840/i) || resolutionCounts.get("4K") || 0;
+    const res1080p = sumRes(/1080|1080p/i) || resolutionCounts.get("1080p") || 0;
+    const res720p = sumRes(/720|720p/i) || resolutionCounts.get("720p") || 0;
+    const resSD = sumRes(/sd|480|480p/i) || resolutionCounts.get("SD") || 0;
 
     // Library Metrics
     const allMedia = await prisma.media.findMany({
