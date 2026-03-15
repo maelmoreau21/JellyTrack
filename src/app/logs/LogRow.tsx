@@ -72,6 +72,24 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
     }
   };
 
+  const formatChangeDetail = (ev: any) => {
+    if (!ev || !ev.metadata) return '';
+    try {
+      const md = typeof ev.metadata === 'string' ? JSON.parse(ev.metadata) : ev.metadata;
+      if (md && md.from && md.to) {
+        const fmt = (side: any) => {
+          if (!side) return '—';
+          const label = side.language ?? (side.index !== undefined ? `#${side.index}` : String(side));
+          const codec = side.codec ? ` (${side.codec})` : '';
+          return `${label}${codec}`;
+        };
+        return `${fmt(md.from)} → ${fmt(md.to)}`;
+      }
+      if (md.from !== undefined && md.to !== undefined) return `${md.from} → ${md.to}`;
+    } catch {}
+    return '';
+  };
+
   return (
     <>
       <TableRow className={`even:bg-zinc-100/50 dark:even:bg-slate-900/35 hover:bg-zinc-100 dark:hover:bg-slate-800/55 border-zinc-200/50 dark:border-zinc-700/50 transition-colors ${isParty ? 'border-l-2 border-l-violet-500/40' : ''}`}>
@@ -264,9 +282,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
                     <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"/> 💬 {t('timeline.legend.subtitles')}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => setBucketMs(0)} className={`px-2 py-0.5 rounded text-xs ${bucketMs===0 ? 'bg-primary text-primary-foreground' : 'app-field'}`}>{t('timeline.toggle.exact')}</button>
-                    <button onClick={() => setBucketMs(5000)} className={`px-2 py-0.5 rounded text-xs ${bucketMs===5000 ? 'bg-primary text-primary-foreground' : 'app-field'}`}>{t('timeline.toggle.5s')}</button>
-                    <button onClick={() => setBucketMs(30000)} className={`px-2 py-0.5 rounded text-xs ${bucketMs===30000 ? 'bg-primary text-primary-foreground' : 'app-field'}`}>{t('timeline.toggle.30s')}</button>
+                    <span className="text-xs text-zinc-400">{t('timeline.toggle.exact')}</span>
                   </div>
                 </div>
               </div>
@@ -285,10 +301,11 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
                         const pct = Number.isFinite(durationMs) && durationMs > 0 ? Math.min(99, Math.max(1, Math.round((pos / durationMs) * 100))) : 1;
                         const meta = getEventMeta(g.repType);
                         const size = g.count > 1 ? 10 : 8;
+                        const detail = formatChangeDetail(g.events && g.events[0] ? g.events[0] : null);
                         return (
                           <div key={g.key ?? idx} className="absolute top-1/2" style={{ left: `${pct}%`, transform: 'translate(-50%, -50%)' }}>
                             <button
-                              title={`${meta.icon} ${meta.label} — ${formatTime(pos)}${g.count > 1 ? ` (${g.count} events)` : ''}`}
+                              title={`${meta.icon} ${meta.label}${detail ? ` — ${detail}` : ''} — ${formatTime(pos)}${g.count > 1 ? ` (${g.count} events)` : ''}`}
                               aria-label={`${meta.label} at ${formatTime(pos)}`}
                               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs text-white shadow ${meta.color} ring-1 ring-white/20 focus:outline-none focus:ring-2 focus:ring-offset-1`}
                             >
@@ -317,12 +334,13 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
                 )}
                 {groupedEvents.map((g: any, idx: number) => {
                   const meta = getEventMeta(g.repType);
+                  const detail = formatChangeDetail(g.events && g.events[0] ? g.events[0] : null);
                   return (
                     <div key={g.key ?? idx} className="flex items-center gap-2 p-2 rounded bg-zinc-50 dark:bg-zinc-900/50">
                       <div className={`${meta.color} w-6 h-6 rounded-full flex items-center justify-center text-xs text-white`}>{meta.icon}</div>
                       <div className="flex-1">
                         <div className="text-[12px] font-medium">{meta.label}{g.count>1 ? ` · ${g.count}` : ''}</div>
-                        <div className="text-zinc-400 text-[11px]">{formatTime(g.pos)} — {Math.round((g.pos / durationMs) * 100)}%</div>
+                        <div className="text-zinc-400 text-[11px]">{formatTime(g.pos)} — {Math.round((g.pos / durationMs) * 100)}%{detail ? ` · ${detail}` : ''}</div>
                       </div>
                     </div>
                   );

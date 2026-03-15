@@ -1,0 +1,1130 @@
+{
+  "generatedAt": "2026-03-15T15:40:00.367146Z",
+  "report": {
+    "de.json": {
+      "count": 578,
+      "sample": [
+        {
+          "key": "common.mb",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.episode",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.album",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.dashboard",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.logHealth",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.directPlay",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitor",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusOk",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "hardware.ram",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "liveStreams.title",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.taskSchedulerDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.pluginVersion",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.exportBackup",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.savedSuccess",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.enableDiscordDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.backupNow",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.restoring",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.pluginCopyKey",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.saveSettings",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.dataBackups",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.pluginServerUrlDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.recentSyncDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.pluginDisconnected",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.taskScheduler",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.saveSchedules",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.invalidBackup",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.fileReadError",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.pluginConfirmRevoke",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.pluginDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "settings.restoreOk",
+          "reason": "missing"
+        }
+      ]
+    },
+    "es.json": {
+      "count": 615,
+      "sample": [
+        {
+          "key": "common.series",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.mb",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.local",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.error",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.logHealth",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.directPlay",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitor",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusActive",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusError",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.never",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.justNow",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.minutesAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.hoursAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.lastPoll",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastSync",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastBackup",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealth",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.openPlaybackOrphans",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.dbWithoutRedis",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.excludedLibraries",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealthDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.monitorStatusOk",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.playbackHistoryNote",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.dbWithoutRedisDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphan",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphanDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksDesc",
+          "reason": "missing"
+        }
+      ]
+    },
+    "fr.json": {
+      "count": 592,
+      "sample": [
+        {
+          "key": "common.local",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.album",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.source",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.dashboard",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.logs",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.directPlay",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusOk",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.mode",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "hardware.ram",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "deepInsights.topAlbums",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "deepInsights.topClients",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "network.colSessions",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.taskSchedulerDesc",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.pluginVersion",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.exportBackup",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.savedSuccess",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.enableDiscordDesc",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.backupNow",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.restoring",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.pluginCopyKey",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.saveSettings",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.dataBackups",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.pluginServerUrlDesc",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.recentSyncDesc",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.pluginDisconnected",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.taskScheduler",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.saveSchedules",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.invalidBackup",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.fileReadError",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "settings.pluginConfirmRevoke",
+          "reason": "same-as-en"
+        }
+      ]
+    },
+    "it.json": {
+      "count": 616,
+      "sample": [
+        {
+          "key": "common.mb",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.album",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.dashboard",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.logHealth",
+          "reason": "missing"
+        },
+        {
+          "key": "search.mediaSection",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.directPlay",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitor",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusActive",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusError",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.never",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.justNow",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.minutesAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.hoursAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.lastPoll",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastSync",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastBackup",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealth",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.openPlaybackOrphans",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.dbWithoutRedis",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.excludedLibraries",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealthDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.monitorStatusOk",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.playbackHistoryNote",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.dbWithoutRedisDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphan",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphanDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksDesc",
+          "reason": "missing"
+        }
+      ]
+    },
+    "nl.json": {
+      "count": 629,
+      "sample": [
+        {
+          "key": "common.series",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.mb",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.album",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.dashboard",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.logs",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.logHealth",
+          "reason": "missing"
+        },
+        {
+          "key": "search.mediaSection",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.directPlay",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitor",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusActive",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusError",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.never",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.justNow",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.minutesAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.hoursAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.lastPoll",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastSync",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastBackup",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealth",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.openPlaybackOrphans",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.dbWithoutRedis",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.excludedLibraries",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealthDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.monitorStatusOk",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.playbackHistoryNote",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.dbWithoutRedisDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphan",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphanDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsDesc",
+          "reason": "missing"
+        }
+      ]
+    },
+    "pl.json": {
+      "count": 607,
+      "sample": [
+        {
+          "key": "common.mb",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.album",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.logHealth",
+          "reason": "missing"
+        },
+        {
+          "key": "search.mediaSection",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.directPlay",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitor",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusActive",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusError",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.never",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.justNow",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.minutesAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.hoursAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.lastPoll",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastSync",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastBackup",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealth",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.openPlaybackOrphans",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.dbWithoutRedis",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.excludedLibraries",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealthDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.monitorStatusOk",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.playbackHistoryNote",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.dbWithoutRedisDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphan",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphanDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.noOrphanPlaybacks",
+          "reason": "missing"
+        }
+      ]
+    },
+    "pt-BR.json": {
+      "count": 606,
+      "sample": [
+        {
+          "key": "common.mb",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "common.local",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.logHealth",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.directPlay",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitor",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusActive",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusError",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.never",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.justNow",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.minutesAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.hoursAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.lastPoll",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastSync",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastBackup",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealth",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.openPlaybackOrphans",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.dbWithoutRedis",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.excludedLibraries",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealthDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.monitorStatusOk",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.playbackHistoryNote",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.dbWithoutRedisDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphan",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphanDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.noOrphanPlaybacks",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.openedOn",
+          "reason": "missing"
+        }
+      ]
+    },
+    "ru.json": {
+      "count": 598,
+      "sample": [
+        {
+          "key": "nav.logHealth",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.directPlay",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitor",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusActive",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusError",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.never",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.justNow",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.minutesAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.hoursAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.lastPoll",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastSync",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastBackup",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealth",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.openPlaybackOrphans",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.dbWithoutRedis",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.excludedLibraries",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealthDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.monitorStatusOk",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.playbackHistoryNote",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.dbWithoutRedisDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphan",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphanDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.noOrphanPlaybacks",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.openedOn",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.recentClosuresTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.recentClosuresDesc",
+          "reason": "missing"
+        }
+      ]
+    },
+    "zh.json": {
+      "count": 596,
+      "sample": [
+        {
+          "key": "common.mb",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "nav.logHealth",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.monitor",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusActive",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.monitorStatusError",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.never",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.justNow",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.minutesAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.hoursAgo",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.lastPoll",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastSync",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.lastBackup",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealth",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.openPlaybackOrphans",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.dbWithoutRedis",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.excludedLibraries",
+          "reason": "same-as-en"
+        },
+        {
+          "key": "dashboard.logHealthDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.monitorStatusOk",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.playbackHistoryNote",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.dbWithoutRedisDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphan",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.redisOrphanDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.anomalyChartsDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.orphanPlaybacksDesc",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.noOrphanPlaybacks",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.openedOn",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.recentClosuresTitle",
+          "reason": "missing"
+        },
+        {
+          "key": "dashboard.recentClosuresDesc",
+          "reason": "missing"
+        }
+      ]
+    }
+  }
+}

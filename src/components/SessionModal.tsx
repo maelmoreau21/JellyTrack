@@ -57,17 +57,34 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
                 </div>
 
                 <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {(session.telemetryEvents || []).map((ev: any, i: number) => (
-                    <div key={i} className="p-2 rounded bg-zinc-50 dark:bg-zinc-900/50">
-                      <div className="font-medium text-[12px]">{ev.eventType}</div>
-                      <div className="text-zinc-400 text-[11px]">{format(new Date(String(ev.createdAt || '')), 'PPpp')}</div>
-                      <div className="mt-1 text-[11px]">{Math.floor(Number(ev.positionMs || 0) / 1000)}s</div>
-                      <div className="mt-2 flex gap-2">
-                        <Button onClick={() => jumpTo(ev.positionMs)}>Jump</Button>
-                        <Button onClick={() => copyJump(ev.positionMs)}>Copy</Button>
+                  {(session.telemetryEvents || []).map((ev: any, i: number) => {
+                    let detail = '';
+                    try {
+                      const md = typeof ev.metadata === 'string' ? JSON.parse(ev.metadata) : ev.metadata;
+                      if (md && md.from && md.to) {
+                        const fmt = (side: any) => {
+                          if (!side) return '—';
+                          const label = side.language ?? (side.index !== undefined ? `#${side.index}` : String(side));
+                          const codec = side.codec ? ` (${side.codec})` : '';
+                          return `${label}${codec}`;
+                        };
+                        detail = `${fmt(md.from)} → ${fmt(md.to)}`;
+                      } else if (md && md.from !== undefined && md.to !== undefined) {
+                        detail = `${md.from} → ${md.to}`;
+                      }
+                    } catch {}
+                    return (
+                      <div key={i} className="p-2 rounded bg-zinc-50 dark:bg-zinc-900/50">
+                        <div className="font-medium text-[12px]">{ev.eventType}</div>
+                        <div className="text-zinc-400 text-[11px]">{format(new Date(String(ev.createdAt || '')), 'PPpp')}</div>
+                        <div className="mt-1 text-[11px]">{Math.floor(Number(ev.positionMs || 0) / 1000)}s{detail ? ` · ${detail}` : ''}</div>
+                        <div className="mt-2 flex gap-2">
+                          <Button onClick={() => jumpTo(ev.positionMs)}>Jump</Button>
+                          <Button onClick={() => copyJump(ev.positionMs)}>Copy</Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

@@ -200,7 +200,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     if (playbackIds.length > 0 && mediaDurationSeconds && mediaDurationSeconds > 0) {
         const rawEvents = await prisma.telemetryEvent.findMany({
             where: { playbackId: { in: playbackIds } },
-            select: { eventType: true, positionMs: true, playbackId: true },
+            select: { eventType: true, positionMs: true, playbackId: true, metadata: true },
         });
         // Aggregate by eventType + position bucket (each bucket = 1% of duration)
         const durationMs = mediaDurationSeconds * 1000;
@@ -224,10 +224,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         });
 
         // Build per-session timelines for detail view
-        const eventsByPlayback = new Map<string, { eventType: string; positionMs: number }[]>();
+        const eventsByPlayback = new Map<string, { eventType: string; positionMs: number; metadata?: any }[]>();
         for (const e of rawEvents) {
             const list = eventsByPlayback.get(e.playbackId) || [];
-            list.push({ eventType: e.eventType, positionMs: Number(e.positionMs) });
+            list.push({ eventType: e.eventType, positionMs: Number(e.positionMs), metadata: e.metadata || null });
             eventsByPlayback.set(e.playbackId, list);
         }
         sessionTimelines = effectiveHistory

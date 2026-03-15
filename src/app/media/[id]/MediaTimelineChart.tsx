@@ -18,7 +18,7 @@ export interface SessionTimeline {
     jellyfinUserId: string;
     durationWatched: number; // seconds
     startedAt: string;
-    events: { eventType: string; positionMs: number }[];
+    events: { eventType: string; positionMs: number; metadata?: any }[];
 }
 
 export interface MediaTimelineChartProps {
@@ -272,6 +272,21 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                             .map((evt, ei) => {
                                                 const pct = Math.min((evt.positionMs / durationMs) * 100, 100);
                                                 const color = EVENT_COLORS[evt.eventType] || EVENT_COLORS.stop;
+                                                let detail = '';
+                                                try {
+                                                    const md = typeof evt.metadata === 'string' ? JSON.parse(evt.metadata) : evt.metadata;
+                                                    if (md && md.from && md.to) {
+                                                        const fmt = (side: any) => {
+                                                            if (!side) return '—';
+                                                            const label = side.language ?? (side.index !== undefined ? `#${side.index}` : String(side));
+                                                            const codec = side.codec ? ` (${side.codec})` : '';
+                                                            return `${label}${codec}`;
+                                                        };
+                                                        detail = `${fmt(md.from)} → ${fmt(md.to)}`;
+                                                    } else if (md && md.from !== undefined && md.to !== undefined) {
+                                                        detail = `${md.from} → ${md.to}`;
+                                                    }
+                                                } catch {}
                                                 return (
                                                     <Tooltip key={ei}>
                                                         <TooltipTrigger asChild>
@@ -281,7 +296,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                                             />
                                                         </TooltipTrigger>
                                                         <TooltipContent className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 text-xs">
-                                                            {EVENT_ICONS[evt.eventType]} {t(`timeline_${evt.eventType}` as any)} @ {formatMs(evt.positionMs)}
+                                                            {EVENT_ICONS[evt.eventType]} {t(`timeline_${evt.eventType}` as any)}{detail ? ` — ${detail}` : ''} @ {formatMs(evt.positionMs)}
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 );

@@ -975,26 +975,75 @@ export async function POST(req: Request) {
                 }
             }
 
-            // Audio change tracking
+            // Audio change tracking (store readable labels with the index)
             if (audioStreamIndex !== undefined && audioStreamIndex !== null) {
                 const audioKey = `audio:${activePlayback.id}`;
-                const prevAudio = await redis.get(audioKey);
-                if (prevAudio !== null && prevAudio !== String(audioStreamIndex)) {
-                    updates.audioChanges = { increment: 1 };
-                    if (positionMs > 0) telemetryEvents.push({ eventType: "audio_change", positionMs, metadata: JSON.stringify({ from: prevAudio, to: String(audioStreamIndex) }) });
+                const prevRaw = await redis.get(audioKey);
+                let prevObj: any = null;
+                let prevIndex: any = null;
+                if (prevRaw !== null) {
+                    try {
+                        prevObj = JSON.parse(prevRaw);
+                        if (prevObj && typeof prevObj === 'object' && 'index' in prevObj) {
+                            prevIndex = prevObj.index;
+                        } else {
+                            prevIndex = prevObj;
+                        }
+                    } catch {
+                        // legacy raw string (index)
+                        prevIndex = isNaN(Number(prevRaw)) ? prevRaw : Number(prevRaw);
+                        prevObj = { index: prevIndex };
+                    }
                 }
-                await redis.setex(audioKey, 3600, String(audioStreamIndex));
+
+                if (prevRaw !== null && String(prevIndex) !== String(audioStreamIndex)) {
+                    updates.audioChanges = { increment: 1 };
+                    if (positionMs > 0) {
+                        const metadata = {
+                            from: { index: prevIndex ?? null, language: prevObj?.language ?? null, codec: prevObj?.codec ?? null },
+                            to: { index: audioStreamIndex, language: resolvedAudioLanguage ?? null, codec: resolvedAudioCodec ?? null },
+                        };
+                        telemetryEvents.push({ eventType: "audio_change", positionMs, metadata: JSON.stringify(metadata) });
+                    }
+                }
+
+                const toObj = { index: audioStreamIndex, language: resolvedAudioLanguage ?? null, codec: resolvedAudioCodec ?? null };
+                await redis.setex(audioKey, 3600, JSON.stringify(toObj));
             }
 
-            // Subtitle change tracking
+            // Subtitle change tracking (store readable labels with the index)
             if (subtitleStreamIndex !== undefined && subtitleStreamIndex !== null) {
                 const subKey = `sub:${activePlayback.id}`;
-                const prevSub = await redis.get(subKey);
-                if (prevSub !== null && prevSub !== String(subtitleStreamIndex)) {
-                    updates.subtitleChanges = { increment: 1 };
-                    if (positionMs > 0) telemetryEvents.push({ eventType: "subtitle_change", positionMs, metadata: JSON.stringify({ from: prevSub, to: String(subtitleStreamIndex) }) });
+                const prevRaw = await redis.get(subKey);
+                let prevObj: any = null;
+                let prevIndex: any = null;
+                if (prevRaw !== null) {
+                    try {
+                        prevObj = JSON.parse(prevRaw);
+                        if (prevObj && typeof prevObj === 'object' && 'index' in prevObj) {
+                            prevIndex = prevObj.index;
+                        } else {
+                            prevIndex = prevObj;
+                        }
+                    } catch {
+                        prevIndex = isNaN(Number(prevRaw)) ? prevRaw : Number(prevRaw);
+                        prevObj = { index: prevIndex };
+                    }
                 }
-                await redis.setex(subKey, 3600, String(subtitleStreamIndex));
+
+                if (prevRaw !== null && String(prevIndex) !== String(subtitleStreamIndex)) {
+                    updates.subtitleChanges = { increment: 1 };
+                    if (positionMs > 0) {
+                        const metadata = {
+                            from: { index: prevIndex ?? null, language: prevObj?.language ?? null, codec: prevObj?.codec ?? null },
+                            to: { index: subtitleStreamIndex, language: resolvedSubtitleLanguage ?? null, codec: resolvedSubtitleCodec ?? null },
+                        };
+                        telemetryEvents.push({ eventType: "subtitle_change", positionMs, metadata: JSON.stringify(metadata) });
+                    }
+                }
+
+                const toObj = { index: subtitleStreamIndex, language: resolvedSubtitleLanguage ?? null, codec: resolvedSubtitleCodec ?? null };
+                await redis.setex(subKey, 3600, JSON.stringify(toObj));
             }
 
             if (Object.keys(updates).length > 0) {
