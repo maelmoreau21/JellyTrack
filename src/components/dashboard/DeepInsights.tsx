@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { StreamProportionsChart } from "@/components/charts/StreamProportionsChart";
 import { StandardPieChart } from "@/components/charts/StandardMetricsCharts";
 import { getTranslations } from 'next-intl/server';
+import { normalizeResolution } from '@/lib/utils';
 
 function buildDateFilter(timeRange: string): any {
     const now = new Date();
@@ -31,8 +32,8 @@ function buildMediaTypeFilter(type: string | undefined, excludedLibraries: strin
         AND.push({
             NOT: {
                 OR: [
-                    { type: { in: excludedLibraries } },
-                    ...excludedLibraries.map((lib: string) => ({ collectionType: lib }))
+                    { libraryName: { in: excludedLibraries } },
+                    { collectionType: { in: excludedLibraries } }
                 ]
             }
         });
@@ -236,13 +237,46 @@ const getDeepInsights = unstable_cache(
 
         const resolutionMap = new Map<string, number>();
         resolutionData.forEach(r => {
-            let res = r.media?.resolution;
-            if (!res) res = "Unknown"; // Fallback for missing resolution
+            const res = normalizeResolution(r.media?.resolution);
             resolutionMap.set(res, (resolutionMap.get(res) || 0) + 1);
         });
 
-
         const resolutionChartData = Array.from(resolutionMap.entries())
+            .map(([name, value]) => ({ name, value }))
+            .sort((a: any, b: any) => b.value - a.value)
+            .slice(0, 8);
+
+        // --- Pro Telemetry: Audio & Subtitle distribution ---
+        const audioRows = await prisma.playbackHistory.findMany({
+            where: filteredWhere,
+            select: { audioLanguage: true, audioCodec: true },
+        });
+        const audioMap = new Map<string, number>();
+        audioRows.forEach(a => {
+            const lang = a.audioLanguage || 'Unknown';
+            const key = a.audioCodec ? `${lang} (${a.audioCodec})` : lang;
+            audioMap.set(key, (audioMap.get(key) || 0) + 1);
+        });
+        const audioChartData = Array.from(audioMap.entries())
+            .map(([name, value]) => ({ name, value }))
+            .sort((a: any, b: any) => b.value - a.value)
+            .slice(0, 8);
+
+        const subtitleRows = await prisma.playbackHistory.findMany({
+            where: filteredWhere,
+            select: { subtitleLanguage: true, subtitleCodec: true },
+        });
+        const subtitleMap = new Map<string, number>();
+        subtitleRows.forEach(s => {
+            if (!s.subtitleLanguage && !s.subtitleCodec) {
+                subtitleMap.set('None', (subtitleMap.get('None') || 0) + 1);
+            } else {
+                const lang = s.subtitleLanguage || 'Unknown';
+                const key = s.subtitleCodec ? `${lang} (${s.subtitleCodec})` : lang;
+                subtitleMap.set(key, (subtitleMap.get(key) || 0) + 1);
+            }
+        });
+        const subtitleChartData = Array.from(subtitleMap.entries())
             .map(([name, value]) => ({ name, value }))
             .sort((a: any, b: any) => b.value - a.value)
             .slice(0, 8);
@@ -264,7 +298,7 @@ const getDeepInsights = unstable_cache(
             .sort((a, b) => b.value - a.value)
             .slice(0, 8);
 
-        return { categorized, topClients, streamMethodsChartData, resolutionChartData, deviceChartData, topGenres };
+        return { categorized, topClients, streamMethodsChartData, resolutionChartData, deviceChartData, topGenres, audioChartData, subtitleChartData };
     },
     // Dynamic cache key — varies with params so different filters get different cached results
     ['JellyTrack-deep-insights-v3'],
@@ -395,6 +429,36 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                             <StandardPieChart data={data.deviceChartData} nameKey="name" dataKey="value" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noDeviceData')}</p>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+            {/* Audio & Subtitles */}
+            <div className="grid gap-4 md:grid-cols-2">
+                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle>{t('audioBreakdown')}</CardTitle>
+                        <CardDescription>{t('audioBreakdownDesc')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px] flex items-center justify-center">
+                        {data.audioChartData && data.audioChartData.length > 0 ? (
+                            <StandardPieChart data={data.audioChartData} nameKey="name" dataKey="value" />
+                        ) : (
+                            <p className="text-xs text-muted-foreground">{t('noDataSmall')}</p>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle>{t('subtitles')}</CardTitle>
+                        <CardDescription>{t('subtitlesDesc')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px] flex items-center justify-center">
+                        {data.subtitleChartData && data.subtitleChartData.length > 0 ? (
+                            <StandardPieChart data={data.subtitleChartData} nameKey="name" dataKey="value" />
+                        ) : (
+                            <p className="text-xs text-muted-foreground">{t('noDataSmall')}</p>
                         )}
                     </CardContent>
                 </Card>

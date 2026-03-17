@@ -12,6 +12,7 @@ import TelemetryChart from "./TelemetryChart";
 import MediaTimelineChart from "./MediaTimelineChart";
 import type { TimelineEvent, SessionTimeline } from "./MediaTimelineChart";
 import { getTranslations, getLocale } from 'next-intl/server';
+import { normalizeResolution } from '@/lib/utils';
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const t = await getTranslations('mediaProfile');
     const tc = await getTranslations('common');
     const locale = await getLocale();
+    const normalizedMediaResolution = normalizeResolution(media.resolution);
 
     // Fetch metadata from Jellyfin API
     let overview = "";
@@ -126,6 +128,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 title: c.title,
                 type: c.type,
                 resolution: c.resolution,
+                normalizedResolution: normalizeResolution(c.resolution),
                 durationMs: c.durationMs,
                 _count: (seasonEpisodeStats.get(c.jellyfinMediaId)?.count || 0) + c.playbackHistory.length,
                 _totalDuration: (seasonEpisodeStats.get(c.jellyfinMediaId)?.duration || 0) + c.playbackHistory.reduce((acc: number, h: any) => acc + h.durationWatched, 0),
@@ -141,6 +144,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 title: c.title,
                 type: c.type,
                 resolution: c.resolution,
+                normalizedResolution: normalizeResolution(c.resolution),
                 durationMs: c.durationMs,
                 _count: c.playbackHistory.length,
                 _totalDuration: c.playbackHistory.reduce((acc: number, h: any) => acc + h.durationWatched, 0),
@@ -333,7 +337,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             <h1 className="text-3xl font-bold tracking-tight">{media.title}</h1>
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
                                 <Badge variant="outline">{media.type}</Badge>
-                                {media.resolution && <Badge variant="secondary">{media.resolution}</Badge>}
+                                {media.resolution && <Badge variant="secondary">{normalizedMediaResolution}</Badge>}
                                 {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
                                 {productionYear && <Badge variant="secondary" className="bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">{productionYear}</Badge>}
                                 {communityRating && <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30">â˜… {communityRating.toFixed(1)}</Badge>}
@@ -410,7 +414,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                     </TableCell>
                                                     {media.type !== 'MusicAlbum' && (
                                                         <TableCell className="text-center">
-                                                            {child.resolution ? <Badge variant="secondary" className="text-xs">{child.resolution}</Badge> : <span className="text-zinc-500 text-xs">—</span>}
+                                                            {child.resolution ? <Badge variant="secondary" className="text-xs">{child.normalizedResolution}</Badge> : <span className="text-zinc-500 text-xs">—</span>}
                                                         </TableCell>
                                                     )}
                                                     <TableCell className="text-center font-medium">

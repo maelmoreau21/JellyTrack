@@ -5,6 +5,7 @@ import { getGeoLocation } from "@/lib/geoip";
 import { inferLibraryKey, isLibraryExcluded } from "@/lib/mediaPolicy";
 import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
 import { cleanupOrphanedSessions } from "@/lib/cleanup";
+import { normalizeResolution } from '@/lib/utils';
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -370,7 +371,7 @@ export async function POST(req: Request) {
                 type,
                 collectionType,
                 genres: media.genres || media.Genres || [],
-                resolution: media.resolution || media.Resolution || null,
+                resolution: (media.resolution || media.Resolution) ? normalizeResolution(media.resolution || media.Resolution) : null,
                 durationMs: media.durationMs != null ? BigInt(media.durationMs) : null,
                 parentId: parentItemId,
                 artist: media.artist || media.Artist || media.albumArtist || media.AlbumArtist || null,
@@ -938,7 +939,7 @@ export async function POST(req: Request) {
                 type: resolvedType,
                 collectionType: resolvedCollectionType,
                 genres: mediaPayload.genres || mediaPayload.Genres || [],
-                resolution: mediaPayload.resolution || mediaPayload.Resolution || null,
+                resolution: (mediaPayload.resolution || mediaPayload.Resolution) ? normalizeResolution(mediaPayload.resolution || mediaPayload.Resolution) : null,
                 durationMs: Number.isFinite(mediaDurationMs) && mediaDurationMs > 0 ? BigInt(mediaDurationMs) : null,
                 parentId: parentItemId || existingMedia?.parentId || null,
                 artist: mediaPayload.artist || mediaPayload.Artist || albumArtist || existingMedia?.artist || null,
@@ -1305,7 +1306,7 @@ export async function POST(req: Request) {
                     type,
                     collectionType,
                     genres: item.genres || item.Genres || [],
-                    resolution: item.resolution || item.Resolution || null,
+                    resolution: (item.resolution || item.Resolution) ? normalizeResolution(item.resolution || item.Resolution) : null,
                     durationMs: item.durationMs != null ? BigInt(item.durationMs) : null,
                     parentId: normalizeJellyfinId(item.parentId || item.ParentId || null),
                     artist: item.artist || item.Artist || null,

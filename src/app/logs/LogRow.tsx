@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown } from "lucide-react";
 import { FallbackImage } from "@/components/FallbackImage";
 import { useTranslations } from 'next-intl';
+import { normalizeResolution } from '@/lib/utils';
 
 export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: any; visibleColumns: string[]; onOpenDetails?: (log:any)=>void }) {
   const t = useTranslations('logs');
@@ -61,6 +62,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
     });
     return out.sort((a, b) => a.pos - b.pos);
   }, [events, bucketMs]);
+
+  const normalizedResolution = log.media?.resolution ? normalizeResolution(log.media.resolution) : null;
 
   const getEventMeta = (type: string | undefined) => {
     switch (type) {
@@ -167,9 +170,9 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
                 )}
 
                 <div className="hidden md:flex items-center gap-2 mt-1 text-xs text-zinc-500">
-                  {log.media?.resolution && (
-                    <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{log.media.resolution}</span>
-                  )}
+                  {normalizedResolution && (
+                      <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{normalizedResolution}</span>
+                    )}
                   <span className={`px-1.5 py-0.5 rounded ${isTranscode ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>{log.playMethod || 'DirectPlay'}</span>
                   {log.clientName && <span className="truncate">{log.clientName}</span>}
                 </div>

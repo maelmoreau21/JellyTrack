@@ -3,6 +3,7 @@ import { FallbackImage } from "@/components/FallbackImage";
 import Link from "next/link";
 import { Clock, Sparkles, Film, Tv, Music, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { getJellyfinImageUrl } from "@/lib/jellyfin";
+import { normalizeResolution } from '@/lib/utils';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -178,7 +179,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                     )}
                     {media.resolution && (
                       <Badge className="mt-1.5 w-fit bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 border text-[10px] px-1.5 py-0">
-                        {media.resolution}
+                        {normalizeResolution(media.resolution)}
                       </Badge>
                     )}
                   </div>

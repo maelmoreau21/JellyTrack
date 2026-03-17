@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { GenreDistributionChart, GenreData } from "@/components/charts/GenreDistributionChart";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTranslations } from 'next-intl/server';
+import { normalizeResolution } from '@/lib/utils';
 
 export const dynamic = "force-dynamic";
 
@@ -147,7 +148,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         }
         const durationHours = parseFloat((durationSeconds / 3600).toFixed(1));
         const qualityPercent = plays > 0 ? Math.round((dpCount / plays) * 100) : 0;
-        return { ...media, plays, durationHours, qualityPercent, childCount };
+        return { ...media, plays, durationHours, qualityPercent, childCount, normalizedResolution: normalizeResolution(media.resolution) };
     });
 
     // Global Stats for Charts
@@ -155,16 +156,15 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const resolutionCounts = new Map<string, number>();
     parentItems.forEach((m: any) => {
         if (m.genres) m.genres.forEach((g: string) => genreCounts.set(g, (genreCounts.get(g) || 0) + 1));
-        if (m.resolution) resolutionCounts.set(m.resolution, (resolutionCounts.get(m.resolution) || 0) + 1);
+        const nr = normalizeResolution(m.resolution);
+        resolutionCounts.set(nr, (resolutionCounts.get(nr) || 0) + 1);
     });
 
     const topGenres = Array.from(genreCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 10);
-    const sumRes = (pattern: RegExp) => Array.from(resolutionCounts.entries()).reduce((acc, [k, v]) => pattern.test(String(k)) ? acc + v : acc, 0);
-
-    const res4K = sumRes(/4k|2160|3840/i) || resolutionCounts.get("4K") || 0;
-    const res1080p = sumRes(/1080|1080p/i) || resolutionCounts.get("1080p") || 0;
-    const res720p = sumRes(/720|720p/i) || resolutionCounts.get("720p") || 0;
-    const resSD = sumRes(/sd|480|480p/i) || resolutionCounts.get("SD") || 0;
+    const res4K = resolutionCounts.get('4K') || 0;
+    const res1080p = resolutionCounts.get('1080p') || 0;
+    const res720p = resolutionCounts.get('720p') || 0;
+    const resSD = resolutionCounts.get('SD') || 0;
 
     // Library Metrics
     const allMedia = await prisma.media.findMany({
@@ -476,14 +476,14 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                             <h3 className="text-white font-bold text-lg leading-tight truncate">{media.title}</h3>
                                             <span className="text-zinc-300 text-xs">{media.productionYear}</span>
                                         </div>
-                                        {media.resolution && (
+                                        {media.normalizedResolution && (
                                             <div className="absolute top-2 right-2 z-10">
                                                 <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${
-                                                    media.resolution.includes('4K') ? 'bg-orange-500 text-black border-transparent' : 
-                                                    media.resolution.includes('1080') ? 'bg-blue-600 text-white border-transparent' :
+                                                    media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : 
+                                                    media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' :
                                                     'bg-zinc-800 text-zinc-300 border-zinc-700'
                                                 }`}>
-                                                    {media.resolution === '4K' ? '4K UHD' : media.resolution}
+                                                    {media.normalizedResolution === '4K' ? '4K UHD' : media.normalizedResolution}
                                                 </Badge>
                                             </div>
                                         )}

@@ -37,3 +37,18 @@ export function categorizeClient(clientName: string): string {
     if (lower.includes("desktop") || lower.includes("jellyfin media player") || lower.includes("mpv") || lower.includes("vlc") || lower.includes("windows") || lower.includes("macos") || lower.includes("linux")) return "Desktop";
     return "Autre";
 }
+
+/**
+ * Normalise une valeur de résolution en une étiquette standardisée.
+ * Exemples retournés: '4K', '1080p', '720p', 'SD', 'Unknown' ou la valeur d'origine trimée.
+ */
+export function normalizeResolution(raw?: string | null): string {
+    if (!raw) return "Unknown";
+    const s = String(raw).trim();
+    const lower = s.toLowerCase();
+    if (/(4k|2160|3840|ultra[-\s]?hd|uhd)/i.test(lower)) return '4K';
+    if (/(1080p|1080|full[-\s]?hd|fhd)/i.test(lower)) return '1080p';
+    if (/(720p|720|\bhd\b)/i.test(lower)) return '720p';
+    if (/(480p|480|\bsd\b)/i.test(lower)) return 'SD';
+    return s;
+}

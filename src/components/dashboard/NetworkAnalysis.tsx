@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StandardAreaChart, StandardBarChart, StandardPieChart } from "@/components/charts/StandardMetricsCharts";
 import { TranscodeHourlyChart } from "@/components/charts/TranscodeHourlyChart";
 import { getTranslations } from 'next-intl/server';
+import { normalizeResolution } from '@/lib/utils';
 
 const getNetworkData = unstable_cache(
     async (type: string | undefined, timeRange: string, excludedLibraries: string[]) => {
@@ -96,7 +97,8 @@ const getNetworkData = unstable_cache(
                         reasons.push("audioHDNotSupported");
                     }
                 }
-                if (h.media.resolution === "4K") {
+                const normalizedRes = normalizeResolution(h.media?.resolution);
+                if (normalizedRes === "4K") {
                     reasons.push("resolution4K");
                 }
                 if (reasons.length === 0) {
@@ -108,7 +110,7 @@ const getNetworkData = unstable_cache(
                 if (!transcodedMediaMap.has(mediaKey)) {
                     transcodedMediaMap.set(mediaKey, {
                         title: mediaKey,
-                        resolution: h.media.resolution || "?",
+                        resolution: normalizeResolution(h.media?.resolution) || "?",
                         count: 0,
                         totalDuration: 0,
                         reasons: new Map(),
