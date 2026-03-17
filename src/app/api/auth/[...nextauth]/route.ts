@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            "Authorization": `MediaBrowser Client="JellyTulli", Device="Server", DeviceId="JellyTulli-1", Version="1.0.0"`
+                            "Authorization": `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="1.0.0"`
                         },
                         body: JSON.stringify({
                             Username: credentials.username,

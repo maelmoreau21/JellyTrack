@@ -449,7 +449,9 @@
     "statsTime": "Temps de Lecture",
     "statsTimeDesc": "Durée cumulative de tous les médias.",
     "timeDays": "{days}j {hours}h",
-    "deepAnalysisTitle": "Analyse Profonde"
+    "deepAnalysisTitle": "Analyse Profonde",
+    "libraryDetailsTitle": "Détails par Bibliothèque",
+    "libraries": "bibliothèques"
   },
   "recent": {
     "title": "Ajouts récents",

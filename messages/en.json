@@ -449,7 +449,9 @@
     "statsTime": "Total Playtime",
     "statsTimeDesc": "Cumulative duration of all media.",
     "timeDays": "{days}d {hours}h",
-    "deepAnalysisTitle": "Deep Analysis"
+    "deepAnalysisTitle": "Deep Analysis",
+    "libraryDetailsTitle": "Library details",
+    "libraries": "libraries"
   },
   "recent": {
     "title": "Recently Added",

@@ -668,7 +668,7 @@ export default function SettingsPage() {
                                     <div className="space-y-0.5">
                                         <Label className="text-sm font-medium text-zinc-200">Activer la période de disponibilité automatique</Label>
                                         <p className="text-xs text-zinc-500">
-                                            Si activé, le Wrapped ne sera accessible qu'entre les dates définies ci-dessous.
+                                            Si activé, le Wrapped ne sera accessible qu&apos;entre les dates définies ci-dessous.
                                         </p>
                                     </div>
                                     <Switch

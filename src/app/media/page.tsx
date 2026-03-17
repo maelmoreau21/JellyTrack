@@ -196,6 +196,14 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         }
     }
 
+    // Ensure DB-derived library names are present (fallback when Jellyfin views are not available)
+    const uniqueLibs = new Set(allMedia.map(m => m.libraryName || tc('other')));
+    for (const name of uniqueLibs) {
+        if (!libraryStatsMap.has(name)) {
+            libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0 });
+        }
+    }
+
     let totalSizeBytes = BigInt(0);
     let totalDurationMs = BigInt(0);
     let movieCount = 0;
@@ -336,7 +344,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                     stats.books > 0 && `${stats.books} ${tc('books').toLowerCase()}`,
                 ].filter(Boolean).join(', '),
                 topItem: (topItem && topContent[0]._count.mediaId) ? { title: topItem.title, plays: topContent[0]._count.mediaId, id: topItem.jellyfinMediaId } : null,
-                lastAdded: lastAdded ? { title: lastAdded.title, date: lastAdded.dateAdded, id: lastAdded.jellyfinMediaId } : null
+                lastAdded: lastAdded ? { title: lastAdded.title, date: lastAdded.dateAdded ? lastAdded.dateAdded.toISOString() : null, id: lastAdded.jellyfinMediaId } : null
             };
         }));
     

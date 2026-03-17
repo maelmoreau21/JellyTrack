@@ -93,18 +93,37 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         }
 
         // 3. Sync Media (Movies, Series, Seasons, Episodes, Audio, MusicAlbums, Books) with Genres and MediaSources
-        let itemsUrl = `${baseUrl}/Items?IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios`;
+        // Use a paginated fetch to avoid very large single requests causing long timeouts.
+        const baseItemsQuery = `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios`;
+        let minDateParam = '';
         if (options?.recentOnly) {
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            itemsUrl += `&MinDateCreated=${sevenDaysAgo.toISOString()}&SortBy=DateCreated&SortOrder=Descending`;
+            minDateParam = `&MinDateCreated=${sevenDaysAgo.toISOString()}&SortBy=DateCreated&SortOrder=Descending`;
         }
-        console.log(`[Sync] Fetching Media Items${options?.recentOnly ? ' (recent only)' : ''}...`);
-        const itemsRes = await fetchWithTimeout(itemsUrl, { headers: jellyfinHeaders }, 60000);
-        if (!itemsRes.ok) throw new Error(`Erreur de récupération des médias: ${itemsRes.status}`);
-        const itemsData = await itemsRes.json();
-        const items = itemsData.Items || [];
-        console.log(`[Sync] Jellyfin returned ${items.length} items to index.`);
+
+        const pageSize = 200;
+        let items: any[] = [];
+        let startIndex = 0;
+        let page = 0;
+        while (true) {
+            page++;
+            const pageUrl = `${baseUrl}/Items?${baseItemsQuery}${minDateParam}&StartIndex=${startIndex}&Limit=${pageSize}`;
+            console.log(`[Sync] Fetching Media Items page ${page} (start=${startIndex})${options?.recentOnly ? ' (recent only)' : ''}...`);
+            const pageRes = await fetchWithTimeout(pageUrl, { headers: jellyfinHeaders }, 60000);
+            if (!pageRes.ok) throw new Error(`Erreur de récupération des médias: ${pageRes.status}`);
+            const pageData = await pageRes.json();
+            const pageItems = pageData.Items || [];
+            items.push(...pageItems);
+            if (pageItems.length < pageSize) break;
+            startIndex += pageSize;
+            // Safety: avoid infinite loops on unexpected Jellyfin behaviour
+            if (page >= 1000) {
+                console.warn('[Sync] Reached page limit while fetching media items, stopping early.');
+                break;
+            }
+        }
+        console.log(`[Sync] Jellyfin returned ${items.length} items to index (paginated).`);
 
         let mediaCount = 0;
         for (const item of items) {

@@ -1,6 +1,6 @@
-# JellyTulli - Project Context & Architecture
+# JellyTrack - Project Context & Architecture
 
-**Description** : JellyTulli (Jellyfin + Tautulli) est un wrapper analytique et un traceur autonome ("Ultimate Dashboard 2.0") pour Jellyfin.
+**Description** : JellyTrack (Jellyfin + Tautulli) est un wrapper analytique et un traceur autonome ("Ultimate Dashboard 2.0") pour Jellyfin.
 
 ## Tech Stack
 - Frontend/Backend: **Next.js 15+ (App Router, Server Components)**
@@ -87,8 +87,8 @@ A massive analytical refactoring was introduced focusing on Data Context and Res
 13. **UUID Normalization, Chunked Upload & Auto-Backups (Phase 12)**:
    - **UUID Normalization**: Playback Reporting TSV exports IDs without dashes (32 hex chars). A `normalizeUuid()` function now adds standard UUID dashes (8-4-4-4-12) before upsert, ensuring imported users correctly match existing Jellyfin users in the database.
    - **Logs CSS Overflow Fix**: Media title column in `/logs` now uses `max-w-[150px] md:max-w-[250px]` with `truncate` to prevent long titles from overflowing into adjacent columns.
-   - **Chunked Upload (Jellystat 174MB)**: Client-side `File.slice()` splits the JSON into 5MB chunks sent sequentially to `/api/backup/import/jellystat/chunk`. Each chunk is saved to `/tmp/jellytulli-uploads/{uploadId}/`. A `/api/backup/import/jellystat/finalize` endpoint merges all chunks then pipes the merged file through `stream-json` for incremental DB import. Progress bar displayed in the UI (0-50% upload, 55-100% processing).
-   - **Auto-Backup System**: `node-cron` task in `instrumentation.ts` triggers `performAutoBackup()` at 3:30 AM daily. The function (`src/lib/autoBackup.ts`) exports all Users, Media, PlaybackHistory and Settings to `/data/backups/jellytulli-auto-YYYY-MM-DD_HH-MM-SS.json`. Rolling rotation keeps only the 5 most recent files. A Docker named volume `jellytulli_backups` persists the backups across container rebuilds.
+   - **Chunked Upload (Jellystat 174MB)**: Client-side `File.slice()` splits the JSON into 5MB chunks sent sequentially to `/api/backup/import/jellystat/chunk`. Each chunk is saved to `/tmp/jellytrack-uploads/{uploadId}/`. A `/api/backup/import/jellystat/finalize` endpoint merges all chunks then pipes the merged file through `stream-json` for incremental DB import. Progress bar displayed in the UI (0-50% upload, 55-100% processing).
+   - **Auto-Backup System**: `node-cron` task in `instrumentation.ts` triggers `performAutoBackup()` at 3:30 AM daily. The function (`src/lib/autoBackup.ts`) exports all Users, Media, PlaybackHistory and Settings to `/data/backups/jellytrack-auto-YYYY-MM-DD_HH-MM-SS.json`. Rolling rotation keeps only the 5 most recent files. A Docker named volume `jellytrack_backups` persists the backups across container rebuilds.
    - **Auto-Backup UI**: New card in `/settings` lists the 5 auto-backups with date, size, and a "Restaurer" button. Restore endpoint (`/api/backup/auto/restore`) reads the file from disk and replays it via Prisma `$transaction` with full cascade (delete → recreate all tables).
 
 14. **DB Pool Fix, Jellystat Parser, RBAC & Extended Wrapped (Phase 13)**:
@@ -222,7 +222,7 @@ A massive analytical refactoring was introduced focusing on Data Context and Res
 
 29. **Wrapped Enrichment, Backup Fix, Live Auto-Refresh, Image Fix & Clickable Stats (Phase 29)**:
    - **Wrapped Spotify-Style Enrichment (Obj1)**: `src/app/wrapped/[userId]/page.tsx` completely rewritten with enriched data computation. New data fields: `peakHour` (most active hour via hourCounts), `peakHourSessions` (count), `monthlyHours` (array of 12 months with name + hours), `topSeries` (aggregated from Episode→Season→Series via 2-hop parent chain), `topArtists` (aggregated from Audio→Album→Artist). `topMedia` changed from `string[]` to `{ title: string; seconds: number }[]` (top 5 instead of top 3). `topGenres` now returns top 5 with counts. `WrappedClient.tsx` rewritten with new sub-components: `RankedList` (proportional gradient bars), `MonthlyChart` (12-bar mini chart), `GenreChart` (horizontal colored bars). New slides: Monthly breakdown (bar chart + best month highlight), Peak hour (with session count), Top genres (genre n°1 + full chart), Top 5 all media (with duration bars), Top Series (conditional), Top Artists/Albums (conditional), Épisodes Favoris. Auto-advance changed from 6s to 8s. Bottom controls show `{current} / {total}` slide counter.
-   - **Backup Deletion "Erreur réseau" Fix (Obj2)**: Root cause — `src/app/api/backup/auto/delete/route.ts` was completely missing (empty directory). Created the missing route with POST handler, `getServerSession` auth check, `path.basename()` for path traversal protection, filename validation (`jellytulli-auto-*.json`), `existsSync` + `unlinkSync` for deletion, proper error handling (400/401/404/500).
+   - **Backup Deletion "Erreur réseau" Fix (Obj2)**: Root cause — `src/app/api/backup/auto/delete/route.ts` was completely missing (empty directory). Created the missing route with POST handler, `getServerSession` auth check, `path.basename()` for path traversal protection, filename validation (`jellytrack-auto-*.json`), `existsSync` + `unlinkSync` for deletion, proper error handling (400/401/404/500).
    - **Live Streams Auto-Refresh (Obj3)**: Dashboard "En Direct" section extracted from server-rendered `page.tsx` into a new `LiveStreamsPanel` client component (`src/components/dashboard/LiveStreamsPanel.tsx`). Component polls `/api/streams` every 10 seconds via `useEffect` + `setInterval`. New API route `src/app/api/streams/route.ts` reads Redis `stream:*` keys with the same enrichment logic (subtitles, progress, pause detection). Initial data passed as `initialStreams` / `initialBandwidth` props from server for SSR hydration. Unused imports (`FallbackImage`, `PlayCircle`, `getJellyfinImageUrl`) cleaned from `page.tsx`.
    - **DirectPlay Label Clarification (Obj4)**: KPI card renamed from "Efficacité DirectPlay" to "DirectPlay". Value now shows `{percent}% DP` with a small "DP" suffix. Description changed from "Contenus non transcodés (Période)" to "Lecture sans transcodage (Période)".
    - **Logs Image Fix (Obj5)**: `FallbackImage` in `src/app/logs/page.tsx` was missing `fill` and `className="object-cover"` props, causing images to not display or get cropped. Both props added. All other `FallbackImage` usages verified correct (UserRecentMedia, media pages, LiveStreamsPanel).
@@ -315,6 +315,17 @@ A massive analytical refactoring was introduced focusing on Data Context and Res
 
 ---
 
+   ## Phase 39: Quick fixes (2026-03-17)
+   - **Sync pagination & robustness**: Rewrote the Jellyfin Items fetch to use paginated requests (200 items/page) in `src/lib/sync.ts`. This prevents single huge requests from timing out and reduces aborted syncs. A safety page limit avoids infinite loops.
+   - **Library page resilience**: Ensured the `/media` Server Component pre-populates library names from the DB when Jellyfin VirtualFolders are unavailable, and serialized `lastAdded.date` to an ISO string to avoid server→client serialization issues (`src/app/media/page.tsx`). This fixes the empty "Bibliothèque" UI when Jellyfin views can't be fetched.
+   - **Audio language sanitization**: Improved audio language normalization in `src/components/dashboard/GranularAnalysis.tsx` (strip codec parentheses, normalize separators, map common 3-letter codes) to prevent codecs and noise from polluting the "Répartition Audio" pie chart.
+   - **Resolution matrix guidance**: The sync improvements and monitor enrichment reduce "Inconnu" resolution cases; if you still see "Unknown 100%", re-run a full sync and check that `JELLYFIN_URL` is reachable from the container (see below).
+
+   Notes / next steps for deployers:
+   - If auto-backup aborts, verify `BACKUP_DIR` is set and writable by the container user (Docker: set `BACKUP_DIR=/data/backups` and ensure `docker-entrypoint.sh` remaps PUID/PGID or create the directory with correct ownership). `src/lib/autoBackup.ts` writes to `process.env.BACKUP_DIR || ./backups`.
+   - For sync problems (`La requête a expiré`), confirm `JELLYFIN_URL` and `JELLYFIN_API_KEY` are correct and reachable from the JellyTrack container (in Docker Compose use the real server IP or service name that resolves in the compose network). Cron: sync runs at 03:00, backup at 03:30 by default.
+   - After deploying the changes, trigger a manual full sync (`POST /api/sync` with mode `full`) and a manual backup (`POST /api/backup/auto/trigger`) to validate behavior and permissions. Monitor the server logs for any remaining errors.
+
 ## Phase Sécurité — Audit DevSecOps Complet
 
 Audit de sécurité réalisé par un agent IA (rôle Ingénieur Cybersécurité Sénior) couvrant l'ensemble de la base de code. Toutes les vulnérabilités identifiées ont été corrigées.
@@ -370,7 +381,7 @@ Routes ayant reçu un `requireAdmin()` explicite (9 routes) :
 - **Après** : `maxAge` = 7 jours.
 
 ### 10. Validation fichiers backup
-- `/api/backup/auto/restore` : Ajout de la validation du préfixe `jellytulli-auto-` et de l'extension `.json` (aligne avec `/auto/delete`).
+- `/api/backup/auto/restore` : Ajout de la validation du préfixe `jellytrack-auto-` et de l'extension `.json` (aligne avec `/auto/delete`).
 
 ### Résultats de l'audit (aucune action nécessaire)
 - **Injections SQL** : Aucun `$queryRaw` / `$executeRaw` dans le code. Toutes les requêtes Prisma sont paramétrées ✅
@@ -875,4 +886,4 @@ Cette phase marque l'aboutissement du support multi-langues et la stabilisation 
 - Fixed invalid JSON in `messages/it.json` that caused the audit to fail.
 - Added placeholder values for missing keys across `messages/*.json`.
 - New i18n helper scripts added in `scripts/` (audit, placeholder population, JSON validation).
-- UI tweaks applied (logs area widened, timeline redesigned, chart contrast improvements).
+- UI tweaks applied (logs area widened, timeline redesigned, chart contrast improvements).
