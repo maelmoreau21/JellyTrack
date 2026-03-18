@@ -299,6 +299,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const timeLabel = t('timeDays', { days: totalDays, hours: totalHoursAfterDays });
 
     const validLibraries = Array.from(libraryStatsMap.entries()).filter(([name, stats]) => {
+        if (name === tc('other')) return false;
         const hasItems = stats.movies > 0 || stats.series > 0 || stats.music > 0 || stats.books > 0;
         return hasItems;
     });

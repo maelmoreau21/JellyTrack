@@ -46,9 +46,9 @@ export default function StatsDeepAnalysis() {
     if (!data) return null;
 
     const sections = [
-        { title: "Top Directors", icon: Video, items: data.topDirectors, color: "text-sky-400", bg: "bg-sky-400/10" },
-        { title: "Top Actors", icon: User, items: data.topActors, color: "text-violet-400", bg: "bg-violet-400/10" },
-        { title: "Top Studios", icon: Building2, items: data.topStudios, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+        { title: "Top Directors", icon: Video, items: data.topDirectors, color: "text-sky-400", bg: "bg-sky-400/10", actionText: "films/séries réalisés" },
+        { title: "Top Actors", icon: User, items: data.topActors, color: "text-violet-400", bg: "bg-violet-400/10", actionText: "apparitions (films/séries)" },
+        { title: "Top Studios", icon: Building2, items: data.topStudios, color: "text-emerald-400", bg: "bg-emerald-400/10", actionText: "films/séries produits" },
     ];
 
     return (
@@ -70,17 +70,17 @@ export default function StatsDeepAnalysis() {
                         <div className="divide-y divide-white/[0.03]">
                             {section.items.length > 0 ? (
                                 section.items.map((item, idx) => (
-                                    <div key={item.name} className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-xs font-mono text-zinc-500 w-4">{idx + 1}</span>
-                                            <span className="text-sm font-medium text-zinc-200 truncate max-w-[150px]">{item.name}</span>
+                                    <div key={item.name} className="flex items-center px-4 py-3 hover:bg-white/[0.02] transition-colors">
+                                        <div className="flex items-center justify-center w-6 h-6 shrink-0 rounded-full bg-zinc-800/50 text-[10px] font-mono font-bold text-zinc-500 mr-3">
+                                            {idx + 1}
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700/50">
-                                                {item.count}
-                                            </span>
-                                            <ChevronRight className="w-3 h-3 text-zinc-600" />
+                                        <div className="flex-1 min-w-0 pr-4">
+                                            <div className="text-sm font-bold text-zinc-200 truncate">{item.name}</div>
+                                            <div className="text-[11px] font-medium text-zinc-500 truncate mt-0.5">
+                                                <span className="text-zinc-400 font-bold">{item.count}</span> {section.actionText}
+                                            </div>
                                         </div>
+                                        <ChevronRight className="w-4 h-4 text-zinc-700 shrink-0" />
                                     </div>
                                 ))
                             ) : (

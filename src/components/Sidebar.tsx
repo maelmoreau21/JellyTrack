@@ -36,7 +36,7 @@ const adminNavigationKeys = [
     { key: 'settings', href: '/settings', icon: Settings },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
     const pathname = usePathname();
     const { data: session } = useSession();
     const t = useTranslations('nav');
@@ -57,10 +57,11 @@ export function Sidebar() {
 
     // Build navigation based on role
     const navigation = isAdmin
-        ? adminNavigationKeys.map(item => ({ name: 'key' in item ? t(item.key as any) : item.label, href: item.href, icon: item.icon }))
+        ? adminNavigationKeys.map(item => ({ name: 'key' in item ? t(item.key as any) : (item as any).label, href: item.href, icon: item.icon }))
         : [
             { name: t('myProfile'), href: `/users/${jellyfinUserId || ''}`, icon: UserCircle },
-            { name: t('myWrapped'), href: `/wrapped/${jellyfinUserId || ''}`, icon: Gift },
+            // Only show wrapped if globally visible AND active
+            ...(isWrappedVisible ? [{ name: t('myWrapped'), href: `/wrapped/${jellyfinUserId || ''}`, icon: Gift }] : []),
         ];
 
     const sidebarContent = (

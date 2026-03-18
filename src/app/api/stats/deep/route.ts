@@ -10,6 +10,7 @@ export async function GET() {
 
     try {
         const media = await prisma.media.findMany({
+            where: { type: { in: ['Movie', 'Series'] } },
             select: {
                 directors: true,
                 actors: true,

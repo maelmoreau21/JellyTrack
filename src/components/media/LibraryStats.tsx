@@ -98,8 +98,8 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                             <Database className="w-5 h-5 text-primary" />
                         </div>
                         <div className="text-left">
-                            <span className="text-sm font-bold text-zinc-100 block">{t('libraryDetailsTitle') || 'Détails par Bibliothèque'}</span>
-                            <span className="text-[10px] text-zinc-500 uppercase tracking-widest">{libraries.length} {t('libraries') || 'bibliothèques'}</span>
+                            <span className="text-sm font-bold text-zinc-100 block">{t('libraryDetailsTitle') || 'Détails par Collection'}</span>
+                            <span className="text-[10px] text-zinc-500 uppercase tracking-widest">{libraries.length} {t('libraries') || 'collections'}</span>
                         </div>
                     </div>
                     {isExpanded ? <ChevronUp className="w-5 h-5 text-zinc-500" /> : <ChevronDown className="w-5 h-5 text-zinc-500" />}
