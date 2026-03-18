@@ -249,8 +249,15 @@ const getDeepInsights = unstable_cache(
             .slice(0, 8);
 
         // --- Pro Telemetry: Audio & Subtitle distribution ---
+        const audioWhere = {
+            ...filteredWhere,
+            media: {
+                type: { notIn: ['Audio', 'MusicAlbum'] }
+            }
+        };
+
         const audioRows = await prisma.playbackHistory.findMany({
-            where: filteredWhere,
+            where: audioWhere,
             select: { audioLanguage: true, audioCodec: true },
         });
         const audioMap = new Map<string, number>();
@@ -276,7 +283,7 @@ const getDeepInsights = unstable_cache(
             .slice(0, 8);
 
         const subtitleRows = await prisma.playbackHistory.findMany({
-            where: filteredWhere,
+            where: audioWhere,
             select: { subtitleLanguage: true, subtitleCodec: true },
         });
         const subtitleMap = new Map<string, number>();

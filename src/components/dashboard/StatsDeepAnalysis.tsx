@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { User, Video, Building2, TrendingUp, ChevronRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 type StatItem = { name: string; count: number };
 
@@ -70,18 +71,18 @@ export default function StatsDeepAnalysis() {
                         <div className="divide-y divide-white/[0.03]">
                             {section.items.length > 0 ? (
                                 section.items.map((item, idx) => (
-                                    <div key={item.name} className="flex items-center px-4 py-3 hover:bg-white/[0.02] transition-colors">
-                                        <div className="flex items-center justify-center w-6 h-6 shrink-0 rounded-full bg-zinc-800/50 text-[10px] font-mono font-bold text-zinc-500 mr-3">
+                                    <Link key={item.name} href={`/media?q=${encodeURIComponent(item.name)}`} className="flex items-center px-4 py-3 hover:bg-white/[0.04] transition-colors group/item block">
+                                        <div className="flex items-center justify-center w-6 h-6 shrink-0 rounded-full bg-zinc-800/50 text-[10px] font-mono font-bold text-zinc-500 mr-3 group-hover/item:text-zinc-300 group-hover/item:bg-zinc-700/50 transition-colors">
                                             {idx + 1}
                                         </div>
                                         <div className="flex-1 min-w-0 pr-4">
-                                            <div className="text-sm font-bold text-zinc-200 truncate">{item.name}</div>
-                                            <div className="text-[11px] font-medium text-zinc-500 truncate mt-0.5">
+                                            <div className="text-sm font-bold text-zinc-200 truncate group-hover/item:text-primary transition-colors">{item.name}</div>
+                                            <div className="text-[11px] font-medium text-zinc-500 truncate mt-0.5 group-hover/item:text-zinc-400 transition-colors">
                                                 <span className="text-zinc-400 font-bold">{item.count}</span> {section.actionText}
                                             </div>
                                         </div>
-                                        <ChevronRight className="w-4 h-4 text-zinc-700 shrink-0" />
-                                    </div>
+                                        <ChevronRight className="w-4 h-4 text-zinc-700 shrink-0 group-hover/item:text-primary transition-colors" />
+                                    </Link>
                                 ))
                             ) : (
                                 <div className="p-8 text-center text-sm text-zinc-500 italic">

@@ -4,7 +4,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Check, Filter } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 
 interface LibraryFilterProps {
@@ -19,26 +19,31 @@ export function LibraryFilter({ libraries }: LibraryFilterProps) {
   const t = useTranslations('dashboard');
 
   const excludedParam = searchParams.get('excludeLibs');
-  const excludedLibs = excludedParam ? excludedParam.split(',') : [];
+  const initialExcluded = excludedParam ? excludedParam.split(',') : [];
+  
+  // Local state to track selections synchronously and avoid searchParams Next.js update delay
+  const [localExcluded, setLocalExcluded] = useState<string[]>(initialExcluded);
+
+  // Sync state if URL changes externally
+  useEffect(() => {
+    setLocalExcluded(excludedParam ? excludedParam.split(',') : []);
+  }, [excludedParam]);
 
   const toggleLibrary = (lib: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const isExcluded = excludedLibs.includes(lib);
-
-    let newExcluded = [...excludedLibs];
-    if (isExcluded) {
-      newExcluded = newExcluded.filter(l => l !== lib);
-    } else {
-      newExcluded.push(lib);
-    }
-
-    if (newExcluded.length > 0) {
-      params.set('excludeLibs', newExcluded.join(','));
-    } else {
-      params.delete('excludeLibs');
-    }
-
-    router.push(`${pathname}?${params.toString()}`);
+    setLocalExcluded((prev) => {
+      const isExcluded = prev.includes(lib);
+      const newExcluded = isExcluded ? prev.filter(l => l !== lib) : [...prev, lib];
+      
+      const params = new URLSearchParams(searchParams.toString());
+      if (newExcluded.length > 0) {
+        params.set('excludeLibs', newExcluded.join(','));
+      } else {
+        params.delete('excludeLibs');
+      }
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+      
+      return newExcluded;
+    });
   };
 
   return (
@@ -47,7 +52,7 @@ export function LibraryFilter({ libraries }: LibraryFilterProps) {
         <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm rounded-full dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hidden sm:flex">
           <Filter className="h-4 w-4" />
           <span className="text-sm font-medium">
-            {excludedLibs.length > 0 ? `${excludedLibs.length} ${t('excluded', { defaultMessage: 'Exclus' })}` : t('allLibraries', { defaultMessage: 'Toutes les biblis' })}
+            {localExcluded.length > 0 ? `${localExcluded.length} ${t('excluded', { defaultMessage: 'Exclus' })}` : t('allLibraries', { defaultMessage: 'Toutes les biblis' })}
           </span>
         </Button>
       </PopoverTrigger>
@@ -61,7 +66,7 @@ export function LibraryFilter({ libraries }: LibraryFilterProps) {
             <div className="p-2 text-xs text-zinc-500 text-center">{t('noLibraries', { defaultMessage: 'Aucune bibliothèque' })}</div>
           )}
           {libraries.map((lib) => {
-            const isVisible = !excludedLibs.includes(lib);
+            const isVisible = !localExcluded.includes(lib);
             return (
               <button
                 key={lib}

@@ -21,6 +21,7 @@ interface MediaPageProps {
         sortBy?: string;
         type?: string;
         page?: string;
+        q?: string;
     }>;
 }
 
@@ -32,6 +33,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const tc = await getTranslations('common');
     const sortBy = sParams.sortBy || "plays";
     const type = sParams.type;
+    const q = sParams.q;
     const currentPage = Math.max(1, parseInt(sParams.page || "1", 10) || 1);
 
     const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } });
@@ -62,6 +64,17 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
     const buildMediaFilter = () => {
         const clauses: any[] = [{ type: { in: displayTypes } }];
+        if (q) {
+            // Case-insensitive Prisma text / array search
+            clauses.push({
+                OR: [
+                    { title: { contains: q } },
+                    { directors: { has: q } },
+                    { actors: { has: q } },
+                    { studios: { has: q } }
+                ]
+            });
+        }
         const excludedClause = buildExcludedMediaClause(excludedLibraries);
         if (excludedClause) clauses.push(excludedClause);
         return { AND: clauses };
@@ -449,7 +462,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
                 <Card className="app-surface border-zinc-800/50">
                     <CardHeader>
-                        <CardTitle>{t('allMedia')}</CardTitle>
+                        <CardTitle>{q ? `${t('searchResult') || 'Recherche'}: ${q}` : t('allMedia')}</CardTitle>
                         <CardDescription>{t('availableContent', { count: parentItems.length })}</CardDescription>
                         <div className="flex items-center gap-2 pt-4">
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
@@ -459,7 +472,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                 {['plays', 'duration', 'quality'].map(sort => (
                                     <Link
                                         key={sort}
-                                        href={`/media?sortBy=${sort}${type ? `&type=${type}` : ''}`}
+                                        href={`/media?sortBy=${sort}${type ? `&type=${type}` : ''}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
                                         className={`px-3 py-1.5 text-xs font-medium rounded-sm transition-colors ${sortBy === sort ? "bg-zinc-100 text-zinc-900 shadow-sm" : "text-zinc-400 hover:text-zinc-100"}`}
                                     >
                                         {sort === 'plays' ? t('sortPopularity') : sort === 'duration' ? t('sortWatchTime') : t('sortPlayMode')}
@@ -483,7 +496,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                                             <h3 className="text-white font-bold text-lg leading-tight truncate">{media.title}</h3>
                                             <span className="text-zinc-300 text-xs">{media.productionYear}</span>
                                         </div>
-                                        {(media.normalizedResolution && media.type !== 'MusicAlbum') && (
+                                        {(media.normalizedResolution && !['MusicAlbum', 'Season', 'Series'].includes(media.type)) && (
                                             <div className="absolute top-2 right-2 z-10">
                                                 <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${
                                                     media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : 

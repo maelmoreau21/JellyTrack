@@ -85,7 +85,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
     // Fetch children items (Seasons for Series, Episodes for Season, Tracks for MusicAlbum)
     const isParentType = ['Series', 'Season', 'MusicAlbum'].includes(media.type);
-    let children: { jellyfinMediaId: string; title: string; type: string; resolution: string | null; durationMs: bigint | null; _count: number; _totalDuration: number }[] = [];
+    let children: { jellyfinMediaId: string; title: string; type: string; resolution: string | null; normalizedResolution: string | null; durationMs: bigint | null; _count: number; _totalDuration: number }[] = [];
     // For Series, we also need grandchildren (Episodes via Seasons) for accurate stats
     let allDescendantHistory: any[] = [];
     if (isParentType) {
@@ -414,7 +414,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                     </TableCell>
                                                     {media.type !== 'MusicAlbum' && (
                                                         <TableCell className="text-center">
-                                                            {child.resolution ? <Badge variant="secondary" className="text-xs">{child.normalizedResolution}</Badge> : <span className="text-zinc-500 text-xs">—</span>}
+                                                            {['Season', 'Series'].includes(child.type) ? <span className="text-zinc-500 text-xs">—</span> : child.resolution ? <Badge variant="secondary" className="text-xs">{child.normalizedResolution}</Badge> : <span className="text-zinc-500 text-xs">—</span>}
                                                         </TableCell>
                                                     )}
                                                     <TableCell className="text-center font-medium">
