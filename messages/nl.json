@@ -190,7 +190,9 @@
     "lastError": "Laatste fout",
     "none": "Geen",
     "mode": "Modus",
-    "file": "Bestand"
+    "file": "Bestand",
+    "filterCategories": "Categorieën Filteren",
+    "uncheckToHide": "Vink uit om te verbergen op het dashboard"
   },
   "draggable": {
     "finishEdit": "Bewerken voltooien",

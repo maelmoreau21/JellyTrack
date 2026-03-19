@@ -1153,7 +1153,9 @@ export async function POST(req: Request) {
                 redis.setex(lastTickKey, 86400, positionTicks.toString())
             ]);
 
-            const updates: Record<string, any> = {};
+            const updates: Record<string, any> = {
+                durationWatched: Math.round(curDur)
+            };
             const telemetryEvents: { eventType: string; positionMs: bigint; metadata?: string }[] = [];
 
             // Pause tracking

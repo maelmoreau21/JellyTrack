@@ -148,22 +148,34 @@ export default async function LogsPage({
 
     // Build the non-fuzzy exact search constraint
     const whereClause: any = {};
+    const conditions: any[] = [];
 
     if (hideZapped) {
-        whereClause.durationWatched = { gte: 60 };
+        conditions.push({
+            OR: [
+                { durationWatched: { gte: 60 } },
+                { endedAt: null }
+            ]
+        });
     }
 
     if (query) {
-        whereClause.OR = [
-            { user: { username: { contains: query, mode: "insensitive" } } },
-            { media: { title: { contains: query, mode: "insensitive" } } },
-            { ipAddress: { contains: query, mode: "insensitive" } },
-            { clientName: { contains: query, mode: "insensitive" } },
-        ];
+        conditions.push({
+            OR: [
+                { user: { username: { contains: query, mode: "insensitive" } } },
+                { media: { title: { contains: query, mode: "insensitive" } } },
+                { ipAddress: { contains: query, mode: "insensitive" } },
+                { clientName: { contains: query, mode: "insensitive" } },
+            ]
+        });
     }
 
     if (typeFilter) {
-        whereClause.media = { type: typeFilter };
+        conditions.push({ media: { type: typeFilter } });
+    }
+
+    if (conditions.length > 0) {
+        whereClause.AND = conditions;
     }
 
     // Determine the sorting order

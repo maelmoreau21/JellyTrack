@@ -190,7 +190,9 @@
     "lastError": "Último error",
     "none": "Ninguno",
     "mode": "Modo",
-    "file": "Archivo"
+    "file": "Archivo",
+    "filterCategories": "Filtrar Categorías",
+    "uncheckToHide": "Desmarque para ocultar del panel"
   },
   "draggable": {
     "finishEdit": "Terminar edición",

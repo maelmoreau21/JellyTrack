@@ -190,7 +190,9 @@
     "lastError": "Dernière erreur",
     "none": "Aucun",
     "mode": "Mode",
-    "file": "Fichier"
+    "file": "Fichier",
+    "filterCategories": "Filtrer les Catégories",
+    "uncheckToHide": "Décochez pour masquer du tableau de bord"
   },
   "draggable": {
     "finishEdit": "Terminer l'édition",

@@ -190,7 +190,9 @@
     "lastError": "Ultimo errore",
     "none": "Nessuno",
     "mode": "Modalità",
-    "file": "File"
+    "file": "File",
+    "filterCategories": "Filtra Categorie",
+    "uncheckToHide": "Deseleziona per nascondere dalla dashboard"
   },
   "draggable": {
     "finishEdit": "Fine modifica",

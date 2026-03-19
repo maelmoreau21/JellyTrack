@@ -190,7 +190,9 @@
     "lastError": "Ошибка",
     "none": "Нет",
     "mode": "Режим",
-    "file": "Файл"
+    "file": "Файл",
+    "filterCategories": "Фильтр Категорий",
+    "uncheckToHide": "Снимите флажок, чтобы скрыть с панели"
   },
   "draggable": {
     "finishEdit": "Завершить редактирование",

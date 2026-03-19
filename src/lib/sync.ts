@@ -25,23 +25,32 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         "X-Emby-Token": apiKey,
     };
 
-    const fetchWithTimeout = async (url: string, options: any = {}, timeout = 30000) => {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(url, { ...options, signal: controller.signal });
-            clearTimeout(id);
-            return response;
-        } catch (e) {
-            clearTimeout(id);
-            throw e;
+    const fetchWithRetry = async (url: string, options: any = {}, timeout = 30000, maxRetries = 3) => {
+        for (let i = 0; i < maxRetries; i++) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(url, { ...options, signal: controller.signal });
+                clearTimeout(id);
+                if (!response.ok && [500, 502, 503, 504].includes(response.status)) {
+                    throw new Error(`Server overload HTTP ${response.status}`);
+                }
+                return response;
+            } catch (e: any) {
+                clearTimeout(id);
+                const isRetryable = e.name === 'AbortError' || e.message?.includes('fetch failed') || e.cause?.code === 'ECONNREFUSED' || e.message?.includes('Server overload HTTP');
+                if (i === maxRetries - 1 || !isRetryable) throw e;
+                console.warn(`[Sync] Fetch retry ${i + 1}/${maxRetries} for ${url.split('?')[0]} in ${2000 * (i + 1)}ms...`);
+                await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+            }
         }
+        throw new Error("Max retries exceeded");
     };
 
     try {
         // 1. Synchronisation des Utilisateurs
         console.log("[Sync] Fetching Users...");
-        const usersRes = await fetchWithTimeout(`${baseUrl}/Users`, { headers: jellyfinHeaders });
+        const usersRes = await fetchWithRetry(`${baseUrl}/Users`, { headers: jellyfinHeaders });
         if (!usersRes.ok) throw new Error(`Erreur de récupération des utilisateurs: ${usersRes.status}`);
         const users = await usersRes.json();
 
@@ -61,7 +70,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
         // 2. Fetch library views to map CollectionType per library
         console.log("[Sync] Fetching Library Views...");
-        const viewsRes = await fetchWithTimeout(`${baseUrl}/Library/VirtualFolders`, { headers: jellyfinHeaders });
+        const viewsRes = await fetchWithRetry(`${baseUrl}/Library/VirtualFolders`, { headers: jellyfinHeaders });
         const libraryCollectionMap = new Map<string, string>();
         const libraryNameMap = new Map<string, string>();
         if (viewsRes.ok) {
@@ -78,7 +87,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         }
 
         // Also fetch user views for parent mapping
-        const userViewsRes = await fetchWithTimeout(`${baseUrl}/UserViews`, { headers: jellyfinHeaders });
+        const userViewsRes = await fetchWithRetry(`${baseUrl}/UserViews`, { headers: jellyfinHeaders });
         const parentCollectionMap = new Map<string, string>();
         const parentNameMap = new Map<string, string>();
         if (userViewsRes.ok) {
@@ -110,7 +119,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             page++;
             const pageUrl = `${baseUrl}/Items?${baseItemsQuery}${minDateParam}&StartIndex=${startIndex}&Limit=${pageSize}`;
             console.log(`[Sync] Fetching Media Items page ${page} (start=${startIndex})${options?.recentOnly ? ' (recent only)' : ''}...`);
-            const pageRes = await fetchWithTimeout(pageUrl, { headers: jellyfinHeaders }, 60000);
+            const pageRes = await fetchWithRetry(pageUrl, { headers: jellyfinHeaders }, 60000, 4);
             if (!pageRes.ok) throw new Error(`Erreur de récupération des médias: ${pageRes.status}`);
             const pageData = await pageRes.json();
             const pageItems = pageData.Items || [];
@@ -126,82 +135,88 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         console.log(`[Sync] Jellyfin returned ${items.length} items to index (paginated).`);
 
         let mediaCount = 0;
+        let errorsCount = 0;
         for (const item of items) {
-            const jellyfinMediaId = normalizeJellyfinId(item.Id);
-            if (!jellyfinMediaId) continue;
-            const genres = item.Genres || [];
-            const studios = (item.Studios || []).map((s: any) => s.Name);
-            const people = item.People || [];
-            const directors = people.filter((p: any) => p.Type === "Director").map((p: any) => p.Name);
-            const actors = people.filter((p: any) => p.Type === "Actor").map((p: any) => p.Name);
+            try {
+                const jellyfinMediaId = normalizeJellyfinId(item.Id);
+                if (!jellyfinMediaId) continue;
+                const genres = item.Genres || [];
+                const studios = (item.Studios || []).map((s: any) => s.Name);
+                const people = item.People || [];
+                const directors = people.filter((p: any) => p.Type === "Director").map((p: any) => p.Name);
+                const actors = people.filter((p: any) => p.Type === "Actor").map((p: any) => p.Name);
 
-            // Determine collectionType from library parent chain
-            let collectionType: string | null = null;
-            if (item.CollectionType) {
-                collectionType = item.CollectionType;
-            } else {
-                const libParentId = item.ParentId || item.SeasonId || item.SeriesId;
-                if (libParentId) {
-                    collectionType = parentCollectionMap.get(libParentId) || libraryCollectionMap.get(libParentId) || null;
-                }
-            }
-            // Infer from item type if still unknown
-            if (!collectionType) {
-                if (item.Type === 'Movie') collectionType = 'movies';
-                else if (['Series', 'Episode'].includes(item.Type)) collectionType = 'tvshows';
-                else if (['Audio', 'MusicAlbum'].includes(item.Type)) collectionType = 'music';
-                else if (item.Type === 'Book') collectionType = 'books';
-            }
-
-            // Resolve actual Jellyfin library name from parent chain (try multiple id variants)
-            let libraryName: string | null = null;
-            {
-                // Try to find the library name in the parent chain using several candidate parent ids
-                const possibleParentIds = [item.ParentId, item.SeasonId, item.SeriesId, item.AlbumId, item.LibraryId].filter(Boolean);
-                for (const pid of possibleParentIds) {
-                    const idKey = pid as string;
-                    const name = parentNameMap.get(idKey) || libraryNameMap.get(idKey) || null;
-                    if (name) {
-                        libraryName = name;
-                        break;
+                // Determine collectionType from library parent chain
+                let collectionType: string | null = null;
+                if (item.CollectionType) {
+                    collectionType = item.CollectionType;
+                } else {
+                    const libParentId = item.ParentId || item.SeasonId || item.SeriesId;
+                    if (libParentId) {
+                        collectionType = parentCollectionMap.get(libParentId) || libraryCollectionMap.get(libParentId) || null;
                     }
                 }
-            }
-
-            let resolution = null;
-            let size = null;
-            if (item.MediaSources && item.MediaSources.length > 0) {
-                const mediaSource = item.MediaSources[0];
-                size = mediaSource.Size ? BigInt(mediaSource.Size) : null;
-                const videoStream = mediaSource.MediaStreams?.find((s: any) => s.Type === "Video");
-                if (videoStream && videoStream.Width) {
-                    const w = videoStream.Width;
-                    if (w >= 3800) resolution = "4K";
-                    else if (w >= 2500) resolution = "1440p";
-                    else if (w >= 1800) resolution = "1080p"; // More lenient (was 1900)
-                    else if (w >= 1200) resolution = "720p";
-                    else if (w >= 700) resolution = "480p"; // More lenient (was 800)
-                    else resolution = "SD";
+                // Infer from item type if still unknown
+                if (!collectionType) {
+                    if (item.Type === 'Movie') collectionType = 'movies';
+                    else if (['Series', 'Episode'].includes(item.Type)) collectionType = 'tvshows';
+                    else if (['Audio', 'MusicAlbum'].includes(item.Type)) collectionType = 'music';
+                    else if (item.Type === 'Book') collectionType = 'books';
                 }
+
+                // Resolve actual Jellyfin library name from parent chain (try multiple id variants)
+                let libraryName: string | null = null;
+                {
+                    // Try to find the library name in the parent chain using several candidate parent ids
+                    const possibleParentIds = [item.ParentId, item.SeasonId, item.SeriesId, item.AlbumId, item.LibraryId].filter(Boolean);
+                    for (const pid of possibleParentIds) {
+                        const idKey = pid as string;
+                        const name = parentNameMap.get(idKey) || libraryNameMap.get(idKey) || null;
+                        if (name) {
+                            libraryName = name;
+                            break;
+                        }
+                    }
+                }
+
+                let resolution = null;
+                let size = null;
+                if (item.MediaSources && item.MediaSources.length > 0) {
+                    const mediaSource = item.MediaSources[0];
+                    size = mediaSource.Size ? BigInt(mediaSource.Size) : null;
+                    const videoStream = mediaSource.MediaStreams?.find((s: any) => s.Type === "Video");
+                    if (videoStream && videoStream.Width) {
+                        const w = videoStream.Width;
+                        if (w >= 3800) resolution = "4K";
+                        else if (w >= 2500) resolution = "1440p";
+                        else if (w >= 1800) resolution = "1080p"; // More lenient (was 1900)
+                        else if (w >= 1200) resolution = "720p";
+                        else if (w >= 700) resolution = "480p"; // More lenient (was 800)
+                        else resolution = "SD";
+                    }
+                }
+
+
+                const durationMs = item.RunTimeTicks ? BigInt(Math.floor(item.RunTimeTicks / 10000)) : null;
+                const parentId = normalizeJellyfinId(item.AlbumId || item.SeasonId || item.SeriesId || item.ParentId || null);
+                const artist = item.AlbumArtist || item.AlbumArtists?.[0]?.Name || item.Artists?.[0] || null;
+                const dateAdded = item.DateCreated ? new Date(item.DateCreated) : new Date(); // Fallback to current date for indexing
+
+                await prisma.media.upsert({
+                    where: { jellyfinMediaId },
+                    update: { title: item.Name, type: item.Type, genres, directors, actors, studios, resolution, collectionType, durationMs, size, parentId, artist, dateAdded, libraryName },
+                    create: { jellyfinMediaId, title: item.Name, type: item.Type, genres, directors, actors, studios, resolution, collectionType, durationMs, size, parentId, artist, dateAdded, libraryName },
+                });
+                if (!libraryName) {
+                    console.warn(`[Sync] Could not resolve libraryName for item ${item.Name} (id=${item.Id}) parents=[${[item.ParentId, item.SeasonId, item.SeriesId, item.AlbumId].filter(Boolean).join(',')}]`);
+                }
+                mediaCount++;
+            } catch (itemErr: any) {
+                console.error(`[Sync] Erreur silencieuse sur l'item ${item.Name} (id=${item.Id}):`, itemErr?.message);
+                errorsCount++;
             }
-
-
-            const durationMs = item.RunTimeTicks ? BigInt(Math.floor(item.RunTimeTicks / 10000)) : null;
-            const parentId = normalizeJellyfinId(item.AlbumId || item.SeasonId || item.SeriesId || item.ParentId || null);
-            const artist = item.AlbumArtist || item.AlbumArtists?.[0]?.Name || item.Artists?.[0] || null;
-            const dateAdded = item.DateCreated ? new Date(item.DateCreated) : new Date(); // Fallback to current date for indexing
-
-            await prisma.media.upsert({
-                where: { jellyfinMediaId },
-                update: { title: item.Name, type: item.Type, genres, directors, actors, studios, resolution, collectionType, durationMs, size, parentId, artist, dateAdded, libraryName },
-                create: { jellyfinMediaId, title: item.Name, type: item.Type, genres, directors, actors, studios, resolution, collectionType, durationMs, size, parentId, artist, dateAdded, libraryName },
-            });
-            if (!libraryName) {
-                console.warn(`[Sync] Could not resolve libraryName for item ${item.Name} (id=${item.Id}) parents=[${[item.ParentId, item.SeasonId, item.SeriesId, item.AlbumId].filter(Boolean).join(',')}]`);
-            }
-            mediaCount++;
         }
-        console.log(`[Sync] ${mediaCount} médias synchronisés.`);
+        console.log(`[Sync] ${mediaCount} médias synchronisés. (${errorsCount} ignorés suite à des erreurs)`);
 
         console.log("[Sync] Terminée avec succès.");
 

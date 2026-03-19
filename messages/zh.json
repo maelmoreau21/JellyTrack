@@ -190,7 +190,9 @@
     "lastError": "上次错误",
     "none": "无",
     "mode": "模式",
-    "file": "文件"
+    "file": "文件",
+    "filterCategories": "筛选分类",
+    "uncheckToHide": "取消选中以从仪表板隐藏"
   },
   "draggable": {
     "finishEdit": "完成编辑",

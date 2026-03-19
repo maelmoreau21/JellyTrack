@@ -190,7 +190,9 @@
     "lastError": "Letzter Fehler",
     "none": "Keine",
     "mode": "Modus",
-    "file": "Datei"
+    "file": "Datei",
+    "filterCategories": "Kategorien Filtern",
+    "uncheckToHide": "Deaktivieren, um im Dashboard auszublenden"
   },
   "draggable": {
     "finishEdit": "Bearbeitung abschließen",

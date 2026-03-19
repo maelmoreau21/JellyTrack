@@ -46,7 +46,7 @@ import { getLogHealthSnapshot } from "@/lib/logHealth";
 import { categorizeClient } from "@/lib/utils";
 import { SystemHealthWidgets } from "@/components/dashboard/SystemHealthWidgets";
 import { CollapsibleCard } from "@/components/dashboard/CollapsibleCard";
-import { CategoryFilter } from "@/components/dashboard/CategoryFilter";
+import { MediaFilter } from "@/components/dashboard/MediaFilter";
 import { AIRecommendations } from "@/components/dashboard/AIRecommendations";
 
 
@@ -136,11 +136,8 @@ const getDashboardMetrics = unstable_cache(
 
     // 2. Build Media Filter
     let AND: any[] = [];
-    if (type === 'movie') AND.push({ type: "Movie" });
-    else if (type === 'series') AND.push({ type: { in: ["Series", "Episode"] } });
-    else if (type === 'music') AND.push({ type: { in: ["Audio", "Track"] } });
-    else if (type === 'book') AND.push({ type: "Book" });
-
+    
+    // We solely rely on excludedTypes here for dashboard filtering now
     if (excludedTypes && excludedTypes.length > 0) {
       const typeExclusions: string[] = [];
       if (excludedTypes.includes('Movie')) typeExclusions.push('Movie');
@@ -660,21 +657,14 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
           <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 min-w-0">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h2>
-            <Tabs defaultValue={type || "all"} className="w-full md:w-[380px]">
-              <TabsList className="dashboard-tablist w-full">
-                <TabsTrigger value="all" asChild><Link href={`/?timeRange=${timeRange}`}>{tc('all')}</Link></TabsTrigger>
-                <TabsTrigger value="movie" asChild><Link href={`/?type=movie&timeRange=${timeRange}`}>{tc('movies')}</Link></TabsTrigger>
-                <TabsTrigger value="series" asChild><Link href={`/?type=series&timeRange=${timeRange}`}>{tc('series')}</Link></TabsTrigger>
-                <TabsTrigger value="music" asChild><Link href={`/?type=music&timeRange=${timeRange}`}>{tc('music')}</Link></TabsTrigger>
-                <TabsTrigger value="book" asChild><Link href={`/?type=book&timeRange=${timeRange}`}>{tc('books')}</Link></TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="w-full md:w-auto overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
+              <MediaFilter />
+            </div>
           </div>
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-4 shrink-0">
             <span className="dashboard-pill hidden sm:block rounded-md px-2 py-1.5 text-xs text-zinc-600 dark:text-zinc-300">
               {t('cachedData')}
             </span>
-            <CategoryFilter />
             <TimeRangeSelector />
           </div>
         </div>
