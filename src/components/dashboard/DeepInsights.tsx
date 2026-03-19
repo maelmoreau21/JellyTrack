@@ -190,15 +190,15 @@ const getDeepInsights = unstable_cache(
         });
 
         categorized.series = Array.from(seriesAgg.entries())
-            .map(([title, data]) => ({ title, type: 'Series', plays: data.plays, duration: data.duration }))
+            .map(([title, data]) => ({ title, type: 'Series', plays: data?.plays || 0, duration: data?.duration || 0 }))
             .sort((a, b) => b.plays - a.plays);
 
         categorized.album = Array.from(albumAgg.entries())
-            .map(([title, data]) => ({ title, type: 'Album', plays: data.plays, duration: data.duration }))
+            .map(([title, data]) => ({ title, type: 'Album', plays: data?.plays || 0, duration: data?.duration || 0 }))
             .sort((a, b) => b.plays - a.plays);
 
         const topGenres = Array.from(genreAgg.entries())
-            .map(([name, data]) => ({ name, plays: data.plays, duration: parseFloat(data.duration.toFixed(1)) }))
+            .map(([name, data]) => ({ name, plays: data?.plays || 0, duration: parseFloat((data?.duration || 0).toFixed(1)) }))
             .sort((a, b) => b.plays - a.plays)
             .slice(0, 10);
 
@@ -355,7 +355,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                                 <span className="text-zinc-500 w-4 inline-block">{i + 1}.</span>
                                 {m.title}
                             </div>
-                            <div className="font-semibold text-xs bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded">{m.plays} {t('views')}</div>
+                            <div className="font-semibold text-xs bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded">{m?.plays || 0} {t('views')}</div>
                         </div>
                     ))}
                 </div>
@@ -383,7 +383,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                         <div className="grid gap-2 md:grid-cols-2">
                             {data.topGenres.map((g: any, i: number) => {
                                 const maxPlays = data.topGenres[0]?.plays || 1;
-                                const pct = Math.round((g.plays / maxPlays) * 100);
+                                const pct = Math.round(((g?.plays || 0) / maxPlays) * 100);
                                 const colors = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-cyan-500', 'bg-yellow-500', 'bg-red-500', 'bg-indigo-500', 'bg-teal-500'];
                                 return (
                                     <div key={g.name} className="flex items-center gap-3 text-sm">
@@ -391,7 +391,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between mb-1">
                                                 <span className="truncate">{g.name}</span>
-                                                <span className="text-xs text-zinc-400 shrink-0 ml-2">{g.plays} {t('views')} · {g.duration}h</span>
+                                                <span className="text-xs text-zinc-400 shrink-0 ml-2">{g?.plays || 0} {t('views')} · {g?.duration || 0}h</span>
                                             </div>
                                             <div className="h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                                                 <div className={`h-full rounded-full ${colors[i % colors.length]}`} style={{ width: `${pct}%` }} />

@@ -1,7 +1,7 @@
 "use client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
-import { Database, Package, Clock, ChevronDown, ChevronUp, Library, HardDrive, FileVideo, Music, BookText, Info, TrendingUp, Sparkles, Calendar } from "lucide-react";
+import { Database, Package, Clock, ChevronDown, ChevronUp, Library, HardDrive, FileVideo, Music, Info, TrendingUp, Sparkles, Calendar } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import { getJellyfinImageUrl } from "@/lib/jellyfin";
@@ -151,7 +151,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                                                 <TrendingUp className="w-3 h-3" /> {t('topContent') || 'Plus regardé'}
                                                             </div>
                                                             <div className="text-xs font-bold text-zinc-200 truncate group-hover/item:text-primary transition-colors">{lib.topItem.title}</div>
-                                                            <div className="text-[10px] text-zinc-500 mt-0.5">{lib.topItem.plays} {tc('views')}</div>
+                                                            <div className="text-[10px] text-zinc-500 mt-0.5">{lib.topItem?.plays || 0} {tc('views')}</div>
                                                         </div>
                                                     </div>
                                                 </Link>

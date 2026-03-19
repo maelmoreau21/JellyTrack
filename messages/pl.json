@@ -364,6 +364,7 @@
     "restoring": "Przywracanie..."
   },
   "logs": {
+    "hideZapped": "Ukryj krótkie (< 1m)",
     "title": "Logi systemowe",
     "description": "Pełna historia zdarzeń i aktywności na serwerze.",
     "totalEntries": "wszystkich wpisów",
@@ -447,7 +448,9 @@
     "statsContent": "Wszystkie pozycje",
     "statsContentDesc": "Suma zaindeksowanych mediów.",
     "statsTime": "Łączny czas",
-    "statsTimeDesc": "Suma długości wszystkich plików.",
+    "statsTimeDesc": "Łączny czas trwania wszystkich mediów.",
+    "libraryDetailsTitle": "Szczegóły według kolekcji",
+    "libraries": "kolekcje",
     "timeDays": "{days}d {hours}h",
     "deepAnalysisTitle": "Głęboka analiza"
   },
@@ -614,7 +617,31 @@
     "timelineDesc": "Szczegółowa lista zdarzeń wewnątrz sesji.",
     "allUsers": "Wszyscy",
     "sessionDetail": "Szczegóły sesji",
-    "eventsCount": "{count} zdarzeń"
+    "eventsCount": "{count} zdarzeń",
+    "timeline": {
+      "label": {
+        "stop": "Stop",
+        "pause": "Pauza",
+        "audio_change": "Dźwięk",
+        "subtitle_change": "Napisy"
+      }
+    },
+    "timeline_stop": "Stop",
+    "timeline_pause": "Pauza",
+    "timeline_audio_change": "Zmiana dźwięku",
+    "timeline_subtitle_change": "Zmiana napisów",
+    "dropoff": "Porzucenie sesji",
+    "dropoff0": "0-10% (Start)",
+    "dropoff1": "10-20%",
+    "dropoff2": "20-30%",
+    "dropoff3": "30-40%",
+    "dropoff4": "40-50% (Środek)",
+    "dropoff5": "50-60%",
+    "dropoff6": "60-70%",
+    "dropoff7": "70-80%",
+    "dropoff8": "80-90% (Prawie)",
+    "dropoff9": "90-100% (Koniec)",
+    "stoppedAt": "Zatrzymano na {range}"
   },
   "cleanup": {
     "title": "System czyszczenia",

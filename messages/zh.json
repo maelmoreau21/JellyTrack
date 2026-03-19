@@ -364,6 +364,7 @@
     "restoring": "正在恢复..."
   },
   "logs": {
+    "hideZapped": "隐藏短播 (< 1分钟)",
     "title": "审计日志",
     "description": "所有播放会话和遥测事件的汇总视图。",
     "totalEntries": "个条目总计",
@@ -448,6 +449,8 @@
     "statsContentDesc": "已索引项总数。",
     "statsTime": "总播放时长",
     "statsTimeDesc": "所有媒体的累计时长。",
+    "libraryDetailsTitle": "按集合详情",
+    "libraries": "个集合",
     "timeDays": "{days}天 {hours}小时",
     "deepAnalysisTitle": "深度分析"
   },
@@ -615,7 +618,31 @@
     "timelineDesc": "针对该会话的精细化用户交互列表。",
     "allUsers": "所有用户",
     "sessionDetail": "会话详情",
-    "eventsCount": "{count} 个事件"
+    "eventsCount": "{count} 个事件",
+    "timeline": {
+      "label": {
+        "stop": "停止",
+        "pause": "暂停",
+        "audio_change": "音频切换",
+        "subtitle_change": "字幕切换"
+      }
+    },
+    "timeline_stop": "停止",
+    "timeline_pause": "暂停",
+    "timeline_audio_change": "音频切换",
+    "timeline_subtitle_change": "字幕切换",
+    "dropoff": "停播分布",
+    "dropoff0": "0-10% (开始)",
+    "dropoff1": "10-20%",
+    "dropoff2": "20-30%",
+    "dropoff3": "30-40%",
+    "dropoff4": "40-50% (中间)",
+    "dropoff5": "50-60%",
+    "dropoff6": "60-70%",
+    "dropoff7": "70-80%",
+    "dropoff8": "80-90% (几乎)",
+    "dropoff9": "90-100% (结束)",
+    "stoppedAt": "停止在 {range}"
   },
   "cleanup": {
     "title": "清理建议",

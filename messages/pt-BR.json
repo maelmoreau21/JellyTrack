@@ -364,6 +364,7 @@
     "day": "Day"
   },
   "logs": {
+    "hideZapped": "Ocultar transições (< 1m)",
     "title": "Logs de auditoria",
     "description": "Histórico completo de reprodução e eventos de telemetria.",
     "totalEntries": "entradas totais",
@@ -448,6 +449,8 @@
     "statsContentDesc": "Total de itens indexados.",
     "statsTime": "Tempo de reprodução total",
     "statsTimeDesc": "Duração cumulativa de todas as mídias.",
+    "libraryDetailsTitle": "Detalhes por coleção",
+    "libraries": "coleções",
     "timeDays": "{days}d {hours}h",
     "deepAnalysisTitle": "Análise profunda"
   },
@@ -615,7 +618,31 @@
     "timelineDesc": "Histórico detalhado de eventos para esta sessão.",
     "allUsers": "Todos os usuários",
     "sessionDetail": "Detalhes da sessão",
-    "eventsCount": "{count} eventos"
+    "eventsCount": "{count} eventos",
+    "timeline": {
+      "label": {
+        "stop": "Parar",
+        "pause": "Pausa",
+        "audio_change": "Áudio",
+        "subtitle_change": "Legendas"
+      }
+    },
+    "timeline_stop": "Parar",
+    "timeline_pause": "Pausa",
+    "timeline_audio_change": "Alteração de áudio",
+    "timeline_subtitle_change": "Alteração de legenda",
+    "dropoff": "Abandono de sessão",
+    "dropoff0": "0-10% (Início)",
+    "dropoff1": "10-20%",
+    "dropoff2": "20-30%",
+    "dropoff3": "30-40%",
+    "dropoff4": "40-50% (Meio)",
+    "dropoff5": "50-60%",
+    "dropoff6": "60-70%",
+    "dropoff7": "70-80%",
+    "dropoff8": "80-90% (Quase)",
+    "dropoff9": "90-100% (Fim)",
+    "stoppedAt": "Parado em {range}"
   },
   "cleanup": {
     "title": "Assistente de limpeza",

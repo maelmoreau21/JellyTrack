@@ -402,7 +402,7 @@
     "toggleColumns": "Colonnes affichées",
     "unknown": "Inconnu",
     "unknownMedia": "Élément supprimé",
-    "seasonType": "Season",
+    "seasonType": "Saison",
     "timeline": {
       "label": {
         "subtitle_change": "Chgt Sous-titre",
@@ -424,8 +424,8 @@
       },
       "noEvents": "Aucun événement enregistré."
     },
-    "episodeType": "Episodio",
-    "musicType": "Traccia",
+    "episodeType": "Épisode",
+    "musicType": "Piste",
     "movieType": "Film"
   },
   "media": {
@@ -618,7 +618,31 @@
     "timelineDesc": "Chronologie détaillée des événements pour cette session.",
     "allUsers": "Tous les Utilisateurs",
     "sessionDetail": "Détail de la Session",
-    "eventsCount": "{count} événements"
+    "eventsCount": "{count} événements",
+    "timeline": {
+      "label": {
+        "stop": "Arrêt",
+        "pause": "Pause",
+        "audio_change": "Audio",
+        "subtitle_change": "Sous-titre"
+      }
+    },
+    "timeline_stop": "Arrêt",
+    "timeline_pause": "Pause",
+    "timeline_audio_change": "Changement Audio",
+    "timeline_subtitle_change": "Changement Sous-titre",
+    "dropoff": "Abandons de session",
+    "dropoff0": "0-10% (Début)",
+    "dropoff1": "10-20%",
+    "dropoff2": "20-30%",
+    "dropoff3": "30-40%",
+    "dropoff4": "40-50% (Milieu)",
+    "dropoff5": "50-60%",
+    "dropoff6": "60-70%",
+    "dropoff7": "70-80%",
+    "dropoff8": "80-90% (Presque)",
+    "dropoff9": "90-100% (Fin)",
+    "stoppedAt": "Arrêté à {range}"
   },
   "cleanup": {
     "title": "Assistant de Nettoyage",

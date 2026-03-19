@@ -769,27 +769,33 @@ export async function POST(req: Request) {
                         if (active?.positionTicks) effectiveTicks = Number(active.positionTicks);
                     }
 
+                    const durKey = `dur:${lastPlayback.id}`;
+                    const cumulativeDurRaw = await redis.get(durKey);
+                    
                     let durationS: number;
-                    if (effectiveTicks > 0) {
-                        const positionS = Math.floor(effectiveTicks / 10_000_000);
-                        
-                        // Try to get start position from Redis
-                        const startPosKey = `start_pos:${lastPlayback.id}`;
-                        const startPosRaw = await redis.get(startPosKey);
-                        const startPosTicks = startPosRaw ? parseInt(startPosRaw, 10) : 0;
-                        const startPosS = Math.floor(startPosTicks / 10_000_000);
-                        
-                        const watchedFromPosS = Math.max(0, positionS - startPosS);
-                        
-                        // If they seeked backwards or we lack start pos, fallback to old logic
-                        // Otherwise, we cap it by the delta of their watch position, protecting against huge wallClocks over pauses
-                        if (watchedFromPosS > 0) {
-                            durationS = Math.min(wallClockS, watchedFromPosS);
-                        } else {
-                            durationS = Math.min(wallClockS, positionS);
-                        }
+                    
+                    if (cumulativeDurRaw !== null) {
+                        // Use the highly accurate incrementally tracked duration
+                        durationS = Math.round(parseFloat(cumulativeDurRaw));
                     } else {
-                        durationS = wallClockS;
+                        // Fallback to legacy logic
+                        if (effectiveTicks > 0) {
+                            const positionS = Math.floor(effectiveTicks / 10_000_000);
+                            const startPosKey = `start_pos:${lastPlayback.id}`;
+                            const startPosRaw = await redis.get(startPosKey);
+                            const startPosTicks = startPosRaw ? parseInt(startPosRaw, 10) : 0;
+                            const startPosS = Math.floor(startPosTicks / 10_000_000);
+                            
+                            const watchedFromPosS = Math.max(0, positionS - startPosS);
+                            
+                            if (startPosRaw && watchedFromPosS > 0) {
+                                durationS = Math.min(wallClockS, watchedFromPosS);
+                            } else {
+                                durationS = Math.min(wallClockS, positionS);
+                            }
+                        } else {
+                            durationS = wallClockS;
+                        }
                     }
 
                     // CAP duration by media length (plus small buffer) to prevent "zombie" durations
@@ -819,6 +825,10 @@ export async function POST(req: Request) {
                     await redis.del(`pause:${lastPlayback.id}`);
                     await redis.del(`audio:${lastPlayback.id}`);
                     await redis.del(`sub:${lastPlayback.id}`);
+                    await redis.del(`dur:${lastPlayback.id}`);
+                    await redis.del(`last_time:${lastPlayback.id}`);
+                    await redis.del(`last_tick:${lastPlayback.id}`);
+                    await redis.del(`start_pos:${lastPlayback.id}`);
 
                     console.log(`[Plugin] PlaybackStop: Session ${lastPlayback.id} closed, duration=${durationS}s`);
                 }
@@ -1089,12 +1099,59 @@ export async function POST(req: Request) {
                 return corsJson({ error: "No active playback session found." }, { status: 404 });
             }
 
-            // Ensure we have a start position recorded
+            // Ensure we have a start position recorded (for fallback)
             const startPosKey = `start_pos:${activePlayback.id}`;
             const existingStart = await redis.get(startPosKey);
             if (!existingStart && positionTicks >= 0) {
                 await redis.setex(startPosKey, 86400, positionTicks.toString());
             }
+
+            // --- ACCUMULATE ACCURATE DURATION ---
+            const durKey = `dur:${activePlayback.id}`;
+            const lastTimeKey = `last_time:${activePlayback.id}`;
+            const lastTickKey = `last_tick:${activePlayback.id}`;
+
+            const prevDurRaw = await redis.get(durKey);
+            const prevTimeRaw = await redis.get(lastTimeKey);
+            const prevTickRaw = await redis.get(lastTickKey);
+
+            let curDur = parseFloat(prevDurRaw || "0");
+            const prevTime = prevTimeRaw ? parseInt(prevTimeRaw, 10) : null;
+            const prevTick = prevTickRaw ? parseInt(prevTickRaw, 10) : null;
+            const now = Date.now();
+
+            // Strict pause detection: even if !isPaused, if ticks didn't advance, they are effectively paused
+            let tickAdvanced = true;
+            if (prevTick !== null) {
+                // If position hasn't changed at all or went backwards, it's not normal progress
+                // Going backwards could be a seek, which we'll handle by using wall-clock delta below
+                // But exactly equal means playback froze or paused
+                if (positionTicks === prevTick) {
+                    tickAdvanced = false;
+                }
+            }
+
+            if (!isPaused && tickAdvanced && prevTime !== null && prevTick !== null) {
+                const wallDeltaS = (now - prevTime) / 1000;
+                const tickDeltaS = (positionTicks - prevTick) / 10_000_000;
+
+                // Only accumulate if the ping is within a reasonable interval (e.g. 35s max, normally 10s)
+                if (wallDeltaS > 0 && wallDeltaS <= 35) {
+                    // Use tickDeltaS if it's progressing normally. 
+                    // If tickDeltaS is huge (>35s) or negative (seeking backwards), just fallback to the wall clock diff for this segment
+                    if (tickDeltaS > 0 && tickDeltaS <= 35) {
+                        curDur += tickDeltaS;
+                    } else {
+                        curDur += wallDeltaS;
+                    }
+                }
+            }
+
+            await Promise.all([
+                redis.setex(durKey, 86400, curDur.toString()),
+                redis.setex(lastTimeKey, 86400, now.toString()),
+                redis.setex(lastTickKey, 86400, positionTicks.toString())
+            ]);
 
             const updates: Record<string, any> = {};
             const telemetryEvents: { eventType: string; positionMs: bigint; metadata?: string }[] = [];

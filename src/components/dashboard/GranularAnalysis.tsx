@@ -101,8 +101,10 @@ const getGranularData = unstable_cache(
                 hourlyMap.set(hourKey, { time: hourKey, plays: 0, duration: 0 });
             }
             const hourEntry = hourlyMap.get(hourKey)!;
-            hourEntry.plays += 1;
-            hourEntry.duration += durationH;
+            if (hourEntry) {
+                hourEntry.plays += 1;
+                hourEntry.duration += durationH;
+            }
 
             // Completion Rate Aggregation
             if (h.media.durationMs) {
@@ -161,7 +163,7 @@ const getGranularData = unstable_cache(
 
         const hourlyData = Array.from(hourlyMap.values()).map(h => ({
             time: h.time,
-            plays: h.plays,
+            plays: h?.plays || 0,
             duration: parseFloat(h.duration.toFixed(2))
         }));
 

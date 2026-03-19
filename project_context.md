@@ -27,6 +27,15 @@
 - **Redundancy Cleanup**: Removed duplicate root-level objects in 80% of files, aligning everything with the standard `logs.timeline` nesting.
 - **Pluralization Fix**: Standardized ICU plural messages in `zh.json` and `en.json`.
 
+## Phase 55: Résilience Dashboard & Télémétrie Durée Précise
+- **Correction Crash Dashboard** : Ajout de la fusion conditionnelle (`?.plays || 0`, `?? 0`) dans le mapping de `GranularAnalysis.tsx`, `DeepInsights.tsx` et `LibraryStats.tsx` pour empêcher le plantage global de l'interface (`TypeError: reading 'plays'`) dû aux index de données fragmentés. Ajout de `"use client"` à `LibraryStats.tsx`.
+- **Calcul de Durée Progressive (Plugin)** : L'algorithme de durée dans `src/app/api/plugin/events/route.ts` ne se base plus uniquement sur l'écart global (qui pouvait générer de graves accumulations faussées suite à des pauses fantômes). Le temps de lecture validé est tracé incrémentalement au fur et à mesure que la lecture avance via `PlaybackProgress`, avec un blocage des durées si `positionTicks` (l'horloge interne de Jellyfin) se fige.
+
+## Phase 56: Internationalisation 100% & Parité des Locales
+- **Couverture 100% i18n** : Audit exhaustif et complétion de toutes les clés de traduction pour les 11 langues supportées (EN, FR, DE, ES, IT, NL, PL, PT-BR, RU, ZH). Utilisation d'un script d'audit automatisé pour garantir une parité parfaite avec `en.json`.
+- **Correction des Termes Techniques** : Harmonisation des termes "Épisode", "Piste", "Série", "Album" dans tous les fichiers JSON, supprimant les calques linguistiques incorrects (ex: termes italiens dans le fichier anglais).
+- **Stabilité de Build** : Validation par `npm run build` pour confirmer qu'aucune erreur de syntaxe JSON ou d'import Lucide (`BookText` supprimé) ne bloque la production.
+
 ## Phase 3 : Tautulli Ultimate Clone Capabilities
 A massive analytical refactoring was introduced focusing on Data Context and Resilience on Edge Devices (Raspberry Pi).
 

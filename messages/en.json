@@ -424,9 +424,9 @@
       },
       "noEvents": "No events recorded."
     },
-    "episodeType": "Episodio",
-    "musicType": "Traccia",
-    "movieType": "Film"
+    "episodeType": "Episode",
+    "musicType": "Track",
+    "movieType": "Movie"
   },
   "media": {
     "title": "Library",
@@ -618,7 +618,31 @@
     "timelineDesc": "Detailed event timeline for this session.",
     "allUsers": "All Users",
     "sessionDetail": "Session Detail",
-    "eventsCount": "{count} events"
+    "eventsCount": "{count} events",
+    "timeline": {
+      "label": {
+        "stop": "Stop",
+        "pause": "Pause",
+        "audio_change": "Audio",
+        "subtitle_change": "Subtitle"
+      }
+    },
+    "timeline_stop": "Stop",
+    "timeline_pause": "Pause",
+    "timeline_audio_change": "Audio Change",
+    "timeline_subtitle_change": "Subtitle Change",
+    "dropoff": "Drop-off",
+    "dropoff0": "0-10% (Start)",
+    "dropoff1": "10-20%",
+    "dropoff2": "20-30%",
+    "dropoff3": "30-40%",
+    "dropoff4": "40-50% (Middle)",
+    "dropoff5": "50-60%",
+    "dropoff6": "60-70%",
+    "dropoff7": "70-80%",
+    "dropoff8": "80-90% (Almost)",
+    "dropoff9": "90-100% (End)",
+    "stoppedAt": "Stopped at {range}"
   },
   "cleanup": {
     "title": "Cleanup Assistant",

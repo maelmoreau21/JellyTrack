@@ -364,6 +364,7 @@
     "restoring": "Восстановление..."
   },
   "logs": {
+    "hideZapped": "Скрыть прыжки (< 1м)",
     "title": "Журналы аудита",
     "description": "Полная история воспроизведения и событий телеметрии.",
     "totalEntries": "записей всего",
@@ -448,6 +449,8 @@
     "statsContentDesc": "Общее число проиндексированных элементов.",
     "statsTime": "Общий хронометраж",
     "statsTimeDesc": "Суммарная длительность всех файлов.",
+    "libraryDetailsTitle": "Детали по коллекциям",
+    "libraries": "коллекции",
     "timeDays": "{days}д {hours}ч",
     "deepAnalysisTitle": "Глубокая аналитика"
   },
@@ -614,7 +617,31 @@
     "timelineDesc": "Детальный список событий внутри сессии.",
     "allUsers": "Все",
     "sessionDetail": "Детали сессии",
-    "eventsCount": "{count} событий"
+    "eventsCount": "{count} событий",
+    "timeline": {
+      "label": {
+        "stop": "Стоп",
+        "pause": "Пауза",
+        "audio_change": "Звук",
+        "subtitle_change": "Субтитры"
+      }
+    },
+    "timeline_stop": "Стоп",
+    "timeline_pause": "Пауза",
+    "timeline_audio_change": "Смена аудио",
+    "timeline_subtitle_change": "Смена субтитров",
+    "dropoff": "Прерывание сессии",
+    "dropoff0": "0-10% (Начало)",
+    "dropoff1": "10-20%",
+    "dropoff2": "20-30%",
+    "dropoff3": "30-40%",
+    "dropoff4": "40-50% (Середина)",
+    "dropoff5": "50-60%",
+    "dropoff6": "60-70%",
+    "dropoff7": "70-80%",
+    "dropoff8": "80-90% (Почти)",
+    "dropoff9": "90-100% (Конец)",
+    "stoppedAt": "Остановлено на {range}"
   },
   "cleanup": {
     "title": "Система очистки",
