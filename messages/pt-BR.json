@@ -266,6 +266,8 @@
     "genresDesc": "Gêneros mais reproduzidos/assistidos por contagem de reproduções.",
     "noAlbums": "Nenhum álbum reproduzido.",
     "noBooks": "Nenhum livro lido.",
+    "noData": "Aucune donnée disponible.",
+    "noDataSmall": "Aucune donnée",
     "noDeviceData": "Sem dados de dispositivo disponíveis.",
     "noMovies": "Nenhum filme assistido.",
     "noResolutionData": "Sem dados de resolução disponíveis.",
@@ -274,10 +276,12 @@
     "resolutionMatrixDesc": "Distribuição de sessões por resolução de mídia (4K, 1080p, 720p, SD).",
     "streamMethods": "Métodos de stream",
     "streamMethodsDesc": "Proporção DirectPlay / Transcodificação.",
+    "topActors": "Top Acteurs",
     "topAlbums": "Top álbuns",
     "topBooks": "Top livros",
     "topClients": "Top clientes",
     "topClientsDesc": "Aplicativos mais utilizados.",
+    "topDirectors": "Top Réalisateurs",
     "topMovies": "Top filmes",
     "topSeries": "Top séries",
     "views": "visualizações"
@@ -580,6 +584,8 @@
     "usersSection": "Usuários"
   },
   "settings": {
+    "autoAvailability": "Activer la période de disponibilité automatique",
+    "autoAvailabilityDesc": "Si activé, le Wrapped ne sera accessible qu'entre les dates définies ci-dessous.",
     "autoNightlyAt": "Backup noturno automático às",
     "backingUp": "Fazendo backup...",
     "backupManagement": "Gerenciamento de backup",

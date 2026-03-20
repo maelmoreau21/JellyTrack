@@ -265,6 +265,8 @@
     "genresDesc": "Наиболее часто воспроизводимые жанры.",
     "noAlbums": "Альбомы не воспроизводились.",
     "noBooks": "Книги не читались.",
+    "noData": "Aucune donnée disponible.",
+    "noDataSmall": "Aucune donnée",
     "noDeviceData": "Нет данных об устройствах.",
     "noMovies": "Фильмы не просматривались.",
     "noResolutionData": "Нет данных о разрешении.",
@@ -273,10 +275,12 @@
     "resolutionMatrixDesc": "Распределение сессий по качеству видео.",
     "streamMethods": "Методы воспроизведения",
     "streamMethodsDesc": "Соотношение Direct Play и транскодирования.",
+    "topActors": "Top Acteurs",
     "topAlbums": "Топ альбомов",
     "topBooks": "Топ книг",
     "topClients": "Топ клиентов",
     "topClientsDesc": "Наиболее используемые приложения.",
+    "topDirectors": "Top Réalisateurs",
     "topMovies": "Топ фильмов",
     "topSeries": "Топ сериалов",
     "views": "просмотров"
@@ -579,6 +583,8 @@
     "usersSection": "Пользователи"
   },
   "settings": {
+    "autoAvailability": "Activer la période de disponibilité automatique",
+    "autoAvailabilityDesc": "Si activé, le Wrapped ne sera accessible qu'entre les dates définies ci-dessous.",
     "autoNightlyAt": "Ежедневный бэкап в",
     "backingUp": "Создание бэкапа...",
     "backupManagement": "Управление бэкапами",

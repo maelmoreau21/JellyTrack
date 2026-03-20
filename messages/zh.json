@@ -266,6 +266,8 @@
     "genresDesc": "按播放次数排列的最常播放类型。",
     "noAlbums": "未播放过专辑。",
     "noBooks": "未阅读过书籍。",
+    "noData": "Aucune donnée disponible.",
+    "noDataSmall": "Aucune donnée",
     "noDeviceData": "无设备数据。",
     "noMovies": "未观看过电影。",
     "noResolutionData": "无分辨率数据。",
@@ -274,10 +276,12 @@
     "resolutionMatrixDesc": "按分辨率（4K、1080p、720p、SD）统计的会话分布。",
     "streamMethods": "流媒体方式",
     "streamMethodsDesc": "直接播放与转码的比例。",
+    "topActors": "Top Acteurs",
     "topAlbums": "热门专辑",
     "topBooks": "热门书籍",
     "topClients": "常用客户端",
     "topClientsDesc": "最常使用的应用程序。",
+    "topDirectors": "Top Réalisateurs",
     "topMovies": "热门电影",
     "topSeries": "热门剧集",
     "views": "次观看"
@@ -580,6 +584,8 @@
     "usersSection": "用户"
   },
   "settings": {
+    "autoAvailability": "Activer la période de disponibilité automatique",
+    "autoAvailabilityDesc": "Si activé, le Wrapped ne sera accessible qu'entre les dates définies ci-dessous.",
     "autoNightlyAt": "每晚自动备份时间",
     "backingUp": "备份中...",
     "backupManagement": "备份管理",

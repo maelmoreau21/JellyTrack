@@ -429,7 +429,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
             {data.topGenres.length > 0 && (
                 <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-md">Top Genres</CardTitle>
+                        <CardTitle className="text-md">{t('topGenres')}</CardTitle>
                         <CardDescription>{t('genresDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>

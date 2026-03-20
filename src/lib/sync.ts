@@ -14,12 +14,13 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
     console.log(`[Sync] Démarrage de la synchronisation ${mode} de la librairie Jellyfin...`);
     await markSyncStarted(options?.recentOnly ? 'recent' : 'full');
 
-    const baseUrl = process.env.JELLYFIN_URL;
+    // Nettoyage de l'URL (suppression du slash final superflu)
+    const baseUrl = (process.env.JELLYFIN_URL || '').replace(/\/+$/, '');
     const apiKey = process.env.JELLYFIN_API_KEY;
 
     if (!baseUrl || !apiKey) {
         console.error("[Sync Error] JELLYFIN_URL ou JELLYFIN_API_KEY manquants.");
-        return { success: false, error: "Server not configured." };
+        return { success: false, error: "Server not configured. Please check JELLYFIN_URL and JELLYFIN_API_KEY in your settings/env." };
     }
     const jellyfinHeaders = { "X-Emby-Token": apiKey };
 
@@ -30,11 +31,21 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             try {
                 const response = await fetch(url, { ...options, signal: controller.signal });
                 clearTimeout(id);
-                if (!response.ok && [500, 502, 503, 504].includes(response.status)) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok && [500, 502, 503, 504].includes(response.status)) {
+                    throw new Error(`HTTP ${response.status} from server`);
+                }
                 return response;
             } catch (e: any) {
                 clearTimeout(id);
-                if (i === maxRetries - 1) throw e;
+                const isAbort = e.name === 'AbortError';
+                const errorMsg = isAbort ? `Timeout (${timeout}ms)` : (e.message || "Unknown Network Error");
+                
+                console.warn(`[Sync Warning] Tentative ${i + 1}/${maxRetries} échouée pour ${url.split('?')[0]}: ${errorMsg}`);
+                
+                if (i === maxRetries - 1) {
+                    console.error(`[Sync Error] Échec final après ${maxRetries} tentatives. URL: ${url}. Erreur:`, e);
+                    throw e;
+                }
                 await new Promise(r => setTimeout(r, 2000 * (i + 1)));
             }
         }
@@ -224,8 +235,9 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         cleanupOrphanedSessions().catch(() => {});
         return { success: true, users: usersCount, media: mediaCount };
     } catch (e: any) {
-        console.error("[Sync Error]", e.message);
-        await markSyncFinished({ success: false, mode: options?.recentOnly ? 'recent' : 'full', error: e.message });
-        return { success: false, error: e.message };
+        const fullError = e.message || "Unknown error";
+        console.error("[Sync Error]", fullError);
+        await markSyncFinished({ success: false, mode: options?.recentOnly ? 'recent' : 'full', error: fullError });
+        return { success: false, error: fullError };
     }
 }
