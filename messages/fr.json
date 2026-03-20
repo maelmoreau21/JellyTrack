@@ -266,7 +266,7 @@
     "genresDesc": "Genres les plus écoutés/visionnés par nombre de lectures.",
     "noAlbums": "Aucun album écouté.",
     "noBooks": "Aucun livre lu.",
-    "noData": "Aucune donnée disponible.",
+    "noData": "Aucune donnée disponible",
     "noDataSmall": "Aucune donnée",
     "noDeviceData": "Aucune donnée d'appareil disponible.",
     "noMovies": "Aucun film visionné.",
@@ -282,6 +282,7 @@
     "topClients": "Top Clients",
     "topClientsDesc": "Applications les plus utilisées.",
     "topDirectors": "Top Réalisateurs",
+    "topGenres": "Top Genres",
     "topMovies": "Top Films",
     "topSeries": "Top Séries",
     "views": "vues"
