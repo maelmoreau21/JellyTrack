@@ -470,8 +470,7 @@ export async function POST(req: Request) {
                                             NOT: { mediaId: dbMedia.id } 
                                         },
                                         data: { 
-                                            endedAt: new Date(),
-                                            durationWatched: 0 // We don't have accurate duration for missed stops
+                                            endedAt: new Date()
                                         }
                                     });
                                 }
@@ -524,8 +523,7 @@ export async function POST(req: Request) {
                                             NOT: { mediaId: dbMedia.id } 
                                         },
                                         data: { 
-                                            endedAt: new Date(),
-                                            durationWatched: 0
+                                            endedAt: new Date()
                                         }
                                     });
                                 }

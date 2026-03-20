@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import { subDays, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { enUS } from "date-fns/locale";
@@ -19,7 +20,10 @@ export default async function NewsletterPage() {
     const totalMetrics = await prisma.playbackHistory.aggregate({
         _sum: { durationWatched: true },
         _count: { id: true },
-        where: { startedAt: { gte: thirtyDaysAgo } }
+        where: { 
+            startedAt: { gte: thirtyDaysAgo },
+            ...ZAPPING_CONDITION
+        }
     });
     const totalHours = ((totalMetrics._sum.durationWatched || 0) / 3600).toFixed(0);
     const totalPlays = totalMetrics._count.id;
@@ -28,7 +32,10 @@ export default async function NewsletterPage() {
     const topMediaAgg = await prisma.playbackHistory.groupBy({
         by: ['mediaId'],
         _sum: { durationWatched: true },
-        where: { startedAt: { gte: thirtyDaysAgo } },
+        where: { 
+            startedAt: { gte: thirtyDaysAgo },
+            ...ZAPPING_CONDITION
+        },
         orderBy: { _sum: { durationWatched: 'desc' } },
         take: 3
     });
@@ -51,7 +58,10 @@ export default async function NewsletterPage() {
     const topUserAgg = await prisma.playbackHistory.groupBy({
         by: ['userId'],
         _sum: { durationWatched: true },
-        where: { startedAt: { gte: thirtyDaysAgo } },
+        where: { 
+            startedAt: { gte: thirtyDaysAgo },
+            ...ZAPPING_CONDITION
+        },
         orderBy: { _sum: { durationWatched: 'desc' } },
         take: 1
     });

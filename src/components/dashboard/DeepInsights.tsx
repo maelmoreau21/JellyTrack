@@ -5,6 +5,7 @@ import { StreamProportionsChart } from "@/components/charts/StreamProportionsCha
 import { StandardPieChart } from "@/components/charts/StandardMetricsCharts";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
+import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 
 function buildDateFilter(timeRange: string): any {
     const now = new Date();
@@ -57,7 +58,7 @@ const getDeepInsights = unstable_cache(
             _sum: { durationWatched: true },
             orderBy: { _count: { id: 'desc' } },
             take: 200,
-            where: Object.keys(historyWhere).length > 0 ? historyWhere : undefined
+            where: { ...(Object.keys(historyWhere).length > 0 ? historyWhere : {}), ...ZAPPING_CONDITION }
         });
 
         const popMediaId = topMedia.map(m => m.mediaId);
@@ -108,7 +109,7 @@ const getDeepInsights = unstable_cache(
             by: ['mediaId'],
             _count: { id: true },
             _sum: { durationWatched: true },
-            where: episodeHistoryWhere
+            where: { ...episodeHistoryWhere, ...ZAPPING_CONDITION }
         });
         const episodeMediaIds = allEpisodeHistory.map(e => e.mediaId);
         const allEpisodes = episodeMediaIds.length > 0
@@ -140,7 +141,7 @@ const getDeepInsights = unstable_cache(
             by: ['mediaId'],
             _count: { id: true },
             _sum: { durationWatched: true },
-            where: audioHistoryWhere
+            where: { ...audioHistoryWhere, ...ZAPPING_CONDITION }
         });
         const audioMediaIds = allAudioHistory.map(a => a.mediaId);
         const allAudioMedia = audioMediaIds.length > 0
@@ -215,13 +216,13 @@ const getDeepInsights = unstable_cache(
             _count: { id: true },
             orderBy: { _count: { id: 'desc' } },
             take: 5,
-            where: filteredWhere
+            where: { ...(filteredWhere || {}), ...ZAPPING_CONDITION }
         });
 
         const streamMethods = await prisma.playbackHistory.groupBy({
             by: ['playMethod'],
             _count: { id: true },
-            where: filteredWhere
+            where: { ...(filteredWhere || {}), ...ZAPPING_CONDITION }
         });
 
         const streamMethodsChartData = streamMethods.map(s => ({
@@ -231,7 +232,7 @@ const getDeepInsights = unstable_cache(
 
         // --- Pro Telemetry: Resolution Matrix ---
         const resolutionData = await prisma.playbackHistory.findMany({
-            where: filteredWhere,
+            where: { ...(filteredWhere || {}), ...ZAPPING_CONDITION },
             select: { media: { select: { resolution: true, type: true } } },
         });
 
@@ -257,7 +258,7 @@ const getDeepInsights = unstable_cache(
         };
 
         const audioRows = await prisma.playbackHistory.findMany({
-            where: audioWhere,
+            where: { ...audioWhere, ...ZAPPING_CONDITION },
             select: { audioLanguage: true, audioCodec: true },
         });
         const audioMap = new Map<string, number>();
@@ -283,7 +284,7 @@ const getDeepInsights = unstable_cache(
             .slice(0, 8);
 
         const subtitleRows = await prisma.playbackHistory.findMany({
-            where: audioWhere,
+            where: { ...audioWhere, ...ZAPPING_CONDITION },
             select: { subtitleLanguage: true, subtitleCodec: true },
         });
         const subtitleMap = new Map<string, number>();
@@ -314,7 +315,7 @@ const getDeepInsights = unstable_cache(
 
         // --- Pro Telemetry: Device Ecosystem ---
         const deviceData = await prisma.playbackHistory.findMany({
-            where: filteredWhere,
+            where: { ...(filteredWhere || {}), ...ZAPPING_CONDITION },
             select: { clientName: true, deviceName: true },
         });
 

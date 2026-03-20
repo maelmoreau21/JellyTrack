@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Clock, Monitor } from "lucide-react";
 import { getTranslations, getLocale } from 'next-intl/server';
+import { isZapped } from "@/lib/mediaPolicy";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export default async function UsersPage() {
                     clientName: true,
                     deviceName: true,
                     startedAt: true,
+                    media: { select: { type: true } }
                 },
                 orderBy: { startedAt: "desc" }
             }
@@ -33,6 +35,7 @@ export default async function UsersPage() {
         const clientCounts = new Map<string, number>();
 
         user.playbackHistory.forEach((session: any) => {
+            if (isZapped(session)) return;
             totalSeconds += session.durationWatched;
             if (!lastActive || new Date(session.startedAt) > lastActive) {
                 lastActive = new Date(session.startedAt);
@@ -57,7 +60,7 @@ export default async function UsersPage() {
             jellyfinUserId: user.jellyfinUserId,
             username: user.username || tc('deletedUser'),
             totalHours: parseFloat((totalSeconds / 3600).toFixed(1)),
-            sessionsCount: user.playbackHistory.length,
+            sessionsCount: user.playbackHistory.filter(s => !isZapped(s)).length,
             lastActive: lastActive,
             favoriteClient: topClient
         };

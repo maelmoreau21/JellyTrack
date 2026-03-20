@@ -41,6 +41,7 @@ import { DraggableDashboard } from "@/components/dashboard/DraggableDashboard";
 import { HardwareMonitor } from "@/components/dashboard/HardwareMonitor";
 import { LiveStreamsPanel } from "@/components/dashboard/LiveStreamsPanel";
 import { buildExcludedMediaClause, getCompletionMetrics } from "@/lib/mediaPolicy";
+import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { loadLibraryRules } from "@/lib/libraryRules";
 import { getLogHealthSnapshot } from "@/lib/logHealth";
 import { categorizeClient } from "@/lib/utils";
@@ -155,40 +156,40 @@ const getDashboardMetrics = unstable_cache(
 
     // 3. User & Hours (Current)
     const totalUsers = await prisma.user.count();
+    const zappedFilter = ZAPPING_CONDITION;
+    
     const hoursWatchedAgg = await prisma.playbackHistory.aggregate({
       _sum: { durationWatched: true },
-      where: { media: mediaWhere, startedAt: dateFilter }
+      where: { media: mediaWhere, startedAt: dateFilter, ...zappedFilter }
     });
     const hoursWatched = parseFloat(((hoursWatchedAgg._sum.durationWatched || 0) / 3600).toFixed(1));
 
-    // Previous Hours
     let previousHoursWatched = 0;
+    let hoursGrowth = 0;
+    let previousPlays = 0;
+    let previousActiveUsers = 0;
+
     if (prevDateFilter) {
       const prevHoursAgg = await prisma.playbackHistory.aggregate({
         _sum: { durationWatched: true },
-        where: { media: mediaWhere, startedAt: prevDateFilter }
+        where: { media: mediaWhere, startedAt: prevDateFilter, ...zappedFilter }
       });
       previousHoursWatched = parseFloat(((prevHoursAgg._sum.durationWatched || 0) / 3600).toFixed(1));
-    }
-    const hoursGrowth = previousHoursWatched > 0 ? ((hoursWatched - previousHoursWatched) / previousHoursWatched) * 100 : 0;
+      hoursGrowth = previousHoursWatched > 0 ? ((hoursWatched - previousHoursWatched) / previousHoursWatched) * 100 : 0;
 
-    // Previous period: total plays & active users
-    let previousPlays = 0;
-    let previousActiveUsers = 0;
-    if (prevDateFilter) {
       previousPlays = await prisma.playbackHistory.count({
-        where: { media: mediaWhere, startedAt: prevDateFilter }
+        where: { media: mediaWhere, startedAt: prevDateFilter, ...zappedFilter }
       });
       const prevActiveUsersAgg = await prisma.playbackHistory.groupBy({
         by: ['userId'],
-        where: { media: mediaWhere, startedAt: prevDateFilter, userId: { not: null } }
+        where: { media: mediaWhere, startedAt: prevDateFilter, userId: { not: null }, ...zappedFilter }
       });
       previousActiveUsers = prevActiveUsersAgg.length;
     }
 
     // 4. Load all history matching period
     const histories = await prisma.playbackHistory.findMany({
-      where: { startedAt: dateFilter, media: mediaWhere },
+      where: { startedAt: dateFilter, media: mediaWhere, ...zappedFilter },
       select: { startedAt: true, durationWatched: true, clientName: true, playMethod: true, userId: true, media: { select: { type: true, title: true } } },
       orderBy: { startedAt: 'asc' }
     });
@@ -269,7 +270,7 @@ const getDashboardMetrics = unstable_cache(
     const topUsersAgg = await prisma.playbackHistory.groupBy({
       by: ['userId'],
       _sum: { durationWatched: true },
-      where: { media: mediaWhere, startedAt: dateFilter, userId: { not: null } },
+      where: { media: mediaWhere, startedAt: dateFilter, userId: { not: null }, ...zappedFilter },
       orderBy: { _sum: { durationWatched: 'desc' } },
       take: 5
     });
@@ -377,7 +378,7 @@ const getDashboardMetrics = unstable_cache(
 
     // Also load full histories with mediaId for completion calc
     const fullHistories = await prisma.playbackHistory.findMany({
-      where: { startedAt: dateFilter, media: mediaWhere },
+      where: { startedAt: dateFilter, media: mediaWhere, ...zappedFilter },
       select: { durationWatched: true, media: { select: { title: true, durationMs: true, type: true, collectionType: true } } },
     });
     fullHistories.forEach((h: any) => {
@@ -412,7 +413,7 @@ const getDashboardMetrics = unstable_cache(
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayHistories = await prisma.playbackHistory.findMany({
-      where: { startedAt: { gte: todayStart }, media: mediaWhere },
+      where: { startedAt: { gte: todayStart }, media: mediaWhere, ...zappedFilter },
       select: { durationWatched: true, userId: true },
     });
     const todayPlays = todayHistories.length;

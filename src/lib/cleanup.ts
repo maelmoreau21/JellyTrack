@@ -72,19 +72,15 @@ export async function cleanupOrphanedSessions() {
                     endedAt = now;
                 }
                 
-                const wallDurationS = Math.floor((endedAt.getTime() - playback.startedAt.getTime()) / 1000);
-                let durationS = Math.max(0, Math.min(wallDurationS, 86400));
-
                 await prisma.playbackHistory.update({
                     where: { id: playback.id },
                     data: {
-                        endedAt,
-                        durationWatched: durationS
+                        endedAt
                     }
                 });
 
                 closedCount++;
-                console.log(`[Cleanup] Closed orphaned history ${playback.id} for "${playback.media?.title || 'Unknown'}" (Duration: ${durationS}s)`);
+                console.log(`[Cleanup] Closed orphaned history ${playback.id} for "${playback.media?.title || 'Unknown'}"`);
             }
         }
 

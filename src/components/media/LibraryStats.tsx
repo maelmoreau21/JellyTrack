@@ -9,6 +9,7 @@ import Link from "next/link";
 
 interface LibraryDetail {
     name: string;
+    collectionType?: string | null;
     size: string;
     duration: string;
     counts: string;
@@ -115,8 +116,8 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             <div>
                                                 <h4 className="font-black text-lg text-zinc-100 group-hover:text-primary transition-colors flex items-center gap-2">
                                                     {lib.name}
-                                                    {lib.name.toLowerCase().includes('film') && <FileVideo className="w-4 h-4 opacity-50" />}
-                                                    {lib.name.toLowerCase().includes('musique') && <Music className="w-4 h-4 opacity-50" />}
+                                                    {(lib.collectionType === 'movies' || lib.name.toLowerCase().includes('film')) && <FileVideo className="w-4 h-4 opacity-50" />}
+                                                    {(lib.collectionType === 'music' || lib.name.toLowerCase().includes('musique')) && <Music className="w-4 h-4 opacity-50" />}
                                                 </h4>
                                                 <div className="flex items-center gap-3 mt-1">
                                                     <span className="text-[10px] font-mono bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded border border-zinc-700/50">

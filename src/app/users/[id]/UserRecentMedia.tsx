@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { getJellyfinImageUrl } from "@/lib/jellyfin";
 import { FallbackImage } from "@/components/FallbackImage";
 import { getTranslations, getLocale } from 'next-intl/server';
+import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -32,7 +33,10 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
 
     // Count total sessions for pagination
     const totalCount = await prisma.playbackHistory.count({
-        where: { userId: user.id },
+        where: { 
+            userId: user.id,
+            ...ZAPPING_CONDITION
+        },
     });
 
     if (totalCount === 0) {
@@ -51,7 +55,10 @@ export default async function UserRecentMedia({ userId, page = 1 }: { userId: st
 
     // Fetch paginated sessions
     const sessions = await prisma.playbackHistory.findMany({
-        where: { userId: user.id },
+        where: { 
+            userId: user.id,
+            ...ZAPPING_CONDITION
+        },
         include: { media: true },
         orderBy: { startedAt: "desc" },
         skip: (safePage - 1) * ITEMS_PER_PAGE,

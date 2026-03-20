@@ -11,6 +11,7 @@ import LogRow from "./LogRow";
 import LogsListClient from "./LogsListClient";
 import prisma from "@/lib/prisma";
 import { getTranslations, getLocale } from 'next-intl/server';
+import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 
 import Link from "next/link";
 
@@ -151,12 +152,7 @@ export default async function LogsPage({
     const conditions: any[] = [];
 
     if (hideZapped) {
-        conditions.push({
-            OR: [
-                { durationWatched: { gte: 60 } },
-                { endedAt: null }
-            ]
-        });
+        conditions.push(ZAPPING_CONDITION);
     }
 
     if (query) {

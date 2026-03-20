@@ -225,3 +225,20 @@ export function getCompletionMetrics(media: MediaLike, durationWatched: number, 
 
     return { percent, bucket: 'skipped' as CompletionBucket };
 }
+
+/**
+ * Zapping Filter: Determines if a session is too short to be counted in statistics.
+ * Use this to ignore background pings (PC wake-ups, background app activity).
+ * Thresholds: 30s for Video, 10s for Audio/Others.
+ */
+export function isZapped(session: { durationWatched: number, media?: { type: string } | null }): boolean {
+    if (!session.durationWatched || session.durationWatched <= 0) return true;
+    
+    const type = session.media?.type || 'Unknown';
+    if (type === 'Movie' || type === 'Episode' || type === 'Series') {
+        return session.durationWatched < 30;
+    }
+    
+    // Default (Audio, Book, etc.)
+    return session.durationWatched < 10;
+}

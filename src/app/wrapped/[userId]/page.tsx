@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import WrappedClient from "./WrappedClient";
@@ -63,6 +64,7 @@ export default async function WrappedPage({ params, searchParams }: WrappedPageP
                         gte: new Date(requestedYear, 0, 1),
                         lt: new Date(requestedYear + 1, 0, 1),
                     },
+                    ...ZAPPING_CONDITION
                 },
                 include: {
                     media: true
@@ -81,7 +83,8 @@ export default async function WrappedPage({ params, searchParams }: WrappedPageP
                             startedAt: { 
                                 gte: new Date(requestedYear, 0, 1),
                                 lt: new Date(requestedYear + 1, 0, 1)
-                            } 
+                            },
+                            ...ZAPPING_CONDITION
                         },
                         include: { media: true }
                     }

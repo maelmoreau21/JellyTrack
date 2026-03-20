@@ -2,7 +2,7 @@ import { Clock, Monitor, Smartphone, PlayCircle, Hash, Film, Calendar, Zap, Trop
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
 import { getTranslations } from 'next-intl/server';
-import { getCompletionMetrics } from "@/lib/mediaPolicy";
+import { getCompletionMetrics, isZapped } from "@/lib/mediaPolicy";
 import { loadLibraryRules } from "@/lib/libraryRules";
 
 export default async function UserInfo({ userId }: { userId: string }) {
@@ -44,6 +44,7 @@ export default async function UserInfo({ userId }: { userId: string }) {
     let firstWatched: Date | null = null;
 
     user.playbackHistory.forEach((session: any) => {
+        if (isZapped(session)) return;
         totalSeconds += session.durationWatched;
         if (session.clientName) clientCounts.set(session.clientName, (clientCounts.get(session.clientName) || 0) + 1);
         if (session.deviceName) deviceCounts.set(session.deviceName, (deviceCounts.get(session.deviceName) || 0) + 1);
@@ -87,7 +88,7 @@ export default async function UserInfo({ userId }: { userId: string }) {
         }
     });
 
-    const sessionCount = user.playbackHistory.length;
+    const sessionCount = user.playbackHistory.filter(s => !isZapped(s)).length;
     const totalHours = parseFloat((totalSeconds / 3600).toFixed(1));
     const avgSessionMin = sessionCount > 0 ? Math.round(totalSeconds / sessionCount / 60) : 0;
     const avgCompletion = completionCount > 0 ? Math.round(totalCompletions / completionCount) : 0;
@@ -137,6 +138,7 @@ export default async function UserInfo({ userId }: { userId: string }) {
     const uniqueSeries = new Set<string>();
     const uniqueMusic = new Set<string>();
     user.playbackHistory.forEach((session: any) => {
+        if (isZapped(session)) return;
         if (session.media?.type === 'Movie') uniqueMovies.add(session.media.jellyfinMediaId);
         else if (session.media?.type === 'Episode') uniqueSeries.add(session.media.jellyfinMediaId);
         else if (session.media?.type === 'Audio') uniqueMusic.add(session.media.jellyfinMediaId);

@@ -12,6 +12,7 @@ import { GenreDistributionChart, GenreData } from "@/components/charts/GenreDist
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
+import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { buildExcludedMediaClause } from '@/lib/mediaPolicy';
 
 export const dynamic = "force-dynamic";
@@ -45,15 +46,30 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     let jellyfinViews: any[] = [];
     if (baseUrl && apiKey) {
         try {
-            const viewsRes = await fetch(`${baseUrl}/Library/VirtualFolders`, { headers: { 'X-Emby-Token': apiKey } });
-            if (viewsRes.ok) {
-                const v = await viewsRes.json();
-                jellyfinViews = Array.isArray(v) ? v : (v.Items || []);
-            } else {
-                console.warn('[MediaPage] Failed to fetch Jellyfin VirtualFolders:', viewsRes.status);
+            const [vfRes, uvRes] = await Promise.all([
+                fetch(`${baseUrl}/Library/VirtualFolders`, { headers: { 'X-Emby-Token': apiKey } }),
+                fetch(`${baseUrl}/UserViews`, { headers: { 'X-Emby-Token': apiKey } })
+            ]);
+            
+            let folders: any[] = [];
+            if (vfRes.ok) folders = await vfRes.json();
+            
+            let userViews: any[] = [];
+            if (uvRes.ok) {
+                const uv = await uvRes.json();
+                userViews = Array.isArray(uv) ? uv : (uv.Items || []);
             }
+
+            // Deduplicate by Name or Id to get the most complete list of available libraries
+            const viewsMap = new Map();
+            [...folders, ...userViews].forEach(v => {
+                if (v && v.Name && !viewsMap.has(v.Name)) {
+                    viewsMap.set(v.Name, v);
+                }
+            });
+            jellyfinViews = Array.from(viewsMap.values());
         } catch (e) {
-            console.warn('[MediaPage] Error fetching Jellyfin VirtualFolders:', e);
+            console.warn('[MediaPage] Error fetching Jellyfin libraries:', e);
         }
     }
 
@@ -66,9 +82,10 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         const clauses: any[] = [{ type: { in: displayTypes } }];
         if (q) {
             // Case-insensitive Prisma text / array search
+            const searchMode = "insensitive";
             clauses.push({
                 OR: [
-                    { title: { contains: q } },
+                    { title: { contains: q, mode: searchMode } },
                     { directors: { has: q } },
                     { actors: { has: q } },
                     { studios: { has: q } }
@@ -113,11 +130,14 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             for (const ep of episodes) {
                 const sid = seasonToSeries.get(ep.parentId!);
                 if (!sid) continue;
+                const filteredHistory = ep.playbackHistory.filter((h: any) => !isZapped({ ...h, media: { type: 'Episode' } }));
+                if (filteredHistory.length === 0) continue;
+
                 const s = seriesChildStats.get(sid) || { plays: 0, dur: 0, dp: 0, childCount: 0 };
                 s.childCount++;
-                s.plays += ep.playbackHistory.length;
-                s.dur += ep.playbackHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
-                s.dp += ep.playbackHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
+                s.plays += filteredHistory.length;
+                s.dur += filteredHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
+                s.dp += filteredHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
                 seriesChildStats.set(sid, s);
             }
         }
@@ -132,13 +152,16 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         });
         for (const track of tracks) {
             if (!track.parentId) continue;
+            const filteredHistory = track.playbackHistory.filter((h: any) => !isZapped({ ...h, media: { type: 'Audio' } }));
+            if (filteredHistory.length === 0) continue;
+
             const s = albumChildStats.get(track.parentId) || { plays: 0, dur: 0, dp: 0, childCount: 0, sizeBytes: BigInt(0), totalTrackDurationMs: BigInt(0) };
             s.childCount++;
             s.sizeBytes += track.size || BigInt(0);
             s.totalTrackDurationMs += track.durationMs || BigInt(0);
-            s.plays += track.playbackHistory.length;
-            s.dur += track.playbackHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
-            s.dp += track.playbackHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
+            s.plays += filteredHistory.length;
+            s.dur += filteredHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
+            s.dp += filteredHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
             albumChildStats.set(track.parentId, s);
         }
     }
@@ -146,9 +169,10 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const processedMedia = parentItems.map((media: any) => {
         let plays = 0, durationSeconds = 0, dpCount = 0, childCount = 0;
         if (media.type === 'Movie') {
-            plays = media.playbackHistory.length;
-            durationSeconds = media.playbackHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
-            dpCount = media.playbackHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
+            const filteredHistory = media.playbackHistory.filter((h: any) => !isZapped({ ...h, media: { type: 'Movie' } }));
+            plays = filteredHistory.length;
+            durationSeconds = filteredHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
+            dpCount = filteredHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
         } else if (media.type === 'Series') {
             const stats = seriesChildStats.get(media.jellyfinMediaId);
             if (stats) { plays = stats.plays; durationSeconds = stats.dur; dpCount = stats.dp; childCount = stats.childCount; }
@@ -188,10 +212,10 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     // Library Metrics
     const allMedia = await prisma.media.findMany({
         where: buildExcludedMediaClause(excludedLibraries) || {},
-        select: { type: true, size: true, durationMs: true, libraryName: true, title: true }
+        select: { type: true, size: true, durationMs: true, libraryName: true, title: true, collectionType: true }
     });
 
-    const libraryStatsMap = new Map<string, { size: bigint; duration: bigint; watchedSeconds?: number; items: number; movies: number; series: number; music: number; books: number }>();
+    const libraryStatsMap = new Map<string, { size: bigint; duration: bigint; watchedSeconds?: number; items: number; movies: number; series: number; music: number; books: number, collectionType?: string | null }>();
 
     console.log(`[MediaPage] Libraries in settings:`, JSON.stringify(excludedLibraries));
     // Safe logging: don't stringify the whole object because of BigInt (durationMs)
@@ -205,7 +229,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         for (const v of jellyfinViews) {
             const name = v?.Name || tc('other');
             if (!libraryStatsMap.has(name)) {
-                libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), items: 0, movies: 0, series: 0, music: 0, books: 0 });
+                libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: v?.CollectionType || null });
             }
         }
     }
@@ -214,7 +238,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const uniqueLibs = new Set(allMedia.map(m => m.libraryName || tc('other')));
     for (const name of uniqueLibs) {
         if (!libraryStatsMap.has(name)) {
-            libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0 });
+            libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: null });
         }
     }
 
@@ -228,9 +252,10 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     allMedia.forEach(m => {
         const libName = m.libraryName || tc('other');
         if (!libraryStatsMap.has(libName)) {
-            libraryStatsMap.set(libName, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0 });
+            libraryStatsMap.set(libName, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: m.collectionType });
         }
         const lib = libraryStatsMap.get(libName)!;
+        if (!lib.collectionType && m.collectionType) lib.collectionType = m.collectionType;
 
         // CRITICAL: Only count durations from leaf items for "Watch Time" (sizes will be aggregated via Prisma below)
         const isLeaf = ['Movie', 'Episode', 'Audio', 'Book'].includes(m.type);
@@ -264,7 +289,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         for (const p of perLibSizes) {
             const name = p.libraryName || tc('other');
             if (!libraryStatsMap.has(name)) {
-                libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0 });
+                libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: null });
             }
             const lib = libraryStatsMap.get(name)!;
             lib.size = (p._sum && (p._sum as any).size) || BigInt(0);
@@ -278,6 +303,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         const playbackAgg = await prisma.playbackHistory.groupBy({
             by: ['mediaId'],
             _sum: { durationWatched: true },
+            where: ZAPPING_CONDITION
         });
         const mediaIdsWithHistory = playbackAgg.map(p => p.mediaId);
         const mediasForHistory = mediaIdsWithHistory.length > 0
@@ -288,7 +314,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         for (const p of playbackAgg) {
             const libName = mediaToLib.get(p.mediaId) || tc('other');
             if (!libraryStatsMap.has(libName)) {
-                libraryStatsMap.set(libName, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0 });
+                libraryStatsMap.set(libName, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: null });
             }
             const lib = libraryStatsMap.get(libName)!;
             lib.watchedSeconds = (lib.watchedSeconds || 0) + (p._sum.durationWatched || 0);
@@ -312,9 +338,13 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const timeLabel = t('timeDays', { days: totalDays, hours: totalHoursAfterDays });
 
     const validLibraries = Array.from(libraryStatsMap.entries()).filter(([name, stats]) => {
-        if (name === tc('other')) return false;
-        const hasItems = stats.movies > 0 || stats.series > 0 || stats.music > 0 || stats.books > 0;
-        return hasItems;
+        // We hide the fallback "Other" library if it's empty, but we show all real libraries
+        // even if they are empty, to reflect what's on the Jellyfin server.
+        if (name === tc('other')) {
+            const hasItems = stats.movies > 0 || stats.series > 0 || stats.music > 0 || stats.books > 0;
+            return hasItems;
+        }
+        return true; 
     });
 
     const libraryStatsList = await Promise.all(validLibraries.map(async ([name, stats]) => {
@@ -355,6 +385,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             }
             return {
                 name,
+                collectionType: stats.collectionType,
                 size: `${size.value} ${size.unit}`,
                 duration: t('timeDays', { days: d, hours: h }),
                 counts: [
@@ -362,7 +393,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                     stats.series > 0 && `${stats.series} ${tc('series').toLowerCase()}`,
                     stats.music > 0 && `${stats.music} albums`,
                     stats.books > 0 && `${stats.books} ${tc('books').toLowerCase()}`,
-                ].filter(Boolean).join(', '),
+                ].filter(Boolean).join(', ') || tc('noData'),
                 topItem: (topItem && topContent[0]._count.mediaId) ? { title: topItem.title, plays: topContent[0]._count.mediaId, id: topItem.jellyfinMediaId } : null,
                 lastAdded: lastAdded ? { title: lastAdded.title, date: lastAdded.dateAdded ? lastAdded.dateAdded.toISOString() : null, id: lastAdded.jellyfinMediaId } : null
             };

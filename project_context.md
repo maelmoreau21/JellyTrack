@@ -1,7 +1,13 @@
 # JellyTrack - Project Context & Architecture
 
 **Description** : JellyTrack (Jellyfin + Tautulli) est un wrapper analytique et un traceur autonome ("Ultimate Dashboard 2.0") pour Jellyfin.
-**Version actuelle** : 1.2.0 (Phase 57)
+**Version actuelle** : 1.2.0 (Phase 63)
+
+## Phase 63: Stats Accuracy & Localized UI (March 2026 Audit)
+- **Centralized Zapping Filter**: Created `src/lib/statsUtils.ts` containing a unified `ZAPPING_CONDITION` (<30s video, <10s audio).
+- **Global Stats Accuracy**: Applied the zapping filter to all dashboard queries (`page.tsx`, `DeepInsights.tsx`), media library totals, and the logs page. This effectively filters out background "ping" sessions and PC wake-ups from analytical totals.
+- **Language-Independent Collection Icons**: The "Details by Collection" component now uses the `collectionType` field (from Jellyfin's `VirtualFolders`) instead of title-based matching. This fixes broken or missing icons in non-French locales.
+- **Search Robustness**: The media search in `/media` is now case-insensitive (via Prisma `mode: 'insensitive'`), aligning it with the global search behavior.
 
 ## Tech Stack
 - Frontend/Backend: **Next.js 15+ (App Router, Server Components)**
@@ -18,11 +24,19 @@
 - **Filtres Médias Intelligents**: Le composant `MediaFilter` affiche désormais des labels localisés et permet de masquer dynamiquement des catégories (Musique, Livres, etc.) du tableau de bord principal.
 - **Stabilité Totale**: Vérification de la synergie entre la "Synchro Récente" et la "Synchro Totale" pour assurer l'intégrité des données historiques et des statistiques de bibliothèque.
 
-## Phase 59: Collection Discovery & Global i18n Sync (v1.2.0 Final)
-- **BoxSet Synchronization**: Added `BoxSet` (Collections) to the synchronized item types to ensure user-defined collections appear in analytics.
-- **Recursive Library Resolution**: Improved `sync.ts` with a parent-lookup cache to correctly attribute nested items (Episodes, Seasons) to their root libraries.
-- **Global 10-Locale Synchronization**: Automated script-based sync of all 10 translation files (`de`, `en`, `es`, `fr`, `it`, `nl`, `pl`, `pt-BR`, `ru`, `zh`) ensuring 100% key parity and no missing UI labels.
-- **MediaFilter UI Polish**: Refined the dashboard category filter with a "Toolbar" integrated design, adding icons and removing redundant labels for a premium feel.
+### Phase 61: Playback Duration Integrity
+- **Preserve Progress on Orphan Closure**: Removed the `durationWatched: 0` reset when auto-closing sessions. This prevents losing all watched time if a new session starts before the old one is stop-synced.
+- **Cleanup Refinement**: Modified `cleanup.ts` to stop overwriting `durationWatched` with wall-clock time. Sessions are now closed using their last known progress position, accounting for pauses and preventing inflated stats.
+- **Log Integrity**: Verified that all session metadata (IP, Client, Country) is preserved during orphan session handling.
+
+### Phase 62: Zapping Filter for Statistics
+- **Statistical Filtering Utility**: Implemented `isZapped(session)` in `src/lib/mediaPolicy.ts` to identify short background playback sessions (pings). Thresholds: <30s for Video, <10s for Audio/Others.
+- **Contextual Stats Exclusions**: Applied the zapping filter across the whole application:
+  - **Users Leaderboard**: Excludes zapped sessions from total hours and session counts.
+  - **User Profile Info**: Filters statistics (completion rate, best streak, hours) to reflect only significant engagement.
+  - **Media & Collection Stats**: Aggregated play counts and durations for Movies, Series, and Albums now exclude "zaps".
+  - **Dashboard Metrics**: Overall watch time, play counts, and growth percentages are now calculated using filtered data for both current and previous periods.
+- **Data Preservation**: Zapped sessions are kept in the database for log transparency but are hidden by default from the Logs page and excluded from all analytical computations.
 
 ## Phase 53: Critical i18n Synchronization & Crash Prevention
 - **fr.json Emergency Restore**: Restored missing `charts` keys (`months`, `weekdays`, `dayNamesShort`, etc.) that were causing a client-side crash in French.
