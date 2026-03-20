@@ -64,6 +64,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         if (vfRes.ok) {
             const folders = await vfRes.json();
             folders.forEach((f: any) => {
+                if (f.CollectionType === 'boxsets') return;
                 const keys = [f.Id, f.ItemId].filter(Boolean);
                 keys.forEach(k => {
                     if (f.Name) libraryNameMap.set(k, f.Name);
@@ -76,6 +77,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         if (uvRes.ok) {
             const views = await uvRes.json();
             (views.Items || []).forEach((v: any) => {
+                if (v.CollectionType === 'boxsets') return;
                 const keys = [v.Id, v.ItemId].filter(Boolean);
                 keys.forEach(k => {
                     if (v.Name) libraryNameMap.set(k, v.Name);
@@ -145,8 +147,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 }
 
                 if (!libraryName && collectionType) {
-                    const typeMap: any = { movies: 'Movies', tvshows: 'TV Shows', music: 'Music', books: 'Books' };
-                    libraryName = typeMap[collectionType] || collectionType;
+                    libraryName = collectionType;
                 }
 
                 // Cache the resolution for children of this item

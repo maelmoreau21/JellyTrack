@@ -63,6 +63,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             // Deduplicate by Name or Id to get the most complete list of available libraries
             const viewsMap = new Map();
             [...folders, ...userViews].forEach(v => {
+                if (v?.CollectionType === 'boxsets') return;
                 if (v && v.Name && !viewsMap.has(v.Name)) {
                     viewsMap.set(v.Name, v);
                 }
@@ -235,7 +236,11 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     }
 
     // Ensure DB-derived library names are present (fallback when Jellyfin views are not available)
-    const uniqueLibs = new Set(allMedia.map(m => m.libraryName || tc('other')));
+    const ghostNames = new Set(['Movies', 'TV Shows', 'Music', 'Books', 'movies', 'tvshows', 'music', 'books', 'Collections']);
+    const uniqueLibs = new Set(allMedia
+        .map(m => m.libraryName || tc('other'))
+        .filter(name => !ghostNames.has(name))
+    );
     for (const name of uniqueLibs) {
         if (!libraryStatsMap.has(name)) {
             libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: null });
@@ -251,6 +256,8 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
     allMedia.forEach(m => {
         const libName = m.libraryName || tc('other');
+        if (ghostNames.has(libName) || m.collectionType === 'boxsets') return;
+        
         if (!libraryStatsMap.has(libName)) {
             libraryStatsMap.set(libName, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: m.collectionType });
         }

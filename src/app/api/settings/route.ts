@@ -33,6 +33,7 @@ async function fetchJellyfinLibraryNames() {
         const folders = Array.isArray(payload) ? payload : [];
 
         const names = folders
+            .filter((folder: any) => folder?.CollectionType !== 'boxsets')
             .map((folder: any) => folder?.Name)
             .filter((value: string | null): value is string => Boolean(value));
 
@@ -72,8 +73,6 @@ export async function GET() {
                     wrappedStartDay: 1,
                     wrappedEndMonth: 1,
                     wrappedEndDay: 31,
-                    monitorIntervalActive: 1000,
-                    monitorIntervalIdle: 5000,
                 }
             });
         }
@@ -90,9 +89,18 @@ export async function GET() {
         const libraryRules = await loadLibraryRules();
 
         // Build available libraries: prefer Jellyfin names, fallback to DB libraryNames
+        // Filter out old hardcoded fallbacks if they are not real Jellyfin libraries
+        const ghostNames = new Set(['Movies', 'TV Shows', 'Music', 'Books', 'movies', 'tvshows', 'music', 'books', 'Collections']);
+        const realJellyfinNames = new Set(jellyfinScan.names);
+        
         const allNames = new Set<string>([
             ...jellyfinScan.names,
-            ...mediaLibraryNames.map((entry) => entry.libraryName).filter((n): n is string => Boolean(n)),
+            ...mediaLibraryNames
+                .map((entry) => entry.libraryName)
+                .filter((n): n is string => {
+                    if (!n) return false;
+                    return !ghostNames.has(n) || realJellyfinNames.has(n);
+                }),
         ]);
         const availableLibraries = Array.from(allNames).sort((a, b) => a.localeCompare(b));
 
@@ -101,7 +109,7 @@ export async function GET() {
             availableLibraries,
             libraryRules,
             libraryScanSource: jellyfinScan.source,
-            libraryScanError: jellyfinScan.error,
+            libraryScanError: jellyfinScan.error || undefined,
         }, { status: 200 });
     } catch (error) {
         console.error("Failed to fetch settings:", error);
