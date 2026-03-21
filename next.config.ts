@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   env: {
-    APP_VERSION: require('./package.json').version,
+    APP_VERSION: process.env.npm_package_version || '0.0.0',
   },
   experimental: {
     serverActions: {
