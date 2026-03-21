@@ -232,6 +232,9 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
                   className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize z-20"
                   aria-hidden
                 />
+                {col.key === 'date' && columns[idx + 1]?.key === 'user' && (
+                  <div className="absolute right-2 top-1/2 h-6 w-px bg-zinc-200 dark:bg-zinc-700 transform -translate-y-1/2 pointer-events-none" />
+                )}
               </TableHead>
             ))}
           </TableRow>
