@@ -4,10 +4,6 @@ import { unlinkSync, existsSync } from "fs";
 import path from "path";
 import { apiT } from "@/lib/i18n-api";
 
-export const dynamic = "force-dynamic";
-
-const BACKUP_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), "backups");
-
 export async function POST(req: NextRequest) {
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
@@ -27,6 +23,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: await apiT('fileInvalid') }, { status: 400 });
         }
 
+        // Resolve backup dir at request time to avoid Turbopack tracing filesystem at import time
+        const BACKUP_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), "backups");
         const filePath = path.join(BACKUP_DIR, safeName);
 
         if (!existsSync(filePath)) {
