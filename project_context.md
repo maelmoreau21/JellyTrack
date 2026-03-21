@@ -1,36 +1,54 @@
-# JellyTrack - Project Context & Architecture
+# JellyTrack - Project Context & Architecture Reference
 
-**Description**: JellyTrack is a high-performance analytical wrapper and autonomous tracker ("Ultimate Dashboard 2.0") for Jellyfin. It pulls data directly from the Jellyfin server and provides highly granular statistics, user-specific tracking, seamless backups, and interactive data visualization.
-**Current Version**: 2.0.0 (Phase 55 - Massive UX & Telemetry Revamp)
+> **FOR AI AGENTS (CRITICAL INSTRUCTION)**: Read this entire schema carefully before proposing backend/frontend implementations. Do not "hallucinate" directories, abstractions, or tools. Stick precisely to this explicit stack and data-flow model.
 
-## Tech Stack
-- Frontend/Backend: **Next.js 15+ (App Router, Server Components)**
-- Caching & Real-time Storage: **Redis (ioredis)**
-- DB & ORM: **PostgreSQL + Prisma** (Connection pooled natively)
-- Styling: **TailwindCSS + Shadcn/UI + Lucide Icons**
-- Data Visualization: **Recharts**
-- Localization: **next-intl (FR, EN, DE, ES, IT, NL, PL, PT-BR, RU, ZH)**
-- IP Geography: **geoip-country**
+## 1. Core Technology Stack
+- **Framework:** Next.js 14+ (App Router `src/app/`)
+- **Language:** TypeScript (`strict: true`)
+- **Backend/ORM:** Prisma (SQLite/PostgreSQL) - `schema.prisma`
+- **Authentication:** NextAuth.js (Custom Jellyfin Credentials + LDAP fallback)
+- **Styling framework:** TailwindCSS + Shadcn/UI (Radix primitives)
+- **Icons:** `lucide-react`
+- **Charts:** `recharts` (Responsive, animated charting)
+- **i18n:** `next-intl` (Translation files stored in `messages/*.json`)
 
-## Core Architectural Concepts
+## 2. Global Architecture Pattern
+JellyTrack operates as a satellite analytics platform for Jellyfin. It pulls data directly via Jellyfin's exposed REST API (`/Users`, `/Items`, `/Sessions`, `/PlaybackInfo`). 
 
-### Database Engine & Caching
-The application uses Prisma alongside PostgreSQL. Critical query paths, especially analytics and log retrievals, are heavily indexed (e.g., `clientName`, `playMethod`, `jellyfinMediaId`). Live streams and dashboard metrics are aggressively cached using Redis to protect edge nodes (like Raspberry Pi) from querying overhead.
+### Data Flow Diagram
+```
+[Jellyfin API] -> [JellyTrack Webhooks/CRON] -> [Prisma DB] -> [Next.js Server Actions/unstable_cache] -> [Client UI]
+```
 
-### NextAuth & RBAC
-Authentication permits *all* Jellyfin users to log in smoothly. However, a specialized backend Middleware automatically enforces strict Role-Based Access Control (RBAC). 
-- **Admins**: Granted full access to dashboard, system health, server settings, and raw logs. 
-- **Standard Users**: Bound exclusively to `/users/[id]` paths where they view their localized content, playback preferences, language tracking interactively.
+### Folder Structure Convention
+- `src/app/*`: Next.js App Router endpoints, Layouts, Pages.
+- `src/app/api/*`: Webhook ingestion endpoints (receiving Jellyfin playstate).
+- `src/components/ui/*`: Dumb Shadcn UI pieces (buttons, inputs, cards).
+- `src/components/dashboard/*`: Complex server-fetched client dashboards.
+- `src/components/charts/*`: Reusable Recharts wrappers (`StandardMetricsCharts.tsx`).
+- `src/lib/*`: Core utilities (`prisma.ts`, `jellyfin.ts`, `auth.ts`, `utils.ts`).
+- `prisma/`: Prisma schema and migration history.
+- `messages/`: Locales (e.g. `fr.json`, `en.json`) strictly namespaced (e.g., `common`, `dashboard`, `media`, `logs`).
 
-### Data Acquisition & Telemetry (The Sync Engine)
-A master polling engine actively queries Jellyfin's `/Sessions` endpoint recursively under the scenes, dynamically mapping playback progress down to the nanosecond, and correctly categorizing media (identifying `VirtualFolders` locally avoiding ghost libraries).
-- Telemetry runs through `ZAPPING_CONDITION` (<30s videos, <10s audio bounds) filtering background stream tests and noise out of dashboard calculations automatically.
+## 3. Database Schema Mastery (Prisma)
+All AI agents must respect the current `schema.prisma` mapping. Do not invent non-existent relations.
+- **User**: Maps one-to-one with a unique Jellyfin User ID. Tracks `jellyfinToken` and `role` (ADMIN vs USER).
+- **PlaybackSession**: Represents an active or completed viewing activity. Contains `deviceId`, `clientName`, `duration`, and `isDirectPlay`.
+- **MediaItem**: Centralizes Jellyfin IDs (movies, episodes, tracks). Includes `type`, `name`, `collectionId`.
+- **LogEntry**: Immutable audit trail for system events (Logins, Syncs, Errors).
 
-### Importer Pipeline
-Supports gigantic external server migrations seamlessly (Jellystat ~200MB JSON chunks, Playback Reporter TSV/CSV). Done natively via raw Blob streams chunking memory aggressively bypassing NodeJS `V8` payload bottlenecks.
+## 4. UI/UX "Premium" Design Rules
+JellyTrack mandates an "Expert UX/UI". Features must not look like barebones templates.
+- **Micro-interactions:** Elements must have `transition-all`, `hover:scale`, `group-hover:opacity-100`.
+- **Styling depth:** Utilize `backdrop-blur-md` and `bg-zinc-900/50` for glassmorphic elements. 
+- **Graceful degradation:** Recharts must wrap in conditional rendering to prevent `null` data crashes.
+- **No Accordions for high-density data:** Use Grid Layouts (`grid-cols-1 md:grid-cols-2 xl:grid-cols-3`) to elegantly display lists (e.g., Library Details, User Lists).
+- **Responsive design is mandatory.**
 
-### Interactive Components 
-UI layouts adhere intensely to a premium dark-mode aesthetic. Top-tier metrics like Most Watched Actors, Genres, and User Drop-off metrics utilize interactive Recharts arrays supporting native clickthroughs and zero-state data crash prevention fallback structures.
+## 5. Agent Workflow & Safety 
+- Always execute `npm run build` to verify TypeScript compliance before completing a task.
+- Check and update `messages/*.json` files for all hardcoded text strings using `next-intl` (`useTranslations()`). Do not leave hardcoded text in `.tsx` files if it can be translated.
+- Any background sync/fetch job uses `unstable_cache` to throttle direct jellyfin API spamming. Cache revalidation must be considered.
+- Never edit Prisma schemas without explicit user consent. If done, provide `npx prisma db push --accept-data-loss` logic safely.
 
----
-*Note: This architectural document supersedes all previous historical changelogs. The environment prioritizes 100% stable performance and zero-clutter file structuring.*
+**By respecting this context, AI agents are guaranteed to deliver highly stable, visually breathtaking Next.js modifications.**
