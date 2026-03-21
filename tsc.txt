@@ -1,0 +1,22 @@
+src/app/admin/cleanup/CleanupClient.tsx(13,36): error TS2304: Cannot find name 'Locale'.
+src/app/api/backup/auto/restore/route.ts(147,25): error TS2353: Object literal may only specify known properties, and 'monitorIntervalActive' does not exist in type '(Without<GlobalSettingsUpdateInput, GlobalSettingsUncheckedUpdateInput> & GlobalSettingsUncheckedUpdateInput) | (Without<...> & GlobalSettingsUpdateInput)'.
+src/app/api/backup/auto/restore/route.ts(162,25): error TS2353: Object literal may only specify known properties, and 'monitorIntervalActive' does not exist in type '(Without<GlobalSettingsCreateInput, GlobalSettingsUncheckedCreateInput> & GlobalSettingsUncheckedCreateInput) | (Without<...> & GlobalSettingsCreateInput)'.
+src/app/api/backup/import/route.ts(80,25): error TS2353: Object literal may only specify known properties, and 'monitorIntervalActive' does not exist in type '(Without<GlobalSettingsCreateInput, GlobalSettingsUncheckedCreateInput> & GlobalSettingsUncheckedCreateInput) | (Without<...> & GlobalSettingsCreateInput)'.
+src/app/media/[id]/MediaDropoffChart.tsx(60,25): error TS2322: Type '(v: number) => string' is not assignable to type 'LabelFormatter'.
+  Types of parameters 'v' and 'label' are incompatible.
+    Type 'RenderableText' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+src/components/charts/ClientCategoryChart.tsx(60,21): error TS2322: Type '(value: number) => [string, "Sessions"]' is not assignable to type 'Formatter<number, "Sessions"> & ((value: number, name: "Sessions", item: Payload<number, "Sessions">, index: number, payload: Payload<number, "Sessions">[]) => ReactNode | [...])'.
+  Type '(value: number) => [string, "Sessions"]' is not assignable to type 'Formatter<number, "Sessions">'.
+    Types of parameters 'value' and 'value' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/components/charts/DayOfWeekChart.tsx(72,21): error TS2322: Type '(value: number) => [number, "Sessions"]' is not assignable to type 'Formatter<number, "Sessions"> & ((value: number, name: "Sessions", item: Payload<number, "Sessions">, index: number, payload: Payload<number, "Sessions">[]) => ReactNode | [...])'.
+  Type '(value: number) => [number, "Sessions"]' is not assignable to type 'Formatter<number, "Sessions">'.
+    Types of parameters 'value' and 'value' are incompatible.
+      Type 'number | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/components/TimeRangeSelector.tsx(15,36): error TS2304: Cannot find name 'Locale'.
+src/lib/systemHealth.ts(152,100): error TS2749: 'Prisma.JsonNull' refers to a value, but is being used as a type here. Did you mean 'typeof Prisma.JsonNull'?
+src/lib/systemHealth.ts(235,92): error TS2749: 'Prisma.JsonNull' refers to a value, but is being used as a type here. Did you mean 'typeof Prisma.JsonNull'?
+src/lib/systemHealth.ts(292,84): error TS2749: 'Prisma.JsonNull' refers to a value, but is being used as a type here. Did you mean 'typeof Prisma.JsonNull'?

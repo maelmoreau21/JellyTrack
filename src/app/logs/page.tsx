@@ -133,7 +133,7 @@ function detectWatchParties(logs: any[]): Map<string, string> {
 export default async function LogsPage({
     searchParams
 }: {
-    searchParams: Promise<{ query?: string, sort?: string, page?: string, type?: string, cols?: string, hideZapped?: string }>
+    searchParams: Promise<{ query?: string, sort?: string, page?: string, type?: string, cols?: string, hideZapped?: string, client?: string, audio?: string, subtitle?: string, dateFrom?: string, dateTo?: string }>
 }) {
     const params = await searchParams;
     const tl = await getTranslations('logs');
@@ -146,6 +146,12 @@ export default async function LogsPage({
     const typeFilter = params.type || "";
     const visibleColumns = parseVisibleColumns(params.cols);
     const hideZapped = params.hideZapped !== 'false'; // default true
+
+    const clientParams = params.client?.trim() || "";
+    const audioParams = params.audio?.trim() || "";
+    const subtitleParams = params.subtitle?.trim() || "";
+    const dateFromParam = params.dateFrom || "";
+    const dateToParam = params.dateTo || "";
 
     // Build the non-fuzzy exact search constraint
     const whereClause: any = {};
@@ -168,6 +174,26 @@ export default async function LogsPage({
 
     if (typeFilter) {
         conditions.push({ media: { type: typeFilter } });
+    }
+
+    if (clientParams) conditions.push({ clientName: { contains: clientParams, mode: "insensitive" } });
+    if (audioParams) conditions.push({ OR: [{audioCodec: { contains: audioParams, mode: "insensitive" }}, {audioLanguage: { contains: audioParams, mode: "insensitive" }}] });
+    if (subtitleParams) conditions.push({ OR: [{subtitleCodec: { contains: subtitleParams, mode: "insensitive" }}, {subtitleLanguage: { contains: subtitleParams, mode: "insensitive" }}] });
+
+    if (dateFromParam || dateToParam) {
+        const dateFilter: any = {};
+        if (dateFromParam) {
+            const fd = new Date(dateFromParam);
+            if (!isNaN(fd.getTime())) dateFilter.gte = fd;
+        }
+        if (dateToParam) {
+            const td = new Date(dateToParam);
+            td.setHours(23, 59, 59, 999);
+            if (!isNaN(td.getTime())) dateFilter.lte = td;
+        }
+        if (Object.keys(dateFilter).length > 0) {
+            conditions.push({ startedAt: dateFilter });
+        }
     }
 
     if (conditions.length > 0) {
@@ -301,6 +327,12 @@ export default async function LogsPage({
         if (sort !== "date_desc") p.set("sort", sort);
         if (typeFilter) p.set("type", typeFilter);
         if (params.cols) p.set("cols", params.cols);
+        if (params.hideZapped === 'false') p.set("hideZapped", "false");
+        if (clientParams) p.set("client", clientParams);
+        if (audioParams) p.set("audio", audioParams);
+        if (subtitleParams) p.set("subtitle", subtitleParams);
+        if (dateFromParam) p.set("dateFrom", dateFromParam);
+        if (dateToParam) p.set("dateTo", dateToParam);
         if (page > 1) p.set("page", String(page));
         const qs = p.toString();
         return `/logs${qs ? `?${qs}` : ""}`;
@@ -350,7 +382,16 @@ export default async function LogsPage({
                     <CardContent className="space-y-4">
                         <div className="flex items-start gap-2 flex-wrap">
                             <div className="flex-1">
-                                <LogFilters initialQuery={query} initialSort={sort} initialHideZapped={hideZapped} />
+                                <LogFilters 
+                                    initialQuery={query} 
+                                    initialSort={sort} 
+                                    initialHideZapped={hideZapped}
+                                    initialClient={clientParams}
+                                    initialAudio={audioParams}
+                                    initialSubtitle={subtitleParams}
+                                    initialDateFrom={dateFromParam}
+                                    initialDateTo={dateToParam}
+                                />
                             </div>
                             <ColumnToggle visibleColumns={visibleColumns} />
                         </div>

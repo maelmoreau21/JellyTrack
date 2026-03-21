@@ -196,8 +196,29 @@ export function LiveStreamsPanel({ initialStreams, initialBandwidth }: { initial
     }, []);
 
     useEffect(() => {
-        const interval = setInterval(fetchStreams, 10000);
-        return () => clearInterval(interval);
+        let interval: NodeJS.Timeout;
+
+        const startPolling = () => {
+            if (interval) clearInterval(interval);
+            interval = setInterval(fetchStreams, 4000);
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                clearInterval(interval);
+            } else {
+                fetchStreams();
+                startPolling();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        startPolling();
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [fetchStreams]);
 
     const useTimeline = streams.length >= 3 && !forceCards;

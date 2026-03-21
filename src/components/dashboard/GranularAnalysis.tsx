@@ -217,6 +217,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
     const rules = await loadLibraryRules();
     const data = await getGranularData(type, timeRange, excludedLibraries, locale, JSON.stringify(rules));
     const t = await getTranslations('granular');
+    const tc = await getTranslations('common');
 
     return (
         <div className="space-y-6">
@@ -249,7 +250,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('durationPerDayDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardAreaChart data={data.dailyData} dataKey="totalDuration" stroke="#a855f7" name={t('durationPerDay')} />
+                        <StandardAreaChart data={data.dailyData} dataKey="totalDuration" stroke="#f59e0b" name={t('durationPerDay')} />
                     </CardContent>
                 </Card>
 
@@ -259,20 +260,10 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('durationByLibraryDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StackedAreaChart data={data.dailyData} keys={data.collections} suffix="_duration" />
+                        <StackedBarChart data={data.dailyData} keys={data.collections} suffix="_duration" />
                     </CardContent>
                 </Card>
             </div>
-
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
-                <CardHeader>
-                    <CardTitle>{t('attendanceHeatmap')}</CardTitle>
-                    <CardDescription>{t('attendanceHeatmapDesc')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <AttendanceHeatmap data={data.heatmapData} />
-                </CardContent>
-            </Card>
 
             <div className="grid gap-4 md:grid-cols-2">
                 <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
@@ -281,7 +272,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('playsHourlyAvgDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardBarChart data={data.hourlyData} dataKey="plays" fill="#eab308" name={t('playsHourlyAvg')} />
+                        <StandardBarChart data={data.hourlyData} xAxisKey="time" dataKey="plays" fill="#10b981" name={t('playsHourlyAvg')} />
                     </CardContent>
                 </Card>
 
@@ -291,72 +282,64 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('durationHourlyAvgDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardAreaChart data={data.hourlyData} dataKey="duration" stroke="#22c55e" name={t('durationHourlyAvg')} />
+                        <StandardAreaChart data={data.hourlyData} dataKey="duration" stroke="#8b5cf6" name={t('durationHourlyAvg')} />
                     </CardContent>
                 </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm lg:col-span-1">
+            <div className="grid gap-4 md:grid-cols-2">
+                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>{t('abandonSegments')}</CardTitle>
-                        <CardDescription>{t('abandonSegmentsDesc')}</CardDescription>
+                        <CardTitle>{t('attendanceHeatmap')}</CardTitle>
+                        <CardDescription>{t('attendanceHeatmapDesc')}</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {data.dropSegments.map((s: any) => {
-                                const total = data.dropSegments.reduce((sum: number, seg: any) => sum + seg.value, 0);
-                                const pct = total > 0 ? Math.round((s.value / total) * 100) : 0;
-                                return (
-                                    <div key={s.name} className="space-y-1">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-zinc-300">{t(s.name)}</span>
-                                            <span className="text-zinc-400 font-mono">{s.value} ({pct}%)</span>
-                                        </div>
-                                        <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full rounded-full transition-all duration-500"
-                                                style={{ width: `${pct}%`, backgroundColor: s.fill }}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                    <CardContent className="flex items-center justify-center p-6">
+                        <AttendanceHeatmap data={data.heatmapData} />
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm lg:col-span-2">
+                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm flex flex-col">
                     <CardHeader>
                         <CardTitle>{t('avgCompletionByLib')}</CardTitle>
                         <CardDescription>{t('avgCompletionByLibDesc')}</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <StandardBarChart data={data.dropOffData} dataKey="completion" fill="#8b5cf6" name="% Moyen" />
+                    <CardContent className="flex-1">
+                        <StandardBarChart data={data.dropOffData} horizontal xAxisKey="time" dataKey="completion" fill="#14b8a6" name={t('completionPct')} />
                     </CardContent>
                 </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
+                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle>{t('abandonSegments')}</CardTitle>
+                        <CardDescription>{t('abandonSegmentsDesc')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px] flex items-center justify-center">
+                        <StandardPieChart data={data.dropSegments} nameKey="name" dataKey="value" />
+                    </CardContent>
+                </Card>
+
                 <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle>{t('worstCompletion')}</CardTitle>
                         <CardDescription>{t('worstCompletionDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {data.topAbandoned.length === 0 ? (
                                 <p className="text-sm text-zinc-500 text-center py-6">—</p>
                             ) : data.topAbandoned.map((m: any, i: number) => (
                                 <a
                                     key={i}
-                                    href={m.mediaId ? `/media/${m.mediaId}` : '#'}
+                                    href={`/media?q=${encodeURIComponent(m.fullTitle)}`}
                                     className="block group"
                                 >
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-zinc-300 group-hover:text-indigo-400 transition-colors truncate max-w-[180px]" title={m.fullTitle || m.title}>
+                                    <div className="flex justify-between items-center text-sm mb-1">
+                                        <div className="truncate pr-2 font-medium group-hover:text-cyan-500 transition-colors">
+                                            <span className="text-zinc-500 w-5 inline-block">{i + 1}.</span>
                                             {m.title}
-                                        </span>
+                                        </div>
                                         <span className="text-zinc-500 font-mono text-xs">{m.completion}% · {m.count}×</span>
                                     </div>
                                     <div className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden mt-1">
@@ -373,14 +356,20 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         </div>
                     </CardContent>
                 </Card>
+            </div>
 
+            <div className="grid gap-4 md:grid-cols-3">
                 <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle>{t('audioBreakdown')}</CardTitle>
                         <CardDescription>{t('audioBreakdownDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        <StandardPieChart data={data.audioData} nameKey="name" dataKey="value" />
+                        {data.audioData && data.audioData.length > 0 ? (
+                            <StandardPieChart data={data.audioData} nameKey="name" dataKey="value" />
+                        ) : (
+                            <p className="text-xs text-muted-foreground">{tc('noData')}</p>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -390,7 +379,11 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('subtitlesDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        <StandardPieChart data={data.subtitleData} nameKey="name" dataKey="value" />
+                        {data.subtitleData && data.subtitleData.length > 0 ? (
+                            <StandardPieChart data={data.subtitleData} nameKey="name" dataKey="value" />
+                        ) : (
+                            <p className="text-xs text-muted-foreground">{tc('noData')}</p>
+                        )}
                     </CardContent>
                 </Card>
             </div>

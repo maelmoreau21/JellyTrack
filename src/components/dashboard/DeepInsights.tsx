@@ -300,21 +300,30 @@ const getDeepInsights = unstable_cache(
             select: { audioLanguage: true, audioCodec: true },
         });
         const audioMap = new Map<string, number>();
+        const isValidLang = (lang: string | null | undefined) => {
+            if (!lang) return false;
+            const l = lang.toLowerCase().trim();
+            if (l === 'und' || l === 'undefined' || l === 'null' || l === 'none' || l === '' || l === 'unknown') return false;
+            return l.length >= 2 && l.length <= 20;
+        };
+
         audioRows.forEach(a => {
-            let lang = a.audioLanguage || 'Unknown';
-            if (lang !== 'Unknown') {
-                lang = String(lang).toUpperCase().trim();
+            if (a.audioLanguage) {
+                let lang = String(a.audioLanguage).toUpperCase().trim();
                 lang = lang.replace(/\(.*\)/, '').trim(); 
                 lang = lang.split(/[\/\\,;]/)[0].trim(); 
                 lang = lang.replace(/[^A-Z0-9\- ]+/g, '').trim();
                 const quickMap: Record<string, string> = { 'FRE': 'FR', 'FRA': 'FR', 'ENG': 'EN', 'SPA': 'ES', 'POR': 'PT', 'DEU': 'DE', 'GER': 'DE', 'ITA': 'IT', 'NLD': 'NL', 'ZHO': 'ZH', 'CHI': 'ZH', 'JPN': 'JA' };
                 if (quickMap[lang]) lang = quickMap[lang];
+
+                if (isValidLang(lang)) {
+                    let codec = a.audioCodec ? String(a.audioCodec).trim() : '';
+                    if (codec.toLowerCase() === 'unknown') codec = '';
+                    
+                    const key = codec ? `${lang} (${codec})` : lang;
+                    audioMap.set(key, (audioMap.get(key) || 0) + 1);
+                }
             }
-            let codec = a.audioCodec ? String(a.audioCodec).trim() : '';
-            if (codec.toLowerCase() === 'unknown') codec = '';
-            
-            const key = codec ? `${lang} (${codec})` : lang;
-            audioMap.set(key, (audioMap.get(key) || 0) + 1);
         });
         const audioChartData = Array.from(audioMap.entries())
             .map(([name, value]) => ({ name, value }))
@@ -329,21 +338,26 @@ const getDeepInsights = unstable_cache(
         subtitleRows.forEach(s => {
             if (!s.subtitleLanguage && !s.subtitleCodec) {
                 subtitleMap.set('None', (subtitleMap.get('None') || 0) + 1);
-            } else {
-                let lang = s.subtitleLanguage || 'Unknown';
-                if (lang !== 'Unknown') {
-                    lang = String(lang).toUpperCase().trim();
-                    lang = lang.replace(/\(.*\)/, '').trim();
-                    lang = lang.split(/[\/\\,;]/)[0].trim();
-                    lang = lang.replace(/[^A-Z0-9\- ]+/g, '').trim();
-                    const quickMap: Record<string, string> = { 'FRE': 'FR', 'FRA': 'FR', 'ENG': 'EN', 'SPA': 'ES', 'POR': 'PT', 'DEU': 'DE', 'GER': 'DE', 'ITA': 'IT', 'NLD': 'NL', 'ZHO': 'ZH', 'CHI': 'ZH', 'JPN': 'JA' };
-                    if (quickMap[lang]) lang = quickMap[lang];
-                }
-                let codec = s.subtitleCodec ? String(s.subtitleCodec).trim() : '';
-                if (codec.toLowerCase() === 'unknown') codec = '';
+            } else if (s.subtitleLanguage) {
+                let lang = String(s.subtitleLanguage).toUpperCase().trim();
+                lang = lang.replace(/\(.*\)/, '').trim();
+                lang = lang.split(/[\/\\,;]/)[0].trim();
+                lang = lang.replace(/[^A-Z0-9\- ]+/g, '').trim();
+                const quickMap: Record<string, string> = { 'FRE': 'FR', 'FRA': 'FR', 'ENG': 'EN', 'SPA': 'ES', 'POR': 'PT', 'DEU': 'DE', 'GER': 'DE', 'ITA': 'IT', 'NLD': 'NL', 'ZHO': 'ZH', 'CHI': 'ZH', 'JPN': 'JA' };
+                if (quickMap[lang]) lang = quickMap[lang];
 
-                const key = codec ? `${lang} (${codec})` : lang;
-                subtitleMap.set(key, (subtitleMap.get(key) || 0) + 1);
+                if (isValidLang(lang)) {
+                    let codec = s.subtitleCodec ? String(s.subtitleCodec).trim() : '';
+                    if (codec.toLowerCase() === 'unknown') codec = '';
+
+                    const key = codec ? `${lang} (${codec})` : lang;
+                    subtitleMap.set(key, (subtitleMap.get(key) || 0) + 1);
+                } else if (s.subtitleCodec && s.subtitleCodec.toLowerCase() !== 'unknown') {
+                    // Fallback to just codec if language is unknown but codec is known
+                    subtitleMap.set(s.subtitleCodec, (subtitleMap.get(s.subtitleCodec) || 0) + 1);
+                }
+            } else if (s.subtitleCodec && s.subtitleCodec.toLowerCase() !== 'unknown') {
+                subtitleMap.set(s.subtitleCodec, (subtitleMap.get(s.subtitleCodec) || 0) + 1);
             }
         });
         const subtitleChartData = Array.from(subtitleMap.entries())

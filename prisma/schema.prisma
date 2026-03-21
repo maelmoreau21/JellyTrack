@@ -44,6 +44,7 @@ model Media {
 
   @@index([type])
   @@index([collectionType])
+  @@index([jellyfinMediaId])
 }
 
 model PlaybackHistory {
@@ -86,6 +87,8 @@ model PlaybackHistory {
   @@index([startedAt])
   @@index([userId, startedAt])
   @@index([mediaId, startedAt])
+  @@index([clientName])
+  @@index([playMethod])
 }
 
 model TelemetryEvent {

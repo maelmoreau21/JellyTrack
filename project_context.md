@@ -965,3 +965,19 @@ Cette phase marque l'aboutissement du support multi-langues et la stabilisation 
 - Added placeholder values for missing keys across `messages/*.json`.
 - New i18n helper scripts added in `scripts/` (audit, placeholder population, JSON validation).
 - UI tweaks applied (logs area widened, timeline redesigned, chart contrast improvements).
+
+---
+
+### Phase 53 — Dashboard Stability & Audio/Subtitle Distribution Fixes
+- **Dashboard Crash Fix (SSR)**: Resolved `MISSING_MESSAGE` error during Server-Side Rendering (SSR) in `GranularAnalysis.tsx` which caused the entire dashboard to fail. Added `common` namespace translation to fallback properly on `{tc('noData')}` for empty chart data.
+- **Unified Language Distribution**: Aligned `audioMap` and `subtitleMap` generation in `DeepInsights.tsx` with `GranularAnalysis.tsx`. Implemented `isValidLang()` logic across both components to correctly filter out invalid ('und', 'unknown') subtitle and audio tracks from pie charts, preventing distorted "Unknown" slices from dominating the visualization.
+- **Chart Resiliency**: Modified conditional rendering in `audioData` and `subtitleData` standard pie charts to display "No data" correctly when tracking data is completely empty.
+
+---
+
+### Phase 54 — Logs Page Revamp & Jellystat 2.0 Architectural Run
+- **Comprehensive Logs Interface**: Rewrote `LogFilters.tsx` to handle an expanding "Advanced Filters" panel. Added querying capability for `client`, `audio` (codec/language), `subtitle` (codec/language), and `dateFrom`/`dateTo`.
+- **CSV Data Exporter**: Designed `api/logs/export/route.ts` that dynamically applies all query filters, drops pagination limitations, and streams a compiled `.csv` block downwards directly to the user for precise local spreadsheet data analysis.
+- **Scale-Ready Telemetry Tracking**: Patched `prisma/schema.prisma` with additional high-resolution indices including `@@index([clientName])`, `@@index([playMethod])`, `@@index([jellyfinMediaId])` to resolve full-table scans when scaling towards thousands of concurrent listeners.
+- **Live Event Resiliency**: Stabilized the dashboard streams card latency. Optimized `api/streams/route.ts` to defer hierarchy calls when not absolutely required and updated `LiveStreamsPanel.tsx`'s underlying fetch polling cycle down to 4 seconds heavily intertwined with browser's native `visibilitychange` API to suspend polling strictly when out-of-focus avoiding memory leaks.
+- **Data Access Verification**: Ensured individual `users/[id]` pages route appropriately non-admins exactly strictly to their specific pages, unlocking granular viewability over what media formats, VO, and subtitles they consume directly inside their private dashboard without compromising system-wide log isolation.

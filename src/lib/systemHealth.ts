@@ -149,7 +149,7 @@ async function migrateLegacySystemHealthIfNeeded() {
                             source: event.source,
                             kind: event.kind,
                             message: event.message,
-                            details: (event.details ?? Prisma.JsonNull) as Prisma.InputJsonValue | Prisma.JsonNull,
+                            details: (event.details ?? Prisma.JsonNull) as any,
                             createdAt: new Date(event.createdAt),
                         })),
                     });
@@ -232,7 +232,7 @@ export async function replaceSystemHealthState(state: SystemHealthState) {
                     source: event.source,
                     kind: event.kind,
                     message: event.message,
-                    details: (event.details ?? Prisma.JsonNull) as Prisma.InputJsonValue | Prisma.JsonNull,
+                    details: (event.details ?? Prisma.JsonNull) as any,
                     createdAt: new Date(event.createdAt),
                 })),
             });
@@ -289,7 +289,7 @@ export async function appendHealthEvent(event: Omit<HealthEvent, "id" | "created
             source: event.source,
             kind: event.kind,
             message: event.message,
-            details: (event.details ?? Prisma.JsonNull) as Prisma.InputJsonValue | Prisma.JsonNull,
+            details: (event.details ?? Prisma.JsonNull) as any,
         },
     });
 
