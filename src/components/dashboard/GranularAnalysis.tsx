@@ -218,6 +218,20 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
     const data = await getGranularData(type, timeRange, excludedLibraries, locale, JSON.stringify(rules));
     const t = await getTranslations('granular');
     const tc = await getTranslations('common');
+    const tCleanup = await getTranslations('cleanup');
+    const tDashboard = await getTranslations('dashboard');
+
+    // Localize drop segments (data.dropSegments contains bucket keys)
+    const localizedDropSegments = (data.dropSegments || []).map((s: any) => {
+        const key = String(s.name || '').toLowerCase();
+        switch (key) {
+            case 'skipped': return { ...s, name: tCleanup('skipped') };
+            case 'abandoned': return { ...s, name: tCleanup('abandoned') };
+            case 'almost': return { ...s, name: tCleanup('almost') };
+            case 'finished': return { ...s, name: tDashboard('completed') };
+            default: return s;
+        }
+    });
 
     return (
         <div className="space-y-6">
@@ -316,7 +330,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('abandonSegmentsDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        <StandardPieChart data={data.dropSegments} nameKey="name" dataKey="value" />
+                        <StandardPieChart data={localizedDropSegments} nameKey="name" dataKey="value" />
                     </CardContent>
                 </Card>
 
