@@ -61,6 +61,7 @@
   "cleanup": {
     "abandonedDesc": "Rozpoczęte, ale nigdy nie ukończone (poniżej 80%).",
     "abandonedMedia": "Porzucone tytuły",
+    "abandoned": "Porzucone",
     "albumType": "Album",
     "albumsFilter": "Albumy",
     "allFilter": "Wszystko",

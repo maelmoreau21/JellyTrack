@@ -61,6 +61,7 @@
   "cleanup": {
     "abandonedDesc": "Начатые, но не досмотренные до конца (менее 80%).",
     "abandonedMedia": "Брошенные медиа",
+    "abandoned": "Брошено",
     "albumType": "Альбом",
     "albumsFilter": "Альбомы",
     "allFilter": "Все",

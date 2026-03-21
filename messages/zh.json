@@ -62,6 +62,7 @@
   "cleanup": {
     "abandonedDesc": "已被开始播放但从未到达 80% 完成进度的内容。",
     "abandonedMedia": "搁置的内容",
+    "abandoned": "已放弃",
     "albumType": "专辑",
     "albumsFilter": "专辑",
     "allFilter": "全部",

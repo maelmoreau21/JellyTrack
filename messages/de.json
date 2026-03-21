@@ -62,6 +62,7 @@
   "cleanup": {
     "abandonedDesc": "Content that was started but whose completion rate never exceeded 80%.",
     "abandonedMedia": "Abandoned Media",
+    "abandoned": "Abgebrochen",
     "albumType": "Album",
     "albumsFilter": "Albums",
     "allFilter": "All",

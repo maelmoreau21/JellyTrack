@@ -62,6 +62,7 @@
   "cleanup": {
     "abandonedDesc": "Content die is gestart maar waarvan de voltooiingsgraad nooit boven 80% kwam.",
     "abandonedMedia": "Verlaten media",
+    "abandoned": "Verlaten",
     "albumType": "Album",
     "albumsFilter": "Albums",
     "allFilter": "Alles",

@@ -62,6 +62,7 @@
   "cleanup": {
     "abandonedDesc": "Contenido que se inició pero cuya tasa de finalización nunca superó el 80%.",
     "abandonedMedia": "Medios abandonados",
+    "abandoned": "Abandonado",
     "albumType": "Álbum",
     "albumsFilter": "Álbumes",
     "allFilter": "Todo",
