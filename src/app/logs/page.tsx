@@ -4,7 +4,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LogFilters } from "./LogFilters";
-import { LogTypeFilter } from "./LogTypeFilter";
 import { ColumnToggle } from "./ColumnToggle";
 import { FallbackImage } from "@/components/FallbackImage";
 import LogRow from "./LogRow";
@@ -362,51 +361,44 @@ export default async function LogsPage({
     return (
         <div className="flex-col md:flex dashboard-page">
             <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1800px] mx-auto w-full">
-                <div className="flex items-center justify-between space-y-2">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
                     <div>
-                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{tl('title')}</h2>
-                        <p className="text-muted-foreground md:mr-12 mt-2 text-sm md:text-base">
+                        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-3">
+                            <Users className="w-8 h-8 text-primary" />
+                            {tl('title')}
+                        </h1>
+                        <p className="text-muted-foreground mt-2">
                             {tl('description')}
                             {totalCount > 0 && <span className="text-zinc-500"> — {totalCount} {tl('totalEntries')}</span>}
                         </p>
                     </div>
                 </div>
 
-                <LogTypeFilter currentType={typeFilter} />
-
-                <Card className="app-surface">
-                    <CardHeader>
-                        <CardTitle>{tl('searchFilters')}</CardTitle>
-                        <CardDescription>{tl('searchFiltersDesc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-start gap-2 flex-wrap">
-                            <div className="flex-1">
-                                <LogFilters 
-                                    initialQuery={query} 
-                                    initialSort={sort} 
-                                    initialHideZapped={hideZapped}
-                                    initialClient={clientParams}
-                                    initialAudio={audioParams}
-                                    initialSubtitle={subtitleParams}
-                                    initialDateFrom={dateFromParam}
-                                    initialDateTo={dateToParam}
-                                />
+                <div className="space-y-4">
+                    <Card className="border-0 shadow-sm bg-white dark:bg-zinc-900/50 backdrop-blur-xl ring-1 ring-zinc-200 dark:ring-zinc-800">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-lg">{tl('searchFilters')}</CardTitle>
+                            <CardDescription>{tl('searchFiltersDesc')}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-start gap-2 flex-wrap">
+                                <div className="flex-1 w-full relative z-10">
+                                    <LogFilters 
+                                        initialQuery={query} 
+                                        initialSort={sort} 
+                                        initialHideZapped={hideZapped}
+                                        initialType={typeFilter}
+                                        initialClient={clientParams}
+                                        initialAudio={audioParams}
+                                        initialSubtitle={subtitleParams}
+                                        initialDateFrom={dateFromParam}
+                                        initialDateTo={dateToParam}
+                                    />
+                                </div>
+                                <ColumnToggle visibleColumns={visibleColumns} />
                             </div>
-                            <ColumnToggle visibleColumns={visibleColumns} />
-                        </div>
-
-                        {typeFilter && (
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs text-zinc-400">{tl('activeFilter')}</span>
-                                <Badge variant="default" className="app-chip border-violet-500/35 bg-violet-500/15 text-violet-300 hover:bg-violet-500/25">
-                                    {typeFilter === 'Movie' ? tl('moviesFilter') : typeFilter === 'Episode' ? tl('seriesFilter') : typeFilter === 'Audio' ? tl('musicFilter') : typeFilter === 'AudioBook' ? tl('booksFilter') : typeFilter}
-                                </Badge>
-                                <Link href="/logs" className="text-xs text-zinc-500 hover:text-zinc-300 underline">
-                                    {tl('removeFilter')}
-                                </Link>
-                            </div>
-                        )}
+                        </CardContent>
+                    </Card>
 
                         <div className="app-surface-soft border rounded-md overflow-x-auto w-full mt-6">
                             <LogsListClient serverLogs={safeLogs} visibleColumns={visibleColumns as string[]} />
@@ -455,8 +447,7 @@ export default async function LogsPage({
                                 </span>
                             </div>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
             </div>
         </div>
     );

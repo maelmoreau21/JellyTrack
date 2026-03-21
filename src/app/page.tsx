@@ -872,7 +872,11 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                   </CardHeader>
                   <CardContent className="pl-0 pb-4 pr-1">
                     <div className="h-[400px] min-h-[400px] w-full overflow-hidden">
-                      <ComposedTrendChart data={metrics.trendData} />
+                      {metrics.trendData.length > 0 ? (
+                        <ComposedTrendChart data={metrics.trendData} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">{tc('noData')}</div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -904,7 +908,11 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                 </CardHeader>
                 <CardContent className="pl-0 pb-4 pr-1">
                   <div className="h-[350px] min-h-[350px] w-full overflow-hidden">
-                    <LibraryDailyPlaysChart data={metrics.trendData} />
+                    {metrics.trendData.length > 0 ? (
+                      <LibraryDailyPlaysChart data={metrics.trendData} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">{tc('noData')}</div>
+                    )}
                   </div>
                 </CardContent>
               </Card>,
@@ -949,7 +957,11 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                   </CardHeader>
                   <CardContent className="flex justify-center items-center pb-4">
                     <div className="h-[300px] w-full max-w-[400px]">
-                      <PlatformDistributionChart data={metrics.platformChartData} />
+                      {metrics.platformChartData.length > 0 ? (
+                        <PlatformDistributionChart data={metrics.platformChartData} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">{tc('noData')}</div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -961,12 +973,20 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
               <div key="hourly" className="grid gap-4 md:grid-cols-2">
                 <CollapsibleCard storageKey="hourly" title={t('hourlyActivity')} description={t('hourlyActivityDesc')} contentClassName="pl-0 pb-4">
                   <div className="h-[250px] min-h-[250px] w-full overflow-hidden">
-                    <ActivityByHourChart data={metrics.hourlyChartData} />
+                    {metrics.hourlyChartData.length > 0 ? (
+                      <ActivityByHourChart data={metrics.hourlyChartData} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">{tc('noData')}</div>
+                    )}
                   </div>
                 </CollapsibleCard>
                 <CollapsibleCard storageKey="dayOfWeek" title={t('dayOfWeekActivity')} description={t('dayOfWeekActivityDesc')} contentClassName="pl-0 pb-4">
                   <div className="h-[250px] min-h-[250px] w-full overflow-hidden">
-                    <DayOfWeekChart data={metrics.dayOfWeekChartData} />
+                    {metrics.dayOfWeekChartData.length > 0 ? (
+                      <DayOfWeekChart data={metrics.dayOfWeekChartData} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">{tc('noData')}</div>
+                    )}
                   </div>
                 </CollapsibleCard>
               </div>,
