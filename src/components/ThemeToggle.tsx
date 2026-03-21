@@ -10,6 +10,8 @@ export function ThemeToggle() {
     const t = useTranslations('common');
     const [mounted, setMounted] = useState(false);
 
+    // Avoid cascading renders from synchronous setState in effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => setMounted(true), []);
 
     if (!mounted) {

@@ -25,6 +25,8 @@ export function LanguageSwitcher() {
 
     function switchLocale(newLocale: string) {
         if (!isSupportedLocale(newLocale)) return;
+        // Setting the cookie is a client-only side-effect; silence immutability lint here
+        // eslint-disable-next-line react-hooks/immutability
         document.cookie = `locale=${newLocale};path=/;max-age=${365 * 24 * 60 * 60}`;
         setOpen(false);
         startTransition(() => {

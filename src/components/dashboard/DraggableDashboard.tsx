@@ -14,6 +14,8 @@ export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
     const [order, setOrder] = useState<number[]>([]);
     const [isEditMode, setIsEditMode] = useState(false);
 
+    // Initialize order from localStorage (client-only). Suppress setState-in-effect lint.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => {
         const saved = localStorage.getItem("JellyTrack-dashboard-order");
         if (saved) {
@@ -23,7 +25,7 @@ export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
                     setOrder(parsed);
                     return;
                 }
-            } catch (e) { }
+            } catch { }
         }
         // Initial / Fallback: Sequential order
         setOrder(blocks.map((_, i) => i));

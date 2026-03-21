@@ -43,6 +43,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     // Close mobile sidebar on route change
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => {
         setMobileOpen(false);
     }, [pathname]);

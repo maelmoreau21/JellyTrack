@@ -42,6 +42,8 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
         );
     }, [searchQuery, libraries]);
 
+    // Initialize expanded/collapsed map based on library count. Avoid setState-in-effect warning.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     useEffect(() => {
         // If many libraries, collapse extra ones to save space by default
         const init: Record<string, boolean> = {};
