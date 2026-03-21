@@ -157,10 +157,18 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             const filteredHistory = track.playbackHistory.filter((h: any) => !isZapped({ ...h, media: { type: 'Audio' } }));
             if (filteredHistory.length === 0) continue;
 
-            const s = albumChildStats.get(track.parentId) || { plays: 0, dur: 0, dp: 0, childCount: 0, sizeBytes: BigInt(0), totalTrackDurationMs: BigInt(0) };
+            const existing = albumChildStats.get(track.parentId);
+            const s = existing || { plays: 0, dur: 0, dp: 0, childCount: 0, sizeBytes: BigInt(0), totalTrackDurationMs: BigInt(0) };
             s.childCount++;
-            s.sizeBytes += track.size || BigInt(0);
-            s.totalTrackDurationMs += track.durationMs || BigInt(0);
+
+            const rawSize = (track.size ?? 0);
+            const sizeBig = typeof rawSize === 'bigint' ? rawSize : BigInt(Math.floor(Number(rawSize)));
+            s.sizeBytes = (s.sizeBytes || BigInt(0)) + sizeBig;
+
+            const rawDurMs = (track.durationMs ?? 0);
+            const durBig = typeof rawDurMs === 'bigint' ? rawDurMs : BigInt(Math.floor(Number(rawDurMs)));
+            s.totalTrackDurationMs = (s.totalTrackDurationMs || BigInt(0)) + durBig;
+
             s.plays += filteredHistory.length;
             s.dur += filteredHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
             s.dp += filteredHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
@@ -285,10 +293,11 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         // CRITICAL: Only count durations from leaf items for "Watch Time" (sizes will be aggregated via Prisma below)
         const isLeaf = ['Movie', 'Episode', 'Audio', 'Book'].includes(m.type);
 
-        if (m.durationMs) {
+        if (m.durationMs != null) {
             if (isLeaf) {
-                totalDurationMs += m.durationMs;
-                lib.duration += m.durationMs;
+                const durBig = typeof m.durationMs === 'bigint' ? m.durationMs : BigInt(Math.floor(Number(m.durationMs)));
+                totalDurationMs += durBig;
+                lib.duration = (lib.duration || BigInt(0)) + durBig;
             }
         }
 
@@ -308,7 +317,8 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         }
 
         const sizeAgg = await prisma.media.aggregate({ where: sizeWhere, _sum: { size: true } });
-        totalSizeBytes = (sizeAgg._sum && (sizeAgg._sum as any).size) || BigInt(0);
+        const rawTotal = (sizeAgg._sum && (sizeAgg._sum as any).size) ?? 0;
+        totalSizeBytes = typeof rawTotal === 'bigint' ? rawTotal : BigInt(Math.floor(Number(rawTotal)));
 
         const perLibSizes = await prisma.media.groupBy({ by: ['libraryName'], where: sizeWhere, _sum: { size: true } });
         for (const p of perLibSizes) {
@@ -317,7 +327,8 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                 libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: null });
             }
             const lib = libraryStatsMap.get(name)!;
-            lib.size = (p._sum && (p._sum as any).size) || BigInt(0);
+            const rawLibSize = (p._sum && (p._sum as any).size) ?? 0;
+            lib.size = typeof rawLibSize === 'bigint' ? rawLibSize : BigInt(Math.floor(Number(rawLibSize)));
         }
     } catch (e) {
         console.warn('[MediaPage] Failed to aggregate sizes from DB:', e);
@@ -342,16 +353,17 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                 libraryStatsMap.set(libName, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: null });
             }
             const lib = libraryStatsMap.get(libName)!;
-            lib.watchedSeconds = (lib.watchedSeconds || 0) + (p._sum.durationWatched || 0);
+            lib.watchedSeconds = (lib.watchedSeconds ?? 0) + (p._sum?.durationWatched ?? 0);
         }
     } catch (e) {
         console.warn('[MediaPage] Failed to aggregate playback history by library:', e);
     }
 
-    const formatSize = (bytes: bigint) => {
-        const tb = Number(bytes) / (1024 ** 4);
+    const formatSize = (bytes: bigint | number) => {
+        const n = typeof bytes === 'bigint' ? Number(bytes) : Number(bytes ?? 0);
+        const tb = n / (1024 ** 4);
         if (tb >= 1) return { value: tb.toFixed(2), unit: "To" };
-        const gb = Number(bytes) / (1024 ** 3);
+        const gb = n / (1024 ** 3);
         return { value: gb.toFixed(1), unit: "Go" };
     };
 

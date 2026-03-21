@@ -205,7 +205,18 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     const ms = item.MediaSources[0];
                     sizeVal = ms.Size ? BigInt(ms.Size) : null;
                     const vs = ms.MediaStreams?.find((s: any) => s.Type === "Video");
-                    if (vs?.Width) {
+                    // Prefer using the video HEIGHT to determine canonical resolution (e.g. 1080p == height 1080).
+                    // Some sources report anamorphic or unusual widths (e.g. 1440x1080) — using height avoids
+                    // misclassifying 4:3/anamorphic material as lower-res because width thresholds were used.
+                    if (vs?.Height) {
+                        const h = vs.Height;
+                        if (h >= 2160) resolution = "4K";
+                        else if (h >= 1080) resolution = "1080p";
+                        else if (h >= 720) resolution = "720p";
+                        else if (h >= 480) resolution = "480p";
+                        else resolution = "SD";
+                    } else if (vs?.Width) {
+                        // Fallback: keep existing width-based thresholds if Height is not provided.
                         const w = vs.Width;
                         if (w >= 3800) resolution = "4K";
                         else if (w >= 1800) resolution = "1080p";

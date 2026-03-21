@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { RefreshCw, CheckCircle2, AlertCircle, Save, Download, UploadCloud, Clock, Trash2, Zap, Database, Play, Plug, Copy, Eye, EyeOff, KeyRound, Unplug } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -54,167 +55,25 @@ export default function SettingsPage() {
 
     // Cron schedule state
     const [syncCronHour, setSyncCronHour] = useState(3);
-    const [syncCronMinute, setSyncCronMinute] = useState(0);
-    const [backupCronHour, setBackupCronHour] = useState(3);
-    const [backupCronMinute, setBackupCronMinute] = useState(30);
-    const [isSavingCron, setIsSavingCron] = useState(false);
-    const [cronMsg, setCronMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+                </Card>
 
-    // Auto-backup state
-    const [autoBackups, setAutoBackups] = useState<{ name: string, sizeMb: string, date: string }[]>([]);
-    const [isRestoringAuto, setIsRestoringAuto] = useState<string | null>(null);
-    const [isDeletingAuto, setIsDeletingAuto] = useState<string | null>(null);
-    const [isTriggering, setIsTriggering] = useState(false);
-    const [autoBackupMsg, setAutoBackupMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-
-    // Plugin connection state
-    const [pluginApiKey, setPluginApiKey] = useState<string | null>(null);
-    const [pluginHasKey, setPluginHasKey] = useState(false);
-    const [pluginConnected, setPluginConnected] = useState(false);
-    const [pluginLastSeen, setPluginLastSeen] = useState<string | null>(null);
-    const [pluginVersion, setPluginVersion] = useState<string | null>(null);
-    const [pluginServerName, setPluginServerName] = useState<string | null>(null);
-    const [pluginLoading, setPluginLoading] = useState(false);
-    const [pluginMsg, setPluginMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-    const [showApiKey, setShowApiKey] = useState(false);
-    const [apiKeyCopied, setApiKeyCopied] = useState(false);
-    const [pluginUrlCopied, setPluginUrlCopied] = useState(false);
-
-    const fetchPluginStatus = useCallback(async () => {
-        try {
-            const res = await fetch("/api/plugin/api-key", { cache: "no-store" });
-            if (res.ok) {
-                const data = await res.json();
-                setPluginHasKey(data.hasApiKey);
-                setPluginApiKey(data.apiKey);
-                setPluginConnected(data.isConnected);
-                setPluginLastSeen(data.pluginLastSeen);
-                setPluginVersion(data.pluginVersion);
-                setPluginServerName(data.pluginServerName);
-            }
-        } catch {
-            console.error("Failed to load plugin status");
-        }
-    }, []);
-
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const res = await fetch("/api/settings");
-                if (res.ok) {
-                    const data = await res.json();
-                    setDiscordEnabled(data.discordAlertsEnabled || false);
-                    setDiscordUrl(data.discordWebhookUrl || "");
-                    setDiscordAlertCondition(data.discordAlertCondition || "ALL");
-                    setMaxConcurrentTranscodes(data.maxConcurrentTranscodes ?? 0);
-                    setWrappedVisible(data.wrappedVisible ?? true);
-                    setWrappedPeriodEnabled(data.wrappedPeriodEnabled ?? true);
-                    setWrappedStartMonth(data.wrappedStartMonth ?? 12);
-                    setWrappedStartDay(data.wrappedStartDay ?? 1);
-                    setWrappedEndMonth(data.wrappedEndMonth ?? 1);
-                    setWrappedEndDay(data.wrappedEndDay ?? 31);
-                    setExcludedLibraries(data.excludedLibraries || []);
-                    setAvailableLibraries(data.availableLibraries || []);
-                    setLibraryRules(data.libraryRules || {});
-                    setLibraryScanSource(data.libraryScanSource || 'database');
-                    setLibraryScanError(data.libraryScanError || null);
-
-                    setSyncCronHour(data.syncCronHour ?? 3);
-                    setSyncCronMinute(data.syncCronMinute ?? 0);
-                    setBackupCronHour(data.backupCronHour ?? 3);
-                    setBackupCronMinute(data.backupCronMinute ?? 30);
-                }
-            } catch {
-                console.error("Failed to load settings");
-            }
-        };
-        fetchSettings();
-    }, []);
-
-    useEffect(() => {
-        const fetchAutoBackups = async () => {
-            try {
-                const res = await fetch("/api/backup/auto");
-                if (res.ok) {
-                    const data = await res.json();
-                    setAutoBackups(data.backups || []);
-                }
-            } catch {
-                console.error("Failed to load auto-backups");
-            }
-        };
-        fetchAutoBackups();
-    }, []);
-
-    useEffect(() => {
-        fetchPluginStatus();
-        const timer = setInterval(fetchPluginStatus, 10000);
-        return () => clearInterval(timer);
-    }, [fetchPluginStatus]);
-
-    const handleGeneratePluginKey = async (regenerate = false) => {
-        if (regenerate && !confirm(t('pluginConfirmRegenerate'))) return;
-        setPluginLoading(true);
-        setPluginMsg(null);
-        try {
-            const res = await fetch("/api/plugin/api-key", { method: "POST" });
-            if (res.ok) {
-                const data = await res.json();
-                setPluginApiKey(data.apiKey);
-                setPluginHasKey(true);
-                setShowApiKey(true);
-                setPluginMsg({ type: "success", text: t('savedSuccess') });
-            } else {
-                setPluginMsg({ type: "error", text: tc('error') });
-            }
-        } catch {
-            setPluginMsg({ type: "error", text: tc('networkError') });
-        } finally {
-            setPluginLoading(false);
-        }
-    };
-
-    const handleRevokePluginKey = async () => {
-        if (!confirm(t('pluginConfirmRevoke'))) return;
-        setPluginLoading(true);
-        setPluginMsg(null);
-        try {
-            const res = await fetch("/api/plugin/api-key", { method: "DELETE" });
-            if (res.ok) {
-                setPluginApiKey(null);
-                setPluginHasKey(false);
-                setPluginConnected(false);
-                setPluginLastSeen(null);
-                setPluginVersion(null);
-                setPluginServerName(null);
-                setShowApiKey(false);
-            }
-        } catch {
-            setPluginMsg({ type: "error", text: tc('networkError') });
-        } finally {
-            setPluginLoading(false);
-        }
-    };
-
-    const handleCopyApiKey = async () => {
-        if (!pluginApiKey) return;
-        try {
-            await navigator.clipboard.writeText(pluginApiKey);
-        } catch {
-            // Fallback for non-secure contexts (HTTP)
-            const textarea = document.createElement('textarea');
-            textarea.value = pluginApiKey;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-        }
-        setApiKeyCopied(true);
-        setTimeout(() => setApiKeyCopied(false), 2000);
-    };
-
+                </section>
+                <section id="notifications" className="space-y-4">
+                    <Card className="app-surface mt-6">
+                        <CardHeader>
+                            <CardTitle>{t('notifications')}</CardTitle>
+                            <CardDescription>{t('notificationsDesc')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground">{t('notificationsSummary') || 'Manage notification channels and alert thresholds on a dedicated page.'}</p>
+                            <div className="mt-4">
+                                <Link href="/settings/notifications" className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90">
+                                    {t('manageNotifications') || 'Gérer les notifications'}
+                                </Link>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </section>
     const handleCopyPluginUrl = async () => {
         try {
             await navigator.clipboard.writeText(pluginEndpoint);

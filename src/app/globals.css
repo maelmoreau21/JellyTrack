@@ -53,13 +53,15 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.145 0 0);
-  /* Make cards slightly darker than the page background to improve contrast in light mode */
-  --card: oklch(0.92 0 0);
-  --card-foreground: oklch(0.12 0 0);
-  --popover: oklch(0.985 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  /* Slightly darker, warmer light background to reduce glare */
+  --background: oklch(0.965 0 0);
+  /* soften primary foreground so pure-black isn't used in light mode */
+  --foreground: oklch(0.13 0 0);
+  /* Make cards modestly darker than the page background to improve contrast without glare */
+  --card: oklch(0.905 0 0);
+  --card-foreground: oklch(0.14 0 0);
+  --popover: oklch(0.97 0 0);
+  --popover-foreground: oklch(0.135 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
@@ -80,10 +82,10 @@
   /* Chart UI variables (light mode defaults). Overridden in .dark below. */
   --chart-axis-color: #475569;
   --chart-grid-color: rgba(74,85,105,0.08);
-  --chart-tooltip-bg: rgba(255, 255, 255, 0.96);
-  --chart-tooltip-border: 1px solid rgba(15, 23, 42, 0.06);
+  --chart-tooltip-bg: rgba(255, 255, 255, 0.94);
+  --chart-tooltip-border: 1px solid rgba(15, 23, 42, 0.05);
   --chart-tooltip-radius: 14px;
-  --chart-tooltip-box-shadow: 0 12px 48px rgba(2, 6, 23, 0.06);
+  --chart-tooltip-box-shadow: 0 10px 30px rgba(2, 6, 23, 0.05);
   --chart-tooltip-backdrop: blur(8px);
   --chart-label-color: #475569;
   --chart-item-color: var(--foreground);
@@ -148,9 +150,9 @@
   body {
     @apply bg-zinc-50 text-zinc-900;
     background-image:
-      radial-gradient(circle at top left, rgba(8, 145, 178, 0.035), transparent 28%),
-      radial-gradient(circle at top right, rgba(245, 158, 11, 0.03), transparent 24%),
-      linear-gradient(180deg, rgba(250, 250, 252, 1), rgba(244, 244, 245, 1));
+      radial-gradient(circle at top left, rgba(8, 145, 178, 0.02), transparent 28%),
+      radial-gradient(circle at top right, rgba(245, 158, 11, 0.02), transparent 24%),
+      linear-gradient(180deg, rgba(250, 250, 252, 0.98), rgba(245, 245, 246, 0.98));
     background-attachment: fixed;
   }
 
@@ -174,15 +176,15 @@
   input,
   select,
   textarea {
-    background-color: rgba(250, 250, 252, 0.9);
+    background-color: rgba(247, 247, 248, 0.92);
     border-color: rgba(212, 212, 216, 0.6);
   }
 
   [data-slot="card"] {
     border-color: rgba(212, 212, 216, 0.75);
     background-image:
-      linear-gradient(180deg, rgba(247, 247, 248, 0.95), rgba(245, 245, 246, 0.92));
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.10);
+      linear-gradient(180deg, rgba(246, 246, 247, 0.95), rgba(244, 244, 245, 0.94));
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   }
 
   .dark [data-slot="card"] {
@@ -195,16 +197,16 @@
 
 @layer components {
     .app-surface {
-      border-color: rgba(212, 212, 216, 0.85);
+      border-color: rgba(212, 212, 216, 0.82);
       background:
-        linear-gradient(180deg, rgba(247, 247, 248, 0.98), rgba(246, 246, 247, 0.96)),
-        radial-gradient(circle at top right, rgba(8, 145, 178, 0.04), transparent 34%),
-        radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.03), transparent 28%),
-        rgba(245, 245, 247, 0.98);
+        linear-gradient(180deg, rgba(246, 246, 247, 0.96), rgba(244, 244, 245, 0.94)),
+        radial-gradient(circle at top right, rgba(8, 145, 178, 0.03), transparent 34%),
+        radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.02), transparent 28%),
+        rgba(244, 244, 246, 0.96);
       box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.12),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(12px);
+        0 10px 30px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(10px);
     }
 
     .dark .app-surface {
@@ -220,9 +222,9 @@
     }
 
     .app-surface-soft {
-      border-color: rgba(212, 212, 216, 0.78);
-      background: rgba(244, 244, 246, 0.96);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64);
+      border-color: rgba(212, 212, 216, 0.72);
+      background: rgba(245, 245, 246, 0.94);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
     }
 
     .dark .app-surface-soft {
@@ -232,8 +234,8 @@
     }
 
     .app-field {
-      border-color: rgba(212, 212, 216, 0.78);
-      background: rgba(250, 250, 252, 0.92);
+      border-color: rgba(212, 212, 216, 0.75);
+      background: rgba(246, 246, 247, 0.9);
     }
 
     .dark .app-field {
@@ -296,17 +298,17 @@
     }
 
     .dashboard-page [data-slot="card"] {
-      position: relative;
-      overflow: hidden;
-      border-color: rgba(212, 212, 216, 0.85);
-      background:
-        linear-gradient(180deg, rgba(247, 247, 248, 0.98), rgba(246, 246, 247, 0.94)),
-        radial-gradient(circle at top right, rgba(8, 145, 178, 0.04), transparent 34%),
-        radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.03), transparent 30%),
-        rgba(245, 245, 247, 0.96);
-      box-shadow:
-        0 14px 48px rgba(0, 0, 0, 0.12),
-        inset 0 1px 0 rgba(255, 255, 255, 0.64);
+        position: relative;
+        overflow: hidden;
+        border-color: rgba(212, 212, 216, 0.85);
+        background:
+          linear-gradient(180deg, rgba(246, 246, 247, 0.96), rgba(244, 244, 245, 0.94)),
+          radial-gradient(circle at top right, rgba(8, 145, 178, 0.03), transparent 34%),
+          radial-gradient(circle at bottom left, rgba(249, 115, 22, 0.02), transparent 30%),
+          rgba(244, 244, 246, 0.95);
+        box-shadow:
+          0 10px 30px rgba(0, 0, 0, 0.06),
+          inset 0 1px 0 rgba(255, 255, 255, 0.32);
       backdrop-filter: blur(18px);
     }
 
@@ -404,15 +406,15 @@
 }
 
 ::selection {
-  background: rgba(8, 145, 178, 0.25);
-  color: #18181b;
+  background: rgba(8, 145, 178, 0.16);
+  color: #0f172a;
 }
 
 /* Soften Tailwind `bg-white*` utilities in light mode only: map them to the off-white used elsewhere.
    This ensures many `bg-white` / `bg-white/*` utility usages are visually consistent without
    affecting dark mode where a global override would produce unwanted white elements. */
 html:not(.dark) [class*="bg-white"] {
-  background-color: rgba(250, 250, 252, var(--tw-bg-opacity, 1));
+  background-color: rgba(245, 245, 246, var(--tw-bg-opacity, 1));
 }
 
 .dark ::selection {
