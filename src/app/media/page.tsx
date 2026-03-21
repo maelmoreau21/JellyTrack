@@ -17,6 +17,21 @@ import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { buildExcludedMediaClause } from '@/lib/mediaPolicy';
 import { getSanitizedLibraryNames, GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
 
+type PlaybackHistory = {
+    id: string;
+    user?: { username?: string; jellyfinUserId?: string } | null;
+    durationWatched: number;
+    pauseCount?: number;
+    audioChanges?: number;
+    subtitleChanges?: number;
+    startedAt: Date | string;
+    playMethod?: string;
+    audioLanguage?: string | null;
+    audioCodec?: string | null;
+    subtitleLanguage?: string | null;
+    subtitleCodec?: string | null;
+};
+
 export const dynamic = "force-dynamic";
 
 interface MediaPageProps {
@@ -45,7 +60,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     // Attempt to fetch the list of libraries (Virtual Folders) directly from Jellyfin
     const baseUrl = process.env.JELLYFIN_URL;
     const apiKey = process.env.JELLYFIN_API_KEY;
-    let jellyfinViews: any[] = [];
+    let jellyfinViews: Array<Record<string, unknown>> = [];
     if (baseUrl && apiKey) {
         try {
             const [vfRes, uvRes] = await Promise.all([
@@ -53,18 +68,18 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                 fetch(`${baseUrl}/UserViews`, { headers: { 'X-Emby-Token': apiKey } })
             ]);
             
-            let folders: any[] = [];
+            let folders: Array<Record<string, unknown>> = [];
             if (vfRes.ok) folders = await vfRes.json();
             
-            let userViews: any[] = [];
+            let userViews: Array<Record<string, unknown>> = [];
             if (uvRes.ok) {
                 const uv = await uvRes.json();
                 userViews = Array.isArray(uv) ? uv : (uv.Items || []);
             }
 
             // Deduplicate by Name or Id to get the most complete list of available libraries
-            const viewsMap = new Map();
-            [...folders, ...userViews].forEach(v => {
+            const viewsMap = new Map<string, Record<string, unknown>>();
+            [...folders, ...userViews].forEach((v: Record<string, unknown>) => {
                 if (v?.CollectionType === 'boxsets') return;
                 if (v && v.Name && !viewsMap.has(v.Name)) {
                     viewsMap.set(v.Name, v);
@@ -82,7 +97,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         : ['Movie', 'Series', 'MusicAlbum'];
 
     const buildMediaFilter = () => {
-        const clauses: any[] = [{ type: { in: displayTypes } }];
+        const clauses: unknown[] = [{ type: { in: displayTypes } }];
         if (q) {
             // Case-insensitive Prisma text / array search
             const searchMode = "insensitive";
@@ -133,14 +148,14 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             for (const ep of episodes) {
                 const sid = seasonToSeries.get(ep.parentId!);
                 if (!sid) continue;
-                const filteredHistory = ep.playbackHistory.filter((h: any) => !isZapped({ ...h, media: { type: 'Episode' } }));
+                const filteredHistory = (ep.playbackHistory || []).filter((h: PlaybackHistory) => !isZapped({ ...h, media: { type: 'Episode' } }));
                 if (filteredHistory.length === 0) continue;
 
                 const s = seriesChildStats.get(sid) || { plays: 0, dur: 0, dp: 0, childCount: 0 };
                 s.childCount++;
                 s.plays += filteredHistory.length;
-                s.dur += filteredHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
-                s.dp += filteredHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
+                s.dur += filteredHistory.reduce((a: number, h: PlaybackHistory) => a + (h.durationWatched || 0), 0);
+                s.dp += filteredHistory.filter((h: PlaybackHistory) => h.playMethod === 'DirectPlay').length;
                 seriesChildStats.set(sid, s);
             }
         }
@@ -155,7 +170,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         });
         for (const track of tracks) {
             if (!track.parentId) continue;
-            const filteredHistory = track.playbackHistory.filter((h: any) => !isZapped({ ...h, media: { type: 'Audio' } }));
+            const filteredHistory = (track.playbackHistory || []).filter((h: PlaybackHistory) => !isZapped({ ...h, media: { type: 'Audio' } }));
             if (filteredHistory.length === 0) continue;
 
             const existing = albumChildStats.get(track.parentId);
@@ -171,8 +186,8 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             s.totalTrackDurationMs = (s.totalTrackDurationMs || BigInt(0)) + durBig;
 
             s.plays += filteredHistory.length;
-            s.dur += filteredHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
-            s.dp += filteredHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
+            s.dur += filteredHistory.reduce((a: number, h: PlaybackHistory) => a + (h.durationWatched || 0), 0);
+            s.dp += filteredHistory.filter((h: PlaybackHistory) => h.playMethod === 'DirectPlay').length;
             albumChildStats.set(track.parentId, s);
         }
     }
@@ -181,10 +196,10 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const processedMedia = parentItems.map((media: any) => {
         let plays = 0, durationSeconds = 0, dpCount = 0, childCount = 0;
         if (media.type === 'Movie') {
-            const filteredHistory = media.playbackHistory.filter((h: any) => !isZapped({ ...h, media: { type: 'Movie' } }));
+            const filteredHistory = (media.playbackHistory || []).filter((h: PlaybackHistory) => !isZapped({ ...h, media: { type: 'Movie' } }));
             plays = filteredHistory.length;
-            durationSeconds = filteredHistory.reduce((a: number, h: any) => a + h.durationWatched, 0);
-            dpCount = filteredHistory.filter((h: any) => h.playMethod === 'DirectPlay').length;
+            durationSeconds = filteredHistory.reduce((a: number, h: PlaybackHistory) => a + (h.durationWatched || 0), 0);
+            dpCount = filteredHistory.filter((h: PlaybackHistory) => h.playMethod === 'DirectPlay').length;
         } else if (media.type === 'Series') {
             const stats = seriesChildStats.get(media.jellyfinMediaId);
             if (stats) { plays = stats.plays; durationSeconds = stats.dur; dpCount = stats.dp; childCount = stats.childCount; }
@@ -311,14 +326,14 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     // Use Prisma aggregation to compute total size and per-library sizes robustly
     try {
         const leafTypes = ['Movie', 'Episode', 'Audio', 'Book'];
-        const sizeWhere: any = { type: { in: leafTypes } };
+        const sizeWhere: Record<string, unknown> = { type: { in: leafTypes } };
         const excludedForSize = buildExcludedMediaClause(excludedLibraries);
         if (excludedForSize) {
             sizeWhere.AND = [excludedForSize];
         }
 
         const sizeAgg = await prisma.media.aggregate({ where: sizeWhere, _sum: { size: true } });
-        const rawTotal = (sizeAgg._sum && (sizeAgg._sum as any).size) ?? 0;
+        const rawTotal = (sizeAgg._sum && (sizeAgg._sum as Record<string, unknown>).size) ?? 0;
         totalSizeBytes = typeof rawTotal === 'bigint' ? rawTotal : BigInt(Math.floor(Number(rawTotal)));
 
         const perLibSizes = await prisma.media.groupBy({ by: ['libraryName'], where: sizeWhere, _sum: { size: true } });
@@ -328,7 +343,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                 libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: null });
             }
             const lib = libraryStatsMap.get(name)!;
-            const rawLibSize = (p._sum && (p._sum as any).size) ?? 0;
+            const rawLibSize = (p._sum && (p._sum as Record<string, unknown>).size) ?? 0;
             lib.size = typeof rawLibSize === 'bigint' ? rawLibSize : BigInt(Math.floor(Number(rawLibSize)));
         }
     } catch (e) {

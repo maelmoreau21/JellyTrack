@@ -29,7 +29,7 @@ export default function MediaDropoffChart({ data }: { data: DropoffData[] }) {
 
     const enrichedData = data.map((d, i) => ({
         ...d,
-        label: BUCKET_KEYS[i] ? t(BUCKET_KEYS[i] as any) : d.range,
+        label: BUCKET_KEYS[i] ? t(BUCKET_KEYS[i]) : d.range,
         pct: totalSessions > 0 ? Math.round((d.count / totalSessions) * 100) : 0,
     }));
 
@@ -49,9 +49,9 @@ export default function MediaDropoffChart({ data }: { data: DropoffData[] }) {
                     contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#f4f4f5' }}
                     labelStyle={{ color: '#e4e4e7' }}
                     itemStyle={{ color: '#e4e4e7' }}
-                    formatter={(value: any, name: any, props: any) => [
-                        `${value} session${value > 1 ? 's' : ''} (${props.payload.pct}%)`,
-                        t('stoppedAt', { range: props.payload.range })
+                    formatter={(value: number, _name: string, props?: { payload?: { pct?: number; range?: string } }) => [
+                        `${value} session${value > 1 ? 's' : ''} (${props?.payload?.pct ?? 0}%)`,
+                        t('stoppedAt', { range: props?.payload?.range })
                     ]}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>

@@ -6,8 +6,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 // --- Types ---
+export type EventType = "pause" | "stop" | "audio_change" | "subtitle_change";
+
 export interface TimelineEvent {
-    eventType: "pause" | "stop" | "audio_change" | "subtitle_change";
+    eventType: EventType;
     positionMs: number;   // ms position within the media
     count: number;        // aggregated count at this bucket
 }
@@ -18,7 +20,7 @@ export interface SessionTimeline {
     jellyfinUserId: string;
     durationWatched: number; // seconds
     startedAt: string;
-    events: { eventType: string; positionMs: number; metadata?: any }[];
+    events: { eventType: EventType; positionMs: number; metadata?: unknown | string }[];
 }
 
 export interface MediaTimelineChartProps {
@@ -29,14 +31,14 @@ export interface MediaTimelineChartProps {
 }
 
 // --- Constants ---
-const EVENT_COLORS: Record<string, string> = {
+const EVENT_COLORS: Record<EventType, string> = {
     stop:            "#ef4444", // red
     pause:           "#eab308", // yellow
     audio_change:    "#a855f7", // purple
     subtitle_change: "#06b6d4", // cyan
 };
 
-const EVENT_ICONS: Record<string, string> = {
+const EVENT_ICONS: Record<EventType, string> = {
     stop:            "⏹",
     pause:           "⏸",
     audio_change:    "🔊",
@@ -57,7 +59,7 @@ function formatMs(ms: number): string {
 export default function MediaTimelineChart({ events, durationMs, buckets = 50, sessions = [] }: MediaTimelineChartProps) {
     const t = useTranslations("mediaProfile");
     const [hovered, setHovered] = useState<number | null>(null);
-    const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set(["stop", "pause", "audio_change", "subtitle_change"]));
+    const [activeTypes, setActiveTypes] = useState<Set<EventType>>(new Set(["stop", "pause", "audio_change", "subtitle_change"]));
     const [selectedUser, setSelectedUser] = useState<string>("all");
 
     // Aggregate events into buckets
@@ -94,7 +96,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
         return { bucketData: data, maxCount: max };
     }, [events, durationMs, buckets, activeTypes]);
 
-    const toggleType = (type: string) => {
+    const toggleType = (type: EventType) => {
         setActiveTypes(prev => {
             const next = new Set(prev);
             if (next.has(type)) next.delete(type);
@@ -103,24 +105,24 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
         });
     };
 
-    if (durationMs <= 0 || events.length === 0) {
-        return <p className="text-sm text-zinc-500 text-center py-6">{t("noDataSmall")}</p>;
-    }
-
     // Unique users from sessions
     const uniqueUsers = useMemo(() => {
         const map = new Map<string, string>();
         sessions.forEach(s => {
-            if (s.events.length > 0) map.set(s.jellyfinUserId, s.username);
+            if (s.events && s.events.length > 0) map.set(s.jellyfinUserId, s.username);
         });
         return Array.from(map.entries());
     }, [sessions]);
 
     // Filtered sessions for detail view
     const filteredSessions = useMemo(() => {
-        if (selectedUser === "all") return sessions.filter(s => s.events.length > 0);
-        return sessions.filter(s => s.jellyfinUserId === selectedUser && s.events.length > 0);
+        if (selectedUser === "all") return sessions.filter(s => s.events && s.events.length > 0);
+        return sessions.filter(s => s.jellyfinUserId === selectedUser && s.events && s.events.length > 0);
     }, [sessions, selectedUser]);
+
+    if (durationMs <= 0 || events.length === 0) {
+        return <p className="text-sm text-zinc-500 text-center py-6">{t("noDataSmall")}</p>;
+    }
 
     return (
         <TooltipProvider delayDuration={100}>
@@ -128,25 +130,28 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                 {/* Legend / Filters */}
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap gap-3 text-xs">
-                        {Object.entries(EVENT_COLORS).map(([type, color]) => (
-                            <button
-                                key={type}
-                                onClick={() => toggleType(type)}
-                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
-                                    activeTypes.has(type)
-                                        ? "border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800"
-                                        : "border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 opacity-40"
-                                }`}
-                            >
-                                <span
-                                    className="w-2.5 h-2.5 rounded-full"
-                                    style={{ backgroundColor: color }}
-                                />
-                                <span className="text-zinc-700 dark:text-zinc-300">
-                                    {EVENT_ICONS[type]} {t(`timeline.label.${type}` as any)}
-                                </span>
-                            </button>
-                        ))}
+                        {Object.entries(EVENT_COLORS).map(([type, color]) => {
+                            const et = type as EventType;
+                            return (
+                                <button
+                                    key={type}
+                                    onClick={() => toggleType(et)}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
+                                        activeTypes.has(et)
+                                            ? "border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800"
+                                            : "border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 opacity-40"
+                                    }`}
+                                >
+                                    <span
+                                        className="w-2.5 h-2.5 rounded-full"
+                                        style={{ backgroundColor: color }}
+                                    />
+                                    <span className="text-zinc-700 dark:text-zinc-300">
+                                        {EVENT_ICONS[et]} {t(`timeline.label.${et}`)}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
                     {uniqueUsers.length > 1 && (
                         <select
@@ -175,8 +180,8 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                             const isHovered = hovered === i;
 
                             // Stack segments within the bar
-                            const segments: { type: string; count: number; color: string }[] = [];
-                            for (const type of ["stop", "pause", "audio_change", "subtitle_change"]) {
+                            const segments: { type: EventType; count: number; color: string }[] = [];
+                            for (const type of ["stop", "pause", "audio_change", "subtitle_change"] as EventType[]) {
                                 if (bucket.events[type] > 0 && activeTypes.has(type)) {
                                     segments.push({ type, count: bucket.events[type], color: EVENT_COLORS[type] });
                                 }
@@ -219,7 +224,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                             {segments.map(seg => (
                                                 <div key={seg.type} className="flex items-center gap-1.5">
                                                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: seg.color }} />
-                                                    <span>{EVENT_ICONS[seg.type]} {t(`timeline_${seg.type}` as any)}: {seg.count}</span>
+                                                    <span>{EVENT_ICONS[seg.type]} {t(`timeline_${seg.type}`)}: {seg.count}</span>
                                                 </div>
                                             ))}
                                         </TooltipContent>
@@ -274,17 +279,22 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                                 const color = EVENT_COLORS[evt.eventType] || EVENT_COLORS.stop;
                                                 let detail = '';
                                                 try {
-                                                    const md = typeof evt.metadata === 'string' ? JSON.parse(evt.metadata) : evt.metadata;
+                                                    const mdRaw = typeof evt.metadata === 'string' ? JSON.parse(evt.metadata) : evt.metadata;
+                                                    const md = mdRaw as Record<string, unknown> | undefined;
                                                     if (md && md.from && md.to) {
-                                                        const fmt = (side: any) => {
+                                                        const fmt = (side: unknown) => {
                                                             if (!side) return '—';
-                                                            const label = side.language ?? (side.index !== undefined ? `#${side.index}` : String(side));
-                                                            const codec = side.codec ? ` (${side.codec})` : '';
-                                                            return `${label}${codec}`;
+                                                            if (typeof side === 'object' && side !== null) {
+                                                                const s = side as Record<string, unknown>;
+                                                                const label = typeof s.language === 'string' ? s.language : (s.index !== undefined ? `#${String(s.index)}` : String(side));
+                                                                const codec = typeof s.codec === 'string' ? ` (${s.codec})` : '';
+                                                                return `${label}${codec}`;
+                                                            }
+                                                            return String(side);
                                                         };
                                                         detail = `${fmt(md.from)} → ${fmt(md.to)}`;
                                                     } else if (md && md.from !== undefined && md.to !== undefined) {
-                                                        detail = `${md.from} → ${md.to}`;
+                                                        detail = `${String(md.from)} → ${String(md.to)}`;
                                                     }
                                                 } catch {}
                                                 return (
@@ -296,7 +306,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                                             />
                                                         </TooltipTrigger>
                                                         <TooltipContent className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 text-xs">
-                                                            {EVENT_ICONS[evt.eventType]} {t(`timeline_${evt.eventType}` as any)}{detail ? ` — ${detail}` : ''} @ {formatMs(evt.positionMs)}
+                                                            {EVENT_ICONS[evt.eventType]} {t(`timeline_${evt.eventType}`)}{detail ? ` — ${detail}` : ''} @ {formatMs(evt.positionMs)}
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 );

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
 
 vi.mock('./prisma', () => {

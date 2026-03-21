@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+import { useState, useRef } from "react";
 import { RefreshCw, CheckCircle2, AlertCircle, Save, Download, UploadCloud, Clock, Trash2, Zap, Database, Play, Plug, Copy, Eye, EyeOff, KeyRound, Unplug } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -39,10 +38,10 @@ export default function SettingsPage() {
     const [wrappedEndMonth, setWrappedEndMonth] = useState(1);
     const [wrappedEndDay, setWrappedEndDay] = useState(31);
     const [excludedLibraries, setExcludedLibraries] = useState<string[]>([]);
-    const [availableLibraries, setAvailableLibraries] = useState<string[]>([]);
+    const availableLibraries = useState<string[]>([])[0] as string[];
     const [libraryRules, setLibraryRules] = useState<Record<string, LibraryRule>>({});
-    const [libraryScanSource, setLibraryScanSource] = useState<'jellyfin' | 'database'>('database');
-    const [libraryScanError, setLibraryScanError] = useState<string | null>(null);
+    const libraryScanSource = useState<'jellyfin' | 'database'>('database')[0] as 'jellyfin' | 'database';
+    const libraryScanError = useState<string | null>(null)[0] as string | null;
 
 
 

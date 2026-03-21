@@ -1,5 +1,5 @@
 import prisma from "./prisma";
-import { appendHealthEvent, markSyncFinished, markSyncStarted } from "@/lib/systemHealth";
+import { markSyncFinished, markSyncStarted } from "@/lib/systemHealth";
 import { normalizeJellyfinId } from "@/lib/jellyfinId";
 import { cleanupOrphanedSessions } from "@/lib/cleanup";
 import { GHOST_LIBRARY_NAMES } from "./libraryUtils";
@@ -24,7 +24,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
     }
     const jellyfinHeaders = { "X-Emby-Token": apiKey };
 
-    const fetchWithRetry = async (url: string, options: any = {}, timeout = 30000, maxRetries = 3) => {
+    const fetchWithRetry = async (url: string, options: RequestInit = {}, timeout = 30000, maxRetries = 3) => {
         for (let i = 0; i < maxRetries; i++) {
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), timeout);
@@ -35,10 +35,11 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     throw new Error(`HTTP ${response.status} from server`);
                 }
                 return response;
-            } catch (e: any) {
+            } catch (e: unknown) {
                 clearTimeout(id);
-                const isAbort = e.name === 'AbortError';
-                const errorMsg = isAbort ? `Timeout (${timeout}ms)` : (e.message || "Unknown Network Error");
+                const err = e as { name?: string; message?: string };
+                const isAbort = err.name === 'AbortError';
+                const errorMsg = isAbort ? `Timeout (${timeout}ms)` : (err.message || "Unknown Network Error");
                 
                 console.warn(`[Sync Warning] Tentative ${i + 1}/${maxRetries} échouée pour ${url.split('?')[0]}: ${errorMsg}`);
                 
@@ -98,10 +99,10 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
         const vfRes = await fetchWithRetry(`${baseUrl}/Library/VirtualFolders`, { headers: jellyfinHeaders });
         if (vfRes.ok) {
-            const folders = await vfRes.json();
-            folders.forEach((f: any) => {
+            const folders = await vfRes.json() as Array<{ CollectionType?: string; Id?: string; ItemId?: string; Name?: string }>;
+            folders.forEach((f) => {
                 if (f.CollectionType === 'boxsets') return;
-                const keys = [f.Id, f.ItemId].filter(Boolean);
+                const keys = [f.Id, f.ItemId].filter(Boolean) as string[];
                 keys.forEach(k => {
                     if (f.Name) libraryNameMap.set(k, f.Name);
                     if (f.CollectionType) libraryCollectionMap.set(k, f.CollectionType);
@@ -111,10 +112,10 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
         const uvRes = await fetchWithRetry(`${baseUrl}/UserViews`, { headers: jellyfinHeaders });
         if (uvRes.ok) {
-            const views = await uvRes.json();
-            (views.Items || []).forEach((v: any) => {
+            const views = await uvRes.json() as { Items?: Array<{ CollectionType?: string; Id?: string; ItemId?: string; Name?: string }> };
+            (views.Items || []).forEach((v) => {
                 if (v.CollectionType === 'boxsets') return;
-                const keys = [v.Id, v.ItemId].filter(Boolean);
+                const keys = [v.Id, v.ItemId].filter(Boolean) as string[];
                 keys.forEach(k => {
                     if (v.Name) libraryNameMap.set(k, v.Name);
                     if (v.CollectionType) libraryCollectionMap.set(k, v.CollectionType);
@@ -132,7 +133,8 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         }
 
         const pageSize = 200;
-        const items: any[] = [];
+        type JellyfinItem = Record<string, unknown>;
+        const items: JellyfinItem[] = [];
         let startIndex = 0;
         while (true) {
             const pageUrl = `${baseUrl}/Items?${baseItemsQuery}${minDateParam}&StartIndex=${startIndex}&Limit=${pageSize}`;
@@ -194,17 +196,17 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
                 // Extract metadata
                 const genres = item.Genres || [];
-                const studios = (item.Studios || []).map((s: any) => s.Name);
-                const people = item.People || [];
-                const directors = people.filter((p: any) => p.Type === "Director").map((p: any) => p.Name);
-                const actors = people.filter((p: any) => p.Type === "Actor").map((p: any) => p.Name);
+                const studios = ((item.Studios as Array<{ Name?: string }> | undefined) || []).map(s => s.Name).filter(Boolean) as string[];
+                const people = (item.People as Array<{ Type?: string; Name?: string }> | undefined) || [];
+                const directors = people.filter((p) => p.Type === "Director").map((p) => p.Name).filter(Boolean) as string[];
+                const actors = people.filter((p) => p.Type === "Actor").map((p) => p.Name).filter(Boolean) as string[];
 
                 let resolution: string | null = null;
                 let sizeVal: bigint | null = null;
                 if (item.MediaSources?.[0]) {
                     const ms = item.MediaSources[0];
                     sizeVal = ms.Size ? BigInt(ms.Size) : null;
-                    const vs = ms.MediaStreams?.find((s: any) => s.Type === "Video");
+                    const vs = ms.MediaStreams?.find((s: unknown) => ((s as Record<string, unknown>)['Type'] === 'Video')) as Record<string, unknown> | undefined;
                     // Prefer using the video HEIGHT to determine canonical resolution (e.g. 1080p == height 1080).
                     // Some sources report anamorphic or unusual widths (e.g. 1440x1080) — using height avoids
                     // misclassifying 4:3/anamorphic material as lower-res because width thresholds were used.
@@ -252,8 +254,14 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         await markSyncFinished({ success: true, mode: options?.recentOnly ? 'recent' : 'full', users: usersCount, media: mediaCount });
         cleanupOrphanedSessions().catch(() => {});
         return { success: true, users: usersCount, media: mediaCount };
-    } catch (e: any) {
-        const fullError = e.message || "Unknown error";
+    } catch (e: unknown) {
+        let fullError = 'Unknown error';
+        if (e instanceof Error) fullError = e.message;
+        else if (typeof e === 'string') fullError = e;
+        else if (typeof e === 'object' && e !== null) {
+            const maybe = e as Record<string, unknown>;
+            if (typeof maybe.message === 'string') fullError = maybe.message;
+        }
         console.error("[Sync Error]", fullError);
         await markSyncFinished({ success: false, mode: options?.recentOnly ? 'recent' : 'full', error: fullError });
         return { success: false, error: fullError };

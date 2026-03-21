@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import type { Session } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import { apiT } from "@/lib/i18n-api";
@@ -10,7 +11,7 @@ import { apiT } from "@/lib/i18n-api";
  */
 
 export interface AuthResult {
-  session: any;
+  session: Session | null;
   jellyfinUserId: string;
   isAdmin: boolean;
 }
@@ -23,10 +24,11 @@ export async function requireAuth(): Promise<AuthResult | NextResponse> {
   if (!session?.user) {
     return NextResponse.json({ error: await apiT('unauthenticated') }, { status: 401 });
   }
+  const user = (session.user as unknown) as { jellyfinUserId?: string; isAdmin?: boolean } | undefined;
   return {
     session,
-    jellyfinUserId: (session.user as any).jellyfinUserId || "",
-    isAdmin: (session.user as any).isAdmin === true,
+    jellyfinUserId: user?.jellyfinUserId || "",
+    isAdmin: user?.isAdmin === true,
   };
 }
 

@@ -14,6 +14,33 @@ import type { TimelineEvent, SessionTimeline } from "./MediaTimelineChart";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 
+// Local types for playback and media records used in this page
+type PlaybackHistory = {
+    id: string;
+    user?: { username?: string; jellyfinUserId?: string } | null;
+    durationWatched: number;
+    pauseCount?: number;
+    audioChanges?: number;
+    subtitleChanges?: number;
+    startedAt: Date;
+    playMethod?: string;
+    audioLanguage?: string | null;
+    audioCodec?: string | null;
+    subtitleLanguage?: string | null;
+    subtitleCodec?: string | null;
+};
+
+type DBMedia = {
+    jellyfinMediaId: string;
+    title: string;
+    type: string;
+    resolution?: string | null;
+    normalizedResolution?: string | null;
+    durationMs?: bigint | null;
+    playbackHistory?: PlaybackHistory[];
+    parentId?: string | null;
+};
+
 export const dynamic = "force-dynamic";
 
 interface MediaProfilePageProps {
@@ -87,7 +114,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const isParentType = ['Series', 'Season', 'MusicAlbum'].includes(media.type);
     let children: { jellyfinMediaId: string; title: string; type: string; resolution: string | null; normalizedResolution: string | null; durationMs: bigint | null; _count: number; _totalDuration: number }[] = [];
     // For Series, we also need grandchildren (Episodes via Seasons) for accurate stats
-    let allDescendantHistory: any[] = [];
+    let allDescendantHistory: PlaybackHistory[] = [];
     if (isParentType) {
         const childMedia = await prisma.media.findMany({
             where: { parentId: media.jellyfinMediaId },
@@ -98,10 +125,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 },
             },
             orderBy: { title: 'asc' },
-        });
+        }) as DBMedia[];
 
         // For Series: also fetch grandchildren (Episodes) via Season IDs
-        let grandchildMedia: any[] = [];
+        let grandchildMedia: DBMedia[] = [];
         if (media.type === 'Series' && childMedia.length > 0) {
             const seasonIds = childMedia.map(c => c.jellyfinMediaId);
             grandchildMedia = await prisma.media.findMany({
@@ -120,8 +147,9 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 const sid = gc.parentId || '';
                 if (!seasonEpisodeStats.has(sid)) seasonEpisodeStats.set(sid, { count: 0, duration: 0 });
                 const entry = seasonEpisodeStats.get(sid)!;
-                entry.count += gc.playbackHistory.length;
-                entry.duration += gc.playbackHistory.reduce((acc: number, h: any) => acc + h.durationWatched, 0);
+                const playback = gc.playbackHistory || [];
+                entry.count += playback.length;
+                entry.duration += playback.reduce((acc: number, h: PlaybackHistory) => acc + (h.durationWatched || 0), 0);
             });
             children = childMedia.map(c => ({
                 jellyfinMediaId: c.jellyfinMediaId,
@@ -130,8 +158,8 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 resolution: c.resolution,
                 normalizedResolution: normalizeResolution(c.resolution),
                 durationMs: c.durationMs,
-                _count: (seasonEpisodeStats.get(c.jellyfinMediaId)?.count || 0) + c.playbackHistory.length,
-                _totalDuration: (seasonEpisodeStats.get(c.jellyfinMediaId)?.duration || 0) + c.playbackHistory.reduce((acc: number, h: any) => acc + h.durationWatched, 0),
+                _count: (seasonEpisodeStats.get(c.jellyfinMediaId)?.count || 0) + (c.playbackHistory?.length || 0),
+                _totalDuration: (seasonEpisodeStats.get(c.jellyfinMediaId)?.duration || 0) + ((c.playbackHistory || []).reduce((acc: number, h: PlaybackHistory) => acc + (h.durationWatched || 0), 0)),
             }));
             // Collect all descendant playback history for charts
             allDescendantHistory = [
@@ -146,10 +174,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 resolution: c.resolution,
                 normalizedResolution: normalizeResolution(c.resolution),
                 durationMs: c.durationMs,
-                _count: c.playbackHistory.length,
-                _totalDuration: c.playbackHistory.reduce((acc: number, h: any) => acc + h.durationWatched, 0),
+                _count: (c.playbackHistory?.length || 0),
+                _totalDuration: (c.playbackHistory || []).reduce((acc: number, h: PlaybackHistory) => acc + (h.durationWatched || 0), 0),
             }));
-            allDescendantHistory = childMedia.flatMap(c => c.playbackHistory);
+            allDescendantHistory = childMedia.flatMap(c => c.playbackHistory || []);
         }
     }
 
@@ -160,15 +188,15 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
     // Global stats (include children's playback for parent items like Series/Season/Album)
     const totalViews = effectiveHistory.length;
-    const totalSeconds = effectiveHistory.reduce((acc: number, h: any) => acc + h.durationWatched, 0);
+    const totalSeconds = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.durationWatched || 0), 0);
 
     const totalHours = parseFloat((totalSeconds / 3600).toFixed(1));
     const avgMinutes = totalViews > 0 ? Math.round(totalSeconds / totalViews / 60) : 0;
 
     // Telemetry aggregates
-    const totalPauses = effectiveHistory.reduce((acc: number, h: any) => acc + (h.pauseCount || 0), 0);
-    const totalAudioChanges = effectiveHistory.reduce((acc: number, h: any) => acc + (h.audioChanges || 0), 0);
-    const totalSubChanges = effectiveHistory.reduce((acc: number, h: any) => acc + (h.subtitleChanges || 0), 0);
+    const totalPauses = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.pauseCount || 0), 0);
+    const totalAudioChanges = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.audioChanges || 0), 0);
+    const totalSubChanges = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.subtitleChanges || 0), 0);
 
     // Drop-off buckets
     const mediaDurationSeconds = media.durationMs ? Number(media.durationMs) / 1000 : null;
@@ -177,7 +205,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         count: 0,
     }));
     if (mediaDurationSeconds && mediaDurationSeconds > 0) {
-        effectiveHistory.forEach((h: any) => {
+        effectiveHistory.forEach((h: PlaybackHistory) => {
             const pct = Math.min((h.durationWatched / mediaDurationSeconds) * 100, 100);
             const bucket = Math.min(Math.floor(pct / 10), 9);
             dropoffBuckets[bucket].count++;
@@ -186,7 +214,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
     // Telemetry timeline: group pauses, audio & subtitle changes per session date
     const telemetryMap = new Map<string, { pauses: number; audioChanges: number; subtitleChanges: number }>();
-    effectiveHistory.forEach((h: any) => {
+    effectiveHistory.forEach((h: PlaybackHistory) => {
         const dateKey = new Date(h.startedAt).toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
         const entry = telemetryMap.get(dateKey) || { pauses: 0, audioChanges: 0, subtitleChanges: 0 };
         entry.pauses += h.pauseCount || 0;
@@ -198,7 +226,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const hasTelemetry = telemetryData.some(d => d.pauses > 0 || d.audioChanges > 0 || d.subtitleChanges > 0);
 
     // Fetch positional telemetry events for timeline chart
-    const playbackIds = effectiveHistory.map((h: any) => h.id);
+    const playbackIds = effectiveHistory.map((h: PlaybackHistory) => h.id);
     let timelineEvents: TimelineEvent[] = [];
     let sessionTimelines: SessionTimeline[] = [];
     if (playbackIds.length > 0 && mediaDurationSeconds && mediaDurationSeconds > 0) {
@@ -228,15 +256,15 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         });
 
         // Build per-session timelines for detail view
-        const eventsByPlayback = new Map<string, { eventType: string; positionMs: number; metadata?: any }[]>();
+        const eventsByPlayback = new Map<string, { eventType: string; positionMs: number; metadata?: unknown }[]>();
         for (const e of rawEvents) {
             const list = eventsByPlayback.get(e.playbackId) || [];
             list.push({ eventType: e.eventType, positionMs: Number(e.positionMs), metadata: e.metadata || null });
             eventsByPlayback.set(e.playbackId, list);
         }
         sessionTimelines = effectiveHistory
-            .filter((h: any) => eventsByPlayback.has(h.id))
-            .map((h: any) => ({
+            .filter((h: PlaybackHistory) => eventsByPlayback.has(h.id))
+            .map((h: PlaybackHistory) => ({
                 id: h.id,
                 username: h.user?.username || "?",
                 jellyfinUserId: h.user?.jellyfinUserId || "",
@@ -249,7 +277,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
     // Unique users who watched this
     const userMap = new Map<string, { username: string; jellyfinUserId: string; sessions: number; totalSeconds: number }>();
-    effectiveHistory.forEach((h: any) => {
+    effectiveHistory.forEach((h: PlaybackHistory) => {
         if (!h.user) return;
         const uid = h.user.jellyfinUserId;
         if (!userMap.has(uid)) {
@@ -264,7 +292,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     // Audio & subtitle language distribution
     const audioLangCounts = new Map<string, number>();
     const subtitleLangCounts = new Map<string, number>();
-    effectiveHistory.forEach((h: any) => {
+    effectiveHistory.forEach((h: PlaybackHistory) => {
         if (h.audioLanguage) {
             const key = `${h.audioLanguage}${h.audioCodec ? ` (${h.audioCodec})` : ""}`;
             audioLangCounts.set(key, (audioLangCounts.get(key) || 0) + 1);
