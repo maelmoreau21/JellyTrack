@@ -46,7 +46,14 @@ export async function GET(req: NextRequest) {
         }
 
         if (!response.ok) {
-            return new NextResponse("Image not found on Jellyfin Server", { status: response.status });
+            // If Jellyfin doesn't have the image or returns an error, return a small SVG placeholder
+            const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
+            const encoder = new TextEncoder();
+            const buffer = encoder.encode(placeholder);
+            const headers = new Headers();
+            headers.set('Content-Type', 'image/svg+xml');
+            headers.set('Cache-Control', 'public, max-age=60, immutable');
+            return new NextResponse(buffer, { headers });
         }
 
         const buffer = await response.arrayBuffer();
@@ -60,6 +67,13 @@ export async function GET(req: NextRequest) {
         return new NextResponse(buffer, { headers });
     } catch (e) {
         console.error("Erreur proxy Image Jellyfin:", e);
-        return new NextResponse("Internal API Proxy Error", { status: 500 });
+        // On renvoie un SVG de remplacement plutôt qu'une erreur 500 pour éviter des effets secondaires côté client
+        const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
+        const encoder = new TextEncoder();
+        const buffer = encoder.encode(placeholder);
+        const headers = new Headers();
+        headers.set('Content-Type', 'image/svg+xml');
+        headers.set('Cache-Control', 'public, max-age=60, immutable');
+        return new NextResponse(buffer, { headers });
     }
 }

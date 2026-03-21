@@ -4,10 +4,21 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Plug, Zap, Save, Database, Download, Clock, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     const t = useTranslations('settings');
     const [open, setOpen] = useState<Record<string, boolean>>({ plugin: true });
+    const pathname = usePathname();
+
+    const tabs = [
+        { href: '/settings/overview', key: 'overviewTab' },
+        { href: '/settings/plugin', key: 'pluginTitle' },
+        { href: '/settings/scheduler', key: 'taskScheduler' },
+        { href: '/settings/notifications', key: 'notifications' },
+        { href: '/settings/libraryRules', key: 'libraryRules' },
+        { href: '/settings/dataBackups', key: 'dataBackups' },
+    ];
 
     const toggle = (key: string) => setOpen((p) => ({ ...p, [key]: !p[key] }));
 
@@ -86,6 +97,22 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                             </div>
                         </aside>
                         <main className="flex-1 space-y-4 md:space-y-6">
+                            <div className="max-w-[1300px] mx-auto w-full">
+                                <nav className="flex gap-2 overflow-auto pb-4 border-b border-zinc-800/40">
+                                    {tabs.map(tab => {
+                                        const active = pathname?.startsWith(tab.href);
+                                        return (
+                                            <Link
+                                                key={tab.href}
+                                                href={tab.href}
+                                                className={`px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap ${active ? 'bg-zinc-900 text-white' : 'text-zinc-400 hover:text-zinc-100'}`}
+                                            >
+                                                {t(tab.key)}
+                                            </Link>
+                                        );
+                                    })}
+                                </nav>
+                            </div>
                             {children}
                         </main>
                     </div>

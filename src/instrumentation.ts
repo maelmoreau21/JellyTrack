@@ -1,4 +1,10 @@
 export async function register() {
+    // Allow skipping background instrumentation for local/dev without DB
+    if (process.env.SKIP_INSTRUMENTATION === '1' || process.env.SKIP_INSTRUMENTATION === 'true') {
+        console.log("[Instrumentation] SKIP_INSTRUMENTATION set — skipping background tasks.");
+        return;
+    }
+
     if (process.env.NEXT_RUNTIME === 'nodejs') {
         const { initCronJobs } = await import('@/server/cronManager');
         const prisma = (await import('@/lib/prisma')).default;

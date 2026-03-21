@@ -168,6 +168,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         }
     }
 
+    // Build a sanitized media list that only exposes primitive, serializable fields
     const processedMedia = parentItems.map((media: any) => {
         let plays = 0, durationSeconds = 0, dpCount = 0, childCount = 0;
         if (media.type === 'Movie') {
@@ -182,7 +183,8 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             const stats = albumChildStats.get(media.jellyfinMediaId);
             if (stats) { plays = stats.plays; durationSeconds = stats.dur; dpCount = stats.dp; childCount = stats.childCount; }
         }
-        let bitrateKbps = null;
+
+        let bitrateKbps: number | null = null;
         if (media.type === 'MusicAlbum') {
             const stats = albumChildStats.get(media.jellyfinMediaId);
             if (stats && stats.totalTrackDurationMs > 0) {
@@ -193,7 +195,21 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
         const durationHours = parseFloat((durationSeconds / 3600).toFixed(1));
         const qualityPercent = plays > 0 ? Math.round((dpCount / plays) * 100) : 0;
-        return { ...media, plays, durationHours, qualityPercent, childCount, normalizedResolution: normalizeResolution(media.resolution), bitrateKbps };
+
+        // Only expose a trimmed set of primitive fields to avoid accidentally serializing BigInt/Date objects
+        return {
+            id: String(media.id),
+            jellyfinMediaId: String(media.jellyfinMediaId),
+            title: media.title || '',
+            productionYear: media.productionYear || null,
+            type: media.type || null,
+            plays,
+            durationHours,
+            qualityPercent,
+            childCount,
+            normalizedResolution: normalizeResolution(media.resolution),
+            bitrateKbps
+        };
     });
 
     // Global Stats for Charts

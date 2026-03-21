@@ -268,7 +268,7 @@ export async function NetworkAnalysis({ type, timeRange, excludedLibraries }: { 
             <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <span>??</span> {t('mostTranscoded')}
+                        {t('mostTranscoded')}
                     </CardTitle>
                     <CardDescription>{t('mostTranscodedDesc')}</CardDescription>
                 </CardHeader>

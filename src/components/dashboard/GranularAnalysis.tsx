@@ -218,17 +218,23 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
     const data = await getGranularData(type, timeRange, excludedLibraries, locale, JSON.stringify(rules));
     const t = await getTranslations('granular');
     const tc = await getTranslations('common');
-    const tCleanup = await getTranslations('cleanup');
     const tDashboard = await getTranslations('dashboard');
+
+    // Localize subtitle names (e.g. OFF -> Disabled) using the granular scope
+    const localizedSubtitleData = (data.subtitleData || []).map((d: any) => {
+        const name = String(d.name || '').toUpperCase();
+        if (name === 'OFF' || name === 'NONE' || name === 'UNKNOWN') return { ...d, name: t('disabled') };
+        return d;
+    });
 
     // Localize drop segments (data.dropSegments contains bucket keys)
     const localizedDropSegments = (data.dropSegments || []).map((s: any) => {
         const key = String(s.name || '').toLowerCase();
         switch (key) {
-            case 'skipped': return { ...s, name: tCleanup('skipped') };
-            case 'abandoned': return { ...s, name: tCleanup('abandoned') };
-            case 'almost': return { ...s, name: tCleanup('almost') };
-            case 'finished': return { ...s, name: tDashboard('completed') };
+            case 'skipped': return { ...s, name: t('skipped') };
+            case 'abandoned': return { ...s, name: t('abandoned') };
+            case 'almost': return { ...s, name: t('almost') };
+            case 'finished': return { ...s, name: t('finished') };
             default: return s;
         }
     });
@@ -393,8 +399,8 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('subtitlesDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        {data.subtitleData && data.subtitleData.length > 0 ? (
-                            <StandardPieChart data={data.subtitleData} nameKey="name" dataKey="value" />
+                        {localizedSubtitleData && localizedSubtitleData.length > 0 ? (
+                            <StandardPieChart data={localizedSubtitleData} nameKey="name" dataKey="value" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{tc('noData')}</p>
                         )}
