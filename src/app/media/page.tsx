@@ -12,6 +12,7 @@ import { GenreDistributionChart, GenreData } from "@/components/charts/GenreDist
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
+import { formatSize } from '@/lib/size';
 import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { buildExcludedMediaClause } from '@/lib/mediaPolicy';
 import { getSanitizedLibraryNames, GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
@@ -359,13 +360,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         console.warn('[MediaPage] Failed to aggregate playback history by library:', e);
     }
 
-    const formatSize = (bytes: bigint | number) => {
-        const n = typeof bytes === 'bigint' ? Number(bytes) : Number(bytes ?? 0);
-        const tb = n / (1024 ** 4);
-        if (tb >= 1) return { value: tb.toFixed(2), unit: "To" };
-        const gb = n / (1024 ** 3);
-        return { value: gb.toFixed(1), unit: "Go" };
-    };
+    // use shared size formatter
 
     const globalSize = formatSize(totalSizeBytes);
     const totalTB = `${globalSize.value} ${globalSize.unit}`;

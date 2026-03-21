@@ -208,22 +208,29 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     // Prefer using the video HEIGHT to determine canonical resolution (e.g. 1080p == height 1080).
                     // Some sources report anamorphic or unusual widths (e.g. 1440x1080) — using height avoids
                     // misclassifying 4:3/anamorphic material as lower-res because width thresholds were used.
-                    if (vs?.Height) {
-                        const h = vs.Height;
-                        if (h >= 2160) resolution = "4K";
-                        else if (h >= 1080) resolution = "1080p";
-                        else if (h >= 720) resolution = "720p";
-                        else if (h >= 480) resolution = "480p";
-                        else resolution = "SD";
-                    } else if (vs?.Width) {
-                        // Fallback: keep existing width-based thresholds if Height is not provided.
-                        const w = vs.Width;
-                        if (w >= 3800) resolution = "4K";
-                        else if (w >= 1800) resolution = "1080p";
-                        else if (w >= 1200) resolution = "720p";
-                        else if (w >= 700) resolution = "480p";
-                        else resolution = "SD";
-                    }
+                        // Delegate to resolution helper (prefer height, fallback to width)
+                        try {
+                            // lazy import to avoid circulars in some environments
+                            const { resolutionFromDimensions } = await import('@/lib/resolution');
+                            resolution = resolutionFromDimensions(vs?.Width ?? null, vs?.Height ?? null);
+                        } catch (e) {
+                            // fallback conservative behavior
+                            if (vs?.Height) {
+                                const h = vs.Height;
+                                if (h >= 2160) resolution = "4K";
+                                else if (h >= 1080) resolution = "1080p";
+                                else if (h >= 720) resolution = "720p";
+                                else if (h >= 480) resolution = "480p";
+                                else resolution = "SD";
+                            } else if (vs?.Width) {
+                                const w = vs.Width;
+                                if (w >= 3800) resolution = "4K";
+                                else if (w >= 1800) resolution = "1080p";
+                                else if (w >= 1200) resolution = "720p";
+                                else if (w >= 700) resolution = "480p";
+                                else resolution = "SD";
+                            }
+                        }
                 }
 
                 const durationMs = item.RunTimeTicks ? BigInt(Math.floor(Number(item.RunTimeTicks) / 10000)) : null;

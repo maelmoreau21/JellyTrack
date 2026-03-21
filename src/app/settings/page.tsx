@@ -55,25 +55,7 @@ export default function SettingsPage() {
 
     // Cron schedule state
     const [syncCronHour, setSyncCronHour] = useState(3);
-                </Card>
 
-                </section>
-                <section id="notifications" className="space-y-4">
-                    <Card className="app-surface mt-6">
-                        <CardHeader>
-                            <CardTitle>{t('notifications')}</CardTitle>
-                            <CardDescription>{t('notificationsDesc')}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground">{t('notificationsSummary') || 'Manage notification channels and alert thresholds on a dedicated page.'}</p>
-                            <div className="mt-4">
-                                <Link href="/settings/notifications" className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90">
-                                    {t('manageNotifications') || 'Gérer les notifications'}
-                                </Link>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </section>
     const handleCopyPluginUrl = async () => {
         try {
             await navigator.clipboard.writeText(pluginEndpoint);
