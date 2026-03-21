@@ -7,6 +7,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:i18n": "node scripts/check_i18n_media.js",
+    "retention:run": "node scripts/retention.js",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
