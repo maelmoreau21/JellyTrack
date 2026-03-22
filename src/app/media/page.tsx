@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { GenreDistributionChart, GenreData } from "@/components/charts/GenreDistributionChart";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTranslations } from 'next-intl/server';
+import type { Prisma } from '@prisma/client';
 import { normalizeResolution } from '@/lib/utils';
 import { formatSize } from '@/lib/size';
 import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
@@ -110,8 +111,9 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             const viewsMap = new Map<string, Record<string, unknown>>();
             [...folders, ...userViews].forEach((v: Record<string, unknown>) => {
                 if (v?.CollectionType === 'boxsets') return;
-                if (v && v.Name && !viewsMap.has(v.Name)) {
-                    viewsMap.set(v.Name, v);
+                const name = v?.Name ? String(v.Name) : undefined;
+                if (name && !viewsMap.has(name)) {
+                    viewsMap.set(name, v);
                 }
             });
             jellyfinViews = Array.from(viewsMap.values());
@@ -147,7 +149,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     const mediaWhere = buildMediaFilter();
 
     const parentItems = (await prisma.media.findMany({
-        where: mediaWhere,
+        where: mediaWhere as Prisma.MediaWhereInput,
         include: {
             playbackHistory: {
                 select: {
@@ -156,7 +158,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                 },
             },
         },
-    })) as ParentItem[];
+    })) as unknown as ParentItem[];
 
     // Aggregates for Series/Albums (simplified for brevity)
     // In a real app we'd fetch these efficiently
@@ -174,7 +176,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
             const episodes = (await prisma.media.findMany({
                 where: { type: 'Episode', parentId: { in: seasonIdList } },
                 include: { playbackHistory: { select: { durationWatched: true, playMethod: true } } },
-            })) as ParentItem[];
+            })) as unknown as ParentItem[];
             for (const ep of episodes) {
                 const sid = seasonToSeries.get(ep.parentId!);
                 if (!sid) continue;
@@ -299,9 +301,10 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     // Pre-populate library map with Jellyfin libraries so empty libraries appear in the UI
     if (jellyfinViews && jellyfinViews.length > 0) {
         for (const v of jellyfinViews) {
-            const name = v?.Name || tc('other');
+            const name = String(v?.Name || tc('other'));
             if (!libraryStatsMap.has(name)) {
-                libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: v?.CollectionType || null });
+                const coll = (typeof (v as Record<string, unknown>)['CollectionType'] === 'string') ? String((v as Record<string, unknown>)['CollectionType']) : null;
+                libraryStatsMap.set(name, { size: BigInt(0), duration: BigInt(0), items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: coll });
             }
         }
     }

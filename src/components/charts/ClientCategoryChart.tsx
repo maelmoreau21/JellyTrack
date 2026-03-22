@@ -58,7 +58,7 @@ export function ClientCategoryChart({ data }: ClientCategoryChartProps) {
                 <YAxis type="category" dataKey="category" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} width={70} />
                 <Tooltip
                     contentStyle={chartTooltipStyle}
-                    formatter={(value: number) => [`${value} sessions`, "Sessions"]}
+                    formatter={((value: any) => [`${value} sessions`, "Sessions"]) as any}
                     labelStyle={chartLabelStyle}
                     itemStyle={chartItemStyle}
                     cursor={{ fill: 'rgba(99, 102, 241, 0.06)' }}

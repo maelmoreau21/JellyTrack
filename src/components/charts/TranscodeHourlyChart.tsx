@@ -32,6 +32,13 @@ export function TranscodeHourlyChart({ data }: { data: HourlyMethodData[] }) {
         });
     };
 
+    const onLegendClick = (payload: unknown) => {
+        if (payload && typeof payload === 'object' && 'dataKey' in payload) {
+            const p = payload as { dataKey?: string };
+            toggleLegend({ dataKey: p.dataKey });
+        }
+    };
+
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
             <AreaChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
@@ -42,9 +49,9 @@ export function TranscodeHourlyChart({ data }: { data: HourlyMethodData[] }) {
                     contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' }}
                     labelStyle={{ color: '#a1a1aa' }}
                     itemStyle={{ color: '#e4e4e7' }}
-                    formatter={(value: number | string | null | undefined, name?: string) => [`${value} sessions`, name]}
+                    formatter={(value: any, name?: any) => [`${value} sessions`, name ?? ''] as [string, string]}
                 />
-                <Legend onClick={toggleLegend} wrapperStyle={{ fontSize: '12px', paddingTop: '10px', cursor: 'pointer' }} />
+                <Legend onClick={onLegendClick} wrapperStyle={{ fontSize: '12px', paddingTop: '10px', cursor: 'pointer' }} />
                 <Area
                     hide={hidden.has("DirectPlay")}
                     type="monotone"

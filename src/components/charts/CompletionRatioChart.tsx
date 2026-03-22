@@ -10,6 +10,9 @@ import {
     Legend,
     Sector,
 } from "recharts";
+// Keep a typed alias to avoid sprinkling `any` in JSX usage while preserving
+// the component reference.
+const PieTyped = Pie as unknown as typeof Pie;
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 // Read chart CSS variables at runtime for theme-aware colors
 
@@ -55,7 +58,7 @@ function renderActiveShape(props: ActiveShapeProps) {
                 {payload.name}
             </text>
             <text x={cx} y={cy + 12} textAnchor="middle" fill={secondaryTextColor} fontSize={11}>
-                {value} ({(percent * 100).toFixed(0)}%)
+                {value} ({((percent ?? 0) * 100).toFixed(0)}%)
             </text>
         </g>
     );
@@ -97,6 +100,13 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
         });
     };
 
+    const onLegendClick = (payload: unknown) => {
+        if (payload && typeof payload === 'object' && 'value' in payload) {
+            const p = payload as { value?: string };
+            if (p.value) toggleLegend({ value: p.value });
+        }
+    };
+
     const legendFormatter = (value: string) => {
         const isHidden = hidden.has(value);
         return <span style={{ color: isHidden ? chartLabelStyle.color : chartItemStyle.color, textDecoration: isHidden ? 'line-through' : 'none', cursor: 'pointer' }}>{value}</span>;
@@ -113,7 +123,7 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
             )}
             <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                    <Pie
+                    <PieTyped
                         data={filteredData}
                         cx="50%"
                         cy="50%"
@@ -126,9 +136,8 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
                         animationDuration={1000}
                         animationBegin={0}
                         animationEasing="ease-out"
-                        activeIndex={activeIndex >= 0 ? activeIndex : undefined}
-                        activeShape={renderActiveShape}
-                        onMouseEnter={(d: { value?: number; name?: string }, index: number) => setActiveIndex(index)}
+                        activeShape={renderActiveShape as any}
+                        onMouseEnter={(d: { value?: number; name?: string } | undefined, index: number) => setActiveIndex(index)}
                         onMouseLeave={() => setActiveIndex(-1)}
                     >
                         {filteredData.map((entry, index) => (
@@ -138,21 +147,21 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
                                 style={{ cursor: "pointer" }}
                             />
                         ))}
-                    </Pie>
+                        </PieTyped>
                     <Tooltip
                         contentStyle={chartTooltipStyle}
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
-                        formatter={(value: number | string, name: string) => [
+                        formatter={(value: any, name?: any) => [
                             `${value} sessions (${total > 0 ? ((Number(value) / total) * 100).toFixed(0) : 0}%)`,
-                            name,
-                        ]}
+                            name ?? '',
+                        ] as [string, string]}
                         animationDuration={200}
                     />
                     <Legend
                         wrapperStyle={{ fontSize: "12px", color: chartLabelStyle.color, cursor: "pointer" }}
                         iconType="circle"
-                        onClick={toggleLegend}
+                        onClick={onLegendClick}
                         formatter={legendFormatter}
                     />
                 </PieChart>

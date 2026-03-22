@@ -12,8 +12,9 @@ export async function POST() {
     try {
         const fileName = await performAutoBackup();
         return NextResponse.json({ success: true, message: await apiT('backupCreated', { fileName }), fileName });
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
         console.error("[Manual Backup Trigger] Error:", e);
-        return NextResponse.json({ error: e.message || await apiT('backupError') }, { status: 500 });
+        return NextResponse.json({ error: msg || await apiT('backupError') }, { status: 500 });
     }
 }

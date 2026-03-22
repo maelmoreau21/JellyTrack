@@ -6,7 +6,25 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 
-export default function SessionModal({ open, onClose, session }: { open: boolean; onClose: () => void; session: any }) {
+type TelemetryEvent = {
+  eventType?: string | null;
+  positionMs?: number | string | null;
+  metadata?: unknown;
+  createdAt?: string | number | null;
+};
+
+type SessionType = {
+  durationWatched?: number | string | null;
+  media?: { jellyfinMediaId?: string | null; title?: string | null } | null;
+  user?: { username?: string | null } | null;
+  clientName?: string | null;
+  pauseCount?: number | null;
+  audioChanges?: number | null;
+  subtitleChanges?: number | null;
+  telemetryEvents?: TelemetryEvent[];
+};
+
+export default function SessionModal({ open, onClose, session }: { open: boolean; onClose: () => void; session: SessionType }) {
   const t = useTranslations('logs');
   if (!open) return null;
 
@@ -47,7 +65,7 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
               <div className="mt-2">
                 <div className="text-xs text-zinc-400 mb-2">{t('timeline.title')}</div>
                 <div className="w-full h-12 bg-zinc-100 dark:bg-zinc-800 rounded relative">
-                  {(session.telemetryEvents || []).map((ev: any, i: number) => {
+                  {(session.telemetryEvents || []).map((ev: TelemetryEvent, i: number) => {
                     const pos = Number(ev.positionMs || 0);
                     const pct = Math.min(100, Math.max(0, Math.round((pos / durationMs) * 100)));
                     return (
@@ -56,21 +74,22 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
                   })}
                 </div>
 
-                <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {(session.telemetryEvents || []).map((ev: any, i: number) => {
+                    <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {(session.telemetryEvents || []).map((ev: TelemetryEvent, i: number) => {
                     let detail = '';
                     try {
-                      const md = typeof ev.metadata === 'string' ? JSON.parse(ev.metadata) : ev.metadata;
-                      if (md && md.from && md.to) {
-                        const fmt = (side: any) => {
+                      const md = typeof (ev.metadata as unknown) === 'string' ? JSON.parse(ev.metadata as string) : ev.metadata;
+                      if (md && typeof md === 'object' && 'from' in md && 'to' in md) {
+                        const fmt = (side: unknown) => {
                           if (!side) return '—';
-                          const label = side.language ?? (side.index !== undefined ? `#${side.index}` : String(side));
-                          const codec = side.codec ? ` (${side.codec})` : '';
+                          const s = side as Record<string, unknown>;
+                          const label = typeof s['language'] === 'string' ? s['language'] : (s['index'] !== undefined ? `#${String(s['index'])}` : String(side));
+                          const codec = typeof s['codec'] === 'string' ? ` (${s['codec']})` : '';
                           return `${label}${codec}`;
                         };
-                        detail = `${fmt(md.from)} → ${fmt(md.to)}`;
-                      } else if (md && md.from !== undefined && md.to !== undefined) {
-                        detail = `${md.from} → ${md.to}`;
+                        detail = `${fmt((md as Record<string, unknown>)['from'])} → ${fmt((md as Record<string, unknown>)['to'])}`;
+                      } else if (md && typeof md === 'object' && 'from' in md && 'to' in md) {
+                        detail = `${String((md as Record<string, unknown>)['from'])} → ${String((md as Record<string, unknown>)['to'])}`;
                       }
                     } catch {}
                     return (
@@ -79,8 +98,8 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
                         <div className="text-zinc-400 text-[11px]">{format(new Date(String(ev.createdAt || '')), 'PPpp')}</div>
                         <div className="mt-1 text-[11px]">{Math.floor(Number(ev.positionMs || 0) / 1000)}s{detail ? ` · ${detail}` : ''}</div>
                         <div className="mt-2 flex gap-2">
-                          <Button onClick={() => jumpTo(ev.positionMs)}>Jump</Button>
-                          <Button onClick={() => copyJump(ev.positionMs)}>Copy</Button>
+                          <Button onClick={() => jumpTo(Number(ev.positionMs || 0))}>Jump</Button>
+                          <Button onClick={() => copyJump(Number(ev.positionMs || 0))}>Copy</Button>
                         </div>
                       </div>
                     );

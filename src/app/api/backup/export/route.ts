@@ -15,7 +15,7 @@ export async function GET() {
         const users = await prisma.user.findMany();
         const media = await prisma.media.findMany();
         const playbackHistory = await prisma.playbackHistory.findMany();
-        const telemetryEvents = await (prisma as any).telemetryEvent.findMany();
+        const telemetryEvents = await prisma.telemetryEvent.findMany();
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
         const libraryRules = await loadLibraryRules();
         const systemHealth = await readSystemHealthState({ eventLimit: 200 });
@@ -46,8 +46,9 @@ export async function GET() {
             }
         });
 
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
         console.error("[BackupExport] Failed", e);
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        return NextResponse.json({ error: msg }, { status: 500 });
     }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { RefreshCw, CheckCircle2, AlertCircle, Save, Download, UploadCloud, Clock, Trash2, Zap, Database, Play, Plug, Copy, Eye, EyeOff, KeyRound, Unplug } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,33 @@ export default function SettingsPage() {
     const [backupMsg, setBackupMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Plugin-related UI state
+    const [pluginMsg, setPluginMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [pluginConnected, setPluginConnected] = useState(false);
+    const [pluginHasKey, setPluginHasKey] = useState(false);
+    const [pluginServerName, setPluginServerName] = useState<string | null>(null);
+    const [pluginVersion, setPluginVersion] = useState<string | null>(null);
+    const [pluginLastSeen, setPluginLastSeen] = useState<string | null>(null);
+    const [pluginApiKey, setPluginApiKey] = useState<string | null>(null);
+    const [pluginLoading, setPluginLoading] = useState(false);
+    const [showApiKey, setShowApiKey] = useState(false);
+    const [apiKeyCopied, setApiKeyCopied] = useState(false);
+    const [pluginUrlCopied, setPluginUrlCopied] = useState(false);
+
+    // Cron / scheduler UI state
+    const [isSavingCron, setIsSavingCron] = useState(false);
+    const [cronMsg, setCronMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [syncCronMinute, setSyncCronMinute] = useState(0);
+    const [backupCronHour, setBackupCronHour] = useState(3);
+    const [backupCronMinute, setBackupCronMinute] = useState(30);
+
+    // Backup management state
+    const [isTriggering, setIsTriggering] = useState(false);
+    const [autoBackups, setAutoBackups] = useState<Array<{ name: string; date: string; sizeMb: number }>>([]);
+    const [autoBackupMsg, setAutoBackupMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [isRestoringAuto, setIsRestoringAuto] = useState<string | null>(null);
+    const [isDeletingAuto, setIsDeletingAuto] = useState<string | null>(null);
 
     const [discordEnabled, setDiscordEnabled] = useState(false);
     const [discordUrl, setDiscordUrl] = useState("");
@@ -70,6 +97,94 @@ export default function SettingsPage() {
         }
         setPluginUrlCopied(true);
         setTimeout(() => setPluginUrlCopied(false), 2000);
+    };
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await fetch('/api/plugin/api-key');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!mounted) return;
+                    setPluginHasKey(!!data.hasApiKey);
+                    setPluginApiKey(data.apiKey || null);
+                    setPluginLastSeen(data.pluginLastSeen || null);
+                    setPluginVersion(data.pluginVersion || null);
+                    setPluginServerName(data.pluginServerName || null);
+                    setPluginConnected(!!data.isConnected);
+                }
+            } catch {}
+
+            try {
+                const listRes = await fetch('/api/backup/auto');
+                if (listRes.ok) {
+                    const listData = await listRes.json();
+                    if (!mounted) return;
+                    setAutoBackups(listData.backups || []);
+                }
+            } catch {}
+        })();
+        return () => { mounted = false; };
+    }, []);
+
+    const handleGeneratePluginKey = async (regenerate: boolean) => {
+        setPluginLoading(true);
+        setPluginMsg(null);
+        try {
+            const res = await fetch('/api/plugin/api-key', { method: 'POST' });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+                setPluginApiKey(data.apiKey || null);
+                setPluginHasKey(true);
+                setPluginMsg({ type: 'success', text: t('pluginKeyGenerated') || 'API key generated' });
+            } else {
+                setPluginMsg({ type: 'error', text: data.error || tc('error') });
+            }
+        } catch {
+            setPluginMsg({ type: 'error', text: tc('networkError') });
+        } finally {
+            setPluginLoading(false);
+        }
+    };
+
+    const handleRevokePluginKey = async () => {
+        if (!confirm(t('confirmRevokePlugin') || 'Revoke plugin API key?')) return;
+        setPluginLoading(true);
+        setPluginMsg(null);
+        try {
+            const res = await fetch('/api/plugin/api-key', { method: 'DELETE' });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+                setPluginApiKey(null);
+                setPluginHasKey(false);
+                setPluginMsg({ type: 'success', text: t('pluginKeyRevoked') || 'API key revoked' });
+            } else {
+                setPluginMsg({ type: 'error', text: data.error || tc('error') });
+            }
+        } catch {
+            setPluginMsg({ type: 'error', text: tc('networkError') });
+        } finally {
+            setPluginLoading(false);
+        }
+    };
+
+    const handleCopyApiKey = async () => {
+        if (!pluginApiKey) return;
+        try {
+            await navigator.clipboard.writeText(pluginApiKey);
+        } catch {
+            const textarea = document.createElement('textarea');
+            textarea.value = pluginApiKey;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+        setApiKeyCopied(true);
+        setTimeout(() => setApiKeyCopied(false), 2000);
     };
 
     const handleSaveSettings = async () => {

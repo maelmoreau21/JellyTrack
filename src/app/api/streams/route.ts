@@ -112,7 +112,8 @@ export async function GET() {
             count: liveStreams.length,
             totalBandwidthMbps,
         });
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
         console.error("[Live Streams API] Error:", e);
         return NextResponse.json({ streams: [], count: 0, totalBandwidthMbps: 0 });
     }

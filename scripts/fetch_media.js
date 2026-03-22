@@ -16,14 +16,14 @@ const url = process.argv[2] || 'http://localhost:3000/media';
     console.log('\n---- BODY START (first 2000 chars) ----\n');
     console.log(text.slice(0, 2000));
     if (text.length > 2000) console.log('\n---- (truncated) ----\n');
-  } catch (err) {
+    } catch (err) {
     try {
       console.error('FETCH_ERROR name:', err.name);
       console.error('FETCH_ERROR code:', err.code);
       console.error('FETCH_ERROR message:', err.message);
       console.error('FETCH_ERROR stack:', err.stack);
-      try { console.error('FETCH_ERROR raw:', JSON.stringify(err)); } catch (e) {}
-    } catch (e) {
+      try { console.error('FETCH_ERROR raw:', JSON.stringify(err)); } catch {}
+    } catch {
       console.error('FETCH_ERROR (unknown):', err);
     }
     process.exit(2);

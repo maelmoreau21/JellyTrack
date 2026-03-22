@@ -28,11 +28,14 @@ export async function getSanitizedLibraryNames() {
         cache: "no-store",
       });
       if (response.ok) {
-        const folders = await response.json();
-        jellyfinNames = (folders || [])
-          .filter((f: any) => f?.CollectionType !== 'boxsets')
-          .map((f: any) => f?.Name)
-          .filter((n: any): n is string => Boolean(n));
+        const foldersRaw = await response.json() as unknown;
+        if (Array.isArray(foldersRaw)) {
+          jellyfinNames = foldersRaw
+            .filter((f): f is Record<string, unknown> => typeof f === 'object' && f !== null)
+            .filter(f => (f['CollectionType'] as string | undefined) !== 'boxsets')
+            .map(f => String(f['Name'] ?? '').trim())
+            .filter((n): n is string => n.length > 0);
+        }
       }
     } catch (e) {
       console.error("[LibraryUtils] Failed to fetch Jellyfin VirtualFolders:", e);

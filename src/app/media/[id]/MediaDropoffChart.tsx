@@ -49,16 +49,16 @@ export default function MediaDropoffChart({ data }: { data: DropoffData[] }) {
                     contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#f4f4f5' }}
                     labelStyle={{ color: '#e4e4e7' }}
                     itemStyle={{ color: '#e4e4e7' }}
-                    formatter={(value: number, _name: string, props?: { payload?: { pct?: number; range?: string } }) => [
+                    formatter={(((value: any, _name: any, props?: { payload?: { pct?: number; range?: string } }) => [
                         `${value} session${value > 1 ? 's' : ''} (${props?.payload?.pct ?? 0}%)`,
-                        t('stoppedAt', { range: props?.payload?.range })
-                    ]}
+                        t('stoppedAt', { range: props?.payload?.range ?? '' })
+                    ]) as any)}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                     <LabelList
                         dataKey="pct"
                         position="top"
-                        formatter={(v: number) => v > 0 ? `${v}%` : ''}
+                        formatter={((v: any) => v > 0 ? `${v}%` : '') as any}
                         style={{ fill: '#a1a1aa', fontSize: 10 }}
                     />
                     {enrichedData.map((_, index) => {

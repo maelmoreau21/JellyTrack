@@ -1,4 +1,5 @@
-﻿const fs = require("fs");
+﻿/* eslint-disable @typescript-eslint/no-require-imports */
+const fs = require("fs");
 
 // Just write the full nl.json directly
 const nl = require("./nl-data.json");

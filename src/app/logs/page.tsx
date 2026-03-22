@@ -134,7 +134,7 @@ function detectWatchParties(logs: SafeLog[]): Map<string, string> {
 export default async function LogsPage({
     searchParams
 }: {
-    searchParams: Promise<{ query?: string, sort?: string, page?: string, type?: string, cols?: string, hideZapped?: string, client?: string, audio?: string, subtitle?: string, dateFrom?: string, dateTo?: string }>
+    searchParams: Promise<{ query?: string, sort?: string, page?: string, type?: string, cols?: string, colsState?: string, hideZapped?: string, client?: string, audio?: string, subtitle?: string, dateFrom?: string, dateTo?: string }>
 }) {
     const params = await searchParams;
     const tl = await getTranslations('logs');
@@ -372,10 +372,10 @@ export default async function LogsPage({
 
     // Parse optional `colsState` query param (format: key:width,key2:width2)
     const rawColsState = typeof params.colsState === 'string' ? params.colsState : '';
-    const initialColumns = rawColsState ? rawColsState.split(',').map(s => {
+    const initialColumns = rawColsState ? rawColsState.split(',').map((s: string) => {
         const [k, w] = s.split(':');
         return { key: (k || '').trim(), width: Number(w || 0) || 0 };
-    }).filter(c => c.key && visibleColumns.includes(c.key)) : undefined;
+    }).filter((c: { key: string; width: number }) => c.key && visibleColumns.includes(c.key as Column)) : undefined;
 
     return (
         <div className="flex-col md:flex dashboard-page">

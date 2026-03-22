@@ -23,7 +23,7 @@ export default function MediaSearchModal({ open, onClose, query }: { open: boole
           const json = await res.json();
           if (mounted) setResults(json.media || []);
         }
-      } catch (e) {
+      } catch {
         // silent
       } finally {
         if (mounted) setLoading(false);

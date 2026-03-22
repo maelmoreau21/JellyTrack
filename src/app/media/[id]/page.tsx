@@ -112,7 +112,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
     // Fetch children items (Seasons for Series, Episodes for Season, Tracks for MusicAlbum)
     const isParentType = ['Series', 'Season', 'MusicAlbum'].includes(media.type);
-    let children: { jellyfinMediaId: string; title: string; type: string; resolution: string | null; normalizedResolution: string | null; durationMs: bigint | null; _count: number; _totalDuration: number }[] = [];
+    let children: { jellyfinMediaId: string; title: string; type: string; resolution?: string | null; normalizedResolution?: string | null; durationMs?: bigint | null; _count: number; _totalDuration: number }[] = [];
     // For Series, we also need grandchildren (Episodes via Seasons) for accurate stats
     let allDescendantHistory: PlaybackHistory[] = [];
     if (isParentType) {
@@ -163,8 +163,8 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
             }));
             // Collect all descendant playback history for charts
             allDescendantHistory = [
-                ...childMedia.flatMap(c => c.playbackHistory),
-                ...grandchildMedia.flatMap(gc => gc.playbackHistory),
+                ...childMedia.flatMap(c => c.playbackHistory || []),
+                ...grandchildMedia.flatMap(gc => gc.playbackHistory || []),
             ];
         } else {
             children = childMedia.map(c => ({
@@ -256,10 +256,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         });
 
         // Build per-session timelines for detail view
-        const eventsByPlayback = new Map<string, { eventType: string; positionMs: number; metadata?: unknown }[]>();
+        const eventsByPlayback = new Map<string, { eventType: TimelineEvent["eventType"]; positionMs: number; metadata?: unknown }[]>();
         for (const e of rawEvents) {
             const list = eventsByPlayback.get(e.playbackId) || [];
-            list.push({ eventType: e.eventType, positionMs: Number(e.positionMs), metadata: e.metadata || null });
+            list.push({ eventType: e.eventType as TimelineEvent["eventType"], positionMs: Number(e.positionMs), metadata: e.metadata || null });
             eventsByPlayback.set(e.playbackId, list);
         }
         sessionTimelines = effectiveHistory
@@ -278,10 +278,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     // Unique users who watched this
     const userMap = new Map<string, { username: string; jellyfinUserId: string; sessions: number; totalSeconds: number }>();
     effectiveHistory.forEach((h: PlaybackHistory) => {
-        if (!h.user) return;
-        const uid = h.user.jellyfinUserId;
+        const uid = h.user?.jellyfinUserId;
+        if (!uid) return;
         if (!userMap.has(uid)) {
-            userMap.set(uid, { username: h.user.username || tc('deletedUser'), jellyfinUserId: uid, sessions: 0, totalSeconds: 0 });
+            userMap.set(uid, { username: h.user?.username || tc('deletedUser'), jellyfinUserId: uid, sessions: 0, totalSeconds: 0 });
         }
         const entry = userMap.get(uid)!;
         entry.sessions++;

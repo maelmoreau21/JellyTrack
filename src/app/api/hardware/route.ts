@@ -36,8 +36,9 @@ export async function GET() {
                 main: cpuTemp
             }
         });
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
         console.error("[Hardware API] Error:", e);
-        return NextResponse.json({ error: "Cannot fetch hardware stats" }, { status: 500 });
+        return NextResponse.json({ error: msg || "Cannot fetch hardware stats" }, { status: 500 });
     }
 }

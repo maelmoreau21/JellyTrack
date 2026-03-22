@@ -36,8 +36,9 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true, message: await apiT('killStreamSuccess') }, { status: 200 });
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
         console.error("[KillStream] Exception:", e);
-        return NextResponse.json({ error: e.message || await apiT('internalError') }, { status: 500 });
+        return NextResponse.json({ error: msg || await apiT('internalError') }, { status: 500 });
     }
 }

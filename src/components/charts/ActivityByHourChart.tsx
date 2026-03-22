@@ -77,9 +77,9 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
             {selectedEntry && (
                 <div className="mb-2 flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/10 dark:bg-cyan-400/10 border border-cyan-500/20 text-xs animate-in fade-in slide-in-from-top-1 duration-200">
                     <span className="font-semibold text-cyan-600 dark:text-cyan-300">{selectedEntry.hour}</span>
-                    <span className="text-zinc-600 dark:text-zinc-300">{selectedEntry.count} sessions</span>
+                    <span className="text-zinc-600 dark:text-zinc-300">{(selectedEntry.count ?? selectedEntry.value ?? 0)} sessions</span>
                     <span className="text-zinc-400">
-                        ({selectedEntry.count > avg ? '+' : ''}{selectedEntry.count - avg} vs moy.)
+                        ({( (selectedEntry.count ?? selectedEntry.value ?? 0) > avg ? '+' : '' )}{(selectedEntry.count ?? selectedEntry.value ?? 0) - avg} vs moy.)
                     </span>
                     <button onClick={() => setSelectedHour(null)} className="ml-auto text-zinc-400 hover:text-zinc-200 text-lg leading-none">×</button>
                 </div>
@@ -89,11 +89,10 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                 <BarChart
                     data={data}
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                    onClick={(e?: { activeLabel?: string }) => {
-                        if (e?.activeLabel) {
-                            setSelectedHour(prev => prev === e.activeLabel ? null : e.activeLabel);
-                        }
-                    }}
+                    onClick={(e: { activeLabel?: unknown } | undefined) => {
+                            const label = e?.activeLabel !== undefined ? String((e as { activeLabel?: unknown }).activeLabel) : undefined;
+                            if (label !== undefined) setSelectedHour(prev => prev === label ? null : label);
+                        }}
                     style={{ cursor: "pointer" }}
                 >
                     <defs>
@@ -130,7 +129,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
-                        formatter={(value: number | string) => [`${value} sessions`, "Activité"]}
+                        formatter={(value: any) => [`${value} sessions`, "Activité"]} 
                         animationDuration={200}
                     />
                     {/* Average reference line (only when meaningful) */}

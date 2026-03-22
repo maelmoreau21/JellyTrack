@@ -16,7 +16,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
   const [bucketMs, setBucketMs] = useState<number>(0); // 0 = exact positions
 
   const isTranscode = String(log.playMethod || "").toLowerCase().includes("transcode");
-  const isParty = !!log.partyId;
+  const isParty = !!(log as any).partyId;
   const isAudioMedia = log.media?.type ? (String(log.media.type).toLowerCase().includes('audio') || String(log.media.type).toLowerCase() === 'track') : false;
 
   const events = useMemo<SafeTelemetryEvent[]>(() => {
@@ -66,7 +66,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
   const normalizedResolution = log.media?.resolution ? normalizeResolution(log.media.resolution) : null;
 
-  const getEventMeta = (type: string | undefined) => {
+  const getEventMeta = (type: string | null | undefined) => {
     switch (type) {
       case 'pause': return { color: 'bg-amber-600', label: t('timeline.label.pause'), icon: '⏸' };
       case 'audio_change': return { color: 'bg-sky-500', label: t('timeline.label.audio_change'), icon: '🔊' };
@@ -253,8 +253,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
               ? (
                 <span className="text-amber-500/80 animate-pulse text-xs uppercase tracking-wider font-semibold flex flex-row items-center justify-end gap-1"><span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>Active</span>
               )
-              : log.durationWatched > 0
-                ? `${Math.floor(log.durationWatched / 60)} min`
+              : (log.durationWatched ?? 0) > 0
+                ? `${Math.floor((log.durationWatched ?? 0) / 60)} min`
                 : '0 min'
             }
           </TableCell>

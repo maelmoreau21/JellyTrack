@@ -62,7 +62,7 @@ export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
                     labelStyle={chartLabelStyle}
                     itemStyle={chartItemStyle}
                     cursor={{ fill: 'rgba(16, 185, 129, 0.06)', radius: 4 }}
-                    formatter={(value: number) => [value, "Sessions"]}
+                    formatter={((value: any) => [value, "Sessions"]) as any}
                     animationDuration={200}
                 />
                 <Bar

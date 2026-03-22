@@ -137,7 +137,7 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                     />
                     <Tooltip
                         contentStyle={chartTooltipStyle}
-                        formatter={formatTooltip}
+                        formatter={formatTooltip as any}
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}

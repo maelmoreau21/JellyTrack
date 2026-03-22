@@ -10,6 +10,7 @@ import {
     Legend,
     Sector,
 } from "recharts";
+const PieTyped = Pie as unknown as typeof Pie;
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 import { chartItemStyle, chartLabelStyle, chartPalette, chartTooltipStyle } from "@/lib/chartTheme";
 
@@ -38,7 +39,7 @@ type PlatformActiveShapeProps = {
     percent?: number;
 };
 
-function renderActiveShape(props: PlatformActiveShapeProps) {
+    function renderActiveShape(props: PlatformActiveShapeProps) {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value, percent } = props;
     return (
         <g>
@@ -54,7 +55,7 @@ function renderActiveShape(props: PlatformActiveShapeProps) {
                 {payload.name}
             </text>
             <text x={cx} y={cy + 12} textAnchor="middle" fill="#94a3b8" fontSize={11}>
-                {value} ({(percent * 100).toFixed(0)}%)
+                {value} ({((percent ?? 0) * 100).toFixed(0)}%)
             </text>
         </g>
     );
@@ -86,6 +87,13 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
         });
     };
 
+    const onLegendClick = (payload: unknown) => {
+        if (payload && typeof payload === 'object' && 'value' in payload) {
+            const p = payload as { value?: string };
+            if (p.value) toggleLegend({ value: p.value });
+        }
+    };
+
     const legendFormatter = (value: string) => {
         const isHidden = hidden.has(value);
         return <span style={{ color: isHidden ? '#52525b' : '#e5eefb', textDecoration: isHidden ? 'line-through' : 'none', cursor: 'pointer' }}>{value}</span>;
@@ -102,7 +110,7 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
             )}
             <ResponsiveContainer width="100%" height={300} minHeight={300}>
                 <PieChart>
-                    <Pie
+                    <PieTyped
                         data={filteredData}
                         cx="50%"
                         cy="50%"
@@ -114,8 +122,7 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         animationDuration={1000}
                         animationBegin={0}
                         animationEasing="ease-out"
-                        activeIndex={activeIndex >= 0 ? activeIndex : undefined}
-                        activeShape={renderActiveShape}
+                        activeShape={renderActiveShape as any}
                         onMouseEnter={(d: { value?: number; name?: string }, index: number) => setActiveIndex(index)}
                         onMouseLeave={() => setActiveIndex(-1)}
                     >
@@ -129,20 +136,20 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                                 />
                             );
                         })}
-                    </Pie>
+                    </PieTyped>
                     <Tooltip
                         contentStyle={chartTooltipStyle}
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
                         animationDuration={200}
-                        formatter={(value: number | string, name: string) => [`${value} (${total > 0 ? ((Number(value) / total) * 100).toFixed(0) : 0}%)`, name]}
+                        formatter={(value: any, name?: any) => [`${value} (${total > 0 ? ((Number(value) / total) * 100).toFixed(0) : 0}%)`, name ?? ''] as [string, string]}
                     />
                     <Legend
                         verticalAlign="bottom"
                         height={36}
                         iconType="circle"
                         wrapperStyle={{ fontSize: '12px', cursor: 'pointer' }}
-                        onClick={toggleLegend}
+                        onClick={onLegendClick}
                         formatter={legendFormatter}
                     />
                 </PieChart>

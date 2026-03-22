@@ -24,12 +24,17 @@ export async function GET() {
 
         return NextResponse.json({ backups: files });
 
-    } catch (e: any) {
+    } catch (e: unknown) {
         // Directory might not exist yet
-        if (e.code === 'ENOENT') {
+        let code: unknown = undefined;
+        if (e && typeof e === 'object' && 'code' in e) {
+            code = (e as { code?: unknown }).code;
+        }
+        if (typeof code === 'string' && code === 'ENOENT') {
             return NextResponse.json({ backups: [] });
         }
+        const msg = e instanceof Error ? e.message : String(e);
         console.error("[Auto-Backup List] Error:", e);
-        return NextResponse.json({ error: e.message }, { status: 500 });
+        return NextResponse.json({ error: msg }, { status: 500 });
     }
 }

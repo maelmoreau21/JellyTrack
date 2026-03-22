@@ -731,7 +731,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
           city: dbStream.city || "Unknown",
           progressPercent,
           isPaused: payload['isPaused'] === true || payload['IsPaused'] === true,
-          parentItemId: itemMedia.parentId,
+          parentItemId: itemMedia.parentId ?? null,
           audioLanguage: dbStream.audioLanguage || audioLang || null,
           audioCodec: dbStream.audioCodec || audioC || null,
           subtitleLanguage: dbStream.subtitleLanguage || subLang || null,

@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
             // Restore telemetry events (if present in backup)
             if (telemetryEvents?.length > 0) {
                 for (const ev of telemetryEvents) {
-                    await (tx as any).telemetryEvent.create({
+                    await tx.telemetryEvent.create({
                         data: {
                             id: ev.id,
                             playbackId: ev.playbackId,
@@ -141,8 +141,6 @@ export async function POST(req: NextRequest) {
                         discordAlertsEnabled: settings.discordAlertsEnabled ?? false,
                         discordAlertCondition: settings.discordAlertCondition ?? "ALL",
                         excludedLibraries: settings.excludedLibraries ?? [],
-                        monitorIntervalActive: settings.monitorIntervalActive ?? 1000,
-                        monitorIntervalIdle: settings.monitorIntervalIdle ?? 5000,
                         syncCronHour: settings.syncCronHour ?? 3,
                         syncCronMinute: settings.syncCronMinute ?? 0,
                         backupCronHour: settings.backupCronHour ?? 3,
@@ -156,8 +154,6 @@ export async function POST(req: NextRequest) {
                         discordAlertsEnabled: settings.discordAlertsEnabled ?? false,
                         discordAlertCondition: settings.discordAlertCondition ?? "ALL",
                         excludedLibraries: settings.excludedLibraries ?? [],
-                        monitorIntervalActive: settings.monitorIntervalActive ?? 1000,
-                        monitorIntervalIdle: settings.monitorIntervalIdle ?? 5000,
                         syncCronHour: settings.syncCronHour ?? 3,
                         syncCronMinute: settings.syncCronMinute ?? 0,
                         backupCronHour: settings.backupCronHour ?? 3,
@@ -179,8 +175,9 @@ export async function POST(req: NextRequest) {
         console.log(`[Auto-Backup Restore] Successfully restored from ${sanitized}`);
         return NextResponse.json({ success: true, message: await apiT('restoreSuccess', { fileName: sanitized }) });
 
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
         console.error("[Auto-Backup Restore] Error:", e);
-        return NextResponse.json({ error: e.message || await apiT('restoreError') }, { status: 500 });
+        return NextResponse.json({ error: msg || await apiT('restoreError') }, { status: 500 });
     }
 }

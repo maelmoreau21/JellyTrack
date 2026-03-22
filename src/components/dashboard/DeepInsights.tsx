@@ -8,7 +8,9 @@ import { normalizeResolution } from '@/lib/utils';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import { GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
 
-function buildDateFilter(timeRange: string): any {
+type CategorizedItem = { title?: string; name?: string; type?: string; plays?: number; duration?: number };
+
+function buildDateFilter(timeRange: string): Record<string, unknown> | undefined {
     const now = new Date();
     if (timeRange === "24h") {
         return { gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) };
@@ -23,8 +25,8 @@ function buildDateFilter(timeRange: string): any {
     return undefined;
 }
 
-function buildMediaTypeFilter(type: string | undefined, excludedLibraries: string[]): any {
-    const AND: any[] = [];
+function buildMediaTypeFilter(type: string | undefined, excludedLibraries: string[]): Record<string, unknown> {
+    const AND: Array<Record<string, unknown>> = [];
     if (type === 'movie') AND.push({ type: "Movie" });
     else if (type === 'series') AND.push({ type: { in: ["Series", "Episode"] } });
     else if (type === 'music') AND.push({ type: { in: ["Audio", "Track"] } });
@@ -55,7 +57,7 @@ const getDeepInsights = unstable_cache(
         // Build date and media filters from parameters
         const dateFilter = buildDateFilter(timeRange);
         const mediaWhere = buildMediaTypeFilter(type, excludedLibraries);
-        const historyWhere: any = {};
+        const historyWhere: Record<string, unknown> = {};
         if (dateFilter) historyWhere.startedAt = dateFilter;
         if (Object.keys(mediaWhere).length > 0) historyWhere.media = mediaWhere;
 
@@ -110,7 +112,7 @@ const getDeepInsights = unstable_cache(
         }
 
         // === DEDICATED SERIES AGGREGATION ===
-        const episodeHistoryWhere: any = { media: { type: 'Episode' } };
+        const episodeHistoryWhere: Record<string, unknown> = { media: { type: 'Episode' } };
         if (dateFilter) episodeHistoryWhere.startedAt = dateFilter;
 
         const allEpisodeHistory = await prisma.playbackHistory.groupBy({
@@ -142,7 +144,7 @@ const getDeepInsights = unstable_cache(
         });
 
         // === DEDICATED ALBUM AGGREGATION ===
-        const audioHistoryWhere: any = { media: { type: 'Audio' } };
+        const audioHistoryWhere: Record<string, unknown> = { media: { type: 'Audio' } };
         if (dateFilter) audioHistoryWhere.startedAt = dateFilter;
 
         const allAudioHistory = await prisma.playbackHistory.groupBy({
@@ -172,7 +174,7 @@ const getDeepInsights = unstable_cache(
         });
 
         // Group movies, books, genres from the top 200
-        const categorized = { movie: [] as any[], series: [] as any[], album: [] as any[], book: [] as any[] };
+        const categorized: { movie: CategorizedItem[]; series: CategorizedItem[]; album: CategorizedItem[]; book: CategorizedItem[] } = { movie: [], series: [], album: [], book: [] };
         const genreAgg = new Map<string, { plays: number; duration: number }>();
         const directorAgg = new Map<string, { plays: number; duration: number }>();
         const actorAgg = new Map<string, { plays: number; duration: number }>();
@@ -284,7 +286,7 @@ const getDeepInsights = unstable_cache(
 
         const resolutionChartData = Array.from(resolutionMap.entries())
             .map(([name, value]) => ({ name, value }))
-            .sort((a: any, b: any) => b.value - a.value)
+            .sort((a, b) => b.value - a.value)
             .slice(0, 8);
 
         // --- Pro Telemetry: Audio & Subtitle distribution ---
@@ -327,7 +329,7 @@ const getDeepInsights = unstable_cache(
         });
         const audioChartData = Array.from(audioMap.entries())
             .map(([name, value]) => ({ name, value }))
-            .sort((a: any, b: any) => b.value - a.value)
+            .sort((a, b) => b.value - a.value)
             .slice(0, 8);
 
         const subtitleRows = await prisma.playbackHistory.findMany({
@@ -362,7 +364,7 @@ const getDeepInsights = unstable_cache(
         });
         const subtitleChartData = Array.from(subtitleMap.entries())
             .map(([name, value]) => ({ name, value }))
-            .sort((a: any, b: any) => b.value - a.value)
+            .sort((a, b) => b.value - a.value)
             .slice(0, 8);
 
         // --- Pro Telemetry: Device Ecosystem ---
@@ -397,7 +399,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
     const t = await getTranslations('deepInsights');
     const tGranular = await getTranslations('granular');
 
-    const renderCategory = (title: string, items: any[], empty: string, icon?: React.ReactNode) => (
+    const renderCategory = (title: string, items: CategorizedItem[], empty: string, icon?: React.ReactNode) => (
         <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
             <CardHeader className="pb-2">
                 <CardTitle className="text-md flex items-center gap-2">{icon}{title}</CardTitle>
@@ -406,7 +408,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                 <div className="space-y-3">
                     {items.length === 0 ? <p className="text-xs text-muted-foreground">{empty}</p> : null}
                     {items.map((m, i) => {
-                        const label = m.title || m.name;
+                        const label = m.title || m.name || '';
                         return (
                             <Link 
                                 key={i} 
@@ -448,7 +450,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                     </CardHeader>
                     <CardContent>
                         <div className="grid gap-2 md:grid-cols-2">
-                            {data.topGenres.map((g: any, i: number) => {
+                            {data.topGenres.map((g: { name: string; plays?: number; duration?: number }, i: number) => {
                                 const maxPlays = data.topGenres[0]?.plays || 1;
                                 const pct = Math.round(((g?.plays || 0) / maxPlays) * 100);
                                 const colors = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-cyan-500', 'bg-yellow-500', 'bg-red-500', 'bg-indigo-500', 'bg-teal-500'];

@@ -65,26 +65,24 @@ export async function POST(req: NextRequest) {
                 await tx.playbackHistory.createMany({ data: playbackHistory });
             }
             if (telemetryEvents && telemetryEvents.length > 0) {
-                await (tx as any).telemetryEvent.createMany({ data: telemetryEvents });
+                await tx.telemetryEvent.createMany({ data: telemetryEvents });
             }
             if (settings) {
                 // Strip legacy jellyfinUrl/jellyfinApiKey fields (now env vars)
-                const { ...cleanSettings } = settings as any;
+                const cs = settings as Record<string, unknown>;
                 await tx.globalSettings.create({
                     data: {
-                        id: cleanSettings.id || "global",
-                        discordWebhookUrl: cleanSettings.discordWebhookUrl ?? null,
-                        discordAlertCondition: cleanSettings.discordAlertCondition ?? "ALL",
-                        discordAlertsEnabled: cleanSettings.discordAlertsEnabled ?? false,
-                        excludedLibraries: cleanSettings.excludedLibraries ?? [],
-                        monitorIntervalActive: cleanSettings.monitorIntervalActive ?? 1000,
-                        monitorIntervalIdle: cleanSettings.monitorIntervalIdle ?? 5000,
-                        syncCronHour: cleanSettings.syncCronHour ?? 3,
-                        syncCronMinute: cleanSettings.syncCronMinute ?? 0,
-                        backupCronHour: cleanSettings.backupCronHour ?? 3,
-                        backupCronMinute: cleanSettings.backupCronMinute ?? 30,
-                        defaultLocale: cleanSettings.defaultLocale ?? "fr",
-                        timeFormat: cleanSettings.timeFormat ?? "24h",
+                        id: (cs['id'] as string) || "global",
+                        discordWebhookUrl: (cs['discordWebhookUrl'] as string) ?? null,
+                        discordAlertCondition: (cs['discordAlertCondition'] as string) ?? "ALL",
+                        discordAlertsEnabled: (cs['discordAlertsEnabled'] as boolean) ?? false,
+                        excludedLibraries: (cs['excludedLibraries'] as string[]) ?? [],
+                        syncCronHour: (cs['syncCronHour'] as number) ?? 3,
+                        syncCronMinute: (cs['syncCronMinute'] as number) ?? 0,
+                        backupCronHour: (cs['backupCronHour'] as number) ?? 3,
+                        backupCronMinute: (cs['backupCronMinute'] as number) ?? 30,
+                        defaultLocale: (cs['defaultLocale'] as string) ?? "fr",
+                        timeFormat: (cs['timeFormat'] as string) ?? "24h",
                     }
                 });
             }
@@ -101,8 +99,9 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true }, { status: 200 });
 
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
         console.error("[BackupImport] Restauration failed:", e);
-        return NextResponse.json({ error: e.message || "Failed to restore backup" }, { status: 500 });
+        return NextResponse.json({ error: msg || "Failed to restore backup" }, { status: 500 });
     }
 }

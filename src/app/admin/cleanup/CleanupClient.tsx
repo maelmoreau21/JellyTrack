@@ -86,14 +86,18 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
         ? initialData.abandonedMedia
         : initialData.abandonedMedia.filter(m => m.type === abandonFilter);
 
-    const ghostTypeCounts = { Movie: 0, Series: 0, MusicAlbum: 0 };
+    const ghostTypeCounts: Record<string, number> = { Movie: 0, Series: 0, MusicAlbum: 0 };
     initialData.ghostMedia.forEach(m => {
-        if (m.type in ghostTypeCounts) (ghostTypeCounts as any)[m.type]++;
+        if (m.type in ghostTypeCounts) {
+            ghostTypeCounts[m.type] = (ghostTypeCounts[m.type] || 0) + 1;
+        }
     });
 
-    const abandonTypeCounts = { Movie: 0, Episode: 0, Audio: 0 };
+    const abandonTypeCounts: Record<string, number> = { Movie: 0, Episode: 0, Audio: 0 };
     initialData.abandonedMedia.forEach(m => {
-        if (m.type in abandonTypeCounts) (abandonTypeCounts as any)[m.type]++;
+        if (m.type in abandonTypeCounts) {
+            abandonTypeCounts[m.type] = (abandonTypeCounts[m.type] || 0) + 1;
+        }
     });
 
     return (

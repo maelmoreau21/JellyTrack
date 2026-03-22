@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /*
  * Simple retention script to prune old telemetry events.
  * Usage: `RETENTION_DAYS=90 node scripts/retention.js`

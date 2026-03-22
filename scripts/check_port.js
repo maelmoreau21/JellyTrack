@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Check TCP connection to host:port
 const net = require('net');
 const host = process.argv[2] || '127.0.0.1';
@@ -25,7 +26,7 @@ socket.on('error', (err) => {
   process.exit(2);
 });
 
-socket.on('close', (hadError) => {
+socket.on('close', () => {
   if (!connected) {
     console.error('CLOSED without connection');
     process.exit(2);

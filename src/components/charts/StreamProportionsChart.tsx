@@ -33,7 +33,7 @@ export function StreamProportionsChart({ data }: { data: { name: string, value: 
                     contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' }}
                     labelStyle={{ color: '#a1a1aa' }}
                     itemStyle={{ color: '#e4e4e7' }}
-                    formatter={(value: number | string) => [`${value} sessions`, 'Total']}
+                    formatter={(value: any, name?: any) => [`${value} sessions`, name ?? 'Total'] as [string, string]}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
             </PieChart>

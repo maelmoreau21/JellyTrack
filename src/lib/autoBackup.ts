@@ -31,7 +31,7 @@ export async function performAutoBackup(): Promise<string> {
     const users = await prisma.user.findMany();
     const media = await prisma.media.findMany();
     const playbackHistory = await prisma.playbackHistory.findMany();
-    const telemetryEvents = await (prisma as any).telemetryEvent.findMany();
+    const telemetryEvents = await prisma.telemetryEvent.findMany();
     const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
     const libraryRules = await loadLibraryRules();
     const systemHealth = await readSystemHealthState();
@@ -95,13 +95,14 @@ export async function performAutoBackup(): Promise<string> {
         details: { fileName },
     });
     return fileName;
-    } catch (error: any) {
-        await markBackupFinished({ success: false, error: error?.message || "Backup error" });
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        await markBackupFinished({ success: false, error: msg || "Backup error" });
         await appendHealthEvent({
             source: "backup",
             kind: "error",
             message: "Échec de sauvegarde automatique.",
-            details: { error: error?.message || "Backup error" },
+            details: { error: msg || "Backup error" },
         });
         throw error;
     }

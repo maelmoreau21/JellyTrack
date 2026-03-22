@@ -6,6 +6,9 @@ import { inferLibraryKey, isLibraryExcluded } from "@/lib/mediaPolicy";
 import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
 import { cleanupOrphanedSessions } from "@/lib/cleanup";
 import { normalizeResolution } from '@/lib/utils';
+// Lightweight local types for incoming Jellyfin payloads
+type JellyfinPerson = { type?: string; Type?: string; name?: string; Name?: string };
+type Studio = { name?: string; Name?: string };
 
 const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -376,9 +379,17 @@ export async function POST(req: Request) {
                 parentId: parentItemId,
                 artist: media.artist || media.Artist || media.albumArtist || media.AlbumArtist || null,
                 libraryName: media.libraryName || media.LibraryName || null,
-                directors: (media.people || media.People || []).filter((p: any) => p.type === "Director" || p.Type === "Director").map((p: any) => p.name || p.Name),
-                actors: (media.people || media.People || []).filter((p: any) => p.type === "Actor" || p.Type === "Actor").map((p: any) => p.name || p.Name),
-                studios: (media.studios || media.Studios || []).map((s: any) => s.name || s.Name),
+                directors: ((media.people || media.People || []) as JellyfinPerson[])
+                    .filter((p) => (p.type === "Director" || p.Type === "Director"))
+                    .map((p) => p.name || p.Name)
+                    .filter((x): x is string => !!x),
+                actors: ((media.people || media.People || []) as JellyfinPerson[])
+                    .filter((p) => (p.type === "Actor" || p.Type === "Actor"))
+                    .map((p) => p.name || p.Name)
+                    .filter((x): x is string => !!x),
+                studios: ((media.studios || media.Studios || []) as Studio[])
+                    .map((s) => s.name || s.Name)
+                    .filter((x): x is string => !!x),
             });
 
             // Library exclusion check
@@ -1151,7 +1162,7 @@ export async function POST(req: Request) {
                 redis.setex(lastTickKey, 86400, positionTicks.toString())
             ]);
 
-            const updates: Record<string, any> = {
+            const updates: Record<string, unknown> = {
                 durationWatched: Math.round(curDur)
             };
             const telemetryEvents: { eventType: string; positionMs: bigint; metadata?: string }[] = [];
@@ -1173,8 +1184,8 @@ export async function POST(req: Request) {
             if (audioStreamIndex !== undefined && audioStreamIndex !== null) {
                 const audioKey = `audio:${activePlayback.id}`;
                 const prevRaw = await redis.get(audioKey);
-                let prevObj: any = null;
-                let prevIndex: any = null;
+                let prevObj: unknown = null;
+                let prevIndex: unknown = null;
                 if (prevRaw !== null) {
                     try {
                         prevObj = JSON.parse(prevRaw);
@@ -1193,8 +1204,11 @@ export async function POST(req: Request) {
                 if (prevRaw !== null && String(prevIndex) !== String(audioStreamIndex)) {
                     updates.audioChanges = { increment: 1 };
                     if (positionMs > 0) {
+                        const prevObjRec = prevObj && typeof prevObj === 'object' ? (prevObj as Record<string, unknown>) : null;
+                        const prevLanguage = prevObjRec && typeof prevObjRec.language === 'string' ? prevObjRec.language : null;
+                        const prevCodec = prevObjRec && typeof prevObjRec.codec === 'string' ? prevObjRec.codec : null;
                         const metadata = {
-                            from: { index: prevIndex ?? null, language: prevObj?.language ?? null, codec: prevObj?.codec ?? null },
+                            from: { index: prevIndex ?? null, language: prevLanguage, codec: prevCodec },
                             to: { index: audioStreamIndex, language: resolvedAudioLanguage ?? null, codec: resolvedAudioCodec ?? null },
                         };
                         telemetryEvents.push({ eventType: "audio_change", positionMs, metadata: JSON.stringify(metadata) });
@@ -1209,8 +1223,8 @@ export async function POST(req: Request) {
             if (subtitleStreamIndex !== undefined && subtitleStreamIndex !== null) {
                 const subKey = `sub:${activePlayback.id}`;
                 const prevRaw = await redis.get(subKey);
-                let prevObj: any = null;
-                let prevIndex: any = null;
+                let prevObj: unknown = null;
+                let prevIndex: unknown = null;
                 if (prevRaw !== null) {
                     try {
                         prevObj = JSON.parse(prevRaw);
@@ -1228,8 +1242,11 @@ export async function POST(req: Request) {
                 if (prevRaw !== null && String(prevIndex) !== String(subtitleStreamIndex)) {
                     updates.subtitleChanges = { increment: 1 };
                     if (positionMs > 0) {
+                        const prevObjRec = prevObj && typeof prevObj === 'object' ? (prevObj as Record<string, unknown>) : null;
+                        const prevLanguage = prevObjRec && typeof prevObjRec.language === 'string' ? prevObjRec.language : null;
+                        const prevCodec = prevObjRec && typeof prevObjRec.codec === 'string' ? prevObjRec.codec : null;
                         const metadata = {
-                            from: { index: prevIndex ?? null, language: prevObj?.language ?? null, codec: prevObj?.codec ?? null },
+                            from: { index: prevIndex ?? null, language: prevLanguage, codec: prevCodec },
                             to: { index: subtitleStreamIndex, language: resolvedSubtitleLanguage ?? null, codec: resolvedSubtitleCodec ?? null },
                         };
                         telemetryEvents.push({ eventType: "subtitle_change", positionMs, metadata: JSON.stringify(metadata) });
@@ -1295,7 +1312,7 @@ export async function POST(req: Request) {
                 const progressPercent = computeProgressPercent(positionTicks, runTimeTicks > 0 ? runTimeTicks : null);
                 const redisKey = `stream:${sessionId}`;
                 const cachedStream = await redis.get(redisKey);
-                let parsed: any = {};
+                let parsed: Record<string, unknown> = {};
                 if (cachedStream) {
                     try {
                         parsed = JSON.parse(cachedStream);
