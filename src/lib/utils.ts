@@ -35,7 +35,7 @@ export function categorizeClient(clientName: string): string {
     if (lower.includes("mobile") || lower.includes("android") || lower.includes("ios") || lower.includes("iphone") || lower.includes("ipad") || lower.includes("findroid")) return "Mobile";
     // Desktop
     if (lower.includes("desktop") || lower.includes("jellyfin media player") || lower.includes("mpv") || lower.includes("vlc") || lower.includes("windows") || lower.includes("macos") || lower.includes("linux")) return "Desktop";
-    return "Autre";
+    return "Other";
 }
 
 /**

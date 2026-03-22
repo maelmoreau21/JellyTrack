@@ -15,7 +15,7 @@ interface LibraryDetail {
     size: string;
     duration: string;
     counts: string;
-    topItem?: { title: string; plays: number; id: string } | null;
+    topItem?: { title: string; plays: number; id: string; type?: string | null } | null;
     lastAdded?: { title: string; date: Date | string | null; id: string } | null;
     ignoredTracks?: number;
     ignoredEpisodes?: number;
@@ -275,7 +275,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             href={`/media/${lib.topItem.id}`}
                                             className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all group/item"
                                         >
-                                            <div className="relative w-12 h-16 aspect-[2/3] rounded-md overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0">
+                                            <div className={`relative ${lib.topItem.type === 'Episode' ? 'aspect-video w-16' : 'w-12 h-16 aspect-[2/3]'} rounded-md overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0`}>
                                                 <Image 
                                                     src={getJellyfinImageUrl(lib.topItem.id, 'Primary')}
                                                     alt={lib.topItem.title}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from 'next-intl';
 import {
     BarChart,
     Bar,
@@ -43,6 +44,7 @@ function GlowBar({ fill, x, y, width, height }: GlowBarProps) {
 }
 
 export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
+    const t = useTranslations('charts');
     // Normalize counts to numbers to avoid unexpected NaN or string comparisons
     const numericCounts = data.map(d => {
         const n = Number(d.count ?? d.value ?? 0);
@@ -77,9 +79,9 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
             {selectedEntry && (
                 <div className="mb-2 flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/10 dark:bg-cyan-400/10 border border-cyan-500/20 text-xs animate-in fade-in slide-in-from-top-1 duration-200">
                     <span className="font-semibold text-cyan-600 dark:text-cyan-300">{selectedEntry.hour}</span>
-                    <span className="text-zinc-600 dark:text-zinc-300">{(selectedEntry.count ?? selectedEntry.value ?? 0)} sessions</span>
+                    <span className="text-zinc-600 dark:text-zinc-300">{(selectedEntry.count ?? selectedEntry.value ?? 0)} {t('sessions')}</span>
                     <span className="text-zinc-400">
-                        ({( (selectedEntry.count ?? selectedEntry.value ?? 0) > avg ? '+' : '' )}{(selectedEntry.count ?? selectedEntry.value ?? 0) - avg} vs moy.)
+                        ({( (selectedEntry.count ?? selectedEntry.value ?? 0) > avg ? '+' : '' )}{(selectedEntry.count ?? selectedEntry.value ?? 0) - avg} {t('vsAverage')})
                     </span>
                     <button onClick={() => setSelectedHour(null)} className="ml-auto text-zinc-400 hover:text-zinc-200 text-lg leading-none">×</button>
                 </div>
@@ -129,7 +131,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
-                        formatter={(value: number | string | null | undefined) => [`${value ?? 0} sessions`, "Activité"]}
+                        formatter={(value: any) => [`${value ?? 0} ${t('sessions')}`, t('activity')]}
                         animationDuration={200}
                     />
                     {/* Average reference line (only when meaningful) */}
@@ -139,7 +141,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                             stroke={chartAxisColor}
                             strokeDasharray="3 4"
                             strokeOpacity={0.32}
-                            label={{ value: `moy: ${avg}`, position: 'right', fill: chartLabelStyle.color, fontSize: 10 }}
+                            label={{ value: `${t('average')}: ${avg}`, position: 'right', fill: chartLabelStyle.color, fontSize: 10 }}
                         />
                     )}
                     <Bar

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 
@@ -12,6 +13,8 @@ const COLORS: Record<string, string> = {
 const DEFAULT_COLOR = "#71717a"; // Zinc 500
 
 export function StreamProportionsChart({ data }: { data: { name: string, value: number }[] }) {
+    const t = useTranslations('charts');
+
     return (
         <ResponsiveContainer width="100%" height={250} minHeight={250}>
             <PieChart>
@@ -33,7 +36,7 @@ export function StreamProportionsChart({ data }: { data: { name: string, value: 
                     contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' }}
                     labelStyle={{ color: '#a1a1aa' }}
                     itemStyle={{ color: '#e4e4e7' }}
-                    formatter={(value: number | string | null | undefined, name?: string) => [`${value ?? 0} sessions`, name ?? 'Total'] as [string, string]}
+                    formatter={(value: any, name: any) => [`${value ?? 0} ${t('sessions')}`, name ?? t('total')] as [string, string]}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
             </PieChart>

@@ -42,7 +42,9 @@ function getImageUrl(itemId: string, type: string = 'Primary', fallbackId?: stri
 
 function StreamCard({ stream }: { stream: LiveStream }) {
     const isAudio = stream.mediaType ? (stream.mediaType.toLowerCase().includes('audio') || stream.mediaType.toLowerCase() === 'track') : false;
-    const aspectClass = isAudio ? 'aspect-square' : 'aspect-[2/3]';
+    const isEpisode = stream.mediaType === 'Episode';
+    const aspectClass = isAudio ? 'aspect-square' : isEpisode ? 'aspect-video' : 'aspect-[2/3]';
+    const widthClass = isEpisode ? 'w-20' : 'w-12';
     const posterId = stream.posterItemId || stream.itemId;
 
     let detail: string | null = null;
@@ -58,7 +60,7 @@ function StreamCard({ stream }: { stream: LiveStream }) {
     return (
         <div className="flex items-center gap-4 p-3 border rounded-lg border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
             {posterId ? (
-                <div className={`relative w-12 ${aspectClass} bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10`}>
+                <div className={`relative ${widthClass} ${aspectClass} bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10`}>
                     <FallbackImage
                         src={getImageUrl(posterId, 'Primary', stream.parentItemId || undefined)}
                         alt={stream.mediaTitle}
@@ -67,7 +69,7 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                     />
                 </div>
             ) : (
-                <div className={`w-12 ${aspectClass} bg-muted rounded shrink-0 flex items-center justify-center ring-1 ring-white/10`}>
+                <div className={`relative ${widthClass} ${aspectClass} bg-muted rounded shrink-0 flex items-center justify-center ring-1 ring-white/10`}>
                     <PlayCircle className="w-5 h-5 opacity-50" />
                 </div>
             )}

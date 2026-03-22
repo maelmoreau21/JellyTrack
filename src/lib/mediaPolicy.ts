@@ -26,6 +26,8 @@ const LIBRARY_ALIASES: Record<string, string> = {
     shows: 'tvshows',
     music: 'music',
     musics: 'music',
+    musique: 'music',
+    musiques: 'music',
     book: 'books',
     books: 'books',
     audiobook: 'books',
@@ -49,7 +51,12 @@ const LIBRARY_TYPE_MAP: Record<string, string[]> = {
 const LIBRARY_ORDER = ['movies', 'tvshows', 'music', 'books', 'homevideos', 'photos', 'livetv'];
 
 function cleanKey(value: string) {
-    return value.trim().toLowerCase().replace(/[\s_-]+/g, '');
+    return value
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\s_-]+/g, '');
 }
 
 export function normalizeLibraryKey(value: string | null | undefined): string | null {

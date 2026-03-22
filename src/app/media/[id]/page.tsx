@@ -310,6 +310,21 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const resolvedAlbumArtist = albumArtist || media.artist || null;
     const headerFallbackId = media.parentId || albumId || undefined;
 
+    // Build hierarchy subtitle (e.g., "Series - Season" or "Artist - Album")
+    let mediaSubtitle = null;
+    if (media.type === 'Episode') {
+        if (seriesName && seasonName) mediaSubtitle = `${seriesName} - ${seasonName}`;
+        else if (seriesName) mediaSubtitle = seriesName;
+    } else if (media.type === 'Season') {
+        if (seriesName) mediaSubtitle = seriesName;
+    } else if (media.type === 'Audio') {
+        if (resolvedAlbumArtist && albumName) mediaSubtitle = `${resolvedAlbumArtist} - ${albumName}`;
+        else if (resolvedAlbumArtist) mediaSubtitle = resolvedAlbumArtist;
+        else if (albumName) mediaSubtitle = albumName;
+    } else if (media.type === 'MusicAlbum') {
+        if (resolvedAlbumArtist) mediaSubtitle = resolvedAlbumArtist;
+    }
+
     return (
         <div className="flex-col md:flex">
             <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
@@ -357,12 +372,17 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row gap-8">
-                    <div className={`relative w-48 ${['MusicAlbum', 'Audio'].includes(media.type) ? 'aspect-square' : 'aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-lg overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-xl shrink-0`}>
+                    <div className={`relative ${media.type === 'Episode' ? 'w-full md:w-80 aspect-video' : ['MusicAlbum', 'Audio'].includes(media.type) ? 'w-48 aspect-square' : 'w-48 aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-lg overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-xl shrink-0`}>
                         <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId)} alt={media.title} fill className="object-cover" />
                     </div>
                     <div className="flex-1 space-y-4">
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight">{media.title}</h1>
+                            {mediaSubtitle && (
+                                <div className="text-xl font-medium text-zinc-500 dark:text-zinc-400 mt-1">
+                                    {mediaSubtitle}
+                                </div>
+                            )}
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
                                 <Badge variant="outline">{media.type}</Badge>
                                 {media.resolution && <Badge variant="secondary">{normalizedMediaResolution}</Badge>}

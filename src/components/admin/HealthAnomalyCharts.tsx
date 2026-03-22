@@ -12,6 +12,7 @@ type TimelinePoint = {
     syncErrors: number;
     backupErrors: number;
     cleanupOps: number;
+    syncSuccesses: number;
 };
 
 type BreakdownPoint = {
@@ -29,6 +30,7 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
         syncErrors: typeof pt?.syncErrors === "number" && Number.isFinite(pt.syncErrors) ? pt.syncErrors : 0,
         backupErrors: typeof pt?.backupErrors === "number" && Number.isFinite(pt.backupErrors) ? pt.backupErrors : 0,
         cleanupOps: typeof pt?.cleanupOps === "number" && Number.isFinite(pt.cleanupOps) ? pt.cleanupOps : 0,
+        syncSuccesses: typeof pt?.syncSuccesses === "number" && Number.isFinite(pt.syncSuccesses) ? pt.syncSuccesses : 0,
     }));
 
     const safeBreakdown: BreakdownPoint[] = (breakdown || []).map((b) => ({
@@ -44,6 +46,7 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
     const syncId = `syncErrorsGradient-${uid}`;
     const backupId = `backupErrorsGradient-${uid}`;
     const cleanupId = `cleanupOpsGradient-${uid}`;
+    const syncSuccessId = `syncSuccessGradient-${uid}`;
     const sourceGradientId = `sourceBreakdownGradient-${uid}`;
     const noValues = !timelineHasValues && !breakdownHasValues;
 
@@ -51,7 +54,7 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
         <>
             {noValues && <div className="text-sm text-zinc-400 mb-2">{t('anomalyDetectedNone')}</div>}
             <div className="grid gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2 h-[320px] min-h-[320px]">
+            <div className="lg:col-span-2 w-full min-w-0 h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={safeTimeline} margin={{ top: 18, right: 20, left: -10, bottom: 4 }}>
                         <defs>
@@ -71,21 +74,26 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
                                 <stop offset="5%" stopColor="#22c55e" stopOpacity={0.45} />
                                 <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                             </linearGradient>
+                            <linearGradient id={syncSuccessId} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35} />
+                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                            </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 7" vertical={false} stroke={chartGridColor} />
                         <XAxis dataKey="day" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
                         <Tooltip contentStyle={chartTooltipStyle} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
                         <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
-                        <Area type="monotone" dataKey="cleanupOps" name={t('anomalyCleanupOps')} stroke="#22c55e" fill={`url(#${cleanupId})`} strokeWidth={2.4} />
-                        <Area type="monotone" dataKey="monitorErrors" name={t('anomalyMonitorErrors')} stroke="#38bdf8" fill={`url(#${monitorId})`} strokeWidth={2.4} />
-                        <Area type="monotone" dataKey="syncErrors" name={t('anomalySyncErrors')} stroke="#f59e0b" fill={`url(#${syncId})`} strokeWidth={2.4} />
-                        <Area type="monotone" dataKey="backupErrors" name={t('anomalyBackupErrors')} stroke="#f43f5e" fill={`url(#${backupId})`} strokeWidth={2.4} />
+                        <Area type="monotone" dataKey="cleanupOps" name={t('anomalyCleanupOps')} stroke="#22c55e" fill={`url(#${cleanupId})`} strokeWidth={2} />
+                        <Area type="monotone" dataKey="syncSuccesses" name={t('anomalySyncSuccess')} stroke="#8b5cf6" fill={`url(#${syncSuccessId})`} strokeWidth={2} />
+                        <Area type="monotone" dataKey="monitorErrors" name={t('anomalyMonitorErrors')} stroke="#38bdf8" fill={`url(#${monitorId})`} strokeWidth={2} />
+                        <Area type="monotone" dataKey="syncErrors" name={t('anomalySyncErrors')} stroke="#f59e0b" fill={`url(#${syncId})`} strokeWidth={2} />
+                        <Area type="monotone" dataKey="backupErrors" name={t('anomalyBackupErrors')} stroke="#f43f5e" fill={`url(#${backupId})`} strokeWidth={2} />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
 
-            <div className="h-[320px] min-h-[320px]">
+            <div className="w-full min-w-0 h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={safeBreakdown} margin={{ top: 18, right: 8, left: -18, bottom: 4 }}>
                         <defs>

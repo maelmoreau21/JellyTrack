@@ -63,6 +63,7 @@ type PlatformActiveShapeProps = {
 
 export function PlatformDistributionChart({ data }: PlatformDistributionChartProps) {
     const t = useTranslations('charts');
+    const td = useTranslations('dashboard');
     const [activeIndex, setActiveIndex] = useState<number>(-1);
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
@@ -104,7 +105,7 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
             {hidden.size > 0 && (
                 <div className="mb-1 text-center">
                     <button onClick={() => setHidden(new Set())} className="text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors">
-                        Tout afficher
+                        {td('showAll')}
                     </button>
                 </div>
             )}
@@ -122,7 +123,7 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         animationDuration={1000}
                         animationBegin={0}
                         animationEasing="ease-out"
-                        activeShape={renderActiveShape as unknown as React.FC<PlatformActiveShapeProps>}
+                        activeShape={renderActiveShape as any}
                         onMouseEnter={(d: { value?: number; name?: string }, index: number) => setActiveIndex(index)}
                         onMouseLeave={() => setActiveIndex(-1)}
                     >
@@ -141,12 +142,9 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         contentStyle={chartTooltipStyle}
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
+                        cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
+                        formatter={(value: any) => [`${value ?? 0} ${t('sessions')}`, t('activity')]}
                         animationDuration={200}
-                        formatter={(value: number | string | null | undefined, name?: string) => {
-                            const n = Number(value ?? 0);
-                            const pct = total > 0 ? ((n / total) * 100).toFixed(0) : '0';
-                            return [`${n} (${pct}%)`, name ?? ''] as [string, string];
-                        }}
                     />
                     <Legend
                         verticalAlign="bottom"

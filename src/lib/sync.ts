@@ -338,6 +338,16 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         }
 
         await markSyncFinished({ success: true, mode: options?.recentOnly ? 'recent' : 'full', users: usersCount, media: mediaCount });
+        
+        if (mediaCount > 0) {
+            await appendHealthEvent({
+                source: 'sync',
+                kind: 'sync_success',
+                message: `Synchronisation réussie : ${mediaCount} médias traités.`,
+                details: { count: 1, mediaProcessed: mediaCount }
+            });
+        }
+
         cleanupOrphanedSessions().catch(() => {});
         return { success: true, users: usersCount, media: mediaCount };
     } catch (e: unknown) {

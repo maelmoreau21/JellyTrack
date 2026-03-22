@@ -99,7 +99,7 @@ export function AIRecommendations() {
             href={`/media/${rec.id}`}
             className="group relative flex-shrink-0 w-[160px] snap-start"
           >
-            <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 shadow-sm group-hover:shadow-md transition-all duration-300">
+            <div className={`relative ${rec.media.type === 'Episode' ? 'aspect-video' : 'aspect-[2/3]'} w-full rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 shadow-sm group-hover:shadow-md transition-all duration-300`}>
               <Image
                 src={getJellyfinImageUrl(rec.id, 'Primary')}
                 alt={rec.media.title}

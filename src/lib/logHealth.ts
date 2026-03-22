@@ -67,7 +67,7 @@ export async function getLogHealthSnapshot() {
     const dbSessionIdSet = new Set(activeStreams.map((stream) => stream.sessionId));
     const redisOrphanKeys = redisKeys.filter((key) => !dbSessionIdSet.has(key.replace("stream:", "")));
 
-    const dailyMap = new Map<string, { day: string; monitorErrors: number; syncErrors: number; backupErrors: number; cleanupOps: number }>();
+    const dailyMap = new Map<string, { day: string; monitorErrors: number; syncErrors: number; backupErrors: number; cleanupOps: number; syncSuccesses: number }>();
     for (let index = 0; index < 14; index++) {
         const current = new Date(anomalyWindowStart);
         current.setUTCDate(anomalyWindowStart.getUTCDate() + index);
@@ -78,6 +78,7 @@ export async function getLogHealthSnapshot() {
             syncErrors: 0,
             backupErrors: 0,
             cleanupOps: 0,
+            syncSuccesses: 0,
         });
     }
 
@@ -106,6 +107,10 @@ export async function getLogHealthSnapshot() {
 
         if (event.kind.includes("ghost") || event.kind.includes("orphan") || event.kind.includes("open-playbacks")) {
             dayEntry.cleanupOps += detailCount;
+        }
+
+        if (event.kind === "sync_success" || event.kind.includes("success")) {
+            dayEntry.syncSuccesses += detailCount;
         }
 
         sourceImpact.set(event.source, (sourceImpact.get(event.source) || 0) + detailCount);

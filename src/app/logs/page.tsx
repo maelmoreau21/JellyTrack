@@ -289,33 +289,39 @@ export default async function LogsPage({
             const fallbackSeriesName = metadata?.seriesName || null;
             const fallbackSeasonName = metadata?.seasonName || null;
             if (fallbackSeriesName && fallbackSeasonName) {
-                return `${fallbackSeriesName} — ${fallbackSeasonName}`;
+                return `${fallbackSeriesName} - ${fallbackSeasonName}`;
             }
             if (fallbackSeriesName) {
                 return fallbackSeriesName;
             }
             if (!parent) return null;
-            // Episode â†’ parent=Season â†’ grandparent=Series
+            // Episode -> parent=Season -> grandparent=Series
             const grandparent = parent.parentId ? grandparentMap.get(parent.parentId) : null;
-            if (grandparent) return `${grandparent.title} — ${parent.title}`;
+            if (grandparent) return `${grandparent.title} - ${parent.title}`;
             return parent.title;
         }
         if (media.type === 'Season') {
+            if (metadata?.seriesName) return metadata.seriesName;
             if (!parent) return null;
-            return parent.title; // Season â†’ Series
+            return parent.title; // Season -> Series
         }
         if (media.type === 'Audio') {
-            // Audio â†’ parent=Album. Show "Artist — Album" if artist is available
+            // Audio -> parent=Album. Show "Artist - Album" if artist is available
             const metaAlbumName = metadata?.albumName || null;
             const metaArtistName = metadata?.albumArtist || metadata?.artist || null;
             if (metaAlbumName || metaArtistName) {
-                if (metaArtistName && metaAlbumName) return `${metaArtistName} — ${metaAlbumName}`;
+                if (metaArtistName && metaAlbumName) return `${metaArtistName} - ${metaAlbumName}`;
                 return metaArtistName || metaAlbumName;
             }
             const artistName = media.artist || parent?.artist || null;
             if (!parent) return artistName;
-            if (artistName) return `${artistName} — ${parent.title}`;
-            return parent.title;
+            if (artistName && parent.title) return `${artistName} - ${parent.title}`;
+            return artistName || parent.title;
+        }
+        if (media.type === 'MusicAlbum') {
+            const metaArtistName = metadata?.albumArtist || metadata?.artist || null;
+            if (metaArtistName) return metaArtistName;
+            if (media.artist) return media.artist;
         }
         return parent ? parent.title : null;
     }
@@ -415,8 +421,12 @@ export default async function LogsPage({
                         </CardContent>
                     </Card>
 
-                        <div className="app-surface-soft border rounded-md overflow-x-auto w-full mt-6">
-                            <LogsListClient serverLogs={safeLogs} visibleColumns={visibleColumns as string[]} initialColumns={initialColumns} />
+        <div className="app-surface-soft border rounded-md overflow-x-auto w-full mt-6">
+                            <LogsListClient 
+                                serverLogs={safeLogs.map(log => ({ ...log, mediaSubtitle: getMediaSubtitle(log.media ?? null) }))} 
+                                visibleColumns={visibleColumns as string[]} 
+                                initialColumns={initialColumns} 
+                            />
                         </div>
 
                         {/* Pagination */}

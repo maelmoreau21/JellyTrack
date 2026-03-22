@@ -383,9 +383,41 @@ import Link from 'next/link';
 import { User, Film as FilmIcon, Star } from 'lucide-react';
 
 export async function DeepInsights({ type, timeRange, excludedLibraries }: { type?: string, timeRange: string, excludedLibraries: string[] }) {
-    const data = await getDeepInsights(type, timeRange, excludedLibraries);
     const t = await getTranslations('deepInsights');
+    const tc = await getTranslations('common');
+    const tCharts = await getTranslations('charts');
     const tGranular = await getTranslations('granular');
+    const tm = await getTranslations('media');
+
+    const data = await getDeepInsights(type, timeRange, excludedLibraries);
+
+    const chartTooltipStyle = { backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' };
+    const chartLabelStyle = { color: '#a1a1aa' };
+    const chartItemStyle = { color: '#e4e4e7' };
+
+    const localizedResolutionChartData = (data.resolutionChartData || []).map((d: { name: string; value: number }) => {
+        const rawName = String(d.name || '');
+        let localizedName = rawName;
+        const key = rawName.toLowerCase();
+        
+        if (key === '4k') localizedName = tm('4kLabel');
+        else if (key === '1080p') localizedName = tm('1080pLabel');
+        else if (key === '720p') localizedName = tm('720pLabel');
+        else if (key === 'sd') localizedName = tm('sdLabel');
+        else if (key === 'unknown') localizedName = tGranular('unknown');
+        
+        return { ...d, name: localizedName };
+    });
+
+    const localizedDeviceChartData = (data.deviceChartData || []).map((d: { name: string; value: number }) => {
+        const rawName = String(d.name || '');
+        let localizedName = rawName;
+        
+        if (rawName === 'Other') localizedName = tc('other');
+        else if (rawName === 'Unknown') localizedName = tc('unknown');
+        
+        return { ...d, name: localizedName };
+    });
 
     // Localize subtitle 'None' label to translation (was using literal 'None' in aggregation)
     const localizedSubtitleChartData = (data.subtitleChartData || []).map((d: { name?: string | null; value?: number }) => {
@@ -491,7 +523,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                                     className="flex justify-between items-center text-sm group cursor-pointer"
                                 >
                                     <div className="truncate pr-2 group-hover:text-cyan-500 transition-colors">{c.clientName || '?'}</div>
-                                    <div className="font-semibold group-hover:bg-cyan-500/10 px-1 rounded transition-colors">{c._count.id} sessions</div>
+                                    <div className="font-semibold group-hover:bg-cyan-500/10 px-1 rounded transition-colors">{c._count.id} {tCharts('sessions')}</div>
                                 </Link>
                             ))}
                         </div>
@@ -517,8 +549,8 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                         <CardDescription>{t('resolutionMatrixDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        {data.resolutionChartData.length > 0 ? (
-                            <StandardPieChart data={data.resolutionChartData} nameKey="name" dataKey="value" />
+                        {localizedResolutionChartData.length > 0 ? (
+                            <StandardPieChart data={localizedResolutionChartData} nameKey="name" dataKey="value" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noResolutionData')}</p>
                         )}
@@ -531,8 +563,8 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                         <CardDescription>{t('deviceEcosystemDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        {data.deviceChartData.length > 0 ? (
-                            <StandardPieChart data={data.deviceChartData} nameKey="name" dataKey="value" />
+                        {localizedDeviceChartData.length > 0 ? (
+                            <StandardPieChart data={localizedDeviceChartData} nameKey="name" dataKey="value" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noDeviceData')}</p>
                         )}
