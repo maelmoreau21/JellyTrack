@@ -71,34 +71,41 @@ export default async function AnalysisPage() {
                             <CardDescription>{t('deepStatsOverview')}</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="col-span-2">
-                                    <StatsDeepAnalysis />
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="app-surface-soft p-3 rounded-lg border">
-                                        <div className="text-sm text-zinc-400">{t('totalMedia')}</div>
-                                        <div className="text-2xl font-bold">{totalMedia}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">{t('totalMediaDesc')}</div>
-                                    </div>
-
-                                    <div className="app-surface-soft p-3 rounded-lg border">
-                                        <div className="text-sm text-zinc-400">{t('uniqueGenres')}</div>
-                                        <div className="text-2xl font-bold">{uniqueGenres}</div>
-                                    </div>
-
-                                    <div className="app-surface-soft p-3 rounded-lg border">
-                                        <div className="text-sm text-zinc-400">{t('avgDuration')}</div>
-                                        <div className="text-2xl font-bold">{formatDuration(avgDurationMinutes)}</div>
-                                        <div className="text-xs text-muted-foreground mt-1">{t('avgDurationDesc')}</div>
-                                    </div>
-                                </div>
+                            <div>
+                                <StatsDeepAnalysis />
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 <div className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{t('deepStatsOverview')}</CardTitle>
+                            <CardDescription>{t('deepStatsOverview')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-3">
+                                <div className="app-surface-soft p-3 rounded-lg border">
+                                    <div className="text-sm text-zinc-400">{t('totalMedia')}</div>
+                                    <div className="text-2xl font-bold">{totalMedia}</div>
+                                    <div className="text-xs text-muted-foreground mt-1">{t('totalMediaDesc')}</div>
+                                </div>
+
+                                <div className="app-surface-soft p-3 rounded-lg border">
+                                    <div className="text-sm text-zinc-400">{t('uniqueGenres')}</div>
+                                    <div className="text-2xl font-bold">{uniqueGenres}</div>
+                                </div>
+
+                                <div className="app-surface-soft p-3 rounded-lg border">
+                                    <div className="text-sm text-zinc-400">{t('avgDuration')}</div>
+                                    <div className="text-2xl font-bold">{formatDuration(avgDurationMinutes)}</div>
+                                    <div className="text-xs text-muted-foreground mt-1">{t('avgDurationDesc')}</div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <Card>
                         <CardHeader>
                             <CardTitle>{t('videoQuality')}</CardTitle>

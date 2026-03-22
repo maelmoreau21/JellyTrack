@@ -35,9 +35,27 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
 
+    const humanizeLibraryName = (name: string) => {
+        if (!name) return '';
+        // replace separators, split camelCase, trim and capitalize
+        const withSpaces = name.replace(/[_-]+/g, ' ').replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+        return withSpaces.replace(/\b\w/g, (c) => c.toUpperCase());
+    };
+
+    const getDisplayName = (lib: LibraryDetail) => {
+        const normKey = normalizeLibraryKey(lib.collectionType || lib.name);
+        let localized: string | null = null;
+        if (normKey) {
+            try { localized = tc(normKey); } catch { localized = null; }
+        }
+        if (localized && localized !== normKey) return localized;
+        return humanizeLibraryName(lib.name || '');
+    };
+
     const filteredLibraries = useMemo(() => {
         if (!searchQuery) return libraries;
         return libraries.filter(lib => 
+            getDisplayName(lib).toLowerCase().includes(searchQuery.toLowerCase()) ||
             lib.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             lib.counts.toLowerCase().includes(searchQuery.toLowerCase())
         );
@@ -112,12 +130,12 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                     </CardHeader>
                     <CardContent className="relative z-10">
                         <div className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-snug h-10">
-                            {[
-                                movieCount > 0 && <span key="movies" className="text-blue-500">{movieCount} {tc('movies').toLowerCase()}</span>,
-                                seriesCount > 0 && <span key="series" className="text-emerald-500">{seriesCount} {tc('series').toLowerCase()}</span>,
-                                albumCount > 0 && <span key="music" className="text-yellow-500">{albumCount} albums</span>,
-                                bookCount > 0 && <span key="books" className="text-purple-500">{bookCount} {tc('books').toLowerCase()}</span>
-                            ].reduce((prev: any, curr: any, i: number) => prev === null ? [curr] : [...prev, <span key={`sep-${i}`} className="text-zinc-400 font-normal">, </span>, curr], null)}
+                                            {[
+                                                movieCount > 0 && <span key="movies" className="text-blue-500">{movieCount} {tc('movies').toLowerCase()}</span>,
+                                                seriesCount > 0 && <span key="series" className="text-emerald-500">{seriesCount} {tc('series').toLowerCase()}</span>,
+                                                albumCount > 0 && <span key="music" className="text-yellow-500">{albumCount} {tc('music').toLowerCase()}</span>,
+                                                bookCount > 0 && <span key="books" className="text-purple-500">{bookCount} {tc('books').toLowerCase()}</span>
+                                            ].reduce((prev: any, curr: any, i: number) => prev === null ? [curr] : [...prev, <span key={`sep-${i}`} className="text-zinc-400 font-normal">, </span>, curr], null)}
                         </div>
                         <p className="text-xs text-zinc-500 mt-2 font-medium flex items-center gap-1.5 opacity-80">
                              <Info className="w-3.5 h-3.5" /> {t('statsContentDesc')}
@@ -173,12 +191,20 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                         <h4 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">{tc('noData')}</h4>
                         <p className="text-sm text-zinc-500 mt-1">Aucune collection ne correspond à votre recherche.</p>
                     </div>
-                ) : filteredLibraries.map((lib, idx) => {
+                ) :
+                // Sort libraries by their display name (localized or humanized)
+                filteredLibraries.slice().sort((a, b) => {
+                    const an = getDisplayName(a);
+                    const bn = getDisplayName(b);
+                    return an.localeCompare(bn);
+                }).map((lib, idx) => {
                     const normKey = normalizeLibraryKey(lib.collectionType || lib.name);
                     let localizedLabel: string | null = null;
                     if (normKey) {
-                        try { localizedLabel = tc(normKey); } catch { localizedLabel = normKey; }
+                        try { localizedLabel = tc(normKey); } catch { localizedLabel = null; }
                     }
+
+                    const displayName = getDisplayName(lib);
 
                     return (
                         <Card key={idx} className="relative overflow-hidden bg-white/80 dark:bg-zinc-900/70 border-zinc-200/60 dark:border-zinc-800/60 backdrop-blur-md group hover:border-primary/30 transition-colors shadow-sm hover:shadow-xl hover:shadow-black/5 flex flex-col">
@@ -193,9 +219,9 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                         <div className="flex items-center gap-2 max-w-[70%]">
                                             {getIconPrefix(lib.collectionType, lib.name)}
                                             <div className="flex items-center gap-2 min-w-0">
-                                                <CardTitle className="text-xl font-bold truncate pr-2 text-zinc-900 dark:text-zinc-100">{lib.name}</CardTitle>
-                                                {localizedLabel ? (
-                                                    <span className="text-xs text-zinc-500 ml-1 px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">{localizedLabel}</span>
+                                                <CardTitle className="text-xl font-bold truncate pr-2 text-zinc-900 dark:text-zinc-100">{displayName}</CardTitle>
+                                                {lib.name && lib.name !== displayName ? (
+                                                    <span className="text-xs text-zinc-500 ml-1 px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">{lib.name}</span>
                                                 ) : null}
                                             </div>
                                         </div>

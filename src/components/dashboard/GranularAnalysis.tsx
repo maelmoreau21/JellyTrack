@@ -243,8 +243,48 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
 
     const normalizedKeys = getAvailableLibraryKeys(Array.from(rawToNorm.values()));
     const labelMap: Record<string, string> = {};
+
+    // Build reverse map: normalized key -> original raw library names
+    const normToRaw = new Map<string, string[]>();
+    for (const [raw, norm] of rawToNorm.entries()) {
+        if (!normToRaw.has(norm)) normToRaw.set(norm, []);
+        normToRaw.get(norm)!.push(raw);
+    }
+
+    function humanizeLibraryName(value: string) {
+        if (!value) return value;
+        let s = String(value);
+        // replace separators, split camelCase and trim
+        s = s.replace(/[_-]+/g, ' ');
+        s = s.replace(/([a-z])([A-Z])/g, '$1 $2');
+        s = s.trim();
+        // Capitalize words
+        s = s.split(' ').map(w => w ? (w[0].toUpperCase() + w.slice(1)) : w).join(' ');
+        return s;
+    }
+
     normalizedKeys.forEach(k => {
-        try { labelMap[k] = tc(k); } catch { labelMap[k] = k; }
+        let label = '';
+        try {
+            const translated = tc(k);
+            // Prefer a real translation when available (and not just the key)
+            if (translated && translated !== k && !translated.includes('.')) {
+                label = translated;
+            }
+        } catch (e) {
+            // ignore and fallback below
+        }
+
+        if (!label) {
+            const raws = normToRaw.get(k) || [];
+            if (raws.length > 0) {
+                label = humanizeLibraryName(raws[0]);
+            } else {
+                label = humanizeLibraryName(k);
+            }
+        }
+
+        labelMap[k] = label;
     });
     const tDashboard = await getTranslations('dashboard');
 

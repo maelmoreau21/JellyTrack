@@ -10,7 +10,6 @@ export default function SettingsSchedulerLayout({ children }: { children: React.
 
     const tabs = [
         { href: '/settings/scheduler', label: t('taskScheduler') },
-        { href: '/settings/scheduler/backups', label: t('schedulerBackups') },
     ];
 
     return (
