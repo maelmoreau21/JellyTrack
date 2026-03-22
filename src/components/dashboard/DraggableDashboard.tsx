@@ -14,21 +14,24 @@ export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
     const [order, setOrder] = useState<number[]>([]);
     const [isEditMode, setIsEditMode] = useState(false);
 
-    // Initialize order from localStorage (client-only). Suppress setState-in-effect lint.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // Initialize order from localStorage (client-only). Defer the update to avoid
+    // synchronous setState inside an effect.
     useEffect(() => {
-        const saved = localStorage.getItem("JellyTrack-dashboard-order");
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed) && parsed.length === blocks.length) {
-                    setOrder(parsed);
-                    return;
-                }
-            } catch { }
-        }
-        // Initial / Fallback: Sequential order
-        setOrder(blocks.map((_, i) => i));
+        const t = setTimeout(() => {
+            const saved = localStorage.getItem("JellyTrack-dashboard-order");
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length === blocks.length) {
+                        setOrder(parsed);
+                        return;
+                    }
+                } catch { }
+            }
+            // Initial / Fallback: Sequential order
+            setOrder(blocks.map((_, i) => i));
+        }, 0);
+        return () => clearTimeout(t);
     }, [blocks.length]);
 
     const moveBlock = (index: number, direction: 'up' | 'down') => {

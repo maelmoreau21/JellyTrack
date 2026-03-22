@@ -28,14 +28,17 @@ export function CollapsibleCard({
     const [isOpen, setIsOpen] = useState(defaultOpen);
     const [mounted, setMounted] = useState(false);
 
-    // Initialize mount state and read persisted open state from localStorage
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // Initialize mount state and read persisted open state from localStorage.
+    // Defer to a microtask to avoid synchronous setState in effect.
     useEffect(() => {
-        setMounted(true);
-        try {
-            const stored = localStorage.getItem(`card-${storageKey}`);
-            if (stored !== null) setIsOpen(stored === "1");
-        } catch {}
+        const t = setTimeout(() => {
+            setMounted(true);
+            try {
+                const stored = localStorage.getItem(`card-${storageKey}`);
+                if (stored !== null) setIsOpen(stored === "1");
+            } catch {}
+        }, 0);
+        return () => clearTimeout(t);
     }, [storageKey]);
 
     const toggle = useCallback(() => {

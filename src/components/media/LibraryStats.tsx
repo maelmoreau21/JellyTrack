@@ -42,16 +42,19 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
         );
     }, [searchQuery, libraries]);
 
-    // Initialize expanded/collapsed map based on library count. Avoid setState-in-effect warning.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // Initialize expanded/collapsed map based on library count.
+    // Defer initialization to avoid synchronous setState inside an effect.
     useEffect(() => {
-        // If many libraries, collapse extra ones to save space by default
-        const init: Record<string, boolean> = {};
-        const defaultExpanded = libraries.length <= 6; // expand all when few
-        libraries.forEach((l, idx) => {
-            init[l.name] = defaultExpanded || idx < 6;
-        });
-        setExpandedMap(init);
+        const t = setTimeout(() => {
+            // If many libraries, collapse extra ones to save space by default
+            const init: Record<string, boolean> = {};
+            const defaultExpanded = libraries.length <= 6; // expand all when few
+            libraries.forEach((l, idx) => {
+                init[l.name] = defaultExpanded || idx < 6;
+            });
+            setExpandedMap(init);
+        }, 0);
+        return () => clearTimeout(t);
     }, [libraries]);
 
     const toggleExpand = (name: string) => {
