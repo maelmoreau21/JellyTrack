@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: await apiT('fileInvalid') }, { status: 400 });
         }
 
-        const BACKUP_DIR = process.env.BACKUP_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "backups");
-        const filePath = path.join(BACKUP_DIR, safeName);
+        const BACKUP_DIR = process.env.BACKUP_DIR || "./backups";
+        const filePath = `${BACKUP_DIR}/${safeName}`;
 
         if (!fs.existsSync(filePath)) {
             return NextResponse.json({ error: await apiT('fileNotFound') }, { status: 404 });

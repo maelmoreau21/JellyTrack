@@ -9,7 +9,6 @@ export default getRequestConfig(async () => {
 
     return {
         locale,
-        // Prevent Turbopack from tracing the entire messages folder at build time
-        messages: (await import(/*turbopackIgnore: true*/ `../../messages/${locale}.json`)).default
+        messages: (await import(`../../messages/${locale}.json`)).default
     };
 });

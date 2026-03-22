@@ -13,12 +13,30 @@ export async function performAutoBackup(): Promise<string> {
     await markBackupStarted();
 
     try {
-        // Dynamic imports to avoid Turbopack tracing filesystem at module import time
-        const fs = await import('fs');
-        const path = await import('path');
+        // Load fs/path dynamically via require-eval to avoid static bundler tracing
+        function getFS() {
+            try {
+                // eslint-disable-next-line no-eval
+                const req = eval('require');
+                return req('fs');
+            } catch (e) {
+                throw new Error('Unable to load fs module dynamically');
+            }
+        }
+        function getPath() {
+            try {
+                // eslint-disable-next-line no-eval
+                const req = eval('require');
+                return req('path');
+            } catch (e) {
+                throw new Error('Unable to load path module dynamically');
+            }
+        }
+        const fs = getFS();
+        const path = getPath();
 
         // Ensure directory exists
-        const BACKUP_DIR = process.env.BACKUP_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "backups");
+        const BACKUP_DIR = process.env.BACKUP_DIR || "./backups";
         if (!fs.existsSync(BACKUP_DIR)) {
             fs.mkdirSync(BACKUP_DIR, { recursive: true });
             console.log(`[Auto-Backup] Created backup directory: ${BACKUP_DIR}`);
@@ -52,7 +70,7 @@ export async function performAutoBackup(): Promise<string> {
         const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         const timeStr = new Date().toISOString().split('T')[1].replace(/:/g, '-').split('.')[0]; // HH-MM-SS
         const fileName = `JellyTrack-auto-${dateStr}_${timeStr}.json`;
-        const filePath = path.join(BACKUP_DIR, fileName);
+        const filePath = `${BACKUP_DIR}/${fileName}`;
 
         // BigInt-safe JSON serializer (Prisma returns BigInt for durationMs, positionTicks, etc.)
         const bigIntReplacer = (_key: string, value: unknown) => typeof value === 'bigint' ? value.toString() : value;
@@ -67,7 +85,7 @@ export async function performAutoBackup(): Promise<string> {
             .filter((f: string) => f.endsWith(".json") && f.startsWith("JellyTrack-auto-"))
             .map((f: string) => ({
                 name: f,
-                time: fs.statSync(path.join(BACKUP_DIR, f)).mtime.getTime(),
+                time: fs.statSync(`${BACKUP_DIR}/${f}`).mtime.getTime(),
             }))
             .sort((a: any, b: any) => b.time - a.time); // Newest first
 

@@ -21,8 +21,7 @@ function getPath() {
 }
 
 function getAppStateDir() {
-    const path = getPath();
-    return process.env.BACKUP_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "backups");
+    return process.env.BACKUP_DIR || "./backups";
 }
 
 function ensureAppStateDir() {
@@ -37,9 +36,8 @@ export function readStateFile<T>(fileName: string, fallback: T): T {
     try {
         ensureAppStateDir();
         const fs = getFS();
-        const path = getPath();
         const APP_STATE_DIR = getAppStateDir();
-        const filePath = path.join(APP_STATE_DIR, fileName);
+        const filePath = `${APP_STATE_DIR}/${fileName}`;
         if (!fs.existsSync(filePath)) return fallback;
         return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
     } catch {
@@ -49,8 +47,7 @@ export function readStateFile<T>(fileName: string, fallback: T): T {
 
 export function writeStateFile<T>(fileName: string, data: T) {
     const fs = getFS();
-    const path = getPath();
     ensureAppStateDir();
     const APP_STATE_DIR = getAppStateDir();
-    fs.writeFileSync(path.join(APP_STATE_DIR, fileName), JSON.stringify(data, null, 2), "utf-8");
+    fs.writeFileSync(`${APP_STATE_DIR}/${fileName}`, JSON.stringify(data, null, 2), "utf-8");
 }

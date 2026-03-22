@@ -10,11 +10,11 @@ export async function GET() {
         const fs = await import('fs');
         const path = await import('path');
 
-        const BACKUP_DIR = process.env.BACKUP_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "backups");
+        const BACKUP_DIR = process.env.BACKUP_DIR || "./backups";
         const files = fs.readdirSync(BACKUP_DIR)
             .filter((f: string) => f.endsWith(".json") && f.startsWith("JellyTrack-auto-"))
             .map((f: string) => {
-                const stats = fs.statSync(path.join(BACKUP_DIR, f));
+                const stats = fs.statSync(`${BACKUP_DIR}/${f}`);
                 return {
                     name: f,
                     size: stats.size,

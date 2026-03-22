@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: await apiT('fileAutoOnly') }, { status: 400 });
         }
 
-        const BACKUP_DIR = process.env.BACKUP_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "backups");
-        const filePath = path.join(BACKUP_DIR, sanitized);
+        const BACKUP_DIR = process.env.BACKUP_DIR || "./backups";
+        const filePath = `${BACKUP_DIR}/${sanitized}`;
 
         if (!fs.existsSync(filePath)) {
             return NextResponse.json({ error: await apiT('fileNotFound') }, { status: 404 });
