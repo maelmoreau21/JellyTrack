@@ -3,15 +3,15 @@
 import React, { useRef, useEffect, useState } from "react";
 import { ResponsiveContainer as RechartsResponsiveContainer } from "recharts";
 
-type Props = {
+type Props = React.ComponentProps<typeof RechartsResponsiveContainer> & {
     minHeight?: number;
 };
 
-export default function ResponsiveContainerGuard({ children, minHeight = 200 }: Props) {
+export default function ResponsiveContainerGuard({ children, minHeight = 200, ...props }: Props) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [hasSize, setHasSize] = useState(false);
-    const minH = typeof props.minHeight === "number"
-        ? props.minHeight
+    const minH = typeof minHeight === "number"
+        ? minHeight
         : (typeof props.height === "number" ? props.height : 300);
 
     useEffect(() => {
@@ -55,7 +55,9 @@ export default function ResponsiveContainerGuard({ children, minHeight = 200 }: 
     return (
         <div ref={containerRef} style={containerStyle}>
             {hasSize ? (
-                <RechartsResponsiveContainer {...props} />
+                <RechartsResponsiveContainer {...props}>
+                    {children}
+                </RechartsResponsiveContainer>
             ) : (
                 <div style={placeholderStyle} />
             )}
