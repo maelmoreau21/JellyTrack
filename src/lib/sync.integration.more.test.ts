@@ -2,16 +2,28 @@
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
 
 vi.mock('./prisma', () => {
-  const mediaUpsert = vi.fn(async () => ({}));
+  const mediaUpsert = vi.fn(async (..._args: any[]) => ({}));
   const mediaUpdateMany = vi.fn(async () => ({ count: 2 }));
   const userUpsert = vi.fn(async () => ({}));
+
+  const tx = {
+    media: {
+      findMany: vi.fn(async () => []),
+      create: async (...args: any[]) => mediaUpsert(...args),
+      update: async (...args: any[]) => mediaUpsert(...args),
+      delete: vi.fn(async () => ({})),
+    },
+    playbackHistory: { updateMany: vi.fn(async () => ({})) },
+    activeStream: { updateMany: vi.fn(async () => ({})) },
+  };
+
   return {
     default: {
       media: { updateMany: mediaUpdateMany, upsert: mediaUpsert },
       user: { upsert: userUpsert },
       systemHealthEvent: { create: vi.fn() },
       systemHealthState: { upsert: vi.fn() },
-      $transaction: vi.fn(async (fn: any) => typeof fn === 'function' ? await fn({}) : undefined),
+      $transaction: vi.fn(async (fn: any) => typeof fn === 'function' ? await fn(tx) : undefined),
     },
   };
 });
@@ -22,7 +34,7 @@ vi.mock('@/lib/systemHealth', () => ({
   markSyncFinished: vi.fn(),
 }));
 
-vi.mock('@/lib/jellyfinId', () => ({ normalizeJellyfinId: (v: any) => v }));
+vi.mock('@/lib/jellyfinId', () => ({ normalizeJellyfinId: (v: any) => v, compactJellyfinId: (v: any) => v }));
 vi.mock('@/lib/cleanup', () => ({ cleanupOrphanedSessions: vi.fn(async () => {}) }));
 
 describe('syncJellyfinLibrary (integration - pagination & resilience)', () => {
