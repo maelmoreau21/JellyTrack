@@ -396,6 +396,12 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
 - **Media Hierarchy & Breadcrumbs**: Improved navigation and visibility for episodes and tracks by displaying their ancestry (Series - Season, Artist - Album) prominently in the profile header and logs.
   - Standardized the separator as ` - ` throughout the UI.
   - Enhanced `getMediaSubtitle` in logs to handle recursive lookups and fallback metadata.
-- Unification des Bibliothèques : Amélioration de la résolution des noms de bibliothèques lors de la synchronisation (meilleure gestion des parents) et implémentation d'une normalisation systématique des noms dans les pages d'analyse et de collections. Les bibliothèques "fantômes" (ex: "tvshows") sont désormais regroupées et traduites correctement ("Séries TV"), évitant les doublons et les incohérences de comptage par rapport à l'interface Jellyfin.
+- **Améliorations de la Surveillance & Collections (Mars 2026)**:
+    - **Synchronisation Précise**: Le processus de synchronisation (`sync.ts`) extrait désormais explicitement `RunTimeTicks` de Jellyfin, garantissant une mesure exacte de la durée totale des collections.
+    - **Santé du Moniteur**: L'état du moniteur ("Last Success") est désormais mis à jour par TOUS les événements du plugin (PlaybackStart, Progress, Stop) en plus du Heartbeat, évitant l'affichage persistant de "Jamais" si le plugin est actif mais que le cron de heartbeat est lent.
+    - **Règles de Complétion Dynamiques**: Les règles de complétion dans la Santé des Logs sont désormais basées sur les bibliothèques RÉELLEMENT présentes dans la base de données, éliminant les types génériques non pertinents.
+    - **Normalisation UHD**: Les bibliothèques de type UHD (`seriesuhd`, `filmsuhd`) sont désormais correctement normalisées et traduites, résolvant les incohérences de nommage (ex: "SéRies UHD").
+    - **Hiérarchie Médiale**: Amélioration de la navigation sur les pages de profil média avec des fils d'Ariane cliquables incluant l'Artiste pour la musique.
+    - **Dédoublonnage des Collections**: Utilisation de `normalizeLibraryKey` pour fusionner les bibliothèques aux noms variés (ex: "Musique" vs "musique") dans une vue unique et cohérente.
 
-Après ces types de changements, toujours exécuter `npm run build` pour valider la compilation et corriger les erreurs/avertissements avant de merger.
+Après ces changements, toujours exécuter `npm run build` pour valider la compilation.

@@ -1,4 +1,5 @@
 import prisma from "./prisma";
+import { normalizeLibraryKey } from "./mediaPolicy";
 
 /**
  * Common list of 'ghost' library names created by sync fallbacks
@@ -50,18 +51,26 @@ export async function getSanitizedLibraryNames() {
   });
   const dbNames = dbEntries.map(e => e.libraryName as string);
 
-  // 3. Consolidate & Filter
+  // 3. Consolidate & Filter using normalized keys to avoid duplicates
   const ghostSet = new Set(GHOST_LIBRARY_NAMES);
-  const realSet = new Set(jellyfinNames);
+  const normalizedToOriginal = new Map<string, string>();
 
-  const allNames = new Set<string>([...jellyfinNames]);
-
-  for (const name of dbNames) {
-    // We keep a DB name IF it's not a ghost name OR if it's explicitly a real Jellyfin library
-    if (!ghostSet.has(name) || realSet.has(name)) {
-      allNames.add(name);
+  // Helper to add a name with normalization logic
+  const addName = (name: string, isFromJellyfin: boolean) => {
+    if (ghostSet.has(name) && !isFromJellyfin) return;
+    
+    // Normalize accent/case for grouping (e.g. "musique" vs "Musique" vs "Musique ")
+    const norm = normalizeLibraryKey(name) || name.trim().toLowerCase();
+    
+    // If it's from Jellyfin, it always wins as the display name
+    // If it's from DB and we don't have a name for this normalized key yet, keep it.
+    if (isFromJellyfin || !normalizedToOriginal.has(norm)) {
+      normalizedToOriginal.set(norm, name);
     }
-  }
+  };
 
-  return Array.from(allNames).sort((a, b) => a.localeCompare(b));
+  jellyfinNames.forEach(n => addName(n, true));
+  dbNames.forEach(n => addName(n, false));
+
+  return Array.from(normalizedToOriginal.values()).sort((a, b) => a.localeCompare(b));
 }

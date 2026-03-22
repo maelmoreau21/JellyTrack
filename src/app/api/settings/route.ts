@@ -83,7 +83,7 @@ export async function GET() {
             fetchJellyfinLibraryNames(),
         ]);
 
-        const libraryRules = await loadLibraryRules();
+        const libraryRules = await loadLibraryRules(availableLibraries);
 
         return NextResponse.json({
             ...settings,
@@ -214,7 +214,8 @@ export async function POST(req: NextRequest) {
         }
 
         if (libraryRules !== undefined) {
-            await saveLibraryRules(libraryRules);
+            const availableLibraries = await getSanitizedLibraryNames();
+            await saveLibraryRules(libraryRules, availableLibraries);
         }
 
         revalidatePath('/');

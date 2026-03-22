@@ -8,7 +8,7 @@ export async function getLogHealthSnapshot() {
     anomalyWindowStart.setUTCHours(0, 0, 0, 0);
     anomalyWindowStart.setUTCDate(anomalyWindowStart.getUTCDate() - 13);
 
-    const [settings, activeStreams, openPlaybackHistory, healthState, libraryRules, anomalyEvents] = await Promise.all([
+    const [settings, activeStreams, openPlaybackHistory, healthState, discoveredLibraries, anomalyEvents] = await Promise.all([
         prisma.globalSettings.findUnique({ where: { id: "global" } }),
         prisma.activeStream.findMany({
             select: {
@@ -36,7 +36,11 @@ export async function getLogHealthSnapshot() {
             }
         }),
         readSystemHealthState({ eventLimit: 120 }),
-        loadLibraryRules(),
+        prisma.media.findMany({
+            where: { libraryName: { not: null } },
+            select: { libraryName: true },
+            distinct: ['libraryName'],
+        }),
         prisma.systemHealthEvent.findMany({
             where: {
                 stateId: "global",
@@ -51,6 +55,9 @@ export async function getLogHealthSnapshot() {
             },
         }),
     ]);
+
+    const discoveredNames = discoveredLibraries.map(l => l.libraryName as string);
+    const libraryRules = await loadLibraryRules(discoveredNames);
 
     const activePairSet = new Set(activeStreams.map((stream) => `${stream.userId}:${stream.mediaId}`));
     const openPlaybackOrphans = openPlaybackHistory.filter((entry) => !activePairSet.has(`${entry.userId}:${entry.mediaId}`));
@@ -109,7 +116,7 @@ export async function getLogHealthSnapshot() {
             dayEntry.cleanupOps += detailCount;
         }
 
-        if (event.kind === "sync_success" || event.kind.includes("success")) {
+        if (event.kind === "sync_success" || event.kind.includes("success") || event.kind.includes("ping") || event.kind.includes("ok")) {
             dayEntry.syncSuccesses += detailCount;
         }
 

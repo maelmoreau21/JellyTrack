@@ -132,12 +132,12 @@ export default async function LogHealthPage() {
                             <div className="mt-1 text-sm text-zinc-500">{t('lastError')}: {snapshot.status.monitor.lastError || t('none')}</div>
                         </div>
                         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><RefreshCw className="h-4 w-4 text-amber-400" /> Sync</div>
+                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><RefreshCw className="h-4 w-4 text-amber-400" /> {t('sync')}</div>
                             <div className="mt-2 text-sm text-zinc-500">{t('lastSuccess')}: {formatDate(snapshot.status.sync.lastSuccessAt)}</div>
                             <div className="mt-1 text-sm text-zinc-500">{t('mode')}: {snapshot.status.sync.mode || '—'}</div>
                         </div>
                         <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Clock3 className="h-4 w-4 text-emerald-400" /> Backup</div>
+                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Clock3 className="h-4 w-4 text-emerald-400" /> {t('backup')}</div>
                             <div className="mt-2 text-sm text-zinc-500">{t('lastSuccess')}: {formatDate(snapshot.status.backup.lastSuccessAt)}</div>
                             <div className="mt-1 text-sm text-zinc-500">{t('file')}: {snapshot.status.backup.lastFileName || '—'}</div>
                         </div>

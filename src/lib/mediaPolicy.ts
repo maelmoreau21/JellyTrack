@@ -18,12 +18,16 @@ const LIBRARY_ALIASES: Record<string, string> = {
     movies: 'movies',
     film: 'movies',
     films: 'movies',
+    filmsuhd: 'filmsuhd',
+    moviesuhd: 'filmsuhd',
     tv: 'tvshows',
     tvshow: 'tvshows',
     tvshows: 'tvshows',
     series: 'tvshows',
     show: 'tvshows',
     shows: 'tvshows',
+    seriesuhd: 'seriesuhd',
+    tvshowsuhd: 'seriesuhd',
     music: 'music',
     musics: 'music',
     musique: 'music',
@@ -41,14 +45,16 @@ const LIBRARY_ALIASES: Record<string, string> = {
 
 const LIBRARY_TYPE_MAP: Record<string, string[]> = {
     movies: ['Movie'],
+    filmsuhd: ['Movie'],
     tvshows: ['Series', 'Season', 'Episode'],
+    seriesuhd: ['Series', 'Season', 'Episode'],
     music: ['Audio', 'Track', 'MusicAlbum'],
     books: ['Book', 'AudioBook'],
     photos: ['Photo'],
     homevideos: ['Video'],
 };
 
-const LIBRARY_ORDER = ['movies', 'tvshows', 'music', 'books', 'homevideos', 'photos', 'livetv'];
+const LIBRARY_ORDER = ['movies', 'filmsuhd', 'tvshows', 'seriesuhd', 'music', 'books', 'homevideos', 'photos', 'livetv'];
 
 function cleanKey(value: string) {
     return value
@@ -196,22 +202,57 @@ export function sanitizeLibraryRule(input: Partial<LibraryRule> | null | undefin
     };
 }
 
-export function sanitizeLibraryRules(input: LibraryRuleMap | null | undefined): LibraryRuleMap {
+export function sanitizeLibraryRules(input: LibraryRuleMap | null | undefined, discoveredNames?: string[]): LibraryRuleMap {
     const output: LibraryRuleMap = {};
-    const keys = new Set<string>([...LIBRARY_ORDER, ...Object.keys(input || {})]);
-    for (const key of keys) {
-        const normalized = normalizeLibraryKey(key);
-        if (!normalized) continue;
-        output[normalized] = sanitizeLibraryRule(input?.[key], normalized);
+    const processedKeys = new Set<string>();
+
+    // 1. Process discovered library names (priority)
+    const activeNames = discoveredNames && discoveredNames.length > 0 ? discoveredNames : [];
+    for (const name of activeNames) {
+        const norm = normalizeLibraryKey(name);
+        const ruleInput = input?.[name] || (norm ? input?.[norm] : undefined);
+        output[name] = sanitizeLibraryRule(ruleInput, name);
+        processedKeys.add(name);
+        if (norm) processedKeys.add(norm);
     }
+
+    // 2. Process all input keys (to preserve any existing user-configured data)
+    for (const key of Object.keys(input || {})) {
+        if (!processedKeys.has(key)) {
+            output[key] = sanitizeLibraryRule(input?.[key], key);
+            processedKeys.add(key);
+        }
+    }
+
+    // 3. Fallback: if we have NO active libraries and NO input, show minimal standard ones
+    if (Object.keys(output).length === 0) {
+        for (const key of ['movies', 'tvshows', 'music']) {
+            output[key] = sanitizeLibraryRule(null, key);
+        }
+    }
+
     return output;
 }
 
-export function resolveLibraryRule(media: MediaLike, rules?: LibraryRuleMap | null): LibraryRule {
+export function resolveLibraryRule(media: MediaLike & { libraryName?: string | null }, rules?: LibraryRuleMap | null): LibraryRule {
+    const libraryName = media.libraryName;
     const libraryKey = inferLibraryKey(media);
-    if (!libraryKey) return getDefaultLibraryRule(null);
-    if (!rules) return getDefaultLibraryRule(libraryKey);
-    return sanitizeLibraryRule(rules[libraryKey], libraryKey);
+    
+    if (!rules) {
+        return getDefaultLibraryRule(libraryName || libraryKey);
+    }
+
+    // 1. Try exact match on real library name
+    if (libraryName && rules[libraryName]) {
+        return sanitizeLibraryRule(rules[libraryName], libraryName);
+    }
+
+    // 2. Fallback to generic library key (movies, tvshows, etc.)
+    if (libraryKey && rules[libraryKey]) {
+        return sanitizeLibraryRule(rules[libraryKey], libraryKey);
+    }
+
+    return getDefaultLibraryRule(libraryName || libraryKey);
 }
 
 export function getCompletionMetrics(media: MediaLike, durationWatched: number, rules?: LibraryRuleMap | null) {

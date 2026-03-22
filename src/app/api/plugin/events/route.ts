@@ -6,6 +6,7 @@ import { inferLibraryKey, isLibraryExcluded } from "@/lib/mediaPolicy";
 import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
 import { cleanupOrphanedSessions } from "@/lib/cleanup";
 import { normalizeResolution } from '@/lib/utils';
+import { markMonitorPoll, appendHealthEvent } from "@/lib/systemHealth";
 // Lightweight local types for incoming Jellyfin payloads
 type JellyfinPerson = { type?: string; Type?: string; name?: string; Name?: string };
 type Studio = { name?: string; Name?: string };
@@ -407,11 +408,24 @@ export async function POST(req: Request) {
             // Run background cleanup on heartbeat to keep DB healthy
             cleanupOrphanedSessions().catch(err => console.error("[Plugin] Heartbeat cleanup error:", err));
 
+            // Record monitor activity for Log Health
+            const sessionCount = Array.isArray(users) ? users.length : 0;
+            await markMonitorPoll({ active: true, sessionCount, consecutiveErrors: 0 });
+            await appendHealthEvent({
+                source: "monitor",
+                kind: "monitor_ping",
+                message: `Monitor heartbeat received (${sessionCount} sessions)`,
+                details: { sessions: sessionCount, version: payload.pluginVersion || "unknown" }
+            });
+
             return corsJson({ success: true, message: `Heartbeat OK, ${syncedUsers} users synced.` });
         }
 
         // ────── PlaybackStart ──────
         if (event === "PlaybackStart") {
+            // Record monitor activity for Log Health
+            await markMonitorPoll({ active: true, sessionCount: 1, consecutiveErrors: 0 });
+
             const user = payload.user || payload.User || {};
             const media = payload.media || payload.Media || {};
             const session = payload.session || payload.Session || {};
@@ -1055,6 +1069,9 @@ export async function POST(req: Request) {
                 artist: mediaPayload.artist || mediaPayload.Artist || albumArtist || existingMedia?.artist || null,
                 libraryName: mediaPayload.libraryName || mediaPayload.LibraryName || existingMedia?.libraryName || null,
             });
+
+            // Record monitor activity for Log Health
+            await markMonitorPoll({ active: true, sessionCount: 1, consecutiveErrors: 0 });
 
             if (!user || !media) {
                 return corsJson({ error: "Unable to resolve canonical user/media." }, { status: 400 });

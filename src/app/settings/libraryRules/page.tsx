@@ -67,7 +67,10 @@ export default function SettingsLibraryRulesPage() {
         };
         
         if (map[k]) return map[k];
-        return k.replace(/([a-z])([A-Z])/g, "$1 $2");
+        
+        // If it's a real library name, it might have camelCase from Jellyfin but 
+        // usually we want to just return it as is or capitalized.
+        return k;
     };
 
     const setRule = (key: string, r: Partial<LibraryRule>) => {

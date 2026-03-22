@@ -19,7 +19,7 @@ export default async function AnalysisPage() {
     const genreCounts = new Map<string, number>();
     const resolutionCounts = new Map<string, number>();
     const directorCounts = new Map<string, number>();
-    const libraryCounts = new Map<string, number>();
+    const libraryStatsMap = new Map<string, { name: string, count: number }>();
     let durationSum = 0;
     let durationCount = 0;
 
@@ -38,25 +38,29 @@ export default async function AnalysisPage() {
             if (rawRes === '4K') nr = '4K';
             else if (rawRes === '1080p') nr = '1080p';
             else if (rawRes === '720p') nr = '720p';
-            // All others (SD, 480p, Unknown, etc.) are treated as 'SD' for the summary cards
-            
             resolutionCounts.set(nr, (resolutionCounts.get(nr) || 0) + 1);
         }
         if (m.directors) m.directors.forEach((d: string) => { if (d) directorCounts.set(d, (directorCounts.get(d) || 0) + 1); });
         
-        // Count library items - focus on main items to match Jellyfin expectations
+        // Count library items - focus on main items
         if (m.libraryName && MAIN_TYPES.has(m.type || '')) {
-            const normKey = normalizeLibraryKey(m.collectionType || m.libraryName);
-            let localizedName = m.libraryName;
-            if (normKey) {
-                try {
-                    const translated = tc(normKey);
-                    if (translated && !translated.includes('.')) {
-                        localizedName = translated;
-                    }
-                } catch { /* ignore */ }
+            const key = normalizeLibraryKey(m.collectionType || m.libraryName) || m.libraryName;
+            const existing = libraryStatsMap.get(key);
+            if (existing) {
+                existing.count += 1;
+            } else {
+                let displayName = m.libraryName;
+                const libNorm = normalizeLibraryKey(m.libraryName);
+                if (libNorm) {
+                    try {
+                        const translated = tc(libNorm);
+                        if (translated && !translated.includes('.')) {
+                            displayName = translated;
+                        }
+                    } catch { /* ignore */ }
+                }
+                libraryStatsMap.set(key, { name: displayName, count: 1 });
             }
-            libraryCounts.set(localizedName, (libraryCounts.get(localizedName) || 0) + 1);
         }
 
         if (m.durationMs !== null && m.durationMs !== undefined) {
@@ -67,11 +71,8 @@ export default async function AnalysisPage() {
         }
     });
 
-
-
     const topGenres = Array.from(genreCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 10);
-
-    const topLibraries = Array.from(libraryCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 8);
+    const topLibraries = Array.from(libraryStatsMap.values()).sort((a, b) => b.count - a.count).slice(0, 8);
 
     const res4K = resolutionCounts.get('4K') || 0;
     const res1080p = resolutionCounts.get('1080p') || 0;

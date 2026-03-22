@@ -41,7 +41,7 @@ async function migrateLegacyLibraryRulesIfNeeded() {
     await legacyMigrationPromise;
 }
 
-export async function loadLibraryRules(): Promise<LibraryRuleMap> {
+export async function loadLibraryRules(discoveredNames?: string[]): Promise<LibraryRuleMap> {
     await migrateLegacyLibraryRulesIfNeeded();
 
     const settings = await prisma.globalSettings.findUnique({
@@ -49,11 +49,11 @@ export async function loadLibraryRules(): Promise<LibraryRuleMap> {
         select: { libraryRules: true },
     });
 
-    return sanitizeLibraryRules((settings?.libraryRules as LibraryRuleMap | null | undefined) || {});
+    return sanitizeLibraryRules((settings?.libraryRules as LibraryRuleMap | null | undefined) || {}, discoveredNames);
 }
 
-export async function saveLibraryRules(rules: LibraryRuleMap) {
-    const sanitized = sanitizeLibraryRules(rules);
+export async function saveLibraryRules(rules: LibraryRuleMap, discoveredNames?: string[]) {
+    const sanitized = sanitizeLibraryRules(rules, discoveredNames);
 
     await prisma.globalSettings.upsert({
         where: { id: "global" },

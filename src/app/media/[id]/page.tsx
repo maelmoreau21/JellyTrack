@@ -363,7 +363,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     {seasonId && seasonName && (
                         <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${seasonId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seasonName}</Link></>
                     )}
-                    {resolvedAlbumArtist && (
+                    {albumArtistId && albumArtist && (
+                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${albumArtistId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{albumArtist}</Link></>
+                    )}
+                    {!albumArtistId && resolvedAlbumArtist && (
                         <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><span className="text-zinc-600 dark:text-zinc-300">{resolvedAlbumArtist}</span></>
                     )}
                     {albumId && albumName && (

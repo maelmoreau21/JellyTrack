@@ -103,9 +103,9 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
                             </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 7" vertical={false} stroke={chartGridColor} />
-                        <XAxis dataKey="source" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} />
+                        <XAxis dataKey="source" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => t(val)} />
                         <YAxis stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                        <Tooltip contentStyle={chartTooltipStyle} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
+                        <Tooltip contentStyle={chartTooltipStyle} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} formatter={(val: any, name: any) => [val, t(name)]} />
                         <Bar dataKey="value" name={t('anomalyCumulativeImpact')} radius={[10, 10, 0, 0]} fill={`url(#${sourceGradientId})`}>
                             {safeBreakdown.map((entry, index) => (
                                 <Cell key={`${entry.source}-${index}`} fill={chartPalette[index % chartPalette.length]} fillOpacity={0.92} />

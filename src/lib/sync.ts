@@ -128,7 +128,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         }
 
         // 3. Sync Media Items
-        const baseItemsQuery = `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book,BoxSet&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios`;
+        const baseItemsQuery = `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book,BoxSet&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios,RunTimeTicks,ProductionYear,Path`;
         let minDateParam = '';
         if (options?.recentOnly) {
             const sevenDaysAgo = new Date();
