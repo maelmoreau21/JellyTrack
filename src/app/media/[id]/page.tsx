@@ -78,6 +78,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     let albumId: string | null = null;
     let albumName: string | null = null;
     let albumArtist: string | null = null;
+    let albumArtistId: string | null = null;
 
     try {
         const jellyfinUrl = process.env.JELLYFIN_URL;
@@ -104,6 +105,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 albumId = data.AlbumId || null;
                 albumName = data.Album || null;
                 albumArtist = data.AlbumArtist || (data.AlbumArtists?.[0]?.Name || data.AlbumArtists?.[0] || null);
+                albumArtistId = data.AlbumArtists?.[0]?.Id || (data.ArtistItems?.[0]?.Id || null);
             }
         }
     } catch (err) {
@@ -310,20 +312,42 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const resolvedAlbumArtist = albumArtist || media.artist || null;
     const headerFallbackId = media.parentId || albumId || undefined;
 
-    // Build hierarchy subtitle (e.g., "Series - Season" or "Artist - Album")
-    let mediaSubtitle = null;
-    if (media.type === 'Episode') {
-        if (seriesName && seasonName) mediaSubtitle = `${seriesName} - ${seasonName}`;
-        else if (seriesName) mediaSubtitle = seriesName;
-    } else if (media.type === 'Season') {
-        if (seriesName) mediaSubtitle = seriesName;
-    } else if (media.type === 'Audio') {
-        if (resolvedAlbumArtist && albumName) mediaSubtitle = `${resolvedAlbumArtist} - ${albumName}`;
-        else if (resolvedAlbumArtist) mediaSubtitle = resolvedAlbumArtist;
-        else if (albumName) mediaSubtitle = albumName;
-    } else if (media.type === 'MusicAlbum') {
-        if (resolvedAlbumArtist) mediaSubtitle = resolvedAlbumArtist;
-    }
+    // Build hierarchy subtitle breadcrumbs
+    const HierarchyLinks = () => {
+        const links = [];
+        if (media.type === 'Episode') {
+            if (seriesId && seriesName) {
+                links.push(<Link key="series" href={`/media/${seriesId}`} className="hover:text-primary transition-colors">{seriesName}</Link>);
+            }
+            if (seasonId && seasonName) {
+                if (links.length > 0) links.push(<span key="sep1" className="text-zinc-400 mx-1">-</span>);
+                links.push(<Link key="season" href={`/media/${seasonId}`} className="hover:text-primary transition-colors">{seasonName}</Link>);
+            }
+        } else if (media.type === 'Season') {
+            if (seriesId && seriesName) {
+                links.push(<Link key="series" href={`/media/${seriesId}`} className="hover:text-primary transition-colors">{seriesName}</Link>);
+            }
+        } else if (media.type === 'Audio') {
+            if (albumArtistId && albumArtist) {
+                links.push(<Link key="artist" href={`/media/${albumArtistId}`} className="hover:text-primary transition-colors">{albumArtist}</Link>);
+            }
+            if (albumId && albumName) {
+                if (links.length > 0) links.push(<span key="sep1" className="text-zinc-400 mx-1">-</span>);
+                links.push(<Link key="album" href={`/media/${albumId}`} className="hover:text-primary transition-colors">{albumName}</Link>);
+            }
+        } else if (media.type === 'MusicAlbum') {
+            if (albumArtistId && albumArtist) {
+                links.push(<Link key="artist" href={`/media/${albumArtistId}`} className="hover:text-primary transition-colors">{albumArtist}</Link>);
+            }
+        }
+        
+        if (links.length === 0) return null;
+        return (
+            <div className="text-xl font-medium text-zinc-500 dark:text-zinc-400 mt-1 flex items-center flex-wrap">
+                {links}
+            </div>
+        );
+    };
 
     return (
         <div className="flex-col md:flex">
@@ -378,11 +402,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     <div className="flex-1 space-y-4">
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight">{media.title}</h1>
-                            {mediaSubtitle && (
-                                <div className="text-xl font-medium text-zinc-500 dark:text-zinc-400 mt-1">
-                                    {mediaSubtitle}
-                                </div>
-                            )}
+                            <HierarchyLinks />
                             <div className="flex items-center gap-2 mt-2 flex-wrap">
                                 <Badge variant="outline">{media.type}</Badge>
                                 {media.resolution && <Badge variant="secondary">{normalizedMediaResolution}</Badge>}

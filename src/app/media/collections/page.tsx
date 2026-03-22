@@ -50,7 +50,8 @@ export default async function CollectionsPage() {
                 pendingAlbumIds: new Set<string>(),
                 // Counters for ignored (non top-level) items to surface in UI
                 ignoredTracks: 0,
-                ignoredEpisodes: 0
+                ignoredEpisodes: 0,
+                rawNames: new Set<string>()
             });
         }
     }
@@ -107,6 +108,7 @@ export default async function CollectionsPage() {
             });
         }
         const lib = libraryStatsMap.get(libName)!;
+        if (!lib.rawNames) lib.rawNames = new Set<string>();
         lib.rawNames.add(m.libraryName);
         if (!lib.collectionType && m.collectionType) lib.collectionType = m.collectionType;
 
