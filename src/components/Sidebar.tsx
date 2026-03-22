@@ -42,10 +42,11 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
     const t = useTranslations('nav');
     const [mobileOpen, setMobileOpen] = useState(false);
 
-    // Close mobile sidebar on route change
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // Close mobile sidebar on route change. Defer the update to avoid
+    // synchronous setState inside an effect which can cause cascading renders.
     useEffect(() => {
-        setMobileOpen(false);
+        const t = setTimeout(() => setMobileOpen(false), 0);
+        return () => clearTimeout(t);
     }, [pathname]);
 
     // Hide sidebar on login page only (Wrapped uses fullscreen overlay)
