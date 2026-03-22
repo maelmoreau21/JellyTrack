@@ -211,7 +211,7 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                                 more: t('more')
                             }
                         }}
-                        renderBlock={(block: any, activity: any) => (
+                        renderBlock={(block: React.ReactNode, activity: HeatmapData) => (
                             <TooltipProvider delayDuration={50}>
                                 <Tooltip>
                                     <TooltipTrigger asChild>{block}</TooltipTrigger>

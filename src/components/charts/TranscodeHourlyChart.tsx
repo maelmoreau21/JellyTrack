@@ -22,8 +22,8 @@ interface HourlyMethodData {
 export function TranscodeHourlyChart({ data }: { data: HourlyMethodData[] }) {
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
-    const toggleLegend = (e: any) => {
-        const dataKey = e.dataKey;
+    const toggleLegend = (e: { dataKey?: string }) => {
+        const dataKey = e.dataKey ?? "";
         setHidden(prev => {
             const next = new Set(prev);
             if (next.has(dataKey)) next.delete(dataKey);
@@ -42,7 +42,7 @@ export function TranscodeHourlyChart({ data }: { data: HourlyMethodData[] }) {
                     contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' }}
                     labelStyle={{ color: '#a1a1aa' }}
                     itemStyle={{ color: '#e4e4e7' }}
-                    formatter={(value: any, name: any) => [`${value} sessions`, name]}
+                    formatter={(value: number | string | null | undefined, name?: string) => [`${value} sessions`, name]}
                 />
                 <Legend onClick={toggleLegend} wrapperStyle={{ fontSize: '12px', paddingTop: '10px', cursor: 'pointer' }} />
                 <Area

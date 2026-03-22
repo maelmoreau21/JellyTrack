@@ -35,17 +35,17 @@ export function LibraryDailyPlaysChart({ data }: { data: LibraryPlaysData[] }) {
     const t = useTranslations('charts');
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
-    const formatTooltipValue = (value: any, name: any) => {
+    const formatTooltipValue = (value: number | string, name: string) => {
         return [t('playsCount', { count: value }), name];
     };
 
     // Auto-hide libraries that have 0 plays across entire dataset
     const hasData = new Map<string, boolean>();
     for (const series of LIBRARY_SERIES_KEYS) {
-        hasData.set(series.key, data.some((d: any) => (d[series.key] || 0) > 0));
+        hasData.set(series.key, data.some((d: LibraryPlaysData) => (d[series.key as keyof LibraryPlaysData] || 0) > 0));
     }
 
-    const toggleLegend = (e: any) => {
+    const toggleLegend = (e: { dataKey?: string }) => {
         const dataKey = e.dataKey;
         setHidden(prev => {
             const next = new Set(prev);

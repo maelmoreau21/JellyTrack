@@ -15,7 +15,7 @@ const COLORS = chartPalette;
 export function CategoryPieChart({ data }: { data: CategoryData[] }) {
     const t = useTranslations('charts');
 
-    const formatTooltipValue = (value: any) => {
+    const formatTooltipValue = (value: number | string) => {
         return [`${Number(value).toFixed(1)}h`, t('playbackVolume')];
     };
 

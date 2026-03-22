@@ -29,8 +29,9 @@ const CATEGORY_COLORS: Record<string, string> = {
     Autre: "#71717a",
 };
 
-function GlowBar(props: any) {
-    const { fill, x, y, width, height } = props;
+type GlowBarProps = { fill?: string; x?: number; y?: number; width?: number; height?: number };
+
+function GlowBar({ fill, x, y, width, height }: GlowBarProps) {
     return (
         <g>
             <rect x={x} y={y} width={width} height={height} rx={4} ry={4}

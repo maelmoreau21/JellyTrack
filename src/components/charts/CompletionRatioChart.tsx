@@ -23,7 +23,20 @@ interface CompletionRatioChartProps {
 }
 
 /* Active shape — expanded sector with glow + center label */
-function renderActiveShape(props: any) {
+type ActiveShapeProps = {
+    cx: number;
+    cy: number;
+    innerRadius: number;
+    outerRadius: number;
+    startAngle: number;
+    endAngle: number;
+    fill?: string;
+    payload: { name: string; value?: number };
+    value?: number;
+    percent?: number;
+};
+
+function renderActiveShape(props: ActiveShapeProps) {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value, percent } = props;
     const root = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
     const activeTextColor = root?.getPropertyValue('--chart-item-color')?.trim() || '#e5eefb';
@@ -74,7 +87,7 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
     const chartLabelStyle = { color: root?.getPropertyValue('--chart-label-color')?.trim() || '#a1a1aa' };
     const chartItemStyle = { color: root?.getPropertyValue('--chart-item-color')?.trim() || '#e5eefb' };
 
-    const toggleLegend = (e: any) => {
+    const toggleLegend = (e: { value: string }) => {
         const name = e.value;
         setHidden(prev => {
             const next = new Set(prev);
@@ -113,12 +126,10 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
                         animationDuration={1000}
                         animationBegin={0}
                         animationEasing="ease-out"
-                        {...{
-                            activeIndex: activeIndex >= 0 ? activeIndex : undefined,
-                            activeShape: renderActiveShape,
-                            onMouseEnter: (_: any, index: number) => setActiveIndex(index),
-                            onMouseLeave: () => setActiveIndex(-1),
-                        } as any}
+                        activeIndex={activeIndex >= 0 ? activeIndex : undefined}
+                        activeShape={renderActiveShape}
+                        onMouseEnter={(d: { value?: number; name?: string }, index: number) => setActiveIndex(index)}
+                        onMouseLeave={() => setActiveIndex(-1)}
                     >
                         {filteredData.map((entry, index) => (
                             <Cell
@@ -132,8 +143,8 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
                         contentStyle={chartTooltipStyle}
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
-                        formatter={(value: any, name: any) => [
-                            `${value} sessions (${total > 0 ? ((value / total) * 100).toFixed(0) : 0}%)`,
+                        formatter={(value: number | string, name: string) => [
+                            `${value} sessions (${total > 0 ? ((Number(value) / total) * 100).toFixed(0) : 0}%)`,
                             name,
                         ]}
                         animationDuration={200}

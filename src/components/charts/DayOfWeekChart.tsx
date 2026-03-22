@@ -1,6 +1,7 @@
 "use client";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
+import type { BarProps } from 'recharts';
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
 
@@ -13,8 +14,8 @@ interface DayOfWeekChartProps {
     data: DayOfWeekData[];
 }
 
-function GlowBar(props: any) {
-    const { fill, x, y, width, height } = props;
+function GlowBar(props: BarProps) {
+    const { fill, x, y, width, height } = props as unknown as { fill?: string; x?: number; y?: number; width?: number; height?: number };
     return (
         <g>
             <rect x={x} y={y} width={width} height={height} rx={4} ry={4}

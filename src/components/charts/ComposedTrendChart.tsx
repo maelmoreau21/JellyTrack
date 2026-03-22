@@ -35,8 +35,8 @@ interface ChartSeries {
 }
 
 /* Glowing active dot for lines */
-function GlowDot(props: any) {
-    const { cx, cy, fill } = props;
+type GlowDotProps = { cx?: number; cy?: number; fill?: string };
+function GlowDot({ cx, cy, fill }: GlowDotProps) {
     if (cx == null || cy == null) return null;
     return (
         <g>
@@ -50,12 +50,12 @@ export function ComposedTrendChart({ data, series }: { data: TrendData[], series
     const t = useTranslations('charts');
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
-    const formatTooltipValue = (value: any, name: any) => {
+    const formatTooltipValue = (value: number | string, name: string) => {
         if (name === t('server')) return [t('maxActiveStreams', { count: value }), name];
         return [`${Number(value).toFixed(1)}h`, name];
     };
 
-    const toggleLegend = (e: any) => {
+    const toggleLegend = (e: { dataKey?: string }) => {
         const dataKey = e.dataKey;
         setHidden(prev => {
             const next = new Set(prev);

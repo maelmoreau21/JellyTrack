@@ -6,17 +6,19 @@ import SessionModal from '@/components/SessionModal';
 import { useTranslations } from 'next-intl';
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { useRouter, useSearchParams } from 'next/navigation';
+import type { SafeLog } from '@/types/logs';
 
-export default function LogsListClient({ serverLogs, visibleColumns, initialColumns }: { serverLogs: any[]; visibleColumns: string[]; initialColumns?: { key: string; width: number }[] }) {
+type ColState = { key: string; width: number };
+
+type FlattenedItem = { type: 'party'; mediaTitle: string; members: string[] } | { type: 'log'; log: SafeLog };
+
+export default function LogsListClient({ serverLogs, visibleColumns, initialColumns }: { serverLogs: SafeLog[]; visibleColumns: string[]; initialColumns?: ColState[] }) {
   const t = useTranslations('logs');
-
-  const [selectedLog, setSelectedLog] = useState<any | null>(null);
+  const [selectedLog, setSelectedLog] = useState<SafeLog | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Column state: order + widths (persisted to localStorage)
   const STORAGE_KEY = 'jellytrack.logs.columns.v1';
-
-  type ColState = { key: string; width: number };
 
   const computeDefaultWidths = (keys: string[]) => {
     const base: Record<string, number> = {
@@ -97,27 +99,27 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
   // Build watch-party detection locally for display banners
   const watchPartyMap = useMemo(() => {
     const WINDOW_MS = 5 * 60 * 1000;
-    const byMedia = new Map();
-    filtered.forEach((log: any) => {
+    const byMedia = new Map<string, Array<{ log: SafeLog; started: number }>>();
+    filtered.forEach((log) => {
       const mId = log.mediaId;
       const started = new Date(String(log.startedAt || '')).getTime();
       if (!mId || !Number.isFinite(started)) return;
       if (!byMedia.has(mId)) byMedia.set(mId, []);
-      byMedia.get(mId).push({ log, started });
+      byMedia.get(mId)!.push({ log, started });
     });
-    const map = new Map();
+    const map = new Map<string, string>();
     let counter = 0;
     byMedia.forEach(list => {
-      const sorted = list.sort((a: any, b: any) => a.started - b.started);
+      const sorted = list.sort((a, b) => a.started - b.started);
       let clusterStart = 0;
       for (let i = 1; i <= sorted.length; i++) {
         if (i === sorted.length || sorted[i].started - sorted[i - 1].started > WINDOW_MS) {
           const cluster = sorted.slice(clusterStart, i);
-          const uniqueUsers = new Set(cluster.map((it: any) => it.log.userId));
+          const uniqueUsers = new Set(cluster.map(it => it.log.userId));
           if (uniqueUsers.size >= 2) {
             counter++;
             const pid = `party-${counter}`;
-            cluster.forEach((item: any) => map.set(item.log.id, pid));
+            cluster.forEach(item => map.set(item.log.id, pid));
           }
           clusterStart = i;
         }
@@ -149,13 +151,13 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
 
   // Flatten logs and inject watch-party banners (client-side)
   const flattened = useMemo(() => {
-    const out: any[] = [];
+    const out: FlattenedItem[] = [];
     const shown = new Set<string>();
     for (const log of filtered) {
       const pid = watchPartyMap.get(log.id);
       if (pid && !shown.has(pid)) {
-        const cluster = filtered.filter((l: any) => watchPartyMap.get(l.id) === pid);
-        const members = Array.from(new Set(cluster.map((c: any) => c.user?.username || '?')));
+        const cluster = filtered.filter(l => watchPartyMap.get(l.id) === pid);
+        const members = Array.from(new Set(cluster.map(c => c.user?.username || '?')));
         const mediaTitle = cluster[0]?.media?.title || '';
         out.push({ type: 'party', mediaTitle, members });
         shown.add(pid);
@@ -246,8 +248,8 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
               <TableRow key={`party-${idx}`} className="bg-gradient-to-r from-violet-50 to-fuchsia-50">
                 <TableCell colSpan={columns.length} className="p-2 font-medium">Watch Party — {item.mediaTitle}</TableCell>
               </TableRow>
-            ) : (
-              <LogRow key={item.log.id} log={item.log} visibleColumns={columns.map(c => c.key)} onOpenDetails={(l: any) => setSelectedLog(l)} />
+              ) : (
+              <LogRow key={item.log.id} log={item.log} visibleColumns={columns.map(c => c.key)} onOpenDetails={(l: SafeLog) => setSelectedLog(l)} />
             ))
           )}
         </TableBody>

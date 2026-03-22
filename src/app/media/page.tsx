@@ -32,6 +32,35 @@ type PlaybackHistory = {
     subtitleCodec?: string | null;
 };
 
+type ParentItem = {
+    id: string;
+    jellyfinMediaId: string;
+    title?: string | null;
+    productionYear?: number | null;
+    type?: string | null;
+    resolution?: string | null;
+    playbackHistory?: PlaybackHistory[] | null;
+    parentId?: string | null;
+    durationMs?: bigint | number | null;
+    size?: bigint | number | null;
+    libraryName?: string | null;
+    collectionType?: string | null;
+};
+
+type ProcessedMedia = {
+    id: string;
+    jellyfinMediaId: string;
+    title: string;
+    productionYear: number | null;
+    type: string | null;
+    plays: number;
+    durationHours: number;
+    qualityPercent: number;
+    childCount: number;
+    normalizedResolution: string;
+    bitrateKbps: number | null;
+};
+
 export const dynamic = "force-dynamic";
 
 interface MediaPageProps {
@@ -117,7 +146,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
 
     const mediaWhere = buildMediaFilter();
 
-    const parentItems = await prisma.media.findMany({
+    const parentItems = (await prisma.media.findMany({
         where: mediaWhere,
         include: {
             playbackHistory: {
@@ -127,24 +156,25 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
                 },
             },
         },
-    });
+    })) as ParentItem[];
 
     // Aggregates for Series/Albums (simplified for brevity)
     // In a real app we'd fetch these efficiently
-    const seriesIdList = parentItems.filter((m: any) => m.type === 'Series').map((m: any) => m.jellyfinMediaId);
+    const seriesIdList = parentItems.filter((m) => m.type === 'Series').map((m) => String(m.jellyfinMediaId));
     const seriesChildStats = new Map<string, { plays: number; dur: number; dp: number; childCount: number }>();
     if (seriesIdList.length > 0) {
-        const seasons = await prisma.media.findMany({
+        type SeasonType = { jellyfinMediaId: string; parentId?: string | null };
+        const seasons = (await prisma.media.findMany({
             where: { type: 'Season', parentId: { in: seriesIdList } },
             select: { jellyfinMediaId: true, parentId: true },
-        });
-        const seasonToSeries = new Map(seasons.map((s: any) => [s.jellyfinMediaId, s.parentId!]));
-        const seasonIdList = seasons.map((s: any) => s.jellyfinMediaId);
+        })) as SeasonType[];
+        const seasonToSeries = new Map(seasons.map((s) => [s.jellyfinMediaId, s.parentId ?? '']));
+        const seasonIdList = seasons.map((s) => s.jellyfinMediaId);
         if (seasonIdList.length > 0) {
-            const episodes = await prisma.media.findMany({
+            const episodes = (await prisma.media.findMany({
                 where: { type: 'Episode', parentId: { in: seasonIdList } },
                 include: { playbackHistory: { select: { durationWatched: true, playMethod: true } } },
-            });
+            })) as ParentItem[];
             for (const ep of episodes) {
                 const sid = seasonToSeries.get(ep.parentId!);
                 if (!sid) continue;
@@ -161,13 +191,13 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
         }
     }
 
-    const albumIdList = parentItems.filter((m: any) => m.type === 'MusicAlbum').map((m: any) => m.jellyfinMediaId);
+    const albumIdList = parentItems.filter((m) => m.type === 'MusicAlbum').map((m) => String(m.jellyfinMediaId));
     const albumChildStats = new Map<string, { plays: number; dur: number; dp: number; childCount: number; sizeBytes: bigint; totalTrackDurationMs: bigint }>();
     if (albumIdList.length > 0) {
-        const tracks = await prisma.media.findMany({
+        const tracks = (await prisma.media.findMany({
             where: { type: 'Audio', parentId: { in: albumIdList } },
             select: { parentId: true, size: true, durationMs: true, playbackHistory: { select: { durationWatched: true, playMethod: true } } },
-        });
+        })) as ParentItem[];
         for (const track of tracks) {
             if (!track.parentId) continue;
             const filteredHistory = (track.playbackHistory || []).filter((h: PlaybackHistory) => !isZapped({ ...h, media: { type: 'Audio' } }));
@@ -193,7 +223,7 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     }
 
     // Build a sanitized media list that only exposes primitive, serializable fields
-    const processedMedia = parentItems.map((media: any) => {
+    const processedMedia: ProcessedMedia[] = parentItems.map((media) => {
         let plays = 0, durationSeconds = 0, dpCount = 0, childCount = 0;
         if (media.type === 'Movie') {
             const filteredHistory = (media.playbackHistory || []).filter((h: PlaybackHistory) => !isZapped({ ...h, media: { type: 'Movie' } }));
@@ -450,9 +480,9 @@ export default async function MediaPage({ searchParams }: MediaPageProps) {
     libraryStatsList.sort((a, b) => b.name.localeCompare(a.name));
 
     // Sorting & Pagination
-    if (sortBy === "duration") processedMedia.sort((a: any, b: any) => b.durationHours - a.durationHours);
-    else if (sortBy === "quality") processedMedia.sort((a: any, b: any) => b.qualityPercent - a.qualityPercent);
-    else processedMedia.sort((a: any, b: any) => b.plays - a.plays);
+    if (sortBy === "duration") processedMedia.sort((a, b) => b.durationHours - a.durationHours);
+    else if (sortBy === "quality") processedMedia.sort((a, b) => b.qualityPercent - a.qualityPercent);
+    else processedMedia.sort((a, b) => b.plays - a.plays);
 
     const totalItems = processedMedia.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));

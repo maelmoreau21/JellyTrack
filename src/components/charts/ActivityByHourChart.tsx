@@ -16,7 +16,8 @@ import ResponsiveContainer from "./ResponsiveContainerGuard";
 
 export interface ActivityHourData {
     hour: string; // "00:00", "01:00", etc.
-    count: number;
+    count?: number;
+    value?: number;
 }
 
 interface ActivityByHourChartProps {
@@ -24,8 +25,15 @@ interface ActivityByHourChartProps {
 }
 
 /* Custom active bar shape with glow effect */
-function GlowBar(props: any) {
-    const { fill, x, y, width, height } = props;
+type GlowBarProps = {
+    fill?: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+};
+
+function GlowBar({ fill, x, y, width, height }: GlowBarProps) {
     return (
         <g>
             <rect x={x} y={y} width={width} height={height} rx={4} ry={4}
@@ -37,7 +45,7 @@ function GlowBar(props: any) {
 export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
     // Normalize counts to numbers to avoid unexpected NaN or string comparisons
     const numericCounts = data.map(d => {
-        const n = Number((d as any).count ?? (d as any).value ?? 0);
+        const n = Number(d.count ?? d.value ?? 0);
         return Number.isFinite(n) ? n : 0;
     });
     const maxCount = numericCounts.length ? Math.max(...numericCounts) : 0;
@@ -81,7 +89,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                 <BarChart
                     data={data}
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                    onClick={(e: any) => {
+                    onClick={(e?: { activeLabel?: string }) => {
                         if (e?.activeLabel) {
                             setSelectedHour(prev => prev === e.activeLabel ? null : e.activeLabel);
                         }
@@ -122,7 +130,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
-                        formatter={(value: any) => [`${value} sessions`, "Activité"]}
+                        formatter={(value: number | string) => [`${value} sessions`, "Activité"]}
                         animationDuration={200}
                     />
                     {/* Average reference line (only when meaningful) */}
@@ -143,7 +151,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         activeBar={<GlowBar />}
                     >
                         {data.map((entry, index) => {
-                            const entryCount = Number((entry as any).count ?? 0);
+                            const entryCount = Number(entry.count ?? 0);
                             const isMax = entryCount === maxCount && maxCount > 0;
                             return (
                                 <Cell

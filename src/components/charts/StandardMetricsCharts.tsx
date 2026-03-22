@@ -7,7 +7,7 @@ import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartP
 const COLORS = chartPalette;
 
 interface BarChartProps {
-    data: any[];
+    data: Record<string, number | string | undefined>[];
     dataKey: string;
     fill: string;
     name: string;
@@ -55,7 +55,7 @@ export function StandardBarChart({ data, dataKey, fill, name, horizontal, xAxisK
     );
 }
 
-export function StandardAreaChart({ data, dataKey, stroke, name }: { data: any[], dataKey: string, stroke: string, name: string }) {
+export function StandardAreaChart({ data, dataKey, stroke, name }: { data: Record<string, number | string | undefined>[], dataKey: string, stroke: string, name: string }) {
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
             <AreaChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
@@ -75,7 +75,7 @@ export function StandardAreaChart({ data, dataKey, stroke, name }: { data: any[]
     );
 }
 
-export function StandardPieChart({ data, nameKey, dataKey }: { data: any[], nameKey: string, dataKey: string }) {
+export function StandardPieChart({ data, nameKey, dataKey }: { data: Record<string, number | string | undefined>[], nameKey: string, dataKey: string }) {
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
             <PieChart>

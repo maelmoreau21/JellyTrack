@@ -10,6 +10,8 @@ import LogRow from "./LogRow";
 import LogsListClient from "./LogsListClient";
 import prisma from "@/lib/prisma";
 import { getTranslations, getLocale } from 'next-intl/server';
+import type { SafeLog, SafeMedia, SafeTelemetryEvent } from '@/types/logs';
+import type { Prisma } from '@prisma/client';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 
 import Link from "next/link";
@@ -87,12 +89,12 @@ function toValidTimestamp(value: unknown): number | null {
     return Number.isFinite(ts) ? ts : null;
 }
 
-function detectWatchParties(logs: any[]): Map<string, string> {
+function detectWatchParties(logs: SafeLog[]): Map<string, string> {
     // Returns a map: logId -> partyId (only for logs that are part of a watch party)
     const WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 
     // Group logs by mediaId
-    const byMedia = new Map<string, Array<{ log: any; startedAtMs: number }>>();
+    const byMedia = new Map<string, Array<{ log: SafeLog; startedAtMs: number }>>();
     logs.forEach(log => {
         const mId = log.mediaId;
         const startedAtMs = toValidTimestamp(log.startedAt);
@@ -115,11 +117,11 @@ function detectWatchParties(logs: any[]): Map<string, string> {
             if (i === sorted.length || sorted[i].startedAtMs - sorted[i - 1].startedAtMs > WINDOW_MS) {
                 const cluster = sorted.slice(clusterStart, i);
                 // Only count as watch party if 2+ DIFFERENT users
-                const uniqueUsers = new Set(cluster.map((item: any) => item.log.userId));
+                const uniqueUsers = new Set(cluster.map((item: { log: SafeLog; startedAtMs: number }) => item.log.userId));
                 if (uniqueUsers.size >= 2) {
                     partyCounter++;
                     const pid = `party-${partyCounter}`;
-                    cluster.forEach((item: any) => partyMap.set(item.log.id, pid));
+                    cluster.forEach((item: { log: SafeLog; startedAtMs: number }) => partyMap.set(item.log.id, pid));
                 }
                 clusterStart = i;
             }
@@ -154,8 +156,8 @@ export default async function LogsPage({
     const dateToParam = params.dateTo || "";
 
     // Build the non-fuzzy exact search constraint
-    const whereClause: any = {};
-    const conditions: any[] = [];
+    const whereClause: Prisma.PlaybackHistoryWhereInput = {} as Prisma.PlaybackHistoryWhereInput;
+    const conditions: Prisma.PlaybackHistoryWhereInput[] = [];
 
     if (hideZapped) {
         conditions.push(ZAPPING_CONDITION);
@@ -183,7 +185,7 @@ export default async function LogsPage({
     if (subtitleParams) conditions.push({ OR: [{subtitleCodec: { contains: subtitleParams, mode: "insensitive" }}, {subtitleLanguage: { contains: subtitleParams, mode: "insensitive" }}] });
 
     if (dateFromParam || dateToParam) {
-        const dateFilter: any = {};
+        const dateFilter: Prisma.DateTimeFilter = {} as Prisma.DateTimeFilter;
         if (dateFromParam) {
             const fd = new Date(dateFromParam);
             if (!isNaN(fd.getTime())) dateFilter.gte = fd;
@@ -203,7 +205,7 @@ export default async function LogsPage({
     }
 
     // Determine the sorting order
-    let orderBy: any = { startedAt: "desc" };
+    let orderBy: Record<string, "asc" | "desc"> = { startedAt: "desc" };
     if (sort === "date_asc") orderBy = { startedAt: "asc" };
     else if (sort === "duration_desc") orderBy = { durationWatched: "desc" };
     else if (sort === "duration_asc") orderBy = { durationWatched: "asc" };
@@ -229,28 +231,35 @@ export default async function LogsPage({
     const activePairSet = new Set(activePairs.map((entry) => `${entry.userId}:${entry.mediaId}`));
 
     // Sanitize logs to plain objects (avoids BigInt/Date serialization issues in RSC)
-    const safeLogs = logs.map((log: any) => ({
+    const safeLogs: SafeLog[] = logs.map((log) => ({
         ...log,
         startedAt: log.startedAt instanceof Date ? log.startedAt.toISOString() : String(log.startedAt ?? ''),
         endedAt: log.endedAt instanceof Date ? log.endedAt.toISOString() : log.endedAt ? String(log.endedAt) : null,
         media: log.media ? { ...log.media } : null,
         user: log.user ? { ...log.user } : null,
-        telemetryEvents: Array.isArray(log.telemetryEvents) ? log.telemetryEvents.map((e: any) => ({
-            ...e,
-            createdAt: e.createdAt instanceof Date ? e.createdAt.toISOString() : String(e.createdAt ?? ''),
-            positionMs: typeof e.positionMs === 'bigint' || typeof e.positionMs === 'number' ? String(e.positionMs) : e.positionMs,
-        })) : [],
+        telemetryEvents: Array.isArray(log.telemetryEvents) ? log.telemetryEvents.map((e) => {
+            const rec = e as Record<string, unknown>;
+            const createdAt = rec.createdAt instanceof Date ? (rec.createdAt as Date).toISOString() : String(rec.createdAt ?? '');
+            const posVal = rec.positionMs;
+            const positionMs = typeof posVal === 'bigint' || typeof posVal === 'number' ? String(posVal) : (typeof posVal === 'string' ? posVal : null);
+            return {
+                eventType: typeof rec.eventType === 'string' ? rec.eventType : undefined,
+                positionMs: positionMs as string | null,
+                createdAt,
+                metadata: (rec as Record<string, unknown>).metadata ?? undefined,
+            } as SafeTelemetryEvent;
+        }) : [],
         isActuallyActive: !log.endedAt && activePairSet.has(`${log.userId}:${log.mediaId}`),
     }));
 
     const mediaIds = safeLogs
-        .map((log: any) => log.media?.jellyfinMediaId)
+        .map((log) => log.media?.jellyfinMediaId)
         .filter((id: string | null | undefined): id is string => Boolean(id));
     const jellyfinMetaMap = await fetchJellyfinSubtitleMeta(mediaIds);
 
     // Build parent chain map for enriched media titles (Episode â†’ Season â†’ Series, Track â†’ Album â†’ Artist)
     const parentIds = new Set<string>();
-    safeLogs.forEach((log: any) => {
+    safeLogs.forEach((log) => {
         const metadata = log.media?.jellyfinMediaId ? jellyfinMetaMap.get(log.media.jellyfinMediaId) : null;
         const resolvedParentId = log.media?.parentId || metadata?.parentId;
         if (resolvedParentId) parentIds.add(resolvedParentId);
@@ -270,7 +279,7 @@ export default async function LogsPage({
     grandparentMedia.forEach(gp => grandparentMap.set(gp.jellyfinMediaId, { title: gp.title, type: gp.type, artist: gp.artist }));
 
     // Helper: build subtitle line for a media (e.g., "Série — Saison" or "Artist — Album")
-    function getMediaSubtitle(media: any): string | null {
+    function getMediaSubtitle(media: SafeMedia | null): string | null {
         if (!media) return null;
         const metadata = media.jellyfinMediaId ? jellyfinMetaMap.get(media.jellyfinMediaId) : null;
         const resolvedParentId = media.parentId || metadata?.parentId || null;
@@ -350,7 +359,7 @@ export default async function LogsPage({
 
     // Build party info for badges
     const partyInfo = new Map<string, { members: Set<string>, mediaTitle: string }>();
-    safeLogs.forEach((log: any) => {
+    safeLogs.forEach((log) => {
         const pid = watchPartyMap.get(log.id);
         if (pid) {
             if (!partyInfo.has(pid)) partyInfo.set(pid, { members: new Set(), mediaTitle: log.media?.title || "" });

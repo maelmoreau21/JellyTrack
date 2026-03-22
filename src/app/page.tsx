@@ -79,6 +79,84 @@ type LiveStream = {
   subtitleStreamIndex?: number | null;
 };
 
+// Local domain types to avoid `any` in dashboard calculations
+type History = {
+  startedAt: Date;
+  durationWatched: number;
+  clientName?: string | null;
+  playMethod?: string | null;
+  userId?: string | null;
+  media?: { type?: string | null; title?: string | null } | null;
+};
+
+type TrendEntry = {
+  time: string;
+  movieVolume: number;
+  seriesVolume: number;
+  musicVolume: number;
+  booksVolume: number;
+  totalViews: number;
+  moviePlays: number;
+  seriesPlays: number;
+  musicPlays: number;
+  booksPlays: number;
+};
+
+type TopUserAgg = {
+  userId: string;
+  _sum: { durationWatched?: number | null };
+};
+
+type ActiveStreamRow = {
+  sessionId: string;
+  mediaId: string;
+  media: { jellyfinMediaId: string; title: string; type?: string | null; parentId?: string | null; artist?: string | null; durationMs?: bigint | null };
+  user: { username?: string | null } | null;
+  playMethod?: string | null;
+  deviceName?: string | null;
+  country?: string | null;
+  city?: string | null;
+  positionTicks?: bigint | null;
+  audioLanguage?: string | null;
+  subtitleLanguage?: string | null;
+  audioCodec?: string | null;
+  subtitleCodec?: string | null;
+};
+
+type DashboardMetrics = {
+  totalUsers: number;
+  hoursWatched: number;
+  hoursGrowth: number;
+  previousHoursWatched: number;
+  directPlayPercent: number;
+  peakConcurrentStreams: number;
+  totalPlays: number;
+  playsGrowth: number;
+  previousPlays: number;
+  currentActiveUsers: number;
+  activeUsersGrowth: number;
+  previousActiveUsers: number;
+  todayPlays: number;
+  todayHours: number;
+  todayActiveUsers: number;
+  trendData: TrendEntry[];
+  categoryPieData: { name: string; value: number }[];
+  hourlyChartData: ActivityHourData[];
+  dayOfWeekChartData: DayOfWeekData[];
+  platformChartData: PlatformData[];
+  serverLoadData: { time: string; peakStreams: number }[];
+  topUsers: { username: string; jellyfinUserId: string; hours: number }[];
+  monthlyWatchData: MonthlyWatchData[];
+  completionData: CompletionData[];
+  clientCategoryData: ClientCategoryData[];
+  breakdown: {
+    movieViews: number; movieHours: number;
+    seriesViews: number; seriesHours: number;
+    musicViews: number; musicHours: number;
+    booksViews: number; booksHours: number;
+  };
+};
+
 export const dynamic = "force-dynamic";
 
 // --- Aggregation Cache Helper ---
@@ -128,16 +206,16 @@ const getDashboardMetrics = unstable_cache(
       previousEndDate = new Date(currentStartDate);
     }
 
-    const dateFilter: any = currentStartDate ? { gte: currentStartDate } : undefined;
+    const dateFilter: { gte?: Date; lte?: Date } | undefined = currentStartDate ? { gte: currentStartDate } : undefined;
     if (timeRange === "custom" && customTo && dateFilter) {
       const toDate = new Date(customTo);
       toDate.setHours(23, 59, 59, 999);
       dateFilter.lte = toDate;
     }
-    const prevDateFilter = (previousStartDate && previousEndDate) ? { gte: previousStartDate, lt: previousEndDate } : undefined;
+    const prevDateFilter: { gte: Date; lt?: Date } | undefined = (previousStartDate && previousEndDate) ? { gte: previousStartDate, lt: previousEndDate } : undefined;
 
     // 2. Build Media Filter
-    const AND: any[] = [];
+    const AND: Array<Record<string, unknown>> = [];
     
     // We solely rely on excludedTypes here for dashboard filtering now
     if (excludedTypes && excludedTypes.length > 0) {
@@ -209,14 +287,14 @@ const getDashboardMetrics = unstable_cache(
     let booksViews = 0, booksHours = 0;
     let directPlayCount = 0;
 
-    const trendMap = new Map<string, any>();
+    const trendMap = new Map<string, TrendEntry>();
     const getFormatKey = (d: Date) => {
       if (timeRange === "24h") return `${d.getHours().toString().padStart(2, '0')}:00`;
       else if (timeRange === "all") return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
       else return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
     };
 
-    histories.forEach((h: any) => {
+    histories.forEach((h) => {
       if (h.playMethod === "DirectPlay") directPlayCount++;
 
       const key = getFormatKey(new Date(h.startedAt));
@@ -224,7 +302,7 @@ const getDashboardMetrics = unstable_cache(
         trendMap.set(key, { time: key, movieVolume: 0, seriesVolume: 0, musicVolume: 0, booksVolume: 0, totalViews: 0, moviePlays: 0, seriesPlays: 0, musicPlays: 0, booksPlays: 0 });
       }
       const entry = trendMap.get(key)!;
-      const mType = h.media?.type?.toLowerCase() || "";
+      const mType = (h.media?.type || "").toLowerCase();
       const hours = h.durationWatched / 3600;
 
       // Classifying
@@ -283,7 +361,7 @@ const getDashboardMetrics = unstable_cache(
       take: 5
     });
 
-    const topUsers = await Promise.all(topUsersAgg.map(async (agg: any) => {
+    const topUsers = await Promise.all((topUsersAgg as TopUserAgg[]).map(async (agg) => {
       const u = await prisma.user.findUnique({ where: { id: agg.userId } });
       return {
         username: u?.username || "?",
@@ -294,7 +372,7 @@ const getDashboardMetrics = unstable_cache(
 
     // Hourly
     const hourlyCounts = new Array(24).fill(0);
-    histories.forEach((h: any) => {
+    histories.forEach((h) => {
       const hour = h.startedAt.getHours();
       hourlyCounts[hour]++;
     });
@@ -304,7 +382,7 @@ const getDashboardMetrics = unstable_cache(
 
     // Day of week
     const dayCounts = new Array(7).fill(0);
-    histories.forEach((h: any) => {
+    histories.forEach((h) => {
       dayCounts[h.startedAt.getDay()]++;
     });
     const dayOfWeekChartData: DayOfWeekData[] = dayCounts.map((count, index) => ({
@@ -313,7 +391,7 @@ const getDashboardMetrics = unstable_cache(
 
     // Clients Platform Distro
     const platformCounts = new Map<string, number>();
-    histories.forEach((h: any) => {
+    histories.forEach((h) => {
       const pName = h.clientName || "?";
       platformCounts.set(pName, (platformCounts.get(pName) || 0) + 1);
     });
@@ -324,7 +402,7 @@ const getDashboardMetrics = unstable_cache(
 
     // Peak Concurrent Streams
     const events: { time: number, type: number }[] = [];
-    histories.forEach((h: any) => {
+    histories.forEach((h) => {
       const start = h.startedAt.getTime();
       const end = start + (h.durationWatched * 1000);
       events.push({ time: start, type: 1 });
@@ -361,7 +439,7 @@ const getDashboardMetrics = unstable_cache(
 
     // Monthly watch time — all data grouped by year_monthIndex (e.g., "2026_0" = Jan 2026)
     const monthlyMap = new Map<string, number>();
-    histories.forEach((h: any) => {
+    histories.forEach((h) => {
       const d = new Date(h.startedAt);
       const key = `${d.getFullYear()}_${d.getMonth()}`;
       monthlyMap.set(key, (monthlyMap.get(key) || 0) + h.durationWatched / 3600);
@@ -389,7 +467,7 @@ const getDashboardMetrics = unstable_cache(
       where: { startedAt: dateFilter, media: mediaWhere, ...zappedFilter },
       select: { durationWatched: true, media: { select: { title: true, durationMs: true, type: true, collectionType: true } } },
     });
-    fullHistories.forEach((h: any) => {
+    fullHistories.forEach((h) => {
       const completion = getCompletionMetrics(h.media || {}, h.durationWatched, libraryRules);
       if (completion.bucket === 'completed') completed++;
       else if (completion.bucket === 'partial') partial++;
@@ -403,7 +481,7 @@ const getDashboardMetrics = unstable_cache(
 
     // Client categories
     const clientCatMap = new Map<string, number>();
-    histories.forEach((h: any) => {
+    histories.forEach((h) => {
       const cat = categorizeClient(h.clientName || "");
       clientCatMap.set(cat, (clientCatMap.get(cat) || 0) + 1);
     });
@@ -413,7 +491,7 @@ const getDashboardMetrics = unstable_cache(
 
     // Current period: total plays & active users
     const totalPlays = histories.length;
-    const currentActiveUsers = new Set(histories.map((h: any) => h.userId).filter(Boolean)).size;
+    const currentActiveUsers = new Set(histories.map((h) => h.userId).filter(Boolean)).size;
     const playsGrowth = previousPlays > 0 ? ((totalPlays - previousPlays) / previousPlays) * 100 : 0;
     const activeUsersGrowth = previousActiveUsers > 0 ? ((currentActiveUsers - previousActiveUsers) / previousActiveUsers) * 100 : 0;
 
@@ -425,8 +503,8 @@ const getDashboardMetrics = unstable_cache(
       select: { durationWatched: true, userId: true },
     });
     const todayPlays = todayHistories.length;
-    const todayHours = parseFloat((todayHistories.reduce((sum: number, h: any) => sum + (h.durationWatched || 0), 0) / 3600).toFixed(1));
-    const todayActiveUsers = new Set(todayHistories.map((h: any) => h.userId).filter(Boolean)).size;
+    const todayHours = parseFloat((todayHistories.reduce((sum: number, h) => sum + (h.durationWatched || 0), 0) / 3600).toFixed(1));
+    const todayActiveUsers = new Set(todayHistories.map((h) => h.userId).filter(Boolean)).size;
 
     return {
       totalUsers,
@@ -510,7 +588,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
   // RBAC: Non-admin users are redirected to their profile page
   const authSession = await getServerSession(authOptions);
   if (!authSession?.user?.isAdmin) {
-    const uid = (authSession?.user as any)?.jellyfinUserId;
+    const uid = (authSession?.user as { jellyfinUserId?: string } | undefined)?.jellyfinUserId;
     redirect(uid ? `/users/${uid}` : "/login");
   }
 
@@ -528,7 +606,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
   
   const excludedTypesArr = excludeTypes ? excludeTypes.split(',') : [];
 
-  const metrics = await getDashboardMetrics(type, timeRange, excludedLibraries, excludedTypesArr, from, to, JSON.stringify(libraryRules));
+  const metrics = await getDashboardMetrics(type, timeRange, excludedLibraries, excludedTypesArr, from, to, JSON.stringify(libraryRules)) as DashboardMetrics;
   const healthSnapshot = await getLogHealthSnapshot();
 
   const t = await getTranslations('dashboard');
@@ -539,7 +617,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
   const MONTH_NAMES = t('monthNames').split(',');
 
   // Translate day of week labels
-  metrics.dayOfWeekChartData = metrics.dayOfWeekChartData.map((d: any) => ({
+  metrics.dayOfWeekChartData = metrics.dayOfWeekChartData.map((d: DayOfWeekData) => ({
     ...d,
     day: DAY_NAMES[parseInt(d.day)] || d.day,
   }));
@@ -552,7 +630,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
     partial: t('partial'),
     abandoned: t('abandoned'),
   };
-  metrics.completionData = metrics.completionData.map((d: any) => ({
+  metrics.completionData = metrics.completionData.map((d: CompletionData) => ({
     ...d,
     name: completionLabels[d.name] || d.name,
   }));
@@ -563,7 +641,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
       user: { select: { username: true } },
       media: { select: { title: true, type: true, parentId: true, artist: true } }
     }
-  });
+  }) as unknown as ActiveStreamRow[];
   
   const activeStreamsCount = activeStreamEntries.length;
   let liveStreams: LiveStream[] = [];
@@ -573,7 +651,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
     // Fetch real-time specifics from Redis if they exist
     const redisKeys = activeStreamEntries.map(s => `stream:${s.sessionId}`);
     const redisPayloads = await Promise.all(redisKeys.map(k => redis.get(k)));
-    const redisMap = new Map<string, any>();
+    const redisMap = new Map<string, Record<string, unknown>>();
     
     redisPayloads.forEach((p, idx) => {
         if (p) {
@@ -586,9 +664,9 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
     const relatedIds = new Set<string>();
     for (const entry of activeStreamEntries) {
-        if (entry.mediaId) relatedIds.add(entry.mediaId);
-        // We also need parent and grandparent for hierarchical display if not in Redis
-        if (entry.media.parentId) relatedIds.add(entry.media.parentId);
+      if (entry.mediaId) relatedIds.add(entry.mediaId);
+      // We also need parent and grandparent for hierarchical display if not in Redis
+      if (entry.media?.parentId) relatedIds.add(entry.media.parentId);
     }
     
     const relatedMedia = relatedIds.size > 0
@@ -599,13 +677,13 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
       : [];
     const mediaHierarchyMap = new Map(relatedMedia.map((m) => [m.jellyfinMediaId, m]));
 
-    liveStreams = activeStreamEntries.map((dbStream: any) => {
-        const payload = redisMap.get(dbStream.sessionId) || {};
-        
-        const isTranscoding = dbStream.playMethod === "Transcode" 
-            || payload?.isTranscoding === true
-            || payload?.IsTranscoding === true;
-            
+    liveStreams = activeStreamEntries.map((dbStream) => {
+        const payload = (redisMap.get(dbStream.sessionId) || {}) as Record<string, unknown>;
+
+        const isTranscoding = dbStream.playMethod === "Transcode"
+            || (payload['isTranscoding'] === true)
+            || (payload['IsTranscoding'] === true);
+
         totalBandwidthMbps += isTranscoding ? 12 : 6;
 
         const itemMedia = dbStream.media;
@@ -614,8 +692,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
         // Build enriched subtitle
         let mediaSubtitle: string | null = null;
-        if (payload?.mediaSubtitle) {
-          mediaSubtitle = payload.mediaSubtitle;
+        if (typeof payload['mediaSubtitle'] === 'string') {
+          mediaSubtitle = payload['mediaSubtitle'] as string;
         } else if (itemMedia.type === "Episode" && parentMedia) {
           mediaSubtitle = grandparentMedia?.title
             ? `${grandparentMedia.title} — ${parentMedia.title}`
@@ -629,17 +707,22 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
         // Calculate progress percentage
         let progressPercent = 0;
-        if (typeof payload?.progressPercent === "number") {
-          progressPercent = payload?.progressPercent;
+        if (typeof payload['progressPercent'] === "number") {
+          progressPercent = payload['progressPercent'] as number;
         } else if (dbStream.positionTicks && itemMedia.durationMs && itemMedia.durationMs > 0) {
           const runTimeTicks = Number(itemMedia.durationMs) * 10_000;
           progressPercent = Math.min(100, Math.round((Number(dbStream.positionTicks) / runTimeTicks) * 100));
         }
 
+        const audioLang = typeof payload['audioLanguage'] === 'string' ? (payload['audioLanguage'] as string) : null;
+        const audioC = typeof payload['audioCodec'] === 'string' ? (payload['audioCodec'] as string) : null;
+        const subLang = typeof payload['subtitleLanguage'] === 'string' ? (payload['subtitleLanguage'] as string) : null;
+        const subC = typeof payload['subtitleCodec'] === 'string' ? (payload['subtitleCodec'] as string) : null;
+
         return {
           sessionId: dbStream.sessionId,
           itemId: itemMedia.jellyfinMediaId,
-          user: dbStream.user.username || "Unknown",
+          user: dbStream.user?.username || "Unknown",
           mediaTitle: itemMedia.title || "Unknown",
           mediaSubtitle,
           playMethod: dbStream.playMethod || "Unknown",
@@ -647,12 +730,12 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
           country: dbStream.country || "Unknown",
           city: dbStream.city || "Unknown",
           progressPercent,
-          isPaused: payload?.isPaused === true || payload?.IsPaused === true,
+          isPaused: payload['isPaused'] === true || payload['IsPaused'] === true,
           parentItemId: itemMedia.parentId,
-          audioLanguage: dbStream.audioLanguage || payload?.audioLanguage || null,
-          audioCodec: dbStream.audioCodec || payload?.audioCodec || null,
-          subtitleLanguage: dbStream.subtitleLanguage || payload?.subtitleLanguage || null,
-          subtitleCodec: dbStream.subtitleCodec || payload?.subtitleCodec || null,
+          audioLanguage: dbStream.audioLanguage || audioLang || null,
+          audioCodec: dbStream.audioCodec || audioC || null,
+          subtitleLanguage: dbStream.subtitleLanguage || subLang || null,
+          subtitleCodec: dbStream.subtitleCodec || subC || null,
           mediaType: itemMedia.type,
           albumArtist: itemMedia.artist,
           posterItemId: (itemMedia.type === 'Audio' || itemMedia.type === 'Track') ? (itemMedia.parentId || itemMedia.jellyfinMediaId) : itemMedia.jellyfinMediaId,
@@ -886,7 +969,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                   <CardContent className="pl-0 pb-4">
                     <div className="h-[300px] min-h-[300px] w-full overflow-hidden">
                       {metrics.categoryPieData.length > 0 ? (
-                        <CategoryPieChart data={metrics.categoryPieData.map((d: any) => ({ ...d, name: tc(d.name) }))} />
+                        <CategoryPieChart data={metrics.categoryPieData.map((d) => ({ ...d, name: tc(d.name) }))} />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">
                           {t('noCategoryData')}

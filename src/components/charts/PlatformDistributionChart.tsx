@@ -25,7 +25,20 @@ interface PlatformDistributionChartProps {
 const COLORS = chartPalette;
 
 /* Animated active shape — sector expands + center label */
-function renderActiveShape(props: any) {
+type PlatformActiveShapeProps = {
+    cx: number;
+    cy: number;
+    innerRadius: number;
+    outerRadius: number;
+    startAngle: number;
+    endAngle: number;
+    fill?: string;
+    payload: { name: string; value?: number };
+    value?: number;
+    percent?: number;
+};
+
+function renderActiveShape(props: PlatformActiveShapeProps) {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value, percent } = props;
     return (
         <g>
@@ -63,7 +76,7 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
     const filteredData = data.filter(d => !hidden.has(d.name));
     const total = filteredData.reduce((sum, d) => sum + d.value, 0);
 
-    const toggleLegend = (e: any) => {
+    const toggleLegend = (e: { value: string }) => {
         const name = e.value;
         setHidden(prev => {
             const next = new Set(prev);
@@ -101,12 +114,10 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         animationDuration={1000}
                         animationBegin={0}
                         animationEasing="ease-out"
-                        {...{
-                            activeIndex: activeIndex >= 0 ? activeIndex : undefined,
-                            activeShape: renderActiveShape,
-                            onMouseEnter: (_: any, index: number) => setActiveIndex(index),
-                            onMouseLeave: () => setActiveIndex(-1),
-                        } as any}
+                        activeIndex={activeIndex >= 0 ? activeIndex : undefined}
+                        activeShape={renderActiveShape}
+                        onMouseEnter={(d: { value?: number; name?: string }, index: number) => setActiveIndex(index)}
+                        onMouseLeave={() => setActiveIndex(-1)}
                     >
                         {filteredData.map((entry, index) => {
                             const originalIdx = data.findIndex(d => d.name === entry.name);
@@ -124,7 +135,7 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
                         animationDuration={200}
-                        formatter={(value: any, name: any) => [`${value} (${total > 0 ? ((value / total) * 100).toFixed(0) : 0}%)`, name]}
+                        formatter={(value: number | string, name: string) => [`${value} (${total > 0 ? ((Number(value) / total) * 100).toFixed(0) : 0}%)`, name]}
                     />
                     <Legend
                         verticalAlign="bottom"

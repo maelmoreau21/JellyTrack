@@ -8,8 +8,9 @@ import { ChevronDown } from "lucide-react";
 import { FallbackImage } from "@/components/FallbackImage";
 import { useTranslations } from 'next-intl';
 import { normalizeResolution } from '@/lib/utils';
+import type { SafeLog, SafeTelemetryEvent } from '@/types/logs';
 
-export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: any; visibleColumns: string[]; onOpenDetails?: (log:any)=>void }) {
+export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: SafeLog; visibleColumns: string[]; onOpenDetails?: (log: SafeLog)=>void }) {
   const t = useTranslations('logs');
   const [open, setOpen] = useState(false);
   const [bucketMs, setBucketMs] = useState<number>(0); // 0 = exact positions
@@ -18,8 +19,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
   const isParty = !!log.partyId;
   const isAudioMedia = log.media?.type ? (String(log.media.type).toLowerCase().includes('audio') || String(log.media.type).toLowerCase() === 'track') : false;
 
-  const events = useMemo(() => {
-    return (log.telemetryEvents || []).slice().sort((a: any, b: any) => {
+  const events = useMemo<SafeTelemetryEvent[]>(() => {
+    return (log.telemetryEvents || []).slice().sort((a, b) => {
       const pa = Number(a.positionMs || 0);
       const pb = Number(b.positionMs || 0);
       return pa - pb;
@@ -36,16 +37,16 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
   };
 
   const durationMs = useMemo(() => {
-    const fromLog = Number(log.durationWatched || 0) * 1000;
-    const maxEvent = events.length ? Math.max(...events.map((e: any) => Number(e.positionMs || 0))) : 0;
+    const fromLog = Number(log.durationWatched ?? 0) * 1000;
+    const maxEvent = events.length ? Math.max(...events.map((e) => Number(e.positionMs || 0))) : 0;
     return Math.max(fromLog, maxEvent, 1);
   }, [log.durationWatched, events]);
 
   const groupedEvents = useMemo(() => {
-    if (!events || events.length === 0) return [];
-    if (!bucketMs) return events.map((e: any) => ({ key: Number(e.positionMs || 0), pos: Number(e.positionMs || 0), events: [e], count: 1, repType: e.eventType }));
+    if (!events || events.length === 0) return [] as Array<{ key: number; pos: number; events: SafeTelemetryEvent[]; count: number; repType?: string }>;
+    if (!bucketMs) return events.map((e) => ({ key: Number(e.positionMs || 0), pos: Number(e.positionMs || 0), events: [e], count: 1, repType: e.eventType }));
 
-    const map = new Map<number, any[]>();
+    const map = new Map<number, SafeTelemetryEvent[]>();
     for (const ev of events) {
       const pos = Math.max(0, Number(ev.positionMs || 0));
       const bucket = Math.floor(pos / bucketMs) * bucketMs;
@@ -75,20 +76,32 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
     }
   };
 
-  const formatChangeDetail = (ev: any) => {
+  const formatChangeDetail = (ev: SafeTelemetryEvent | null | undefined) => {
     if (!ev || !ev.metadata) return '';
     try {
-      const md = typeof ev.metadata === 'string' ? JSON.parse(ev.metadata) : ev.metadata;
-      if (md && md.from && md.to) {
-        const fmt = (side: any) => {
-          if (!side) return '—';
-          const label = side.language ?? (side.index !== undefined ? `#${side.index}` : String(side));
-          const codec = side.codec ? ` (${side.codec})` : '';
-          return `${label}${codec}`;
-        };
-        return `${fmt(md.from)} → ${fmt(md.to)}`;
+      const mdRaw = typeof ev.metadata === 'string' ? JSON.parse(ev.metadata) : ev.metadata;
+      const md = mdRaw as Record<string, unknown> | undefined;
+      if (!md) return '';
+
+      const hasFrom = Object.prototype.hasOwnProperty.call(md, 'from');
+      const hasTo = Object.prototype.hasOwnProperty.call(md, 'to');
+
+      const fmtSide = (side: unknown) => {
+        if (!side) return '—';
+        if (typeof side === 'string' || typeof side === 'number') return String(side);
+        const s = side as Record<string, unknown>;
+        const language = typeof s.language === 'string' ? s.language : undefined;
+        const index = typeof s.index === 'number' ? `#${s.index}` : undefined;
+        const codec = typeof s.codec === 'string' ? ` (${s.codec})` : '';
+        const label = language ?? index ?? String(side);
+        return `${label}${codec}`;
+      };
+
+      if (hasFrom && hasTo) {
+        const from = md['from'];
+        const to = md['to'];
+        return `${fmtSide(from)} → ${fmtSide(to)}`;
       }
-      if (md.from !== undefined && md.to !== undefined) return `${md.from} → ${md.to}`;
     } catch {}
     return '';
   };
@@ -307,7 +320,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
                     {groupedEvents.length === 0 ? (
                       <div className="absolute inset-0 flex items-center justify-center text-zinc-400">{t('timeline.noEvents')}</div>
                     ) : (
-                      groupedEvents.map((g: any, idx: number) => {
+                      groupedEvents.map((g, idx: number) => {
                         const pos = Number(g.pos || 0);
                         const pct = Number.isFinite(durationMs) && durationMs > 0 ? Math.min(99, Math.max(1, Math.round((pos / durationMs) * 100))) : 1;
                         const meta = getEventMeta(g.repType);
@@ -343,7 +356,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: an
                 {groupedEvents.length === 0 && (
                   <div className="text-zinc-400">{t('timeline.noEvents')}</div>
                 )}
-                {groupedEvents.map((g: any, idx: number) => {
+                    {groupedEvents.map((g, idx: number) => {
                   const meta = getEventMeta(g.repType);
                   const detail = formatChangeDetail(g.events && g.events[0] ? g.events[0] : null);
                   return (

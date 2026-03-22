@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, isAuthError } from "@/lib/auth";
-import { unlinkSync, existsSync } from "fs";
-import path from "path";
 import { apiT } from "@/lib/i18n-api";
 
 export async function POST(req: NextRequest) {
@@ -23,15 +21,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: await apiT('fileInvalid') }, { status: 400 });
         }
 
-        // Resolve backup dir at request time to avoid Turbopack tracing filesystem at import time
+        // Load fs/path at request time to avoid Turbopack tracing filesystem at import time
+        const fs = await import('fs');
+        const path = await import('path');
+
         const BACKUP_DIR = process.env.BACKUP_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "backups");
         const filePath = path.join(BACKUP_DIR, safeName);
 
-        if (!existsSync(filePath)) {
+        if (!fs.existsSync(filePath)) {
             return NextResponse.json({ error: await apiT('fileNotFound') }, { status: 404 });
         }
 
-        unlinkSync(filePath);
+        fs.unlinkSync(filePath);
 
         return NextResponse.json({ success: true, message: await apiT('backupDeleted', { fileName: safeName }) });
     } catch (e: any) {
