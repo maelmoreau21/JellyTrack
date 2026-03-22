@@ -84,7 +84,7 @@ export default function SettingsPluginPage() {
     };
 
     const handleRevokePluginKey = async () => {
-        if (!confirm(t('confirmRevokePlugin') || 'Revoke plugin API key?')) return;
+        if (!confirm(t('pluginConfirmRevoke') || 'Revoke plugin API key?')) return;
         setPluginLoading(true);
         setPluginMsg(null);
         try {

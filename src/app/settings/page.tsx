@@ -82,23 +82,6 @@ export default function SettingsPage() {
     // Cron schedule state
     const [syncCronHour, setSyncCronHour] = useState(3);
 
-    const handleCopyPluginUrl = async () => {
-        try {
-            await navigator.clipboard.writeText(pluginEndpoint);
-        } catch {
-            const textarea = document.createElement('textarea');
-            textarea.value = pluginEndpoint;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-        }
-        setPluginUrlCopied(true);
-        setTimeout(() => setPluginUrlCopied(false), 2000);
-    };
-
     useEffect(() => {
         let mounted = true;
         (async () => {
@@ -149,7 +132,7 @@ export default function SettingsPage() {
     };
 
     const handleRevokePluginKey = async () => {
-        if (!confirm(t('confirmRevokePlugin') || 'Revoke plugin API key?')) return;
+        if (!confirm(t('pluginConfirmRevoke') || 'Revoke plugin API key?')) return;
         setPluginLoading(true);
         setPluginMsg(null);
         try {
@@ -221,8 +204,6 @@ export default function SettingsPage() {
         }
     };
 
-
-
     const handleSaveCron = async () => {
         setIsSavingCron(true);
         setCronMsg(null);
@@ -292,20 +273,20 @@ export default function SettingsPage() {
                     });
                     const data = await res.json();
                     if (res.ok) {
-                        setBackupMsg({ type: "success", text: t('restoreSuccess') });
+                        setBackupMsg({ type: 'success', text: t('restoreSuccess') });
                         setTimeout(() => window.location.reload(), 3000);
                     } else {
-                        setBackupMsg({ type: "error", text: data.error || t('invalidBackup') });
+                        setBackupMsg({ type: 'error', text: data.error || t('invalidBackup') });
                         setIsRestoring(false);
                     }
                 } catch {
-                    setBackupMsg({ type: "error", text: t('jsonParseError') });
+                    setBackupMsg({ type: 'error', text: t('jsonParseError') });
                     setIsRestoring(false);
                 }
             };
             fileReader.readAsText(file);
         } catch {
-            setBackupMsg({ type: "error", text: t('fileReadError') });
+            setBackupMsg({ type: 'error', text: t('fileReadError') });
             setIsRestoring(false);
         }
         if (fileInputRef.current) { fileInputRef.current.value = ""; }
@@ -551,7 +532,7 @@ export default function SettingsPage() {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="max-transcodes">Seuil de Transcodes Simultanés</Label>
+                                    <Label htmlFor="max-transcodes">{t('maxConcurrentTranscodesLabel')}</Label>
                                     <div className="flex items-center gap-3">
                                         <Input
                                             id="max-transcodes"
@@ -561,7 +542,7 @@ export default function SettingsPage() {
                                             onChange={(e) => setMaxConcurrentTranscodes(parseInt(e.target.value) || 0)}
                                             className="w-24 font-mono"
                                         />
-                                        <p className="text-xs text-muted-foreground">0 = désactivé. Alerte si le nombre dépasse ce seuil.</p>
+                                        <p className="text-xs text-muted-foreground">{t('maxConcurrentTranscodesDesc')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -571,11 +552,11 @@ export default function SettingsPage() {
                             <p className="text-sm text-muted-foreground mb-4">{t('collectionFilterDesc')}</p>
                             <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
                                 <span className={`rounded-full px-2.5 py-1 font-semibold uppercase tracking-wide ${libraryScanSource === 'jellyfin' ? 'app-chip-success' : 'app-chip'}`}>
-                                    {libraryScanSource === 'jellyfin' ? 'Scan direct Jellyfin' : 'Fallback base locale'}
+                                    {libraryScanSource === 'jellyfin' ? t('scanDirectJellyfin') : t('scanFallback')}
                                 </span>
                                 {libraryScanError && (
                                     <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-200">
-                                        Jellyfin unreachable, display based on already synced media.
+                                        {t('jellyfinUnreachable')}
                                     </span>
                                 )}
                             </div>
@@ -598,7 +579,7 @@ export default function SettingsPage() {
                                                     <div className="text-xs text-zinc-400 font-mono mt-1">{libraryKey}</div>
                                                 </div>
                                                 <div className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${enabled ? 'app-chip-success' : 'app-chip'}`}>
-                                                    {enabled ? 'Suivi' : 'Ignoré'}
+                                                    {enabled ? t('tracked') : t('ignored')}
                                                 </div>
                                             </div>
                                         </button>
