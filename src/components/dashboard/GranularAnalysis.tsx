@@ -6,6 +6,8 @@ import { StandardAreaChart, StandardBarChart, StandardPieChart } from "@/compone
 import { StackedBarChart, StackedAreaChart } from "@/components/charts/StackedMetricsCharts";
 import { AttendanceHeatmap } from "@/components/charts/AttendanceHeatmap";
 import { getTranslations, getLocale } from 'next-intl/server';
+import { normalizeLibraryKey, getAvailableLibraryKeys } from '@/lib/mediaPolicy';
+import { normalizeLanguageTag } from '@/lib/language';
 import { formatHour } from "@/lib/utils";
 import { getCompletionMetrics } from "@/lib/mediaPolicy";
 import { loadLibraryRules } from "@/lib/libraryRules";
@@ -132,24 +134,15 @@ const getGranularData = unstable_cache(
 
             // Languages
             if (h.audioLanguage) {
-                // Normalize language strings: strip codec parentheses, commas/slashes, and noise
-                let aKey = String(h.audioLanguage).toUpperCase().trim();
-                aKey = aKey.replace(/\(.*\)/, '').trim(); // remove '(aac)', etc.
-                aKey = aKey.split(/[\/\\,;]/)[0].trim(); // take first token before separators
-                aKey = aKey.replace(/[^A-Z0-9\- ]+/g, '').trim();
-
-                // Quick mapping for common 3-letter codes returned by some Jellyfin instances
-                const quickMap: Record<string, string> = { 'FRE': 'FR', 'FRA': 'FR', 'ENG': 'EN', 'SPA': 'ES', 'POR': 'PT', 'DEU': 'DE', 'GER': 'DE', 'ITA': 'IT', 'NLD': 'NL', 'ZHO': 'ZH', 'CHI': 'ZH', 'JPN': 'JA' };
-                if (quickMap[aKey]) aKey = quickMap[aKey];
-
-                if (isValidLang(aKey)) {
-                    audioMap.set(aKey, (audioMap.get(aKey) || 0) + 1);
+                const lang = normalizeLanguageTag(h.audioLanguage);
+                if (lang) {
+                    audioMap.set(lang, (audioMap.get(lang) || 0) + 1);
                 }
             }
 
-            // For subtitles, we count "None" if null/undefined, otherwise the language
-            const sKey = h.subtitleLanguage ? h.subtitleLanguage.toUpperCase() : "OFF";
-            subMap.set(sKey, (subMap.get(sKey) || 0) + 1);
+            // For subtitles, count disabled as OFF; otherwise normalize language token
+            const sNorm = h.subtitleLanguage ? (normalizeLanguageTag(h.subtitleLanguage) || String(h.subtitleLanguage).toUpperCase()) : 'OFF';
+            subMap.set(sNorm, (subMap.get(sNorm) || 0) + 1);
         });
 
         const dailyData = Array.from(dailyMap.values()).map(d => {
@@ -218,6 +211,41 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
     const data = await getGranularData(type, timeRange, excludedLibraries, locale, JSON.stringify(rules));
     const t = await getTranslations('granular');
     const tc = await getTranslations('common');
+
+    // Normalize library keys and prepare localized labels for charts
+    const rawCollections: string[] = Array.isArray(data.collections) ? data.collections : [];
+    const rawToNorm = new Map<string, string>();
+    rawCollections.forEach((raw) => {
+        const norm = normalizeLibraryKey(raw) || String(raw || 'unknown');
+        rawToNorm.set(raw, norm);
+    });
+
+    const normalizedDailyData = (data.dailyData || []).map((d: Record<string, unknown>) => {
+        const out: Record<string, any> = { ...d };
+        for (const [raw, norm] of rawToNorm.entries()) {
+            const rawPlays = `${raw}_plays`;
+            const rawDur = `${raw}_duration`;
+            const normPlays = `${norm}_plays`;
+            const normDur = `${norm}_duration`;
+            if (Object.prototype.hasOwnProperty.call(out, rawPlays)) {
+                out[normPlays] = (out[normPlays] || 0) + (out[rawPlays] || 0);
+                delete out[rawPlays];
+            }
+            if (Object.prototype.hasOwnProperty.call(out, rawDur)) {
+                out[normDur] = (out[normDur] || 0) + (out[rawDur] || 0);
+                delete out[rawDur];
+            }
+        }
+        return out;
+    });
+
+    const normalizedDropOffData = (data.dropOffData || []).map((d: any) => ({ time: rawToNorm.get(d.time) || d.time, completion: d.completion }));
+
+    const normalizedKeys = getAvailableLibraryKeys(Array.from(rawToNorm.values()));
+    const labelMap: Record<string, string> = {};
+    normalizedKeys.forEach(k => {
+        try { labelMap[k] = tc(k); } catch { labelMap[k] = k; }
+    });
     const tDashboard = await getTranslations('dashboard');
 
     // Localize subtitle names (e.g. OFF -> Disabled) using the granular scope
@@ -258,7 +286,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('playsByLibraryDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StackedBarChart data={data.dailyData} keys={data.collections} suffix="_plays" />
+                        <StackedBarChart data={normalizedDailyData} keys={normalizedKeys} suffix="_plays" labelMap={labelMap} />
                     </CardContent>
                 </Card>
             </div>
@@ -280,7 +308,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('durationByLibraryDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StackedBarChart data={data.dailyData} keys={data.collections} suffix="_duration" />
+                        <StackedBarChart data={normalizedDailyData} keys={normalizedKeys} suffix="_duration" labelMap={labelMap} />
                     </CardContent>
                 </Card>
             </div>
@@ -324,7 +352,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <CardDescription>{t('avgCompletionByLibDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <StandardBarChart data={data.dropOffData} horizontal xAxisKey="time" dataKey="completion" fill="#14b8a6" name={t('completionPct')} />
+                        <StandardBarChart data={normalizedDropOffData} horizontal xAxisKey="time" dataKey="completion" fill="#14b8a6" name={t('completionPct')} />
                     </CardContent>
                 </Card>
             </div>

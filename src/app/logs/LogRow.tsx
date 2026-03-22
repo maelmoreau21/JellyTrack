@@ -111,8 +111,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
       <TableRow className={`even:bg-zinc-100/50 dark:even:bg-slate-900/35 hover:bg-zinc-100 dark:hover:bg-slate-800/55 border-zinc-200/50 dark:border-zinc-700/50 transition-colors ${isParty ? 'border-l-2 border-l-violet-500/40' : ''}`}>
         {/* Date (with expand toggle) */}
         {visibleColumns.includes('date') && (
-          <TableCell className="font-medium whitespace-nowrap">
-            <div className="flex items-center gap-1.5">
+          <TableCell className="font-medium whitespace-nowrap pr-3 border-r border-zinc-200/30 dark:border-zinc-700/30">
+            <div className="flex items-center gap-1.5 min-w-0">
               <button onClick={() => setOpen(v => !v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setOpen(v=>!v); }} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1" aria-expanded={open} aria-label={open ? 'Collapse' : 'Expand'}>
                 <ChevronDown className={`w-4 h-4 transform ${open ? 'rotate-180' : 'rotate-0'}`} />
               </button>
@@ -145,7 +145,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
         {/* User */}
         {visibleColumns.includes('user') && (
-          <TableCell className="font-semibold text-primary">
+          <TableCell className="font-semibold text-primary pl-3">
             {log.user ? (
               <Link href={`/users/${log.user.jellyfinUserId}`} className="hover:underline">{log.user.username}</Link>
             ) : '—'}

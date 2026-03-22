@@ -42,7 +42,7 @@ export default function MediaSearchModal({ open, onClose, query }: { open: boole
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">{query}</h3>
           <div className="flex items-center gap-2">
-            <Link href={`/media?q=${encodeURIComponent(query || '')}`} className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">{t('viewAll') || 'Voir tout'}</Link>
+            <Link href={`/media/all?q=${encodeURIComponent(query || '')}`} className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">{t('viewAll') || 'Voir tout'}</Link>
             <Button onClick={onClose}>Close</Button>
           </div>
         </div>

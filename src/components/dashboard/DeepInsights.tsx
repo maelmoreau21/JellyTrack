@@ -7,6 +7,7 @@ import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import { GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
+import { normalizeLanguageTag } from '@/lib/language';
 
 type CategorizedItem = { title?: string; name?: string; type?: string; plays?: number; duration?: number };
 
@@ -311,17 +312,11 @@ const getDeepInsights = unstable_cache(
 
         audioRows.forEach(a => {
             if (a.audioLanguage) {
-                let lang = String(a.audioLanguage).toUpperCase().trim();
-                lang = lang.replace(/\(.*\)/, '').trim(); 
-                lang = lang.split(/[\/\\,;]/)[0].trim(); 
-                lang = lang.replace(/[^A-Z0-9\- ]+/g, '').trim();
-                const quickMap: Record<string, string> = { 'FRE': 'FR', 'FRA': 'FR', 'ENG': 'EN', 'SPA': 'ES', 'POR': 'PT', 'DEU': 'DE', 'GER': 'DE', 'ITA': 'IT', 'NLD': 'NL', 'ZHO': 'ZH', 'CHI': 'ZH', 'JPN': 'JA' };
-                if (quickMap[lang]) lang = quickMap[lang];
-
-                if (isValidLang(lang)) {
+                const lang = normalizeLanguageTag(a.audioLanguage);
+                if (lang) {
                     let codec = a.audioCodec ? String(a.audioCodec).trim() : '';
                     if (codec.toLowerCase() === 'unknown') codec = '';
-                    
+
                     const key = codec ? `${lang} (${codec})` : lang;
                     audioMap.set(key, (audioMap.get(key) || 0) + 1);
                 }
@@ -341,14 +336,8 @@ const getDeepInsights = unstable_cache(
             if (!s.subtitleLanguage && !s.subtitleCodec) {
                 subtitleMap.set('None', (subtitleMap.get('None') || 0) + 1);
             } else if (s.subtitleLanguage) {
-                let lang = String(s.subtitleLanguage).toUpperCase().trim();
-                lang = lang.replace(/\(.*\)/, '').trim();
-                lang = lang.split(/[\/\\,;]/)[0].trim();
-                lang = lang.replace(/[^A-Z0-9\- ]+/g, '').trim();
-                const quickMap: Record<string, string> = { 'FRE': 'FR', 'FRA': 'FR', 'ENG': 'EN', 'SPA': 'ES', 'POR': 'PT', 'DEU': 'DE', 'GER': 'DE', 'ITA': 'IT', 'NLD': 'NL', 'ZHO': 'ZH', 'CHI': 'ZH', 'JPN': 'JA' };
-                if (quickMap[lang]) lang = quickMap[lang];
-
-                if (isValidLang(lang)) {
+                const lang = normalizeLanguageTag(s.subtitleLanguage);
+                if (lang) {
                     let codec = s.subtitleCodec ? String(s.subtitleCodec).trim() : '';
                     if (codec.toLowerCase() === 'unknown') codec = '';
 
@@ -398,6 +387,15 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
     const data = await getDeepInsights(type, timeRange, excludedLibraries);
     const t = await getTranslations('deepInsights');
     const tGranular = await getTranslations('granular');
+
+    // Localize subtitle 'None' label to translation (was using literal 'None' in aggregation)
+    const localizedSubtitleChartData = (data.subtitleChartData || []).map((d: any) => {
+        const name = String(d.name || '');
+        if (name.toUpperCase() === 'NONE' || name.toUpperCase() === 'OFF' || name.toUpperCase() === 'UNKNOWN') {
+            return { ...d, name: tGranular('disabled') };
+        }
+        return d;
+    });
 
     const renderCategory = (title: string, items: CategorizedItem[], empty: string, icon?: React.ReactNode) => (
         <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
@@ -564,8 +562,8 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                         <CardDescription>{tGranular('subtitlesDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        {data.subtitleChartData && data.subtitleChartData.length > 0 ? (
-                            <StandardPieChart data={data.subtitleChartData} nameKey="name" dataKey="value" />
+                        {localizedSubtitleChartData && localizedSubtitleChartData.length > 0 ? (
+                            <StandardPieChart data={localizedSubtitleChartData} nameKey="name" dataKey="value" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noDataSmall')}</p>
                         )}

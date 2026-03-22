@@ -9,7 +9,6 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
     const pathname = usePathname();
 
     const tabs = [
-        { href: '/settings/overview', key: 'overviewTab' },
         { href: '/settings/plugin', key: 'pluginTitle' },
         { href: '/settings/scheduler', key: 'taskScheduler' },
         { href: '/settings/notifications', key: 'notifications' },
@@ -29,7 +28,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                     <Link
                                         key={tab.href}
                                         href={tab.href}
-                                        className={`px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap ${active ? 'bg-zinc-900 text-white' : 'text-zinc-400 hover:text-zinc-100'}`}
+                                        className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors border ${active ? 'bg-zinc-900 text-white shadow-sm border-zinc-800/60' : 'text-zinc-300 border-transparent hover:bg-zinc-900/40 hover:border-zinc-800/30'}`}
                                     >
                                         {t(tab.key)}
                                     </Link>

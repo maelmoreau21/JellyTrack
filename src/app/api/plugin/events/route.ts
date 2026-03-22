@@ -273,6 +273,78 @@ async function acquirePlaybackLock(userId: string, mediaId: string, retries = 10
     return { acquired: false, key };
 }
 
+// Merge multiple concurrently-open PlaybackHistory rows for the same user+media.
+// This is a safety net for rare race conditions where parallel event processing
+// creates more than one open session. We migrate telemetry, merge Redis keys
+// and delete duplicate rows, keeping the earliest started session as primary.
+async function mergeOpenPlaybacks(userId: string, mediaId: string) {
+    const opens = await prisma.playbackHistory.findMany({
+        where: { userId, mediaId, endedAt: null },
+        orderBy: { startedAt: "asc" },
+        select: { id: true, startedAt: true },
+    });
+    if (opens.length <= 1) return;
+
+    const primaryId = opens[0].id;
+    const duplicateIds = opens.slice(1).map((o) => o.id);
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            for (const dupId of duplicateIds) {
+                await tx.telemetryEvent.updateMany({ where: { playbackId: dupId }, data: { playbackId: primaryId } });
+                await tx.playbackHistory.delete({ where: { id: dupId } });
+            }
+        });
+    } catch (err) {
+        console.error("[Plugin] mergeOpenPlaybacks prisma transaction failed:", err);
+        return;
+    }
+
+    // Merge ephemeral Redis keys (durations, last tick/time, start_pos, audio/sub/pause)
+    for (const dupId of duplicateIds) {
+        try {
+            // dur: sum durations
+            const dupDur = await redis.get(`dur:${dupId}`);
+            if (dupDur) {
+                const primDur = await redis.get(`dur:${primaryId}`) || "0";
+                const newDur = (parseFloat(primDur || "0") + parseFloat(dupDur || "0")).toString();
+                await redis.setex(`dur:${primaryId}`, 86400, newDur);
+            }
+
+            // last_time: keep the most recent
+            const dupLastTime = await redis.get(`last_time:${dupId}`);
+            const primLastTime = await redis.get(`last_time:${primaryId}`);
+            if (dupLastTime && (!primLastTime || Number(dupLastTime) > Number(primLastTime))) {
+                await redis.setex(`last_time:${primaryId}`, 86400, dupLastTime);
+            }
+
+            // last_tick: keep the most recent
+            const dupLastTick = await redis.get(`last_tick:${dupId}`);
+            const primLastTick = await redis.get(`last_tick:${primaryId}`);
+            if (dupLastTick && (!primLastTick || Number(dupLastTick) > Number(primLastTick))) {
+                await redis.setex(`last_tick:${primaryId}`, 86400, dupLastTick);
+            }
+
+            // start_pos: prefer primary, else copy dup
+            const dupStart = await redis.get(`start_pos:${dupId}`);
+            const primStart = await redis.get(`start_pos:${primaryId}`);
+            if (dupStart && !primStart) await redis.setex(`start_pos:${primaryId}`, 86400, dupStart);
+
+            // audio/sub/pause keys: prefer existing primary, else copy
+            for (const k of ["audio", "sub", "pause"]) {
+                const dupVal = await redis.get(`${k}:${dupId}`);
+                const primVal = await redis.get(`${k}:${primaryId}`);
+                if (dupVal && !primVal) await redis.setex(`${k}:${primaryId}`, 3600, dupVal);
+            }
+
+            // cleanup dup keys
+            await redis.del(`dur:${dupId}`, `last_time:${dupId}`, `last_tick:${dupId}`, `start_pos:${dupId}`, `audio:${dupId}`, `sub:${dupId}`, `pause:${dupId}`);
+        } catch (err) {
+            console.error("[Plugin] mergeOpenPlaybacks redis merge failed:", err);
+        }
+    }
+}
+
 function corsJson(body: unknown, init?: { status?: number }) {
     return NextResponse.json(body, { ...init, headers: CORS_HEADERS });
 }
@@ -484,6 +556,8 @@ export async function POST(req: Request) {
                                             endedAt: new Date()
                                         }
                                     });
+                                    // Ensure duplicate open sessions for the same user+media are merged
+                                    await mergeOpenPlaybacks(dbUser.id, dbMedia.id);
                                 }
                             }
                         } else {
@@ -537,6 +611,8 @@ export async function POST(req: Request) {
                                             endedAt: new Date()
                                         }
                                     });
+                                    // Ensure duplicate open sessions for the same user+media are merged
+                                    await mergeOpenPlaybacks(dbUser.id, dbMedia.id);
                                 }
                             }
                         }
@@ -1047,6 +1123,9 @@ export async function POST(req: Request) {
                                     jellyfinMediaId,
                                     sessionId: sessionId || null,
                                 });
+                                // Merge any concurrently-created open sessions and re-resolve the activePlayback
+                                await mergeOpenPlaybacks(user.id, media.id);
+                                activePlayback = await prisma.playbackHistory.findFirst({ where: { userId: user.id, mediaId: media.id, endedAt: null }, orderBy: { startedAt: "desc" } });
                             }
                         }
                     } else {
@@ -1093,6 +1172,9 @@ export async function POST(req: Request) {
                                     jellyfinMediaId,
                                     sessionId: sessionId || null,
                                 });
+                                // Merge any concurrently-created open sessions and re-resolve the activePlayback
+                                await mergeOpenPlaybacks(user.id, media.id);
+                                activePlayback = await prisma.playbackHistory.findFirst({ where: { userId: user.id, mediaId: media.id, endedAt: null }, orderBy: { startedAt: "desc" } });
                             }
                         }
                     }

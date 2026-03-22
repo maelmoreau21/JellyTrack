@@ -1,6 +1,6 @@
 import prisma from "./prisma";
 import { markSyncFinished, markSyncStarted } from "@/lib/systemHealth";
-import { normalizeJellyfinId } from "@/lib/jellyfinId";
+import { normalizeJellyfinId, compactJellyfinId } from "@/lib/jellyfinId";
 import { cleanupOrphanedSessions } from "@/lib/cleanup";
 import { GHOST_LIBRARY_NAMES } from "./libraryUtils";
 
@@ -242,10 +242,73 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 const artist = item.AlbumArtist || item.AlbumArtists?.[0]?.Name || item.Artists?.[0] || null;
                 const dateAdded = item.DateCreated ? new Date(item.DateCreated) : new Date();
 
-                await prisma.media.upsert({
-                    where: { jellyfinMediaId },
-                    update: { title: item.Name || "Unknown", type: item.Type, genres, directors, actors, studios, resolution, collectionType, durationMs, size: sizeVal, parentId, artist, dateAdded, libraryName, updatedAt: new Date() },
-                    create: { jellyfinMediaId, title: item.Name || "Unknown", type: item.Type, genres, directors, actors, studios, resolution, collectionType, durationMs, size: sizeVal, parentId, artist, dateAdded, libraryName, updatedAt: new Date() },
+                // Use a canonical upsert that tolerates compact/dashed ID variants
+                const compactId = compactJellyfinId(jellyfinMediaId);
+                const candidates = Array.from(new Set([jellyfinMediaId, compactId]));
+
+                await prisma.$transaction(async (tx) => {
+                    const matches = await tx.media.findMany({
+                        where: { jellyfinMediaId: { in: candidates } },
+                        orderBy: { createdAt: "asc" },
+                    });
+
+                    let primary = matches.find((m) => m.jellyfinMediaId === jellyfinMediaId) || matches[0] || null;
+
+                    if (!primary) {
+                        primary = await tx.media.create({
+                            data: {
+                                jellyfinMediaId,
+                                title: item.Name || "Unknown",
+                                type: item.Type,
+                                genres,
+                                directors,
+                                actors,
+                                studios,
+                                resolution,
+                                collectionType,
+                                durationMs,
+                                size: sizeVal,
+                                parentId,
+                                artist,
+                                dateAdded,
+                                libraryName,
+                                updatedAt: new Date(),
+                            },
+                        });
+                    } else {
+                        primary = await tx.media.update({
+                            where: { id: primary.id },
+                            data: {
+                                jellyfinMediaId,
+                                title: item.Name || "Unknown",
+                                type: item.Type,
+                                genres: genres ?? undefined,
+                                directors: directors ?? undefined,
+                                actors: actors ?? undefined,
+                                studios: studios ?? undefined,
+                                resolution: resolution ?? undefined,
+                                collectionType: collectionType ?? undefined,
+                                durationMs: durationMs ?? undefined,
+                                size: sizeVal ?? undefined,
+                                parentId: parentId ?? undefined,
+                                artist: artist ?? undefined,
+                                dateAdded,
+                                libraryName: libraryName ?? undefined,
+                                updatedAt: new Date(),
+                            },
+                        });
+                    }
+
+                    const duplicates = matches.filter((m) => m.id !== primary!.id);
+                    for (const duplicate of duplicates) {
+                        await tx.playbackHistory.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primary!.id } });
+                        await tx.activeStream.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primary!.id } });
+                        await tx.media.delete({ where: { id: duplicate.id } });
+                        console.warn("[Sync] Media merged after ID normalization", {
+                            kept: primary!.jellyfinMediaId,
+                            removed: duplicate.jellyfinMediaId,
+                        });
+                    }
                 });
                 mediaCount++;
             } catch (err) {

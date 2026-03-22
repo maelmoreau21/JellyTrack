@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from 'next-themes';
 import { useTranslations, useLocale } from 'next-intl';
+import { normalizeLibraryKey } from '@/lib/mediaPolicy';
 import { ActivityCalendar, ThemeInput } from "react-activity-calendar";
 import { format, eachDayOfInterval, startOfYear, endOfYear } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -42,6 +43,7 @@ const customTheme: ThemeInput = {
 
 export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }: YearlyHeatmapProps) {
     const t = useTranslations('charts');
+    const tc = useTranslations('common');
     const locale = useLocale();
     const dateFnsLocale = locale === 'fr' ? fr : enUS;
     const { theme } = useTheme();
@@ -175,20 +177,26 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                         >
                             {t('all')}
                         </button>
-                        {libraryTypes.map(lib => (
-                            <button
-                                key={lib}
-                                onClick={() => setSelectedLibrary(lib)}
-                                className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
-                                    selectedLibrary === lib
-                                        ? 'text-white'
-                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                                }`}
-                                style={selectedLibrary === lib ? { backgroundColor: LIBRARY_COLORS[lib] || '#6366f1' } : undefined}
-                            >
-                                {lib}
-                            </button>
-                        ))}
+                        {libraryTypes.map(lib => {
+                            const norm = normalizeLibraryKey(lib) || lib;
+                            let label = lib;
+                            try { label = tc(norm); } catch { label = lib; }
+                            const bgColor = LIBRARY_COLORS[norm] || LIBRARY_COLORS[lib] || undefined;
+                            return (
+                                <button
+                                    key={lib}
+                                    onClick={() => setSelectedLibrary(lib)}
+                                    className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
+                                        selectedLibrary === lib
+                                            ? 'text-white'
+                                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                                    }`}
+                                    style={selectedLibrary === lib ? { backgroundColor: bgColor || '#6366f1' } : undefined}
+                                >
+                                    {label}
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
             </CardHeader>

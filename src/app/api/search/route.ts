@@ -16,11 +16,20 @@ export async function GET(req: NextRequest) {
 
   const isAdmin = session.user.isAdmin === true;
 
-  // Search media by title (case-insensitive via mode: 'insensitive')
+  // Search media by title, directors, actors or studios (case-insensitive for title)
   const media = await prisma.media.findMany({
     where: {
-      title: { contains: q, mode: "insensitive" },
       type: { in: ["Movie", "Series", "MusicAlbum"] }, // Only parent-level items
+      AND: [
+        {
+          OR: [
+            { title: { contains: q, mode: "insensitive" } },
+            { directors: { has: q } },
+            { actors: { has: q } },
+            { studios: { has: q } },
+          ],
+        },
+      ],
     },
     select: {
       jellyfinMediaId: true,

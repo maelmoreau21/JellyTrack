@@ -215,27 +215,30 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
       <Table className="table-fixed">
         <TableHeader>
           <TableRow>
-            {columns.map((col, idx) => (
-              <TableHead
-                key={col.key}
-                draggable
-                onDragStart={(e) => onDragStart(e, idx)}
-                onDragOver={onDragOver}
-                onDrop={(e) => onDrop(e, idx)}
-                style={{ width: `${col.width}px` }}
-                className="relative"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="cursor-move opacity-70">≡</span>
-                  <span className="truncate">{headingForKey(col.key)}</span>
-                </div>
-                <div
-                  onMouseDown={(e) => startResize(e, idx)}
-                  className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize z-20"
-                  aria-hidden
-                />
-              </TableHead>
-            ))}
+            {columns.map((col, idx) => {
+              const isDate = col.key === 'date';
+              return (
+                <TableHead
+                  key={col.key}
+                  draggable
+                  onDragStart={(e) => onDragStart(e, idx)}
+                  onDragOver={onDragOver}
+                  onDrop={(e) => onDrop(e, idx)}
+                  style={{ width: `${col.width}px` }}
+                  className={`relative ${isDate ? 'border-r border-zinc-200/30 dark:border-zinc-700/30 pr-2' : ''}`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="cursor-move opacity-70">≡</span>
+                    <span className="truncate">{headingForKey(col.key)}</span>
+                  </div>
+                  <div
+                    onMouseDown={(e) => startResize(e, idx)}
+                    className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize z-20"
+                    aria-hidden
+                  />
+                </TableHead>
+              );
+            })}
           </TableRow>
         </TableHeader>
         <TableBody>

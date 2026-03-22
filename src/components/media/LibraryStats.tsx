@@ -7,6 +7,7 @@ import { getJellyfinImageUrl } from "@/lib/jellyfin";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo, useEffect } from "react";
+import { normalizeLibraryKey } from '@/lib/mediaPolicy';
 
 interface LibraryDetail {
     name: string;
@@ -172,8 +173,15 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                         <h4 className="text-lg font-semibold text-zinc-700 dark:text-zinc-300">{tc('noData')}</h4>
                         <p className="text-sm text-zinc-500 mt-1">Aucune collection ne correspond à votre recherche.</p>
                     </div>
-                ) : filteredLibraries.map((lib, idx) => (
-                    <Card key={idx} className="relative overflow-hidden bg-white/80 dark:bg-zinc-900/70 border-zinc-200/60 dark:border-zinc-800/60 backdrop-blur-md group hover:border-primary/30 transition-colors shadow-sm hover:shadow-xl hover:shadow-black/5 flex flex-col">
+                ) : filteredLibraries.map((lib, idx) => {
+                    const normKey = normalizeLibraryKey(lib.collectionType || lib.name);
+                    let localizedLabel: string | null = null;
+                    if (normKey) {
+                        try { localizedLabel = tc(normKey); } catch { localizedLabel = normKey; }
+                    }
+
+                    return (
+                        <Card key={idx} className="relative overflow-hidden bg-white/80 dark:bg-zinc-900/70 border-zinc-200/60 dark:border-zinc-800/60 backdrop-blur-md group hover:border-primary/30 transition-colors shadow-sm hover:shadow-xl hover:shadow-black/5 flex flex-col">
                         {/* Dynamic top-edge decoration based on content type */}
                         <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${getGradientType(lib.collectionType, lib.name)} via-primary/20 top-border-glow`} />
                         <div className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-b ${getGradientType(lib.collectionType, lib.name)} opacity-50 pointer-events-none`} />
@@ -184,7 +192,12 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                     <div className="flex items-center justify-between gap-2 w-full">
                                         <div className="flex items-center gap-2 max-w-[70%]">
                                             {getIconPrefix(lib.collectionType, lib.name)}
-                                            <CardTitle className="text-xl font-bold truncate pr-2 text-zinc-900 dark:text-zinc-100">{lib.name}</CardTitle>
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <CardTitle className="text-xl font-bold truncate pr-2 text-zinc-900 dark:text-zinc-100">{lib.name}</CardTitle>
+                                                {localizedLabel ? (
+                                                    <span className="text-xs text-zinc-500 ml-1 px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">{localizedLabel}</span>
+                                                ) : null}
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="shrink-0 text-[10px] font-mono font-medium tracking-tighter bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 px-2 py-0.5 rounded-full">
@@ -283,8 +296,9 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                 </div>
                             ) : null}
                         </CardContent>
-                    </Card>
-                ))}
+                        </Card>
+                    );
+                })}
             </div>
         </div>
     );

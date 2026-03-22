@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { PlayCircle, LayoutList, Rows3 } from "lucide-react";
+import { PlayCircle, LayoutList, Rows3, Headphones, Languages, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FallbackImage } from "@/components/FallbackImage";
 import { KillStreamButton } from "@/components/dashboard/KillStreamButton";
@@ -82,18 +82,29 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                 <p className="text-xs text-muted-foreground flex flex-col gap-0.5">
                     <span className="truncate">{stream.user} . {stream.device}</span>
                     {(stream.audioLanguage || stream.subtitleLanguage) && (
-                        <span className="text-[10px] opacity-70 truncate">
-                            {stream.audioLanguage ? `?? ${stream.audioLanguage.toUpperCase()}` : ''}
-                            {stream.audioCodec ? ` (${stream.audioCodec})` : ''}
-                            {stream.audioStreamIndex != null ? ` · A:${stream.audioStreamIndex}` : ''}
-                            {stream.subtitleLanguage ? ` . ?? ${stream.subtitleLanguage.toUpperCase()}` : ''}
-                            {stream.subtitleCodec ? ` (${stream.subtitleCodec})` : ''}
-                            {stream.subtitleStreamIndex != null ? ` · S:${stream.subtitleStreamIndex}` : ''}
+                        <span className="text-[10px] opacity-70 truncate inline-flex items-center gap-1">
+                            {stream.audioLanguage ? (
+                                <span className="inline-flex items-center gap-1">
+                                    <Headphones className="w-3 h-3" />
+                                    <span className="font-mono uppercase">{stream.audioLanguage.toUpperCase()}</span>
+                                </span>
+                            ) : null}
+                            {stream.audioCodec ? <span className="text-[10px] opacity-70">({stream.audioCodec})</span> : null}
+                            {stream.audioStreamIndex != null ? <span>· A:{stream.audioStreamIndex}</span> : null}
+                            {stream.subtitleLanguage ? (
+                                <span className="inline-flex items-center gap-1">
+                                    <Languages className="w-3 h-3" />
+                                    <span className="font-mono uppercase">{stream.subtitleLanguage.toUpperCase()}</span>
+                                </span>
+                            ) : null}
+                            {stream.subtitleCodec ? <span className="text-[10px] opacity-70">({stream.subtitleCodec})</span> : null}
+                            {stream.subtitleStreamIndex != null ? <span>· S:{stream.subtitleStreamIndex}</span> : null}
                         </span>
                     )}
                     {(stream.city !== "Unknown" || stream.country !== "Unknown") && (
-                        <span className="text-[10px] opacity-70 truncate">
-                            ?? {stream.city !== "Unknown" ? `${stream.city}, ` : ''}{stream.country}
+                        <span className="text-[10px] opacity-70 truncate inline-flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            <span>{stream.city !== "Unknown" ? `${stream.city}, ` : ''}{stream.country}</span>
                         </span>
                     )}
                 </p>
