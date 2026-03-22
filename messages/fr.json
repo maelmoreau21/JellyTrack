@@ -732,7 +732,16 @@
     "wrappedPeriodDesc": "Définit quand le Wrapped de l'année actuelle (2025+) devient accessible. Les années précédentes restent toujours consultables.",
     "wrappedStart": "Ouverture",
     "wrappedVisible": "Afficher le Wrapped",
-    "wrappedVisibleDesc": "Autoriser les utilisateurs à voir leur récapitulatif annuel."
+    "wrappedVisibleDesc": "Autoriser les utilisateurs à voir leur récapitulatif annuel.",
+    "resolutionThresholds": "Seuils de Résolution",
+    "resolutionThresholdsDesc": "Configurez comment JellyTrack catégorise la qualité vidéo. Si un fichier dépasse la largeur OU la hauteur d'un seuil, il passe à la catégorie supérieure (ex: 1920x800 est considéré 1080p car sa largeur dépasse le seuil 720p).",
+    "resThreshold480p": "Seuil SD / 480p (Max)",
+    "resThreshold720p": "Seuil 720p HD (Max)",
+    "resThreshold1080p": "Seuil 1080p FHD (Max)",
+    "resThreshold4K": "Seuil 4K UHD (Max)",
+    "maxWidth": "Largeur Max (px)",
+    "maxHeight": "Hauteur Max (px)",
+    "syncRequired": "Une synchronisation complète est nécessaire pour appliquer ces changements à vos médias existants."
   },
   "timeRange": {
     "allTime": "Tout temps",

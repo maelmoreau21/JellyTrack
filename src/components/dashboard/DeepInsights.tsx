@@ -44,9 +44,8 @@ function buildMediaTypeFilter(type: string | undefined, excludedLibraries: strin
         });
     }
 
-    // Hard Exclusion (Ghosts & Collections)
+    // BoxSets are usually pseudo-items we want to exclude from many stats
     AND.push({
-        libraryName: { notIn: GHOST_LIBRARY_NAMES },
         collectionType: { not: 'boxsets' }
     });
 
@@ -390,11 +389,11 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
 
     // Localize subtitle 'None' label to translation (was using literal 'None' in aggregation)
     const localizedSubtitleChartData = (data.subtitleChartData || []).map((d: { name?: string | null; value?: number }) => {
-        const name = String(d.name || '');
-        if (name.toUpperCase() === 'NONE' || name.toUpperCase() === 'OFF' || name.toUpperCase() === 'UNKNOWN') {
+        const rawName = String(d.name || '');
+        if (rawName.toUpperCase() === 'NONE' || rawName.toUpperCase() === 'OFF' || rawName.toUpperCase() === 'UNKNOWN') {
             return { ...d, name: tGranular('disabled') };
         }
-        return d;
+        return { ...d, name: d.name || tGranular('unknown') || 'Unknown' };
     });
 
     const renderCategory = (title: string, items: CategorizedItem[], empty: string, icon?: React.ReactNode) => (

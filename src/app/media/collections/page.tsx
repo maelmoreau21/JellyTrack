@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { getTranslations } from 'next-intl/server';
 import LibraryStats from '@/components/media/LibraryStats';
 import { formatSize } from '@/lib/size';
-import { buildExcludedMediaClause, inferLibraryKey } from '@/lib/mediaPolicy';
+import { buildExcludedMediaClause, inferLibraryKey, normalizeLibraryKey } from '@/lib/mediaPolicy';
 import { getSanitizedLibraryNames, GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
 import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
 
@@ -69,8 +69,20 @@ export default async function CollectionsPage() {
     // in a second pass against the DB to map season -> series and track -> album.
     const TOP_LEVEL_TYPES = new Set(['Movie', 'Series', 'MusicAlbum', 'Book', 'AudioBook']);
     for (const m of allMedia) {
-        if (!m.libraryName || ghostNames.has(m.libraryName) || m.collectionType === 'boxsets') continue;
-        const libName = m.libraryName;
+        if (!m.libraryName || m.collectionType === 'boxsets') continue;
+        
+        // Normalize and localize the library name for grouping
+        const normKey = normalizeLibraryKey(m.collectionType || m.libraryName);
+        let libName = m.libraryName;
+        if (normKey) {
+            try {
+                const translated = tc(normKey);
+                if (translated && !translated.includes('.')) {
+                    libName = translated;
+                }
+            } catch { /* ignore */ }
+        }
+
         if (!libraryStatsMap.has(libName)) {
             libraryStatsMap.set(libName, {
                 size: BigInt(0),
@@ -89,10 +101,13 @@ export default async function CollectionsPage() {
                 pendingSeasonIds: new Set<string>(),
                 pendingAlbumIds: new Set<string>(),
                 ignoredTracks: 0,
-                ignoredEpisodes: 0
+                ignoredEpisodes: 0,
+                // Keep track of raw names for database queries later
+                rawNames: new Set<string>()
             });
         }
         const lib = libraryStatsMap.get(libName)!;
+        lib.rawNames.add(m.libraryName);
         if (!lib.collectionType && m.collectionType) lib.collectionType = m.collectionType;
 
         // Aggregate size (if present) from all media records (tracks, files, parents)
@@ -207,12 +222,26 @@ export default async function CollectionsPage() {
         for (const p of playbackAgg) {
             const seconds = p._sum?.durationWatched ?? 0;
             totalWatchedSeconds += seconds;
-            const libName = mediaToLib.get(p.mediaId) || tc('other');
+            const rawLibName = mediaToLib.get(p.mediaId) || tc('other');
+            
+            // Normalize the library name from playback history to match regrouped stats
+            const normKey = normalizeLibraryKey(rawLibName);
+            let libName = rawLibName;
+            if (normKey) {
+                try {
+                    const translated = tc(normKey);
+                    if (translated && !translated.includes('.')) {
+                        libName = translated;
+                    }
+                } catch { /* ignore */ }
+            }
+
             if (!libraryStatsMap.has(libName)) {
-                libraryStatsMap.set(libName, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: null });
+                libraryStatsMap.set(libName, { size: BigInt(0), duration: BigInt(0), watchedSeconds: 0, items: 0, movies: 0, series: 0, music: 0, books: 0, collectionType: null, rawNames: new Set([rawLibName]) });
             }
             const lib = libraryStatsMap.get(libName)!;
             lib.watchedSeconds = (lib.watchedSeconds ?? 0) + seconds;
+            lib.rawNames?.add(rawLibName);
         }
     } catch (e) {
         console.warn('[CollectionsPage] Failed to aggregate playback history by library:', e);
@@ -244,12 +273,29 @@ export default async function CollectionsPage() {
 
     const libraryStatsList = await Promise.all(validLibraries.map(async ([name, stats]) => {
         const size = formatSize(stats.size);
-        const topContent = await prisma.playbackHistory.groupBy({ by: ['mediaId'], where: { media: { libraryName: name } }, _count: { mediaId: true }, orderBy: { _count: { mediaId: 'desc' } }, take: 1 });
+        const rawNames = stats.rawNames ? Array.from(stats.rawNames as Set<string>) : [name];
+        
+        const topContent = await prisma.playbackHistory.groupBy({ 
+            by: ['mediaId'], 
+            where: { media: { libraryName: { in: rawNames } } }, 
+            _count: { mediaId: true }, 
+            orderBy: { _count: { mediaId: 'desc' } }, 
+            take: 1 
+        });
+        
         let topItem = null;
         if (topContent.length > 0) {
             topItem = await prisma.media.findUnique({ where: { id: topContent[0].mediaId }, select: { title: true, type: true, jellyfinMediaId: true } });
         }
-        const lastAdded = await prisma.media.findFirst({ where: { libraryName: name, type: { in: ['Movie', 'Series', 'MusicAlbum', 'BoxSet'] } }, orderBy: { dateAdded: 'desc' }, select: { title: true, dateAdded: true, jellyfinMediaId: true } });
+        
+        const lastAdded = await prisma.media.findFirst({ 
+            where: { 
+                libraryName: { in: rawNames }, 
+                type: { in: ['Movie', 'Series', 'MusicAlbum', 'BoxSet'] } 
+            }, 
+            orderBy: { dateAdded: 'desc' }, 
+            select: { title: true, dateAdded: true, jellyfinMediaId: true } 
+        });
         let d = 0; let h = 0;
         if (stats.watchedSeconds && stats.watchedSeconds > 0) {
             d = Math.floor(stats.watchedSeconds / (60 * 60 * 24));

@@ -6,6 +6,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { normalizeLibraryKey } from "@/lib/mediaPolicy";
+import { ResolutionThresholds } from "@/components/settings/ResolutionThresholds";
+import { InfoIcon } from "lucide-react";
 
 type LibraryRule = {
     completionEnabled: boolean;
@@ -25,6 +27,7 @@ export default function SettingsLibraryRulesPage() {
     const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [availableLibraries, setAvailableLibraries] = useState<string[]>([]);
     const [rules, setRules] = useState<Record<string, LibraryRule>>({});
+    const [resolutionThresholds, setResolutionThresholds] = useState<any>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -36,6 +39,7 @@ export default function SettingsLibraryRulesPage() {
                 if (!mounted) return;
                 setAvailableLibraries(data.availableLibraries || []);
                 setRules(data.libraryRules || {});
+                setResolutionThresholds(data.resolutionThresholds || null);
             } catch (err) {
                 setMsg({ type: "error", text: (err as any)?.message || "Failed to load" });
             } finally {
@@ -74,7 +78,14 @@ export default function SettingsLibraryRulesPage() {
         setSaving(true);
         setMsg(null);
         try {
-            const res = await fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ libraryRules: rules }) });
+            const res = await fetch("/api/settings", { 
+                method: "POST", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ 
+                    libraryRules: rules,
+                    resolutionThresholds: resolutionThresholds
+                }) 
+            });
             const data = await res.json().catch(() => ({}));
             if (res.ok) setMsg({ type: "success", text: t("savedSuccess") });
             else setMsg({ type: "error", text: data.error || t("saveError") });
@@ -208,6 +219,28 @@ export default function SettingsLibraryRulesPage() {
                             );
                         })}
                     </div>
+                </CardContent>
+
+                {/* Resolution Thresholds Section */}
+                <CardHeader className="border-t border-zinc-200/50 dark:border-zinc-800/50 mt-4 pt-8">
+                    <CardTitle className="text-xl">{t("resolutionThresholds")}</CardTitle>
+                    <CardDescription>{t("resolutionThresholdsDesc")}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-500/5 border border-blue-500/20 text-blue-600 dark:text-blue-400">
+                        <InfoIcon className="h-5 w-5 mt-0.5 shrink-0" />
+                        <div className="space-y-1">
+                            <div className="text-sm font-bold">Note</div>
+                            <div className="text-xs opacity-90">
+                                {t("syncRequired")}
+                            </div>
+                        </div>
+                    </div>
+
+                    <ResolutionThresholds 
+                        value={resolutionThresholds} 
+                        onChange={setResolutionThresholds} 
+                    />
                 </CardContent>
 
                 <CardFooter className="bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-200/50 dark:border-zinc-800/50 rounded-b-xl px-6 py-4">

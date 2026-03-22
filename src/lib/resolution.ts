@@ -1,45 +1,35 @@
 /**
  * Determine a canonical resolution label from width/height.
- * Prefer height when available (handles anamorphic / 4:3 like 1440x1080).
+ * Uses boundaries similar to Tdarr to be inclusive of various aspect ratios.
  */
-export function resolutionFromDimensions(width?: number | null, height?: number | null): string {
-  // Helper to classify by height
-  const classifyByHeight = (hVal?: number | null): string | undefined => {
-    if (hVal === undefined || hVal === null) return undefined;
-    const h = Number(hVal);
-    if (Number.isNaN(h)) return 'Unknown';
-    if (h >= 2160) return '4K';
-    if (h >= 1080) return '1080p';
-    if (h >= 720) return '720p';
-    if (h >= 480) return '480p';
-    return 'SD';
+export function resolutionFromDimensions(width?: number | null, height?: number | null, customThresholds?: any): string {
+  const w = width ? Number(width) : 0;
+  const h = height ? Number(height) : 0;
+
+  if (!w && !h) return 'Unknown';
+
+  // Boundaries (Max values for each category)
+  // Based on Tdarr / Common Media Server standards
+  const thresholds = customThresholds || {
+    "480p": { maxW: 792, maxH: 528 },
+    "720p": { maxW: 1408, maxH: 792 },
+    "1080p": { maxW: 2112, maxH: 1188 },
+    "4K": { maxW: 4224, maxH: 2376 }
   };
 
-  // Helper to classify by width
-  const classifyByWidth = (wVal?: number | null): string | undefined => {
-    if (wVal === undefined || wVal === null) return undefined;
-    const w = Number(wVal);
-    if (Number.isNaN(w)) return 'Unknown';
-    if (w >= 3800) return '4K';
-    if (w >= 1800) return '1080p';
-    if (w >= 1200) return '720p';
-    if (w >= 700) return '480p';
-    return 'SD';
-  };
+  // If it exceeds 1080p boundaries, it's 4K
+  if (w > thresholds["1080p"].maxW || h > thresholds["1080p"].maxH) return '4K';
+  
+  // If it exceeds 720p boundaries, it's 1080p
+  if (w > thresholds["720p"].maxW || h > thresholds["720p"].maxH) return '1080p';
+  
+  // If it exceeds 480p boundaries, it's 720p
+  if (w > thresholds["480p"].maxW || h > thresholds["480p"].maxH) return '720p';
+  
+  // If it has some dimensions but is within 480p bounds
+  if (w > 100 || h > 100) return 'SD';
 
-  const hRes = classifyByHeight(height);
-  const wRes = classifyByWidth(width);
-
-  // If we have both dimensions, pick the stronger (higher) bucket between
-  // width and height. This handles common letterboxed/cinemascope files
-  // like 1920x800 which should be considered 1080p rather than 720p.
-  if (hRes && wRes) {
-    const order = ['Unknown', 'SD', '480p', '720p', '1080p', '4K'];
-    const idx = (r: string) => Math.max(0, order.indexOf(r));
-    return idx(hRes) >= idx(wRes) ? hRes : wRes;
-  }
-
-  return hRes ?? wRes ?? 'Unknown';
+  return 'Unknown';
 }
 
 export default resolutionFromDimensions;

@@ -23,6 +23,10 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         return { success: false, error: "Server not configured. Please check JELLYFIN_URL and JELLYFIN_API_KEY in your settings/env." };
     }
     const jellyfinHeaders = { "X-Emby-Token": apiKey };
+    
+    // Fetch global settings to get custom resolution thresholds if any
+    const settings = await (prisma.globalSettings as any).findUnique({ where: { id: "global" } });
+    const resolutionThresholds = (settings?.resolutionThresholds as any) || null;
 
     const fetchWithRetry = async (url: string, options: RequestInit = {}, timeout = 30000, maxRetries = 3) => {
         for (let i = 0; i < maxRetries; i++) {
@@ -195,7 +199,14 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 }
 
                 if (!libraryName && collectionType) {
-                    libraryName = collectionType;
+                    // Try to find if we have ANY library with this collectionType in our known maps
+                    // avoid using the raw collectionType string as a library name if a real one exists
+                    const knownName = Array.from(libraryCollectionMap.entries()).find(([_, type]) => type === collectionType)?.[0];
+                    if (knownName && libraryNameMap.has(knownName)) {
+                        libraryName = libraryNameMap.get(knownName)!;
+                    } else {
+                        libraryName = collectionType;
+                    }
                 }
 
                 // Cache the resolution for children of this item
@@ -226,7 +237,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     // Delegate to resolution helper (prefer height, fallback to width)
                     try {
                         const { resolutionFromDimensions } = await import('@/lib/resolution');
-                        resolution = resolutionFromDimensions(widthNum, heightNum);
+                        resolution = resolutionFromDimensions(widthNum, heightNum, resolutionThresholds);
                     } catch (e) {
                         // fallback conservative behavior using numeric parsed values
                         if (heightNum !== null) {

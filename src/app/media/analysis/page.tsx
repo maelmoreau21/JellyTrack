@@ -3,11 +3,13 @@ import { getTranslations } from 'next-intl/server';
 import StatsDeepAnalysis from '@/components/dashboard/StatsDeepAnalysis';
 import { GenreDistributionChart } from '@/components/charts/GenreDistributionChart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { normalizeLibraryKey } from '@/lib/mediaPolicy';
 
 export const dynamic = "force-dynamic";
 
 export default async function AnalysisPage() {
     const t = await getTranslations('media');
+    const tc = await getTranslations('common');
 
     // Fetch media fields useful for the analysis
     // Include `type` and `collectionType` so we can filter video vs audio items
@@ -24,17 +26,39 @@ export default async function AnalysisPage() {
     // Consider only video-like media for resolution counting to avoid audio/media polluting video stats
     const VIDEO_COLLECTION_KEYS = new Set(['movies', 'tvshows', 'homevideos']);
     const VIDEO_TYPES = new Set(['Movie', 'Episode', 'Series', 'BoxSet', 'Video']);
+    const MAIN_TYPES = new Set(['Movie', 'Series', 'MusicAlbum', 'Book']);
 
     medias.forEach(m => {
         if (m.genres) m.genres.forEach((g: string) => genreCounts.set(g, (genreCounts.get(g) || 0) + 1));
         const collectionKey = typeof m.collectionType === 'string' ? m.collectionType.toLowerCase() : '';
         const isVideo = VIDEO_TYPES.has((m.type || '').toString()) || VIDEO_COLLECTION_KEYS.has(collectionKey);
         if (isVideo) {
-            const nr = (m.resolution || 'SD');
+            const rawRes = m.resolution || 'SD';
+            let nr = 'SD';
+            if (rawRes === '4K') nr = '4K';
+            else if (rawRes === '1080p') nr = '1080p';
+            else if (rawRes === '720p') nr = '720p';
+            // All others (SD, 480p, Unknown, etc.) are treated as 'SD' for the summary cards
+            
             resolutionCounts.set(nr, (resolutionCounts.get(nr) || 0) + 1);
         }
         if (m.directors) m.directors.forEach((d: string) => { if (d) directorCounts.set(d, (directorCounts.get(d) || 0) + 1); });
-        if (m.libraryName) libraryCounts.set(m.libraryName, (libraryCounts.get(m.libraryName) || 0) + 1);
+        
+        // Count library items - focus on main items to match Jellyfin expectations
+        if (m.libraryName && MAIN_TYPES.has(m.type || '')) {
+            const normKey = normalizeLibraryKey(m.collectionType || m.libraryName);
+            let localizedName = m.libraryName;
+            if (normKey) {
+                try {
+                    const translated = tc(normKey);
+                    if (translated && !translated.includes('.')) {
+                        localizedName = translated;
+                    }
+                } catch { /* ignore */ }
+            }
+            libraryCounts.set(localizedName, (libraryCounts.get(localizedName) || 0) + 1);
+        }
+
         if (m.durationMs !== null && m.durationMs !== undefined) {
             try {
                 const v = typeof m.durationMs === 'bigint' ? Number(m.durationMs) : Number(m.durationMs);

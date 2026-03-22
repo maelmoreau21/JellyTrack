@@ -732,7 +732,16 @@
     "wrappedPeriodDesc": "Defines when the current year's Wrapped (2025+) becomes accessible. Previous years always remain accessible.",
     "wrappedStart": "Release Date",
     "wrappedVisible": "Show Wrapped Feature",
-    "wrappedVisibleDesc": "Allow users to view their annual recap."
+    "wrappedVisibleDesc": "Allow users to view their annual recap.",
+    "resolutionThresholds": "Resolution Thresholds",
+    "resolutionThresholdsDesc": "Configure how JellyTrack categorizes video quality. If a file exceeds either the width OR height of a threshold, it is promoted to the higher category (e.g., 1920x800 is considered 1080p because its width exceeds the 720p threshold).",
+    "resThreshold480p": "SD / 480p Threshold (Max)",
+    "resThreshold720p": "720p HD Threshold (Max)",
+    "resThreshold1080p": "1080p FHD Threshold (Max)",
+    "resThreshold4K": "4K UHD Threshold (Max)",
+    "maxWidth": "Max Width (px)",
+    "maxHeight": "Max Height (px)",
+    "syncRequired": "A full synchronization is required to apply these changes to your existing media."
   },
   "timeRange": {
     "allTime": "All time",

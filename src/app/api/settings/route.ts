@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { discordWebhookUrl, discordAlertCondition, discordAlertsEnabled, maxConcurrentTranscodes, excludedLibraries, syncCronHour, syncCronMinute, backupCronHour, backupCronMinute, defaultLocale, libraryRules, wrappedVisible, wrappedPeriodEnabled, wrappedStartMonth, wrappedStartDay, wrappedEndMonth, wrappedEndDay } = body;
+        const { discordWebhookUrl, discordAlertCondition, discordAlertsEnabled, maxConcurrentTranscodes, excludedLibraries, syncCronHour, syncCronMinute, backupCronHour, backupCronMinute, defaultLocale, libraryRules, wrappedVisible, wrappedPeriodEnabled, wrappedStartMonth, wrappedStartDay, wrappedEndMonth, wrappedEndDay, resolutionThresholds } = body;
 
         // Input validation — Discord webhook URL must be a valid Discord URL or null
         if (discordWebhookUrl !== undefined && discordWebhookUrl !== null && discordWebhookUrl !== "") {
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: await apiT('localeInvalid') }, { status: 400 });
         }
 
-        const updated = await prisma.globalSettings.upsert({
+        const updated = await (prisma.globalSettings as any).upsert({
             where: { id: "global" },
             update: {
                 discordWebhookUrl: discordWebhookUrl !== undefined ? discordWebhookUrl : undefined,
@@ -174,6 +174,7 @@ export async function POST(req: NextRequest) {
                 wrappedStartDay: wrappedStartDay !== undefined ? Number(wrappedStartDay) : undefined,
                 wrappedEndMonth: wrappedEndMonth !== undefined ? Number(wrappedEndMonth) : undefined,
                 wrappedEndDay: wrappedEndDay !== undefined ? Number(wrappedEndDay) : undefined,
+                resolutionThresholds: resolutionThresholds !== undefined ? resolutionThresholds : undefined,
             },
             create: {
                 id: "global",
@@ -193,6 +194,7 @@ export async function POST(req: NextRequest) {
                 wrappedStartDay: wrappedStartDay !== undefined ? Number(wrappedStartDay) : 1,
                 wrappedEndMonth: wrappedEndMonth !== undefined ? Number(wrappedEndMonth) : 1,
                 wrappedEndDay: wrappedEndDay !== undefined ? Number(wrappedEndDay) : 31,
+                resolutionThresholds: resolutionThresholds || null,
             }
         });
 
