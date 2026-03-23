@@ -42,7 +42,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`antialiased min-h-screen overflow-x-hidden ${inter.className} selection:bg-primary selection:text-primary-foreground flex bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50`}>
+      <body className={`antialiased min-h-screen overflow-x-hidden ${inter.className} selection:bg-primary selection:text-primary-foreground flex text-zinc-900 dark:text-zinc-50`}>
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
             <AuthProvider>

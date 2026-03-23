@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
-import { saveLibraryRules } from "@/lib/libraryRules";
+// No rules
 import { replaceSystemHealthState } from "@/lib/systemHealth";
 
 export const dynamic = "force-dynamic";
@@ -90,9 +90,7 @@ export async function POST(req: NextRequest) {
             timeout: 60000 // Give it 60 seconds if the DB is massive
         });
 
-        if (libraryRules) {
-            await saveLibraryRules(libraryRules);
-        }
+        // Skip library rules
         if (systemHealth) {
             await replaceSystemHealthState(systemHealth);
         }

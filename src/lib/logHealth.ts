@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
-import { loadLibraryRules } from "@/lib/libraryRules";
+// No rules
 import { readSystemHealthState } from "@/lib/systemHealth";
 
 export async function getLogHealthSnapshot() {
@@ -56,8 +56,8 @@ export async function getLogHealthSnapshot() {
         }),
     ]);
 
+    // No rules
     const discoveredNames = discoveredLibraries.map(l => l.libraryName as string);
-    const libraryRules = await loadLibraryRules(discoveredNames);
 
     const activePairSet = new Set(activeStreams.map((stream) => `${stream.userId}:${stream.mediaId}`));
     const openPlaybackOrphans = openPlaybackHistory.filter((entry) => !activePairSet.has(`${entry.userId}:${entry.mediaId}`));
@@ -126,7 +126,6 @@ export async function getLogHealthSnapshot() {
     return {
         status: healthState,
         excludedLibraries: settings?.excludedLibraries || [],
-        libraryRules,
         counts: {
             activeStreams: activeStreams.length,
             openPlaybackOrphans: openPlaybackOrphans.length,

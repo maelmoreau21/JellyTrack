@@ -10,7 +10,7 @@ import { normalizeLibraryKey, getAvailableLibraryKeys } from '@/lib/mediaPolicy'
 import { normalizeLanguageTag } from '@/lib/language';
 import { formatHour } from "@/lib/utils";
 import { getCompletionMetrics } from "@/lib/mediaPolicy";
-import { loadLibraryRules } from "@/lib/libraryRules";
+// No more library rules
 
 function isValidLang(lang: string | null | undefined): boolean {
     if (!lang) return false;
@@ -21,8 +21,8 @@ function isValidLang(lang: string | null | undefined): boolean {
 }
 
 const getGranularData = unstable_cache(
-    async (type: string | undefined, timeRange: string, excludedLibraries: string[], locale: string, libraryRulesJson: string) => {
-        const libraryRules = JSON.parse(libraryRulesJson || '{}');
+    async (type: string | undefined, timeRange: string, excludedLibraries: string[], locale: string) => {
+        // Use defaults
         let currentStartDate = new Date();
         if (timeRange === "24h") currentStartDate.setDate(currentStartDate.getDate() - 1);
         else if (timeRange === "7d") currentStartDate.setDate(currentStartDate.getDate() - 7);
@@ -50,7 +50,7 @@ const getGranularData = unstable_cache(
             orderBy: { startedAt: 'asc' }
         });
 
-        const dailyMap = new Map<string, Record<string, number | string>>();
+        const dailyMap = new Map<string, any>();
         const hourlyMap = new Map<string, { time: string; plays: number; duration: number }>();
         const collections = new Set<string>();
         const completionMap = new Map<string, { totalCompletion: number, sessions: number }>();
@@ -110,7 +110,7 @@ const getGranularData = unstable_cache(
 
             // Completion Rate Aggregation
             if (h.media.durationMs) {
-                const completion = getCompletionMetrics(h.media, h.durationWatched, libraryRules);
+                const completion = getCompletionMetrics(h.media, h.durationWatched);
                 if (!completionMap.has(lib)) {
                     completionMap.set(lib, { totalCompletion: 0, sessions: 0 });
                 }
@@ -147,9 +147,9 @@ const getGranularData = unstable_cache(
 
         const dailyData = Array.from(dailyMap.values()).map(d => {
             // Round durations
-            d.totalDuration = parseFloat(d.totalDuration.toFixed(2));
+            d.totalDuration = parseFloat(Number(d.totalDuration).toFixed(2));
             Array.from(collections).forEach(c => {
-                if (d[`${c}_duration`]) d[`${c}_duration`] = parseFloat(d[`${c}_duration`].toFixed(2));
+                if (d[`${c}_duration`]) d[`${c}_duration`] = parseFloat(Number(d[`${c}_duration`]).toFixed(2));
             });
             return d;
         });
@@ -207,8 +207,8 @@ const getGranularData = unstable_cache(
 
 export async function GranularAnalysis({ type, timeRange, excludedLibraries }: { type?: string, timeRange: string, excludedLibraries: string[] }) {
     const locale = await getLocale();
-    const rules = await loadLibraryRules();
-    const data = await getGranularData(type, timeRange, excludedLibraries, locale, JSON.stringify(rules));
+    // const rules = await loadLibraryRules();
+    const data = await getGranularData(type, timeRange, excludedLibraries, locale);
     const t = await getTranslations('granular');
     const tc = await getTranslations('common');
 

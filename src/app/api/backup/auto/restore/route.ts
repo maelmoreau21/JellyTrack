@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { apiT } from "@/lib/i18n-api";
-import { saveLibraryRules } from "@/lib/libraryRules";
+// No rules
 import { replaceSystemHealthState } from "@/lib/systemHealth";
 
 export async function POST(req: NextRequest) {
@@ -167,9 +167,7 @@ export async function POST(req: NextRequest) {
             }
         }, { timeout: 120000 });
 
-        if (libraryRules) {
-            await saveLibraryRules(libraryRules);
-        }
+        // Skip rules
         if (systemHealth) {
             await replaceSystemHealthState(systemHealth);
         }

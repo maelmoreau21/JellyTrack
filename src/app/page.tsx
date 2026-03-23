@@ -40,9 +40,8 @@ import { YearlyHeatmap } from "@/components/charts/YearlyHeatmap";
 import { DraggableDashboard } from "@/components/dashboard/DraggableDashboard";
 import { HardwareMonitor } from "@/components/dashboard/HardwareMonitor";
 import { LiveStreamsPanel } from "@/components/dashboard/LiveStreamsPanel";
-import { buildExcludedMediaClause, getCompletionMetrics } from "@/lib/mediaPolicy";
-import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
-import { loadLibraryRules } from "@/lib/libraryRules";
+import { buildExcludedMediaClause, getCompletionMetrics, isZapped } from "@/lib/mediaPolicy";
+import { ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { getLogHealthSnapshot } from "@/lib/logHealth";
 import { categorizeClient } from "@/lib/utils";
 import { GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
@@ -161,8 +160,7 @@ export const dynamic = "force-dynamic";
 
 // --- Aggregation Cache Helper ---
 const getDashboardMetrics = unstable_cache(
-  async (type: string | undefined, timeRange: string, excludedLibraries: string[], excludedTypes: string[], customFrom?: string, customTo?: string, libraryRulesJson?: string) => {
-    const libraryRules = JSON.parse(libraryRulesJson || '{}');
+  async (type: string | undefined, timeRange: string, excludedLibraries: string[], excludedTypes: string[], customFrom?: string, customTo?: string) => {
     // 1. Calculate time windows
     let currentStartDate: Date | undefined;
     let previousStartDate: Date | undefined;
@@ -468,7 +466,7 @@ const getDashboardMetrics = unstable_cache(
       select: { durationWatched: true, media: { select: { title: true, durationMs: true, type: true, collectionType: true } } },
     });
     fullHistories.forEach((h) => {
-      const completion = getCompletionMetrics(h.media || {}, h.durationWatched, libraryRules);
+      const completion = getCompletionMetrics(h.media || {}, h.durationWatched);
       if (completion.bucket === 'completed') completed++;
       else if (completion.bucket === 'partial') partial++;
       else if (completion.bucket === 'abandoned') abandoned++;
@@ -598,7 +596,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
   const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } });
   const dbExcluded = settings?.excludedLibraries || [];
   
-  const libraryRules = await loadLibraryRules();
+  // const libraryRules = await loadLibraryRules();
 
   // Combine DB settings with URL params for excluded libraries
   const excludedLibsUrl = excludeLibs ? excludeLibs.split(',') : [];
@@ -606,7 +604,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
   
   const excludedTypesArr = excludeTypes ? excludeTypes.split(',') : [];
 
-  const metrics = await getDashboardMetrics(type, timeRange, excludedLibraries, excludedTypesArr, from, to, JSON.stringify(libraryRules)) as DashboardMetrics;
+  const metrics = await getDashboardMetrics(type, timeRange, excludedLibraries, excludedTypesArr, from, to) as DashboardMetrics;
   const healthSnapshot = await getLogHealthSnapshot();
 
   const t = await getTranslations('dashboard');
@@ -969,7 +967,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                   <CardContent className="pl-0 pb-4">
                     <div className="h-[300px] min-h-[300px] w-full overflow-hidden">
                       {metrics.categoryPieData.length > 0 ? (
-                        <CategoryPieChart data={metrics.categoryPieData.map((d) => ({ ...d, name: tc(d.name) }))} />
+                        <CategoryPieChart data={metrics.categoryPieData.map((d) => ({ ...d, name: tc(d.name), rawName: d.name }))} />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">
                           {t('noCategoryData')}
@@ -1005,7 +1003,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
               /* Dataviz Row : Plateformes + Top Users + Live */
               <div key="platforms" className="grid gap-4 md:grid-cols-2 lg:grid-cols-8 min-w-0">
 
-                <Card className="col-span-2 bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="col-span-2 app-surface-soft dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex gap-2"><Award className="w-5 h-5 text-yellow-500" /> {t('loyalUsers')}</CardTitle>
                     <CardDescription>{t('loyalUsersDesc')}</CardDescription>
@@ -1030,7 +1028,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                   </CardContent>
                 </Card>
 
-                <Card className="col-span-3 bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="col-span-3 app-surface-soft dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
                   <CardHeader>
                     <CardTitle>{t('clientEcosystem')}</CardTitle>
                     <CardDescription>{t('clientEcosystemDesc')}</CardDescription>

@@ -169,11 +169,10 @@ function clampCompletion(percent: number) {
     return Math.max(0, Math.min(100, percent));
 }
 
-export function getDefaultLibraryRule(libraryKey: string | null | undefined): LibraryRule {
+export function getDefaultLibraryRule(libraryKey: string | null | undefined) {
     const normalized = normalizeLibraryKey(libraryKey);
     if (normalized === 'music') {
         return {
-            completionEnabled: true,
             completedThreshold: 60,
             partialThreshold: 30,
             abandonedThreshold: 12,
@@ -181,92 +180,21 @@ export function getDefaultLibraryRule(libraryKey: string | null | undefined): Li
     }
 
     return {
-        completionEnabled: true,
         completedThreshold: 80,
         partialThreshold: 20,
         abandonedThreshold: 10,
     };
 }
 
-export function sanitizeLibraryRule(input: Partial<LibraryRule> | null | undefined, libraryKey: string | null | undefined): LibraryRule {
-    const defaults = getDefaultLibraryRule(libraryKey);
-    const completedThreshold = Math.max(1, Math.min(100, Number(input?.completedThreshold ?? defaults.completedThreshold)));
-    const partialThreshold = Math.max(1, Math.min(completedThreshold - 1, Number(input?.partialThreshold ?? defaults.partialThreshold)));
-    const abandonedThreshold = Math.max(0, Math.min(partialThreshold - 1, Number(input?.abandonedThreshold ?? defaults.abandonedThreshold)));
-
-    return {
-        completionEnabled: input?.completionEnabled ?? defaults.completionEnabled,
-        completedThreshold,
-        partialThreshold,
-        abandonedThreshold,
-    };
-}
-
-export function sanitizeLibraryRules(input: LibraryRuleMap | null | undefined, discoveredNames?: string[]): LibraryRuleMap {
-    const output: LibraryRuleMap = {};
-    const processedKeys = new Set<string>();
-
-    // 1. Process discovered library names (priority)
-    const activeNames = discoveredNames && discoveredNames.length > 0 ? discoveredNames : [];
-    for (const name of activeNames) {
-        const norm = normalizeLibraryKey(name);
-        const ruleInput = input?.[name] || (norm ? input?.[norm] : undefined);
-        output[name] = sanitizeLibraryRule(ruleInput, name);
-        processedKeys.add(name);
-        if (norm) processedKeys.add(norm);
-    }
-
-    // 2. Process all input keys (to preserve any existing user-configured data)
-    for (const key of Object.keys(input || {})) {
-        if (!processedKeys.has(key)) {
-            output[key] = sanitizeLibraryRule(input?.[key], key);
-            processedKeys.add(key);
-        }
-    }
-
-    // 3. Fallback: if we have NO active libraries and NO input, show minimal standard ones
-    if (Object.keys(output).length === 0) {
-        for (const key of ['movies', 'tvshows', 'music']) {
-            output[key] = sanitizeLibraryRule(null, key);
-        }
-    }
-
-    return output;
-}
-
-export function resolveLibraryRule(media: MediaLike & { libraryName?: string | null }, rules?: LibraryRuleMap | null): LibraryRule {
-    const libraryName = media.libraryName;
-    const libraryKey = inferLibraryKey(media);
-    
-    if (!rules) {
-        return getDefaultLibraryRule(libraryName || libraryKey);
-    }
-
-    // 1. Try exact match on real library name
-    if (libraryName && rules[libraryName]) {
-        return sanitizeLibraryRule(rules[libraryName], libraryName);
-    }
-
-    // 2. Fallback to generic library key (movies, tvshows, etc.)
-    if (libraryKey && rules[libraryKey]) {
-        return sanitizeLibraryRule(rules[libraryKey], libraryKey);
-    }
-
-    return getDefaultLibraryRule(libraryName || libraryKey);
-}
-
-export function getCompletionMetrics(media: MediaLike, durationWatched: number, rules?: LibraryRuleMap | null) {
+export function getCompletionMetrics(media: MediaLike, durationWatched: number) {
     const durationSeconds = media.durationMs ? Number(media.durationMs) / 1000 : 0;
     if (!Number.isFinite(durationSeconds) || durationSeconds <= 0 || durationWatched <= 0) {
         return { percent: 0, bucket: 'skipped' as CompletionBucket };
     }
 
     const percent = clampCompletion((durationWatched / durationSeconds) * 100);
-    const rule = resolveLibraryRule(media, rules);
-    if (!rule.completionEnabled) {
-        return { percent, bucket: 'skipped' as CompletionBucket };
-    }
-
+    const rule = getDefaultLibraryRule(media.collectionType || media.type);
+    
     if (percent >= rule.completedThreshold) return { percent, bucket: 'completed' as CompletionBucket };
     if (percent >= rule.partialThreshold) return { percent, bucket: 'partial' as CompletionBucket };
     if (percent >= rule.abandonedThreshold) return { percent, bucket: 'abandoned' as CompletionBucket };

@@ -22,9 +22,9 @@ const LOGS_PER_PAGE = 100;
 
 // Column utilities — defined server-side to avoid client/server boundary issues
 // Restore separate `client` and `ip` columns while keeping client-side features.
-const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'client', 'ip', 'country', 'status', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
+const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'client', 'ip', 'country', 'status', 'resolution', 'audioBitrate', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
 type Column = typeof ALL_COLUMNS[number];
-const DEFAULT_VISIBLE: Column[] = ['date', 'user', 'media', 'client', 'ip', 'country', 'status', 'duration'];
+const DEFAULT_VISIBLE: Column[] = ['date', 'user', 'media', 'client', 'resolution', 'audioBitrate', 'status', 'duration'];
 
 function parseVisibleColumns(colsParam: string | undefined): Column[] {
     if (!colsParam) return DEFAULT_VISIBLE;

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
     BarChart,
     Bar,
@@ -14,6 +15,7 @@ import {
 } from "recharts";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 export interface MonthlyWatchData {
     month: string; // "2026_0" = year_monthIndex
@@ -38,6 +40,7 @@ function GlowBar({ fill, x, y, width, height }: GlowBarProps) {
 
 export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChartProps) {
     const t = useTranslations('charts');
+    const router = useRouter();
 
     const availableYears = useMemo(() => {
         const years = new Set<number>();
@@ -68,17 +71,31 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
             return {
                 month: monthNames[i] || `M${i + 1}`,
                 hours: dataMap.get(key) || 0,
+                monthIndex: i,
             };
         });
     }, [data, selectedYear, monthNames]);
 
     const maxHours = Math.max(...chartData.map((d) => d.hours), 1);
 
-    const formatTooltip = (value: number | undefined) => {
-        const h = value ?? 0;
+    const formatTooltip = (value?: ValueType, name?: NameType) => {
+        const h = Number(value ?? 0);
         const hours = Math.floor(h);
         const mins = Math.round((h - hours) * 60);
-        return [`${hours}h ${mins}min`, t('watchTime')];
+        return [`${hours}h ${mins}min`, t('watchTime')] as [string, string];
+    };
+
+    const handleBarClick = (payload: any) => {
+        const monthIndex = payload.monthIndex;
+        if (monthIndex === undefined) return;
+
+        const firstDay = new Date(selectedYear, monthIndex, 1);
+        const lastDay = new Date(selectedYear, monthIndex + 1, 0);
+
+        const from = firstDay.toISOString().split('T')[0];
+        const to = lastDay.toISOString().split('T')[0];
+
+        router.push(`/logs?dateFrom=${from}&dateTo=${to}`);
     };
 
     return (
@@ -149,12 +166,14 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                         animationDuration={800}
                         animationEasing="ease-out"
                         activeBar={<GlowBar />}
+                        onClick={handleBarClick}
                     >
                         {chartData.map((entry, index) => (
                             <Cell
                                 key={`cell-${index}`}
                                 fill={entry.hours === maxHours && maxHours > 0 ? "#f97316" : "url(#monthlyWatchGradient)"}
                                 fillOpacity={maxHours > 0 ? 0.6 + (entry.hours / maxHours) * 0.4 : 0.3}
+                                style={{ cursor: "pointer" }}
                             />
                         ))}
                     </Bar>

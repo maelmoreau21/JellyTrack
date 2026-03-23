@@ -4,12 +4,12 @@ import CleanupClient from "./CleanupClient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTranslations } from 'next-intl/server';
 import { getCompletionMetrics } from "@/lib/mediaPolicy";
-import { loadLibraryRules } from "@/lib/libraryRules";
+// No more library rules
 
 export const dynamic = "force-dynamic";
 
 async function getCleanupData() {
-    const rules = await loadLibraryRules();
+    // Use defaults
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
     // 1. Ghost Media: parent-level items (Movie, Series, MusicAlbum) with 0 plays on themselves or children
@@ -123,12 +123,12 @@ async function getCleanupData() {
         let lastPlayed = new Date(0);
 
         for (const history of media.playbackHistory) {
-            const completion = getCompletionMetrics({ type: media.type, durationMs: media.durationMs }, history.durationWatched, rules).percent;
+            const completion = getCompletionMetrics({ type: media.type, durationMs: media.durationMs }, history.durationWatched).percent;
             if (completion > maxCompletionPercentage) maxCompletionPercentage = completion;
             if (history.startedAt > lastPlayed) lastPlayed = history.startedAt;
         }
 
-        const bestBucket = getCompletionMetrics({ type: media.type, durationMs: media.durationMs }, Math.round((maxCompletionPercentage / 100) * maxDurationSecs), rules).bucket;
+        const bestBucket = getCompletionMetrics({ type: media.type, durationMs: media.durationMs }, Math.round((maxCompletionPercentage / 100) * maxDurationSecs)).bucket;
         if (maxCompletionPercentage > 0 && bestBucket !== 'completed') {
             abandonedMedia.push({
                 ...media,

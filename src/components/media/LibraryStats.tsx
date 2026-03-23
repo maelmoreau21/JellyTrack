@@ -35,7 +35,8 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
     const t = useTranslations('media');
     const tc = useTranslations('common');
     const [searchQuery, setSearchQuery] = useState("");
-    const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
+    // Always show all details
+    const showDetails = true;
 
     const humanizeLibraryName = (name: string) => {
         if (!name) return '';
@@ -65,25 +66,6 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
         );
     }, [searchQuery, libraries, getDisplayName]);
 
-    // Initialize expanded/collapsed map based on library count.
-    // Defer initialization to avoid synchronous setState inside an effect.
-    useEffect(() => {
-        const t = setTimeout(() => {
-            // If many libraries, collapse extra ones to save space by default
-            const init: Record<string, boolean> = {};
-            const defaultExpanded = libraries.length <= 6; // expand all when few
-            libraries.forEach((l, idx) => {
-                init[l.name] = defaultExpanded || idx < 6;
-            });
-            setExpandedMap(init);
-        }, 0);
-        return () => clearTimeout(t);
-    }, [libraries]);
-
-    const toggleExpand = (name: string) => {
-        setExpandedMap(prev => ({ ...prev, [name]: !prev[name] }));
-    };
-
     const getIconPrefix = (collectionType?: string | null, name?: string) => {
         const type = collectionType?.toLowerCase() || "";
         const fallbackName = name?.toLowerCase() || "";
@@ -109,7 +91,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
         seriesCount > 0 ? <span key="series" className="text-emerald-500">{seriesCount} {tc('series').toLowerCase()}</span> : null,
         albumCount > 0 ? <span key="music" className="text-yellow-500">{albumCount} {tc('music').toLowerCase()}</span> : null,
         bookCount > 0 ? <span key="books" className="text-purple-500">{bookCount} {tc('books').toLowerCase()}</span> : null,
-    ].filter(Boolean) as JSX.Element[];
+    ].filter(Boolean) as React.ReactNode[];
 
     const contentWithSeparators = _contentItems.flatMap((item, i) => i === 0 ? [item] : [<span key={`sep-${i}`} className="text-zinc-400 font-normal">, </span>, item]);
 
@@ -134,7 +116,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                     </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm group transition-all hover:shadow-lg hover:shadow-purple-500/5">
+                <Card className="relative overflow-hidden bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm group transition-all hover:shadow-lg hover:shadow-purple-500/5 md:col-span-2">
                     <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardHeader className="pb-2">
                         <CardTitle className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
@@ -142,8 +124,8 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="relative z-10">
-                        <div className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-snug h-10">
-                            {contentWithSeparators}
+                        <div className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 leading-snug">
+                            <div className="whitespace-normal break-words">{contentWithSeparators}</div>
                         </div>
                         <p className="text-xs text-zinc-500 mt-2 font-medium flex items-center gap-1.5 opacity-80">
                              <Info className="w-3.5 h-3.5" /> {t('statsContentDesc')}
@@ -225,7 +207,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                 <div className="space-y-1 w-full">
                                     <div className="flex items-center justify-between gap-2 w-full">
                                         <div className="flex items-center gap-2 w-full">
-                                            <div onClick={() => toggleExpand(lib.name)} className="flex items-center gap-2 cursor-pointer min-w-0">
+                                            <div className="flex items-center gap-2 min-w-0">
                                                 {getIconPrefix(lib.collectionType, lib.name)}
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <CardTitle className="text-xl font-bold pr-2 text-zinc-900 dark:text-zinc-100 line-clamp-2 whitespace-normal break-words">{displayName}</CardTitle>
@@ -267,7 +249,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                 </div>
                             ) : null}
 
-                            {expandedMap[lib.name] ? (
+                            {showDetails ? (
                                 <div className="space-y-3 flex-1 flex flex-col">
                                     {/* Top Item */}
                                     {lib.topItem ? (

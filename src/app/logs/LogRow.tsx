@@ -66,6 +66,15 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
   const normalizedResolution = log.media?.resolution ? normalizeResolution(log.media.resolution) : null;
 
+  // Defensive: if ingestion accidentally prefixed the media title with the client name (e.g. "Finamp - Title"), strip it for display
+  const displayTitle = (() => {
+    const raw = log.media?.title || '';
+    const client = log.clientName || '';
+    if (client && raw.startsWith(`${client} - `)) return raw.slice(client.length + 3).trim();
+    if (client && raw.startsWith(`${client}: `)) return raw.slice(client.length + 2).trim();
+    return raw;
+  })();
+
   const getEventMeta = (type: string | null | undefined) => {
     switch (type) {
       case 'pause': return { color: 'bg-amber-600', label: t('timeline.label.pause'), icon: '⏸' };
@@ -170,8 +179,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
               </div>
               <div className="flex flex-col min-w-0 flex-1">
                 {log.media?.jellyfinMediaId ? (
-                  <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-800 dark:text-zinc-100 hover:underline" title={log.media?.title || 'Unknown'}>
-                    {log.media?.title || 'Unknown'}
+                  <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-800 dark:text-zinc-100 hover:underline" title={displayTitle || log.media?.title || 'Unknown'}>
+                    {displayTitle || log.media?.title || 'Unknown'}
                   </Link>
                 ) : (
                   <span className="truncate font-medium text-zinc-400">Unknown</span>
@@ -202,6 +211,20 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
         {visibleColumns.includes('client') && (
           <TableCell className="hidden lg:table-cell">
             <div className="text-sm font-semibold">{log.clientName || '—'}</div>
+          </TableCell>
+        )}
+
+        {/* Resolution */}
+        {visibleColumns.includes('resolution') && (
+          <TableCell className="hidden lg:table-cell">
+            <div className="text-sm">{normalizedResolution || '—'}</div>
+          </TableCell>
+        )}
+
+        {/* Audio Bitrate */}
+        {visibleColumns.includes('audioBitrate') && (
+          <TableCell className="hidden lg:table-cell">
+            <div className="text-sm">{typeof log.bitrate === 'number' && log.bitrate > 0 ? `${log.bitrate} kbps` : '—'}</div>
           </TableCell>
         )}
 

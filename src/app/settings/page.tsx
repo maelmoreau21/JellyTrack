@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Plug, Zap, Bell, BookOpen, Database } from "lucide-react";
+import { Plug, Zap, Bell, Film, Database } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export default function SettingsPage() {
@@ -12,7 +12,7 @@ export default function SettingsPage() {
         { href: '/settings/plugin', icon: <Plug className="w-5 h-5" />, title: t('pluginTitle'), desc: t('pluginDesc') },
         { href: '/settings/scheduler', icon: <Zap className="w-5 h-5" />, title: t('taskScheduler'), desc: t('taskSchedulerDesc') },
         { href: '/settings/notifications', icon: <Bell className="w-5 h-5" />, title: t('notifications'), desc: t('notificationsDesc') },
-        { href: '/settings/libraryRules', icon: <BookOpen className="w-5 h-5" />, title: t('libraryRules'), desc: t('libraryRulesDesc') },
+        { href: '/settings/media', icon: <Film className="w-5 h-5" />, title: t('mediaSettings'), desc: t('mediaSettingsDesc') },
         { href: '/settings/dataBackups', icon: <Database className="w-5 h-5" />, title: t('dataBackups'), desc: t('dataBackupsDesc') },
     ];
 

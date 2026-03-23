@@ -10,6 +10,7 @@ import {
     Legend,
     Sector,
 } from "recharts";
+import { useRouter } from "next/navigation";
 const PieTyped = Pie as unknown as typeof Pie;
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 import { chartItemStyle, chartLabelStyle, chartPalette, chartTooltipStyle } from "@/lib/chartTheme";
@@ -62,6 +63,7 @@ type PlatformActiveShapeProps = {
 }
 
 export function PlatformDistributionChart({ data }: PlatformDistributionChartProps) {
+    const router = useRouter();
     const t = useTranslations('charts');
     const td = useTranslations('dashboard');
     const [activeIndex, setActiveIndex] = useState<number>(-1);
@@ -100,6 +102,12 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
         return <span style={{ color: isHidden ? '#52525b' : '#e5eefb', textDecoration: isHidden ? 'line-through' : 'none', cursor: 'pointer' }}>{value}</span>;
     };
 
+    const handleSliceClick = (data: any) => {
+        if (data && data.name) {
+            router.push(`/logs?client=${encodeURIComponent(data.name)}`);
+        }
+    };
+
     return (
         <div className="flex flex-col h-full">
             {hidden.size > 0 && (
@@ -126,6 +134,7 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         activeShape={renderActiveShape as any}
                         onMouseEnter={(d: { value?: number; name?: string }, index: number) => setActiveIndex(index)}
                         onMouseLeave={() => setActiveIndex(-1)}
+                        onClick={handleSliceClick}
                     >
                         {filteredData.map((entry, index) => {
                             const originalIdx = data.findIndex(d => d.name === entry.name);

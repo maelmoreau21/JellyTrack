@@ -58,7 +58,7 @@ function StreamCard({ stream }: { stream: LiveStream }) {
     }
 
     return (
-        <div className="flex items-center gap-4 p-3 border rounded-lg border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
+        <div className="flex items-center gap-4 p-3 border rounded-lg border-zinc-200/60 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 hover:bg-zinc-50 transition-colors">
             {posterId ? (
                 <div className={`relative ${widthClass} ${aspectClass} bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10`}>
                     <FallbackImage
@@ -237,7 +237,7 @@ export function LiveStreamsPanel({ initialStreams, initialBandwidth }: { initial
     const useTimeline = streams.length >= 3 && !forceCards;
 
     return (
-        <Card className="col-span-3 bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+        <Card className="col-span-3 app-surface-soft dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>

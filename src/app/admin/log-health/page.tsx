@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getLogHealthSnapshot } from "@/lib/logHealth";
-import { AlertTriangle, CheckCircle2, Clock3, HeartPulse, RadioTower, RefreshCw, ShieldAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock3, HeartPulse, RadioTower, RefreshCw, ShieldAlert, Library, Activity, History } from "lucide-react";
 import { HealthAnomalyCharts } from "@/components/admin/HealthAnomalyCharts";
 import { getTranslations } from 'next-intl/server';
 
@@ -24,22 +24,82 @@ export default async function LogHealthPage() {
 
     return (
         <div className="flex-col md:flex">
-            <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-7xl mx-auto w-full">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('logHealth')}</h2>
-                    <p className="mt-2 text-sm text-zinc-400">{t('logHealthDesc')}</p>
+            <div className="flex-1 space-y-8 p-4 md:p-8 pt-4 md:pt-6 max-w-7xl mx-auto w-full">
+                <header className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+                            <HeartPulse className="h-6 w-6" />
+                        </div>
+                        <h2 className="text-3xl font-bold tracking-tight">{t('logHealth')}</h2>
+                    </div>
+                    <p className="text-muted-foreground max-w-2xl">{t('logHealthDesc')}</p>
+                </header>
+
+                {/* Status Overview Cards */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-semibold text-zinc-500 flex items-center gap-2">
+                                <RadioTower className="h-4 w-4 text-cyan-500" />
+                                {t('monitor')}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{snapshot.status.monitor.status === 'error' ? t('monitorStatusError') : t('monitorStatusOk')}</div>
+                            <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                                <Clock3 className="h-3 w-3" />
+                                {t('lastPoll')}: {formatDate(snapshot.status.monitor.lastPollAt)}
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-semibold text-zinc-500 flex items-center gap-2">
+                                <ShieldAlert className="h-4 w-4 text-orange-500" />
+                                {t('openPlaybackOrphans')}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{snapshot.counts.openPlaybackOrphans}</div>
+                            <p className="text-xs text-muted-foreground mt-1.5">{t('playbackHistoryNote')}</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-semibold text-zinc-500 flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4 text-red-500" />
+                                {t('dbWithoutRedis')}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{snapshot.counts.dbStreamsWithoutRedis}</div>
+                            <p className="text-xs text-muted-foreground mt-1.5">{t('dbWithoutRedisDesc')}</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-semibold text-zinc-500 flex items-center gap-2">
+                                <Activity className="h-4 w-4 text-emerald-500" />
+                                {t('redisOrphan')}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{snapshot.counts.redisOrphans}</div>
+                            <p className="text-xs text-muted-foreground mt-1.5">{t('redisOrphanDesc')}</p>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-4">
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50"><CardHeader><CardTitle className="text-sm text-zinc-400 flex items-center gap-2"><RadioTower className="h-4 w-4 text-cyan-400" /> {t('monitor')}</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{snapshot.status.monitor.status === 'error' ? t('monitorStatusError') : t('monitorStatusOk')}</div><p className="text-xs text-zinc-500 mt-1">{t('lastPoll')}: {formatDate(snapshot.status.monitor.lastPollAt)}</p></CardContent></Card>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50"><CardHeader><CardTitle className="text-sm text-zinc-400 flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-orange-400" /> {t('openPlaybackOrphans')}</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{snapshot.counts.openPlaybackOrphans}</div><p className="text-xs text-zinc-500 mt-1">{t('playbackHistoryNote')}</p></CardContent></Card>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50"><CardHeader><CardTitle className="text-sm text-zinc-400 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-red-400" /> {t('dbWithoutRedis')}</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{snapshot.counts.dbStreamsWithoutRedis}</div><p className="text-xs text-zinc-500 mt-1">{t('dbWithoutRedisDesc')}</p></CardContent></Card>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50"><CardHeader><CardTitle className="text-sm text-zinc-400 flex items-center gap-2"><HeartPulse className="h-4 w-4 text-emerald-400" /> {t('redisOrphan')}</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{snapshot.counts.redisOrphans}</div><p className="text-xs text-zinc-500 mt-1">{t('redisOrphanDesc')}</p></CardContent></Card>
-                </div>
-
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                {/* Main Anomaly Charts Section */}
+                <Card className="app-surface border-zinc-200/60 dark:border-zinc-800/50 shadow-md">
                     <CardHeader>
-                        <CardTitle>{t('anomalyChartsTitle')}</CardTitle>
+                        <CardTitle className="flex items-center gap-2 text-xl">
+                            <Activity className="h-5 w-5 text-cyan-500" />
+                            {t('anomalyChartsTitle')}
+                        </CardTitle>
                         <CardDescription>{t('anomalyChartsDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-2">
@@ -47,102 +107,122 @@ export default async function LogHealthPage() {
                     </CardContent>
                 </Card>
 
-                <div className="grid gap-4 lg:grid-cols-2">
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                {/* Sub-sections: Orphans, Closures, Excluded Libraries */}
+                <div className="grid gap-6 lg:grid-cols-3">
+                    {/* Orphans List */}
+                    <Card className="app-surface border-zinc-200/60 dark:border-zinc-800/50 lg:col-span-1">
                         <CardHeader>
-                            <CardTitle>{t('orphanPlaybacksTitle')}</CardTitle>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <ShieldAlert className="h-5 w-5 text-orange-400" />
+                                {t('orphanPlaybacksTitle')}
+                            </CardTitle>
                             <CardDescription>{t('orphanPlaybacksDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {snapshot.orphanPlaybacks.length === 0 && <div className="text-sm text-zinc-500">{t('noOrphanPlaybacks')}</div>}
-                            {snapshot.orphanPlaybacks.map((entry: { id: string; mediaTitle?: string; username?: string; library?: string; startedAt?: string | null; durationWatched?: number }) => (
-                                <div key={entry.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-3">
-                                    <div className="font-medium text-zinc-100">{entry.mediaTitle}</div>
-                                    <div className="mt-1 text-xs text-zinc-400">{entry.username} · {entry.library}</div>
-                                    <div className="mt-2 text-xs text-zinc-500">{t('openedOn')} {formatDate(entry.startedAt)} · {Math.floor((entry.durationWatched ?? 0) / 60)} min</div>
+                            {snapshot.orphanPlaybacks.length === 0 && (
+                                <div className="py-8 text-center text-sm text-zinc-500 italic bg-zinc-50/50 dark:bg-white/5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                    {t('noOrphanPlaybacks')}
                                 </div>
-                            ))}
+                            )}
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                {snapshot.orphanPlaybacks.map((entry: any) => (
+                                    <div key={entry.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/40 p-3 hover:shadow-sm transition-shadow">
+                                        <div className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{entry.mediaTitle}</div>
+                                        <div className="mt-1 text-xs text-zinc-500 font-medium">{entry.username} · {entry.library}</div>
+                                        <div className="mt-2 text-xs text-zinc-400 flex items-center gap-1.5">
+                                            <History className="h-3 w-3" />
+                                            {formatDate(entry.startedAt)} · {Math.floor((entry.durationWatched ?? 0) / 60)} min
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    {/* Recent Events List */}
+                    <Card className="app-surface border-zinc-200/60 dark:border-zinc-800/50 lg:col-span-1">
                         <CardHeader>
-                            <CardTitle>{t('recentClosuresTitle')}</CardTitle>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <History className="h-5 w-5 text-cyan-400" />
+                                {t('recentClosuresTitle')}
+                            </CardTitle>
                             <CardDescription>{t('recentClosuresDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {snapshot.recentEvents.length === 0 && <div className="text-sm text-zinc-500">{t('noRecentEvents')}</div>}
-                            {snapshot.recentEvents.map((event: { id: string; kind?: string; message?: string; createdAt?: string | null }) => (
-                                <div key={event.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-3">
-                                    <div className="flex items-center gap-2 text-sm font-medium text-zinc-100">
-                                        {String(event.kind || '').includes('error') ? <AlertTriangle className="h-4 w-4 text-red-400" /> : <CheckCircle2 className="h-4 w-4 text-emerald-400" />}
-                                        {event.message}
-                                    </div>
-                                    <div className="mt-2 text-xs text-zinc-500">{formatDate(event.createdAt)}</div>
+                            {snapshot.recentEvents.length === 0 && (
+                                <div className="py-8 text-center text-sm text-zinc-500 italic bg-zinc-50/50 dark:bg-white/5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                    {t('noRecentEvents')}
                                 </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
-                        <CardHeader>
-                            <CardTitle>{t('excludedLibrariesTitle')}</CardTitle>
-                            <CardDescription>{t('excludedLibrariesDesc')}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-wrap gap-2">
-                            {snapshot.excludedLibraries.length === 0 && <span className="text-sm text-zinc-500">{t('noExcludedLibraries')}</span>}
-                            {snapshot.excludedLibraries.map((library: string) => (
-                                <span key={library} className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-medium text-red-200">{library}</span>
-                            ))}
+                            )}
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                {snapshot.recentEvents.map((event: any) => (
+                                    <div key={event.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/40 p-3 hover:shadow-sm transition-shadow">
+                                        <div className="flex items-start gap-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                            {String(event.kind || '').includes('error') 
+                                                ? <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" /> 
+                                                : <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5" />}
+                                            <div className="flex-1 leading-relaxed">{event.message}</div>
+                                        </div>
+                                        <div className="mt-2 text-[10px] text-zinc-400 font-mono text-right">{formatDate(event.createdAt)}</div>
+                                    </div>
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
-                        <CardHeader>
-                            <CardTitle>{t('rulesTitle')}</CardTitle>
-                            <CardDescription>{t('libraryRulesDesc')}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            {Object.entries(snapshot.libraryRules).map(([library, rule]: [string, { completionEnabled?: boolean; abandonedThreshold?: number; partialThreshold?: number; completedThreshold?: number }]) => (
-                                <div key={library} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-3">
-                                    <div className="font-medium text-zinc-100">{library}</div>
-                                    <div className="mt-1 text-xs text-zinc-400">
-                                        {rule.completionEnabled
-                                            ? `${t('abandoned')}: ${rule.abandonedThreshold}% · ${t('partial')}: ${rule.partialThreshold}% · ${t('completed')}: ${rule.completedThreshold}%`
-                                            : t('completionDisabled')
-                                        }
+                    {/* Excluded Libraries & Processing Status summary */}
+                    <div className="space-y-6">
+                        <Card className="app-surface border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <Library className="h-5 w-5 text-zinc-400" />
+                                    {t('excludedLibrariesTitle')}
+                                </CardTitle>
+                                <CardDescription>{t('excludedLibrariesDesc')}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-wrap gap-2">
+                                {snapshot.excludedLibraries.length === 0 && <span className="text-sm text-zinc-500 italic">{t('noExcludedLibraries')}</span>}
+                                {snapshot.excludedLibraries.map((library: string) => (
+                                    <span key={library} className="rounded-lg border border-red-500/20 bg-red-500/5 px-2.5 py-1 text-xs font-semibold text-red-600 dark:text-red-400">{library}</span>
+                                ))}
+                            </CardContent>
+                        </Card>
+
+                        <Card className="app-surface border-zinc-200/60 dark:border-zinc-800/50 shadow-sm overflow-hidden">
+                            <CardHeader className="bg-zinc-50/50 dark:bg-white/5 border-b border-zinc-100 dark:border-zinc-800/50">
+                                <CardTitle className="text-lg">{t('processingStatusTitle')}</CardTitle>
+                                <CardDescription>{t('processingStatusDesc')}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                                    <div className="p-4 hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200"><RadioTower className="h-4 w-4 text-cyan-500" /> {t('monitor')}</div>
+                                            <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{t('lastSuccess')}</div>
+                                        </div>
+                                        <div className="text-xs text-zinc-500 ml-6">{formatDate(snapshot.status.monitor.lastSuccessAt)}</div>
+                                    </div>
+                                    
+                                    <div className="p-4 hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200"><RefreshCw className="h-4 w-4 text-amber-500" /> {t('sync')}</div>
+                                            <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{t('lastSuccess')}</div>
+                                        </div>
+                                        <div className="text-xs text-zinc-500 ml-6">{formatDate(snapshot.status.sync.lastSuccessAt)} ({snapshot.status.sync.mode || '—'})</div>
+                                    </div>
+
+                                    <div className="p-4 hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200"><Clock3 className="h-4 w-4 text-emerald-500" /> {t('backup')}</div>
+                                            <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{t('lastSuccess')}</div>
+                                        </div>
+                                        <div className="text-xs text-zinc-500 ml-6">{formatDate(snapshot.status.backup.lastSuccessAt)}</div>
                                     </div>
                                 </div>
-                            ))}
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
-
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
-                    <CardHeader>
-                        <CardTitle>{t('processingStatusTitle')}</CardTitle>
-                        <CardDescription>{t('processingStatusDesc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid gap-4 md:grid-cols-3">
-                        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><RadioTower className="h-4 w-4 text-cyan-400" /> {t('monitor')}</div>
-                            <div className="mt-2 text-sm text-zinc-500">{t('lastSuccess')}: {formatDate(snapshot.status.monitor.lastSuccessAt)}</div>
-                            <div className="mt-1 text-sm text-zinc-500">{t('lastError')}: {snapshot.status.monitor.lastError || t('none')}</div>
-                        </div>
-                        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><RefreshCw className="h-4 w-4 text-amber-400" /> {t('sync')}</div>
-                            <div className="mt-2 text-sm text-zinc-500">{t('lastSuccess')}: {formatDate(snapshot.status.sync.lastSuccessAt)}</div>
-                            <div className="mt-1 text-sm text-zinc-500">{t('mode')}: {snapshot.status.sync.mode || '—'}</div>
-                        </div>
-                        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                            <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300"><Clock3 className="h-4 w-4 text-emerald-400" /> {t('backup')}</div>
-                            <div className="mt-2 text-sm text-zinc-500">{t('lastSuccess')}: {formatDate(snapshot.status.backup.lastSuccessAt)}</div>
-                            <div className="mt-1 text-sm text-zinc-500">{t('file')}: {snapshot.status.backup.lastFileName || '—'}</div>
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
         </div>
     );

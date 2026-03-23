@@ -73,9 +73,17 @@ export async function GET(request: Request) {
         orderBy,
     });
 
-    let csvContent = "Id,Date,User,Media Title,Media Type,Client,Device,IP Address,Country,Play Method,Duration (s),Audio Language,Subtitle Codec\n";
+    // Fetch active streams to surface current bitrate/audio codec when available
+    const activeStreams = await prisma.activeStream.findMany({ select: { userId: true, mediaId: true, bitrate: true, audioCodec: true } });
+    const activeMap = new Map(activeStreams.map((a) => [`${a.userId}:${a.mediaId}`, { bitrate: a.bitrate ?? null, audioCodec: a.audioCodec ?? '' }] as [string, { bitrate: number | null; audioCodec: string }]));
+
+    let csvContent = "Id,Date,User,Media Title,Media Type,Client,Device,IP Address,Country,Play Method,Duration (s),Resolution,Audio Bitrate (kbps),Audio Codec,Audio Language,Subtitle Codec\n";
 
     logs.forEach((log) => {
+        const key = `${log.userId}:${log.mediaId}`;
+        const active = activeMap.get(key) ?? null;
+        const bitrateVal = active?.bitrate ?? null;
+        const audioCodecVal = (log.audioCodec || (active ? active.audioCodec : '')) || '';
         const row = [
             log.id,
             log.startedAt.toISOString(),
@@ -88,6 +96,9 @@ export async function GET(request: Request) {
             log.country || '',
             log.playMethod || '',
             log.durationWatched,
+            log.media?.resolution || '',
+            bitrateVal !== null && bitrateVal !== undefined ? String(bitrateVal) : '',
+            audioCodecVal,
             log.audioLanguage || '',
             log.subtitleCodec || ''
         ];

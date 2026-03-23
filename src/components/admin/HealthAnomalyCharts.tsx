@@ -5,6 +5,7 @@ import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { useTranslations } from "next-intl";
 import ResponsiveContainer from "../charts/ResponsiveContainerGuard";
 import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartPalette, chartTooltipStyle } from "@/lib/chartTheme";
+import { AlertCircle } from "lucide-react";
 
 type TimelinePoint = {
     day: string;
@@ -39,8 +40,8 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
     }));
 
     // Detect whether there are any non-zero anomaly values
-    const timelineHasValues = safeTimeline.some(pt => (pt.monitorErrors || pt.syncErrors || pt.backupErrors || pt.cleanupOps) > 0);
-    const breakdownHasValues = safeBreakdown.some(b => (b.value || 0) > 0);
+    const hasTimelineValues = safeTimeline.some(pt => (pt.monitorErrors || pt.syncErrors || pt.backupErrors || pt.cleanupOps || pt.syncSuccesses) > 0);
+    const hasBreakdownValues = safeBreakdown.some(b => (b.value || 0) > 0);
 
     const monitorId = `monitorErrorsGradient-${uid}`;
     const syncId = `syncErrorsGradient-${uid}`;
@@ -48,73 +49,134 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
     const cleanupId = `cleanupOpsGradient-${uid}`;
     const syncSuccessId = `syncSuccessGradient-${uid}`;
     const sourceGradientId = `sourceBreakdownGradient-${uid}`;
-    const noValues = !timelineHasValues && !breakdownHasValues;
+
+    if (!hasTimelineValues && !hasBreakdownValues) {
+        return (
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-zinc-50/50 dark:bg-white/5 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-500 mb-4">
+                    <CheckCircle2 className="h-8 w-8" />
+                </div>
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{t('anomalyDetectedNone') || "Santé parfaite détectée"}</h3>
+                <p className="text-sm text-zinc-500 max-w-sm mt-1">
+                    {t('noAnomaliesDesc') || "Aucun événement critique ou anomalie n'a été enregistré au cours des 14 derniers jours."}
+                </p>
+            </div>
+        );
+    }
 
     return (
-        <>
-            {noValues && <div className="text-sm text-zinc-400 mb-2">{t('anomalyDetectedNone')}</div>}
-            <div className="grid gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2 w-full min-w-0 h-[320px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={safeTimeline} margin={{ top: 18, right: 20, left: -10, bottom: 4 }}>
-                        <defs>
-                            <linearGradient id={monitorId} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.55} />
-                                <stop offset="95%" stopColor="#38bdf8" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id={syncId} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.45} />
-                                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id={backupId} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.45} />
-                                <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id={cleanupId} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.45} />
-                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id={syncSuccessId} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35} />
-                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 7" vertical={false} stroke={chartGridColor} />
-                        <XAxis dataKey="day" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                        <Tooltip contentStyle={chartTooltipStyle} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
-                        <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }} />
-                        <Area type="monotone" dataKey="cleanupOps" name={t('anomalyCleanupOps')} stroke="#22c55e" fill={`url(#${cleanupId})`} strokeWidth={2} />
-                        <Area type="monotone" dataKey="syncSuccesses" name={t('anomalySyncSuccess')} stroke="#8b5cf6" fill={`url(#${syncSuccessId})`} strokeWidth={2} />
-                        <Area type="monotone" dataKey="monitorErrors" name={t('anomalyMonitorErrors')} stroke="#38bdf8" fill={`url(#${monitorId})`} strokeWidth={2} />
-                        <Area type="monotone" dataKey="syncErrors" name={t('anomalySyncErrors')} stroke="#f59e0b" fill={`url(#${syncId})`} strokeWidth={2} />
-                        <Area type="monotone" dataKey="backupErrors" name={t('anomalyBackupErrors')} stroke="#f43f5e" fill={`url(#${backupId})`} strokeWidth={2} />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </div>
+        <div className="space-y-8">
+            <div className="grid gap-8 lg:grid-cols-3 items-start">
+                {/* Timeline Chart */}
+                <div className="lg:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-zinc-400">{t('anomalyTimelineTitle') || "Évolution des anomalies"}</h4>
+                    </div>
+                    <div className="w-full min-w-0 h-[340px] bg-white/30 dark:bg-black/10 rounded-xl p-2 border border-zinc-100/50 dark:border-zinc-800/30">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={safeTimeline} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id={monitorId} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id={syncId} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id={backupId} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id={cleanupId} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id={syncSuccessId} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} opacity={0.5} />
+                                <XAxis 
+                                    dataKey="day" 
+                                    stroke={chartAxisColor} 
+                                    fontSize={10} 
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    tick={{ fill: chartAxisColor }}
+                                    dy={10}
+                                />
+                                <YAxis 
+                                    stroke={chartAxisColor} 
+                                    fontSize={10} 
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    allowDecimals={false} 
+                                    tick={{ fill: chartAxisColor }}
+                                />
+                                <Tooltip 
+                                    contentStyle={{ ...chartTooltipStyle, borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
+                                    labelStyle={chartLabelStyle} 
+                                    itemStyle={chartItemStyle} 
+                                />
+                                <Legend 
+                                    verticalAlign="top" 
+                                    align="right" 
+                                    iconType="circle"
+                                    wrapperStyle={{ fontSize: "11px", fontWeight: 600, paddingBottom: "20px" }} 
+                                />
+                                <Area type="monotone" dataKey="syncSuccesses" name={t('anomalySyncSuccess')} stroke="#8b5cf6" fill={`url(#${syncSuccessId})`} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                                <Area type="monotone" dataKey="cleanupOps" name={t('anomalyCleanupOps')} stroke="#10b981" fill={`url(#${cleanupId})`} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                                <Area type="monotone" dataKey="monitorErrors" name={t('anomalyMonitorErrors')} stroke="#0ea5e9" fill={`url(#${monitorId})`} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                                <Area type="monotone" dataKey="syncErrors" name={t('anomalySyncErrors')} stroke="#f59e0b" fill={`url(#${syncId})`} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                                <Area type="monotone" dataKey="backupErrors" name={t('anomalyBackupErrors')} stroke="#ef4444" fill={`url(#${backupId})`} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
 
-            <div className="w-full min-w-0 h-[320px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={safeBreakdown} margin={{ top: 18, right: 8, left: -18, bottom: 4 }}>
-                        <defs>
-                            <linearGradient id={sourceGradientId} x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.95} />
-                                <stop offset="100%" stopColor="#a855f7" stopOpacity={0.95} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 7" vertical={false} stroke={chartGridColor} />
-                        <XAxis dataKey="source" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => t(val)} />
-                        <YAxis stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                        <Tooltip contentStyle={chartTooltipStyle} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} formatter={(val: any, name: any) => [val, t(name)]} />
-                        <Bar dataKey="value" name={t('anomalyCumulativeImpact')} radius={[10, 10, 0, 0]} fill={`url(#${sourceGradientId})`}>
-                            {safeBreakdown.map((entry, index) => (
-                                <Cell key={`${entry.source}-${index}`} fill={chartPalette[index % chartPalette.length]} fillOpacity={0.92} />
-                            ))}
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
+                {/* Breakdown Chart */}
+                <div className="space-y-4">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-zinc-400">{t('anomalyBreakdownTitle') || "Répartition par source"}</h4>
+                    <div className="w-full min-w-0 h-[340px] bg-white/30 dark:bg-black/10 rounded-xl p-2 border border-zinc-100/50 dark:border-zinc-800/30">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={safeBreakdown} margin={{ top: 10, right: 10, left: -25, bottom: 0 }} layout="vertical">
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} opacity={0.5} />
+                                <XAxis type="number" hide />
+                                <YAxis 
+                                    dataKey="source" 
+                                    type="category" 
+                                    stroke={chartAxisColor} 
+                                    fontSize={11} 
+                                    tickLine={false} 
+                                    axisLine={false} 
+                                    tickFormatter={(val) => t(val)}
+                                    width={80}
+                                />
+                                <Tooltip 
+                                    cursor={{ fill: 'transparent' }}
+                                    contentStyle={{ ...chartTooltipStyle, borderRadius: '12px', border: 'none' }} 
+                                    formatter={(val: any, name: any) => [val, t('anomalyCumulativeImpact')]} 
+                                />
+                                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
+                                    {safeBreakdown.map((entry, index) => (
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={chartPalette[index % chartPalette.length]} 
+                                            fillOpacity={0.8}
+                                        />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
         </div>
-        </>
     );
 }
+
+const CheckCircle2 = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="m9 12 2 2 4-4" /></svg>
+);

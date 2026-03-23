@@ -353,7 +353,46 @@ Ces notes décrivent le flux serveur principal et les points à connaître pour 
 	- Retention : prévoir job de purge/archivage pour `telemetry_event` si index et taille croissent trop.
 	- Monitoring : enregistrer métriques d'ingestion (events/sec, latence DB, count des `createMany`), et erreurs de parsing du plugin.
 
-## 14. Exemples de requêtes utiles
+	### Logs — format, colonnes et recommandations
+
+	Notes opérationnelles (Logs / `playback_history` / affichage UI) :
+
+	- Colonne `media` : afficher uniquement le titre canonique du média (`media.title`) — ne concaténez pas le nom de l'application/client au titre. L'application/client doit figurer dans une colonne dédiée (`clientName` / `deviceName` / `application`). Cela évite les libellés du type "PNL - Dans la légende".
+	- Colonne `status` : séparer le statut de lecture (`playMethod`, `status`) dans sa propre colonne. Ne pas réutiliser la colonne `application` pour indiquer l'état.
+	- Colonne `resolution` : ajouter une colonne `resolution` aux exports et aux vues logs. Remonter la valeur depuis :
+		- `media.resolution` (champ synchronisé lors du `sync`), ou
+		- `active_stream` / snapshot live (si présent) pour refléter la résolution courante d'un flux actif.
+		- Si ni l'un ni l'autre n'est disponible, normaliser à `SD`/`Unknown` selon la politique.
+	- Bitrate / Qualité audio : éviter les doublons `Unknown`. La vue Logs doit prioriser :
+		1. `active_stream.bitrate` (si présent) — afficher en `kbps` (ex: `320 kbps`).
+		2. `telemetry_event` / metadata (si disponible) — fallback.
+		3. Si aucune valeur, afficher `Unknown` UNE seule fois dans la colonne `audioQuality`.
+	- Libellé musique dupliqué (`Unknown, Unknown`) : cela signale que deux champs (par ex. `audioCodec` et `bitrate`) étaient vides et affichés côte à côte. Solution : afficher les deux champs dans des colonnes distinctes (`audioCodec`, `audioBitrate`) ou n'afficher que `audioBitrate` sous forme lisible (`320 kbps`) et masquer les valeurs nulles.
+	- Export CSV / API : mettre à jour `GET /api/logs/export` pour inclure `resolution`, `audioBitrate` et `audioCodec` dans l'export.
+
+	Guides de debug rapides :
+
+	- Vérifier les mappings dans le serveur : `src/app/logs/page.tsx` (assemblage `safeLogs`) et `src/app/logs/LogRow.tsx` (rendu des colonnes). S'assurer que `activeStream.bitrate` est propagé vers `safeLogs`.
+	- Vérifier la table `active_stream` pour les sessions live :
+		```sql
+		SELECT session_id, media_id, bitrate, video_codec FROM active_stream WHERE last_ping_at > now() - interval '5 minutes';
+		```
+	- Pour analyser les `Unknown` en masse :
+		```sql
+		SELECT ph.id, ph.media_id, m.title, ph.audio_codec, ph.client_name
+		FROM playback_history ph
+		JOIN media m ON ph.media_id = m.id
+		WHERE ph.audio_codec IS NULL OR ph.audio_codec = '' OR ph.bitrate IS NULL
+		LIMIT 200;
+		```
+
+	- UI : proposer deux colonnes visibles dans l'UI Logs : `Resolution` et `Audio (kbps)` ; regrouper `player/application` dans `Client`.
+
+	- Remontées utilisateurs : si vous voyez titres concaténés avec le client, rechercher transformations côté ingestion (plugin ou route d'ingestion) qui pourraient préfixer `media.title` par `clientName` — corriger `upsertCanonicalMedia` ou `safeLogs` mapping.
+
+	---
+
+	## 14. Exemples de requêtes utiles
 - Récupérer tous les events de télémétrie pour une session :
 	SELECT * FROM telemetry_event WHERE playback_id = '<uuid>' ORDER BY position_ms ASC;
 
@@ -375,7 +414,7 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
 
 ## 16. Modifications récentes (notes opérationnelles)
 
-- Pages de paramètres : le fichier `src/app/settings/page.tsx` a été remplacé par une page d'aperçu qui renvoie vers des sous-pages dédiées : `Connexion Plugin` (`/settings/plugin`), `Planificateur de Tâches` (`/settings/scheduler`), `Notifications` (`/settings/notifications`), `Règles par bibliothèque` (`/settings/libraryRules`) et `Sauvegardes de Données` (`/settings/dataBackups`). Vérifier ces routes lors d'une QA visuelle.
+- Pages de paramètres : le fichier `src/app/settings/page.tsx` a été remplacé par une page d'aperçu qui renvoie vers des sous-pages dédiées : `Connexion Plugin` (`/settings/plugin`), `Planificateur de Tâches` (`/settings/scheduler`), `Notifications` (`/settings/notifications`), `Paramètres Média` (`/settings/media`) et `Sauvegardes de Données` (`/settings/dataBackups`). Vérifier ces routes lors d'une QA visuelle.
 - Language switcher (login) : `src/app/login/LoginLanguageSwitcher.tsx` utilise désormais des images de drapeaux (FlagCDN, ex. `https://flagcdn.com/w40/{iso}.png`) au lieu d'emojis — conserver la source `AVAILABLE_LOCALES` dans `src/i18n/locales.ts` pour la cohérence.
 - Analyse média : `src/app/media/analysis/page.tsx` a été refactorée pour calculer des agrégats (total média, diversité de genres, durée moyenne, top directors, top libraries). Des clés i18n `media.*` ont été ajoutées — s'assurer qu'elles existent dans tous les fichiers `messages/*.json`.
 - UI mineures : `src/app/logs/LogRow.tsx` a été ajusté pour enlever la bordure verticale par ligne (séparation maintenue au niveau de l'entête).
@@ -383,11 +422,11 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
 - Avertissement restant : une alerte non-bloquante Turbopack peut encore référencer `next.config.ts -> src/app/api/backup/auto/restore/route.ts`. Ce warning n'empêche pas la compilation mais peut être investigué si l'objectif est zéro warnings.
 - i18n plugin : si des libellés liés au plugin changent, pensez aussi à mettre à jour `JellyTrack.Plugin/Localization/*.json` pour garder la cohérence entre l'application et le plugin.
 - Refonte UI : Les filtres de `Bibliothèques` (Tous les Médias) ont été alignés sur ceux du dashboard (multi-sélection `excludeTypes`).
-- Historique Utilisateur & Règles : `UserRecentMedia.tsx` utilise désormais `LogsListClient` pour un historique robuste et la gestion native des timelines (pauses, audio). La page paramètre `Règles par bibliothèque` utilise une UI avec curseurs visuels complets et traduction complète (`abandoned`, `partial`, `completed` inclus dans root `settings`).
+- Historique Utilisateur & Règles : `UserRecentMedia.tsx` utilise désormais `LogsListClient` pour un historique robuste et la gestion native des timelines (pauses, audio). Les "Règles de complétion" ont été supprimées pour simplifier l'expérience utilisateur.
 - Graphiques d'anomalies (Santé des Logs) : Résolution d'un dysfonctionnement silencieux où les dates UTC des événements n'étaient pas correctement couplées à l'heure locale lors de la génération de l'axe temporel (corrigé via utilisation de `setUTCHours`/`getUTCDate` dans `logHealth.ts`). De plus, ajout du déclencheur `appendHealthEvent` dans la boucle d'erreurs de `sync.ts` afin que les échecs de synchronisation soient bien répertoriés. Le composant `HealthAnomalyCharts` utilise désormais la méthode `useTranslations('dashboard')` pour éviter tout terme en dur (hardcoded).
 - Traduction Universelle : Les 10 langues supportées ont été synchronisées. Les clés pour les graphiques d'anomalies, les règles par bibliothèque et les recommandations IA sont désormais présentes et traduites partout, garantissant une cohérence globale du projet. Tous les fichiers JSON de traduction ont été normalisés à exactement 888 lignes pour une maintenance facilitée.
 - Coopération UI & Bugs : Correction de la redirection brusque dans l'historique utilisateur (LogsListClient), réactivation de la recherche et des filtres dans "Tous les médias" (await searchParams), et harmonisation des clés de traduction (`rulesDesc` -> `libraryRulesDesc`).
-- **Configurable Resolution Thresholds**: Video quality categorization (4K, 1080p, etc.) is now based on Tdarr-aligned thresholds, configurable by the user in Settings > Library Rules. A full sync is required to apply changes to existing media.
+- **Configurable Resolution Thresholds**: Video quality categorization (4K, 1080p, etc.) is now based on Tdarr-aligned thresholds, configurable by the user in Settings > Media. A full sync is required to apply changes to existing media.
 - **100% Translation Coverage**: All 10 supported languages (de, en, es, fr, it, nl, pl, pt-BR, ru, zh) have been updated with latest translation keys for settings (including `cancel` button) and analytics.
 - **Chart Internationalization**: All chart components (`PlatformDistributionChart`, `ActivityByHourChart`, `StreamProportionsChart`, `DeepInsights`, `HealthAnomalyCharts`) have been refactored to use `next-intl` translation keys instead of hardcoded strings. Resolution labels in analytics are dynamically localized based on the user's language.
 - **Improved Log Health Monitoring**: Anomaly charts now include successful synchronization events as a "Sync Success" series, ensuring visibility even when no errors occur. Container responsiveness has been improved with `min-w-0` to guarantee correct rendering on all screens.
@@ -406,6 +445,10 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
     - **Normalisation UHD**: Les bibliothèques de type UHD (`seriesuhd`, `filmsuhd`) sont désormais correctement normalisées et traduites, résolvant les incohérences de nommage (ex: "SéRies UHD").
     - **Hiérarchie Médiale**: Amélioration de la navigation sur les pages de profil média avec des fils d'Ariane cliquables incluant l'Artiste pour la musique.
     - **Dédoublonnage des Collections**: Utilisation de `normalizeLibraryKey` pour fusionner les bibliothèques aux noms variés (ex: "Musique" vs "musique") dans une vue unique et cohérente.
+    - **Refonte de la Santé des Logs (Mars 2026)**: Overhaul complet de la page `admin/log-health` avec un design premium, des cartes de statut plus claires et des graphiques d'anomalies (`HealthAnomalyCharts`) plus robustes. Suppression définitive de la configuration des "Règles de Complétion" obsolètes.
+    - **Interactivité du Dashboard (Mars 2026)**:
+        - Les graphiques du tableau de bord (`MonthlyWatchTimeChart`, `CategoryPieChart`, `PlatformDistributionChart`) sont désormais interactifs. Cliquer sur un segment ou une barre redirige automatiquement vers les logs filtrés correspondants (par type, client ou période).
+        - Suppression de la fonctionnalité de réduction/expansion des cartes (`CollapsibleCard`) sur tout le tableau de bord et dans les statistiques de bibliothèque pour garantir une visibilité totale et immédiate des données.
 
 Après ces changements, toujours exécuter `npm run build` pour valider la compilation.
 

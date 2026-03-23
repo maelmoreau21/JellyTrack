@@ -40,7 +40,8 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
                 items: 0,
                 movies: 0,
                 series: 0,
-                music: 0,
+                        music: 0,
+                        tracks: 0,
                 books: 0,
                 collectionType: null,
                 uniqueMovies: new Set<string>(),
@@ -97,7 +98,8 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
                 items: 0,
                 movies: 0,
                 series: 0,
-                music: 0,
+                    music: 0,
+                    tracks: 0,
                 books: 0,
                 collectionType: m.collectionType,
                 uniqueMovies: new Set<string>(),
@@ -158,6 +160,7 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
             }
             if (m.type === 'Track' || m.type === 'Audio') {
                 lib.ignoredTracks = (lib.ignoredTracks || 0) + 1;
+                lib.tracks = (lib.tracks || 0) + 1;
                 if (m.parentId) lib.pendingAlbumIds.add(String(m.parentId));
             }
         }
@@ -202,7 +205,9 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
     for (const [, s] of libraryStatsMap) {
         s.movies = (s.uniqueMovies?.size) || 0;
         s.series = (s.uniqueSeries?.size) || 0;
-        s.music = (s.uniqueMusicAlbums?.size) || 0;
+        // Prefer showing track count when available (users often expect number of tracks)
+        s.tracks = s.tracks || 0;
+        s.music = s.tracks > 0 ? s.tracks : ((s.uniqueMusicAlbums?.size) || 0);
         s.books = (s.uniqueBooks?.size) || 0;
         s.items = s.movies + s.series + s.music + s.books;
         movieCount += s.movies;

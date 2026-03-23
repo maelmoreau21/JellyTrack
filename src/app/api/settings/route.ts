@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { apiT } from "@/lib/i18n-api";
 import { AVAILABLE_LOCALES } from "@/i18n/locales";
-import { loadLibraryRules, saveLibraryRules } from "@/lib/libraryRules";
+// No more library rules
 import { getSanitizedLibraryNames } from "@/lib/libraryUtils";
 import { revalidatePath } from "next/cache";
 
@@ -83,12 +83,12 @@ export async function GET() {
             fetchJellyfinLibraryNames(),
         ]);
 
-        const libraryRules = await loadLibraryRules(availableLibraries);
+        // const libraryRules = await loadLibraryRules(availableLibraries);
 
         return NextResponse.json({
             ...settings,
             availableLibraries,
-            libraryRules,
+            // libraryRules,
             libraryScanSource: jellyfinScanNames.source,
             libraryScanError: jellyfinScanNames.error || undefined,
         }, { status: 200 });
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { discordWebhookUrl, discordAlertCondition, discordAlertsEnabled, maxConcurrentTranscodes, excludedLibraries, syncCronHour, syncCronMinute, backupCronHour, backupCronMinute, defaultLocale, libraryRules, wrappedVisible, wrappedPeriodEnabled, wrappedStartMonth, wrappedStartDay, wrappedEndMonth, wrappedEndDay, resolutionThresholds } = body;
+        const { discordWebhookUrl, discordAlertCondition, discordAlertsEnabled, maxConcurrentTranscodes, excludedLibraries, syncCronHour, syncCronMinute, backupCronHour, backupCronMinute, defaultLocale, wrappedVisible, wrappedPeriodEnabled, wrappedStartMonth, wrappedStartDay, wrappedEndMonth, wrappedEndDay, resolutionThresholds } = body;
 
         // Input validation — Discord webhook URL must be a valid Discord URL or null
         if (discordWebhookUrl !== undefined && discordWebhookUrl !== null && discordWebhookUrl !== "") {
@@ -213,10 +213,10 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        if (libraryRules !== undefined) {
+        /* if (libraryRules !== undefined) {
             const availableLibraries = await getSanitizedLibraryNames();
             await saveLibraryRules(libraryRules, availableLibraries);
-        }
+        } */
 
         revalidatePath('/');
         revalidatePath('/settings');
