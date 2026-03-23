@@ -395,7 +395,10 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
 - **Episode Poster Aspect Ratio**: Fixed the issue where episode posters (typically 16:9) were being forced into a vertical 2:3 ratio, causing them to be cut off. Standardized with `aspect-video` for episodes across the UI.
 - **Media Hierarchy & Breadcrumbs**: Improved navigation and visibility for episodes and tracks by displaying their ancestry (Series - Season, Artist - Album) prominently in the profile header and logs.
   - Standardized the separator as ` - ` throughout the UI.
-  - Enhanced `getMediaSubtitle` in logs to handle recursive lookups and fallback metadata.
+	- Enhanced `getMediaSubtitle` in logs to handle recursive lookups and fallback metadata.
+	- Logs: pour les médias musicaux, l'UI affiche désormais le bitrate en `kbps` (si connu) au lieu d'afficher "Unknown" pour la qualité.
+	- Video Quality chart: added a `1440p` (QHD) bucket and made the resolution rows interactive — each row links to `/media/all?resolution=<bucket>` to inspect the matching items. Audio/media (albums/tracks) are excluded from video-quality counts to avoid polluting "Standard / Autre" with audio-only items.
+	- Light theme redesign: complete refonte du mode clair vers une direction "Soft-Slate" — palette neutre et atténuée, accents teal/amber, moins d'éblouissement (moindre contraste blanc pur), et ajustements UI (cards, surfaces, tooltips, charts) pour une lecture plus confortable sur de longues sessions. Voir `src/app/globals.css` pour les variables CSS modifiées (`--background`, `--foreground`, `--card`, `--primary`, chart vars, etc.).
 - **Améliorations de la Surveillance & Collections (Mars 2026)**:
     - **Synchronisation Précise**: Le processus de synchronisation (`sync.ts`) extrait désormais explicitement `RunTimeTicks` de Jellyfin, garantissant une mesure exacte de la durée totale des collections.
     - **Santé du Moniteur**: L'état du moniteur ("Last Success") est désormais mis à jour par TOUS les événements du plugin (PlaybackStart, Progress, Stop) en plus du Heartbeat, évitant l'affichage persistant de "Jamais" si le plugin est actif mais que le cron de heartbeat est lent.
@@ -405,3 +408,70 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
     - **Dédoublonnage des Collections**: Utilisation de `normalizeLibraryKey` pour fusionner les bibliothèques aux noms variés (ex: "Musique" vs "musique") dans une vue unique et cohérente.
 
 Après ces changements, toujours exécuter `npm run build` pour valider la compilation.
+
+## 17. Dépannage — Import des Collections ("Détails par Collection")
+
+Problème fréquent : sur la page **Détails par Collection** seules des collections vides (ou la pseudo‑collection "Collections") apparaissent, alors que votre Jellyfin comporte plusieurs bibliothèques avec du contenu.
+
+Causes possibles et vérifications rapides :
+- Variables d'environnement manquantes : `JELLYFIN_URL` et `JELLYFIN_API_KEY` sont utilisées par `getSanitizedLibraryNames()` pour récupérer les VirtualFolders. Si elles manquent ou sont incorrectes, l'application retombe sur les noms présents en base de données ou sur des valeurs par défaut.
+- Bibliothèques marquées comme "ghost" : `GHOST_LIBRARY_NAMES` contient des noms pseudo‑libraries (ex: `Collections`, `Movies`, `Music`). Si vos noms Jellyfin collent à ces valeurs ils peuvent être filtrés.
+- Exclusions globales : `global_settings.excludedLibraries` est appliqué via `buildExcludedMediaClause()` ; si une bibliothèque est listée là, ses médias sont exclus des calculs.
+- Type de collection : les VirtualFolders avec `CollectionType === 'boxsets'` sont explicitement ignorés par `getSanitizedLibraryNames()` (c.f. filtre dans la requête Jellyfin). Vérifier si vos bibliothèques utiles sont marquées `boxsets` côté Jellyfin.
+- Données partielles en base : la page fusionne noms provenant de Jellyfin et de la DB (`media.libraryName`). Si la synchronisation n'a pas remonté `libraryName` ou `collectionType` pour certains médias, ils pourront apparaître dans `other` ou ne pas être agrégés correctement.
+
+Étapes de diagnostic (commande / requêtes utiles) :
+- Vérifier les env vars :
+```
+echo %JELLYFIN_URL%
+echo %JELLYFIN_API_KEY%
+```
+- Tester l'API Jellyfin VirtualFolders (remplacez <JELLYFIN_URL> et <API_KEY>) :
+```
+curl -s -H "X-Emby-Token: <API_KEY>" "<JELLYFIN_URL>/Library/VirtualFolders" | jq '.'
+```
+- Vérifier les noms de bibliothèques stockés en base (via psql / Prisma) :
+SQL:
+```
+SELECT DISTINCT library_name FROM media ORDER BY library_name;
+SELECT library_name, COUNT(*) FROM media GROUP BY library_name ORDER BY COUNT DESC LIMIT 20;
+```
+- Vérifier `excludedLibraries` dans la table `global_settings` :
+```
+SELECT excluded_libraries FROM global_settings WHERE id = 'global';
+```
+- Vérifier s'il y a des `collectionType='boxsets'` (ignorés) :
+```
+SELECT collection_type, COUNT(*) FROM media GROUP BY collection_type;
+```
+
+Remèdes rapides :
+- Si `JELLYFIN_URL`/`JELLYFIN_API_KEY` manquent, ajouter-les dans votre `.env` et re‑lancer la sync / redémarrer le serveur.
+- Si des bibliothèques sont dans `excludedLibraries`, retirez‑les via UI Settings ou directement dans la table `global_settings` (attention en prod).
+- Si la synchronisation n'a pas renseigné `libraryName` ou `collectionType`, relancer un `full sync` (voir scripts de synchronisation) pour forcer le remontée des métadonnées.
+- Si votre VirtualFolder est de type `boxsets` et que vous souhaitez l'afficher, modifier `getSanitizedLibraryNames()` pour ne plus filtrer `CollectionType === 'boxsets'` (nécessite revue & build).
+
+Si vous voulez, je peux :
+- exécuter les requêtes SQL ci‑dessus (si vous me donnez accès à la DB ou à un dump),
+- lancer localement un `curl` vers votre Jellyfin (si vous confirmez l'URL/API key),
+- ou appliquer une petite PR pour afficher temporairement plus d'informations de debugging dans `CollectionsPage` (par ex. afficher `rawNames` et la taille détectée par bibliothèque).
+
+## 18. Breadcrumbs / Remontée de la hiérarchie (Comportement attendu)
+
+Objectif : permettre à l'utilisateur de "remonter" facilement la hiérarchie (Episode → Season → Series, Track → Album → Artist) depuis la page de détail d'un média, même si Jellyfin n'a pas fourni tous les parents dans son payload.
+
+Comportement implémenté :
+- La page de détail média (`src/app/media/[id]/page.tsx`) tente d'abord d'utiliser les métadonnées retournées par l'API Jellyfin (`SeriesId`, `SeasonId`, `AlbumId`, `AlbumArtist`).
+- Si ces IDs ne sont pas présents, le serveur remonte la chaîne de `parentId` stockée localement dans la table `media` (champ `parentId` contient l'ID Jellyfin du parent). On effectue des recherches successives (`jellyfinMediaId = parentId`) jusqu'à atteindre la racine ou un cycle.
+- Les ancêtres résolus sont exposés en fallback aux breadcrumbs et aux boutons de navigation rapide présents en haut de la page (links vers `/media/{jellyfinId}`).
+
+Points d'attention et debugging :
+- Si la synchronisation n'a pas importé les parents (champ `parentId` absent), la remontée ne pourra pas fonctionner — relancer un `full sync` résout souvent ce cas.
+- Pour diagnostiquer, activez `DEBUG_COLLECTIONS=1` ou visitez `/media/collections?debugCollections=1` pour voir les `rawNames` et mappings.
+- Les résolutions utilisent `jellyfinMediaId` comme clé ; si vous avez plusieurs entrées pour le même Jellyfin ID, corriger les doublons en base.
+
+Si vous voulez que je :
+- affiche également un bouton "Remonter toute la hiérarchie" (qui ouvre une vue détaillée),
+- ou fournisse un endpoint API pour récupérer la chaîne d'ancêtres (utile pour clients externes),
+dites‑le et je l'implémente.
+

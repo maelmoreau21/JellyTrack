@@ -50,10 +50,16 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
         else mediaWhere.AND.push(orClause);
     }
 
-    const parentItems = await prisma.media.findMany({
+    let parentItems = await prisma.media.findMany({
         where: mediaWhere,
         include: { playbackHistory: { select: { durationWatched: true, playMethod: true } } },
     });
+
+    // Optional: filter by normalized resolution (client links from analysis page use `resolution`)
+    const resolutionFilter = typeof searchParams?.resolution === 'string' && searchParams.resolution ? String(searchParams.resolution) : null;
+    if (resolutionFilter) {
+        parentItems = parentItems.filter((m: any) => normalizeResolution(m.resolution) === resolutionFilter);
+    }
 
     const seriesIdList = parentItems.filter((m: any) => m.type === 'Series').map((m: any) => String(m.jellyfinMediaId));
     const seriesChildStats = new Map<string, { plays: number; dur: number; dp: number; childCount: number }>();

@@ -112,6 +112,45 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         console.error("[Media Profile] Erreur récupération métadonnées Jellyfin:", err);
     }
 
+    // If Jellyfin did not provide full parent IDs (series/season/album), try to resolve
+    // the parent chain from our local `media.parentId` fields stored in DB.
+    try {
+        const ancestors: { [k: string]: { jellyfinMediaId: string; title: string; type: string } | null } = { series: null, season: null, album: null };
+        let cur = media.parentId || null;
+        const seen = new Set<string>();
+        while (cur) {
+            if (seen.has(cur)) break;
+            seen.add(cur);
+            const p = await prisma.media.findUnique({ where: { jellyfinMediaId: cur }, select: { jellyfinMediaId: true, title: true, type: true, parentId: true } });
+            if (!p) break;
+            if (p.type === 'Season') {
+                ancestors.season = { jellyfinMediaId: p.jellyfinMediaId, title: p.title, type: p.type };
+            } else if (p.type === 'Series') {
+                ancestors.series = { jellyfinMediaId: p.jellyfinMediaId, title: p.title, type: p.type };
+            } else if (p.type === 'MusicAlbum') {
+                ancestors.album = { jellyfinMediaId: p.jellyfinMediaId, title: p.title, type: p.type };
+            }
+            // climb up
+            cur = p.parentId || null;
+        }
+
+        // apply fallbacks only when Jellyfin metadata is missing
+        if (!seriesId && ancestors.series) {
+            seriesId = ancestors.series.jellyfinMediaId;
+            seriesName = seriesName || ancestors.series.title;
+        }
+        if (!seasonId && ancestors.season) {
+            seasonId = ancestors.season.jellyfinMediaId;
+            seasonName = seasonName || ancestors.season.title;
+        }
+        if (!albumId && ancestors.album) {
+            albumId = ancestors.album.jellyfinMediaId;
+            albumName = albumName || ancestors.album.title;
+        }
+    } catch (err) {
+        console.warn('[Media Profile] Failed to resolve DB ancestry for media:', err);
+    }
+
     // Fetch children items (Seasons for Series, Episodes for Season, Tracks for MusicAlbum)
     const isParentType = ['Series', 'Season', 'MusicAlbum'].includes(media.type);
     let children: { jellyfinMediaId: string; title: string; type: string; resolution?: string | null; normalizedResolution?: string | null; durationMs?: bigint | null; _count: number; _totalDuration: number }[] = [];

@@ -45,4 +45,5 @@ export type SafeLog = {
   city?: string | null;
   mediaSubtitle?: string | null;
   fallbackImageParentId?: string | null;
+  bitrate?: number | null;
 };

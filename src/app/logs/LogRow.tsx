@@ -186,6 +186,9 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                   {normalizedResolution && (
                       <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{normalizedResolution}</span>
                     )}
+                  {isAudioMedia && (
+                    <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{typeof log.bitrate === 'number' && log.bitrate > 0 ? `${log.bitrate} kbps` : 'Unknown'}</span>
+                  )}
                   <span className={`px-1.5 py-0.5 rounded ${isTranscode ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>{log.playMethod || 'DirectPlay'}</span>
                   {log.clientName && <span className="truncate">{log.clientName}</span>}
                 </div>

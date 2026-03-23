@@ -48,6 +48,7 @@ export function normalizeResolution(raw?: string | null): string {
     const lower = s.toLowerCase();
     if (/(4k|2160|3840|ultra[-\s]?hd|uhd)/i.test(lower)) return '4K';
     if (/(1080p|1080|full[-\s]?hd|fhd)/i.test(lower)) return '1080p';
+    if (/(1440p|2560x1440|qhd|2k)/i.test(lower)) return '1440p';
     if (/(720p|720|\bhd\b)/i.test(lower)) return '720p';
     if (/(480p|480|\bsd\b)/i.test(lower)) return 'SD';
     return s;

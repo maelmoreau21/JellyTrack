@@ -26,17 +26,20 @@ export default async function AnalysisPage() {
     // Consider only video-like media for resolution counting to avoid audio/media polluting video stats
     const VIDEO_COLLECTION_KEYS = new Set(['movies', 'tvshows', 'homevideos']);
     const VIDEO_TYPES = new Set(['Movie', 'Episode', 'Series', 'BoxSet', 'Video']);
+    const AUDIO_TYPES = new Set(['MusicAlbum', 'Audio', 'Track', 'AudioBook']);
     const MAIN_TYPES = new Set(['Movie', 'Series', 'MusicAlbum', 'Book']);
 
     medias.forEach(m => {
         if (m.genres) m.genres.forEach((g: string) => genreCounts.set(g, (genreCounts.get(g) || 0) + 1));
         const collectionKey = typeof m.collectionType === 'string' ? m.collectionType.toLowerCase() : '';
         const isVideo = VIDEO_TYPES.has((m.type || '').toString()) || VIDEO_COLLECTION_KEYS.has(collectionKey);
-        if (isVideo) {
+        // ensure we explicitly exclude known audio types even if collection keys are fuzzy
+        if (isVideo && !AUDIO_TYPES.has((m.type || '').toString())) {
             const rawRes = m.resolution || 'SD';
             let nr = 'SD';
             if (rawRes === '4K') nr = '4K';
             else if (rawRes === '1080p') nr = '1080p';
+            else if (rawRes === '1440p') nr = '1440p';
             else if (rawRes === '720p') nr = '720p';
             resolutionCounts.set(nr, (resolutionCounts.get(nr) || 0) + 1);
         }
@@ -75,6 +78,7 @@ export default async function AnalysisPage() {
     const topLibraries = Array.from(libraryStatsMap.values()).sort((a, b) => b.count - a.count).slice(0, 8);
 
     const res4K = resolutionCounts.get('4K') || 0;
+    const res1440p = resolutionCounts.get('1440p') || 0;
     const res1080p = resolutionCounts.get('1080p') || 0;
     const res720p = resolutionCounts.get('720p') || 0;
     const resSD = resolutionCounts.get('SD') || 0;
@@ -151,15 +155,18 @@ export default async function AnalysisPage() {
                         </CardHeader>
                         <CardContent className="flex flex-col gap-4 mt-4">
                             {[
-                                { label: t('4kLabel') || "4K UHD", val: res4K, color: "bg-gradient-to-r from-yellow-400 to-orange-500", text: "text-transparent bg-clip-text" },
-                                { label: "1080p FHD", val: res1080p, color: "text-blue-400" },
-                                { label: "720p HD", val: res720p, color: "text-emerald-400" },
-                                { label: t('standardOther'), val: resSD, color: "text-zinc-500" }
+                                { label: t('4kLabel') || "4K UHD", val: res4K, key: '4K', color: "bg-gradient-to-r from-yellow-400 to-orange-500", text: "text-transparent bg-clip-text" },
+                                { label: "1440p QHD", val: res1440p, key: '1440p', color: "text-sky-400" },
+                                { label: "1080p FHD", val: res1080p, key: '1080p', color: "text-blue-400" },
+                                { label: "720p HD", val: res720p, key: '720p', color: "text-emerald-400" },
+                                { label: t('standardOther'), val: resSD, key: 'SD', color: "text-zinc-500" }
                             ].map((q, idx) => (
-                                <div key={idx} className="app-surface-soft flex justify-between items-center p-3 rounded-lg border border-zinc-800/50">
-                                    <span className={`font-semibold ${q.color} ${q.text || ""}`}>{q.label}</span>
-                                    <span className="text-xl font-bold">{q.val}</span>
-                                </div>
+                                <a key={q.key} href={`/media/all?resolution=${encodeURIComponent(q.key)}`} className="block">
+                                    <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border border-zinc-800/50 hover:shadow-md hover:scale-[1.01] transition-transform">
+                                        <span className={`font-semibold ${q.color} ${q.text || ""}`}>{q.label}</span>
+                                        <span className="text-xl font-bold">{q.val}</span>
+                                    </div>
+                                </a>
                             ))}
                         </CardContent>
                     </Card>

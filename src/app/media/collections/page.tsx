@@ -8,7 +8,7 @@ import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
 
 export const dynamic = "force-dynamic";
 
-export default async function CollectionsPage() {
+export default async function CollectionsPage({ searchParams }: { searchParams?: Record<string, string | string[]> }) {
     const t = await getTranslations('media');
     const tc = await getTranslations('common');
 
@@ -261,6 +261,23 @@ export default async function CollectionsPage() {
         return true;
     });
 
+    const debugEnabled = (searchParams && String(searchParams.debugCollections) === '1') || process.env.DEBUG_COLLECTIONS === '1';
+    const debugOutput = debugEnabled ? Array.from(libraryStatsMap.entries()).map(([key, stats]) => ({
+        key,
+        displayName: stats.displayName,
+        rawNames: stats.rawNames ? Array.from(stats.rawNames as Set<string>) : [],
+        size: String(stats.size ?? '0'),
+        duration: String(stats.duration ?? '0'),
+        items: stats.items ?? 0,
+        movies: stats.movies ?? 0,
+        series: stats.series ?? 0,
+        music: stats.music ?? 0,
+        books: stats.books ?? 0,
+        ignoredTracks: stats.ignoredTracks ?? 0,
+        ignoredEpisodes: stats.ignoredEpisodes ?? 0,
+        watchedSeconds: stats.watchedSeconds ?? 0
+    })) : null;
+
     const libraryStatsList = await Promise.all(validLibraries.map(async ([key, stats]) => {
         const size = formatSize(stats.size);
         const rawNames = stats.rawNames ? Array.from(stats.rawNames as Set<string>) : [stats.displayName || key];
@@ -312,6 +329,12 @@ export default async function CollectionsPage() {
     return (
         <div className="p-6 max-w-[1400px] mx-auto">
             <h1 className="text-2xl font-bold mb-4">{t('libraryCollections') || 'Collections'}</h1>
+            {debugEnabled && debugOutput ? (
+                <div className="mb-4 p-3 bg-slate-800/70 text-sm rounded">
+                    <div className="font-medium mb-2">Debug: Collections snapshot</div>
+                    <pre className="whitespace-pre-wrap max-h-72 overflow-auto text-xs">{JSON.stringify(debugOutput, null, 2)}</pre>
+                </div>
+            ) : null}
             <LibraryStats
                 totalTB={totalTB}
                 movieCount={movieCount}

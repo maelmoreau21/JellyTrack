@@ -225,10 +225,11 @@ export default async function LogsPage({
         skip: (safePage - 1) * LOGS_PER_PAGE,
         take: LOGS_PER_PAGE,
     });
-    const activePairs = await prisma.activeStream.findMany({
-        select: { userId: true, mediaId: true }
+    const activeStreams = await prisma.activeStream.findMany({
+        select: { userId: true, mediaId: true, bitrate: true }
     });
-    const activePairSet = new Set(activePairs.map((entry) => `${entry.userId}:${entry.mediaId}`));
+    const activeStreamMap = new Map(activeStreams.map((entry) => [`${entry.userId}:${entry.mediaId}`, entry.bitrate ?? null] as [string, number | null]));
+    const activePairSet = new Set(activeStreams.map((entry) => `${entry.userId}:${entry.mediaId}`));
 
     // Sanitize logs to plain objects (avoids BigInt/Date serialization issues in RSC)
     const safeLogs: SafeLog[] = logs.map((log) => ({
@@ -250,6 +251,7 @@ export default async function LogsPage({
             } as SafeTelemetryEvent;
         }) : [],
         isActuallyActive: !log.endedAt && activePairSet.has(`${log.userId}:${log.mediaId}`),
+        bitrate: activeStreamMap.get(`${log.userId}:${log.mediaId}`) ?? null,
     }));
 
     const mediaIds = safeLogs
