@@ -99,52 +99,52 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
         <div className="space-y-8 mb-10 mt-6">
             {/* KPI Banners */}
             <div className="grid gap-4 md:grid-cols-3">
-                <Card className="relative overflow-hidden bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm group transition-all hover:shadow-lg hover:shadow-cyan-500/5">
+                <Card className="app-surface-soft border-border group transition-all hover:shadow-lg hover:shadow-cyan-500/5">
                     <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                        <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                             <HardDrive className="w-4 h-4 text-cyan-400" /> {t('statsVolume')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="relative z-10">
-                        <div className="text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 bg-clip-text">
+                        <div className="text-4xl font-black tracking-tight text-foreground bg-clip-text">
                             {totalTB}
                         </div>
-                        <p className="text-xs text-zinc-500 mt-2 font-medium flex items-center gap-1.5 opacity-80">
+                        <p className="text-xs text-muted-foreground mt-2 font-medium flex items-center gap-1.5 opacity-80">
                             <Info className="w-3.5 h-3.5" /> {t('statsVolumeDesc')}
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm group transition-all hover:shadow-lg hover:shadow-purple-500/5 md:col-span-2">
+                <Card className="app-surface-soft border-border group transition-all hover:shadow-lg hover:shadow-purple-500/5 md:col-span-2">
                     <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                        <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                             <Library className="w-4 h-4 text-purple-400" /> {t('statsContent')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="relative z-10">
-                        <div className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 leading-snug">
+                        <div className="text-xl font-bold tracking-tight text-foreground leading-snug">
                             <div className="whitespace-normal break-words">{contentWithSeparators}</div>
                         </div>
-                        <p className="text-xs text-zinc-500 mt-2 font-medium flex items-center gap-1.5 opacity-80">
+                        <p className="text-xs text-muted-foreground mt-2 font-medium flex items-center gap-1.5 opacity-80">
                              <Info className="w-3.5 h-3.5" /> {t('statsContentDesc')}
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm group transition-all hover:shadow-lg hover:shadow-amber-500/5">
+                <Card className="app-surface-soft border-border group transition-all hover:shadow-lg hover:shadow-amber-500/5">
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                        <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                             <Clock className="w-4 h-4 text-amber-400" /> {t('statsTime')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="relative z-10">
-                        <div className="text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 bg-clip-text">
+                        <div className="text-4xl font-black tracking-tight text-foreground bg-clip-text">
                             {timeLabel.replace('jours', 'j').replace('heures', 'h')}
                         </div>
-                        <p className="text-xs text-zinc-500 mt-2 font-medium flex items-center gap-1.5 opacity-80">
+                        <p className="text-xs text-muted-foreground mt-2 font-medium flex items-center gap-1.5 opacity-80">
                              <Info className="w-3.5 h-3.5" /> {t('statsTimeDesc')}
                         </p>
                     </CardContent>
@@ -166,7 +166,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <Input 
                         placeholder={t('searchLibrary') || 'Rechercher une collection...'}
-                        className="pl-9 bg-white/50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus-visible:ring-primary/20 transition-all rounded-full h-10"
+                        className="pl-9 bg-card border-border focus-visible:ring-primary/20 transition-all rounded-full h-10"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -197,7 +197,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                     const displayName = getDisplayName(lib);
 
                     return (
-                        <Card key={idx} className="relative overflow-hidden bg-white/80 dark:bg-zinc-900/70 border-zinc-200/60 dark:border-zinc-800/60 backdrop-blur-md group hover:border-primary/30 transition-colors shadow-sm hover:shadow-xl hover:shadow-black/5 flex flex-col">
+                        <Card key={idx} className="app-surface-soft border-border group hover:border-primary/30 transition-colors shadow-sm hover:shadow-xl hover:shadow-black/5 flex flex-col overflow-hidden">
                         {/* Dynamic top-edge decoration based on content type */}
                         <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${getGradientType(lib.collectionType, lib.name)} via-primary/20 top-border-glow`} />
                         <div className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-b ${getGradientType(lib.collectionType, lib.name)} opacity-50 pointer-events-none`} />

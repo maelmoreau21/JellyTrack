@@ -74,17 +74,17 @@ export function SystemHealthWidgets({ initialSnapshot }: { initialSnapshot: Snap
                     <Activity className="h-3.5 w-3.5" />
                     {t('monitor')} {snapshot.status.monitor.status === 'error' ? t('monitorStatusError') : t('monitorStatusActive')}
                 </div>
-                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-300">
-                    <Clock3 className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-300" />
-                    {t('lastPoll')}: {formatRelative(snapshot.status.monitor.lastPollAt)}
+                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-muted-foreground">
+                    <Clock3 className="h-3.5 w-3.5 text-primary" />
+                    {t('lastPoll')}: {formatRelative(snapshot.status.monitor.lastPollAt as string | null)}
                 </div>
-                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-300">
-                    <RefreshCw className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
-                    {t('lastSync')}: {formatRelative(snapshot.status.sync.lastSuccessAt)}
+                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-muted-foreground">
+                    <RefreshCw className="h-3.5 w-3.5 text-amber-500" />
+                    {t('lastSync')}: {formatRelative(snapshot.status.sync.lastSuccessAt as string | null)}
                 </div>
-                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-300">
-                    <DatabaseBackup className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
-                    {t('lastBackup')}: {formatRelative(snapshot.status.backup.lastSuccessAt)}
+                <div className="dashboard-pill inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs text-muted-foreground">
+                    <DatabaseBackup className="h-3.5 w-3.5 text-emerald-500" />
+                    {t('lastBackup')}: {formatRelative(snapshot.status.backup.lastSuccessAt as string | null)}
                 </div>
                 <Link href="/admin/log-health" className="ml-auto inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-700 dark:text-cyan-200 hover:bg-cyan-500/15">
                     <HeartPulse className="h-3.5 w-3.5" />
@@ -92,23 +92,23 @@ export function SystemHealthWidgets({ initialSnapshot }: { initialSnapshot: Snap
                 </Link>
             </div>
 
-            <Card className="border-zinc-200/60 dark:border-white/5 bg-white/80 dark:bg-zinc-950/90 backdrop-blur-xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+            <Card className="app-surface-soft border-border shadow-md">
                 <CardContent className="grid gap-4 p-5 md:grid-cols-4">
-                    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                        <div className="flex items-center gap-2 text-sm text-zinc-400"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> {t('activeStreams')}</div>
-                        <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{snapshot.counts.activeStreams}</div>
+                    <div className="rounded-2xl border border-border bg-card/40 p-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> {t('activeStreams')}</div>
+                        <div className="mt-2 text-3xl font-bold">{snapshot.counts.activeStreams}</div>
                     </div>
-                    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                        <div className="flex items-center gap-2 text-sm text-zinc-400"><ShieldAlert className="h-4 w-4 text-orange-400" /> {t('openPlaybackOrphans')}</div>
-                        <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{snapshot.counts.openPlaybackOrphans}</div>
+                    <div className="rounded-2xl border border-border bg-card/40 p-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground"><ShieldAlert className="h-4 w-4 text-amber-500" /> {t('openPlaybackOrphans')}</div>
+                        <div className="mt-2 text-3xl font-bold">{snapshot.counts.openPlaybackOrphans}</div>
                     </div>
-                    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                        <div className="flex items-center gap-2 text-sm text-zinc-400"><AlertTriangle className="h-4 w-4 text-red-400" /> {t('dbWithoutRedis')}</div>
-                        <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{snapshot.counts.dbStreamsWithoutRedis}</div>
+                    <div className="rounded-2xl border border-border bg-card/40 p-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground"><AlertTriangle className="h-4 w-4 text-rose-500" /> {t('dbWithoutRedis')}</div>
+                        <div className="mt-2 text-3xl font-bold">{snapshot.counts.dbStreamsWithoutRedis}</div>
                     </div>
-                    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100/50 dark:bg-black/20 p-4">
-                        <div className="flex items-center gap-2 text-sm text-zinc-400"><HeartPulse className="h-4 w-4 text-cyan-400" /> {t('excludedLibraries')}</div>
-                        <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{snapshot.excludedLibraries.length}</div>
+                    <div className="rounded-2xl border border-border bg-card/40 p-4">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground"><HeartPulse className="h-4 w-4 text-primary" /> {t('excludedLibraries')}</div>
+                        <div className="mt-2 text-3xl font-bold">{snapshot.excludedLibraries.length}</div>
                     </div>
                 </CardContent>
             </Card>

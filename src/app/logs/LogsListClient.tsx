@@ -23,7 +23,7 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
   const computeDefaultWidths = (keys: string[]) => {
     const base: Record<string, number> = {
       date: 220, startedAt: 160, endedAt: 160, user: 140, media: 420,
-      client: 140, ip: 140, country: 120, status: 120, codecs: 120,
+      client: 140, resolution: 100, audioBitrate: 100, ip: 140, country: 120, status: 120, codecs: 120,
       duration: 100, pauseCount: 80, audioChanges: 80, subtitleChanges: 80,
     };
     const arr = keys.map(k => base[k] ?? 100);
@@ -141,6 +141,8 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
       case 'ip': return t('colIp');
       case 'country': return t('colCountry');
       case 'status': return t('colStatus');
+      case 'resolution': return t('colResolution');
+      case 'audioBitrate': return t('colAudioBitrate');
       case 'codecs': return t('colCodecs');
       case 'duration': return t('colDuration');
       case 'pauseCount': return t('colPauseCount');

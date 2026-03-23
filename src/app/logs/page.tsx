@@ -287,9 +287,11 @@ export default async function LogsPage({
         const resolvedParentId = media.parentId || metadata?.parentId || null;
         const parent = resolvedParentId ? parentMap.get(resolvedParentId) : null;
 
+        const cleanStr = (s: string | null | undefined) => (s && s !== 'Unknown') ? s.trim() : null;
+
         if (media.type === 'Episode') {
-            const fallbackSeriesName = metadata?.seriesName || null;
-            const fallbackSeasonName = metadata?.seasonName || null;
+            const fallbackSeriesName = cleanStr(metadata?.seriesName);
+            const fallbackSeasonName = cleanStr(metadata?.seasonName);
             if (fallbackSeriesName && fallbackSeasonName) {
                 return `${fallbackSeriesName} - ${fallbackSeasonName}`;
             }
@@ -297,35 +299,33 @@ export default async function LogsPage({
                 return fallbackSeriesName;
             }
             if (!parent) return null;
-            // Episode -> parent=Season -> grandparent=Series
-            const grandparent = parent.parentId ? grandparentMap.get(parent.parentId) : null;
-            if (grandparent) return `${grandparent.title} - ${parent.title}`;
-            return parent.title;
+            const gpTitle = cleanStr(parent.parentId ? grandparentMap.get(parent.parentId)?.title : null);
+            const pTitle = cleanStr(parent.title);
+            if (gpTitle && pTitle) return `${gpTitle} - ${pTitle}`;
+            return pTitle || gpTitle;
         }
         if (media.type === 'Season') {
-            if (metadata?.seriesName) return metadata.seriesName;
+            const sName = cleanStr(metadata?.seriesName);
+            if (sName) return sName;
             if (!parent) return null;
-            return parent.title; // Season -> Series
+            return cleanStr(parent.title);
         }
         if (media.type === 'Audio') {
-            // Audio -> parent=Album. Show "Artist - Album" if artist is available
-            const metaAlbumName = metadata?.albumName || null;
-            const metaArtistName = metadata?.albumArtist || metadata?.artist || null;
+            const metaAlbumName = cleanStr(metadata?.albumName);
+            const metaArtistName = cleanStr(metadata?.albumArtist || metadata?.artist);
             if (metaAlbumName || metaArtistName) {
                 if (metaArtistName && metaAlbumName) return `${metaArtistName} - ${metaAlbumName}`;
                 return metaArtistName || metaAlbumName;
             }
-            const artistName = media.artist || parent?.artist || null;
-            if (!parent) return artistName;
-            if (artistName && parent.title) return `${artistName} - ${parent.title}`;
-            return artistName || parent.title;
+            const artistName = cleanStr(media.artist || parent?.artist);
+            const pTitle = cleanStr(parent?.title);
+            if (artistName && pTitle) return `${artistName} - ${pTitle}`;
+            return artistName || pTitle;
         }
         if (media.type === 'MusicAlbum') {
-            const metaArtistName = metadata?.albumArtist || metadata?.artist || null;
-            if (metaArtistName) return metaArtistName;
-            if (media.artist) return media.artist;
+            return cleanStr(metadata?.albumArtist || metadata?.artist || media.artist);
         }
-        return parent ? parent.title : null;
+        return parent ? cleanStr(parent.title) : null;
     }
 
     // Helper: get the media type icon prefix

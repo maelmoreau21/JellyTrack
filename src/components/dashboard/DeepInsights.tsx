@@ -429,9 +429,9 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
     });
 
     const renderCategory = (title: string, items: CategorizedItem[], empty: string, icon?: React.ReactNode) => (
-        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+        <Card className="app-surface-soft border-border">
             <CardHeader className="pb-2">
-                <CardTitle className="text-md flex items-center gap-2">{icon}{title}</CardTitle>
+                <CardTitle className="text-md flex items-center gap-2 font-bold">{icon}{title}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="space-y-3">
@@ -444,11 +444,11 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                                 href={`/media?q=${encodeURIComponent(label)}`}
                                 className="flex justify-between items-center text-sm group cursor-pointer"
                             >
-                                <div className="truncate pr-2 max-w-[180px] group-hover:text-cyan-500 transition-colors">
-                                    <span className="text-zinc-500 w-4 inline-block">{i + 1}.</span>
+                                <div className="truncate pr-2 max-w-[180px] group-hover:text-primary transition-colors font-medium">
+                                    <span className="text-muted-foreground w-4 inline-block">{i + 1}.</span>
                                     {label}
                                 </div>
-                                <div className="font-semibold text-xs bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded group-hover:bg-cyan-500/10 transition-colors">{m?.plays || 0} {t('views')}</div>
+                                <div className="font-bold text-xs bg-primary/10 text-primary px-2 py-1 rounded-lg group-hover:bg-primary/20 transition-all">{m?.plays || 0} {t('views')}</div>
                             </Link>
                         );
                     })}
@@ -472,7 +472,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
 
             {/* Top Genres */}
             {data.topGenres.length > 0 && (
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-md">{t('topGenres')}</CardTitle>
                         <CardDescription>{t('genresDesc')}</CardDescription>
@@ -491,12 +491,12 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                                     >
                                         <span className="text-zinc-500 w-5 text-right shrink-0">{i + 1}.</span>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between mb-1 group-hover:text-cyan-500 transition-colors">
+                                            <div className="flex justify-between mb-1 group-hover:text-primary transition-colors font-medium">
                                                 <span className="truncate">{g.name}</span>
-                                                <span className="text-xs text-zinc-400 shrink-0 ml-2">{g?.plays || 0} {t('views')} · {g?.duration || 0}h</span>
+                                                <span className="text-xs text-muted-foreground shrink-0 ml-2">{g?.plays || 0} {t('views')} · {g?.duration || 0}h</span>
                                             </div>
-                                            <div className="h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                                <div className={`h-full rounded-full ${colors[i % colors.length]}`} style={{ width: `${pct}%` }} />
+                                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                                <div className={`h-full rounded-full ${colors[i % colors.length]}`} style={{ width: `${pct}%`, opacity: 0.8 }} />
                                             </div>
                                         </div>
                                     </Link>
@@ -509,7 +509,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle>{t('topClients')}</CardTitle>
                         <CardDescription>{t('topClientsDesc')}</CardDescription>
@@ -522,15 +522,15 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                                     href={`/logs?query=${encodeURIComponent(c.clientName || '')}`}
                                     className="flex justify-between items-center text-sm group cursor-pointer"
                                 >
-                                    <div className="truncate pr-2 group-hover:text-cyan-500 transition-colors">{c.clientName || '?'}</div>
-                                    <div className="font-semibold group-hover:bg-cyan-500/10 px-1 rounded transition-colors">{c._count.id} {tCharts('sessions')}</div>
+                                    <div className="truncate pr-2 group-hover:text-primary transition-colors font-medium">{c.clientName || '?'}</div>
+                                    <div className="font-bold group-hover:bg-primary/10 px-1 rounded transition-colors text-primary">{c._count.id} {tCharts('sessions')}</div>
                                 </Link>
                             ))}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle>{t('streamMethods')}</CardTitle>
                         <CardDescription>{t('streamMethodsDesc')}</CardDescription>
@@ -543,7 +543,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
 
             {/* Pro Telemetry Section */}
             <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle>{t('resolutionMatrix')}</CardTitle>
                         <CardDescription>{t('resolutionMatrixDesc')}</CardDescription>
@@ -557,7 +557,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle>{t('deviceEcosystem')}</CardTitle>
                         <CardDescription>{t('deviceEcosystemDesc')}</CardDescription>
@@ -573,7 +573,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
             </div>
             {/* Audio & Subtitles */}
             <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle>{tGranular('audioBreakdown')}</CardTitle>
                         <CardDescription>{tGranular('audioBreakdownDesc')}</CardDescription>
@@ -587,7 +587,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle>{tGranular('subtitles')}</CardTitle>
                         <CardDescription>{tGranular('subtitlesDesc')}</CardDescription>

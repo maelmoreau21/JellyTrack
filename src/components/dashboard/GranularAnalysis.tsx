@@ -341,11 +341,23 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                         <StandardAreaChart data={data.dailyData} dataKey="totalDuration" stroke="#f59e0b" name={t('durationPerDay')} />
                     </CardContent>
                 </Card>
+            </div>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <div className="grid gap-6 md:grid-cols-1">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
-                        <CardTitle>{t('durationByLibrary')}</CardTitle>
-                        <CardDescription>{t('durationByLibraryDesc')}</CardDescription>
+                        <CardTitle className="text-xl font-bold">{t('playsByLibTitle')}</CardTitle>
+                        <CardDescription>{t('playsByLibDesc')}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <StackedBarChart data={normalizedDailyData} keys={normalizedKeys} suffix="_plays" labelMap={labelMap} />
+                    </CardContent>
+                </Card>
+
+                <Card className="app-surface-soft border-border">
+                    <CardHeader>
+                        <CardTitle className="text-xl font-bold">{t('durationByLibTitle')}</CardTitle>
+                        <CardDescription>{t('durationByLibDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <StackedBarChart data={normalizedDailyData} keys={normalizedKeys} suffix="_duration" labelMap={labelMap} />
@@ -353,32 +365,32 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                 </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
-                        <CardTitle>{t('playsHourlyAvg')}</CardTitle>
+                        <CardTitle className="text-lg font-bold">{t('playsHourlyAvg')}</CardTitle>
                         <CardDescription>{t('playsHourlyAvgDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardBarChart data={data.hourlyData} xAxisKey="time" dataKey="plays" fill="#10b981" name={t('playsHourlyAvg')} />
+                        <StandardBarChart data={data.hourlyData} xAxisKey="time" dataKey="plays" fill="var(--primary)" name={t('playsHourlyAvg')} />
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
-                        <CardTitle>{t('durationHourlyAvg')}</CardTitle>
+                        <CardTitle className="text-lg font-bold">{t('durationHourlyAvg')}</CardTitle>
                         <CardDescription>{t('durationHourlyAvgDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardAreaChart data={data.hourlyData} dataKey="duration" stroke="#8b5cf6" name={t('durationHourlyAvg')} />
+                        <StandardAreaChart data={data.hourlyData} dataKey="duration" stroke="var(--primary)" name={t('durationHourlyAvg')} />
                     </CardContent>
                 </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
-                        <CardTitle>{t('attendanceHeatmap')}</CardTitle>
+                        <CardTitle className="text-lg font-bold">{t('attendanceHeatmap')}</CardTitle>
                         <CardDescription>{t('attendanceHeatmapDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex items-center justify-center p-6">
@@ -386,21 +398,21 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm flex flex-col">
+                <Card className="app-surface-soft border-border flex flex-col">
                     <CardHeader>
-                        <CardTitle>{t('avgCompletionByLib')}</CardTitle>
+                        <CardTitle className="text-lg font-bold">{t('avgCompletionByLib')}</CardTitle>
                         <CardDescription>{t('avgCompletionByLibDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <StandardBarChart data={normalizedDropOffData} horizontal xAxisKey="time" dataKey="completion" fill="#14b8a6" name={t('completionPct')} />
+                        <StandardBarChart data={normalizedDropOffData} horizontal xAxisKey="time" dataKey="completion" fill="var(--primary)" name={t('completionPct')} />
                     </CardContent>
                 </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
-                        <CardTitle>{t('abandonSegments')}</CardTitle>
+                        <CardTitle className="text-lg font-bold">{t('abandonSegments')}</CardTitle>
                         <CardDescription>{t('abandonSegmentsDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
@@ -408,34 +420,34 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
-                        <CardTitle>{t('worstCompletion')}</CardTitle>
+                        <CardTitle className="text-lg font-bold">{t('worstCompletion')}</CardTitle>
                         <CardDescription>{t('worstCompletionDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             {data.topAbandoned.length === 0 ? (
-                                <p className="text-sm text-zinc-500 text-center py-6">—</p>
-                            ) : data.topAbandoned.map((m: { title: string; fullTitle: string; mediaId: string; completion: number; count: number }, i: number) => (
+                                <p className="text-sm text-muted-foreground text-center py-6">—</p>
+                            ) : data.topAbandoned.map((m: any, i: number) => (
                                 <a
                                     key={i}
                                     href={`/media?q=${encodeURIComponent(m.fullTitle)}`}
                                     className="block group"
                                 >
-                                    <div className="flex justify-between items-center text-sm mb-1">
-                                        <div className="truncate pr-2 font-medium group-hover:text-cyan-500 transition-colors">
-                                            <span className="text-zinc-500 w-5 inline-block">{i + 1}.</span>
+                                    <div className="flex justify-between items-center text-sm mb-1 font-medium">
+                                        <div className="truncate pr-2 group-hover:text-primary transition-colors">
+                                            <span className="text-muted-foreground w-5 inline-block">{i + 1}.</span>
                                             {m.title}
                                         </div>
-                                        <span className="text-zinc-500 font-mono text-xs">{m.completion}% · {m.count}×</span>
+                                        <span className="text-muted-foreground font-mono text-xs">{m.completion}% · {m.count}×</span>
                                     </div>
-                                    <div className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden mt-1">
+                                    <div className="h-2 bg-muted rounded-full overflow-hidden mt-1">
                                         <div
                                             className="h-full rounded-full transition-all duration-300"
                                             style={{
                                                 width: `${m.completion}%`,
-                                                backgroundColor: m.completion < 10 ? '#ef4444' : m.completion < 50 ? '#f97316' : '#eab308'
+                                                backgroundColor: m.completion < 10 ? 'var(--chart-5)' : m.completion < 50 ? 'var(--chart-4)' : 'var(--chart-3)'
                                             }}
                                         />
                                     </div>
@@ -446,10 +458,10 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                 </Card>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
-                        <CardTitle>{t('audioBreakdown')}</CardTitle>
+                        <CardTitle className="text-lg font-bold">{t('audioBreakdown')}</CardTitle>
                         <CardDescription>{t('audioBreakdownDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
@@ -461,9 +473,9 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
-                        <CardTitle>{t('subtitles')}</CardTitle>
+                        <CardTitle className="text-lg font-bold">{t('subtitles')}</CardTitle>
                         <CardDescription>{t('subtitlesDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">

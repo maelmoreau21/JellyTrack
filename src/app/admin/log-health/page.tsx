@@ -36,9 +36,9 @@ export default async function LogHealthPage() {
                 </header>
 
                 {/* Status Overview Cards */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
-                        <CardHeader className="pb-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
+                    <Card className="app-surface-soft border-border">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-semibold text-zinc-500 flex items-center gap-2">
                                 <RadioTower className="h-4 w-4 text-cyan-500" />
                                 {t('monitor')}

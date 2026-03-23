@@ -63,10 +63,10 @@ export function TimeRangeSelector() {
     return (
         <div className="flex items-center gap-2">
             <Select value={timeRange} onValueChange={handleValueChange}>
-                <SelectTrigger className="w-[180px] bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-sm h-9">
+                <SelectTrigger className="w-[180px] bg-card border-border text-sm h-9">
                     <SelectValue placeholder={t('period')} />
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+                <SelectContent className="bg-card border-border">
                     <SelectItem value="24h">{t('last24h')}</SelectItem>
                     <SelectItem value="7d">{t('last7d')}</SelectItem>
                     <SelectItem value="30d">{t('last30d')}</SelectItem>
@@ -80,7 +80,7 @@ export function TimeRangeSelector() {
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
-                            className={`h-9 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 justify-start text-left font-normal ${!date && "text-muted-foreground"}`}
+                            className={`h-9 bg-card border-border justify-start text-left font-normal ${!date && "text-muted-foreground"}`}
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {date?.from ? (
@@ -97,7 +97,7 @@ export function TimeRangeSelector() {
                             )}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800" align="end">
+                    <PopoverContent className="w-auto p-0 bg-card border-border" align="end">
                         <Calendar
                             initialFocus
                             mode="range"

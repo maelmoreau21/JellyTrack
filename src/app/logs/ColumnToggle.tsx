@@ -6,7 +6,7 @@ import { Columns3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { createPortal } from 'react-dom';
 
-const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'client', 'ip', 'country', 'status', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
+const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'client', 'resolution', 'audioBitrate', 'ip', 'country', 'status', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
 type Column = typeof ALL_COLUMNS[number];
 
 export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
@@ -28,6 +28,8 @@ export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
         ip: t('colClientIp') || 'Client & IP',
         country: t('colCountry') || 'Country',
         status: t('colStatus'),
+        resolution: t('colResolution'),
+        audioBitrate: t('colAudioBitrate'),
         codecs: t('colCodecs'),
         duration: t('colDuration'),
         pauseCount: t('colPauseCount') || 'Pauses',

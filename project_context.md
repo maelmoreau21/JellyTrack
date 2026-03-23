@@ -413,12 +413,23 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
 
 ## 16. Modifications récentes (notes opérationnelles)
 
-- **Analyse média & Refonte UI (Mars 2026)** :
-    - `media/analysis/page.tsx` refactorée pour agrégats (genres, durée moyenne, top directors).
-    - **Refonte Mode Clair** : Migration complète vers une palette "Soft-Slate" (Pearl/Cool Gray) pour réduire l'éblouissement. Les variables OKLCH (`--background`, `--card`, etc.) ont été harmonisées pour offrir profondeur et confort.
-    - **Suppression des "Règles de complétion"** : Pour simplifier l'UX et la maintenance, la configuration par bibliothèque a été supprimée au profit de valeurs par défaut codées en dur (80% pour complétion, 10% pour zapping).
-    - **Interactivité du Dashboard** : Les graphiques sont désormais cliquables et redirigent vers les logs filtrés. Suppression du mode "collapsible" sur les cartes pour une visibilité immédiate des données.
-    - **Nettoyage i18n** : Synchronisation des 10 langues supportées et suppression de toutes les clés de traduction obsolètes.
+- **Refonte UI & Thèmes (Mars 2026)** :
+    - **Mode Claire "Pastel Marshmallow"** : Refonte complète vers une esthétique douce et colorée. Utilisation de dégradés pastels (`linear-gradient`), de neutres teintés et d'effets de glassmorphism raffinés pour réduire la fatigue visuelle sans sacrifier le dynamisme.
+    - **Mode Sombre Raffiné** : Correction des bugs de contraste, notamment le fond des bulles d'information (tooltips) qui était blanc en mode sombre.
+    - **Standardisation Thématique** : Remplacement systématique des couleurs Tailwind codées en dur (ex: `bg-zinc-900`, `border-slate-200`) par des variables de thème dynamiques (`app-surface`, `app-surface-soft`, `bg-card`, `border-border`) sur tout le tableau de bord, les composants de santé et les sélecteurs.
+    - **Correction "Détails par Collection"** : Résolution du bogue où les bibliothèques Jellyfin apparaissaient vides ou étaient masquées.
+    - **Optimisation des Journaux (Logs) :**
+    - Nettoyage des identificants redondants.
+    - Suppression des données incohérentes pour la musique.
+    - Ajout de colonnes officielles "Résolution" et "Bitrate Audio".
+    - **Correction Analyse Bibliothèque :**
+    - Suppression des doublons de titres/descriptions ("Aperçu des statistiques approfondies").
+    - Correction de la matrice des résolutions : utilise désormais `normalizeResolution` et agrège par entité parente unique (Films/Séries) pour correspondre aux filtres de la page "Tous les Médias".
+    - Amélioration de la cohérence entre les statistiques affichées et les résultats de filtrage.
+
+### Problèmes Courants & Solutions
+- **Interactivité du Dashboard** : Les graphiques sont désormais cliquables et redirigent vers les logs filtrés. Suppression du mode "collapsible" sur les cartes pour une visibilité immédiate.
+    - **Nettoyage Code & Types** : Résolution de nombreuses erreurs de lint (TypeScript, CSS) et suppression de fichiers obsolètes ou inutilisés.
 - **Configurable Resolution Thresholds**: Video quality categorization (4K, 1080p, etc.) is now based on Tdarr-aligned thresholds, configurable by the user in Settings > Media. A full sync is required to apply changes to existing media.
 - **100% Translation Coverage**: All 10 supported languages (de, en, es, fr, it, nl, pl, pt-BR, ru, zh) have been updated with latest translation keys for settings (including `cancel` button) and analytics.
 - **Chart Internationalization**: All chart components (`PlatformDistributionChart`, `ActivityByHourChart`, `StreamProportionsChart`, `DeepInsights`, `HealthAnomalyCharts`) have been refactored to use `next-intl` translation keys instead of hardcoded strings. Resolution labels in analytics are dynamically localized based on the user's language.
@@ -450,11 +461,9 @@ Après ces changements, toujours exécuter `npm run build` pour valider la compi
 Problème fréquent : sur la page **Détails par Collection** seules des collections vides (ou la pseudo‑collection "Collections") apparaissent, alors que votre Jellyfin comporte plusieurs bibliothèques avec du contenu.
 
 Causes possibles et vérifications rapides :
+- **Confusion sur les Clés** (Corrigé en Mars 2026) : Auparavant, l'application regroupait les médias par leur type générique (`tvshows`, `movies`). Si votre bibliothèque s'appelait "Séries TV", elle apparaissait vide car les données étaient cachées sous la clé masquée `tvshows`. Désormais, la priorité est donnée au nom réel (`libraryName`).
 - Variables d'environnement manquantes : `JELLYFIN_URL` et `JELLYFIN_API_KEY` sont utilisées par `getSanitizedLibraryNames()` pour récupérer les VirtualFolders. Si elles manquent ou sont incorrectes, l'application retombe sur les noms présents en base de données ou sur des valeurs par défaut.
-- Bibliothèques marquées comme "ghost" : `GHOST_LIBRARY_NAMES` contient des noms pseudo‑libraries (ex: `Collections`, `Movies`, `Music`). Si vos noms Jellyfin collent à ces valeurs ils peuvent être filtrés.
-- Exclusions globales : `global_settings.excludedLibraries` est appliqué via `buildExcludedMediaClause()` ; si une bibliothèque est listée là, ses médias sont exclus des calculs.
-- Type de collection : les VirtualFolders avec `CollectionType === 'boxsets'` sont explicitement ignorés par `getSanitizedLibraryNames()` (c.f. filtre dans la requête Jellyfin). Vérifier si vos bibliothèques utiles sont marquées `boxsets` côté Jellyfin.
-- Données partielles en base : la page fusionne noms provenant de Jellyfin et de la DB (`media.libraryName`). Si la synchronisation n'a pas remonté `libraryName` ou `collectionType` pour certains médias, ils pourront apparaître dans `other` ou ne pas être agrégés correctement.
+- Bibliothèques marquées comme "ghost" : `GHOST_LIBRARY_NAMES` contient des noms pseudo‑libraries (ex: `Collections`, `Movies`, `Music`). Elles ne sont désormais masquées QUE si elles sont réellement vides.
 
 Étapes de diagnostic (commande / requêtes utiles) :
 - Vérifier les env vars :

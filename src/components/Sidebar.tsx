@@ -68,10 +68,10 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
 
     const sidebarContent = (
         <>
-            <div className="flex h-16 shrink-0 items-center px-6 border-b border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-950">
-                <Link href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`} className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,rgba(71,85,105,0.08),rgba(148,163,184,0.05))] ring-1 ring-black/5 dark:ring-white/10">
-                        <PlayCircle className="w-5 h-5 text-slate-500 dark:text-cyan-300" />
+            <div className="flex h-16 shrink-0 items-center px-6 border-b border-sidebar-border bg-sidebar/50 backdrop-blur-xl">
+                <Link href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`} className="text-xl font-bold tracking-tight text-sidebar-foreground flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sidebar-primary/10 ring-1 ring-sidebar-border">
+                        <PlayCircle className="w-5 h-5 text-sidebar-primary" />
                     </div>
                     <span>JellyTrack</span>
                 </Link>
@@ -97,12 +97,12 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                                 key={item.name}
                                 href={item.href}
                                 className={`group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${isActive
-                                    ? "bg-slate-500/10 text-slate-900 dark:text-zinc-50 ring-1 ring-slate-500/15"
-                                    : "text-slate-500 dark:text-zinc-400 hover:bg-slate-500/5 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-50"
+                                    ? "bg-sidebar-primary/10 text-sidebar-primary ring-1 ring-sidebar-primary/20"
+                                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                                     }`}
                             >
                                 <item.icon
-                                    className={`mr-3 h-5 w-5 shrink-0 transition-colors ${isActive ? "text-slate-600 dark:text-cyan-300" : "text-slate-400 dark:text-zinc-500 group-hover:text-slate-600 dark:group-hover:text-amber-300"
+                                    className={`mr-3 h-5 w-5 shrink-0 transition-colors ${isActive ? "text-sidebar-primary" : "text-sidebar-foreground/40 group-hover:text-sidebar-primary"
                                         }`}
                                     aria-hidden="true"
                                 />
@@ -113,12 +113,12 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                 </nav>
             </div>
 
-            <div className="border-t border-zinc-200 dark:border-white/5 p-4 space-y-3 bg-zinc-50/30 dark:bg-zinc-950">
+            <div className="border-t border-sidebar-border p-4 space-y-3 bg-sidebar/30">
                 <LanguageSwitcher />
                 <ThemeToggle />
-                <LogoutButton className="w-full justify-start text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50" />
+                <LogoutButton className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
                 <div className="text-center">
-                    <Link href="/about" className="text-[11px] text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">
+                    <Link href="/about" className="text-[11px] text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors">
                         JellyTrack v{process.env.APP_VERSION || '1.0.0'}
                     </Link>
                 </div>
@@ -129,7 +129,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
     return (
         <>
             {/* Mobile header bar */}
-            <div className="fixed top-0 left-0 right-0 z-40 flex md:hidden items-center h-14 px-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-xl">
+            <div className="fixed top-0 left-0 right-0 z-40 flex md:hidden items-center h-14 px-4 border-b border-sidebar-border bg-sidebar/95 backdrop-blur-xl">
                 <button
                     onClick={() => setMobileOpen(true)}
                     className="p-1.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
@@ -154,7 +154,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
             {/* Sidebar — desktop: always visible, mobile: slide-over */}
             <div
                 className={`
-                    fixed top-0 left-0 z-50 h-screen w-[86vw] max-w-72 md:w-64 flex flex-col border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-xl shadow-2xl md:shadow-none
+                    fixed top-0 left-0 z-50 h-screen w-[86vw] max-w-72 md:w-64 flex flex-col border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl shadow-2xl md:shadow-none
                     transition-transform duration-200 ease-in-out
                     md:sticky md:translate-x-0
                     ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}

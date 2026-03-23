@@ -68,10 +68,12 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
   // Defensive: if ingestion accidentally prefixed the media title with the client name (e.g. "Finamp - Title"), strip it for display
   const displayTitle = (() => {
-    const raw = log.media?.title || '';
+    let raw = log.media?.title || '';
+    if (!raw || raw === 'Unknown') return null;
+    
     const client = log.clientName || '';
-    if (client && raw.startsWith(`${client} - `)) return raw.slice(client.length + 3).trim();
-    if (client && raw.startsWith(`${client}: `)) return raw.slice(client.length + 2).trim();
+    if (client && raw.startsWith(`${client} - `)) raw = raw.slice(client.length + 3).trim();
+    if (client && raw.startsWith(`${client}: `)) raw = raw.slice(client.length + 2).trim();
     return raw;
   })();
 
@@ -178,28 +180,31 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                 )}
               </div>
               <div className="flex flex-col min-w-0 flex-1">
-                {log.media?.jellyfinMediaId ? (
-                  <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-800 dark:text-zinc-100 hover:underline" title={displayTitle || log.media?.title || 'Unknown'}>
-                    {displayTitle || log.media?.title || 'Unknown'}
+                {displayTitle ? (
+                  <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-800 dark:text-zinc-100 hover:underline" title={displayTitle}>
+                    {displayTitle}
                   </Link>
                 ) : (
-                  <span className="truncate font-medium text-zinc-400">Unknown</span>
+                  <span className="truncate font-medium text-zinc-400 italic">
+                    {log.media?.type && log.media.type !== 'Unknown' ? `${t('unknown')} (${log.media.type})` : t('unknown')}
+                  </span>
                 )}
-                {log.mediaSubtitle ? (
+                
+                {log.mediaSubtitle && log.mediaSubtitle !== 'Unknown' && log.mediaSubtitle !== displayTitle ? (
                   <span className="text-xs text-zinc-500 truncate flex items-center gap-1" title={log.mediaSubtitle}>{log.mediaSubtitle}</span>
-                ) : (
-                  <span className="text-xs text-zinc-500">{log.media?.type || '—'}</span>
+                ) : !displayTitle && log.media?.type && log.media.type !== 'Unknown' ? null : (
+                  <span className="text-xs text-zinc-400/80">{log.media?.type && log.media.type !== 'Unknown' ? log.media.type : '—'}</span>
                 )}
 
                 <div className="hidden md:flex items-center gap-2 mt-1 text-xs text-zinc-500">
-                  {normalizedResolution && (
+                  {!isAudioMedia && normalizedResolution && normalizedResolution !== 'Unknown' && (
                       <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{normalizedResolution}</span>
                     )}
                   {isAudioMedia && (
-                    <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{typeof log.bitrate === 'number' && log.bitrate > 0 ? `${log.bitrate} kbps` : 'Unknown'}</span>
+                    <span className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{typeof log.bitrate === 'number' && log.bitrate > 0 ? `${log.bitrate} kbps` : t('unknown')}</span>
                   )}
                   <span className={`px-1.5 py-0.5 rounded ${isTranscode ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>{log.playMethod || 'DirectPlay'}</span>
-                  {log.clientName && <span className="truncate">{log.clientName}</span>}
+                  {log.clientName && <span className="truncate opacity-80">{log.clientName}</span>}
                 </div>
 
               </div>
@@ -215,9 +220,14 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
         )}
 
         {/* Resolution */}
+        {/* Resolution */}
         {visibleColumns.includes('resolution') && (
           <TableCell className="hidden lg:table-cell">
-            <div className="text-sm">{normalizedResolution || '—'}</div>
+            <div className="text-sm">
+              {!isAudioMedia && normalizedResolution && !['Unknown', 'DirectPlay'].includes(normalizedResolution) 
+                ? normalizedResolution 
+                : '—'}
+            </div>
           </TableCell>
         )}
 

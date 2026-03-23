@@ -4,6 +4,7 @@ import StatsDeepAnalysis from '@/components/dashboard/StatsDeepAnalysis';
 import { GenreDistributionChart } from '@/components/charts/GenreDistributionChart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { normalizeLibraryKey } from '@/lib/mediaPolicy';
+import { normalizeResolution } from '@/lib/utils';
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +14,12 @@ export default async function AnalysisPage() {
 
     // Fetch media fields useful for the analysis
     // Include `type` and `collectionType` so we can filter video vs audio items
-    const medias = await prisma.media.findMany({ select: { genres: true, resolution: true, durationMs: true, directors: true, libraryName: true, type: true, collectionType: true }, where: {} });
+    const medias = await prisma.media.findMany({ select: { id: true, parentId: true, genres: true, resolution: true, durationMs: true, directors: true, libraryName: true, type: true, collectionType: true }, where: {} });
 
     // Aggregate genres and resolutions
+    // Aggregate genres and resolutions. For resolutions, we use Sets to track unique parent entities
     const genreCounts = new Map<string, number>();
-    const resolutionCounts = new Map<string, number>();
+    const resolutionCounts = new Map<string, Set<string>>();
     const directorCounts = new Map<string, number>();
     const libraryStatsMap = new Map<string, { name: string, count: number }>();
     let durationSum = 0;
@@ -35,13 +37,19 @@ export default async function AnalysisPage() {
         const isVideo = VIDEO_TYPES.has((m.type || '').toString()) || VIDEO_COLLECTION_KEYS.has(collectionKey);
         // ensure we explicitly exclude known audio types even if collection keys are fuzzy
         if (isVideo && !AUDIO_TYPES.has((m.type || '').toString())) {
-            const rawRes = m.resolution || 'SD';
-            let nr = 'SD';
-            if (rawRes === '4K') nr = '4K';
-            else if (rawRes === '1080p') nr = '1080p';
-            else if (rawRes === '1440p') nr = '1440p';
-            else if (rawRes === '720p') nr = '720p';
-            resolutionCounts.set(nr, (resolutionCounts.get(nr) || 0) + 1);
+            const nr = normalizeResolution(m.resolution);
+            if (nr && nr !== 'Unknown') {
+                if (!resolutionCounts.has(nr)) resolutionCounts.set(nr, new Set<string>());
+                const set = resolutionCounts.get(nr)!;
+
+                if (m.type === 'Movie') {
+                    set.add(m.id);
+                } else if (m.type === 'Episode' && m.parentId) {
+                    set.add(m.parentId);
+                } else if (m.type === 'Series') {
+                    set.add(m.id);
+                }
+            }
         }
         if (m.directors) m.directors.forEach((d: string) => { if (d) directorCounts.set(d, (directorCounts.get(d) || 0) + 1); });
         
@@ -77,11 +85,12 @@ export default async function AnalysisPage() {
     const topGenres = Array.from(genreCounts.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 10);
     const topLibraries = Array.from(libraryStatsMap.values()).sort((a, b) => b.count - a.count).slice(0, 8);
 
-    const res4K = resolutionCounts.get('4K') || 0;
-    const res1440p = resolutionCounts.get('1440p') || 0;
-    const res1080p = resolutionCounts.get('1080p') || 0;
-    const res720p = resolutionCounts.get('720p') || 0;
-    const resSD = resolutionCounts.get('SD') || 0;
+    const countFor = (k: string) => resolutionCounts.get(k)?.size || 0;
+    const res4K = countFor('4K');
+    const res1440p = countFor('1440p');
+    const res1080p = countFor('1080p');
+    const res720p = countFor('720p');
+    const resSD = countFor('SD');
 
     const totalMedia = medias.length;
     const uniqueGenres = Array.from(genreCounts.keys()).filter(Boolean).length;
@@ -110,7 +119,7 @@ export default async function AnalysisPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>{t('deepStatsOverview')}</CardTitle>
-                            <CardDescription>{t('deepStatsOverview')}</CardDescription>
+                            <CardDescription>{t('deepStatsOverviewDesc') || 'Analyses avancées de votre collection multimédia.'}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div>
@@ -123,8 +132,8 @@ export default async function AnalysisPage() {
                 <div className="space-y-4">
                     <Card>
                         <CardHeader>
-                            <CardTitle>{t('deepStatsOverview')}</CardTitle>
-                            <CardDescription>{t('deepStatsOverview')}</CardDescription>
+                            <CardTitle>{t('statsContent')}</CardTitle>
+                            <CardDescription>{t('statsContentDesc')}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">

@@ -52,69 +52,68 @@
 }
 
 :root {
-  --radius: 0.85rem;
-  /* Premium Soft Slate: gentle, low-glare, high depth */
-  --background: oklch(0.95 0.008 245); /* Soft cool pearl gray */
-  --foreground: oklch(0.22 0.025 245); /* Deep slate for maximum legibility */
-  --card: oklch(0.98 0.004 245); /* Bright but tinted for contrast */
-  --card-foreground: oklch(0.22 0.025 245);
-  --popover: oklch(0.98 0.004 245);
-  --popover-foreground: oklch(0.22 0.025 245);
-  --primary: oklch(0.45 0.16 230); /* Refined vivid teal */
-  --primary-foreground: oklch(0.99 0.005 245);
-  --secondary: oklch(0.92 0.012 245);
-  --secondary-foreground: oklch(0.22 0.025 245);
-  --muted: oklch(0.91 0.01 245);
-  --muted-foreground: oklch(0.42 0.02 245);
-  --accent: oklch(0.93 0.025 230);
-  --accent-foreground: oklch(0.22 0.025 245);
-  --destructive: oklch(0.55 0.18 25);
-  --border: oklch(0.86 0.015 245); /* Concrete but soft border */
-  --input: oklch(0.93 0.008 245);
-  --ring: oklch(0.45 0.16 230);
-  --chart-1: oklch(0.52 0.16 230);
-  --chart-2: oklch(0.58 0.14 85);
-  --chart-3: oklch(0.48 0.1 35);
-  --chart-4: oklch(0.62 0.12 165);
-  --chart-5: oklch(0.64 0.1 260);
-  /* Chart UI variables (light mode) */
-  --chart-axis-color: oklch(0.45 0.02 245);
-  --chart-grid-color: oklch(0 0 0 / 5%);
-  --chart-tooltip-bg: oklch(0.99 0.004 245 / 92%);
-  --chart-tooltip-border: 1px solid oklch(0.45 0.16 230 / 15%);
-  --chart-tooltip-radius: 16px;
-  --chart-tooltip-box-shadow: 0 15px 40px oklch(0 0 0 / 6%);
-  --chart-tooltip-backdrop: blur(12px);
-  --chart-label-color: oklch(0.45 0.02 245);
-  --chart-item-color: var(--foreground);
-  --sidebar: oklch(0.97 0.006 245);
-  --sidebar-foreground: oklch(0.22 0.025 245);
-  --sidebar-primary: oklch(0.45 0.16 230);
-  --sidebar-primary-foreground: oklch(0.99 0.005 245);
-  --sidebar-accent: oklch(0.94 0.012 245);
-  --sidebar-accent-foreground: oklch(0.22 0.025 245);
-  --sidebar-border: oklch(0.88 0.015 245);
-  --sidebar-ring: oklch(0.45 0.16 230);
+  --radius: 0.95rem;
+  /* Pastel Marshmallow Theme: Joyful, soft, low-contrast, non-white */
+  --background: oklch(0.92 0.015 285); /* Slightly darker soft pastel lavender */
+  --foreground: oklch(0.25 0.04 285); /* Deep purple for readability */
+  --card: oklch(0.96 0.01 285); /* Soft white with lavender hint */
+  --card-foreground: oklch(0.25 0.04 285);
+  --popover: oklch(0.97 0.005 285);
+  --popover-foreground: oklch(0.25 0.04 285);
+  --primary: oklch(0.65 0.12 250); /* Soft pastel sky blue */
+  --primary-foreground: oklch(0.99 0.005 260);
+  --secondary: oklch(0.9 0.05 165); /* Mint pastel */
+  --secondary-foreground: oklch(0.2 0.05 165);
+  --muted: oklch(0.9 0.02 285);
+  --muted-foreground: oklch(0.45 0.04 285);
+  --accent: oklch(0.9 0.07 340); /* Soft rose pastel */
+  --accent-foreground: oklch(0.25 0.06 340);
+  --destructive: oklch(0.6 0.15 25);
+  --border: oklch(0.82 0.03 285); /* Soft lavender border */
+  --input: oklch(0.92 0.01 285);
+  --ring: oklch(0.65 0.12 250);
+  --chart-1: oklch(0.65 0.12 250);
+  --chart-2: oklch(0.7 0.1 165);
+  --chart-3: oklch(0.7 0.12 340);
+  --chart-4: oklch(0.75 0.1 85);
+  --chart-5: oklch(0.72 0.08 210);
+  /* Chart UI variables (Pastel mode) */
+  --chart-axis-color: oklch(0.45 0.04 285);
+  --chart-grid-color: oklch(0 0 0 / 4%);
+  --chart-tooltip-bg: oklch(0.99 0.01 285 / 96%);
+  --chart-tooltip-border: 1px solid oklch(0.65 0.12 250 / 20%);
+  --chart-tooltip-radius: 20px;
+  --chart-tooltip-box-shadow: 0 20px 50px oklch(0 0 0 / 5%);
+  --chart-tooltip-backdrop: blur(16px);
+  --chart-label-color: oklch(0.45 0.04 285);
+  --sidebar: oklch(0.91 0.025 285);
+  --sidebar-foreground: oklch(0.25 0.04 285);
+  --sidebar-primary: oklch(0.65 0.12 250);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.88 0.04 285);
+  --sidebar-accent-foreground: oklch(0.25 0.04 285);
+  --sidebar-border: oklch(0.82 0.03 285);
+  --sidebar-ring: oklch(0.65 0.12 250);
 }
 
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.225 0.01 250);
+  --card: oklch(0.185 0.015 260);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.225 0.01 250);
+  --popover: oklch(0.185 0.015 260);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.76 0.14 205);
   --primary-foreground: oklch(0.16 0.02 210);
-  --secondary: oklch(0.3 0.01 250);
+  --secondary: oklch(0.25 0.015 260);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.3 0.01 250);
-  --muted-foreground: oklch(0.79 0.01 250);
-  --accent: oklch(0.32 0.02 235);
+  --muted: oklch(0.25 0.015 260);
+  --muted-foreground: oklch(0.7 0.015 260);
+  --accent: oklch(0.28 0.02 260);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 16%);
-  --input: oklch(1 0 0 / 20%);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.72 0.12 205);
   --chart-1: oklch(0.74 0.15 205);
   --chart-2: oklch(0.78 0.17 75);
@@ -122,21 +121,21 @@
   --chart-4: oklch(0.7 0.18 155);
   --chart-5: oklch(0.73 0.13 250);
   --chart-axis-color: #94a3b8;
-  --chart-grid-color: rgba(148, 163, 184, 0.14);
-  --chart-tooltip-bg: rgba(8, 12, 18, 0.9);
-  --chart-tooltip-border: 1px solid rgba(103, 232, 249, 0.18);
+  --chart-grid-color: rgba(148, 163, 184, 0.12);
+  --chart-tooltip-bg: oklch(0.15 0.01 260 / 92%);
+  --chart-tooltip-border: 1px solid oklch(0.76 0.14 205 / 20%);
   --chart-tooltip-radius: 18px;
-  --chart-tooltip-box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  --chart-tooltip-backdrop: blur(18px);
+  --chart-tooltip-box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  --chart-tooltip-backdrop: blur(20px);
   --chart-label-color: #94a3b8;
   --chart-item-color: #e5eefb;
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.17 0.01 260);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.76 0.14 205);
   --sidebar-primary-foreground: oklch(0.16 0.02 210);
-  --sidebar-accent: oklch(0.3 0.01 250);
+  --sidebar-accent: oklch(0.25 0.015 260);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 16%);
+  --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.72 0.12 205);
 }
 
@@ -148,9 +147,10 @@
   body {
     background-color: var(--background);
     background-image:
-      radial-gradient(circle at 0% 0%, oklch(0.45 0.16 230 / 4%), transparent 40%),
-      radial-gradient(circle at 100% 0%, oklch(0.58 0.14 85 / 3%), transparent 35%),
-      linear-gradient(180deg, var(--background) 0%, oklch(0.93 0.01 245) 100%);
+      radial-gradient(at 0% 0%, oklch(0.90 0.04 285) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, oklch(0.90 0.04 165) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, oklch(0.88 0.06 340) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, oklch(0.65 0.12 250 / 12%) 0px, transparent 50%);
     background-attachment: fixed;
   }
 
@@ -198,14 +198,14 @@
 
 @layer components {
     .app-surface {
-      border-color: oklch(0 0 0 / 10%);
+      border-color: oklch(0 0 0 / 6%);
       background:
-        linear-gradient(180deg, oklch(1 0 0 / 85%), oklch(1 0 0 / 70%)),
+        linear-gradient(135deg, oklch(1 0 0 / 90%), oklch(1 0 0 / 70%)),
         var(--card);
       box-shadow:
-        0 8px 30px oklch(0 0 0 / 4%),
-        inset 0 1px 0 oklch(1 0 0 / 50%);
-      backdrop-filter: blur(14px);
+        0 10px 40px oklch(0.65 0.12 250 / 8%),
+        inset 0 1px 0 oklch(1 0 0 / 60%);
+      backdrop-filter: blur(20px);
     }
 
     .dark .app-surface {
@@ -299,14 +299,14 @@
     .dashboard-page [data-slot="card"] {
         position: relative;
         overflow: hidden;
-        border-color: oklch(0 0 0 / 8%);
+        border-color: oklch(0.65 0.12 250 / 15%);
         background:
-          linear-gradient(180deg, oklch(1 0 0 / 60%), oklch(1 0 0 / 10%)),
+          linear-gradient(160deg, oklch(1 0 0 / 80%), oklch(1 0 0 / 20%)),
           var(--card);
         box-shadow:
-          0 4px 15px oklch(0 0 0 / 3%),
-          inset 0 1px 0 oklch(1 0 0 / 40%);
-        backdrop-filter: blur(20px);
+          0 8px 25px oklch(0.65 0.12 250 / 6%),
+          inset 0 1px 1px oklch(1 0 0 / 60%);
+        backdrop-filter: blur(25px);
     }
 
     .dark .dashboard-page [data-slot="card"] {
@@ -344,12 +344,13 @@
 
     .dashboard-page a:hover [data-slot="card"],
     .dashboard-page .dashboard-interactive:hover {
-      transform: translateY(-2px);
+      transform: translateY(-4px) scale(1.01);
       border-color: var(--primary);
+      background: linear-gradient(160deg, oklch(1 0 0 / 95%), oklch(1 0 0 / 40%)), var(--card);
       box-shadow:
-        0 10px 25px oklch(0 0 0 / 6%),
-        0 0 0 1px oklch(0.45 0.16 230 / 10%),
-        inset 0 1px 0 oklch(1 0 0 / 60%);
+        0 20px 40px oklch(0.65 0.12 250 / 12%),
+        0 0 0 2px oklch(0.65 0.12 250 / 10%),
+        inset 0 1px 0 oklch(1 0 0 / 80%);
     }
 
     .dark .dashboard-page a:hover [data-slot="card"],

@@ -73,8 +73,8 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
     for (const m of allMedia) {
         if (!m.libraryName || m.collectionType === 'boxsets') continue;
         
-        // Use normalized key for deduplication
-        const key = normalizeLibraryKey(m.collectionType || m.libraryName) || m.libraryName;
+        // Prioritize the actual library name for grouping, fallback to collection type
+        const key = normalizeLibraryKey(m.libraryName || m.collectionType) || m.libraryName || m.collectionType || 'other';
 
         if (!libraryStatsMap.has(key)) {
             let libDisplayName = m.libraryName;
@@ -258,11 +258,13 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
     const timeLabel = t('timeDays', { days: totalDays, hours: totalHoursAfterDays });
 
     const validLibraries = Array.from(libraryStatsMap.entries()).filter(([key, stats]) => {
-        if (ghostNames.has(key)) return false;
-        if (key === tc('other')) {
-            const hasItems = stats.movies > 0 || stats.series > 0 || stats.music > 0 || stats.books > 0 || stats.watchedSeconds > 0;
-            return hasItems;
-        }
+        const hasItems = stats.movies > 0 || stats.series > 0 || stats.music > 0 || stats.books > 0 || stats.watchedSeconds > 0;
+        
+        // If it's a ghost name (Movies, TV Shows, etc.), only show it if it has content
+        if (ghostNames.has(key)) return hasItems;
+        
+        if (key === tc('other')) return hasItems;
+        
         return true;
     });
 
