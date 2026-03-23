@@ -120,13 +120,13 @@ export default async function LogHealthPage() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {snapshot.orphanPlaybacks.length === 0 && (
-                                <div className="py-8 text-center text-sm text-zinc-500 italic bg-zinc-50/50 dark:bg-white/5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                <div className="py-8 text-center text-sm text-zinc-500 italic app-surface-soft rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
                                     {t('noOrphanPlaybacks')}
                                 </div>
                             )}
                             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                 {snapshot.orphanPlaybacks.map((entry: any) => (
-                                    <div key={entry.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/40 p-3 hover:shadow-sm transition-shadow">
+                                    <div key={entry.id} className="rounded-xl border border-border/50 app-surface-soft/40 p-3 hover:shadow-sm transition-shadow">
                                         <div className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{entry.mediaTitle}</div>
                                         <div className="mt-1 text-xs text-zinc-500 font-medium">{entry.username} · {entry.library}</div>
                                         <div className="mt-2 text-xs text-zinc-400 flex items-center gap-1.5">
@@ -150,13 +150,13 @@ export default async function LogHealthPage() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {snapshot.recentEvents.length === 0 && (
-                                <div className="py-8 text-center text-sm text-zinc-500 italic bg-zinc-50/50 dark:bg-white/5 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                <div className="py-8 text-center text-sm text-zinc-500 italic app-surface-soft rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
                                     {t('noRecentEvents')}
                                 </div>
                             )}
                             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                 {snapshot.recentEvents.map((event: any) => (
-                                    <div key={event.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/40 p-3 hover:shadow-sm transition-shadow">
+                                    <div key={event.id} className="rounded-xl border border-border/50 app-surface-soft/40 p-3 hover:shadow-sm transition-shadow">
                                         <div className="flex items-start gap-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
                                             {String(event.kind || '').includes('error') 
                                                 ? <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" /> 

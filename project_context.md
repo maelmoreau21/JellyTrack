@@ -419,9 +419,10 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
     - **Standardisation Thématique** : Remplacement systématique des couleurs Tailwind codées en dur (ex: `bg-zinc-900`, `border-slate-200`) par des variables de thème dynamiques (`app-surface`, `app-surface-soft`, `bg-card`, `border-border`) sur tout le tableau de bord, les composants de santé et les sélecteurs.
     - **Correction "Détails par Collection"** : Résolution du bogue où les bibliothèques Jellyfin apparaissaient vides ou étaient masquées.
     - **Optimisation des Journaux (Logs) :**
-    - Nettoyage des identificants redondants.
-    - Suppression des données incohérentes pour la musique.
-    - Ajout de colonnes officielles "Résolution" et "Bitrate Audio".
+        - Nettoyage de la colonne Média : suppression de l'empilement des labels "Unknown" (Inconnu). Utilisation d'un libellé unique "Média inconnu" en cas d'absence totale de métadonnées.
+        - Sécurisation de la colonne Résolution : filtre désormais strictement les valeurs techniques (4K, 1080p, etc.). Les méthodes de lecture (DirectPlay) ou noms de clients ne peuvent plus "fuiter" dans cette colonne.
+        - Amélioration de `getMediaSubtitle` : gestion intelligente de la hiérarchie (Artiste - Album, Série - Saison) avec dédoublonnage par rapport au titre principal.
+        - Support complet du format "Titre / Artiste - Album" (ex: "Lion / PNL - Lion") tout en restant propre pour les fichiers sans tags.
     - **Correction Analyse Bibliothèque :**
     - Suppression des doublons de titres/descriptions ("Aperçu des statistiques approfondies").
     - Correction de la matrice des résolutions : utilise désormais `normalizeResolution` et agrège par entité parente unique (Films/Séries) pour correspondre aux filtres de la page "Tous les Médias".

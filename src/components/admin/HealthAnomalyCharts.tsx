@@ -22,7 +22,7 @@ type BreakdownPoint = {
 };
 
 export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: TimelinePoint[]; breakdown: BreakdownPoint[] }) {
-    const uid = useId();
+    const rawId = useId().replace(/[:]/g, ""); // Remove colons for SVG ID safety
     const t = useTranslations('dashboard');
 
     const safeTimeline: TimelinePoint[] = (timeline || []).map((pt) => ({
@@ -43,12 +43,11 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
     const hasTimelineValues = safeTimeline.some(pt => (pt.monitorErrors || pt.syncErrors || pt.backupErrors || pt.cleanupOps || pt.syncSuccesses) > 0);
     const hasBreakdownValues = safeBreakdown.some(b => (b.value || 0) > 0);
 
-    const monitorId = `monitorErrorsGradient-${uid}`;
-    const syncId = `syncErrorsGradient-${uid}`;
-    const backupId = `backupErrorsGradient-${uid}`;
-    const cleanupId = `cleanupOpsGradient-${uid}`;
-    const syncSuccessId = `syncSuccessGradient-${uid}`;
-    const sourceGradientId = `sourceBreakdownGradient-${uid}`;
+    const monitorId = `monitorG-${rawId}`;
+    const syncId = `syncG-${rawId}`;
+    const backupId = `backupG-${rawId}`;
+    const cleanupId = `cleanupG-${rawId}`;
+    const syncSuccessId = `syncSuccG-${rawId}`;
 
     if (!hasTimelineValues && !hasBreakdownValues) {
         return (
@@ -70,10 +69,10 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
                 {/* Timeline Chart */}
                 <div className="lg:col-span-2 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold uppercase tracking-wider text-zinc-400">{t('anomalyTimelineTitle') || "Évolution des anomalies"}</h4>
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-zinc-400">{t('anomalyTimelineTitle')}</h4>
                     </div>
                     <div className="w-full min-w-0 h-[340px] bg-white/30 dark:bg-black/10 rounded-xl p-2 border border-zinc-100/50 dark:border-zinc-800/30">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height={320} minHeight={200}>
                             <AreaChart data={safeTimeline} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id={monitorId} x1="0" y1="0" x2="0" y2="1">
@@ -104,7 +103,6 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
                                     fontSize={10} 
                                     tickLine={false} 
                                     axisLine={false} 
-                                    tick={{ fill: chartAxisColor }}
                                     dy={10}
                                 />
                                 <YAxis 
@@ -113,7 +111,6 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
                                     tickLine={false} 
                                     axisLine={false} 
                                     allowDecimals={false} 
-                                    tick={{ fill: chartAxisColor }}
                                 />
                                 <Tooltip 
                                     contentStyle={{ ...chartTooltipStyle, borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
@@ -138,9 +135,9 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
 
                 {/* Breakdown Chart */}
                 <div className="space-y-4">
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-zinc-400">{t('anomalyBreakdownTitle') || "Répartition par source"}</h4>
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-zinc-400">{t('anomalyBreakdownTitle')}</h4>
                     <div className="w-full min-w-0 h-[340px] bg-white/30 dark:bg-black/10 rounded-xl p-2 border border-zinc-100/50 dark:border-zinc-800/30">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height={320} minHeight={200}>
                             <BarChart data={safeBreakdown} margin={{ top: 10, right: 10, left: -25, bottom: 0 }} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} opacity={0.5} />
                                 <XAxis type="number" hide />
@@ -151,13 +148,15 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
                                     fontSize={11} 
                                     tickLine={false} 
                                     axisLine={false} 
-                                    tickFormatter={(val) => t(val)}
+                                    tickFormatter={(val) => {
+                                        try { return t(val.toLowerCase()); } catch { return val; }
+                                    }}
                                     width={80}
                                 />
                                 <Tooltip 
                                     cursor={{ fill: 'transparent' }}
                                     contentStyle={{ ...chartTooltipStyle, borderRadius: '12px', border: 'none' }} 
-                                    formatter={(val: any, name: any) => [val, t('anomalyCumulativeImpact')]} 
+                                    formatter={(val: any) => [val, t('anomalyCumulativeImpact')]} 
                                 />
                                 <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
                                     {safeBreakdown.map((entry, index) => (

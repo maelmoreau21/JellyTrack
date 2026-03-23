@@ -1,3 +1,4 @@
+// Dynamic chart theme derived from CSS variables in globals.css
 export const chartPalette = [
     "#38bdf8",
     "#22c55e",
@@ -9,14 +10,16 @@ export const chartPalette = [
     "#818cf8",
 ];
 
-export const chartAxisColor = "#94a3b8";
-export const chartGridColor = "rgba(148, 163, 184, 0.14)";
+// Re-evaluate these at runtime if possible, or use CSS variable strings for Recharts components
+export const chartAxisColor = "var(--chart-axis-color)";
+export const chartGridColor = "var(--chart-grid-color)";
+
 export const chartTooltipStyle = {
-    background: "rgba(8, 12, 18, 0.9)",
-    border: "1px solid rgba(103, 232, 249, 0.18)",
-    borderRadius: "18px",
-    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.35)",
-    backdropFilter: "blur(18px)",
+    background: "var(--chart-tooltip-bg)",
+    border: "var(--chart-tooltip-border)",
+    borderRadius: "var(--chart-tooltip-radius)",
+    boxShadow: "var(--chart-tooltip-box-shadow)",
+    backdropFilter: "var(--chart-tooltip-backdrop)",
 };
-export const chartLabelStyle = { color: "#94a3b8" };
-export const chartItemStyle = { color: "#e5eefb" };
+export const chartLabelStyle = { color: "var(--chart-label-color)" };
+export const chartItemStyle = { color: "var(--chart-item-color)" };

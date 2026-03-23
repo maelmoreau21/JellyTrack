@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Area, AreaChart, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
+import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
 
 export type VolumeHourData = {
     name: string;
@@ -36,26 +37,26 @@ export function VolumeAreaChart({ data }: { data: VolumeHourData[] }) {
                         <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
                     </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
                 <XAxis
                     dataKey="name"
-                    stroke="#52525b"
+                    stroke={chartAxisColor}
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => value}
                 />
                 <YAxis
-                    stroke="#52525b"
+                    stroke={chartAxisColor}
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => `${value}h`}
                 />
                 <Tooltip
-                    contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' }}
-                    labelStyle={{ color: '#a1a1aa' }}
-                    itemStyle={{ color: '#e4e4e7' }}
+                    contentStyle={chartTooltipStyle}
+                    labelStyle={chartLabelStyle}
+                    itemStyle={chartItemStyle}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
 

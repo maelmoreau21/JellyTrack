@@ -46,6 +46,10 @@ export function normalizeResolution(raw?: string | null): string {
     if (!raw) return "Unknown";
     const s = String(raw).trim();
     const lower = s.toLowerCase();
+    
+    // Safety check: if raw is actually a play method or common non-res string, treat as Unknown here
+    if (lower === 'directplay' || lower === 'transcode' || lower === 'remux' || lower === 'unknown') return "Unknown";
+
     if (/(4k|2160|3840|ultra[-\s]?hd|uhd)/i.test(lower)) return '4K';
     if (/(1080p|1080|full[-\s]?hd|fhd)/i.test(lower)) return '1080p';
     if (/(1440p|2560x1440|qhd|2k)/i.test(lower)) return '1440p';

@@ -6,7 +6,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Tailwind 4 class-mode variant */
+@variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -53,67 +54,68 @@
 
 :root {
   --radius: 0.95rem;
-  /* Pastel Marshmallow Theme: Joyful, soft, low-contrast, non-white */
-  --background: oklch(0.92 0.015 285); /* Slightly darker soft pastel lavender */
-  --foreground: oklch(0.25 0.04 285); /* Deep purple for readability */
-  --card: oklch(0.96 0.01 285); /* Soft white with lavender hint */
-  --card-foreground: oklch(0.25 0.04 285);
-  --popover: oklch(0.97 0.005 285);
-  --popover-foreground: oklch(0.25 0.04 285);
-  --primary: oklch(0.65 0.12 250); /* Soft pastel sky blue */
+  /* Pastel Marshmallow Theme: Optimized for soft, non-shredding pastel experience */
+  --background: oklch(0.91 0.04 285); /* Marshmallow Lavender */
+  --foreground: oklch(0.20 0.05 285); /* Deep readable ink */
+  --card: oklch(0.96 0.02 285 / 75%); /* Glassy pastel cards */
+  --card-foreground: oklch(0.20 0.05 285);
+  --popover: oklch(0.98 0.01 285);
+  --popover-foreground: oklch(0.20 0.05 285);
+  --primary: oklch(0.68 0.12 250); /* Marshmallow Blue */
   --primary-foreground: oklch(0.99 0.005 260);
-  --secondary: oklch(0.9 0.05 165); /* Mint pastel */
+  --secondary: oklch(0.88 0.05 165); /* Soft Mint */
   --secondary-foreground: oklch(0.2 0.05 165);
-  --muted: oklch(0.9 0.02 285);
-  --muted-foreground: oklch(0.45 0.04 285);
-  --accent: oklch(0.9 0.07 340); /* Soft rose pastel */
+  --muted: oklch(0.94 0.02 285 / 60%);
+  --muted-foreground: oklch(0.40 0.05 285);
+  --accent: oklch(0.92 0.08 340); /* Rose Pastel */
   --accent-foreground: oklch(0.25 0.06 340);
   --destructive: oklch(0.6 0.15 25);
-  --border: oklch(0.82 0.03 285); /* Soft lavender border */
-  --input: oklch(0.92 0.01 285);
-  --ring: oklch(0.65 0.12 250);
-  --chart-1: oklch(0.65 0.12 250);
-  --chart-2: oklch(0.7 0.1 165);
-  --chart-3: oklch(0.7 0.12 340);
-  --chart-4: oklch(0.75 0.1 85);
-  --chart-5: oklch(0.72 0.08 210);
+  --border: oklch(0.85 0.05 285); /* Subdued pastel borders */
+  --input: oklch(0.92 0.02 285);
+  --ring: oklch(0.68 0.12 250);
+  --chart-1: oklch(0.68 0.12 250);
+  --chart-2: oklch(0.82 0.08 165);
+  --chart-3: oklch(0.85 0.10 340);
+  --chart-4: oklch(0.88 0.08 85);
+  --chart-5: oklch(0.85 0.06 210);
   /* Chart UI variables (Pastel mode) */
-  --chart-axis-color: oklch(0.45 0.04 285);
-  --chart-grid-color: oklch(0 0 0 / 4%);
-  --chart-tooltip-bg: oklch(0.99 0.01 285 / 96%);
-  --chart-tooltip-border: 1px solid oklch(0.65 0.12 250 / 20%);
-  --chart-tooltip-radius: 20px;
-  --chart-tooltip-box-shadow: 0 20px 50px oklch(0 0 0 / 5%);
-  --chart-tooltip-backdrop: blur(16px);
-  --chart-label-color: oklch(0.45 0.04 285);
-  --sidebar: oklch(0.91 0.025 285);
-  --sidebar-foreground: oklch(0.25 0.04 285);
-  --sidebar-primary: oklch(0.65 0.12 250);
+  --chart-axis-color: oklch(0.40 0.05 285);
+  --chart-grid-color: oklch(0.2 0.05 285 / 8%);
+  --chart-tooltip-bg: oklch(0.98 0.02 285 / 95%);
+  --chart-tooltip-border: 1px solid oklch(0.68 0.12 250 / 30%);
+  --chart-tooltip-radius: 18px;
+  --chart-tooltip-box-shadow: 0 15px 40px oklch(0.2 0.05 285 / 8%);
+  --chart-tooltip-backdrop: blur(12px);
+  --chart-label-color: oklch(0.3 0.05 285);
+  --chart-item-color: oklch(0.2 0.05 285);
+  --sidebar: oklch(0.94 0.03 285);
+  --sidebar-foreground: oklch(0.20 0.05 285);
+  --sidebar-primary: oklch(0.68 0.12 250);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.88 0.04 285);
-  --sidebar-accent-foreground: oklch(0.25 0.04 285);
-  --sidebar-border: oklch(0.82 0.03 285);
-  --sidebar-ring: oklch(0.65 0.12 250);
+  --sidebar-accent: oklch(0.91 0.04 285);
+  --sidebar-accent-foreground: oklch(0.2 0.05 285);
+  --sidebar-border: oklch(0.85 0.04 285);
+  --sidebar-ring: oklch(0.68 0.12 250);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.185 0.015 260);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.185 0.015 260);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: oklch(0.12 0.02 260); /* Deeper midnight background (not pure black/gray) */
+  --foreground: oklch(0.98 0.01 260);
+  --card: oklch(0.16 0.03 260); /* Slightly lighter midnight for cards */
+  --card-foreground: oklch(0.98 0.01 260);
+  --popover: oklch(0.14 0.03 260); /* Popovers must be dark! */
+  --popover-foreground: oklch(0.98 0.01 260);
   --primary: oklch(0.76 0.14 205);
-  --primary-foreground: oklch(0.16 0.02 210);
-  --secondary: oklch(0.25 0.015 260);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.25 0.015 260);
-  --muted-foreground: oklch(0.7 0.015 260);
-  --accent: oklch(0.28 0.02 260);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
+  --primary-foreground: oklch(0.12 0.03 260);
+  --secondary: oklch(0.18 0.03 260);
+  --secondary-foreground: oklch(0.98 0.01 260);
+  --muted: oklch(0.18 0.03 260);
+  --muted-foreground: oklch(0.65 0.02 260);
+  --accent: oklch(0.22 0.04 260);
+  --accent-foreground: oklch(0.98 0.01 260);
+  --destructive: oklch(0.70 0.19 22.2);
+  --border: oklch(0.98 0.01 260 / 12%);
+  --input: oklch(0.98 0.01 260 / 15%);
   --ring: oklch(0.72 0.12 205);
   --chart-1: oklch(0.74 0.15 205);
   --chart-2: oklch(0.78 0.17 75);
@@ -122,35 +124,49 @@
   --chart-5: oklch(0.73 0.13 250);
   --chart-axis-color: #94a3b8;
   --chart-grid-color: rgba(148, 163, 184, 0.12);
-  --chart-tooltip-bg: oklch(0.15 0.01 260 / 92%);
-  --chart-tooltip-border: 1px solid oklch(0.76 0.14 205 / 20%);
+  --chart-tooltip-bg: oklch(0.14 0.03 260 / 96%); /* Very dark semi-transparent bg for tooltips */
+  --chart-tooltip-border: 1px solid oklch(1 0 0 / 15%);
   --chart-tooltip-radius: 18px;
-  --chart-tooltip-box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  --chart-tooltip-box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
   --chart-tooltip-backdrop: blur(20px);
   --chart-label-color: #94a3b8;
   --chart-item-color: #e5eefb;
-  --sidebar: oklch(0.17 0.01 260);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar: oklch(0.14 0.02 260);
+  --sidebar-foreground: oklch(0.98 0.01 260);
   --sidebar-primary: oklch(0.76 0.14 205);
-  --sidebar-primary-foreground: oklch(0.16 0.02 210);
-  --sidebar-accent: oklch(0.25 0.015 260);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-primary-foreground: oklch(0.12 0.03 260);
+  --sidebar-accent: oklch(0.18 0.03 260);
+  --sidebar-accent-foreground: oklch(0.98 0.01 260);
+  --sidebar-border: oklch(0.98 0.01 260 / 12%);
   --sidebar-ring: oklch(0.72 0.12 205);
 }
 
 @layer base {
+  html {
+    @apply scroll-smooth;
+  }
+ 
+  .app-surface {
+    @apply bg-card text-card-foreground border-border relative;
+  }
+ 
+  .app-surface-soft {
+    @apply bg-card/60 dark:bg-zinc-900/40 backdrop-blur-sm border-border relative;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
 
   body {
-    background-color: var(--background);
-    background-image:
-      radial-gradient(at 0% 0%, oklch(0.90 0.04 285) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, oklch(0.90 0.04 165) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, oklch(0.88 0.06 340) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, oklch(0.65 0.12 250 / 12%) 0px, transparent 50%);
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-attachment: fixed;
+  }
+
+  :root body {
+    /* Dynamic pastel gradient for light mode */
+    background: linear-gradient(145deg, oklch(0.94 0.04 285), oklch(0.92 0.04 200), oklch(0.94 0.04 330));
     background-attachment: fixed;
   }
 

@@ -287,7 +287,7 @@ export default async function LogsPage({
         const resolvedParentId = media.parentId || metadata?.parentId || null;
         const parent = resolvedParentId ? parentMap.get(resolvedParentId) : null;
 
-        const cleanStr = (s: string | null | undefined) => (s && s !== 'Unknown') ? s.trim() : null;
+        const cleanStr = (s: string | null | undefined) => (s && s !== 'Unknown' && s.trim().length > 0) ? s.trim() : null;
 
         if (media.type === 'Episode') {
             const fallbackSeriesName = cleanStr(metadata?.seriesName);
@@ -295,31 +295,31 @@ export default async function LogsPage({
             if (fallbackSeriesName && fallbackSeasonName) {
                 return `${fallbackSeriesName} - ${fallbackSeasonName}`;
             }
-            if (fallbackSeriesName) {
-                return fallbackSeriesName;
-            }
+            if (fallbackSeriesName) return fallbackSeriesName;
+            
             if (!parent) return null;
             const gpTitle = cleanStr(parent.parentId ? grandparentMap.get(parent.parentId)?.title : null);
             const pTitle = cleanStr(parent.title);
-            if (gpTitle && pTitle) return `${gpTitle} - ${pTitle}`;
+            if (gpTitle && pTitle && gpTitle !== pTitle) return `${gpTitle} - ${pTitle}`;
             return pTitle || gpTitle;
         }
         if (media.type === 'Season') {
             const sName = cleanStr(metadata?.seriesName);
             if (sName) return sName;
-            if (!parent) return null;
-            return cleanStr(parent.title);
+            return parent ? cleanStr(parent.title) : null;
         }
-        if (media.type === 'Audio') {
+        if (media.type === 'Audio' || media.type === 'Track') {
             const metaAlbumName = cleanStr(metadata?.albumName);
             const metaArtistName = cleanStr(metadata?.albumArtist || metadata?.artist);
-            if (metaAlbumName || metaArtistName) {
-                if (metaArtistName && metaAlbumName) return `${metaArtistName} - ${metaAlbumName}`;
-                return metaArtistName || metaAlbumName;
+            if (metaAlbumName && metaArtistName) {
+                if (metaAlbumName === metaArtistName) return metaArtistName;
+                return `${metaArtistName} - ${metaAlbumName}`;
             }
+            if (metaArtistName || metaAlbumName) return metaArtistName || metaAlbumName;
+
             const artistName = cleanStr(media.artist || parent?.artist);
             const pTitle = cleanStr(parent?.title);
-            if (artistName && pTitle) return `${artistName} - ${pTitle}`;
+            if (artistName && pTitle && artistName !== pTitle) return `${artistName} - ${pTitle}`;
             return artistName || pTitle;
         }
         if (media.type === 'MusicAlbum') {

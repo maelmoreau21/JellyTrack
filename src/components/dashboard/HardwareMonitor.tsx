@@ -38,7 +38,7 @@ export function HardwareMonitor() {
 
     return (
         <div className="grid grid-cols-3 gap-4 mb-6">
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface-soft shadow-sm ring-1 ring-border/5">
                 <CardContent className="p-4 flex flex-row items-center gap-4">
                     <div className="p-2.5 bg-blue-500/10 rounded-lg">
                         <Cpu className="w-5 h-5 text-blue-500" />
@@ -50,7 +50,7 @@ export function HardwareMonitor() {
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface-soft shadow-sm ring-1 ring-border/5">
                 <CardContent className="p-4 flex flex-row items-center gap-4">
                     <div className="p-2.5 bg-purple-500/10 rounded-lg">
                         <MemoryStick className="w-5 h-5 text-purple-500" />
@@ -62,7 +62,7 @@ export function HardwareMonitor() {
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface-soft shadow-sm ring-1 ring-border/5">
                 <CardContent className="p-4 flex flex-row items-center gap-4">
                     <div className="p-2.5 bg-rose-500/10 rounded-lg">
                         <Thermometer className="w-5 h-5 text-rose-500" />

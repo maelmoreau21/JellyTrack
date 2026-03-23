@@ -180,21 +180,22 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                 )}
               </div>
               <div className="flex flex-col min-w-0 flex-1">
-                {displayTitle ? (
+                {displayTitle && log.media ? (
                   <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-800 dark:text-zinc-100 hover:underline" title={displayTitle}>
                     {displayTitle}
                   </Link>
                 ) : (
                   <span className="truncate font-medium text-zinc-400 italic">
-                    {log.media?.type && log.media.type !== 'Unknown' ? `${t('unknown')} (${log.media.type})` : t('unknown')}
+                    {t('unknownMedia')}
                   </span>
                 )}
                 
-                {log.mediaSubtitle && log.mediaSubtitle !== 'Unknown' && log.mediaSubtitle !== displayTitle ? (
+                {log.mediaSubtitle && 
+                 log.mediaSubtitle !== 'Unknown' && 
+                 log.mediaSubtitle.trim().length > 0 &&
+                 log.mediaSubtitle !== displayTitle ? (
                   <span className="text-xs text-zinc-500 truncate flex items-center gap-1" title={log.mediaSubtitle}>{log.mediaSubtitle}</span>
-                ) : !displayTitle && log.media?.type && log.media.type !== 'Unknown' ? null : (
-                  <span className="text-xs text-zinc-400/80">{log.media?.type && log.media.type !== 'Unknown' ? log.media.type : '—'}</span>
-                )}
+                ) : null}
 
                 <div className="hidden md:flex items-center gap-2 mt-1 text-xs text-zinc-500">
                   {!isAudioMedia && normalizedResolution && normalizedResolution !== 'Unknown' && (
