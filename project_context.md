@@ -90,7 +90,7 @@ Vous devez RELIRE `prisma/schema.prisma` avant toute proposition qui touche aux 
 	- index : `lastPingAt`
 
 - `model GlobalSettings` : singleton `id = "global"` (réglages globaux)
-	- champs pour webhooks, discord, quotas, `excludedLibraries String[]`, `libraryRules Json?`, `defaultLocale`, `timeFormat`, `pluginApiKey`, `pluginLastSeen`, etc.
+	- champs pour webhooks, discord, quotas, `excludedLibraries String[]`, `defaultLocale`, `timeFormat`, `pluginApiKey`, `pluginLastSeen`, etc.
 
 - `model SystemHealthState` et `SystemHealthEvent` : stockent l'état du moniteur/sync/backup et les événements associés.
 
@@ -268,7 +268,6 @@ CREATE TABLE global_settings (
 	discord_alerts_enabled boolean NOT NULL DEFAULT false,
 	max_concurrent_transcodes integer NOT NULL DEFAULT 0,
 	excluded_libraries text[] NOT NULL DEFAULT '{}',
-	library_rules jsonb NULL,
 	sync_cron_hour integer NOT NULL DEFAULT 3,
 	sync_cron_minute integer NOT NULL DEFAULT 0,
 	backup_cron_hour integer NOT NULL DEFAULT 3,
@@ -414,18 +413,12 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
 
 ## 16. Modifications récentes (notes opérationnelles)
 
-- Pages de paramètres : le fichier `src/app/settings/page.tsx` a été remplacé par une page d'aperçu qui renvoie vers des sous-pages dédiées : `Connexion Plugin` (`/settings/plugin`), `Planificateur de Tâches` (`/settings/scheduler`), `Notifications` (`/settings/notifications`), `Paramètres Média` (`/settings/media`) et `Sauvegardes de Données` (`/settings/dataBackups`). Vérifier ces routes lors d'une QA visuelle.
-- Language switcher (login) : `src/app/login/LoginLanguageSwitcher.tsx` utilise désormais des images de drapeaux (FlagCDN, ex. `https://flagcdn.com/w40/{iso}.png`) au lieu d'emojis — conserver la source `AVAILABLE_LOCALES` dans `src/i18n/locales.ts` pour la cohérence.
-- Analyse média : `src/app/media/analysis/page.tsx` a été refactorée pour calculer des agrégats (total média, diversité de genres, durée moyenne, top directors, top libraries). Des clés i18n `media.*` ont été ajoutées — s'assurer qu'elles existent dans tous les fichiers `messages/*.json`.
-- UI mineures : `src/app/logs/LogRow.tsx` a été ajusté pour enlever la bordure verticale par ligne (séparation maintenue au niveau de l'entête).
-- Sauvegardes & bundler : pour réduire les warnings liés au traçage NFT de Turbopack, éviter les imports statiques top-level de `fs`/`path` dans le code serveur/route. Utiliser des imports dynamiques (`await import('fs')`) ou ajouter `/*turbopackIgnore: true*/` sur des imports dynamiques quand nécessaire. Fichiers notables modifiés : `src/lib/autoBackup.ts`, `src/app/api/backup/auto/*`, `src/lib/appStateStorage.ts`.
-- Avertissement restant : une alerte non-bloquante Turbopack peut encore référencer `next.config.ts -> src/app/api/backup/auto/restore/route.ts`. Ce warning n'empêche pas la compilation mais peut être investigué si l'objectif est zéro warnings.
-- i18n plugin : si des libellés liés au plugin changent, pensez aussi à mettre à jour `JellyTrack.Plugin/Localization/*.json` pour garder la cohérence entre l'application et le plugin.
-- Refonte UI : Les filtres de `Bibliothèques` (Tous les Médias) ont été alignés sur ceux du dashboard (multi-sélection `excludeTypes`).
-- Historique Utilisateur & Règles : `UserRecentMedia.tsx` utilise désormais `LogsListClient` pour un historique robuste et la gestion native des timelines (pauses, audio). Les "Règles de complétion" ont été supprimées pour simplifier l'expérience utilisateur.
-- Graphiques d'anomalies (Santé des Logs) : Résolution d'un dysfonctionnement silencieux où les dates UTC des événements n'étaient pas correctement couplées à l'heure locale lors de la génération de l'axe temporel (corrigé via utilisation de `setUTCHours`/`getUTCDate` dans `logHealth.ts`). De plus, ajout du déclencheur `appendHealthEvent` dans la boucle d'erreurs de `sync.ts` afin que les échecs de synchronisation soient bien répertoriés. Le composant `HealthAnomalyCharts` utilise désormais la méthode `useTranslations('dashboard')` pour éviter tout terme en dur (hardcoded).
-- Traduction Universelle : Les 10 langues supportées ont été synchronisées. Les clés pour les graphiques d'anomalies, les règles par bibliothèque et les recommandations IA sont désormais présentes et traduites partout, garantissant une cohérence globale du projet. Tous les fichiers JSON de traduction ont été normalisés à exactement 888 lignes pour une maintenance facilitée.
-- Coopération UI & Bugs : Correction de la redirection brusque dans l'historique utilisateur (LogsListClient), réactivation de la recherche et des filtres dans "Tous les médias" (await searchParams), et harmonisation des clés de traduction (`rulesDesc` -> `libraryRulesDesc`).
+- **Analyse média & Refonte UI (Mars 2026)** :
+    - `media/analysis/page.tsx` refactorée pour agrégats (genres, durée moyenne, top directors).
+    - **Refonte Mode Clair** : Migration complète vers une palette "Soft-Slate" (Pearl/Cool Gray) pour réduire l'éblouissement. Les variables OKLCH (`--background`, `--card`, etc.) ont été harmonisées pour offrir profondeur et confort.
+    - **Suppression des "Règles de complétion"** : Pour simplifier l'UX et la maintenance, la configuration par bibliothèque a été supprimée au profit de valeurs par défaut codées en dur (80% pour complétion, 10% pour zapping).
+    - **Interactivité du Dashboard** : Les graphiques sont désormais cliquables et redirigent vers les logs filtrés. Suppression du mode "collapsible" sur les cartes pour une visibilité immédiate des données.
+    - **Nettoyage i18n** : Synchronisation des 10 langues supportées et suppression de toutes les clés de traduction obsolètes.
 - **Configurable Resolution Thresholds**: Video quality categorization (4K, 1080p, etc.) is now based on Tdarr-aligned thresholds, configurable by the user in Settings > Media. A full sync is required to apply changes to existing media.
 - **100% Translation Coverage**: All 10 supported languages (de, en, es, fr, it, nl, pl, pt-BR, ru, zh) have been updated with latest translation keys for settings (including `cancel` button) and analytics.
 - **Chart Internationalization**: All chart components (`PlatformDistributionChart`, `ActivityByHourChart`, `StreamProportionsChart`, `DeepInsights`, `HealthAnomalyCharts`) have been refactored to use `next-intl` translation keys instead of hardcoded strings. Resolution labels in analytics are dynamically localized based on the user's language.

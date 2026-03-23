@@ -149,7 +149,6 @@ model GlobalSettings {
   discordAlertsEnabled  Boolean  @default(false)
   maxConcurrentTranscodes Int      @default(0)     // 0 = désactivé. Alerte si dépassé.
   excludedLibraries     String[] @default([]) // Filtre les types de collection (ex: Photo, HomeVideos)
-  libraryRules          Json?
   syncCronHour          Int      @default(3)     // Hour (0-23) for daily full sync
   syncCronMinute        Int      @default(0)     // Minute (0-59) for daily full sync
   backupCronHour        Int      @default(3)     // Hour (0-23) for daily auto-backup
