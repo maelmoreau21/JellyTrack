@@ -39,7 +39,7 @@ export default async function LogHealthPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 relative z-10">
                     <Card className="app-surface-soft border-border">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-semibold text-zinc-500 flex items-center gap-2">
+                            <CardTitle className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                                 <RadioTower className="h-4 w-4 text-cyan-500" />
                                 {t('monitor')}
                             </CardTitle>
@@ -55,7 +55,7 @@ export default async function LogHealthPage() {
 
                     <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-semibold text-zinc-500 flex items-center gap-2">
+                            <CardTitle className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                                 <ShieldAlert className="h-4 w-4 text-orange-500" />
                                 {t('openPlaybackOrphans')}
                             </CardTitle>
@@ -68,7 +68,7 @@ export default async function LogHealthPage() {
 
                     <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-semibold text-zinc-500 flex items-center gap-2">
+                            <CardTitle className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                                 <AlertTriangle className="h-4 w-4 text-red-500" />
                                 {t('dbWithoutRedis')}
                             </CardTitle>
@@ -81,7 +81,7 @@ export default async function LogHealthPage() {
 
                     <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-semibold text-zinc-500 flex items-center gap-2">
+                            <CardTitle className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                                 <Activity className="h-4 w-4 text-emerald-500" />
                                 {t('redisOrphan')}
                             </CardTitle>
@@ -120,16 +120,16 @@ export default async function LogHealthPage() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {snapshot.orphanPlaybacks.length === 0 && (
-                                <div className="py-8 text-center text-sm text-zinc-500 italic app-surface-soft rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                <div className="py-8 text-center text-sm text-muted-foreground italic app-surface-soft rounded-xl border border-dashed border-border/50">
                                     {t('noOrphanPlaybacks')}
                                 </div>
                             )}
                             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                 {snapshot.orphanPlaybacks.map((entry: any) => (
                                     <div key={entry.id} className="rounded-xl border border-border/50 app-surface-soft/40 p-3 hover:shadow-sm transition-shadow">
-                                        <div className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{entry.mediaTitle}</div>
-                                        <div className="mt-1 text-xs text-zinc-500 font-medium">{entry.username} · {entry.library}</div>
-                                        <div className="mt-2 text-xs text-zinc-400 flex items-center gap-1.5">
+                                        <div className="font-semibold text-foreground truncate">{entry.mediaTitle}</div>
+                                        <div className="mt-1 text-xs text-muted-foreground font-medium">{entry.username} · {entry.library}</div>
+                                        <div className="mt-2 text-xs text-muted-foreground/80 flex items-center gap-1.5">
                                             <History className="h-3 w-3" />
                                             {formatDate(entry.startedAt)} · {Math.floor((entry.durationWatched ?? 0) / 60)} min
                                         </div>
@@ -150,20 +150,20 @@ export default async function LogHealthPage() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {snapshot.recentEvents.length === 0 && (
-                                <div className="py-8 text-center text-sm text-zinc-500 italic app-surface-soft rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                <div className="py-8 text-center text-sm text-muted-foreground italic app-surface-soft rounded-xl border border-dashed border-border/50">
                                     {t('noRecentEvents')}
                                 </div>
                             )}
                             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                 {snapshot.recentEvents.map((event: any) => (
                                     <div key={event.id} className="rounded-xl border border-border/50 app-surface-soft/40 p-3 hover:shadow-sm transition-shadow">
-                                        <div className="flex items-start gap-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                                        <div className="flex items-start gap-3 text-sm font-medium text-foreground">
                                             {String(event.kind || '').includes('error') 
                                                 ? <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" /> 
                                                 : <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5" />}
                                             <div className="flex-1 leading-relaxed">{event.message}</div>
                                         </div>
-                                        <div className="mt-2 text-[10px] text-zinc-400 font-mono text-right">{formatDate(event.createdAt)}</div>
+                                        <div className="mt-2 text-[10px] text-muted-foreground/80 font-mono text-right">{formatDate(event.createdAt)}</div>
                                     </div>
                                 ))}
                             </div>
@@ -189,34 +189,34 @@ export default async function LogHealthPage() {
                         </Card>
 
                         <Card className="app-surface border-zinc-200/60 dark:border-zinc-800/50 shadow-sm overflow-hidden">
-                            <CardHeader className="bg-zinc-50/50 dark:bg-white/5 border-b border-zinc-100 dark:border-zinc-800/50">
+                            <CardHeader className="app-surface-soft border-b border-zinc-200/50 dark:border-zinc-800/50">
                                 <CardTitle className="text-lg">{t('processingStatusTitle')}</CardTitle>
                                 <CardDescription>{t('processingStatusDesc')}</CardDescription>
                             </CardHeader>
                             <CardContent className="p-0">
                                 <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
-                                    <div className="p-4 hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors">
+                                    <div className="p-4 hover:bg-zinc-500/5 dark:hover:bg-white/5 transition-colors">
                                         <div className="flex items-center justify-between mb-1">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200"><RadioTower className="h-4 w-4 text-cyan-500" /> {t('monitor')}</div>
-                                            <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{t('lastSuccess')}</div>
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><RadioTower className="h-4 w-4 text-cyan-500" /> {t('monitor')}</div>
+                                            <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('lastSuccess')}</div>
                                         </div>
-                                        <div className="text-xs text-zinc-500 ml-6">{formatDate(snapshot.status.monitor.lastSuccessAt)}</div>
+                                        <div className="text-xs text-muted-foreground ml-6">{formatDate(snapshot.status.monitor.lastSuccessAt)}</div>
                                     </div>
                                     
-                                    <div className="p-4 hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors">
+                                    <div className="p-4 hover:bg-zinc-500/5 dark:hover:bg-white/5 transition-colors">
                                         <div className="flex items-center justify-between mb-1">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200"><RefreshCw className="h-4 w-4 text-amber-500" /> {t('sync')}</div>
-                                            <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{t('lastSuccess')}</div>
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><RefreshCw className="h-4 w-4 text-amber-500" /> {t('sync')}</div>
+                                            <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('lastSuccess')}</div>
                                         </div>
-                                        <div className="text-xs text-zinc-500 ml-6">{formatDate(snapshot.status.sync.lastSuccessAt)} ({snapshot.status.sync.mode || '—'})</div>
+                                        <div className="text-xs text-muted-foreground ml-6">{formatDate(snapshot.status.sync.lastSuccessAt)} ({snapshot.status.sync.mode || '—'})</div>
                                     </div>
 
-                                    <div className="p-4 hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors">
+                                    <div className="p-4 hover:bg-zinc-500/5 dark:hover:bg-white/5 transition-colors">
                                         <div className="flex items-center justify-between mb-1">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200"><Clock3 className="h-4 w-4 text-emerald-500" /> {t('backup')}</div>
-                                            <div className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">{t('lastSuccess')}</div>
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><Clock3 className="h-4 w-4 text-emerald-500" /> {t('backup')}</div>
+                                            <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('lastSuccess')}</div>
                                         </div>
-                                        <div className="text-xs text-zinc-500 ml-6">{formatDate(snapshot.status.backup.lastSuccessAt)}</div>
+                                        <div className="text-xs text-muted-foreground ml-6">{formatDate(snapshot.status.backup.lastSuccessAt)}</div>
                                     </div>
                                 </div>
                             </CardContent>

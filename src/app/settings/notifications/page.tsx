@@ -108,10 +108,10 @@ export default function SettingsNotificationsPage() {
                     {wrappedVisible && (
                         <div className="space-y-4 border p-4 rounded-lg">
                             <Label className="text-base underline mb-2 block">{t('wrappedPeriod')}</Label>
-                            <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-900/40 border border-zinc-800/50">
+                            <div className="flex items-center justify-between p-4 rounded-lg app-surface-soft border border-border/50">
                                 <div className="space-y-0.5">
-                                    <Label className="text-sm font-medium text-zinc-200">{t('autoAvailability')}</Label>
-                                    <p className="text-xs text-zinc-500">{t('autoAvailabilityDesc')}</p>
+                                    <Label className="text-sm font-medium text-foreground">{t('autoAvailability')}</Label>
+                                    <p className="text-xs text-muted-foreground">{t('autoAvailabilityDesc')}</p>
                                 </div>
                                 <Switch checked={wrappedPeriodEnabled} onCheckedChange={setWrappedPeriodEnabled} />
                             </div>
@@ -144,7 +144,7 @@ export default function SettingsNotificationsPage() {
                                     </div>
                                 </div>
                             </div>
-                            <p className="text-xs text-zinc-500 italic mt-2">{t('wrappedPeriodDesc')}</p>
+                            <p className="text-xs text-muted-foreground italic mt-2">{t('wrappedPeriodDesc')}</p>
                         </div>
                     )}
 

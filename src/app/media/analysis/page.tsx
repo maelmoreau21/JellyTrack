@@ -12,11 +12,22 @@ export default async function AnalysisPage() {
     const t = await getTranslations('media');
     const tc = await getTranslations('common');
 
-    // Fetch media fields useful for the analysis
-    // Include `type` and `collectionType` so we can filter video vs audio items
-    const medias = await prisma.media.findMany({ select: { id: true, parentId: true, genres: true, resolution: true, durationMs: true, directors: true, libraryName: true, type: true, collectionType: true }, where: {} });
+    const settings = await prisma.globalSettings.findUnique({ where: { id: 'global' } });
+    const excludedLibraries = settings?.excludedLibraries || [];
+    const { buildExcludedMediaClause } = await import('@/lib/mediaPolicy');
+    const excludedClause = buildExcludedMediaClause(excludedLibraries);
 
-    // Aggregate genres and resolutions
+    // Fetch media fields useful for the analysis
+    // Respect same exclusions as the all media page
+    const baseTypes = ['Movie', 'Series', 'MusicAlbum'];
+    const medias = await prisma.media.findMany({ 
+        select: { id: true, parentId: true, genres: true, resolution: true, durationMs: true, directors: true, libraryName: true, type: true, collectionType: true }, 
+        where: {
+            type: { in: baseTypes },
+            ...(excludedClause ? { AND: [excludedClause] } : {})
+        } 
+    });
+
     // Aggregate genres and resolutions. For resolutions, we use Sets to track unique parent entities
     const genreCounts = new Map<string, number>();
     const resolutionCounts = new Map<string, Set<string>>();
@@ -25,36 +36,27 @@ export default async function AnalysisPage() {
     let durationSum = 0;
     let durationCount = 0;
 
-    // Consider only video-like media for resolution counting to avoid audio/media polluting video stats
-    const VIDEO_COLLECTION_KEYS = new Set(['movies', 'tvshows', 'homevideos']);
-    const VIDEO_TYPES = new Set(['Movie', 'Episode', 'Series', 'BoxSet', 'Video']);
-    const AUDIO_TYPES = new Set(['MusicAlbum', 'Audio', 'Track', 'AudioBook']);
-    const MAIN_TYPES = new Set(['Movie', 'Series', 'MusicAlbum', 'Book']);
+    // Consider only video-like media for resolution counting
+    const VIDEO_TYPES = new Set(['Movie', 'Series']);
+    const AUDIO_TYPES = new Set(['MusicAlbum', 'Track']);
+    const MAIN_TYPES = new Set(['Movie', 'Series', 'MusicAlbum']);
 
     medias.forEach(m => {
         if (m.genres) m.genres.forEach((g: string) => genreCounts.set(g, (genreCounts.get(g) || 0) + 1));
-        const collectionKey = typeof m.collectionType === 'string' ? m.collectionType.toLowerCase() : '';
-        const isVideo = VIDEO_TYPES.has((m.type || '').toString()) || VIDEO_COLLECTION_KEYS.has(collectionKey);
-        // ensure we explicitly exclude known audio types even if collection keys are fuzzy
-        if (isVideo && !AUDIO_TYPES.has((m.type || '').toString())) {
+        const isVideo = VIDEO_TYPES.has((m.type || '').toString());
+        
+        if (isVideo) {
             const nr = normalizeResolution(m.resolution);
             if (nr && nr !== 'Unknown') {
                 if (!resolutionCounts.has(nr)) resolutionCounts.set(nr, new Set<string>());
                 const set = resolutionCounts.get(nr)!;
-
-                if (m.type === 'Movie') {
-                    set.add(m.id);
-                } else if (m.type === 'Episode' && m.parentId) {
-                    set.add(m.parentId);
-                } else if (m.type === 'Series') {
-                    set.add(m.id);
-                }
+                set.add(m.id);
             }
         }
         if (m.directors) m.directors.forEach((d: string) => { if (d) directorCounts.set(d, (directorCounts.get(d) || 0) + 1); });
         
         // Count library items - focus on main items
-        if (m.libraryName && MAIN_TYPES.has(m.type || '')) {
+        if (m.libraryName) {
             const key = normalizeLibraryKey(m.collectionType || m.libraryName) || m.libraryName;
             const existing = libraryStatsMap.get(key);
             if (existing) {

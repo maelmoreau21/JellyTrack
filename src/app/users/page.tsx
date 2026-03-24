@@ -136,13 +136,13 @@ export default async function UsersPage() {
                                                             {stat.favoriteClient}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="text-zinc-300 text-sm">
+                                                    <TableCell className="text-muted-foreground text-sm">
                                                         {stat.lastActive 
                                                             ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(stat.lastActive)
                                                             : t('never')
                                                         }
                                                     </TableCell>
-                                                    <TableCell className="text-right font-medium text-zinc-300">
+                                                    <TableCell className="text-right font-medium text-muted-foreground">
                                                         {stat.sessionsCount}
                                                     </TableCell>
                                                 </TableRow>

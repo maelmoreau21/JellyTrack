@@ -164,6 +164,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         // Cache for faster lookup of parent library names
         const itemLibraryCache = new Map<string, string>();
         const itemCollectionCache = new Map<string, string>();
+        const seriesResolutionMap = new Map<string, string>(); // seriesJellyfinId -> resolution
 
         let mediaCount = 0;
         for (const item of items) {
@@ -258,6 +259,26 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     }
                 }
 
+                // Track series resolution if this is an episode or season item
+                if (resolution && item.SeriesId) {
+                    const sid = normalizeJellyfinId(item.SeriesId);
+                    if (sid) {
+                        const existing = seriesResolutionMap.get(sid);
+                        // Resolution priority: 4K > 1440p > 1080p > 720p > SD
+                        const getWeight = (r: string) => {
+                            if (r === '4K') return 5;
+                            if (r === '1440p') return 4;
+                            if (r === '1080p') return 3;
+                            if (r === '720p') return 2;
+                            if (r === 'SD') return 1;
+                            return 0;
+                        };
+                        if (!existing || getWeight(resolution) > getWeight(existing)) {
+                            seriesResolutionMap.set(sid, resolution);
+                        }
+                    }
+                }
+
                 const durationMs = item.RunTimeTicks ? BigInt(Math.floor(Number(item.RunTimeTicks) / 10000)) : null;
                 const parentId = normalizeJellyfinId(item.AlbumId || item.SeasonId || item.SeriesId || item.ParentId || null);
                 const artist = item.AlbumArtist || item.AlbumArtists?.[0]?.Name || item.Artists?.[0] || null;
@@ -285,7 +306,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                                 directors,
                                 actors,
                                 studios,
-                                resolution,
+                                resolution: item.Type === 'Series' ? (seriesResolutionMap.get(item.Id) || resolution) : resolution,
                                 collectionType,
                                 durationMs,
                                 size: sizeVal,
@@ -307,7 +328,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                                 directors: directors ?? undefined,
                                 actors: actors ?? undefined,
                                 studios: studios ?? undefined,
-                                resolution: resolution ?? undefined,
+                                resolution: (item.Type === 'Series' ? (seriesResolutionMap.get(item.Id) || resolution) : resolution) ?? undefined,
                                 collectionType: collectionType ?? undefined,
                                 durationMs: durationMs ?? undefined,
                                 size: sizeVal ?? undefined,
@@ -334,6 +355,17 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 mediaCount++;
             } catch (err) {
                 console.error(`[Sync] Error item ${item.Id}:`, err);
+            }
+        }
+
+        // 4. Update Series resolutions if they were identified from episodes during this sync
+        if (seriesResolutionMap.size > 0) {
+            console.log(`[Sync] Propagating resolutions for ${seriesResolutionMap.size} series...`);
+            for (const [sid, res] of seriesResolutionMap.entries()) {
+                await prisma.media.updateMany({
+                    where: { jellyfinMediaId: sid, type: 'Series' },
+                    data: { resolution: res }
+                }).catch(e => console.error(`[Sync] Failed to update series resolution for ${sid}:`, e));
             }
         }
 

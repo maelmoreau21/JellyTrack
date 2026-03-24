@@ -31,9 +31,9 @@ export default function SettingsPage() {
                                 <CardHeader>
                                     <div className="flex items-center gap-3">
                                         {c.icon}
-                                        <CardTitle className="text-sm font-semibold">{c.title}</CardTitle>
+                                        <CardTitle className="text-sm font-semibold text-foreground">{c.title}</CardTitle>
                                     </div>
-                                    <CardDescription className="mt-1 text-xs text-zinc-400">{c.desc}</CardDescription>
+                                    <CardDescription className="mt-1 text-xs text-muted-foreground">{c.desc}</CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-xs text-muted-foreground">{t('manage') || ''}</div>

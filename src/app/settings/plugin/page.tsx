@@ -139,22 +139,22 @@ export default function SettingsPluginPage() {
 
                     <div className="app-surface-soft rounded-lg border p-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">{t('pluginStatus')}</span>
-                            <span className={`flex items-center gap-2 text-sm font-semibold ${pluginConnected ? 'text-emerald-400' : 'text-zinc-500'}`}>
-                                <span className={`w-2.5 h-2.5 rounded-full ${pluginConnected ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
+                            <span className="text-sm font-medium text-foreground">{t('pluginStatus')}</span>
+                            <span className={`flex items-center gap-2 text-sm font-semibold ${pluginConnected ? 'text-emerald-400' : 'text-muted-foreground'}`}>
+                                <span className={`w-2.5 h-2.5 rounded-full ${pluginConnected ? 'bg-emerald-400 animate-pulse' : 'bg-muted-foreground/40'}`} />
                                 {pluginConnected ? t('pluginConnected') : t('pluginDisconnected')}
                             </span>
                         </div>
                         {pluginHasKey && (
                             <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground">
                                 {pluginServerName && (
-                                    <div><span className="text-zinc-500">{t('pluginServerName')}:</span> <span className="text-zinc-300">{pluginServerName}</span></div>
+                                    <div><span className="text-muted-foreground">{t('pluginServerName')}:</span> <span className="text-foreground font-medium">{pluginServerName}</span></div>
                                 )}
                                 {pluginVersion && (
-                                    <div><span className="text-zinc-500">{t('pluginVersion')}:</span> <span className="text-zinc-300">v{pluginVersion}</span></div>
+                                    <div><span className="text-muted-foreground">{t('pluginVersion')}:</span> <span className="text-foreground font-medium">v{pluginVersion}</span></div>
                                 )}
                                 {pluginLastSeen && (
-                                    <div><span className="text-zinc-500">{t('pluginLastSeen')}:</span> <span className="text-zinc-300">{new Date(pluginLastSeen).toLocaleString(locale)}</span></div>
+                                    <div><span className="text-muted-foreground">{t('pluginLastSeen')}:</span> <span className="text-foreground font-medium">{new Date(pluginLastSeen).toLocaleString(locale)}</span></div>
                                 )}
                             </div>
                         )}
@@ -195,7 +195,7 @@ export default function SettingsPluginPage() {
                                     </div>
                                     <button
                                         onClick={handleCopyApiKey}
-                                        className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                        className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-border hover:bg-muted transition-colors text-foreground"
                                     >
                                         <Copy className="w-4 h-4" />
                                         {apiKeyCopied ? t('pluginApiKeyCopied') : t('pluginCopyKey')}
@@ -214,7 +214,7 @@ export default function SettingsPluginPage() {
                                     <button
                                         type="button"
                                         onClick={handleCopyPluginUrl}
-                                        className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                        className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-border hover:bg-muted transition-colors text-foreground"
                                     >
                                         <Copy className="w-4 h-4" />
                                         {pluginUrlCopied ? t('pluginApiKeyCopied') : t('pluginCopyKey')}
@@ -232,7 +232,7 @@ export default function SettingsPluginPage() {
                         <button
                             onClick={() => handleGeneratePluginKey(true)}
                             disabled={pluginLoading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${pluginLoading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${pluginLoading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'border border-border hover:bg-muted text-foreground'}`}
                         >
                             <RefreshCw className={`w-4 h-4 ${pluginLoading ? 'animate-spin' : ''}`} />
                             {t('pluginRegenerateKey')}
@@ -240,7 +240,7 @@ export default function SettingsPluginPage() {
                         <button
                             onClick={handleRevokePluginKey}
                             disabled={pluginLoading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${pluginLoading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'border border-red-500/30 text-red-400 hover:bg-red-500/10'}`}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${pluginLoading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'border border-destructive/30 text-destructive hover:bg-destructive/10'}`}
                         >
                             <Unplug className="w-4 h-4" />
                             {t('pluginRevokeKey')}

@@ -238,8 +238,10 @@
 
     .app-surface-soft {
       border-color: oklch(0 0 0 / 6%);
-      background: oklch(1 0 0 / 50%);
+      background: var(--card); /* Ensure it follows the soft pastel card background in light mode */
+      opacity: 0.85;
       box-shadow: inset 0 1px 0 oklch(1 0 0 / 30%);
+      backdrop-filter: blur(10px);
     }
 
     .dark .app-surface-soft {
@@ -371,11 +373,15 @@
 
     .dark .dashboard-page a:hover [data-slot="card"],
     .dark .dashboard-page .dashboard-interactive:hover {
-      border-color: rgba(103, 232, 249, 0.2);
+      border-color: rgba(103, 232, 249, 0.4);
+      background:
+        linear-gradient(135deg, rgba(8, 145, 178, 0.16), rgba(8, 145, 178, 0.04)),
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.22), transparent 44%),
+        rgba(9, 12, 18, 0.94);
       box-shadow:
-        0 30px 90px rgba(0, 0, 0, 0.34),
-        0 0 0 1px rgba(103, 232, 249, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        0 40px 100px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(103, 232, 249, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     .dashboard-page .dashboard-banner {
@@ -449,6 +455,18 @@ body:not(.dark) [class*="bg-gray-50"]:not([class*="dark:bg-"]) {
 .dark [class*="bg-amber-50"]:not([class*="dark:bg-"]),
 .dark [class*="bg-red-50"]:not([class*="dark:bg-"]) {
   background-color: oklch(0.16 0.03 260 / var(--tw-bg-opacity, 1)) !important;
+}
+
+/* New Hover Catch-all for dark mode: prevent white backgrounds when classes like hover:bg-white are used. */
+.dark [class*="hover:bg-white"]:hover,
+.dark [class*="hover:bg-zinc-50"]:hover,
+.dark [class*="hover:bg-zinc-100"]:hover,
+.dark [class*="hover:bg-slate-50"]:hover,
+.dark [class*="hover:bg-slate-100"]:hover,
+.dark [class*="hover:bg-gray-50"]:hover,
+.dark [class*="hover:bg-gray-100"]:hover,
+.dark [class*="hover:bg-accent"]:hover {
+  background-color: oklch(0.25 0.04 260 / 0.15) !important;
 }
 
 .dark ::selection {

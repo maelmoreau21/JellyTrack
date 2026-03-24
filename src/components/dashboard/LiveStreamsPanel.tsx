@@ -58,7 +58,7 @@ function StreamCard({ stream }: { stream: LiveStream }) {
     }
 
     return (
-        <div className="flex items-center gap-4 p-3 border rounded-lg border-zinc-200/60 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/50 hover:bg-zinc-50 transition-colors">
+        <div className="flex items-center gap-4 p-3 border rounded-lg border-border/50 app-surface-soft hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
             {posterId ? (
                 <div className={`relative ${widthClass} ${aspectClass} bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10`}>
                     <FallbackImage
@@ -79,7 +79,7 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                     {stream.mediaTitle}
                 </p>
                 {detail && (
-                    <p className="text-[11px] text-zinc-400 truncate">{detail}</p>
+                    <p className="text-[11px] text-muted-foreground font-medium truncate">{detail}</p>
                 )}
                 <p className="text-xs text-muted-foreground flex flex-col gap-0.5">
                     <span className="truncate">{stream.user} . {stream.device}</span>
@@ -110,19 +110,17 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                         </span>
                     )}
                 </p>
-                {stream.progressPercent > 0 && (
                     <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 app-surface-soft border border-border/30 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all ${stream.isPaused ? 'bg-yellow-500' : 'bg-purple-500'}`}
                                 style={{ width: `${stream.progressPercent}%` }}
                             />
                         </div>
-                        <span className="text-[10px] text-zinc-500 w-8 text-right shrink-0">
+                        <span className="text-[10px] text-muted-foreground w-8 text-right shrink-0">
                             {stream.isPaused ? '⏸' : ''}{stream.progressPercent}%
                         </span>
                     </div>
-                )}
             </div>
             <div className="ml-auto font-medium text-xs shrink-0">
                 <span
@@ -164,16 +162,16 @@ function StreamTimeline({ stream, colorIndex }: { stream: LiveStream; colorIndex
             {/* Info + Gantt bar */}
             <div className="flex-1 min-w-0 space-y-1">
                 <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xs font-medium text-zinc-700 dark:text-zinc-200 truncate max-w-[120px]">{stream.user}</span>
-                        <span className="text-[10px] text-zinc-500 truncate max-w-[180px]">{stream.mediaTitle}</span>
+                    <div className="flex items-center gap-2 min-w-0 font-medium">
+                        <span className="text-xs text-foreground truncate max-w-[120px]">{stream.user}</span>
+                        <span className="text-[10px] text-muted-foreground truncate max-w-[180px]">{stream.mediaTitle}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                         <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${stream.playMethod === "Transcode" ? "bg-orange-500/10 text-orange-400" : "bg-emerald-500/10 text-emerald-400"}`}>
                             {stream.playMethod === "Transcode" ? "TC" : "DP"}
                         </span>
                         {stream.isPaused && <span className="text-[10px] text-yellow-500">⏸</span>}
-                        <span className="text-[10px] text-zinc-500">{stream.progressPercent}%</span>
+                        <span className="text-[10px] text-muted-foreground">{stream.progressPercent}%</span>
                         <KillStreamButton sessionId={stream.sessionId} mediaTitle={stream.mediaTitle} />
                     </div>
                 </div>
@@ -237,7 +235,7 @@ export function LiveStreamsPanel({ initialStreams, initialBandwidth }: { initial
     const useTimeline = streams.length >= 3 && !forceCards;
 
     return (
-        <Card className="col-span-3 app-surface-soft dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
+        <Card className="col-span-3 app-surface-soft border-border/50 shadow-sm">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
@@ -249,10 +247,10 @@ export function LiveStreamsPanel({ initialStreams, initialBandwidth }: { initial
                     {streams.length >= 3 && (
                         <button
                                 onClick={() => setForceCards(!forceCards)}
-                                className="p-1.5 rounded-md border border-zinc-200/50 dark:border-zinc-700/50 bg-zinc-100/50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors"
+                                className="p-1.5 rounded-md border border-border/50 app-surface-soft hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                                 title={forceCards ? "Vue Timeline" : "Vue Cartes"}
                             >
-                            {forceCards ? <Rows3 className="w-4 h-4 text-zinc-400" /> : <LayoutList className="w-4 h-4 text-zinc-400" />}
+                            {forceCards ? <Rows3 className="w-4 h-4 text-muted-foreground" /> : <LayoutList className="w-4 h-4 text-muted-foreground" />}
                         </button>
                     )}
                 </div>

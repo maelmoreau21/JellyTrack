@@ -86,7 +86,7 @@ export function SystemHealthWidgets({ initialSnapshot }: { initialSnapshot: Snap
                     <DatabaseBackup className="h-3.5 w-3.5 text-emerald-500" />
                     {t('lastBackup')}: {formatRelative(snapshot.status.backup.lastSuccessAt as string | null)}
                 </div>
-                <Link href="/admin/log-health" className="ml-auto inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-700 dark:text-cyan-200 hover:bg-cyan-500/15">
+                <Link href="/admin/log-health" className="ml-auto inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all">
                     <HeartPulse className="h-3.5 w-3.5" />
                     {t('logHealth')}
                 </Link>
@@ -94,19 +94,19 @@ export function SystemHealthWidgets({ initialSnapshot }: { initialSnapshot: Snap
 
             <Card className="app-surface-soft border-border shadow-md">
                 <CardContent className="grid gap-4 p-5 md:grid-cols-4">
-                    <div className="rounded-2xl border border-border bg-card/40 p-4">
+                    <div className="rounded-2xl border border-border/50 bg-card/60 p-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> {t('activeStreams')}</div>
                         <div className="mt-2 text-3xl font-bold">{snapshot.counts.activeStreams}</div>
                     </div>
-                    <div className="rounded-2xl border border-border bg-card/40 p-4">
+                    <div className="rounded-2xl border border-border/50 bg-card/60 p-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground"><ShieldAlert className="h-4 w-4 text-amber-500" /> {t('openPlaybackOrphans')}</div>
                         <div className="mt-2 text-3xl font-bold">{snapshot.counts.openPlaybackOrphans}</div>
                     </div>
-                    <div className="rounded-2xl border border-border bg-card/40 p-4">
+                    <div className="rounded-2xl border border-border/50 bg-card/60 p-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground"><AlertTriangle className="h-4 w-4 text-rose-500" /> {t('dbWithoutRedis')}</div>
                         <div className="mt-2 text-3xl font-bold">{snapshot.counts.dbStreamsWithoutRedis}</div>
                     </div>
-                    <div className="rounded-2xl border border-border bg-card/40 p-4">
+                    <div className="rounded-2xl border border-border/50 bg-card/60 p-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground"><HeartPulse className="h-4 w-4 text-primary" /> {t('excludedLibraries')}</div>
                         <div className="mt-2 text-3xl font-bold">{snapshot.excludedLibraries.length}</div>
                     </div>

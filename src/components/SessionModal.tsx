@@ -49,22 +49,22 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white dark:bg-zinc-900 rounded-lg w-[95%] md:w-[900px] max-h-[85vh] overflow-auto p-4 shadow-lg">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative app-surface rounded-xl w-[95%] md:w-[900px] max-h-[85vh] overflow-auto p-6 shadow-2xl border border-border/50">
         <div className="flex items-start gap-4">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold">{session.media?.title || t('unknownMedia')}</h3>
-            <div className="text-sm text-zinc-500">{session.user?.username} — {session.clientName || t('unknown')}</div>
+            <h3 className="text-xl font-bold text-foreground">{session.media?.title || t('unknownMedia')}</h3>
+            <div className="text-sm text-muted-foreground font-medium">{session.user?.username} — {session.clientName || t('unknown')}</div>
             <div className="mt-3 space-y-2">
               <div className="flex items-center gap-3">
-                <Badge className="bg-zinc-100 dark:bg-zinc-800">{t('timeline.legend.pause')}: {session.pauseCount ?? 0}</Badge>
-                <Badge className="bg-zinc-100 dark:bg-zinc-800">{t('timeline.legend.audio')}: {session.audioChanges ?? 0}</Badge>
-                <Badge className="bg-zinc-100 dark:bg-zinc-800">{t('timeline.legend.subtitles')}: {session.subtitleChanges ?? 0}</Badge>
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t('timeline.legend.pause')}: {session.pauseCount ?? 0}</Badge>
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t('timeline.legend.audio')}: {session.audioChanges ?? 0}</Badge>
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t('timeline.legend.subtitles')}: {session.subtitleChanges ?? 0}</Badge>
               </div>
 
               <div className="mt-2">
-                <div className="text-xs text-zinc-400 mb-2">{t('timeline.title')}</div>
-                <div className="w-full h-12 bg-zinc-100 dark:bg-zinc-800 rounded relative">
+              <div className="mt-2 text-xs text-muted-foreground mb-2">{t('timeline.title')}</div>
+              <div className="w-full h-12 app-surface-soft border border-border/50 rounded-lg relative overflow-hidden">
                   {(session.telemetryEvents || []).map((ev: TelemetryEvent, i: number) => {
                     const pos = Number(ev.positionMs || 0);
                     const pct = Math.min(100, Math.max(0, Math.round((pos / durationMs) * 100)));
@@ -93,13 +93,13 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
                       }
                     } catch {}
                     return (
-                      <div key={i} className="p-2 rounded bg-zinc-50 dark:bg-zinc-900/50">
-                        <div className="font-medium text-[12px]">{ev.eventType}</div>
-                        <div className="text-zinc-400 text-[11px]">{format(new Date(String(ev.createdAt || '')), 'PPpp')}</div>
-                        <div className="mt-1 text-[11px]">{Math.floor(Number(ev.positionMs || 0) / 1000)}s{detail ? ` · ${detail}` : ''}</div>
-                        <div className="mt-2 flex gap-2">
-                          <Button onClick={() => jumpTo(Number(ev.positionMs || 0))}>Jump</Button>
-                          <Button onClick={() => copyJump(Number(ev.positionMs || 0))}>Copy</Button>
+                      <div key={i} className="p-3 rounded-lg app-surface-soft border border-border/50 hover:border-primary/30 transition-colors">
+                        <div className="font-bold text-[12px] text-foreground">{ev.eventType}</div>
+                        <div className="text-muted-foreground text-[11px] font-medium">{format(new Date(String(ev.createdAt || '')), 'PPpp')}</div>
+                        <div className="mt-1 text-[11px] text-foreground/80">{Math.floor(Number(ev.positionMs || 0) / 1000)}s{detail ? ` · ${detail}` : ''}</div>
+                        <div className="mt-3 flex gap-2">
+                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => jumpTo(Number(ev.positionMs || 0))}>Jump</Button>
+                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => copyJump(Number(ev.positionMs || 0))}>Copy</Button>
                         </div>
                       </div>
                     );

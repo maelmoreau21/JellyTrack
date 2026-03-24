@@ -114,7 +114,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
             </TabsList>
 
             <TabsContent value="ghosts" className="mt-6">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle className="text-red-400">{t('ghostMedia')}</CardTitle>
                         <CardDescription>
@@ -154,7 +154,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                     )}
                                     {filteredGhosts.map((media) => (
                                         <TableRow key={media.id} className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800/20">
-                                            <TableCell className="font-medium text-zinc-200">{media.title}</TableCell>
+                                            <TableCell className="font-medium text-foreground">{media.title}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 w-fit">
                                                     {getTypeIcon(media.type)}
@@ -177,7 +177,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
             </TabsContent>
 
             <TabsContent value="abandoned" className="mt-6">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle className="text-orange-400">{t('abandonedMedia')}</CardTitle>
                         <CardDescription>
@@ -218,7 +218,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                     )}
                                     {filteredAbandoned.map((media) => (
                                         <TableRow key={media.id} className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800/20">
-                                            <TableCell className="font-medium text-zinc-200 max-w-[300px] truncate" title={media.title}>{media.title}</TableCell>
+                                            <TableCell className="font-medium text-foreground max-w-[300px] truncate" title={media.title}>{media.title}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 w-fit">
                                                     {getTypeIcon(media.type)}

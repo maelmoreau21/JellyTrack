@@ -73,36 +73,36 @@ export default function StatsDeepAnalysis() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {sections.map((section) => (
                 <Card key={String(section.title)} className="app-surface overflow-hidden group">
-                    <CardHeader className="pb-3 border-b border-white/[0.03]">
+                    <CardHeader className="pb-3 border-b border-border/50">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className={`p-1.5 rounded-lg ${section.bg}`}>
                                     <section.icon className={`w-4 h-4 ${section.color}`} />
                                 </div>
-                                <CardTitle className="text-base">{section.title}</CardTitle>
+                                <CardTitle className="text-base text-foreground">{section.title}</CardTitle>
                             </div>
-                            <TrendingUp className="w-4 h-4 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <TrendingUp className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                        <div className="divide-y divide-white/[0.03]">
+                        <div className="divide-y divide-border/50">
                             {section.items && section.items.length > 0 ? (
                                 section.items.map((item, idx) => (
-                                    <button key={item.name} onClick={() => openModal(item.name)} className="w-full text-left flex items-center px-4 py-3 hover:bg-white/[0.04] transition-colors group/item block">
-                                        <div className="flex items-center justify-center w-6 h-6 shrink-0 rounded-full bg-zinc-800/50 text-[10px] font-mono font-bold text-zinc-500 mr-3 group-hover/item:text-zinc-300 group-hover/item:bg-zinc-700/50 transition-colors">
+                                    <button key={item.name} onClick={() => openModal(item.name)} className="w-full text-left flex items-center px-4 py-3 hover:bg-muted/30 transition-colors group/item block">
+                                        <div className="flex items-center justify-center w-6 h-6 shrink-0 rounded-full bg-muted text-[10px] font-mono font-bold text-muted-foreground mr-3 group-hover/item:text-foreground group-hover/item:bg-accent/20 transition-colors">
                                             {idx + 1}
                                         </div>
                                         <div className="flex-1 min-w-0 pr-4">
-                                            <div className="text-sm font-bold text-zinc-200 truncate group-hover/item:text-primary transition-colors">{item.name}</div>
-                                            <div className="text-[11px] font-medium text-zinc-500 truncate mt-0.5 group-hover/item:text-zinc-400 transition-colors">
-                                                <span className="text-zinc-400 font-bold">{item.count}</span> {section.actionText}
+                                            <div className="text-sm font-bold text-foreground truncate group-hover/item:text-primary transition-colors">{item.name}</div>
+                                            <div className="text-[11px] font-medium text-muted-foreground truncate mt-0.5 group-hover/item:text-foreground/70 transition-colors">
+                                                <span className="text-primary font-bold">{item.count}</span> {section.actionText}
                                             </div>
                                         </div>
-                                        <ChevronRight className="w-4 h-4 text-zinc-700 shrink-0 group-hover/item:text-primary transition-colors" />
+                                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 group-hover/item:text-primary transition-colors" />
                                     </button>
                                 ))
                             ) : (
-                                <div className="p-8 text-center text-sm text-zinc-500 italic">
+                                <div className="p-8 text-center text-sm text-muted-foreground italic">
                                     {tc('noData') || 'No data available'}
                                 </div>
                             )}

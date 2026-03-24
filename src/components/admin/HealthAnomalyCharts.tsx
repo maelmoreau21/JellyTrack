@@ -51,12 +51,12 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
 
     if (!hasTimelineValues && !hasBreakdownValues) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-zinc-50/50 dark:bg-white/5 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center app-surface-soft rounded-2xl border border-dashed border-border/50">
                 <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-500 mb-4">
                     <CheckCircle2 className="h-8 w-8" />
                 </div>
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{t('anomalyDetectedNone') || "Santé parfaite détectée"}</h3>
-                <p className="text-sm text-zinc-500 max-w-sm mt-1">
+                <h3 className="text-lg font-bold text-foreground">{t('anomalyDetectedNone') || "Santé parfaite détectée"}</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mt-1">
                     {t('noAnomaliesDesc') || "Aucun événement critique ou anomalie n'a été enregistré au cours des 14 derniers jours."}
                 </p>
             </div>
@@ -69,9 +69,9 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
                 {/* Timeline Chart */}
                 <div className="lg:col-span-2 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold uppercase tracking-wider text-zinc-400">{t('anomalyTimelineTitle')}</h4>
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80">{t('anomalyTimelineTitle')}</h4>
                     </div>
-                    <div className="w-full min-w-0 h-[340px] bg-white/30 dark:bg-black/10 rounded-xl p-2 border border-zinc-100/50 dark:border-zinc-800/30">
+                    <div className="w-full min-w-0 h-[340px] app-surface-soft/30 rounded-xl p-2 border border-border/20">
                         <ResponsiveContainer width="100%" height={320} minHeight={200}>
                             <AreaChart data={safeTimeline} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
@@ -135,8 +135,8 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
 
                 {/* Breakdown Chart */}
                 <div className="space-y-4">
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-zinc-400">{t('anomalyBreakdownTitle')}</h4>
-                    <div className="w-full min-w-0 h-[340px] bg-white/30 dark:bg-black/10 rounded-xl p-2 border border-zinc-100/50 dark:border-zinc-800/30">
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80">{t('anomalyBreakdownTitle')}</h4>
+                    <div className="w-full min-w-0 h-[340px] app-surface-soft/30 rounded-xl p-2 border border-border/20">
                         <ResponsiveContainer width="100%" height={320} minHeight={200}>
                             <BarChart data={safeBreakdown} margin={{ top: 10, right: 10, left: -25, bottom: 0 }} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} opacity={0.5} />

@@ -310,7 +310,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
     return (
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle>{t('playsPerDay')}</CardTitle>
                         <CardDescription>{t('playsPerDayDesc')}</CardDescription>
@@ -320,7 +320,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle>{t('playsByLibrary')}</CardTitle>
                         <CardDescription>{t('playsByLibraryDesc')}</CardDescription>
@@ -332,7 +332,7 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle>{t('durationPerDay')}</CardTitle>
                         <CardDescription>{t('durationPerDayDesc')}</CardDescription>

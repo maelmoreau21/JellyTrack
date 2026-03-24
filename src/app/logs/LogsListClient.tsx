@@ -248,30 +248,30 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
                   onDrop={(e) => onDrop(e, idx)}
                   style={{ width: `${col.width}px`, minWidth: `${col.width}px` }}
                   className={cn(
-                    "relative h-12 px-4 text-left align-middle font-medium text-zinc-500 dark:text-zinc-400 transition-colors",
-                    "border-r border-zinc-200/50 dark:border-zinc-800/50 last:border-r-0",
-                    isResizing && "bg-zinc-100/50 dark:bg-zinc-800/50"
+                    "relative h-12 px-4 text-left align-middle font-semibold text-muted-foreground transition-colors",
+                    "border-r border-border/60 dark:border-border/20 last:border-r-0",
+                    isResizing && "bg-accent/10"
                   )}
                 >
                   <div className="flex items-center gap-2 min-w-0 h-full group">
-                    <span className="cursor-move opacity-0 group-hover:opacity-100 transition-opacity text-zinc-300 dark:text-zinc-600">≡</span>
-                    <span className="truncate select-none">{headingForKey(col.key)}</span>
+                    <span className="cursor-move opacity-0 group-hover:opacity-40 transition-opacity text-muted-foreground mr-1">≡</span>
+                    <span className="truncate select-none tracking-tight uppercase text-[10px] font-bold">{headingForKey(col.key)}</span>
                   </div>
                   
                   {/* Visual Resizer Handle */}
                   <div
                     onMouseDown={(e) => startResize(e, idx)}
                     className={cn(
-                      "absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize z-40 transition-colors",
-                      "hover:bg-primary/30 group-hover:bg-zinc-300/30 dark:group-hover:bg-zinc-700/30",
-                      isResizing && "bg-primary/50 shadow-[0_0_8px_rgba(var(--primary),0.4)]"
+                      "absolute right-[-1px] top-0 bottom-0 w-[4px] cursor-col-resize z-40 transition-colors group/resizer",
+                      "hover:bg-primary/50",
+                      isResizing && "bg-primary w-[2px] shadow-[0_0_8px_rgba(var(--primary),0.6)]"
                     )}
                     aria-hidden
                   >
                     <div className={cn(
-                      "absolute right-[3.5px] top-1/4 bottom-1/4 w-[1px] transition-colors",
-                      "bg-zinc-200 dark:bg-zinc-800",
-                      isResizing && "bg-primary w-[2px]"
+                      "absolute right-0 top-0 bottom-0 w-[1px] transition-colors",
+                      "bg-border/60 dark:bg-border/20",
+                      isResizing && "bg-primary"
                     )} />
                   </div>
                 </TableHead>

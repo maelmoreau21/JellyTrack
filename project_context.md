@@ -428,6 +428,8 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
         - Amélioration de `getMediaSubtitle` : gestion intelligente de la hiérarchie (Artiste - Album, Série - Saison) avec dédoublonnage par rapport au titre principal.
         - Support complet du format "Titre / Artiste - Album" (ex: "Lion / PNL - Lion") tout en restant propre pour les fichiers sans tags.
     - **Correction Analyse Bibliothèque :**
+        - **Qualité Vidéo & Séries :** Les statistiques de qualité vidéo (`AnalysisPage`) sont désormais alignées sur la liste des médias (`AllMediaPage`) en respectant les exclusions de bibliothèques et les types de base.
+        - **Propagation de la Résolution :** Lors de la synchronisation, la résolution maximale des épisodes est désormais propagée vers l'objet Série parent. Cela permet de filtrer et rechercher les séries par leur qualité réelle (ex: 4K) même si l'objet série de Jellyfin n'a pas de résolution définie.
     - Suppression des doublons de titres/descriptions ("Aperçu des statistiques approfondies").
     - Correction de la matrice des résolutions : utilise désormais `normalizeResolution` et agrège par entité parente unique (Films/Séries) pour correspondre aux filtres de la page "Tous les Médias".
     - Amélioration de la cohérence entre les statistiques affichées et les résultats de filtrage.
@@ -457,6 +459,7 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
     - **Refonte de la Santé des Logs (Mars 2026)**: Overhaul complet de la page `admin/log-health` avec un design premium, des cartes de statut plus claires et des graphiques d'anomalies (`HealthAnomalyCharts`) plus robustes. Suppression définitive de la configuration des "Règles de Complétion" obsolètes.
     - **Interactivité du Dashboard (Mars 2026)**:
         - Les graphiques du tableau de bord (`MonthlyWatchTimeChart`, `CategoryPieChart`, `PlatformDistributionChart`) sont désormais interactifs. Cliquer sur un segment ou une barre redirige automatiquement vers les logs filtrés correspondants (par type, client ou période).
+        - **Synchronisation des Colonnes :** Correction du bug où le réordonnancement des colonnes (drag-and-drop) n'affectait que les en-têtes. Le composant `LogRow` a été refactorisé pour restituer dynamiquement les cellules dans l'ordre exact défini par l'utilisateur.
         - Suppression de la fonctionnalité de réduction/expansion des cartes (`CollapsibleCard`) sur tout le tableau de bord et dans les statistiques de bibliothèque pour garantir une visibilité totale et immédiate des données.
 
 Après ces changements, toujours exécuter `npm run build` pour valider la compilation.

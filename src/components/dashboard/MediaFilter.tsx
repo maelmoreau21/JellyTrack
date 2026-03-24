@@ -64,7 +64,7 @@ export function MediaFilter() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-3 bg-zinc-100/50 dark:bg-zinc-900/40 p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 backdrop-blur-sm transition-all hover:bg-zinc-100/80 dark:hover:bg-zinc-900/60 group">
+      <div className="flex items-center gap-3 app-surface-soft p-1.5 rounded-xl border border-border/40 backdrop-blur-md transition-all hover:bg-black/5 dark:hover:bg-white/5 group">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-0.5 px-1">
           {categories.map((cat) => {
             // An item is active if it's NOT in the excluded list, or if 'all' is selected
@@ -78,8 +78,8 @@ export function MediaFilter() {
                 className={`
                   flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap border
                   ${isActive 
-                    ? 'bg-white dark:bg-zinc-800 text-primary border-zinc-200 dark:border-zinc-700 shadow-sm' 
-                    : 'bg-transparent text-zinc-500 border-transparent hover:bg-zinc-200/30 dark:hover:bg-zinc-800/30 hover:text-zinc-600 dark:hover:text-zinc-400'
+                    ? 'app-surface text-primary border-border shadow-sm' 
+                    : 'bg-transparent text-muted-foreground border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground'
                   }
                 `}
               >

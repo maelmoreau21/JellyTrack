@@ -71,13 +71,13 @@ export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
             </div>
 
             {order.map((blockIndex, visualIndex) => (
-                <div key={blockIndex} className={`relative transition-all duration-300 ${isEditMode ? 'ring-1 ring-zinc-300 dark:ring-zinc-700 rounded-xl p-4 bg-zinc-100/40 dark:bg-zinc-900/40 ml-12' : ''}`}>
+                <div key={blockIndex} className={`relative transition-all duration-300 ${isEditMode ? 'ring-1 ring-border/50 rounded-xl p-4 app-surface-soft ml-12' : ''}`}>
                     {isEditMode && (
                         <div className="absolute -left-12 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-50">
                             <Button
                                 variant="secondary"
                                 size="icon"
-                                className="h-8 w-8 rounded-full opacity-80 hover:opacity-100 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700"
+                                className="h-8 w-8 rounded-full opacity-80 hover:opacity-100 app-surface-soft border border-border/50"
                                 onClick={() => moveBlock(visualIndex, 'up')}
                                 disabled={visualIndex === 0}
                             >
@@ -86,7 +86,7 @@ export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
                             <Button
                                 variant="secondary"
                                 size="icon"
-                                className="h-8 w-8 rounded-full opacity-80 hover:opacity-100 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700"
+                                className="h-8 w-8 rounded-full opacity-80 hover:opacity-100 app-surface-soft border border-border/50"
                                 onClick={() => moveBlock(visualIndex, 'down')}
                                 disabled={visualIndex === order.length - 1}
                             >

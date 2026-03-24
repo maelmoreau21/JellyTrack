@@ -123,203 +123,212 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
       <TableRow 
         onClick={() => onOpenDetails?.(log)}
         className={cn(
-          "cursor-pointer even:bg-zinc-100/50 dark:even:bg-slate-900/35 hover:bg-zinc-100 dark:hover:bg-slate-800/55 border-zinc-200/50 dark:border-zinc-700/50 transition-colors",
+          "cursor-pointer even:bg-zinc-500/5 dark:even:bg-white/5 hover:bg-zinc-500/10 dark:hover:bg-white/10 border-zinc-200/50 dark:border-zinc-800/50 transition-colors",
           isParty && "border-l-2 border-l-violet-500/40"
         )}
       >
-        {/* Date (with expand toggle) */}
-        {visibleColumns.includes('date') && (
-          <TableCell className={cn("font-medium whitespace-nowrap pr-3 border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <button 
-                onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }} 
-                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors focus:outline-none" 
-                aria-expanded={open}
-              >
-                <ChevronDown className={`w-3.5 h-3.5 transform transition-transform ${open ? 'rotate-180' : 'rotate-0'}`} />
-              </button>
-              <div className="flex flex-col">
-                <span className="text-zinc-900 dark:text-zinc-100">
-                  {(() => {
-                    try {
-                      const d = new Date(log.startedAt);
-                      if (isNaN(d.getTime())) return '—';
-                      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-                    } catch { return '—'; }
-                  })()}
-                </span>
-                <span className="text-[10px] text-zinc-500 font-normal">
-                  {(() => {
-                    try {
-                      const d = new Date(log.startedAt);
-                      if (isNaN(d.getTime())) return '';
-                      return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-                    } catch { return ''; }
-                  })()}
-                </span>
-              </div>
-            </div>
-          </TableCell>
-        )}
+        {visibleColumns.map((colKey) => {
+          switch (colKey) {
+            case 'date':
+              return (
+                <TableCell key="date" className={cn("font-medium whitespace-nowrap pr-3 border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }} 
+                      className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors focus:outline-none" 
+                      aria-expanded={open}
+                    >
+                      <ChevronDown className={`w-3.5 h-3.5 transform transition-transform ${open ? 'rotate-180' : 'rotate-0'}`} />
+                    </button>
+                    <div className="flex flex-col">
+                      <span className="text-zinc-900 dark:text-zinc-100">
+                        {(() => {
+                          try {
+                            const d = new Date(log.startedAt);
+                            if (isNaN(d.getTime())) return '—';
+                            return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+                          } catch { return '—'; }
+                        })()}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-normal">
+                        {(() => {
+                          try {
+                            const d = new Date(log.startedAt);
+                            if (isNaN(d.getTime())) return '';
+                            return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                          } catch { return ''; }
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+                </TableCell>
+              );
 
-        {/* StartedAt (Optional absolute override) */}
-        {visibleColumns.includes('startedAt') && (
-          <TableCell className={cn("hidden md:table-cell whitespace-nowrap text-xs text-zinc-500 border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            {log.startedAt ? new Date(log.startedAt).toLocaleTimeString() : '—'}
-          </TableCell>
-        )}
+            case 'startedAt':
+              return (
+                <TableCell key="startedAt" className={cn("hidden md:table-cell whitespace-nowrap text-xs text-zinc-500 border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  {log.startedAt ? new Date(log.startedAt).toLocaleTimeString() : '—'}
+                </TableCell>
+              );
 
-        {/* EndedAt */}
-        {visibleColumns.includes('endedAt') && (
-          <TableCell className={cn("hidden md:table-cell whitespace-nowrap border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            {log.endedAt ? new Date(log.endedAt).toLocaleString() : '—'}
-          </TableCell>
-        )}
+            case 'endedAt':
+              return (
+                <TableCell key="endedAt" className={cn("hidden md:table-cell whitespace-nowrap border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  {log.endedAt ? new Date(log.endedAt).toLocaleString() : '—'}
+                </TableCell>
+              );
 
-        {/* User */}
-        {visibleColumns.includes('user') && (
-          <TableCell className={cn("font-semibold text-primary pl-3 border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            {log.user ? (
-              <Link href={`/users/${log.user.jellyfinUserId}`} className="hover:underline">{log.user.username}</Link>
-            ) : '—'}
-          </TableCell>
-        )}
+            case 'user':
+              return (
+                <TableCell key="user" className={cn("font-semibold text-primary pl-3 border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  {log.user ? (
+                    <Link href={`/users/${log.user.jellyfinUserId}`} className="hover:underline">{log.user.username}</Link>
+                  ) : '—'}
+                </TableCell>
+              );
 
-        {/* Media */}
-        {visibleColumns.includes('media') && (
-          <TableCell className={cn("overflow-hidden border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            <div className="flex items-center gap-2 md:gap-3 w-full overflow-hidden" title={log.media?.title || 'Unknown'}>
-              <div className={`relative ${log.media?.type === 'Episode' ? 'aspect-video w-20' : isAudioMedia ? 'aspect-square w-12 md:w-14' : 'aspect-[2/3] w-12 md:w-14'} bg-muted rounded-md shrink-0 overflow-hidden ring-1 ring-white/10`}>
-                {log.media?.jellyfinMediaId ? (
-                  <FallbackImage
-                    src={`/api/jellyfin/image?itemId=${log.media.jellyfinMediaId}&type=Primary${log.fallbackImageParentId ? `&fallbackId=${log.fallbackImageParentId}` : ''}`}
-                    alt={log.media?.title || 'Unknown'}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <FallbackImage src="" alt={'Unknown'} fill className="object-cover" />
-                )}
-              </div>
-              <div className="flex flex-col min-w-0 flex-1">
-                {displayTitle && log.media ? (
-                  <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-800 dark:text-zinc-100 hover:underline" title={displayTitle}>
-                    {displayTitle}
-                  </Link>
-                ) : (
-                  <span className="truncate font-medium text-zinc-400 italic">
-                    {t('unknownMedia')}
-                  </span>
-                )}
-                
-                {log.mediaSubtitle && 
-                 log.mediaSubtitle !== 'Unknown' && 
-                 log.mediaSubtitle.trim().length > 0 &&
-                 log.mediaSubtitle !== displayTitle ? (
-                  <span className="text-xs text-zinc-500 truncate flex items-center gap-1" title={log.mediaSubtitle}>{log.mediaSubtitle}</span>
-                ) : null}
-              </div>
-            </div>
-          </TableCell>
-        )}
+            case 'media':
+              return (
+                <TableCell key="media" className={cn("overflow-hidden border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  <div className="flex items-center gap-2 md:gap-3 w-full overflow-hidden" title={log.media?.title || 'Unknown'}>
+                    <div className={`relative ${log.media?.type === 'Episode' ? 'aspect-video w-20' : isAudioMedia ? 'aspect-square w-12 md:w-14' : 'aspect-[2/3] w-12 md:w-14'} bg-muted rounded-md shrink-0 overflow-hidden ring-1 ring-white/10`}>
+                      {log.media?.jellyfinMediaId ? (
+                        <FallbackImage
+                          src={`/api/jellyfin/image?itemId=${log.media.jellyfinMediaId}&type=Primary${log.fallbackImageParentId ? `&fallbackId=${log.fallbackImageParentId}` : ''}`}
+                          alt={log.media?.title || 'Unknown'}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <FallbackImage src="" alt={'Unknown'} fill className="object-cover" />
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      {displayTitle && log.media ? (
+                        <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-800 dark:text-zinc-100 hover:underline" title={displayTitle}>
+                          {displayTitle}
+                        </Link>
+                      ) : (
+                        <span className="truncate font-medium text-zinc-400 italic">
+                          {t('unknownMedia')}
+                        </span>
+                      )}
+                      
+                      {log.mediaSubtitle && 
+                       log.mediaSubtitle !== 'Unknown' && 
+                       log.mediaSubtitle.trim().length > 0 &&
+                       log.mediaSubtitle !== displayTitle ? (
+                        <span className="text-xs text-zinc-500 truncate flex items-center gap-1" title={log.mediaSubtitle}>{log.mediaSubtitle}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                </TableCell>
+              );
 
-        {/* Client */}
-        {visibleColumns.includes('client') && (
-          <TableCell className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            <div className="text-sm font-semibold">{log.clientName || '—'}</div>
-          </TableCell>
-        )}
+            case 'client':
+              return (
+                <TableCell key="client" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  <div className="text-sm font-semibold">{log.clientName || '—'}</div>
+                </TableCell>
+              );
 
-        {/* Resolution */}
-        {/* Resolution */}
-        {visibleColumns.includes('resolution') && (
-          <TableCell className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            <div className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/50 w-fit">
-              {!isAudioMedia && normalizedResolution && normalizedResolution !== 'Unknown' 
-                ? normalizedResolution 
-                : '—'}
-            </div>
-          </TableCell>
-        )}
+            case 'resolution':
+              return (
+                <TableCell key="resolution" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  <div className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/50 w-fit">
+                    {!isAudioMedia && normalizedResolution && normalizedResolution !== 'Unknown' 
+                      ? normalizedResolution 
+                      : '—'}
+                  </div>
+                </TableCell>
+              );
 
-        {/* Audio Bitrate */}
-        {visibleColumns.includes('audioBitrate') && (
-          <TableCell className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            <div className="text-xs text-zinc-500">
-              {typeof log.bitrate === 'number' && log.bitrate > 0 ? `${log.bitrate} kbps` : '—'}
-            </div>
-          </TableCell>
-        )}
+            case 'audioBitrate':
+              return (
+                <TableCell key="audioBitrate" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  <div className="text-xs text-zinc-500">
+                    {typeof log.bitrate === 'number' && log.bitrate > 0 ? `${log.bitrate} kbps` : '—'}
+                  </div>
+                </TableCell>
+              );
 
-        {/* IP */}
-        {visibleColumns.includes('ip') && (
-          <TableCell className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            <div className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-sm w-fit">{log.ipAddress || '—'}</div>
-          </TableCell>
-        )}
+            case 'ip':
+              return (
+                <TableCell key="ip" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  <div className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-sm w-fit">{log.ipAddress || '—'}</div>
+                </TableCell>
+              );
 
-        {/* Country */}
-        {visibleColumns.includes('country') && (
-          <TableCell className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            <div className="text-xs">
-              {(() => {
-                if (!log.country || log.country === 'Unknown') {
-                  return log.city && log.city !== 'Unknown' ? log.city : '—';
-                }
-                return log.city && log.city !== 'Unknown' ? `${log.city}, ${log.country}` : log.country;
-              })()}
-            </div>
-          </TableCell>
-        )}
+            case 'country':
+              return (
+                <TableCell key="country" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  <div className="text-xs">
+                    {(() => {
+                      if (!log.country || log.country === 'Unknown') {
+                        return log.city && log.city !== 'Unknown' ? log.city : '—';
+                      }
+                      return log.city && log.city !== 'Unknown' ? `${log.city}, ${log.country}` : log.country;
+                    })()}
+                  </div>
+                </TableCell>
+              );
 
-        {/* Status */}
-        {visibleColumns.includes('status') && (
-          <TableCell className={cn("hidden md:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
-              {log.playMethod || 'DirectPlay'}
-            </Badge>
-          </TableCell>
-        )}
+            case 'status':
+              return (
+                <TableCell key="status" className={cn("hidden md:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
+                    {log.playMethod || 'DirectPlay'}
+                  </Badge>
+                </TableCell>
+              );
 
-        {/* Codecs */}
-        {visibleColumns.includes('codecs') && (
-          <TableCell className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-            {isTranscode && log.videoCodec ? (
-              <div className="flex flex-col text-xs text-muted-foreground font-mono">
-                <span>V: {log.videoCodec}</span>
-                {log.audioCodec && <span>A: {log.audioCodec}</span>}
-              </div>
-            ) : (
-              <span className="text-xs text-muted-foreground italic">source</span>
-            )}
-          </TableCell>
-        )}
+            case 'codecs':
+              return (
+                <TableCell key="codecs" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                  {isTranscode && log.videoCodec ? (
+                    <div className="flex flex-col text-xs text-muted-foreground font-mono">
+                      <span>V: {log.videoCodec}</span>
+                      {log.audioCodec && <span>A: {log.audioCodec}</span>}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">source</span>
+                  )}
+                </TableCell>
+              );
 
-        {/* Duration */}
-        {visibleColumns.includes('duration') && (
-          <TableCell className={cn("text-right whitespace-nowrap hidden md:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50 last:border-r-0")}>
-            {log.isActuallyActive
-              ? (
-                <span className="text-amber-500/80 animate-pulse text-xs uppercase tracking-wider font-semibold flex flex-row items-center justify-end gap-1"><span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>Active</span>
-              )
-              : (log.durationWatched ?? 0) > 0
-                ? `${Math.floor((log.durationWatched ?? 0) / 60)} min`
-                : '0 min'
-            }
-          </TableCell>
-        )}
+            case 'duration':
+              return (
+                <TableCell key="duration" className={cn("text-right whitespace-nowrap hidden md:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50 last:border-r-0")}>
+                  {log.isActuallyActive
+                    ? (
+                      <span className="text-amber-500/80 animate-pulse text-xs uppercase tracking-wider font-semibold flex flex-row items-center justify-end gap-1"><span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>Active</span>
+                    )
+                    : (log.durationWatched ?? 0) > 0
+                      ? `${Math.floor((log.durationWatched ?? 0) / 60)} min`
+                      : '0 min'
+                  }
+                </TableCell>
+              );
 
-        {/* Telemetry quick columns */}
-        {visibleColumns.includes('pauseCount') && (
-          <TableCell className={cn("hidden lg:table-cell text-sm border-r border-zinc-200/50 dark:border-zinc-800/50")}>{log.pauseCount ?? 0}</TableCell>
-        )}
-        {visibleColumns.includes('audioChanges') && (
-          <TableCell className={cn("hidden lg:table-cell text-sm border-r border-zinc-200/50 dark:border-zinc-800/50")}>{log.audioChanges ?? 0}</TableCell>
-        )}
-        {visibleColumns.includes('subtitleChanges') && (
-          <TableCell className={cn("hidden lg:table-cell text-sm border-r border-zinc-200/50 dark:border-zinc-800/50 last:border-r-0")}>{log.subtitleChanges ?? 0}</TableCell>
-        )}
+            case 'pauseCount':
+              return (
+                <TableCell key="pauseCount" className={cn("hidden lg:table-cell text-sm border-r border-zinc-200/50 dark:border-zinc-800/50")}>{log.pauseCount ?? 0}</TableCell>
+              );
 
+            case 'audioChanges':
+              return (
+                <TableCell key="audioChanges" className={cn("hidden lg:table-cell text-sm border-r border-zinc-200/50 dark:border-zinc-800/50")}>{log.audioChanges ?? 0}</TableCell>
+              );
+
+            case 'subtitleChanges':
+              return (
+                <TableCell key="subtitleChanges" className={cn("hidden lg:table-cell text-sm border-r border-zinc-200/50 dark:border-zinc-800/50 last:border-r-0")}>{log.subtitleChanges ?? 0}</TableCell>
+              );
+
+            default:
+              return null;
+          }
+        })}
       </TableRow>
 
       {/* Expanded row */}
@@ -363,7 +372,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                     <div className="text-xs text-zinc-400">{t('timeline.title')}</div>
                     <div className="text-xs text-zinc-400">{`Events: ${events.length}`}</div>
                   </div>
-                  <div className="relative h-8 md:h-6 bg-zinc-50 dark:bg-zinc-900/50 rounded-full overflow-visible py-2">
+                  <div className="relative h-8 md:h-6 app-surface-soft rounded-full overflow-visible py-2">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-40 pointer-events-none" />
 
                     {groupedEvents.length === 0 ? (
@@ -409,7 +418,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                   const meta = getEventMeta(g.repType);
                   const detail = formatChangeDetail(g.events && g.events[0] ? g.events[0] : null);
                   return (
-                    <div key={g.key ?? idx} className="flex items-center gap-2 p-2 rounded bg-zinc-50 dark:bg-zinc-900/50">
+                    <div key={g.key ?? idx} className="flex items-center gap-2 p-2 rounded app-surface-soft">
                       <div className={`${meta.color} w-6 h-6 rounded-full flex items-center justify-center text-xs text-white`}>{meta.icon}</div>
                       <div className="flex-1">
                         <div className="text-[12px] font-medium">{meta.label}{g.count>1 ? ` · ${g.count}` : ''}</div>

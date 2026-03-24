@@ -391,9 +391,15 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
 
     const data = await getDeepInsights(type, timeRange, excludedLibraries);
 
-    const chartTooltipStyle = { backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' };
-    const chartLabelStyle = { color: '#a1a1aa' };
-    const chartItemStyle = { color: '#e4e4e7' };
+    const chartTooltipStyle = { 
+        backgroundColor: 'var(--chart-tooltip-bg)', 
+        borderColor: 'var(--chart-tooltip-border)', 
+        borderRadius: 'var(--chart-tooltip-radius)', 
+        color: 'var(--chart-item-color)',
+        backdropFilter: 'var(--chart-tooltip-backdrop)'
+    };
+    const chartLabelStyle = { color: 'var(--chart-label-color)' };
+    const chartItemStyle = { color: 'var(--chart-item-color)' };
 
     const localizedResolutionChartData = (data.resolutionChartData || []).map((d: { name: string; value: number }) => {
         const rawName = String(d.name || '');
@@ -489,7 +495,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                                         href={`/media?q=${encodeURIComponent(g.name)}`}
                                         className="flex items-center gap-3 text-sm group cursor-pointer"
                                     >
-                                        <span className="text-zinc-500 w-5 text-right shrink-0">{i + 1}.</span>
+                                        <span className="text-muted-foreground w-5 text-right shrink-0">{i + 1}.</span>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between mb-1 group-hover:text-primary transition-colors font-medium">
                                                 <span className="truncate">{g.name}</span>
