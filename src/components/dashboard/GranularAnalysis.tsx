@@ -241,7 +241,16 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
 
     const normalizedDropOffData = (data.dropOffData || []).map((d: { time: string; completion: number }) => ({ time: rawToNorm.get(d.time) || d.time, completion: d.completion }));
 
-    const normalizedKeys = getAvailableLibraryKeys(Array.from(rawToNorm.values()));
+    const rawKeys = Array.from(rawToNorm.values());
+    const availableKeys = getAvailableLibraryKeys(rawKeys);
+    
+    // Filter out keys that have no data at all in the current set to avoid legend clutter
+    const normalizedKeys = availableKeys.filter(k => {
+        const hasPlays = normalizedDailyData.some((d: any) => (d[`${k}_plays`] || 0) > 0);
+        const hasDur = normalizedDailyData.some((d: any) => (d[`${k}_duration`] || 0) > 0);
+        return hasPlays || hasDur;
+    });
+
     const labelMap: Record<string, string> = {};
 
     // Build reverse map: normalized key -> original raw library names
@@ -322,18 +331,6 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
 
                 <Card className="app-surface-soft border-border">
                     <CardHeader>
-                        <CardTitle>{t('playsByLibrary')}</CardTitle>
-                        <CardDescription>{t('playsByLibraryDesc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <StackedBarChart data={normalizedDailyData} keys={normalizedKeys} suffix="_plays" labelMap={labelMap} />
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-                <Card className="app-surface-soft border-border">
-                    <CardHeader>
                         <CardTitle>{t('durationPerDay')}</CardTitle>
                         <CardDescription>{t('durationPerDayDesc')}</CardDescription>
                     </CardHeader>
@@ -343,7 +340,8 @@ export async function GranularAnalysis({ type, timeRange, excludedLibraries }: {
                 </Card>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-1">
+
+            <div className="grid gap-6 md:grid-cols-2">
                 <Card className="app-surface-soft border-border">
                     <CardHeader>
                         <CardTitle className="text-xl font-bold">{t('playsByLibTitle')}</CardTitle>

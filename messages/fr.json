@@ -349,6 +349,8 @@
     "finished": "> 80% (Fini)",
     "playsByLibrary": "Lectures par Bibliothèque",
     "playsByLibraryDesc": "Répartition par types ou dossiers sources.",
+    "playsByLibTitle": "Lectures par Bibliothèque",
+    "playsByLibDesc": "Répartition quotidienne des lectures par bibliothèque.",
     "playsHourlyAvg": "Lectures (Moy. Horaire)",
     "playsHourlyAvgDesc": "Débuts de lecture par heure de la journée.",
     "playsPerDay": "Lectures par Jour",
@@ -357,7 +359,9 @@
     "subtitles": "Sous-titres",
     "subtitlesDesc": "Activés vs Désactivés et langues.",
     "worstCompletion": "Pires Taux de Complétion",
-    "worstCompletionDesc": "Top 5 des médias abandonnés de manière répétée."
+    "worstCompletionDesc": "Top 5 des médias abandonnés de manière répétée.",
+    "durationByLibTitle": "Durée par Bibliothèque",
+    "durationByLibDesc": "Volume horaire quotidien par bibliothèque."
   },
   "hardware": {
     "cpuUsage": "Utilisation CPU",

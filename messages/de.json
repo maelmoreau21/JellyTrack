@@ -357,7 +357,11 @@
     "subtitles": "Subtitles",
     "subtitlesDesc": "Enabled vs Disabled and languages.",
     "worstCompletion": "Worst Completion Rates",
-    "worstCompletionDesc": "Top 5 most repeatedly abandoned media."
+    "worstCompletionDesc": "Top 5 most repeatedly abandoned media.",
+    "playsByLibTitle": "Plays by Library",
+    "playsByLibDesc": "Daily play counts by library type.",
+    "durationByLibTitle": "Duration by Library",
+    "durationByLibDesc": "Hourly volume by library type."
   },
   "hardware": {
     "cpuUsage": "CPU Usage",

@@ -349,6 +349,8 @@
     "finished": "> 80% (Finished)",
     "playsByLibrary": "Plays by Library",
     "playsByLibraryDesc": "Distribution by types or source folders.",
+    "playsByLibTitle": "Plays by Library",
+    "playsByLibDesc": "Daily play counts by library type.",
     "playsHourlyAvg": "Plays (Hourly Avg)",
     "playsHourlyAvgDesc": "Playback starts by hour of the day.",
     "playsPerDay": "Plays per Day",
@@ -357,7 +359,9 @@
     "subtitles": "Subtitles",
     "subtitlesDesc": "Enabled vs Disabled and languages.",
     "worstCompletion": "Worst Completion Rates",
-    "worstCompletionDesc": "Top 5 most repeatedly abandoned media."
+    "worstCompletionDesc": "Top 5 most repeatedly abandoned media.",
+    "durationByLibTitle": "Duration by Library",
+    "durationByLibDesc": "Hourly volume by library type."
   },
   "hardware": {
     "cpuUsage": "CPU Usage",

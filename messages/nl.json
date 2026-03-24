@@ -357,7 +357,11 @@
     "subtitles": "Ondertitels",
     "subtitlesDesc": "Ingeschakeld vs uitgeschakeld en talen.",
     "worstCompletion": "Slechtste voltooiingsgraden",
-    "worstCompletionDesc": "Top 5 meest herhaaldelijk verlaten media."
+    "worstCompletionDesc": "Top 5 meest herhaaldelijk verlaten media.",
+    "playsByLibTitle": "Plays by Library",
+    "playsByLibDesc": "Daily play counts by library type.",
+    "durationByLibTitle": "Duration by Library",
+    "durationByLibDesc": "Hourly volume by library type."
   },
   "hardware": {
     "cpuUsage": "CPU-gebruik",

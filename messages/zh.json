@@ -357,7 +357,11 @@
     "subtitles": "字幕",
     "subtitlesDesc": "启用/禁用状态及对应语言。",
     "worstCompletion": "最低完成率",
-    "worstCompletionDesc": "被放弃频率最高的前 5 名媒体。"
+    "worstCompletionDesc": "被放弃频率最高的前 5 名媒体。",
+    "playsByLibTitle": "Plays by Library",
+    "playsByLibDesc": "Daily play counts by library type.",
+    "durationByLibTitle": "Duration by Library",
+    "durationByLibDesc": "Hourly volume by library type."
   },
   "hardware": {
     "cpuUsage": "CPU 使用率",

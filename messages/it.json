@@ -357,7 +357,11 @@
     "subtitles": "Sottotitoli",
     "subtitlesDesc": "Abilitati vs disabilitati e lingue.",
     "worstCompletion": "Tassi di completamento peggiori",
-    "worstCompletionDesc": "I 5 media più spesso abbandonati."
+    "worstCompletionDesc": "I 5 media più spesso abbandonati.",
+    "playsByLibTitle": "Plays by Library",
+    "playsByLibDesc": "Daily play counts by library type.",
+    "durationByLibTitle": "Duration by Library",
+    "durationByLibDesc": "Hourly volume by library type."
   },
   "hardware": {
     "cpuUsage": "Utilizzo CPU",

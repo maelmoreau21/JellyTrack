@@ -357,7 +357,11 @@
     "subtitles": "Субтитры",
     "subtitlesDesc": "Использование и языки субтитров.",
     "worstCompletion": "Худшие показатели",
-    "worstCompletionDesc": "Топ 5 наиболее часто недосмотренных медиа."
+    "worstCompletionDesc": "Топ 5 наиболее часто недосмотренных медиа.",
+    "playsByLibTitle": "Plays by Library",
+    "playsByLibDesc": "Daily play counts by library type.",
+    "durationByLibTitle": "Duration by Library",
+    "durationByLibDesc": "Hourly volume by library type."
   },
   "hardware": {
     "cpuUsage": "Загрузка ЦП",
