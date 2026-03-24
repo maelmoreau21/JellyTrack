@@ -13,13 +13,14 @@ interface BarChartProps {
     name: string;
     horizontal?: boolean;
     xAxisKey?: string;
+    onClick?: (data: any) => void;
 }
 
-export function StandardBarChart({ data, dataKey, fill, name, horizontal, xAxisKey = "time" }: BarChartProps) {
+export function StandardBarChart({ data, dataKey, fill, name, horizontal, xAxisKey = "time", onClick }: BarChartProps) {
     if (horizontal) {
         return (
             <ResponsiveContainer width="100%" height={300} minHeight={300}>
-                <BarChart data={data} layout="vertical" margin={{ top: 20, right: 20, left: 40, bottom: 0 }}>
+                <BarChart data={data} layout="vertical" margin={{ top: 20, right: 20, left: 40, bottom: 0 }} onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
                     <defs>
                         <linearGradient id="standardBarGradientHorizontal" x1="0" y1="0" x2="1" y2="0">
                             <stop offset="0%" stopColor={fill} stopOpacity={0.95} />
@@ -38,7 +39,7 @@ export function StandardBarChart({ data, dataKey, fill, name, horizontal, xAxisK
 
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
-            <BarChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
+            <BarChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }} onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
                 <defs>
                     <linearGradient id="standardBarGradientVertical" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor={fill} stopOpacity={0.95} />
@@ -55,10 +56,10 @@ export function StandardBarChart({ data, dataKey, fill, name, horizontal, xAxisK
     );
 }
 
-export function StandardAreaChart({ data, dataKey, stroke, name }: { data: Record<string, number | string | undefined>[], dataKey: string, stroke: string, name: string }) {
+export function StandardAreaChart({ data, dataKey, stroke, name, onClick }: { data: Record<string, number | string | undefined>[], dataKey: string, stroke: string, name: string, onClick?: (data: any) => void }) {
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
-            <AreaChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
+            <AreaChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }} onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
                 <defs>
                     <linearGradient id="standardAreaGradient" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor={stroke} stopOpacity={0.55} />
@@ -75,7 +76,7 @@ export function StandardAreaChart({ data, dataKey, stroke, name }: { data: Recor
     );
 }
 
-export function StandardPieChart({ data, nameKey, dataKey }: { data: Record<string, number | string | undefined>[], nameKey: string, dataKey: string }) {
+export function StandardPieChart({ data, nameKey, dataKey, onClick }: { data: Record<string, number | string | undefined>[], nameKey: string, dataKey: string, onClick?: (data: any) => void }) {
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
             <PieChart>
@@ -96,6 +97,8 @@ export function StandardPieChart({ data, nameKey, dataKey }: { data: Record<stri
                     }}
                     labelLine={false}
                     fontSize={11}
+                    onClick={onClick}
+                    style={onClick ? { cursor: 'pointer' } : undefined}
                 >
                     {data.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

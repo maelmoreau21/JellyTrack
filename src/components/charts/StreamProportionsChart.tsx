@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import { useRouter } from "next/navigation";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 
 const COLORS: Record<string, string> = {
@@ -14,6 +15,13 @@ const DEFAULT_COLOR = "#71717a"; // Zinc 500
 
 export function StreamProportionsChart({ data }: { data: { name: string, value: number }[] }) {
     const t = useTranslations('charts');
+    const router = useRouter();
+
+    const handleSliceClick = (data: any) => {
+        if (data && data.name) {
+            router.push(`/logs?playMethod=${encodeURIComponent(data.name)}`);
+        }
+    };
 
     return (
         <ResponsiveContainer width="100%" height={250} minHeight={250}>
@@ -27,6 +35,8 @@ export function StreamProportionsChart({ data }: { data: { name: string, value: 
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
+                    onClick={handleSliceClick}
+                    style={{ cursor: "pointer" }}
                 >
                     {data.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[entry.name] || DEFAULT_COLOR} opacity={0.8} />

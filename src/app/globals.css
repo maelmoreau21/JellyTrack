@@ -55,19 +55,19 @@
 :root {
   --radius: 0.95rem;
   /* Soft Satin Theme: Redesigned for visual comfort with muted pastel tones */
-  --background: oklch(0.85 0.035 285); /* Satin Lavender 2.0 - Darker & Softer */
-  --foreground: oklch(0.20 0.05 285); /* Deep Graphite */
-  --card: oklch(0.89 0.025 285 / 80%); /* Muted Satin Card */
-  --card-foreground: oklch(0.20 0.05 285);
-  --popover: oklch(0.94 0.01 285);
+  --background: oklch(0.78 0.035 285); /* Satin Lavender - slightly darker pastel */
+  --foreground: oklch(0.18 0.05 285); /* Deeper graphite for contrast */
+  --card: oklch(0.86 0.025 285 / 82%); /* Muted Satin Card — a bit darker */
+  --card-foreground: oklch(0.18 0.05 285);
+  --popover: oklch(0.92 0.01 285);
   --popover-foreground: oklch(0.20 0.05 285);
-  --primary: oklch(0.65 0.10 250); /* Muted Marshmallow Blue */
+  --primary: oklch(0.60 0.09 250); /* Slightly muted marshmallow blue */
   --primary-foreground: oklch(0.99 0.005 260);
   --secondary: oklch(0.85 0.04 165); /* Soft Sage Satin */
   --secondary-foreground: oklch(0.2 0.05 165);
-  --muted: oklch(0.90 0.02 285 / 60%);
-  --muted-foreground: oklch(0.40 0.05 285);
-  --accent: oklch(0.85 0.06 30); /* Soft Sand/Peach */
+  --muted: oklch(0.86 0.02 285 / 60%);
+  --muted-foreground: oklch(0.36 0.05 285);
+  --accent: oklch(0.80 0.06 30); /* Soft Sand/Peach — toned down */
   --accent-foreground: oklch(0.25 0.06 340);
   --destructive: oklch(0.6 0.15 25);
   --border: oklch(0.76 0.03 285);
@@ -89,8 +89,8 @@
   --chart-tooltip-backdrop: blur(12px);
   --chart-label-color: oklch(0.3 0.05 285);
   --chart-item-color: oklch(0.2 0.05 285);
-  --sidebar: oklch(0.90 0.03 285);
-  --sidebar-foreground: oklch(0.20 0.05 285);
+  --sidebar: oklch(0.88 0.03 285);
+  --sidebar-foreground: oklch(0.18 0.05 285);
   --sidebar-primary: oklch(0.65 0.10 250);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.88 0.04 285);
@@ -170,13 +170,13 @@
     background-attachment: fixed;
   }
 
-  body:not(.dark) {
+  html:not(.dark) {
     /* Dynamic pastel gradient for light mode */
     background: linear-gradient(145deg, oklch(0.94 0.04 285), oklch(0.92 0.04 200), oklch(0.94 0.04 330));
     background-attachment: fixed;
   }
 
-  .dark body {
+  html.dark body {
     background-color: oklch(0.12 0.02 260);
     background-image:
       radial-gradient(circle at top left, rgba(8, 145, 178, 0.12), transparent 28%),
@@ -441,13 +441,13 @@
  * This prevents stark white backgrounds in both light and dark modes 
  * for components that haven't been fully themed yet.
  */
-body:not(.dark) [class*="bg-white"],
-body:not(.dark) [class*="bg-zinc-50"],
-body:not(.dark) [class*="bg-zinc-100"],
-body:not(.dark) [class*="bg-zinc-200"],
-body:not(.dark) [class*="bg-slate-50"],
-body:not(.dark) [class*="bg-slate-100"],
-body:not(.dark) [class*="bg-gray-50"] {
+html:not(.dark) [class*="bg-white"],
+html:not(.dark) [class*="bg-zinc-50"],
+html:not(.dark) [class*="bg-zinc-100"],
+html:not(.dark) [class*="bg-zinc-200"],
+html:not(.dark) [class*="bg-slate-50"],
+html:not(.dark) [class*="bg-slate-100"],
+html:not(.dark) [class*="bg-gray-50"] {
   background-color: oklch(0.89 0.02 285 / var(--tw-bg-opacity, 1)) !important;
 }
 
@@ -481,11 +481,11 @@ body:not(.dark) [class*="bg-gray-50"] {
 }
 
 /* Satin 2.0 Specific Overrides for common white backgrounds */
-body:not(.dark) .bg-sidebar {
+html:not(.dark) .bg-sidebar {
   background-color: oklch(0.86 0.03 285 / 0.95) !important;
 }
 
-body:not(.dark) .bg-card {
+html:not(.dark) .bg-card {
   background-color: oklch(0.89 0.025 285 / 0.8) !important;
 }
 

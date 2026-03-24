@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { unstable_cache } from "next/cache";
 import { StreamProportionsChart } from "@/components/charts/StreamProportionsChart";
-import { StandardPieChart } from "@/components/charts/StandardMetricsCharts";
+import { DrillDownPieChart } from "@/components/charts/DrillDownChart";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
@@ -412,7 +412,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
         else if (key === 'sd') localizedName = tm('sdLabel');
         else if (key === 'unknown') localizedName = tGranular('unknown');
         
-        return { ...d, name: localizedName };
+        return { ...d, name: localizedName, rawName };
     });
 
     const localizedDeviceChartData = (data.deviceChartData || []).map((d: { name: string; value: number }) => {
@@ -422,16 +422,19 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
         if (rawName === 'Other') localizedName = tc('other');
         else if (rawName === 'Unknown') localizedName = tc('unknown');
         
-        return { ...d, name: localizedName };
+        return { ...d, name: localizedName, rawName };
     });
 
-    // Localize subtitle 'None' label to translation (was using literal 'None' in aggregation)
-    const localizedSubtitleChartData = (data.subtitleChartData || []).map((d: { name?: string | null; value?: number }) => {
+    const localizedAudioChartData = (data.audioChartData || []).map((d: { name: string; value: number }) => {
         const rawName = String(d.name || '');
-        if (rawName.toUpperCase() === 'NONE' || rawName.toUpperCase() === 'OFF' || rawName.toUpperCase() === 'UNKNOWN') {
-            return { ...d, name: tGranular('disabled') };
-        }
-        return { ...d, name: d.name || tGranular('unknown') || 'Unknown' };
+        if (rawName === 'Unknown') return { ...d, name: tc('unknown'), rawName };
+        return { ...d, rawName };
+    });
+
+    const localizedSubtitleChartData = (data.subtitleChartData || []).map((d: { name: string; value: number }) => {
+        const rawName = String(d.name || '');
+        if (rawName === 'None') return { ...d, name: t('none'), rawName };
+        return { ...d, rawName };
     });
 
     const renderCategory = (title: string, items: CategorizedItem[], empty: string, icon?: React.ReactNode) => (
@@ -556,7 +559,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {localizedResolutionChartData.length > 0 ? (
-                            <StandardPieChart data={localizedResolutionChartData} nameKey="name" dataKey="value" />
+                            <DrillDownPieChart data={localizedResolutionChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="resolution" payloadKey="rawName" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noResolutionData')}</p>
                         )}
@@ -570,7 +573,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {localizedDeviceChartData.length > 0 ? (
-                            <StandardPieChart data={localizedDeviceChartData} nameKey="name" dataKey="value" />
+                            <DrillDownPieChart data={localizedDeviceChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="client" payloadKey="rawName" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noDeviceData')}</p>
                         )}
@@ -585,10 +588,10 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                         <CardDescription>{tGranular('audioBreakdownDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        {data.audioChartData && data.audioChartData.length > 0 ? (
-                            <StandardPieChart data={data.audioChartData} nameKey="name" dataKey="value" />
+                        {localizedAudioChartData.length > 0 ? (
+                            <DrillDownPieChart data={localizedAudioChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="audio" payloadKey="rawName" />
                         ) : (
-                            <p className="text-xs text-muted-foreground">{t('noDataSmall')}</p>
+                            <p className="text-xs text-muted-foreground">{t('noAudioData')}</p>
                         )}
                     </CardContent>
                 </Card>
@@ -599,10 +602,10 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
                         <CardDescription>{tGranular('subtitlesDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        {localizedSubtitleChartData && localizedSubtitleChartData.length > 0 ? (
-                            <StandardPieChart data={localizedSubtitleChartData} nameKey="name" dataKey="value" />
+                        {localizedSubtitleChartData.length > 0 ? (
+                            <DrillDownPieChart data={localizedSubtitleChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="subtitle" payloadKey="rawName" />
                         ) : (
-                            <p className="text-xs text-muted-foreground">{t('noDataSmall')}</p>
+                            <p className="text-xs text-muted-foreground">{t('noSubtitleData')}</p>
                         )}
                     </CardContent>
                 </Card>

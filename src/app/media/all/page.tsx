@@ -23,6 +23,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
     
     const sortBy = searchParams?.sortBy || 'plays';
     const q = typeof searchParams?.q === 'string' ? (searchParams.q || '').trim() : undefined;
+    const genre = typeof searchParams?.genre === 'string' ? (searchParams.genre || '').trim() : undefined;
     const currentPage = Math.max(1, parseInt(searchParams?.page || '1', 10) || 1);
 
     const settings = await prisma.globalSettings.findUnique({ where: { id: 'global' } });
@@ -48,6 +49,12 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
         };
         if (!mediaWhere.AND) mediaWhere.AND = [orClause];
         else mediaWhere.AND.push(orClause);
+    }
+    
+    if (genre) {
+        const genreClause = { genres: { has: genre } };
+        if (!mediaWhere.AND) mediaWhere.AND = [genreClause];
+        else mediaWhere.AND.push(genreClause);
     }
 
     let parentItems = await prisma.media.findMany({
@@ -164,6 +171,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
         if (excludedParam && typeof excludedParam === 'string') params.set('excludeTypes', excludedParam);
         if (sortBy !== 'plays') params.set('sortBy', sortBy);
         if (q) params.set('q', q);
+        if (genre) params.set('genre', genre);
         if (page > 1) params.set('page', String(page));
         const qs = params.toString();
         return `/media/all${qs ? `?${qs}` : ''}`;

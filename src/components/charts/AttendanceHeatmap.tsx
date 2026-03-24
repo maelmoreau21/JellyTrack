@@ -8,6 +8,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
 
 interface HeatmapCell {
     day: number;
@@ -21,6 +22,7 @@ interface AttendanceHeatmapProps {
 
 export function AttendanceHeatmap({ data }: AttendanceHeatmapProps) {
     const t = useTranslations('charts');
+    const router = useRouter();
     const dayNames = t('dayNamesShort').split(',');
 
     const maxVal = useMemo(() => Math.max(...data.map(d => d.value), 1), [data]);
@@ -34,6 +36,13 @@ export function AttendanceHeatmap({ data }: AttendanceHeatmapProps) {
         if (opacity <= 0.5) return 'bg-indigo-500/40';
         if (opacity <= 0.75) return 'bg-indigo-500/70';
         return 'bg-indigo-500';
+    };
+
+    const handleCellClick = (dayIdx: number, hourIdx: number, val: number) => {
+        if (val === 0) return;
+        // Redirect to logs filtered by day and hour
+        // Day is 0-6 (Sun-Sat or Mon-Sun depending on locale, but typically 0 is Sunday in JS)
+        router.push(`/logs?day=${dayIdx}&hour=${hourIdx}`);
     };
 
     // Organize data into 7x24 grid
@@ -71,13 +80,15 @@ export function AttendanceHeatmap({ data }: AttendanceHeatmapProps) {
                                     <Tooltip key={hourIdx}>
                                         <TooltipTrigger asChild>
                                             <div 
-                                                className={`flex-1 rounded-sm transition-all duration-300 hover:scale-110 hover:z-10 cursor-default ${getColor(val)}`}
+                                                onClick={() => handleCellClick(dayIdx, hourIdx, val)}
+                                                className={`flex-1 rounded-sm transition-all duration-300 hover:scale-110 hover:z-10 cursor-default ${getColor(val)} ${val > 0 ? 'cursor-pointer' : ''}`}
                                                 style={val > 0 ? { boxShadow: `0 0 10px rgba(99, 102, 241, ${val / maxVal * 0.3})` } : {}}
                                             />
                                         </TooltipTrigger>
                                         <TooltipContent side="top" className="text-[10px] py-1 px-2">
                                             <div className="font-bold">{dayNames[dayIdx]} — {hourIdx}h</div>
                                             <div className="text-zinc-400">{val} {t('sessions')}</div>
+                                            {val > 0 && <div className="text-[9px] text-indigo-400 mt-1 font-medium italic">Click to view logs</div>}
                                         </TooltipContent>
                                     </Tooltip>
                                 ))}

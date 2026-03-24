@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from 'next-intl';
+import { useRouter } from "next/navigation";
+import { ExternalLink } from "lucide-react";
 import {
     BarChart,
     Bar,
@@ -45,6 +47,7 @@ function GlowBar({ fill, x, y, width, height }: GlowBarProps) {
 
 export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
     const t = useTranslations('charts');
+    const router = useRouter();
     // Normalize counts to numbers to avoid unexpected NaN or string comparisons
     const numericCounts = data.map(d => {
         const n = Number(d.count ?? d.value ?? 0);
@@ -83,6 +86,13 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                     <span className="text-zinc-400">
                         ({( (selectedEntry.count ?? selectedEntry.value ?? 0) > avg ? '+' : '' )}{(selectedEntry.count ?? selectedEntry.value ?? 0) - avg} {t('vsAverage')})
                     </span>
+                    <button 
+                        onClick={() => router.push(`/logs?hour=${selectedEntry.hour.split(':')[0]}`)}
+                        className="flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/30 transition-colors"
+                    >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>{t('viewLogs') || 'View logs'}</span>
+                    </button>
                     <button onClick={() => setSelectedHour(null)} className="ml-auto text-zinc-400 hover:text-zinc-200 text-lg leading-none">×</button>
                 </div>
             )}

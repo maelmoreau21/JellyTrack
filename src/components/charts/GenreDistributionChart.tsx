@@ -10,6 +10,7 @@ import {
     Tooltip,
     Cell
 } from "recharts";
+import { useRouter } from "next/navigation";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 
 export interface GenreData {
@@ -25,6 +26,7 @@ const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308'
 
 export function GenreDistributionChart({ data }: GenreDistributionChartProps) {
     const t = useTranslations('charts');
+    const router = useRouter();
 
     if (!data || data.length === 0) {
         return (
@@ -34,12 +36,20 @@ export function GenreDistributionChart({ data }: GenreDistributionChartProps) {
         );
     }
 
+    const handleBarClick = (data: any) => {
+        if (data && data.name) {
+            router.push(`/media/all?genre=${encodeURIComponent(data.name)}`);
+        }
+    };
+
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
             <BarChart
                 data={data}
                 layout="vertical"
                 margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
+                onClick={handleBarClick}
+                style={{ cursor: "pointer" }}
             >
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#333" />
                 <XAxis type="number" stroke="#888888" fontSize={10} tickLine={false} axisLine={false} />
