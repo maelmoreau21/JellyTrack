@@ -569,3 +569,4 @@ Points d'attention et debugging :
 - **Suppression des composants obsolètes** : Retrait définitif de `AIRecommendations`, `WorldMap` (Carte des Connexions) et `MetadataAudit` du dashboard et des profils utilisateurs.
 - **Optimisation Logicielle** : Suppression des fichiers `lib/recommendations.ts`, `api/recommendations/route.ts` et des clés i18n associées pour un projet plus léger et maintenable.
 - **Harmonisation des Boutons** : Finalisation du style des boutons du planificateur (remplis, ombres portées, variantes dark mode explicites).
+- **Correction Durée Musique** : Optimisation de l'accumulateur de durée (Redis) pour éviter les relevés à 0 min. Augmentation du seuil d'intervalle à 120s et ajout du segment final au `PlaybackStop`.

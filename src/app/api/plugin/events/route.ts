@@ -506,132 +506,143 @@ export async function POST(req: Request) {
                 const lock = await acquirePlaybackLock(dbUser.id, dbMedia.id);
                 try {
                     if (lock.acquired) {
-                            const existingOpen = await prisma.playbackHistory.findFirst({
-                                where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: null },
+                        const positionTicks = session.positionTicks != null ? Number(session.positionTicks) : 0;
+                        const now = Date.now();
+                        
+                        const existingOpen = await prisma.playbackHistory.findFirst({
+                            where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: null },
+                        });
+                        
+                        let historyId: string | null = null;
+                        
+                        if (!existingOpen) {
+                            const recentMergeWindowMs = (type === 'Audio' || type === 'Track') 
+                                ? 5 * 60 * 1000 
+                                : MERGE_WINDOW_MS;
+                            
+                            const mergeWindow = new Date(now - recentMergeWindowMs);
+                            const recentClosed = await prisma.playbackHistory.findFirst({
+                                where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: { not: null, gte: mergeWindow } },
+                                orderBy: { endedAt: "desc" },
                             });
-                            if (!existingOpen) {
-                                // Try to reopen a recently closed session to avoid duplicates
-                                // For Audio (music): only reopen if it was closed within 5 minutes
-                                // For Video: use standard 1 hour window
-                                const recentMergeWindowMs = (type === 'Audio' || type === 'Track') 
-                                    ? 5 * 60 * 1000 
-                                    : MERGE_WINDOW_MS;
-                                
-                                const mergeWindow = new Date(Date.now() - recentMergeWindowMs);
-                                const recentClosed = await prisma.playbackHistory.findFirst({
-                                    where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: { not: null, gte: mergeWindow } },
-                                    orderBy: { endedAt: "desc" },
+                            
+                            if (recentClosed) {
+                                await prisma.playbackHistory.update({
+                                    where: { id: recentClosed.id },
+                                    data: {
+                                        endedAt: null,
+                                        playMethod,
+                                        clientName,
+                                        deviceName,
+                                        ipAddress,
+                                        country: geoData.country,
+                                        city: geoData.city,
+                                        audioLanguage: (session.audioLanguage || session.AudioLanguage || "").split(' ')[0] || null,
+                                        audioCodec: session.audioCodec || session.AudioCodec || null,
+                                        subtitleLanguage: (session.subtitleLanguage || session.SubtitleLanguage || "").split(' ')[0] || null,
+                                        subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                                    },
                                 });
-                                if (recentClosed) {
-                                    await prisma.playbackHistory.update({
-                                        where: { id: recentClosed.id },
-                                        data: {
-                                            endedAt: null,
-                                            playMethod,
-                                            clientName,
-                                            deviceName,
-                                            ipAddress,
-                                            country: geoData.country,
-                                            city: geoData.city,
-                                            audioLanguage: (session.audioLanguage || session.AudioLanguage || "").split(' ')[0] || null,
-                                            audioCodec: session.audioCodec || session.AudioCodec || null,
-                                            subtitleLanguage: (session.subtitleLanguage || session.SubtitleLanguage || "").split(' ')[0] || null,
-                                            subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
-                                        },
-                                    });
-                                    console.log(`[Plugin] PlaybackStart: Reopened recent session ${recentClosed.id} for ${title}`);
-                                } else {
-                                    await prisma.playbackHistory.create({
-                                        data: {
-                                            userId: dbUser.id,
-                                            mediaId: dbMedia.id,
-                                            playMethod,
-                                            clientName,
-                                            deviceName,
-                                            ipAddress,
-                                            country: geoData.country,
-                                            city: geoData.city,
-                                            bitrate: session.bitrate ?? session.Bitrate ?? null,
-                                            audioLanguage: session.audioLanguage || session.AudioLanguage || null,
-                                            audioCodec: session.audioCodec || session.AudioCodec || null,
-                                            subtitleLanguage: session.subtitleLanguage || session.SubtitleLanguage || null,
-                                            subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
-                                        },
-                                    });
-                                    console.log(`[Plugin] PlaybackStart: Created session for ${title}`);
+                                historyId = recentClosed.id;
+                                console.log(`[Plugin] PlaybackStart: Reopened recent session ${recentClosed.id} for ${title}`);
+                            } else {
+                                const created = await prisma.playbackHistory.create({
+                                    data: {
+                                        userId: dbUser.id,
+                                        mediaId: dbMedia.id,
+                                        playMethod,
+                                        clientName,
+                                        deviceName,
+                                        ipAddress,
+                                        country: geoData.country,
+                                        city: geoData.city,
+                                        bitrate: session.bitrate ?? session.Bitrate ?? null,
+                                        audioLanguage: session.audioLanguage || session.AudioLanguage || null,
+                                        audioCodec: session.audioCodec || session.AudioCodec || null,
+                                        subtitleLanguage: session.subtitleLanguage || session.SubtitleLanguage || null,
+                                        subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                                    },
+                                });
+                                historyId = created.id;
+                                console.log(`[Plugin] PlaybackStart: Created session ${historyId} for ${title}`);
 
-                                    // Auto-close any OTHER open sessions for this user (prevent orphans)
-                                    await prisma.playbackHistory.updateMany({
-                                        where: { 
-                                            userId: dbUser.id, 
-                                            endedAt: null, 
-                                            NOT: { mediaId: dbMedia.id } 
-                                        },
-                                        data: { 
-                                            endedAt: new Date()
-                                        }
-                                    });
-                                    // Ensure duplicate open sessions for the same user+media are merged
-                                    await mergeOpenPlaybacks(dbUser.id, dbMedia.id);
-                                }
+                                await prisma.playbackHistory.updateMany({
+                                    where: { 
+                                        userId: dbUser.id, 
+                                        endedAt: null, 
+                                        NOT: { id: historyId } 
+                                    },
+                                    data: { endedAt: new Date() }
+                                });
+                                await mergeOpenPlaybacks(dbUser.id, dbMedia.id);
                             }
                         } else {
-                            // Fallback: if lock couldn't be acquired, re-check once to avoid duplicate create
-                            const existingOpen = await prisma.playbackHistory.findFirst({
-                                where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: null },
-                            });
-                            if (!existingOpen) {
-                                const recentMergeWindowMs = (type === 'Audio' || type === 'Track') 
-                                    ? 5 * 60 * 1000 
-                                    : MERGE_WINDOW_MS;
-                                
-                                const mergeWindow = new Date(Date.now() - recentMergeWindowMs);
-                                const recentClosed = await prisma.playbackHistory.findFirst({
-                                    where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: { not: null, gte: mergeWindow } },
-                                    orderBy: { endedAt: "desc" },
-                                });
-                                if (recentClosed) {
-                                    await prisma.playbackHistory.update({
-                                        where: { id: recentClosed.id },
-                                        data: { endedAt: null },
-                                    });
-                                    console.log(`[Plugin] PlaybackStart (nolock fallback): Reopened recent session ${recentClosed.id} for ${title}`);
-                                } else {
-                                    await prisma.playbackHistory.create({
-                                        data: {
-                                            userId: dbUser.id,
-                                            mediaId: dbMedia.id,
-                                            playMethod,
-                                            clientName,
-                                            deviceName,
-                                            ipAddress,
-                                            country: geoData.country,
-                                            city: geoData.city,
-                                            bitrate: session.bitrate ?? session.Bitrate ?? null,
-                                            audioLanguage: (session.audioLanguage || session.AudioLanguage || "").split(' ')[0] || null,
-                                            audioCodec: session.audioCodec || session.AudioCodec || null,
-                                            subtitleLanguage: (session.subtitleLanguage || session.SubtitleLanguage || "").split(' ')[0] || null,
-                                            subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
-                                        },
-                                    });
-                                    console.log(`[Plugin] PlaybackStart (nolock fallback): Created session for ${title}`);
-
-                                    // Auto-close any OTHER open sessions for this user (prevent orphans)
-                                    await prisma.playbackHistory.updateMany({
-                                        where: { 
-                                            userId: dbUser.id, 
-                                            endedAt: null, 
-                                            NOT: { mediaId: dbMedia.id } 
-                                        },
-                                        data: { 
-                                            endedAt: new Date()
-                                        }
-                                    });
-                                    // Ensure duplicate open sessions for the same user+media are merged
-                                    await mergeOpenPlaybacks(dbUser.id, dbMedia.id);
-                                }
-                            }
+                            historyId = existingOpen.id;
                         }
+
+                        // Initialize Redis tracking keys for accurate cumulative duration
+                        if (historyId) {
+                            await Promise.all([
+                                redis.setex(`last_time:${historyId}`, 86400, now.toString()),
+                                redis.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
+                                redis.setex(`start_pos:${historyId}`, 86400, positionTicks.toString()),
+                            ]);
+                        }
+                    } else {
+                        // Fallback without lock
+                        const existingOpen = await prisma.playbackHistory.findFirst({
+                            where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: null },
+                        });
+                        const positionTicks = session.positionTicks != null ? Number(session.positionTicks) : 0;
+                        const now = Date.now();
+                        let historyId: string | null = null;
+                        
+                        if (!existingOpen) {
+                            const recentMergeWindowMs = (type === 'Audio' || type === 'Track') 
+                                ? 5 * 60 * 1000 
+                                : MERGE_WINDOW_MS;
+                            
+                            const mergeWindow = new Date(now - recentMergeWindowMs);
+                            const recentClosed = await prisma.playbackHistory.findFirst({
+                                where: { userId: dbUser.id, mediaId: dbMedia.id, endedAt: { not: null, gte: mergeWindow } },
+                                orderBy: { endedAt: "desc" },
+                            });
+                            
+                            if (recentClosed) {
+                                await prisma.playbackHistory.update({
+                                    where: { id: recentClosed.id },
+                                    data: { endedAt: null },
+                                });
+                                historyId = recentClosed.id;
+                            } else {
+                                const created = await prisma.playbackHistory.create({
+                                    data: {
+                                        userId: dbUser.id,
+                                        mediaId: dbMedia.id,
+                                        playMethod, clientName, deviceName, ipAddress,
+                                        country: geoData.country, city: geoData.city,
+                                        bitrate: session.bitrate ?? session.Bitrate ?? null,
+                                    },
+                                });
+                                historyId = created.id;
+                                await prisma.playbackHistory.updateMany({
+                                    where: { userId: dbUser.id, endedAt: null, NOT: { id: historyId } },
+                                    data: { endedAt: new Date() }
+                                });
+                                await mergeOpenPlaybacks(dbUser.id, dbMedia.id);
+                            }
+                        } else {
+                            historyId = existingOpen.id;
+                        }
+                        
+                        if (historyId) {
+                            await Promise.all([
+                                redis.setex(`last_time:${historyId}`, 86400, now.toString()),
+                                redis.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
+                                redis.setex(`start_pos:${historyId}`, 86400, positionTicks.toString()),
+                            ]);
+                        }
+                    }
                 } finally {
                     try {
                         if (lock.acquired) await redis.del(lock.key);
@@ -872,31 +883,31 @@ export async function POST(req: Request) {
 
                     const durKey = `dur:${lastPlayback.id}`;
                     const cumulativeDurRaw = await redis.get(durKey);
+                    let curDur = cumulativeDurRaw !== null ? parseFloat(cumulativeDurRaw) : 0;
                     
-                    let durationS: number;
-                    
-                    if (cumulativeDurRaw !== null) {
-                        // Use the highly accurate incrementally tracked duration
-                        durationS = Math.round(parseFloat(cumulativeDurRaw));
-                    } else {
-                        // Fallback to legacy logic
-                        if (effectiveTicks > 0) {
-                            const positionS = Math.floor(effectiveTicks / 10_000_000);
-                            const startPosKey = `start_pos:${lastPlayback.id}`;
-                            const startPosRaw = await redis.get(startPosKey);
-                            const startPosTicks = startPosRaw ? parseInt(startPosRaw, 10) : 0;
-                            const startPosS = Math.floor(startPosTicks / 10_000_000);
-                            
-                            const watchedFromPosS = Math.max(0, positionS - startPosS);
-                            
-                            if (startPosRaw && watchedFromPosS > 0) {
-                                durationS = Math.min(wallClockS, watchedFromPosS);
+                    // Final segment accumulation before closing
+                    const lastTimeRaw = await redis.get(`last_time:${lastPlayback.id}`);
+                    const lastTickRaw = await redis.get(`last_tick:${lastPlayback.id}`);
+                    if (lastTimeRaw && lastTickRaw) {
+                        const prevTime = parseInt(lastTimeRaw, 10);
+                        const prevTick = parseInt(lastTickRaw, 10);
+                        const wallDeltaS = (endedAt.getTime() - prevTime) / 1000;
+                        const tickDeltaS = (effectiveTicks - prevTick) / 10_000_000;
+
+                        if (wallDeltaS > 0 && wallDeltaS <= 300) {
+                            if (tickDeltaS > 0 && tickDeltaS <= 300) {
+                                curDur += tickDeltaS;
                             } else {
-                                durationS = Math.min(wallClockS, positionS);
+                                curDur += wallDeltaS;
                             }
-                        } else {
-                            durationS = wallClockS;
                         }
+                    }
+
+                    let durationS = Math.round(curDur);
+                    
+                    if (durationS <= 0 && cumulativeDurRaw === null) {
+                        // Total fallback: wall clock if everything else failed
+                        durationS = wallClockS;
                     }
 
                     durationS = clampDuration(durationS, media.durationMs);
@@ -1238,14 +1249,13 @@ export async function POST(req: Request) {
                 const wallDeltaS = (now - prevTime) / 1000;
                 const tickDeltaS = (positionTicks - prevTick) / 10_000_000;
 
-                // Only accumulate if the ping is within a reasonable interval (e.g. 35s max, normally 10s)
-                if (wallDeltaS > 0 && wallDeltaS <= 35) {
-                    // Use tickDeltaS if it's progressing normally. 
-                    // If tickDeltaS is huge (>35s) or negative (seeking backwards), just fallback to the wall clock diff for this segment
-                    if (tickDeltaS > 0 && tickDeltaS <= 35) {
+                // Increased threshold to 120s to avoid losing data on slow pings (especially for music)
+                if (wallDeltaS > 0 && wallDeltaS <= 120) {
+                    if (tickDeltaS > 0 && tickDeltaS <= 120) {
                         curDur += tickDeltaS;
                     } else {
-                        curDur += wallDeltaS;
+                        // Cap wallDeltaS to 35s if it's used as fallback for seek/invalid tick to maintain sanity
+                        curDur += Math.min(wallDeltaS, 35);
                     }
                 }
             }
