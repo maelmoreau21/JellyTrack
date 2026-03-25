@@ -58,9 +58,9 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('recentSync', '/api/sync', { mode: 'recent' })}
                             disabled={taskStatus.recentSync.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${taskStatus.recentSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-zinc-300 dark:border-zinc-600' : 'bg-sky-600 text-white hover:bg-sky-500 border-sky-400/50'}`}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:shadow-md active:scale-95 transition-all border ${taskStatus.recentSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-zinc-200 dark:border-zinc-800' : 'bg-sky-600 text-white hover:bg-sky-500 border-white/20'}`}
                         >
-                            <Play className={`w-3 h-3 ${taskStatus.recentSync.loading ? 'animate-spin' : ''}`} />
+                            <Play className={`w-3.5 h-3.5 ${taskStatus.recentSync.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.recentSync.loading ? tc('running') : tc('run')}
                         </button>
                     </div>
@@ -81,9 +81,9 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('fullSync', '/api/sync', { mode: 'full' })}
                             disabled={taskStatus.fullSync.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${taskStatus.fullSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-zinc-300 dark:border-zinc-600' : 'bg-violet-600 text-white hover:bg-violet-500 border-violet-400/50'}`}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:shadow-md active:scale-95 transition-all border ${taskStatus.fullSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-zinc-200 dark:border-zinc-800' : 'bg-violet-600 text-white hover:bg-violet-500 border-white/20'}`}
                         >
-                            <Play className={`w-3 h-3 ${taskStatus.fullSync.loading ? 'animate-spin' : ''}`} />
+                            <Play className={`w-3.5 h-3.5 ${taskStatus.fullSync.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.fullSync.loading ? tc('running') : tc('run')}
                         </button>
                     </div>
@@ -104,9 +104,9 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('backup', '/api/backup/auto/trigger')}
                             disabled={taskStatus.backup.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${taskStatus.backup.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-zinc-300 dark:border-zinc-600' : 'bg-amber-600 text-white hover:bg-amber-500 border-amber-400/50'}`}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:shadow-md active:scale-95 transition-all border ${taskStatus.backup.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-zinc-200 dark:border-zinc-800' : 'bg-amber-600 text-white hover:bg-amber-500 border-white/20'}`}
                         >
-                            <Play className={`w-3 h-3 ${taskStatus.backup.loading ? 'animate-spin' : ''}`} />
+                            <Play className={`w-3.5 h-3.5 ${taskStatus.backup.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.backup.loading ? tc('running') : tc('run')}
                         </button>
                     </div>

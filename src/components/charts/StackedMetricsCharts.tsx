@@ -12,7 +12,7 @@ export function StackedBarChart({ data, keys, suffix, labelMap }: { data: Record
             <BarChart data={data} margin={{ top: 20, right: 10, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 7" vertical={false} stroke={chartGridColor} />
                 <XAxis dataKey="time" stroke={chartAxisColor} fontSize={10} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis stroke={chartAxisColor} fontSize={10} tickLine={false} axisLine={false} width={35} />
+                <YAxis stroke={chartAxisColor} fontSize={10} tickLine={false} axisLine={false} width={45} />
                 <Tooltip contentStyle={chartTooltipStyle} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }} />
                 {keys.map((k, i) => (
@@ -29,7 +29,7 @@ export function StackedAreaChart({ data, keys, suffix, labelMap }: { data: Recor
             <AreaChart data={data} margin={{ top: 20, right: 10, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 7" vertical={false} stroke={chartGridColor} />
                 <XAxis dataKey="time" stroke={chartAxisColor} fontSize={10} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                <YAxis stroke={chartAxisColor} fontSize={10} tickLine={false} axisLine={false} width={35} />
+                <YAxis stroke={chartAxisColor} fontSize={10} tickLine={false} axisLine={false} width={45} />
                 <Tooltip contentStyle={chartTooltipStyle} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
                 <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }} />
                 {keys.map((k, i) => (

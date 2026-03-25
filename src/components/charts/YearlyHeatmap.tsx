@@ -38,7 +38,7 @@ const LIBRARY_COLORS: Record<string, string> = {
 
 const customTheme: ThemeInput = {
     light: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
-    dark: ['#18181b', '#312e81', '#4338ca', '#4f46e5', '#6366f1'],
+    dark: ['#27272a', '#312e81', '#4338ca', '#4f46e5', '#6366f1'],
 };
 
 export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }: YearlyHeatmapProps) {
@@ -133,7 +133,7 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
     const totalPlays = processedData.reduce((sum, d) => sum + d.count, 0);
 
     return (
-        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 backdrop-blur-sm overflow-hidden flex flex-col">
+        <Card className="app-surface-soft dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 backdrop-blur-sm overflow-hidden flex flex-col">
             <CardHeader className="w-full pb-2">
                 <CardTitle className="flex items-center justify-between text-zinc-900 dark:text-zinc-100">
                     <span>{t('yearlyActivity')}</span>

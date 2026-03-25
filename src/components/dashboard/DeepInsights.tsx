@@ -468,7 +468,7 @@ export async function DeepInsights({ type, timeRange, excludedLibraries }: { typ
 
     return (
         <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2">
                 {renderCategory(t('topMovies'), data.categorized.movie, t('noMovies'))}
                 {renderCategory(t('topSeries'), data.categorized.series, t('noSeries'))}
                 {renderCategory(t('topActors'), data.topActors, t('noData'), <Star className="w-4 h-4 text-yellow-500" />)}

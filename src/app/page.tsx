@@ -988,7 +988,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
               </div>,
 
               /* Daily Plays by Library */
-              <Card key="libraryPlays" className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+              <Card key="libraryPlays" className="app-surface-soft dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader className="pb-1">
                   <CardTitle>{t('libraryPlays')}</CardTitle>
                   <CardDescription>{t('libraryPlaysDesc')}</CardDescription>

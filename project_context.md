@@ -567,3 +567,19 @@ Points d'attention et debugging :
 
 ### Scheduler boutons
 `src/app/settings/scheduler/tasks/page.tsx` — les 3 boutons de tâche (Synchro Récente, Synchro Totale, Sauvegarde) ont `border border-{color}-400/50` pour un contour visible avec remplissage.
+
+## 21. Corrections UI & Performance (Round 3 — 2026-03-25)
+
+### Heatmaps & Mode Sombre
+- `AttendanceHeatmap.tsx` : Couleurs indigo renforcées (`indigo-400/30`, `indigo-500/50`, etc.) et fond de cellule vide `dark:bg-zinc-800/60` pour une meilleure visibilité sur fond sombre.
+- `YearlyHeatmap.tsx` : Thème sombre ajusté (`#27272a` pour le niveau 0) pour ne pas se fondre dans le fond des cartes.
+
+### WorldMap (v4)
+Détails accrus sur les tracés SVG (11 continents/îles détaillés). Ajout de `feDropShadow` pour un effet de relief "premium" et amélioration des Tooltips.
+
+### Graphiques & Layout
+- `StackedMetricsCharts.tsx` : Élargissement de la `YAxis` (35 → 45) pour éviter la coupure des grands nombres.
+- `AnalysisPage` : `StatsDeepAnalysis` passe en `lg:col-span-3` (pleine largeur) pour éviter la troncature des noms dans les classements.
+
+### Harmonisation CSS
+Suppression des derniers `bg-white/70` résiduels au profit de `app-surface-soft` (compatible dark mode).
