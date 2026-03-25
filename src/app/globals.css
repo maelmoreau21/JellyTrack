@@ -54,48 +54,48 @@
 
 :root {
   --radius: 0.95rem;
-  /* Soft Satin Theme: Redesigned for visual comfort with deeper, richer tones */
-  --background: oklch(0.70 0.06 285); /* Satin Lavender - richer and darker */
-  --foreground: oklch(0.18 0.05 285);
-  --card: oklch(0.78 0.05 285 / 85%); /* Muted Satin Card — deeper foundation */
-  --card-foreground: oklch(0.18 0.05 285);
-  --popover: oklch(0.80 0.05 285); /* Popovers are no longer white */
-  --popover-foreground: oklch(0.20 0.05 285);
-  --primary: oklch(0.60 0.09 250); 
-  --primary-foreground: oklch(0.99 0.005 260);
-  --secondary: oklch(0.75 0.06 165); /* Soft Sage Satin - darker */
-  --secondary-foreground: oklch(0.2 0.05 165);
-  --muted: oklch(0.78 0.04 285 / 65%);
-  --muted-foreground: oklch(0.36 0.05 285);
-  --accent: oklch(0.80 0.06 30);
-  --accent-foreground: oklch(0.25 0.06 340);
+  /* Cloud Satin Theme: Professional, fresh and visually comfortable palette */
+  --background: oklch(0.96 0.01 230); /* Softest Azure Cloud - fresh and airy */
+  --foreground: oklch(0.18 0.04 230);
+  --card: oklch(0.98 0.01 230 / 85%); /* Clean Satin Card — bright foundation */
+  --card-foreground: oklch(0.18 0.04 230);
+  --popover: oklch(0.98 0.01 230); /* Popovers are clean but not stark white */
+  --popover-foreground: oklch(0.20 0.04 230);
+  --primary: oklch(0.58 0.12 245); /* Clear Azure Blue */
+  --primary-foreground: oklch(0.99 0.005 245);
+  --secondary: oklch(0.94 0.03 165); /* Soft Sage Satin - calming */
+  --secondary-foreground: oklch(0.25 0.05 165);
+  --muted: oklch(0.92 0.02 230 / 65%);
+  --muted-foreground: oklch(0.45 0.05 230);
+  --accent: oklch(0.95 0.06 40); /* Soft Peach/Gold accent */
+  --accent-foreground: oklch(0.30 0.06 40);
   --destructive: oklch(0.6 0.15 25);
-  --border: oklch(0.65 0.04 285); /* More visible borders */
-  --input: oklch(0.80 0.03 285);
-  --ring: oklch(0.65 0.10 250);
-  --chart-1: oklch(0.65 0.10 250);
+  --border: oklch(0.88 0.02 230); /* Subtle boundaries */
+  --input: oklch(0.98 0.01 230);
+  --ring: oklch(0.60 0.10 245);
+  --chart-1: oklch(0.60 0.12 245);
   --chart-2: oklch(0.80 0.08 165);
   --chart-3: oklch(0.82 0.10 340);
   --chart-4: oklch(0.85 0.08 85);
   --chart-5: oklch(0.82 0.06 210);
-  /* Chart UI variables (Soft Satin mode) */
-  --chart-axis-color: oklch(0.40 0.05 285);
-  --chart-grid-color: oklch(0.2 0.05 285 / 8%);
-  --chart-tooltip-bg: oklch(0.85 0.03 285 / 95%);
-  --chart-tooltip-border: 1px solid oklch(0.65 0.10 250 / 30%);
+  /* Chart UI variables (Cloud Satin mode) */
+  --chart-axis-color: oklch(0.45 0.05 230);
+  --chart-grid-color: oklch(0.2 0.05 230 / 6%);
+  --chart-tooltip-bg: oklch(0.98 0.01 230 / 95%);
+  --chart-tooltip-border: 1px solid oklch(0.60 0.12 245 / 30%);
   --chart-tooltip-radius: 18px;
-  --chart-tooltip-box-shadow: 0 15px 40px oklch(0.2 0.05 285 / 8%);
+  --chart-tooltip-box-shadow: 0 15px 40px oklch(0.2 0.05 230 / 5%);
   --chart-tooltip-backdrop: blur(12px);
-  --chart-label-color: oklch(0.3 0.05 285);
-  --chart-item-color: oklch(0.2 0.05 285);
-  --sidebar: oklch(0.75 0.06 285);
-  --sidebar-foreground: oklch(0.18 0.05 285);
-  --sidebar-primary: oklch(0.65 0.10 250);
+  --chart-label-color: oklch(0.4 0.05 230);
+  --chart-item-color: oklch(0.2 0.05 230);
+  --sidebar: oklch(0.97 0.01 230);
+  --sidebar-foreground: oklch(0.18 0.04 230);
+  --sidebar-primary: oklch(0.60 0.12 245);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.78 0.06 285);
-  --sidebar-accent-foreground: oklch(0.2 0.05 285);
-  --sidebar-border: oklch(0.68 0.05 285);
-  --sidebar-ring: oklch(0.65 0.10 250);
+  --sidebar-accent: oklch(0.95 0.02 230);
+  --sidebar-accent-foreground: oklch(0.2 0.04 230);
+  --sidebar-border: oklch(0.92 0.02 230);
+  --sidebar-ring: oklch(0.60 0.12 245);
 }
 
 .dark {
@@ -170,8 +170,8 @@
   }
 
   html:not(.dark) {
-    /* Dynamic satin gradient for light mode: Richer and deeper */
-    background: linear-gradient(145deg, oklch(0.85 0.06 285), oklch(0.83 0.06 200), oklch(0.85 0.06 330));
+    /* Dynamic satin gradient for light mode: Fresh and clean */
+    background: linear-gradient(145deg, oklch(0.96 0.01 230), oklch(0.94 0.02 210), oklch(0.97 0.01 250));
     background-attachment: fixed;
   }
 
@@ -447,7 +447,7 @@ html:not(.dark) [class*="bg-zinc-200"],
 html:not(.dark) [class*="bg-slate-50"],
 html:not(.dark) [class*="bg-slate-100"],
 html:not(.dark) [class*="bg-gray-50"] {
-  background-color: oklch(0.80 0.04 285 / var(--tw-bg-opacity, 1)) !important;
+  background-color: oklch(0.98 0.01 230 / var(--tw-bg-opacity, 1)) !important;
 }
 
 .dark [class*="bg-white"]:not([class*="dark:bg-"]),
@@ -481,11 +481,11 @@ html:not(.dark) [class*="bg-gray-50"] {
 
 /* Satin 2.0 Specific Overrides for common white backgrounds */
 html:not(.dark) .bg-sidebar {
-  background-color: oklch(0.75 0.06 285 / 0.95) !important;
+  background-color: oklch(0.97 0.01 230 / 0.95) !important;
 }
 
 html:not(.dark) .bg-card {
-  background-color: oklch(0.78 0.05 285 / 0.8) !important;
+  background-color: oklch(0.98 0.01 230 / 0.8) !important;
 }
 
 .dark ::selection {
