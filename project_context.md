@@ -23,7 +23,7 @@ IMPORTANT (pour agents IA) — lire entièrement ce document avant de proposer d
 - `src/app/*` : routes, layouts et pages (server components par défaut). Utilisez `use client` au début d'un fichier pour les composants client.
 - `src/app/api/*` : endpoints API côté serveur (webhooks, exports, actions admin).
 - `src/components/ui/*` : composants UI réutilisables (boutons, input, card) — éviter de dupliquer le style.
-- `src/components/dashboard/*` : composants complexes, server-fetched (`AIRecommendations`, `MetadataAudit`, `WorldMap`, `PredictionsPanel`, `HardwareMonitor`, etc.).
+- `src/components/dashboard/*` : composants complexes, server-fetched (`PredictionsPanel`, `HardwareMonitor`, etc.).
 - `src/components/charts/*` : wrappers pour `recharts` (toujours protéger par condition si données nulles). Inclut `HeatmapDrillDown` (modal drill-down), `AttendanceHeatmap` (mobile-responsive).
 - `src/lib/*` : utilitaires et wrappers (ex. `prisma.ts`, `jellyfin.ts`, `auth.ts`, `utils.ts`).
 - `prisma/` : `schema.prisma` + migrations historiées.
@@ -330,9 +330,6 @@ Ces notes décrivent le flux serveur principal et les points à connaître pour 
 	- `GET /api/streams/telemetry?mediaId=...` — exports de télémétrie par média (admin). Voir `src/app/api/streams/telemetry/route.ts`.
 	- `GET /api/logs/export` — export CSV des logs (filtrage côté serveur).
 	- `GET /api/jellyfin/image` — proxy d'images Jellyfin pour affichage.
-	- `GET /api/geo-stats` — agrégation géolocalisation des sessions (admin).
-	- `GET /api/heatmap-detail?day=&hour=` — détails sessions par créneau jour/heure (admin).
-	- `GET /api/metadata-audit` — audit des métadonnées manquantes (admin).
 	- `GET /api/predictions` — tendances IA et prédiction de charge (admin, cache Redis 1h).
 
 - Ingestion / logique principale (`/api/plugin/events`):
@@ -568,18 +565,7 @@ Points d'attention et debugging :
 ### Scheduler boutons
 `src/app/settings/scheduler/tasks/page.tsx` — les 3 boutons de tâche (Synchro Récente, Synchro Totale, Sauvegarde) ont `border border-{color}-400/50` pour un contour visible avec remplissage.
 
-## 21. Corrections UI & Performance (Round 3 — 2026-03-25)
-
-### Heatmaps & Mode Sombre
-- `AttendanceHeatmap.tsx` : Couleurs indigo renforcées (`indigo-400/30`, `indigo-500/50`, etc.) et fond de cellule vide `dark:bg-zinc-800/60` pour une meilleure visibilité sur fond sombre.
-- `YearlyHeatmap.tsx` : Thème sombre ajusté (`#27272a` pour le niveau 0) pour ne pas se fondre dans le fond des cartes.
-
-### WorldMap (v4)
-Détails accrus sur les tracés SVG (11 continents/îles détaillés). Ajout de `feDropShadow` pour un effet de relief "premium" et amélioration des Tooltips.
-
-### Graphiques & Layout
-- `StackedMetricsCharts.tsx` : Élargissement de la `YAxis` (35 → 45) pour éviter la coupure des grands nombres.
-- `AnalysisPage` : `StatsDeepAnalysis` passe en `lg:col-span-3` (pleine largeur) pour éviter la troncature des noms dans les classements.
-
-### Harmonisation CSS
-Suppression des derniers `bg-white/70` résiduels au profit de `app-surface-soft` (compatible dark mode).
+### Nettoyage de Printemps (Release Ready — 2026-03-25)
+- **Suppression des composants obsolètes** : Retrait définitif de `AIRecommendations`, `WorldMap` (Carte des Connexions) et `MetadataAudit` du dashboard et des profils utilisateurs.
+- **Optimisation Logicielle** : Suppression des fichiers `lib/recommendations.ts`, `api/recommendations/route.ts` et des clés i18n associées pour un projet plus léger et maintenable.
+- **Harmonisation des Boutons** : Finalisation du style des boutons du planificateur (remplis, ombres portées, variantes dark mode explicites).

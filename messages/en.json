@@ -173,7 +173,6 @@
     "activeStreams": "Active Streams",
     "activeUsers": "active user(s)",
     "activeUsersTitle": "Active Users",
-    "aiRecommendations": "AI Recommendations",
     "anomalyBackupErrors": "Backup errors",
     "anomalyBreakdownTitle": "Breakdown by Source",
     "anomalyChartsDesc": "14-day view of monitor/sync/backup errors and detected auto-cleanups.",
@@ -189,7 +188,6 @@
     "autoAvailabilityDesc": "If enabled, Wrapped will only be accessible between the dates defined below.",
     "backup": "Backup",
     "backupTaskDesc": "Automatic nightly backup task.",
-    "basedOnProfile": "Based on your profile",
     "booksCard": "Books & Audiobooks",
     "booksOpened": "opens",
     "booksSpent": "spent",
@@ -243,8 +241,6 @@
     "mediaSettings": "Media Settings",
     "mediaSettingsDesc": "Manage resolution thresholds and content display preferences.",
     "metadataAllGood": "All metadata is complete!",
-    "metadataAudit": "Metadata Audit",
-    "metadataAuditDesc": "Reports media with missing data.",
     "minutesAgo": "{count} min ago",
     "missingActors": "Missing actors",
     "missingGenres": "Missing genres",
@@ -317,9 +313,7 @@
     "volumeHistoryDesc": "Temporal watch-hours trend by library.",
     "vsPrevPeriod": "vs {count} prev. period",
     "vsUsersOnPeriod": "vs {count} prev. period",
-    "watched": "watched",
-    "worldMap": "Connection Map",
-    "worldMapDesc": "Geographic distribution of playback sessions."
+    "watched": "watched"
   },
   "deepInsights": {
     "deviceEcosystem": "Device Ecosystem",

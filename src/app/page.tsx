@@ -48,9 +48,6 @@ import { GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
 import { SystemHealthWidgets } from "@/components/dashboard/SystemHealthWidgets";
 import { CollapsibleCard } from "@/components/dashboard/CollapsibleCard";
 import { MediaFilter } from "@/components/dashboard/MediaFilter";
-import { AIRecommendations } from "@/components/dashboard/AIRecommendations";
-import { MetadataAudit } from "@/components/dashboard/MetadataAudit";
-import { WorldMap } from "@/components/dashboard/WorldMap";
 import { PredictionsPanel } from "@/components/dashboard/PredictionsPanel";
 
 
@@ -761,15 +758,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
 
         <SystemHealthWidgets initialSnapshot={healthSnapshot} />
 
-        <AIRecommendations />
-
         <HardwareMonitor />
-
-        {/* World Map & Metadata Audit */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <WorldMap />
-          <MetadataAudit />
-        </div>
 
         {/* Today Stats Banner */}
         <div className="dashboard-banner flex flex-wrap items-center gap-2 rounded-xl px-3 py-3 md:gap-3 md:px-4">

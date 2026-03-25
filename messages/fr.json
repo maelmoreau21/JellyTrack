@@ -173,7 +173,6 @@
     "activeStreams": "Flux Actifs",
     "activeUsers": "utilisateur(s) actif(s)",
     "activeUsersTitle": "Utilisateurs actifs",
-    "aiRecommendations": "Recommandations IA",
     "anomalyBackupErrors": "Erreurs backup",
     "anomalyBreakdownTitle": "Répartition par source",
     "anomalyChartsDesc": "Vue sur 14 jours des erreurs moniteur/synchro/backup et auto-cleanups détectés.",
@@ -189,7 +188,6 @@
     "autoAvailabilityDesc": "Si activé, le Wrapped ne sera accessible qu'entre les dates ci-dessous.",
     "backup": "Sauvegarde",
     "backupTaskDesc": "Tâche de sauvegarde automatique nocturne.",
-    "basedOnProfile": "Basé sur votre profil",
     "booksCard": "Livres & Audiobooks",
     "booksOpened": "ouvertures",
     "booksSpent": "passés",
@@ -243,8 +241,6 @@
     "mediaSettings": "Paramètres Média",
     "mediaSettingsDesc": "Gérez les seuils de résolution et les préférences d'affichage du contenu.",
     "metadataAllGood": "Toutes les métadonnées sont complètes !",
-    "metadataAudit": "Audit des Métadonnées",
-    "metadataAuditDesc": "Signale les médias avec des données manquantes.",
     "minutesAgo": "il y a {count} min",
     "missingActors": "Acteurs manquants",
     "missingGenres": "Genres manquants",
@@ -317,9 +313,7 @@
     "volumeHistoryDesc": "Évolution des heures de visionnage par bibliothèque.",
     "vsPrevPeriod": "vs {count} période préc.",
     "vsUsersOnPeriod": "vs {count} période préc.",
-    "watched": "visionnées",
-    "worldMap": "Carte des Connexions",
-    "worldMapDesc": "Répartition géographique des sessions de lecture."
+    "watched": "visionnées"
   },
   "deepInsights": {
     "deviceEcosystem": "Écosystème Appareils",
