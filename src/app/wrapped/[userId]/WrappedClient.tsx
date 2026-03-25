@@ -235,7 +235,7 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
                         {data.peakHour}
                     </span>
                     <p className="mt-2 text-zinc-400 text-center max-w-sm">
-                        {t.rich('peakContent', { count: data.peakHourSessions, bold: (chunks) => <span className="text-white font-bold">{chunks}</span> })}
+                        {t.rich('peakContent', { count: data.peakHourSessions, hour: data.peakHour, bold: (chunks) => <span className="text-white font-bold">{chunks}</span> })}
                     </p>
                 </div>
             )

@@ -347,7 +347,9 @@
     "topMovies": "Topfilms",
     "topSeries": "Topseries",
     "topStudios": "Top Studios",
-    "views": "weergaven"
+    "views": "weergaven",
+    "noAudioData": "Geen audiogegevens beschikbaar voor de geselecteerde periode.",
+    "noSubtitleData": "Geen ondertitelgegevens beschikbaar voor de geselecteerde periode."
   },
   "draggable": {
     "editOrder": "Volgorde bewerken",
@@ -789,7 +791,10 @@
     "wrappedPeriodDesc": "Bepaalt wanneer de Wrapped van het huidige jaar (2025+) toegankelijk wordt. Voorgaande jaren blijven altijd toegankelijk.",
     "wrappedStart": "Releasedatum",
     "wrappedVisible": "Wrapped-functie weergeven",
-    "wrappedVisibleDesc": "Gebruikers toestaan hun jaaroverzicht te bekijken."
+    "wrappedVisibleDesc": "Gebruikers toestaan hun jaaroverzicht te bekijken.",
+    "excludedLibrariesTitle": "Bibliotheken uitgesloten van statistieken",
+    "excludedLibrariesDesc": "De hieronder uitgeschakelde bibliotheken worden uitgesloten van alle dashboardstatistieken.",
+    "noLibrariesFound": "Geen bibliotheken gevonden. Voer eerst een synchronisatie uit."
   },
   "timeRange": {
     "allTime": "Altijd",

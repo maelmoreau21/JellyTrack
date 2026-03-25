@@ -911,9 +911,9 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                 </Link>
 
                 <Link href="/logs?type=Episode" className="block group">
-                  <Card className="bg-white/60 dark:bg-zinc-900/30 border-zinc-200/40 dark:border-zinc-800/40 transition-colors group-hover:border-green-500/40 group-hover:bg-zinc-900/50 cursor-pointer">
+                  <Card className="app-surface-soft border-border transition-all group-hover:border-green-500/40 cursor-pointer">
                     <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-                      <CardTitle className="text-sm font-medium text-zinc-400">{t('seriesCard')}</CardTitle>
+                      <CardTitle className="text-sm font-medium opacity-70">{t('seriesCard')}</CardTitle>
                       <Tv className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
@@ -937,9 +937,9 @@ export default async function DashboardPage(props: { searchParams: Promise<{ typ
                 </Link>
 
                 <Link href="/logs?type=AudioBook" className="block group">
-                  <Card className="bg-white/60 dark:bg-zinc-900/30 border-zinc-200/40 dark:border-zinc-800/40 transition-colors group-hover:border-purple-500/40 group-hover:bg-zinc-900/50 cursor-pointer">
+                  <Card className="app-surface-soft border-border transition-all group-hover:border-purple-500/40 cursor-pointer">
                     <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-                      <CardTitle className="text-sm font-medium text-zinc-400">{t('booksCard')}</CardTitle>
+                      <CardTitle className="text-sm font-medium opacity-70">{t('booksCard')}</CardTitle>
                       <BookOpen className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">

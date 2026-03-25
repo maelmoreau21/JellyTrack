@@ -347,7 +347,9 @@
     "topMovies": "Film più visti",
     "topSeries": "Serie più viste",
     "topStudios": "Top Studi",
-    "views": "visualizzazioni"
+    "views": "visualizzazioni",
+    "noAudioData": "Nessun dato audio disponibile per il periodo selezionato.",
+    "noSubtitleData": "Nessun dato sui sottotitoli disponibile per il periodo selezionato."
   },
   "draggable": {
     "editOrder": "Modifica ordine",
@@ -789,7 +791,10 @@
     "wrappedPeriodDesc": "Definisce quando il Wrapped dell'anno corrente (2025+) diventa accessibile. Gli anni precedenti rimangono sempre accessibili.",
     "wrappedStart": "Data di rilascio",
     "wrappedVisible": "Mostra la funzione Wrapped",
-    "wrappedVisibleDesc": "Permetti agli utenti di vedere il loro riepilogo annuale."
+    "wrappedVisibleDesc": "Permetti agli utenti di vedere il loro riepilogo annuale.",
+    "excludedLibrariesTitle": "Librerie escluse dalle statistiche",
+    "excludedLibrariesDesc": "Le librerie disabilitate di seguito saranno escluse da tutte le statistiche della dashboard.",
+    "noLibrariesFound": "Nessuna libreria trovata. Esegui prima una sincronizzazione."
   },
   "timeRange": {
     "allTime": "Sempre",

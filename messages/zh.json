@@ -347,7 +347,9 @@
     "topMovies": "热门电影",
     "topSeries": "热门剧集",
     "topStudios": "热门工作室",
-    "views": "次观看"
+    "views": "次观看",
+    "noAudioData": "所选时段无可用音频数据。",
+    "noSubtitleData": "所选时段无可用字幕数据。"
   },
   "draggable": {
     "editOrder": "编辑排序",
@@ -789,7 +791,10 @@
     "wrappedPeriodDesc": "定义本年度的回顾（2025+）何时开放访问。过往年份始终可以查看。",
     "wrappedStart": "发布日期",
     "wrappedVisible": "显示年度回顾 (Wrapped)",
-    "wrappedVisibleDesc": "允许用户查看其年度总结。"
+    "wrappedVisibleDesc": "允许用户查看其年度总结。",
+    "excludedLibrariesTitle": "从统计中排除的库",
+    "excludedLibrariesDesc": "以下禁用的库将从所有仪表板统计中排除。",
+    "noLibrariesFound": "未找到库。请先运行同步。"
   },
   "timeRange": {
     "allTime": "全部时间",

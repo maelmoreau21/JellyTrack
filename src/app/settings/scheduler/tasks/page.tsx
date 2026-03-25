@@ -58,7 +58,7 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('recentSync', '/api/sync', { mode: 'recent' })}
                             disabled={taskStatus.recentSync.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${taskStatus.recentSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-sky-600 text-white hover:bg-sky-500'}`}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ring-1 ring-inset ${taskStatus.recentSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed ring-zinc-300 dark:ring-zinc-600' : 'bg-sky-600 text-white hover:bg-sky-500 ring-sky-400/50'}`}
                         >
                             <Play className={`w-3 h-3 ${taskStatus.recentSync.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.recentSync.loading ? tc('running') : tc('run')}
@@ -81,7 +81,7 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('fullSync', '/api/sync', { mode: 'full' })}
                             disabled={taskStatus.fullSync.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${taskStatus.fullSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-violet-600 text-white hover:bg-violet-500'}`}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ring-1 ring-inset ${taskStatus.fullSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed ring-zinc-300 dark:ring-zinc-600' : 'bg-violet-600 text-white hover:bg-violet-500 ring-violet-400/50'}`}
                         >
                             <Play className={`w-3 h-3 ${taskStatus.fullSync.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.fullSync.loading ? tc('running') : tc('run')}
@@ -104,7 +104,7 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('backup', '/api/backup/auto/trigger')}
                             disabled={taskStatus.backup.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${taskStatus.backup.loading ? 'bg-muted text-muted-foreground cursor-not-allowed' : 'bg-amber-600 text-white hover:bg-amber-500'}`}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ring-1 ring-inset ${taskStatus.backup.loading ? 'bg-muted text-muted-foreground cursor-not-allowed ring-zinc-300 dark:ring-zinc-600' : 'bg-amber-600 text-white hover:bg-amber-500 ring-amber-400/50'}`}
                         >
                             <Play className={`w-3 h-3 ${taskStatus.backup.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.backup.loading ? tc('running') : tc('run')}

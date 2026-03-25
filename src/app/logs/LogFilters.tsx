@@ -72,14 +72,14 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
     return (
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex md:flex-row flex-col gap-2 md:gap-4">
-                <div className="relative flex-1">
+                <div className="relative flex-1 md:min-w-[350px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <Input
                         name="query"
                         type="text"
                         defaultValue={initialQuery}
                         placeholder={t('searchPlaceholder')}
-                        className="app-field pl-9 h-10 md:h-9"
+                        className="app-field pl-9 h-10 md:h-9 w-full"
                     />
                 </div>
                 <div className="flex flex-col md:flex-row gap-2 md:items-center">

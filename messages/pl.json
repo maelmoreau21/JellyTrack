@@ -347,7 +347,9 @@
     "topMovies": "Najczęściej oglądane filmy",
     "topSeries": "Najczęściej oglądane seriale",
     "topStudios": "Top Studia",
-    "views": "odsłony"
+    "views": "odsłony",
+    "noAudioData": "Brak danych audio dla wybranego okresu.",
+    "noSubtitleData": "Brak danych napisów dla wybranego okresu."
   },
   "draggable": {
     "editOrder": "Edytuj kolejność",
@@ -789,7 +791,10 @@
     "wrappedPeriodDesc": "Określa, kiedy Wrapped z bieżącego roku (2025+) stanie się dostępny. Poprzednie lata pozostają zawsze dostępne.",
     "wrappedStart": "Data premiery",
     "wrappedVisible": "Pokaż funkcję Wrapped",
-    "wrappedVisibleDesc": "Zezwalaj użytkownikom na wyświetlanie ich rocznego podsumowania."
+    "wrappedVisibleDesc": "Zezwalaj użytkownikom na wyświetlanie ich rocznego podsumowania.",
+    "excludedLibrariesTitle": "Biblioteki wykluczone ze statystyk",
+    "excludedLibrariesDesc": "Wyłączone poniżej biblioteki zostaną wykluczone ze wszystkich statystyk panelu.",
+    "noLibrariesFound": "Nie znaleziono bibliotek. Najpierw uruchom synchronizację."
   },
   "timeRange": {
     "allTime": "Cały czas",

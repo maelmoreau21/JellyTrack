@@ -347,7 +347,9 @@
     "topMovies": "Películas principales",
     "topSeries": "Series principales",
     "topStudios": "Top Estudios",
-    "views": "vistas"
+    "views": "vistas",
+    "noAudioData": "No hay datos de audio disponibles para el período seleccionado.",
+    "noSubtitleData": "No hay datos de subtítulos disponibles para el período seleccionado."
   },
   "draggable": {
     "editOrder": "Editar orden",
@@ -789,7 +791,10 @@
     "wrappedPeriodDesc": "Define cuándo el Wrapped del año actual (2025+) se vuelve accesible. Los años anteriores siempre permanecen accesibles.",
     "wrappedStart": "Fecha de lanzamiento",
     "wrappedVisible": "Mostrar función Wrapped",
-    "wrappedVisibleDesc": "Permitir a los usuarios ver su resumen anual."
+    "wrappedVisibleDesc": "Permitir a los usuarios ver su resumen anual.",
+    "excludedLibrariesTitle": "Bibliotecas excluidas de las estadísticas",
+    "excludedLibrariesDesc": "Las bibliotecas desactivadas a continuación se excluirán de todas las estadísticas del panel.",
+    "noLibrariesFound": "No se encontraron bibliotecas. Ejecute una sincronización primero."
   },
   "timeRange": {
     "allTime": "Todo el tiempo",

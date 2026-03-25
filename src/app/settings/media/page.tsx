@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { ResolutionThresholds } from "@/components/settings/ResolutionThresholds";
-import { InfoIcon, Film } from "lucide-react";
+import { InfoIcon, Film, EyeOff } from "lucide-react";
 
 export default function SettingsMediaPage() {
     const t = useTranslations("settings");
@@ -13,6 +13,8 @@ export default function SettingsMediaPage() {
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [resolutionThresholds, setResolutionThresholds] = useState<any>(null);
+    const [excludedLibraries, setExcludedLibraries] = useState<string[]>([]);
+    const [availableLibraries, setAvailableLibraries] = useState<string[]>([]);
 
     useEffect(() => {
         let mounted = true;
@@ -23,6 +25,18 @@ export default function SettingsMediaPage() {
                 const data = await res.json();
                 if (!mounted) return;
                 setResolutionThresholds(data.resolutionThresholds || null);
+                setExcludedLibraries(data.excludedLibraries || []);
+
+                // Build list of available libraries from scan or existing excluded list
+                const libs: string[] = [];
+                if (data.libraryScanSource && Array.isArray(data.libraryScanSource)) {
+                    libs.push(...data.libraryScanSource);
+                }
+                // Merge any currently excluded that might not be in scan
+                for (const ex of (data.excludedLibraries || [])) {
+                    if (!libs.includes(ex)) libs.push(ex);
+                }
+                setAvailableLibraries(libs.sort());
             } catch (err) {
                 setMsg({ type: "error", text: (err as any)?.message || "Failed to load" });
             } finally {
@@ -34,6 +48,12 @@ export default function SettingsMediaPage() {
         };
     }, []);
 
+    const toggleLibrary = (lib: string) => {
+        setExcludedLibraries(prev =>
+            prev.includes(lib) ? prev.filter(l => l !== lib) : [...prev, lib]
+        );
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setMsg(null);
@@ -42,7 +62,8 @@ export default function SettingsMediaPage() {
                 method: "POST", 
                 headers: { "Content-Type": "application/json" }, 
                 body: JSON.stringify({ 
-                    resolutionThresholds: resolutionThresholds
+                    resolutionThresholds: resolutionThresholds,
+                    excludedLibraries: excludedLibraries,
                 }) 
             });
             const data = await res.json().catch(() => ({}));
@@ -83,6 +104,41 @@ export default function SettingsMediaPage() {
                                 {t("syncRequired")}
                             </div>
                         </div>
+                    </div>
+
+                    {/* Excluded Libraries Section */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                            <EyeOff className="w-5 h-5 text-orange-500" />
+                            {t("excludedLibrariesTitle") || "Bibliothèques exclues des statistiques"}
+                        </h3>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            {t("excludedLibrariesDesc") || "Les bibliothèques désactivées ci-dessous seront exclues de toutes les statistiques du dashboard."}
+                        </p>
+                        {availableLibraries.length === 0 ? (
+                            <p className="text-sm text-zinc-400 italic">{t("noLibrariesFound") || "Aucune bibliothèque trouvée. Lancez une synchronisation d'abord."}</p>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {availableLibraries.map(lib => {
+                                    const isExcluded = excludedLibraries.includes(lib);
+                                    return (
+                                        <button
+                                            key={lib}
+                                            type="button"
+                                            onClick={() => toggleLibrary(lib)}
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-left transition-all ${
+                                                isExcluded
+                                                    ? "border-red-500/30 bg-red-500/5 text-zinc-400 line-through opacity-60"
+                                                    : "border-emerald-500/30 bg-emerald-500/5 text-zinc-900 dark:text-zinc-100"
+                                            }`}
+                                        >
+                                            <div className={`w-3 h-3 rounded-full shrink-0 ${isExcluded ? "bg-red-500" : "bg-emerald-500"}`} />
+                                            <span className="text-sm font-medium truncate">{lib}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-4">

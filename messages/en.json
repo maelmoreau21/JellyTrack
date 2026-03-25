@@ -347,7 +347,9 @@
     "topMovies": "Top Movies",
     "topSeries": "Top Series",
     "topStudios": "Top Studios",
-    "views": "views"
+    "views": "views",
+    "noAudioData": "No audio data available for the selected period.",
+    "noSubtitleData": "No subtitle data available for the selected period."
   },
   "draggable": {
     "editOrder": "Edit order",
@@ -789,7 +791,10 @@
     "wrappedPeriodDesc": "Defines when the current year's Wrapped (2025+) becomes accessible. Previous years always remain accessible.",
     "wrappedStart": "Release Date",
     "wrappedVisible": "Show Wrapped Feature",
-    "wrappedVisibleDesc": "Allow users to view their annual recap."
+    "wrappedVisibleDesc": "Allow users to view their annual recap.",
+    "excludedLibrariesTitle": "Libraries excluded from statistics",
+    "excludedLibrariesDesc": "Libraries disabled below will be excluded from all dashboard statistics.",
+    "noLibrariesFound": "No libraries found. Run a sync first."
   },
   "timeRange": {
     "allTime": "All time",
