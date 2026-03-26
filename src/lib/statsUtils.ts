@@ -5,23 +5,16 @@
  */
 export const ZAPPING_CONDITION = {
   OR: [
-    { media: { type: { in: ['Movie', 'Episode', 'Series'] } }, durationWatched: { gte: 30 } },
-    { media: { type: { notIn: ['Movie', 'Episode', 'Series'] } }, durationWatched: { gte: 10 } },
+    { durationWatched: { gte: 60 } },
     { endedAt: null } // Still playing shouldn't be zapped yet
   ]
 };
-
+ 
 /**
  * Zapping Filter for already aggregated results or where media relation is not directly available.
- * Use with caution in JS-side filtering.
+ * Threshold: 60s (1 min) for all media types as per UI label.
  */
-export function isZapped(session: { durationWatched: number, media?: { type: string } | null }): boolean {
+export function isZapped(session: { durationWatched: number }): boolean {
   if (!session.durationWatched || session.durationWatched <= 0) return true;
-  
-  const type = session.media?.type || 'Unknown';
-  if (['Movie', 'Episode', 'Series'].includes(type)) {
-    return session.durationWatched < 30;
-  }
-  
-  return session.durationWatched < 10;
+  return session.durationWatched < 60;
 }

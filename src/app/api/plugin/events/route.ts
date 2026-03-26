@@ -75,40 +75,43 @@ function computeProgressPercent(positionTicks: number, runTimeTicks: number | nu
     return Math.min(100, Math.max(0, Math.round((positionTicks / runTimeTicks) * 100)));
 }
 
-async function upsertCanonicalUser(rawJellyfinUserId: unknown, rawUsername: unknown) {
+async function upsertCanonicalUser(rawJellyfinUserId: unknown, rawUsername: unknown, bumpLastActive: boolean = false) {
     const jellyfinUserId = normalizeJellyfinId(rawJellyfinUserId);
     if (!jellyfinUserId) return null;
-
+ 
     const compactId = compactJellyfinId(jellyfinUserId);
     const candidates = Array.from(new Set([jellyfinUserId, compactId]));
     const username = typeof rawUsername === "string" && rawUsername.trim() && rawUsername !== "Unknown"
         ? rawUsername.trim()
         : null;
-
+ 
     return prisma.$transaction(async (tx) => {
         const matches = await tx.user.findMany({
             where: { jellyfinUserId: { in: candidates } },
             orderBy: { createdAt: "asc" },
         });
-
+ 
         let primary = matches.find((u) => u.jellyfinUserId === jellyfinUserId) || matches[0] || null;
-
+ 
         if (!primary) {
             primary = await tx.user.create({
                 data: {
                     jellyfinUserId,
                     username: username || jellyfinUserId,
+                    lastActive: bumpLastActive ? new Date() : undefined,
                 },
             });
         } else {
-            const updates: { jellyfinUserId?: string; username?: string } = {};
+            const updates: { jellyfinUserId?: string; username?: string; lastActive?: Date } = {};
             if (primary.jellyfinUserId !== jellyfinUserId) updates.jellyfinUserId = jellyfinUserId;
             if (username && username !== primary.username) updates.username = username;
+            if (bumpLastActive) updates.lastActive = new Date();
+            
             if (Object.keys(updates).length > 0) {
                 primary = await tx.user.update({ where: { id: primary.id }, data: updates });
             }
         }
-
+ 
         const duplicates = matches.filter((u) => u.id !== primary!.id);
         for (const duplicate of duplicates) {
             await tx.playbackHistory.updateMany({ where: { userId: duplicate.id }, data: { userId: primary!.id } });
@@ -119,7 +122,7 @@ async function upsertCanonicalUser(rawJellyfinUserId: unknown, rawUsername: unkn
                 removed: duplicate.jellyfinUserId,
             });
         }
-
+ 
         return primary;
     });
 }
@@ -401,7 +404,7 @@ export async function POST(req: Request) {
                 const jellyfinUserId = normalizeJellyfinId(u.jellyfinUserId || u.JellyfinUserId || u.id || u.Id);
                 const username = u.username || u.Username || u.name || u.Name;
                 if (!jellyfinUserId || !username) continue;
-                await upsertCanonicalUser(jellyfinUserId, username);
+                await upsertCanonicalUser(jellyfinUserId, username, true);
                 syncedUsers++;
             }
 
@@ -452,7 +455,7 @@ export async function POST(req: Request) {
             }
 
             // Upsert canonical user/media and merge legacy compact IDs when needed.
-            const dbUser = await upsertCanonicalUser(jellyfinUserId, username);
+            const dbUser = await upsertCanonicalUser(jellyfinUserId, username, true);
             const collectionType = media.collectionType || media.CollectionType || inferLibraryKey({ type });
             const dbMedia = await upsertCanonicalMedia({
                 rawJellyfinMediaId: jellyfinMediaId,
@@ -865,6 +868,9 @@ export async function POST(req: Request) {
                 : null;
 
             if (user && media) {
+                // Also update lastActive on stop
+                await prisma.user.update({ where: { id: user.id }, data: { lastActive: new Date() } });
+
                 const lastPlayback = await prisma.playbackHistory.findFirst({
                     where: { userId: user.id, mediaId: media.id, endedAt: null },
                     orderBy: { startedAt: "desc" },
@@ -1061,7 +1067,7 @@ export async function POST(req: Request) {
                 return corsJson({ success: true, ignored: true, message: "Library excluded." });
             }
 
-            const user = await upsertCanonicalUser(jellyfinUserId, username);
+            const user = await upsertCanonicalUser(jellyfinUserId, username, true);
             const media = await upsertCanonicalMedia({
                 rawJellyfinMediaId: jellyfinMediaId,
                 title: resolvedTitle,

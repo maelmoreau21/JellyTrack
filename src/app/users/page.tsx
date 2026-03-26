@@ -28,24 +28,20 @@ export default async function UsersPage() {
             }
         }
     });
-
+ 
     // Calculer les statistiques par utilisateur
     const userStats = users.map(user => {
         let totalSeconds = 0;
-        let lastActive: Date | null = null;
         const clientCounts = new Map<string, number>();
-
+ 
         user.playbackHistory.forEach((session: any) => {
             if (isZapped(session)) return;
             totalSeconds += session.durationWatched;
-            if (!lastActive || new Date(session.startedAt) > lastActive) {
-                lastActive = new Date(session.startedAt);
-            }
             if (session.clientName) {
                 clientCounts.set(session.clientName, (clientCounts.get(session.clientName) || 0) + 1);
             }
         });
-
+ 
         // Trouver le client préféré
         let topClient = tc('unknown');
         let topClientCount = 0;
@@ -55,14 +51,14 @@ export default async function UsersPage() {
                 topClient = name;
             }
         });
-
+ 
         return {
             id: user.id,
             jellyfinUserId: user.jellyfinUserId,
             username: user.username || tc('deletedUser'),
             totalHours: parseFloat((totalSeconds / 3600).toFixed(1)),
             sessionsCount: user.playbackHistory.filter(s => !isZapped(s)).length,
-            lastActive: lastActive,
+            lastActive: user.lastActive,
             favoriteClient: topClient
         };
     }).sort((a, b) => b.totalHours - a.totalHours); // Trier par temps de visionnage global

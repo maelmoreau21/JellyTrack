@@ -58,47 +58,49 @@ export function AttendanceHeatmap({ data }: AttendanceHeatmapProps) {
 
     return (
         <TooltipProvider>
-            <div className="w-full space-y-2 mt-4 select-none">
-                {/* Hour labels — show every 4th on desktop, every 6th on mobile */}
-                <div className="flex text-[8px] md:text-[10px] text-zinc-500 ml-6 md:ml-10 mb-2">
-                    {hours.map(h => (
-                        <div key={h} className="flex-1 text-center font-medium">
-                            <span className="hidden md:inline">{h % 4 === 0 ? `${h}h` : ''}</span>
-                            <span className="md:hidden">{h % 6 === 0 ? `${h}` : ''}</span>
-                        </div>
-                    ))}
-                </div>
+            <div className="w-full space-y-2 mt-4 select-none overflow-x-auto pb-2 scrollbar-hide">
+                <div className="min-w-[500px] md:min-w-0">
+                    {/* Hour labels — show every 4th on desktop, every 6th on mobile */}
+                    <div className="flex text-[8px] md:text-[10px] text-zinc-500 ml-6 md:ml-10 mb-2">
+                        {hours.map(h => (
+                            <div key={h} className="flex-1 text-center font-medium">
+                                <span className="hidden md:inline">{h % 4 === 0 ? `${h}h` : ''}</span>
+                                <span className="md:hidden">{h % 6 === 0 ? `${h}` : ''}</span>
+                            </div>
+                        ))}
+                    </div>
 
-                <div className="space-y-0.5 md:space-y-1">
-                    {grid.map((dayRow, dayIdx) => (
-                        <div key={dayIdx} className="flex items-center gap-1 md:gap-2">
-                            <div className="w-5 md:w-8 text-[8px] md:text-[10px] font-medium text-zinc-500 text-right uppercase tracking-wider">
-                                {dayNames[dayIdx]}
+                    <div className="space-y-0.5 md:space-y-1">
+                        {grid.map((dayRow, dayIdx) => (
+                            <div key={dayIdx} className="flex items-center gap-1 md:gap-2">
+                                <div className="w-6 md:w-8 text-[8px] md:text-[10px] font-medium text-zinc-500 text-right uppercase tracking-wider">
+                                    {dayNames[dayIdx]}
+                                </div>
+                                <div className="flex-1 flex gap-0.5 md:gap-1 h-5 md:h-8">
+                                    {dayRow.map((val, hourIdx) => (
+                                        <Tooltip key={hourIdx}>
+                                            <TooltipTrigger asChild>
+                                                <div 
+                                                    onClick={() => handleCellClick(dayIdx, hourIdx, val)}
+                                                    className={`flex-1 rounded-sm transition-all duration-300 hover:scale-110 hover:z-10 cursor-default ${getColor(val)} ${val > 0 ? 'cursor-pointer' : ''}`}
+                                                    style={val > 0 ? { boxShadow: `0 0 10px rgba(99, 102, 241, ${val / maxVal * 0.3})` } : {}}
+                                                />
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top" className="text-[10px] py-1 px-2">
+                                                <div className="font-bold">{dayNames[dayIdx]} — {hourIdx}h</div>
+                                                <div className="text-zinc-400">{val} {t('sessions')}</div>
+                                                {val > 0 && <div className="text-[9px] text-indigo-400 mt-1 font-medium italic">{t('clickToViewDetail')}</div>}
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex-1 flex gap-0.5 md:gap-1 h-4 md:h-8">
-                                {dayRow.map((val, hourIdx) => (
-                                    <Tooltip key={hourIdx}>
-                                        <TooltipTrigger asChild>
-                                            <div 
-                                                onClick={() => handleCellClick(dayIdx, hourIdx, val)}
-                                                className={`flex-1 rounded-sm transition-all duration-300 hover:scale-110 hover:z-10 cursor-default ${getColor(val)} ${val > 0 ? 'cursor-pointer' : ''}`}
-                                                style={val > 0 ? { boxShadow: `0 0 10px rgba(99, 102, 241, ${val / maxVal * 0.3})` } : {}}
-                                            />
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top" className="text-[10px] py-1 px-2">
-                                            <div className="font-bold">{dayNames[dayIdx]} — {hourIdx}h</div>
-                                            <div className="text-zinc-400">{val} {t('sessions')}</div>
-                                            {val > 0 && <div className="text-[9px] text-indigo-400 mt-1 font-medium italic">{t('clickToViewDetail')}</div>}
-                                        </TooltipContent>
-                                    </Tooltip>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
                 
                 {/* Legend — compact on mobile */}
-                <div className="flex justify-end items-center gap-1.5 md:gap-2 pt-3 md:pt-4 text-[8px] md:text-[10px] text-zinc-500">
+                <div className="flex justify-end items-center gap-1.5 md:gap-2 pt-3 md:pt-4 text-[8px] md:text-[10px] text-zinc-500 pr-2">
                     <span>{t('less')}</span>
                     <div className="flex gap-0.5 md:gap-1">
                         <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-sm bg-zinc-200/30 dark:bg-zinc-800/40" />

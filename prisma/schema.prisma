@@ -12,6 +12,7 @@ model User {
   jellyfinUserId  String            @unique
   username        String
   isActive        Boolean           @default(true)
+  lastActive      DateTime?         // Dernière activité réelle (via heartbeat ou playback)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   

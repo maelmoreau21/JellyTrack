@@ -82,58 +82,78 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                         className="app-field pl-9 h-10 md:h-9 w-full"
                     />
                 </div>
-                <div className="flex flex-col md:flex-row gap-2 md:items-center">
-                    <div className="flex items-center gap-2 pl-1 md:pr-3">
-                        <input
-                            type="checkbox"
-                            id="hideZapped"
-                            name="hideZapped"
-                            defaultChecked={initialHideZapped}
-                            onChange={(e) => {
-                                const form = e.target.form;
-                                if (form) form.requestSubmit();
-                            }}
-                            className="w-4 h-4 rounded accent-primary cursor-pointer text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <label htmlFor="hideZapped" className="text-sm cursor-pointer whitespace-nowrap font-medium text-zinc-600 dark:text-zinc-300">
-                            {t('hideZapped')}
-                        </label>
-                    </div>
+                <div className="flex flex-col md:flex-row gap-2 md:items-center w-full md:w-auto">
+                    <div className="flex items-center justify-between md:justify-start w-full md:w-auto gap-2 pl-1 md:pr-3">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="hideZapped"
+                                name="hideZapped"
+                                defaultChecked={initialHideZapped}
+                                onChange={(e) => {
+                                    const form = e.target.form;
+                                    if (form) form.requestSubmit();
+                                }}
+                                className="w-4 h-4 rounded accent-primary cursor-pointer text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <label htmlFor="hideZapped" className="text-sm cursor-pointer whitespace-nowrap font-medium text-zinc-600 dark:text-zinc-300">
+                                {t('hideZapped')}
+                            </label>
+                        </div>
 
-                    <Button 
-                        type="button" 
-                        variant="outline"
-                        size="sm"
-                        className="h-10 md:h-9 bg-zinc-100 dark:bg-slate-700/50 border-0"
-                        onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                    >
-                        <Filter className="w-4 h-4 mr-2" />
-                        {isAdvancedOpen ? tc('close') : tc('filters')}
-                    </Button>
-
-                    <div className="app-field rounded-md px-3 py-2 text-sm flex flex-row items-center cursor-pointer hover:bg-zinc-100 dark:hover:bg-slate-700/50 relative group h-10 md:h-9">
-                        <span className="font-semibold mr-2 flex items-center gap-2"><ArrowUpDown className="w-4 h-4" /> {t('sortBy')}</span>
-                        <ChevronDown className="w-4 h-4" />
-                        <select
-                            name="sort"
-                            defaultValue={initialSort}
-                            onChange={handleSortChange}
-                            className="absolute w-full h-full opacity-0 cursor-pointer left-0 top-0"
+                        <Button 
+                            type="button" 
+                            variant="outline"
+                            size="sm"
+                            className="h-10 md:h-9 bg-zinc-100 dark:bg-slate-700/50 border-0 md:hidden"
+                            onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
                         >
-                            <option value="date_desc">{t('sortDateDesc')}</option>
-                            <option value="date_asc">{t('sortDateAsc')}</option>
-                            <option value="duration_desc">{t('sortDurationDesc')}</option>
-                            <option value="duration_asc">{t('sortDurationAsc')}</option>
-                        </select>
+                            <Filter className="w-4 h-4" />
+                            {isAdvancedOpen ? tc('close') : tc('filters')}
+                        </Button>
                     </div>
-                    <button type="submit" className="bg-primary text-primary-foreground font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors h-10 md:h-9">
-                        {tc('search')}
-                    </button>
-                    
-                    <a href={`/api/logs/export?${searchParams.toString()}`} className="flex items-center gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium px-4 py-2 rounded-md hover:bg-emerald-500/20 transition-colors h-10 md:h-9 whitespace-nowrap">
-                        <Download className="w-4 h-4" />
-                        {tc('export')}
-                    </a>
+
+                    <div className="grid grid-cols-2 md:flex md:flex-row gap-2 w-full md:w-auto">
+                        <Button 
+                            type="button" 
+                            variant="outline"
+                            size="sm"
+                            className="hidden md:flex h-10 md:h-9 bg-zinc-100 dark:bg-slate-700/50 border-0"
+                            onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+                        >
+                            <Filter className="w-4 h-4 mr-2" />
+                            {isAdvancedOpen ? tc('close') : tc('filters')}
+                        </Button>
+
+                        <div className="app-field rounded-md px-3 py-2 text-sm flex flex-row items-center justify-between md:justify-start cursor-pointer hover:bg-zinc-100 dark:hover:bg-slate-700/50 relative group h-10 md:h-9">
+                            <span className="font-semibold mr-2 flex items-center gap-2 truncate"><ArrowUpDown className="w-4 h-4" /> {t('sortBy')}</span>
+                            <ChevronDown className="w-4 h-4 shrink-0" />
+                            <select
+                                name="sort"
+                                defaultValue={initialSort}
+                                onChange={handleSortChange}
+                                className="absolute w-full h-full opacity-0 cursor-pointer left-0 top-0"
+                            >
+                                <option value="date_desc">{t('sortDateDesc')}</option>
+                                <option value="date_asc">{t('sortDateAsc')}</option>
+                                <option value="duration_desc">{t('sortDurationDesc')}</option>
+                                <option value="duration_asc">{t('sortDurationAsc')}</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" className="bg-primary text-primary-foreground font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors h-10 md:h-9 md:hidden lg:block order-last md:order-none">
+                            {tc('search')}
+                        </button>
+                        
+                        <a href={`/api/logs/export?${searchParams.toString()}`} className="flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium px-4 py-2 rounded-md hover:bg-emerald-500/20 transition-colors h-10 md:h-9 whitespace-nowrap">
+                            <Download className="w-4 h-4" />
+                            <span className="md:hidden lg:inline">{tc('export')}</span>
+                        </a>
+
+                        <button type="submit" className="hidden md:block lg:hidden bg-primary text-primary-foreground font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors h-10 md:h-9">
+                            {tc('search')}
+                        </button>
+                    </div>
                 </div>
             </div>
 

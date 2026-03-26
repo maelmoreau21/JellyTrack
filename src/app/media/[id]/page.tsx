@@ -13,6 +13,7 @@ import MediaTimelineChart from "./MediaTimelineChart";
 import type { TimelineEvent, SessionTimeline } from "./MediaTimelineChart";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
+import { isZapped } from "@/lib/statsUtils";
 
 // Local types for playback and media records used in this page
 type PlaybackHistory = {
@@ -230,13 +231,15 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     }
 
     // IDOR Hardening: Non-admins only see their own history
-    const filteredBaseHistory = isAdmin 
+    const filteredBaseHistory = (isAdmin 
         ? media.playbackHistory 
-        : media.playbackHistory.filter(h => h.user?.jellyfinUserId === sessionUserId);
+        : media.playbackHistory.filter(h => h.user?.jellyfinUserId === sessionUserId))
+        .filter(h => !isZapped(h));
 
-    const filteredDescendantHistory = isAdmin
+    const filteredDescendantHistory = (isAdmin
         ? allDescendantHistory
-        : allDescendantHistory.filter(h => h.user?.jellyfinUserId === sessionUserId);
+        : allDescendantHistory.filter(h => h.user?.jellyfinUserId === sessionUserId))
+        .filter(h => !isZapped(h));
 
     // Use descendant history for parent types that have no direct playbackHistory
     const effectiveHistory = isParentType && allDescendantHistory.length > 0

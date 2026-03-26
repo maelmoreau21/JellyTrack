@@ -94,11 +94,13 @@ export function StandardPieChart({ data, nameKey, dataKey, onClick }: { data: Re
                     nameKey={nameKey}
                     stroke="none"
                     label={({ name, percent }) => {
-                        const truncated = name && name.length > 12 ? name.substring(0, 12) + '…' : name;
+                        // On very small screens, labels often overlap. 
+                        // We use a more aggressive truncation and smaller font.
+                        const truncated = name && name.length > 8 ? name.substring(0, 8) + '…' : name;
                         return `${truncated} ${((percent || 0) * 100).toFixed(0)}%`;
                     }}
-                    labelLine={false}
-                    fontSize={11}
+                    labelLine={true}
+                    fontSize={10}
                     onClick={onClick}
                     style={onClick ? { cursor: 'pointer' } : undefined}
                 >

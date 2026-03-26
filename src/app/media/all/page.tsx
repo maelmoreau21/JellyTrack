@@ -98,7 +98,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
             for (const ep of episodes) {
                 const sid = seasonToSeries.get(ep.parentId!);
                 if (!sid) continue;
-                const filteredHistory = (ep.playbackHistory || []).filter((h) => !isZapped({ ...h, media: { type: 'Episode' } }));
+                const filteredHistory = (ep.playbackHistory || []).filter((h) => !isZapped(h));
                 if (filteredHistory.length === 0) continue;
                 const s = seriesChildStats.get(sid) || { plays: 0, dur: 0, dp: 0, childCount: 0 };
                 s.childCount++;
@@ -116,7 +116,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
         const tracks = await prisma.media.findMany({ where: { type: 'Audio', parentId: { in: albumIdList } }, select: { parentId: true, size: true, durationMs: true, playbackHistory: { select: { durationWatched: true, playMethod: true } } } });
         for (const track of tracks as any) {
             if (!track.parentId) continue;
-            const filteredHistory = (track.playbackHistory || []).filter((h: any) => !isZapped({ ...h, media: { type: 'Audio' } }));
+            const filteredHistory = (track.playbackHistory || []).filter((h: any) => !isZapped(h));
             if (filteredHistory.length === 0) continue;
             const existing = albumChildStats.get(track.parentId);
             const s = existing || { plays: 0, dur: 0, dp: 0, childCount: 0, sizeBytes: BigInt(0), totalTrackDurationMs: BigInt(0) };
@@ -137,7 +137,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
     const processedMedia = parentItems.map((media) => {
         let plays = 0, durationSeconds = 0, dpCount = 0, childCount = 0;
         if (media.type === 'Movie') {
-            const filteredHistory = (media.playbackHistory || []).filter((h) => !isZapped({ ...h, media: { type: 'Movie' } }));
+            const filteredHistory = (media.playbackHistory || []).filter((h) => !isZapped(h));
             plays = filteredHistory.length;
             durationSeconds = filteredHistory.reduce((a, h) => a + (h.durationWatched || 0), 0);
             dpCount = filteredHistory.filter((h) => h.playMethod === 'DirectPlay').length;

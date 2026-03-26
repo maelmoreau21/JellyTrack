@@ -8,8 +8,7 @@ import { getCompletionMetrics, isZapped } from "@/lib/mediaPolicy";
 export default async function UserInfo({ userId }: { userId: string }) {
     const user = await prisma.user.findUnique({
         where: { jellyfinUserId: userId },
-        include: {
-            playbackHistory: {
+        select: { username: true, jellyfinUserId: true, lastActive: true, playbackHistory: {
                 select: {
                     durationWatched: true,
                     clientName: true,
@@ -101,6 +100,7 @@ export default async function UserInfo({ userId }: { userId: string }) {
     const totalHours = parseFloat((totalSeconds / 3600).toFixed(1));
     const avgSessionMin = sessionCount > 0 ? Math.round(totalSeconds / sessionCount / 60) : 0;
     const avgCompletion = completionCount > 0 ? Math.round(totalCompletions / completionCount) : 0;
+    const lastActive = user.lastActive;
 
     const getTopItem = (map: Map<string, number>) => {
         if (map.size === 0) return "N/A";
@@ -179,6 +179,11 @@ export default async function UserInfo({ userId }: { userId: string }) {
                 <CardContent>
                     <div className="text-2xl font-bold">{totalHours}h</div>
                     <p className="text-xs text-muted-foreground">{t('cumulTotal')}</p>
+                    {lastActive && (
+                        <div className="mt-2 text-[10px] text-zinc-500 pt-2 border-t border-zinc-200/50 dark:border-zinc-800/50">
+                            {t('colLastActive')}: {new Date(lastActive).toLocaleString()}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

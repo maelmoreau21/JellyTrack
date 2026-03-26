@@ -1,11 +1,9 @@
-FROM node:20-alpine AS base
-
 # 1. Install dependencies only when needed
 FROM base AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
 RUN npm ci
 
@@ -14,13 +12,16 @@ FROM base AS builder
 RUN apk add --no-cache openssl
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy Prisma schema first to cache the generate step
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# Copy source code only after dependencies and prisma are ready
 COPY . .
 
 # Environment variables for build time
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Generate Prisma client
-RUN npx prisma generate
 
 # Provide dummy variables so Next.js build doesn't crash trying to connect to a real DB
 ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
