@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
     const dateFrom = searchParams.get("dateFrom") || "";
     const dateTo = searchParams.get("dateTo") || "";
 
-    const conditions: any[] = [];
+    const conditions: Prisma.PlaybackHistoryWhereInput[] = [];
     if (hideZapped) conditions.push(ZAPPING_CONDITION);
 
     if (query) {
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
     if (subStr) conditions.push({ OR: [{subtitleCodec: { contains: subStr, mode: "insensitive" }}, {subtitleLanguage: { contains: subStr, mode: "insensitive" }}] });
 
     if (dateFrom || dateTo) {
-        const dateFilter: any = {};
+        const dateFilter: { gte?: Date; lte?: Date } = {};
         if (dateFrom) {
             const fd = new Date(dateFrom);
             if (!isNaN(fd.getTime())) dateFilter.gte = fd;
@@ -59,7 +60,7 @@ export async function GET(request: Request) {
 
     const whereClause = conditions.length > 0 ? { AND: conditions } : {};
 
-    let orderBy: any = { startedAt: "desc" };
+    let orderBy: Prisma.PlaybackHistoryOrderByWithRelationInput = { startedAt: "desc" };
     if (sort === "date_asc") orderBy = { startedAt: "asc" };
     else if (sort === "duration_desc") orderBy = { durationWatched: "desc" };
     else if (sort === "duration_asc") orderBy = { durationWatched: "asc" };
@@ -68,7 +69,7 @@ export async function GET(request: Request) {
         where: whereClause,
         include: {
             user: { select: { username: true } },
-            media: { select: { type: true, title: true } }
+            media: { select: { type: true, title: true, resolution: true } }
         },
         orderBy,
     });

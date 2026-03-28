@@ -1,4 +1,4 @@
-const http = require('http');
+import http from 'http';
 const paths = ["/", "/login", "/settings", "/settings/overview", "/settings/plugin", "/media/analysis", "/media/all"];
 function fetchPath(path){
   const url = `http://localhost:3000${path}`;

@@ -1,4 +1,4 @@
-const http = require('http');
+import http from 'http';
 function fetchPort(port){
   const url = `http://localhost:${port}/`;
   http.get(url, res => {

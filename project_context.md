@@ -479,6 +479,13 @@ Si vous souhaitez que j'ajoute un diagramme ER Mermaid ou des scripts SQL de mig
         - **Synchronisation des Colonnes :** Correction du bug où le réordonnancement des colonnes (drag-and-drop) n'affectait que les en-têtes. Le composant `LogRow` a été refactorisé pour restituer dynamiquement les cellules dans l'ordre exact défini par l'utilisateur.
         - Suppression de la fonctionnalité de réduction/expansion des cartes (`CollapsibleCard`) sur tout le tableau de bord et dans les statistiques de bibliothèque pour garantir une visibilité totale et immédiate des données.
 
+    - **CI Maintenance & Lint Hardening (Mars 2026)**:
+        - Updated GitHub Actions to opt-in to Node.js 24 for runner actions (`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`).
+        - Migrated CI build environment to Node.js 22 (LTS).
+        - Resolved 11 linting warnings across the codebase, including replacing `any` types with specific Prisma interfaces in API routes and Admin UI.
+        - Converted maintenance scripts (`scripts/fetch_root.js`, `scripts/fetch_paths.js`) from CommonJS to ESM.
+        - Hardened `src/app/api/logs/export/route.ts` by adding missing select fields and specific Prisma types for complex filtering.
+
 Après ces changements, toujours exécuter `npm run build` pour valider la compilation.
 
 ## 17. Dépannage — Import des Collections ("Détails par Collection")

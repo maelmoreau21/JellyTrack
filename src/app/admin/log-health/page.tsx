@@ -4,8 +4,18 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getLogHealthSnapshot } from "@/lib/logHealth";
 import { AlertTriangle, CheckCircle2, Clock3, HeartPulse, RadioTower, RefreshCw, ShieldAlert, Library, Activity, History } from "lucide-react";
+import { HealthEvent } from "@/lib/systemHealth";
 import { HealthAnomalyCharts } from "@/components/admin/HealthAnomalyCharts";
 import { getTranslations } from 'next-intl/server';
+
+interface OrphanPlayback {
+    id: string;
+    mediaTitle: string;
+    username: string;
+    library: string;
+    startedAt: string;
+    durationWatched: number;
+}
 
 export default async function LogHealthPage() {
     const session = await getServerSession(authOptions);
@@ -125,7 +135,7 @@ export default async function LogHealthPage() {
                                 </div>
                             )}
                             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                {snapshot.orphanPlaybacks.map((entry: any) => (
+                                {snapshot.orphanPlaybacks.map((entry: OrphanPlayback) => (
                                     <div key={entry.id} className="rounded-xl border border-border/50 app-surface-soft/40 p-3 hover:shadow-sm transition-shadow">
                                         <div className="font-semibold text-foreground truncate">{entry.mediaTitle}</div>
                                         <div className="mt-1 text-xs text-muted-foreground font-medium">{entry.username} · {entry.library}</div>
@@ -155,7 +165,7 @@ export default async function LogHealthPage() {
                                 </div>
                             )}
                             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                {snapshot.recentEvents.map((event: any) => (
+                                {snapshot.recentEvents.map((event: HealthEvent) => (
                                     <div key={event.id} className="rounded-xl border border-border/50 app-surface-soft/40 p-3 hover:shadow-sm transition-shadow">
                                         <div className="flex items-start gap-3 text-sm font-medium text-foreground">
                                             {String(event.kind || '').includes('error') 

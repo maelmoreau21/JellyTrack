@@ -8,7 +8,6 @@ export async function GET() {
     try {
         // Dynamic imports to avoid Turbopack tracing filesystem at import time
         const fs = await import('fs');
-        const path = await import('path');
 
         const BACKUP_DIR = process.env.BACKUP_DIR || "./backups";
         const files = fs.readdirSync(BACKUP_DIR)
@@ -22,7 +21,7 @@ export async function GET() {
                     date: stats.mtime.toISOString(),
                 };
             })
-            .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            .sort((a: { date: string }, b: { date: string }) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         return NextResponse.json({ backups: files });
 

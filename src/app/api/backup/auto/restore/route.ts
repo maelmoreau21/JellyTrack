@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: await apiT('backupFormatInvalid') }, { status: 400 });
         }
 
-        const { users, media, playbackHistory, telemetryEvents, settings, libraryRules, systemHealth } = backup.data;
+        const { users, media, playbackHistory, telemetryEvents, settings, systemHealth } = backup.data;
 
         // Restore using transaction
         await prisma.$transaction(async (tx) => {
