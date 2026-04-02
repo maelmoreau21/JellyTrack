@@ -12,6 +12,8 @@ export default function SettingsPluginPage() {
     const t = useTranslations('settings');
     const tc = useTranslations('common');
     const locale = useLocale();
+    const isFr = locale.toLowerCase().startsWith('fr');
+    const tr = (en: string, fr: string) => (isFr ? fr : en);
 
     const [pluginMsg, setPluginMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [pluginConnected, setPluginConnected] = useState(false);
@@ -171,14 +173,14 @@ export default function SettingsPluginPage() {
                                 className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border border-border hover:bg-muted transition-colors"
                             >
                                 <ShieldCheck className="w-4 h-4" />
-                                Security Center
+                                {tr('Security Center', 'Centre de securite')}
                             </Link>
                             <Link
                                 href="/admin/plugin-health"
                                 className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border border-border hover:bg-muted transition-colors"
                             >
                                 <HeartPulse className="w-4 h-4" />
-                                Health Center
+                                {tr('Health Center', 'Centre de sante')}
                             </Link>
                         </div>
                     </div>
@@ -223,12 +225,17 @@ export default function SettingsPluginPage() {
                                         className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-border hover:bg-muted transition-colors text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <Copy className="w-4 h-4" />
-                                        {!pluginApiKey ? 'Cle masquee' : (apiKeyCopied ? t('pluginApiKeyCopied') : t('pluginCopyKey'))}
+                                        {!pluginApiKey
+                                            ? tr('Key hidden', 'Cle masquee')
+                                            : (apiKeyCopied ? t('pluginApiKeyCopied') : t('pluginCopyKey'))}
                                     </button>
                                 </div>
                                 {!pluginApiKey && (
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        La cle API enregistree est masquee pour la securite. Regenerer pour l'afficher une seule fois.
+                                        {tr(
+                                            'The saved API key is hidden for security. Regenerate it to display it once.',
+                                            'La cle API enregistree est masquee pour la securite. Regenerez-la pour l afficher une seule fois.'
+                                        )}
                                     </p>
                                 )}
                             </div>

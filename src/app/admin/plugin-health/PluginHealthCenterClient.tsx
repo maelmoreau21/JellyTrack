@@ -5,6 +5,7 @@ import { Activity, AlertTriangle, Download, HeartPulse, RefreshCw, Send, ShieldC
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "next-intl";
 import {
     Table,
     TableBody,
@@ -68,6 +69,18 @@ function formatGap(seconds: number | null): string {
     return `${Math.floor(seconds / 3600)}h`;
 }
 
+function formatSeconds(value: number | null): string {
+    if (value === null || !Number.isFinite(value)) return "-";
+    const rounded = Math.round(value * 100) / 100;
+    return `${rounded}s`;
+}
+
+function formatPercent(value: number | null): string {
+    if (value === null || !Number.isFinite(value)) return "-";
+    const rounded = Math.round(value * 100) / 100;
+    return `${rounded}%`;
+}
+
 function formatBitrateKbps(value: number | null): string {
     if (value === null || !Number.isFinite(value)) return "-";
     if (value >= 1000) return `${(value / 1000).toFixed(1)} Mbps`;
@@ -75,6 +88,10 @@ function formatBitrateKbps(value: number | null): string {
 }
 
 export default function PluginHealthCenterClient() {
+    const locale = useLocale();
+    const isFr = locale.toLowerCase().startsWith("fr");
+    const tr = (en: string, fr: string) => (isFr ? fr : en);
+
     const [snapshot, setSnapshot] = useState<HealthSnapshot | null>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<"test_connection" | "force_heartbeat" | null>(null);
@@ -91,7 +108,9 @@ export default function PluginHealthCenterClient() {
             const data = (await res.json()) as HealthSnapshot;
             setSnapshot(data);
         } catch (error) {
-            const message = error instanceof Error ? error.message : "Failed to load plugin health.";
+            const message = error instanceof Error
+                ? error.message
+                : tr("Failed to load plugin health.", "Impossible de charger l'etat du plugin.");
             setNotice({ type: "error", text: message });
         } finally {
             setLoading(false);
@@ -124,13 +143,13 @@ export default function PluginHealthCenterClient() {
             setNotice({
                 type: "success",
                 text: action === "test_connection"
-                    ? `Connection test completed (latency ${latency}).`
-                    : `Manual heartbeat sent (latency ${latency}).`,
+                    ? tr(`Connection test completed (latency ${latency}).`, `Test de connexion termine (latence ${latency}).`)
+                    : tr(`Manual heartbeat sent (latency ${latency}).`, `Heartbeat manuel envoye (latence ${latency}).`),
             });
 
             await loadSnapshot();
         } catch (error) {
-            const message = error instanceof Error ? error.message : "Action failed.";
+            const message = error instanceof Error ? error.message : tr("Action failed.", "Action echouee.");
             setNotice({ type: "error", text: message });
         } finally {
             setActionLoading(null);
@@ -139,10 +158,10 @@ export default function PluginHealthCenterClient() {
 
     const connectionBadge = useMemo(() => {
         if (!snapshot?.plugin.connected) {
-            return <Badge className="bg-red-500/15 text-red-400 border-red-500/30">offline</Badge>;
+            return <Badge className="bg-red-500/15 text-red-400 border-red-500/30">{tr("offline", "hors ligne")}</Badge>;
         }
-        return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">online</Badge>;
-    }, [snapshot?.plugin.connected]);
+        return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">{tr("online", "en ligne")}</Badge>;
+    }, [snapshot?.plugin.connected, isFr]);
 
     return (
         <div className="flex-col md:flex">
@@ -151,17 +170,20 @@ export default function PluginHealthCenterClient() {
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                             <HeartPulse className="w-7 h-7 text-primary" />
-                            Plugin Health Center
+                            {tr("Plugin Health Center", "Centre de Sante du Plugin")}
                         </h1>
                         <p className="text-sm text-muted-foreground mt-2 max-w-3xl">
-                            Centralized diagnostics for heartbeat stability, ingestion reliability, and stream health.
+                            {tr(
+                                "Centralized diagnostics for heartbeat stability, ingestion reliability, and stream health.",
+                                "Diagnostic centralise pour la stabilite des heartbeats, la fiabilite d'ingestion et la sante des flux."
+                            )}
                         </p>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
                         <Button variant="outline" onClick={() => void loadSnapshot()} disabled={loading}>
                             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                            Refresh
+                            {tr("Refresh", "Rafraichir")}
                         </Button>
                         <Button
                             variant="outline"
@@ -169,19 +191,23 @@ export default function PluginHealthCenterClient() {
                             disabled={actionLoading !== null}
                         >
                             <ShieldCheck className="w-4 h-4" />
-                            {actionLoading === "test_connection" ? "Testing..." : "Test Connection"}
+                            {actionLoading === "test_connection"
+                                ? tr("Testing...", "Test en cours...")
+                                : tr("Test Connection", "Tester la connexion")}
                         </Button>
                         <Button
                             onClick={() => void runAction("force_heartbeat")}
                             disabled={actionLoading !== null}
                         >
                             <Send className="w-4 h-4" />
-                            {actionLoading === "force_heartbeat" ? "Sending..." : "Force Heartbeat"}
+                            {actionLoading === "force_heartbeat"
+                                ? tr("Sending...", "Envoi en cours...")
+                                : tr("Force Heartbeat", "Forcer un heartbeat")}
                         </Button>
                         <Button asChild variant="secondary">
                             <a href="/api/admin/plugin/health?export=1">
                                 <Download className="w-4 h-4" />
-                                Export Diagnostic JSON
+                                {tr("Export Diagnostic JSON", "Exporter le JSON de diagnostic")}
                             </a>
                         </Button>
                     </div>
@@ -199,19 +225,19 @@ export default function PluginHealthCenterClient() {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                     <Card className="app-surface-soft border-border/60">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">Connection</CardTitle>
+                            <CardTitle className="text-sm text-muted-foreground">{tr("Connection", "Connexion")}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1.5 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>Status</span>
+                                <span>{tr("Status", "Statut")}</span>
                                 {connectionBadge}
                             </div>
                             <div className="flex items-center justify-between gap-3">
-                                <span>Last seen</span>
+                                <span>{tr("Last seen", "Derniere activite")}</span>
                                 <span className="font-medium">{snapshot?.plugin.lastSeen ? new Date(snapshot.plugin.lastSeen).toLocaleString() : "-"}</span>
                             </div>
                             <div className="flex items-center justify-between gap-3">
-                                <span>Server</span>
+                                <span>{tr("Server", "Serveur")}</span>
                                 <span className="font-medium truncate">{snapshot?.plugin.serverName || "-"}</span>
                             </div>
                         </CardContent>
@@ -219,23 +245,23 @@ export default function PluginHealthCenterClient() {
 
                     <Card className="app-surface-soft border-border/60">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">Heartbeat jitter</CardTitle>
+                            <CardTitle className="text-sm text-muted-foreground">{tr("Heartbeat jitter", "Jitter heartbeat")}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1.5 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>P50 interval</span>
-                                <span className="font-semibold">{snapshot?.heartbeat.intervalP50Sec ?? "-"}s</span>
+                                <span>{tr("P50 interval", "Intervalle P50")}</span>
+                                <span className="font-semibold">{formatSeconds(snapshot?.heartbeat.intervalP50Sec ?? null)}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>P95 interval</span>
-                                <span className="font-semibold">{snapshot?.heartbeat.intervalP95Sec ?? "-"}s</span>
+                                <span>{tr("P95 interval", "Intervalle P95")}</span>
+                                <span className="font-semibold">{formatSeconds(snapshot?.heartbeat.intervalP95Sec ?? null)}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>P95 jitter</span>
-                                <span className="font-semibold">{snapshot?.heartbeat.jitterP95Sec ?? "-"}s</span>
+                                <span>{tr("P95 jitter", "Jitter P95")}</span>
+                                <span className="font-semibold">{formatSeconds(snapshot?.heartbeat.jitterP95Sec ?? null)}</span>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
-                                <span>Gap now</span>
+                                <span>{tr("Gap now", "Ecart actuel")}</span>
                                 <span>{formatGap(snapshot?.heartbeat.gapSec ?? null)}</span>
                             </div>
                         </CardContent>
@@ -243,23 +269,23 @@ export default function PluginHealthCenterClient() {
 
                     <Card className="app-surface-soft border-border/60">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">Ingestion reliability</CardTitle>
+                            <CardTitle className="text-sm text-muted-foreground">{tr("Ingestion reliability", "Fiabilite d'ingestion")}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1.5 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>Success rate (24h)</span>
-                                <span className="font-semibold">{snapshot?.ingestion.successRate24h ?? "-"}%</span>
+                                <span>{tr("Success rate (24h)", "Taux de succes (24h)")}</span>
+                                <span className="font-semibold">{formatPercent(snapshot?.ingestion.successRate24h ?? null)}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Failures (24h)</span>
+                                <span>{tr("Failures (24h)", "Echecs (24h)")}</span>
                                 <span className="font-semibold">{snapshot?.ingestion.failureCount24h ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
-                                <span>Unauthorized</span>
+                                <span>{tr("Unauthorized", "Non autorise")}</span>
                                 <span>{snapshot?.ingestion.unauthorized24h ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
-                                <span>Rate limited</span>
+                                <span>{tr("Rate limited", "Limite de debit")}</span>
                                 <span>{snapshot?.ingestion.rateLimited24h ?? 0}</span>
                             </div>
                         </CardContent>
@@ -267,23 +293,23 @@ export default function PluginHealthCenterClient() {
 
                     <Card className="app-surface-soft border-border/60">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">Live stream health</CardTitle>
+                            <CardTitle className="text-sm text-muted-foreground">{tr("Live stream health", "Sante des flux en direct")}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1.5 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>Active streams</span>
+                                <span>{tr("Active streams", "Flux actifs")}</span>
                                 <span className="font-semibold">{snapshot?.streams.active ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Transcodes</span>
+                                <span>{tr("Transcodes", "Transcodages")}</span>
                                 <span className="font-semibold">{snapshot?.streams.transcodes ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Stale streams</span>
+                                <span>{tr("Stale streams", "Flux inactifs")}</span>
                                 <span className="font-semibold">{snapshot?.streams.stale ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
-                                <span>Avg bitrate</span>
+                                <span>{tr("Avg bitrate", "Debit moyen")}</span>
                                 <span>{formatBitrateKbps(snapshot?.streams.avgBitrateKbps ?? null)}</span>
                             </div>
                         </CardContent>
@@ -295,18 +321,21 @@ export default function PluginHealthCenterClient() {
                         <CardHeader>
                             <CardTitle className="text-base flex items-center gap-2">
                                 <AlertTriangle className="w-4 h-4 text-amber-400" />
-                                Recent ingest failures
+                                {tr("Recent ingest failures", "Derniers echecs d'ingestion")}
                             </CardTitle>
                             <CardDescription>
-                                Latest plugin validation/security failures recorded by the server.
+                                {tr(
+                                    "Latest plugin validation/security failures recorded by the server.",
+                                    "Derniers echecs de validation/securite du plugin enregistres par le serveur."
+                                )}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>When</TableHead>
-                                        <TableHead>Action</TableHead>
+                                        <TableHead>{tr("When", "Quand")}</TableHead>
+                                        <TableHead>{tr("Action", "Action")}</TableHead>
                                         <TableHead>IP</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -321,7 +350,7 @@ export default function PluginHealthCenterClient() {
                                     {(snapshot?.recentFailures || []).length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={3} className="text-center text-muted-foreground">
-                                                No recent failures detected.
+                                                {tr("No recent failures detected.", "Aucun echec recent detecte.")}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -334,23 +363,23 @@ export default function PluginHealthCenterClient() {
                         <CardHeader>
                             <CardTitle className="text-base flex items-center gap-2">
                                 <Timer className="w-4 h-4 text-cyan-400" />
-                                Plugin-reported metrics
+                                {tr("Plugin-reported metrics", "Metriques remontees par le plugin")}
                             </CardTitle>
                             <CardDescription>
-                                Metrics expected from plugin queue telemetry.
+                                {tr("Metrics expected from plugin queue telemetry.", "Metriques attendues via la telemetrie de file du plugin.")}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>Queue depth</span>
+                                <span>{tr("Queue depth", "Profondeur de file")}</span>
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.queueDepth ?? "-"}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Retries</span>
+                                <span>{tr("Retries", "Tentatives")}</span>
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.retries ?? "-"}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Last HTTP code</span>
+                                <span>{tr("Last HTTP code", "Dernier code HTTP")}</span>
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.lastHttpCode ?? "-"}</span>
                             </div>
                             <p className="text-xs text-muted-foreground pt-2 border-t border-border/60">
