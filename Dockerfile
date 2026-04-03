@@ -8,7 +8,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 # Install build tools and git (some deps fetch via git), then install packages
 RUN apk add --no-cache python3 build-base git ca-certificates && \
-    npm ci --no-audit --progress=false
+    npm --version && \
+    npm install -g npm@10 || true && \
+    npm ci --no-audit --progress=false || npm install --no-audit --progress=false
 
 # 2. Rebuild the source code only when needed
 FROM base AS builder
