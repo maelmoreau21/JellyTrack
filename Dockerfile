@@ -4,9 +4,11 @@ RUN apk add --no-cache libc6-compat openssl
 # 1. Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN apk add --no-cache python3 build-base && \
-    npm ci --prefer-offline --no-audit --progress=false
+# Copy lockfile explicitly to ensure it's present in the build context
+COPY package.json package-lock.json ./
+# Install build tools and git (some deps fetch via git), then install packages
+RUN apk add --no-cache python3 build-base git ca-certificates && \
+    npm ci --no-audit --progress=false
 
 # 2. Rebuild the source code only when needed
 FROM base AS builder
