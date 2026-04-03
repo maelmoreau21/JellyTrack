@@ -3,10 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { unstable_cache } from "next/cache";
 import { format } from "date-fns";
 import { getTranslations, getLocale } from 'next-intl/server';
-import { normalizeLibraryKey, getAvailableLibraryKeys } from '@/lib/mediaPolicy';
+import { buildExcludedMediaClause, getAvailableLibraryKeys, getCompletionMetrics, normalizeLibraryKey } from '@/lib/mediaPolicy';
 import { normalizeLanguageTag } from '@/lib/language';
 import { formatHour } from "@/lib/utils";
-import { getCompletionMetrics } from "@/lib/mediaPolicy";
 import { GranularAnalysisClient } from "./GranularAnalysisClient";
 
 type GranularData = {
@@ -32,16 +31,21 @@ const getGranularData = unstable_cache(
 
         const selectedServerScope = selectedServerIds.length > 0 ? { in: selectedServerIds } : undefined;
 
-        let mediaTypeFilter: Record<string, unknown> = {};
-        if (type === 'movie') mediaTypeFilter = { type: 'Movie' };
-        else if (type === 'series') mediaTypeFilter = { type: { in: ['Series', 'Episode'] } };
-        else if (type === 'music') mediaTypeFilter = { type: { in: ['Audio', 'Track', 'MusicAlbum'] } };
-        else if (type === 'book') mediaTypeFilter = { type: { in: ['Book', 'AudioBook'] } };
+        const mediaAnd: Array<Record<string, unknown>> = [];
+        if (type === 'movie') mediaAnd.push({ type: 'Movie' });
+        else if (type === 'series') mediaAnd.push({ type: { in: ['Series', 'Episode'] } });
+        else if (type === 'music') mediaAnd.push({ type: { in: ['Audio', 'Track', 'MusicAlbum'] } });
+        else if (type === 'book') mediaAnd.push({ type: { in: ['Book', 'AudioBook'] } });
+
+        const excludedClause = buildExcludedMediaClause(excludedLibraries);
+        if (excludedClause) mediaAnd.push(excludedClause);
+
+        const mediaWhere = mediaAnd.length > 0 ? { AND: mediaAnd } : undefined;
 
         const history = await prisma.playbackHistory.findMany({
             where: {
                 startedAt: { gte: currentStartDate },
-                media: mediaTypeFilter,
+                ...(mediaWhere ? { media: mediaWhere } : {}),
                 ...(selectedServerScope ? { serverId: selectedServerScope } : {}),
             },
             select: {
@@ -49,7 +53,7 @@ const getGranularData = unstable_cache(
                 durationWatched: true,
                 audioLanguage: true,
                 subtitleLanguage: true,
-                media: { select: { collectionType: true, type: true, durationMs: true, title: true, jellyfinMediaId: true } }
+                media: { select: { libraryName: true, collectionType: true, type: true, durationMs: true, title: true, jellyfinMediaId: true } }
             },
             orderBy: { startedAt: 'asc' }
         });
@@ -75,8 +79,7 @@ const getGranularData = unstable_cache(
 
         history.forEach(h => {
             if (!h.media) return;
-            const lib = h.media.collectionType || h.media.type || "?";
-            if (excludedLibraries.includes(lib)) return;
+            const lib = h.media.libraryName || h.media.collectionType || h.media.type || "?";
 
             collections.add(lib);
             const date = new Date(h.startedAt);

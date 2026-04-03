@@ -1,11 +1,7 @@
-import { requireAdmin, isAuthError } from "@/lib/auth";
-import PluginHealthCenterClient from "./PluginHealthCenterClient";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function PluginHealthPage() {
-    const auth = await requireAdmin();
-    if (isAuthError(auth)) return auth;
-
-    return <PluginHealthCenterClient />;
+export default function PluginHealthPage() {
+    redirect('/admin/health');
 }

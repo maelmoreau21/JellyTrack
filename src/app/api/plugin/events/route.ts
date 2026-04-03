@@ -183,6 +183,21 @@ function parsePositiveInteger(raw: unknown): number | null {
     return null;
 }
 
+function parseFiniteNumber(raw: unknown): number | null {
+    if (typeof raw === "number" && Number.isFinite(raw)) {
+        return raw;
+    }
+
+    if (typeof raw === "string") {
+        const value = Number(raw.trim());
+        if (Number.isFinite(value)) {
+            return value;
+        }
+    }
+
+    return null;
+}
+
 function resolvePluginSchemaVersion(payload: Record<string, any>): PluginSchemaVersionResult {
     const raw =
         payload.eventSchemaVersion ??
@@ -683,6 +698,15 @@ export async function POST(req: Request) {
 
         // ────── Heartbeat ──────
         if (event === "Heartbeat") {
+            const metrics = payload.pluginMetrics || payload.PluginMetrics || {};
+            const queueDepthRaw = parseFiniteNumber(metrics.queueDepth ?? metrics.QueueDepth);
+            const retriesRaw = parseFiniteNumber(metrics.retries ?? metrics.Retries ?? metrics.retryCount ?? metrics.RetryCount);
+            const lastHttpCodeRaw = parseFiniteNumber(metrics.lastHttpCode ?? metrics.LastHttpCode ?? metrics.lastHttpStatusCode ?? metrics.LastHttpStatusCode);
+
+            const queueDepth = queueDepthRaw !== null ? Math.max(0, Math.floor(queueDepthRaw)) : null;
+            const retries = retriesRaw !== null ? Math.max(0, Math.floor(retriesRaw)) : null;
+            const lastHttpCode = lastHttpCodeRaw !== null ? Math.max(0, Math.floor(lastHttpCodeRaw)) : null;
+
             await prisma.globalSettings.upsert({
                 where: { id: "global" },
                 update: {
@@ -719,7 +743,13 @@ export async function POST(req: Request) {
                 source: "monitor",
                 kind: "monitor_ping",
                 message: `Monitor heartbeat received (${sessionCount} sessions)`,
-                details: { sessions: sessionCount, version: payload.pluginVersion || "unknown" }
+                details: {
+                    sessions: sessionCount,
+                    version: payload.pluginVersion || "unknown",
+                    queueDepth,
+                    retries,
+                    lastHttpCode,
+                }
             });
 
             return corsJson({ success: true, message: `Heartbeat OK, ${syncedUsers} users synced.` });
@@ -758,6 +788,7 @@ export async function POST(req: Request) {
             // Upsert canonical user/media and merge legacy compact IDs when needed.
             const dbUser = await upsertCanonicalUser(sourceServer.id, jellyfinUserId, username, true);
             const collectionType = media.collectionType || media.CollectionType || inferLibraryKey({ type });
+            const payloadLibraryName = media.libraryName || media.LibraryName || null;
             const dbMedia = await upsertCanonicalMedia({
                 serverId: sourceServer.id,
                 rawJellyfinMediaId: jellyfinMediaId,
@@ -769,7 +800,7 @@ export async function POST(req: Request) {
                 durationMs: media.durationMs != null ? BigInt(media.durationMs) : null,
                 parentId: parentItemId,
                 artist: media.artist || media.Artist || media.albumArtist || media.AlbumArtist || null,
-                libraryName: media.libraryName || media.LibraryName || null,
+                libraryName: payloadLibraryName,
                 directors: ((media.people || media.People || []) as JellyfinPerson[])
                     .filter((p) => (p.type === "Director" || p.Type === "Director"))
                     .map((p) => p.name || p.Name)
@@ -794,10 +825,12 @@ export async function POST(req: Request) {
                     maxConcurrentTranscodes: true 
                 },
             });
-            if (isLibraryExcluded({ collectionType, type }, settings?.excludedLibraries || [])) {
+            if (isLibraryExcluded({ serverId: sourceServer.id, libraryName: payloadLibraryName, collectionType, type }, settings?.excludedLibraries || [])) {
                 console.log("[Plugin] PlaybackStart ignored due excluded library", {
+                    serverId: sourceServer.id,
                     jellyfinUserId,
                     jellyfinMediaId,
+                    libraryName: payloadLibraryName,
                     collectionType: collectionType || null,
                     type,
                 });
@@ -1358,6 +1391,7 @@ export async function POST(req: Request) {
                 : (existingMedia?.title || `Media ${String(jellyfinMediaId).slice(0, 8)}`);
             const resolvedType = type !== "Unknown" ? type : (existingMedia?.type || "Unknown");
             const resolvedCollectionType = collectionType || existingMedia?.collectionType || inferLibraryKey({ type: resolvedType });
+            const resolvedLibraryName = mediaPayload.libraryName || mediaPayload.LibraryName || existingMedia?.libraryName || null;
             const resolvedClientName = clientNameRaw !== "Unknown" ? clientNameRaw : (existingStream?.clientName || "Unknown");
             const resolvedDeviceName = deviceNameRaw !== "Unknown" ? deviceNameRaw : (existingStream?.deviceName || "Unknown");
             const resolvedPlayMethod = playMethodRaw !== "Unknown" ? playMethodRaw : (existingStream?.playMethod || "DirectPlay");
@@ -1374,10 +1408,12 @@ export async function POST(req: Request) {
                 where: { id: "global" },
                 select: { excludedLibraries: true },
             });
-            if (isLibraryExcluded({ collectionType: resolvedCollectionType, type: resolvedType }, settings?.excludedLibraries || [])) {
+            if (isLibraryExcluded({ serverId: sourceServer.id, libraryName: resolvedLibraryName, collectionType: resolvedCollectionType, type: resolvedType }, settings?.excludedLibraries || [])) {
                 console.log("[Plugin] PlaybackProgress ignored due excluded library", {
+                    serverId: sourceServer.id,
                     jellyfinUserId,
                     jellyfinMediaId,
+                    libraryName: resolvedLibraryName,
                     collectionType: resolvedCollectionType || null,
                     type: resolvedType,
                     sessionId: sessionId || null,
@@ -1397,7 +1433,7 @@ export async function POST(req: Request) {
                 durationMs: Number.isFinite(mediaDurationMs) && mediaDurationMs > 0 ? BigInt(mediaDurationMs) : null,
                 parentId: parentItemId || existingMedia?.parentId || null,
                 artist: mediaPayload.artist || mediaPayload.Artist || albumArtist || existingMedia?.artist || null,
-                libraryName: mediaPayload.libraryName || mediaPayload.LibraryName || existingMedia?.libraryName || null,
+                libraryName: resolvedLibraryName,
             });
 
             // Record monitor activity for Log Health

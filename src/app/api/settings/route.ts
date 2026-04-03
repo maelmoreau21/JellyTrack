@@ -4,7 +4,7 @@ import { requireAdmin, isAuthError } from "@/lib/auth";
 import { apiT } from "@/lib/i18n-api";
 import { AVAILABLE_LOCALES } from "@/i18n/locales";
 // No more library rules
-import { getSanitizedLibraryNames } from "@/lib/libraryUtils";
+import { getSanitizedLibraryNames, getServerLibraryScopes } from "@/lib/libraryUtils";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -78,15 +78,24 @@ export async function GET() {
             });
         }
 
-        const [availableLibraries, jellyfinScanNames] = await Promise.all([
+        const [availableLibraries, availableLibraryScopes, jellyfinScanNames] = await Promise.all([
             getSanitizedLibraryNames(),
+            getServerLibraryScopes(),
             fetchJellyfinLibraryNames(),
         ]);
+
+        const mergedAvailableLibraries = Array.from(
+            new Set([
+                ...availableLibraries,
+                ...availableLibraryScopes.map((entry) => entry.libraryName),
+            ])
+        ).sort((left, right) => left.localeCompare(right, undefined, { sensitivity: "base" }));
 
 
         return NextResponse.json({
             ...settings,
-            availableLibraries,
+            availableLibraries: mergedAvailableLibraries,
+            availableLibraryScopes,
             libraryScanSource: jellyfinScanNames.source,
             libraryScanError: jellyfinScanNames.error || undefined,
         }, { status: 200 });
@@ -152,6 +161,19 @@ export async function POST(req: NextRequest) {
         if (defaultLocale !== undefined && !validLocales.includes(defaultLocale)) {
             return NextResponse.json({ error: await apiT('localeInvalid') }, { status: 400 });
         }
+        if (excludedLibraries !== undefined && !Array.isArray(excludedLibraries)) {
+            return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
+        }
+
+        const sanitizedExcludedLibraries = excludedLibraries !== undefined
+            ? Array.from(
+                new Set(
+                    excludedLibraries
+                        .map((value: unknown) => String(value || '').trim())
+                        .filter((value: string) => value.length > 0)
+                )
+            )
+            : undefined;
 
         const updated = await (prisma.globalSettings as any).upsert({
             where: { id: "global" },
@@ -160,7 +182,7 @@ export async function POST(req: NextRequest) {
                 discordAlertCondition: discordAlertCondition !== undefined ? discordAlertCondition : undefined,
                 discordAlertsEnabled: discordAlertsEnabled !== undefined ? discordAlertsEnabled : undefined,
                 maxConcurrentTranscodes: maxConcurrentTranscodes !== undefined ? Number(maxConcurrentTranscodes) : undefined,
-                excludedLibraries: excludedLibraries !== undefined ? excludedLibraries : undefined,
+                excludedLibraries: sanitizedExcludedLibraries !== undefined ? sanitizedExcludedLibraries : undefined,
                 syncCronHour: syncCronHour !== undefined ? Number(syncCronHour) : undefined,
                 syncCronMinute: syncCronMinute !== undefined ? Number(syncCronMinute) : undefined,
                 backupCronHour: backupCronHour !== undefined ? Number(backupCronHour) : undefined,
@@ -180,7 +202,7 @@ export async function POST(req: NextRequest) {
                 discordAlertCondition: discordAlertCondition || "ALL",
                 discordAlertsEnabled: discordAlertsEnabled || false,
                 maxConcurrentTranscodes: maxConcurrentTranscodes !== undefined ? Number(maxConcurrentTranscodes) : 0,
-                excludedLibraries: excludedLibraries || [],
+                excludedLibraries: sanitizedExcludedLibraries || [],
                 syncCronHour: syncCronHour !== undefined ? Number(syncCronHour) : 3,
                 syncCronMinute: syncCronMinute !== undefined ? Number(syncCronMinute) : 0,
                 backupCronHour: backupCronHour !== undefined ? Number(backupCronHour) : 3,
@@ -215,7 +237,9 @@ export async function POST(req: NextRequest) {
         revalidatePath('/');
         revalidatePath('/settings');
         revalidatePath('/admin/cleanup');
+        revalidatePath('/admin/health');
         revalidatePath('/admin/log-health');
+        revalidatePath('/admin/plugin-health');
 
         return NextResponse.json(updated, { status: 200 });
     } catch (error) {

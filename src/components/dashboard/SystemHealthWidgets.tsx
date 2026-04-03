@@ -86,7 +86,7 @@ export function SystemHealthWidgets({ initialSnapshot }: { initialSnapshot: Snap
                     <DatabaseBackup className="h-3.5 w-3.5 text-emerald-500" />
                     {t('lastBackup')}: {formatRelative(snapshot.status.backup.lastSuccessAt as string | null)}
                 </div>
-                <Link href="/admin/log-health" className="ml-auto inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all">
+                <Link href="/admin/health" className="ml-auto inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all">
                     <HeartPulse className="h-3.5 w-3.5" />
                     {t('logHealth')}
                 </Link>

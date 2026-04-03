@@ -12,8 +12,6 @@ export default function SettingsPluginPage() {
     const t = useTranslations('settings');
     const tc = useTranslations('common');
     const locale = useLocale();
-    const isFr = locale.toLowerCase().startsWith('fr');
-    const tr = (en: string, fr: string) => (isFr ? fr : en);
 
     const [pluginMsg, setPluginMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [pluginConnected, setPluginConnected] = useState(false);
@@ -173,14 +171,14 @@ export default function SettingsPluginPage() {
                                 className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border border-border hover:bg-muted transition-colors"
                             >
                                 <ShieldCheck className="w-4 h-4" />
-                                {tr('Security Center', 'Centre de securite')}
+                                {t('pluginSecurityCenter')}
                             </Link>
                             <Link
-                                href="/admin/plugin-health"
+                                href="/admin/health"
                                 className="inline-flex items-center gap-2 text-xs px-3 py-2 rounded-md border border-border hover:bg-muted transition-colors"
                             >
                                 <HeartPulse className="w-4 h-4" />
-                                {tr('Health Center', 'Centre de sante')}
+                                {t('pluginHealthCenter')}
                             </Link>
                         </div>
                     </div>
@@ -226,16 +224,13 @@ export default function SettingsPluginPage() {
                                     >
                                         <Copy className="w-4 h-4" />
                                         {!pluginApiKey
-                                            ? tr('Key hidden', 'Cle masquee')
+                                            ? t('pluginKeyHidden')
                                             : (apiKeyCopied ? t('pluginApiKeyCopied') : t('pluginCopyKey'))}
                                     </button>
                                 </div>
                                 {!pluginApiKey && (
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        {tr(
-                                            'The saved API key is hidden for security. Regenerate it to display it once.',
-                                            'La cle API enregistree est masquee pour la securite. Regenerez-la pour l afficher une seule fois.'
-                                        )}
+                                        {t('pluginKeyMaskedHint')}
                                     </p>
                                 )}
                             </div>
@@ -254,7 +249,7 @@ export default function SettingsPluginPage() {
                                         className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-border hover:bg-muted transition-colors text-foreground"
                                     >
                                         <Copy className="w-4 h-4" />
-                                        {pluginUrlCopied ? t('pluginApiKeyCopied') : t('pluginCopyKey')}
+                                        {pluginUrlCopied ? t('pluginUrlCopied') : t('pluginCopyUrl')}
                                     </button>
                                 </div>
                                 <p className="text-xs text-muted-foreground">{t('pluginServerUrlDesc')}</p>

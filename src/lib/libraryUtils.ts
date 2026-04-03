@@ -1,5 +1,5 @@
 import prisma from "./prisma";
-import { normalizeLibraryKey } from "./mediaPolicy";
+import { makeScopedLibraryExclusion, normalizeLibraryKey } from "./mediaPolicy";
 
 /**
  * Common list of 'ghost' library names created by sync fallbacks
@@ -10,6 +10,14 @@ export const GHOST_LIBRARY_NAMES = [
   'movies', 'tvshows', 'music', 'books', 
   'Collections'
 ];
+
+export type ServerLibraryScope = {
+  key: string;
+  serverId: string;
+  serverName: string;
+  serverUrl: string | null;
+  libraryName: string;
+};
 
 /**
  * Fetches the list of library names from both Jellyfin (via VirtualFolders)
@@ -73,4 +81,71 @@ export async function getSanitizedLibraryNames() {
   dbNames.forEach(n => addName(n, false));
 
   return Array.from(normalizedToOriginal.values()).sort((a, b) => a.localeCompare(b));
+}
+
+function normalizeLibraryNameIdentity(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+export async function getServerLibraryScopes(): Promise<ServerLibraryScope[]> {
+  const prismaAny = prisma as any;
+  if (!prismaAny?.media || typeof prismaAny.media.findMany !== 'function') {
+    return [];
+  }
+
+  const [serverRows, mediaRows] = await Promise.all([
+    prismaAny?.server && typeof prismaAny.server.findMany === 'function'
+      ? prismaAny.server.findMany({
+          select: { id: true, name: true, url: true },
+        })
+      : Promise.resolve([]),
+    prismaAny.media.findMany({
+      where: { libraryName: { not: null } },
+      select: { serverId: true, libraryName: true },
+      distinct: ['serverId', 'libraryName'],
+    }),
+  ]);
+
+  const serverMap = new Map<string, { name: string; url: string | null }>(
+    (serverRows || []).map((row: { id: string; name: string; url?: string | null }) => [
+      row.id,
+      {
+        name: String(row.name || row.id || 'Unknown server'),
+        url: row.url ? String(row.url) : null,
+      },
+    ])
+  );
+
+  const ghostSet = new Set(GHOST_LIBRARY_NAMES.map((name) => normalizeLibraryNameIdentity(name)));
+  const seen = new Set<string>();
+  const scoped: ServerLibraryScope[] = [];
+
+  for (const row of mediaRows as Array<{ serverId: string; libraryName: string | null }>) {
+    const serverId = String(row.serverId || '').trim();
+    const libraryName = String(row.libraryName || '').trim();
+    if (!serverId || !libraryName) continue;
+
+    if (ghostSet.has(normalizeLibraryNameIdentity(libraryName))) continue;
+
+    const key = makeScopedLibraryExclusion(serverId, libraryName);
+    if (!key || seen.has(key)) continue;
+
+    const serverMeta = serverMap.get(serverId);
+    scoped.push({
+      key,
+      serverId,
+      serverName: serverMeta?.name || serverId,
+      serverUrl: serverMeta?.url || null,
+      libraryName,
+    });
+    seen.add(key);
+  }
+
+  scoped.sort((left, right) => {
+    const byServer = left.serverName.localeCompare(right.serverName, undefined, { sensitivity: 'base' });
+    if (byServer !== 0) return byServer;
+    return left.libraryName.localeCompare(right.libraryName, undefined, { sensitivity: 'base' });
+  });
+
+  return scoped;
 }

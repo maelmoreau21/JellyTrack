@@ -18,8 +18,7 @@ import {
     Menu,
     X,
     HeartPulse,
-    GitCompareArrows,
-    Stethoscope
+    GitCompareArrows
 } from "lucide-react";
 import { LogoutButton } from "./LogoutButton";
 import { SearchBar } from "./SearchBar";
@@ -32,9 +31,8 @@ const adminNavigationKeys = [
     { key: 'recentlyAdded', href: '/recent', icon: Sparkles },
     { key: 'library', href: '/media', icon: Film },
     { key: 'logs', href: '/logs', icon: ScrollText },
-    { key: 'logHealth', href: '/admin/log-health', icon: HeartPulse },
-    { label: 'Server Compare', href: '/admin/server-compare', icon: GitCompareArrows },
-    { label: 'Plugin Health', href: '/admin/plugin-health', icon: Stethoscope },
+    { key: 'logHealth', href: '/admin/health', icon: HeartPulse },
+    { key: 'serverCompare', href: '/admin/server-compare', icon: GitCompareArrows },
     { key: 'users', href: '/users', icon: Users },
     { key: 'cleanup', href: '/admin/cleanup', icon: Eraser },
     { key: 'settings', href: '/settings', icon: Settings },
@@ -63,7 +61,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
 
     // Build navigation based on role
     const navigation = isAdmin
-        ? adminNavigationKeys.map(item => ({ name: 'key' in item ? t(item.key as any) : (item as any).label, href: item.href, icon: item.icon }))
+        ? adminNavigationKeys.map(item => ({ name: t(item.key as any), href: item.href, icon: item.icon }))
         : [
             { name: t('myProfile'), href: `/users/${jellyfinUserId || ''}`, icon: UserCircle },
             // Only show wrapped if globally visible AND active

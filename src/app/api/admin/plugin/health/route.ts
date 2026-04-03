@@ -15,6 +15,31 @@ const FAILURE_ACTIONS = [
     "plugin.events.invalid_content_type",
 ] as const;
 
+const DEFAULT_GAP_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_GAP_WARNING_SEC || 90);
+const DEFAULT_GAP_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_GAP_CRITICAL_SEC || 180);
+const DEFAULT_JITTER_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_WARNING_SEC || 15);
+const DEFAULT_JITTER_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_CRITICAL_SEC || 30);
+
+function clampPositiveNumber(value: number, fallback: number): number {
+    if (!Number.isFinite(value) || value <= 0) return fallback;
+    return value;
+}
+
+const HEARTBEAT_THRESHOLD_DEFAULTS = {
+    gapWarningSec: clampPositiveNumber(DEFAULT_GAP_WARNING_SEC, 90),
+    gapCriticalSec: clampPositiveNumber(DEFAULT_GAP_CRITICAL_SEC, 180),
+    jitterWarningSec: clampPositiveNumber(DEFAULT_JITTER_WARNING_SEC, 15),
+    jitterCriticalSec: clampPositiveNumber(DEFAULT_JITTER_CRITICAL_SEC, 30),
+};
+
+if (HEARTBEAT_THRESHOLD_DEFAULTS.gapCriticalSec <= HEARTBEAT_THRESHOLD_DEFAULTS.gapWarningSec) {
+    HEARTBEAT_THRESHOLD_DEFAULTS.gapCriticalSec = HEARTBEAT_THRESHOLD_DEFAULTS.gapWarningSec + 1;
+}
+
+if (HEARTBEAT_THRESHOLD_DEFAULTS.jitterCriticalSec <= HEARTBEAT_THRESHOLD_DEFAULTS.jitterWarningSec) {
+    HEARTBEAT_THRESHOLD_DEFAULTS.jitterCriticalSec = HEARTBEAT_THRESHOLD_DEFAULTS.jitterWarningSec + 0.1;
+}
+
 function percentile(values: number[], percentileValue: number): number | null {
     if (values.length === 0) return null;
     const sorted = [...values].sort((a, b) => a - b);
@@ -30,6 +55,15 @@ function computeIntervalsMs(timestamps: Date[]): number[] {
         intervals.push(sorted[i].getTime() - sorted[i - 1].getTime());
     }
     return intervals;
+}
+
+function parseFiniteNumber(raw: unknown): number | null {
+    if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+    if (typeof raw === "string") {
+        const parsed = Number(raw.trim());
+        if (Number.isFinite(parsed)) return parsed;
+    }
+    return null;
 }
 
 async function buildPluginHealthSnapshot(req: Request) {
@@ -116,6 +150,45 @@ async function buildPluginHealthSnapshot(req: Request) {
         : [];
     const jitterP95Ms = percentile(heartbeatJitterMs, 95);
 
+    const intervalSeriesRaw = heartbeatIntervalsMs.map((intervalMs, index) => {
+        const sampleTime = heartbeatEvents[index + 1]?.createdAt;
+        return {
+            timestamp: (sampleTime instanceof Date ? sampleTime : new Date(now)).toISOString(),
+            intervalSec: Number((intervalMs / 1000).toFixed(2)),
+            jitterSec: baselineIntervalMs !== null
+                ? Number((Math.abs(intervalMs - baselineIntervalMs) / 1000).toFixed(2))
+                : null,
+        };
+    });
+
+    const maxTimelinePoints = 240;
+    const samplingStep = intervalSeriesRaw.length > maxTimelinePoints
+        ? Math.ceil(intervalSeriesRaw.length / maxTimelinePoints)
+        : 1;
+    const intervalSeries24h = intervalSeriesRaw.filter((_, index) => (
+        index % samplingStep === 0 || index === intervalSeriesRaw.length - 1
+    ));
+
+    const latestHeartbeatDetails = heartbeatEvents.length > 0
+        ? heartbeatEvents[heartbeatEvents.length - 1]?.details
+        : null;
+    const heartbeatDetails = latestHeartbeatDetails && typeof latestHeartbeatDetails === "object" && !Array.isArray(latestHeartbeatDetails)
+        ? latestHeartbeatDetails as Record<string, unknown>
+        : null;
+    const queueDepth = parseFiniteNumber(heartbeatDetails?.queueDepth ?? heartbeatDetails?.QueueDepth);
+    const retries = parseFiniteNumber(heartbeatDetails?.retries ?? heartbeatDetails?.Retries ?? heartbeatDetails?.retryCount ?? heartbeatDetails?.RetryCount);
+    const lastHttpCode = parseFiniteNumber(
+        heartbeatDetails?.lastHttpCode ??
+        heartbeatDetails?.LastHttpCode ??
+        heartbeatDetails?.lastHttpStatusCode ??
+        heartbeatDetails?.LastHttpStatusCode
+    );
+
+    const normalizedQueueDepth = queueDepth !== null ? Math.max(0, Math.floor(queueDepth)) : null;
+    const normalizedRetries = retries !== null ? Math.max(0, Math.floor(retries)) : null;
+    const normalizedLastHttpCode = lastHttpCode !== null ? Math.max(0, Math.floor(lastHttpCode)) : null;
+    const hasPluginMetrics = normalizedQueueDepth !== null || normalizedRetries !== null || normalizedLastHttpCode !== null;
+
     const successEstimate24h = heartbeatEvents.length + playbackStarts24h + playbackStops24h;
     const totalEstimate24h = successEstimate24h + failureCount24h;
     const successRate24h = totalEstimate24h > 0
@@ -141,7 +214,9 @@ async function buildPluginHealthSnapshot(req: Request) {
             intervalP50Sec: p50IntervalMs !== null ? Number((p50IntervalMs / 1000).toFixed(2)) : null,
             intervalP95Sec: p95IntervalMs !== null ? Number((p95IntervalMs / 1000).toFixed(2)) : null,
             jitterP95Sec: jitterP95Ms !== null ? Number((jitterP95Ms / 1000).toFixed(2)) : null,
+            intervalSeries24h,
         },
+        thresholdDefaults: HEARTBEAT_THRESHOLD_DEFAULTS,
         ingestion: {
             successEstimate24h,
             failureCount24h,
@@ -160,10 +235,12 @@ async function buildPluginHealthSnapshot(req: Request) {
                 : null,
         },
         pluginReportedMetrics: {
-            queueDepth: null,
-            retries: null,
-            lastHttpCode: null,
-            note: "Current plugin payload version does not include queue depth/retry/http diagnostics.",
+            queueDepth: normalizedQueueDepth,
+            retries: normalizedRetries,
+            lastHttpCode: normalizedLastHttpCode,
+            note: hasPluginMetrics
+                ? "Live plugin telemetry from latest heartbeat."
+                : "Current plugin payload version does not include queue depth/retry/http diagnostics.",
         },
         recentFailures: recentAuditFailures.map((event: any) => ({
             id: String(event.id),

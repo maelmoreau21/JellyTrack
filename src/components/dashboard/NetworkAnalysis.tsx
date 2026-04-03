@@ -7,6 +7,7 @@ import { StandardAreaChart, StandardBarChart, StandardPieChart } from "@/compone
 import { TranscodeHourlyChart } from "@/components/charts/TranscodeHourlyChart";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
+import { buildExcludedMediaClause } from "@/lib/mediaPolicy";
 
 const getNetworkData = unstable_cache(
     async (type: string | undefined, timeRange: string, excludedLibraries: string[], selectedServerIds: string[] = []) => {
@@ -22,16 +23,8 @@ const getNetworkData = unstable_cache(
         else if (type === 'music') mediaAnd.push({ type: { in: ['Audio', 'Track', 'MusicAlbum'] } });
         else if (type === 'book') mediaAnd.push({ type: { in: ['Book', 'AudioBook'] } });
 
-        if (excludedLibraries.length > 0) {
-            mediaAnd.push({
-                NOT: {
-                    OR: [
-                        { libraryName: { in: excludedLibraries } },
-                        { collectionType: { in: excludedLibraries } },
-                    ],
-                },
-            });
-        }
+        const excludedClause = buildExcludedMediaClause(excludedLibraries);
+        if (excludedClause) mediaAnd.push(excludedClause);
 
         const mediaWhere = mediaAnd.length > 0 ? { AND: mediaAnd } : undefined;
         const selectedServerScope = selectedServerIds.length > 0 ? { in: selectedServerIds } : undefined;

@@ -5,7 +5,11 @@ import { Activity, AlertTriangle, Download, HeartPulse, RefreshCw, Send, ShieldC
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useLocale } from "next-intl";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useLocale, useTranslations } from "next-intl";
+import ResponsiveContainer from "@/components/charts/ResponsiveContainerGuard";
+import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import {
     Table,
     TableBody,
@@ -31,6 +35,17 @@ type HealthSnapshot = {
         intervalP50Sec: number | null;
         intervalP95Sec: number | null;
         jitterP95Sec: number | null;
+        intervalSeries24h: Array<{
+            timestamp: string;
+            intervalSec: number;
+            jitterSec: number | null;
+        }>;
+    };
+    thresholdDefaults: {
+        gapWarningSec: number;
+        gapCriticalSec: number;
+        jitterWarningSec: number;
+        jitterCriticalSec: number;
     };
     ingestion: {
         successEstimate24h: number;
@@ -62,6 +77,53 @@ type HealthSnapshot = {
     }>;
 };
 
+type HeartbeatThresholds = {
+    gapWarningSec: number;
+    gapCriticalSec: number;
+    jitterWarningSec: number;
+    jitterCriticalSec: number;
+};
+
+type Severity = "ok" | "warning" | "critical" | "na";
+
+const THRESHOLDS_STORAGE_KEY = "plugin-health-thresholds-v1";
+const FALLBACK_THRESHOLDS: HeartbeatThresholds = {
+    gapWarningSec: 90,
+    gapCriticalSec: 180,
+    jitterWarningSec: 15,
+    jitterCriticalSec: 30,
+};
+
+function parsePositive(value: unknown, fallback: number): number {
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
+    if (typeof value === "string") {
+        const parsed = Number(value.trim());
+        if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    }
+    return fallback;
+}
+
+function normalizeThresholds(raw: Partial<HeartbeatThresholds> | null | undefined, defaults: HeartbeatThresholds): HeartbeatThresholds {
+    const gapWarningSec = parsePositive(raw?.gapWarningSec, defaults.gapWarningSec);
+    const gapCriticalSec = Math.max(parsePositive(raw?.gapCriticalSec, defaults.gapCriticalSec), gapWarningSec + 1);
+    const jitterWarningSec = parsePositive(raw?.jitterWarningSec, defaults.jitterWarningSec);
+    const jitterCriticalSec = Math.max(parsePositive(raw?.jitterCriticalSec, defaults.jitterCriticalSec), jitterWarningSec + 0.1);
+
+    return {
+        gapWarningSec,
+        gapCriticalSec,
+        jitterWarningSec,
+        jitterCriticalSec,
+    };
+}
+
+function resolveSeverity(value: number | null, warning: number, critical: number): Severity {
+    if (value === null || !Number.isFinite(value)) return "na";
+    if (value >= critical) return "critical";
+    if (value >= warning) return "warning";
+    return "ok";
+}
+
 function formatGap(seconds: number | null): string {
     if (seconds === null) return "-";
     if (seconds < 60) return `${seconds}s`;
@@ -87,15 +149,15 @@ function formatBitrateKbps(value: number | null): string {
     return `${Math.round(value)} kbps`;
 }
 
-export default function PluginHealthCenterClient() {
+export default function PluginHealthCenterClient({ embedded = false }: { embedded?: boolean }) {
     const locale = useLocale();
-    const isFr = locale.toLowerCase().startsWith("fr");
-    const tr = (en: string, fr: string) => (isFr ? fr : en);
+    const t = useTranslations("pluginHealth");
 
     const [snapshot, setSnapshot] = useState<HealthSnapshot | null>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<"test_connection" | "force_heartbeat" | null>(null);
     const [notice, setNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [thresholds, setThresholds] = useState<HeartbeatThresholds>(FALLBACK_THRESHOLDS);
 
     const loadSnapshot = useCallback(async () => {
         setLoading(true);
@@ -110,12 +172,12 @@ export default function PluginHealthCenterClient() {
         } catch (error) {
             const message = error instanceof Error
                 ? error.message
-                : tr("Failed to load plugin health.", "Impossible de charger l'etat du plugin.");
+                : t("failedLoad");
             setNotice({ type: "error", text: message });
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         void loadSnapshot();
@@ -143,47 +205,116 @@ export default function PluginHealthCenterClient() {
             setNotice({
                 type: "success",
                 text: action === "test_connection"
-                    ? tr(`Connection test completed (latency ${latency}).`, `Test de connexion termine (latence ${latency}).`)
-                    : tr(`Manual heartbeat sent (latency ${latency}).`, `Heartbeat manuel envoye (latence ${latency}).`),
+                    ? t("connectionTestCompleted", { latency })
+                    : t("manualHeartbeatSent", { latency }),
             });
 
             await loadSnapshot();
         } catch (error) {
-            const message = error instanceof Error ? error.message : tr("Action failed.", "Action echouee.");
+            const message = error instanceof Error ? error.message : t("actionFailed");
             setNotice({ type: "error", text: message });
         } finally {
             setActionLoading(null);
         }
-    }, [loadSnapshot]);
+    }, [loadSnapshot, t]);
 
     const connectionBadge = useMemo(() => {
         if (!snapshot?.plugin.connected) {
-            return <Badge className="bg-red-500/15 text-red-400 border-red-500/30">{tr("offline", "hors ligne")}</Badge>;
+            return <Badge className="bg-red-500/15 text-red-400 border-red-500/30">{t("offline")}</Badge>;
         }
-        return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">{tr("online", "en ligne")}</Badge>;
-    }, [snapshot?.plugin.connected, isFr]);
+        return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">{t("online")}</Badge>;
+    }, [snapshot?.plugin.connected, t]);
+
+    const pluginMetricsNote = useMemo(() => {
+        const raw = snapshot?.pluginReportedMetrics.note;
+        if (!raw) return "-";
+        if (raw === "Live plugin telemetry from latest heartbeat.") {
+            return t("pluginMetricsLive");
+        }
+        if (raw === "Current plugin payload version does not include queue depth/retry/http diagnostics.") {
+            return t("pluginMetricsUnavailable");
+        }
+        return raw;
+    }, [snapshot?.pluginReportedMetrics.note, t]);
+
+    const thresholdDefaults = useMemo<HeartbeatThresholds>(() => {
+        if (!snapshot?.thresholdDefaults) return FALLBACK_THRESHOLDS;
+        return normalizeThresholds(snapshot.thresholdDefaults, FALLBACK_THRESHOLDS);
+    }, [snapshot?.thresholdDefaults]);
+
+    useEffect(() => {
+        let persistedRaw: Partial<HeartbeatThresholds> | null = null;
+
+        if (typeof window !== "undefined") {
+            try {
+                const saved = window.localStorage.getItem(THRESHOLDS_STORAGE_KEY);
+                if (saved) {
+                    persistedRaw = JSON.parse(saved) as Partial<HeartbeatThresholds>;
+                }
+            } catch {
+                persistedRaw = null;
+            }
+        }
+
+        setThresholds(normalizeThresholds(persistedRaw ?? thresholdDefaults, thresholdDefaults));
+    }, [thresholdDefaults]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            window.localStorage.setItem(THRESHOLDS_STORAGE_KEY, JSON.stringify(thresholds));
+        } catch {
+            // Ignore local storage write failures.
+        }
+    }, [thresholds]);
+
+    const updateThreshold = useCallback((key: keyof HeartbeatThresholds, value: string) => {
+        setThresholds((current) => normalizeThresholds({ ...current, [key]: value }, thresholdDefaults));
+    }, [thresholdDefaults]);
+
+    const gapSeverity = useMemo(
+        () => resolveSeverity(snapshot?.heartbeat.gapSec ?? null, thresholds.gapWarningSec, thresholds.gapCriticalSec),
+        [snapshot?.heartbeat.gapSec, thresholds],
+    );
+
+    const jitterSeverity = useMemo(
+        () => resolveSeverity(snapshot?.heartbeat.jitterP95Sec ?? null, thresholds.jitterWarningSec, thresholds.jitterCriticalSec),
+        [snapshot?.heartbeat.jitterP95Sec, thresholds],
+    );
+
+    const renderSeverityBadge = useCallback((severity: Severity) => {
+        if (severity === "critical") {
+            return <Badge className="bg-red-500/15 text-red-400 border-red-500/30">{t("stateCritical")}</Badge>;
+        }
+        if (severity === "warning") {
+            return <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30">{t("stateWarning")}</Badge>;
+        }
+        if (severity === "ok") {
+            return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">{t("stateOk")}</Badge>;
+        }
+        return <Badge className="bg-zinc-500/15 text-zinc-300 border-zinc-500/30">{t("stateUnknown")}</Badge>;
+    }, [t]);
+
+    const heartbeatSeries = snapshot?.heartbeat.intervalSeries24h || [];
 
     return (
-        <div className="flex-col md:flex">
-            <div className="flex-1 space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
+        <div className={embedded ? "space-y-6" : "flex-col md:flex"}>
+            <div className={embedded ? "space-y-6" : "flex-1 space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full"}>
                 <header className="flex flex-col gap-3">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                             <HeartPulse className="w-7 h-7 text-primary" />
-                            {tr("Plugin Health Center", "Centre de Sante du Plugin")}
+                            {t("title")}
                         </h1>
                         <p className="text-sm text-muted-foreground mt-2 max-w-3xl">
-                            {tr(
-                                "Centralized diagnostics for heartbeat stability, ingestion reliability, and stream health.",
-                                "Diagnostic centralise pour la stabilite des heartbeats, la fiabilite d'ingestion et la sante des flux."
-                            )}
+                            {t("description")}
                         </p>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
                         <Button variant="outline" onClick={() => void loadSnapshot()} disabled={loading}>
                             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                            {tr("Refresh", "Rafraichir")}
+                            {t("refresh")}
                         </Button>
                         <Button
                             variant="outline"
@@ -192,8 +323,8 @@ export default function PluginHealthCenterClient() {
                         >
                             <ShieldCheck className="w-4 h-4" />
                             {actionLoading === "test_connection"
-                                ? tr("Testing...", "Test en cours...")
-                                : tr("Test Connection", "Tester la connexion")}
+                                ? t("testing")
+                                : t("testConnection")}
                         </Button>
                         <Button
                             onClick={() => void runAction("force_heartbeat")}
@@ -201,13 +332,13 @@ export default function PluginHealthCenterClient() {
                         >
                             <Send className="w-4 h-4" />
                             {actionLoading === "force_heartbeat"
-                                ? tr("Sending...", "Envoi en cours...")
-                                : tr("Force Heartbeat", "Forcer un heartbeat")}
+                                ? t("sending")
+                                : t("forceHeartbeat")}
                         </Button>
                         <Button asChild variant="secondary">
                             <a href="/api/admin/plugin/health?export=1">
                                 <Download className="w-4 h-4" />
-                                {tr("Export Diagnostic JSON", "Exporter le JSON de diagnostic")}
+                                {t("exportDiagnosticJson")}
                             </a>
                         </Button>
                     </div>
@@ -225,19 +356,19 @@ export default function PluginHealthCenterClient() {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                     <Card className="app-surface-soft border-border/60">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">{tr("Connection", "Connexion")}</CardTitle>
+                            <CardTitle className="text-sm text-muted-foreground">{t("connection")}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1.5 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>{tr("Status", "Statut")}</span>
+                                <span>{t("status")}</span>
                                 {connectionBadge}
                             </div>
                             <div className="flex items-center justify-between gap-3">
-                                <span>{tr("Last seen", "Derniere activite")}</span>
-                                <span className="font-medium">{snapshot?.plugin.lastSeen ? new Date(snapshot.plugin.lastSeen).toLocaleString() : "-"}</span>
+                                <span>{t("lastSeen")}</span>
+                                <span className="font-medium">{snapshot?.plugin.lastSeen ? new Date(snapshot.plugin.lastSeen).toLocaleString(locale) : "-"}</span>
                             </div>
                             <div className="flex items-center justify-between gap-3">
-                                <span>{tr("Server", "Serveur")}</span>
+                                <span>{t("server")}</span>
                                 <span className="font-medium truncate">{snapshot?.plugin.serverName || "-"}</span>
                             </div>
                         </CardContent>
@@ -245,47 +376,53 @@ export default function PluginHealthCenterClient() {
 
                     <Card className="app-surface-soft border-border/60">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">{tr("Heartbeat jitter", "Jitter heartbeat")}</CardTitle>
+                            <CardTitle className="text-sm text-muted-foreground">{t("heartbeatJitter")}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1.5 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>{tr("P50 interval", "Intervalle P50")}</span>
+                                <span>{t("p50Interval")}</span>
                                 <span className="font-semibold">{formatSeconds(snapshot?.heartbeat.intervalP50Sec ?? null)}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>{tr("P95 interval", "Intervalle P95")}</span>
+                                <span>{t("p95Interval")}</span>
                                 <span className="font-semibold">{formatSeconds(snapshot?.heartbeat.intervalP95Sec ?? null)}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>{tr("P95 jitter", "Jitter P95")}</span>
-                                <span className="font-semibold">{formatSeconds(snapshot?.heartbeat.jitterP95Sec ?? null)}</span>
+                                <span>{t("p95Jitter")}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold">{formatSeconds(snapshot?.heartbeat.jitterP95Sec ?? null)}</span>
+                                    {renderSeverityBadge(jitterSeverity)}
+                                </div>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
-                                <span>{tr("Gap now", "Ecart actuel")}</span>
-                                <span>{formatGap(snapshot?.heartbeat.gapSec ?? null)}</span>
+                                <span>{t("gapNow")}</span>
+                                <div className="flex items-center gap-2">
+                                    <span>{formatGap(snapshot?.heartbeat.gapSec ?? null)}</span>
+                                    {renderSeverityBadge(gapSeverity)}
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card className="app-surface-soft border-border/60">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">{tr("Ingestion reliability", "Fiabilite d'ingestion")}</CardTitle>
+                            <CardTitle className="text-sm text-muted-foreground">{t("ingestionReliability")}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1.5 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>{tr("Success rate (24h)", "Taux de succes (24h)")}</span>
+                                <span>{t("successRate24h")}</span>
                                 <span className="font-semibold">{formatPercent(snapshot?.ingestion.successRate24h ?? null)}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>{tr("Failures (24h)", "Echecs (24h)")}</span>
+                                <span>{t("failures24h")}</span>
                                 <span className="font-semibold">{snapshot?.ingestion.failureCount24h ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
-                                <span>{tr("Unauthorized", "Non autorise")}</span>
+                                <span>{t("unauthorized")}</span>
                                 <span>{snapshot?.ingestion.unauthorized24h ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
-                                <span>{tr("Rate limited", "Limite de debit")}</span>
+                                <span>{t("rateLimited")}</span>
                                 <span>{snapshot?.ingestion.rateLimited24h ?? 0}</span>
                             </div>
                         </CardContent>
@@ -293,25 +430,128 @@ export default function PluginHealthCenterClient() {
 
                     <Card className="app-surface-soft border-border/60">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm text-muted-foreground">{tr("Live stream health", "Sante des flux en direct")}</CardTitle>
+                            <CardTitle className="text-sm text-muted-foreground">{t("liveStreamHealth")}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-1.5 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>{tr("Active streams", "Flux actifs")}</span>
+                                <span>{t("activeStreams")}</span>
                                 <span className="font-semibold">{snapshot?.streams.active ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>{tr("Transcodes", "Transcodages")}</span>
+                                <span>{t("transcodes")}</span>
                                 <span className="font-semibold">{snapshot?.streams.transcodes ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>{tr("Stale streams", "Flux inactifs")}</span>
+                                <span>{t("staleStreams")}</span>
                                 <span className="font-semibold">{snapshot?.streams.stale ?? 0}</span>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
-                                <span>{tr("Avg bitrate", "Debit moyen")}</span>
+                                <span>{t("avgBitrate")}</span>
                                 <span>{formatBitrateKbps(snapshot?.streams.avgBitrateKbps ?? null)}</span>
                             </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    <Card className="app-surface border-border/60 xl:col-span-2">
+                        <CardHeader>
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Activity className="w-4 h-4 text-primary" />
+                                {t("heartbeatIntervals24h")}
+                            </CardTitle>
+                            <CardDescription>{t("heartbeatIntervals24hDesc")}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {heartbeatSeries.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={260} minHeight={220}>
+                                    <LineChart data={heartbeatSeries} margin={{ top: 10, right: 10, left: -12, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+                                        <XAxis
+                                            dataKey="timestamp"
+                                            tickFormatter={(value) => new Date(String(value)).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
+                                            minTickGap={28}
+                                        />
+                                        <YAxis unit="s" allowDecimals={false} />
+                                        <Tooltip
+                                            formatter={(value: number | string, name: string) => {
+                                                const numeric = typeof value === "number" ? value : Number(value);
+                                                const pretty = Number.isFinite(numeric) ? `${Math.round(numeric * 100) / 100}s` : "-";
+                                                return [pretty, name === "intervalSec" ? t("intervalSeries") : t("jitterSeries")];
+                                            }}
+                                            labelFormatter={(value) => new Date(String(value)).toLocaleString(locale)}
+                                        />
+                                        <Legend
+                                            formatter={(name) => name === "intervalSec" ? t("intervalSeries") : t("jitterSeries")}
+                                        />
+                                        <ReferenceLine y={thresholds.jitterWarningSec} stroke="#f59e0b" strokeDasharray="4 4" />
+                                        <ReferenceLine y={thresholds.jitterCriticalSec} stroke="#ef4444" strokeDasharray="4 4" />
+                                        <Line type="monotone" dataKey="intervalSec" stroke="var(--primary)" strokeWidth={2} dot={false} />
+                                        <Line type="monotone" dataKey="jitterSec" stroke="#f59e0b" strokeWidth={1.8} dot={false} connectNulls />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">{t("noHeartbeatIntervals")}</p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="app-surface border-border/60">
+                        <CardHeader>
+                            <CardTitle className="text-base">{t("alertThresholds")}</CardTitle>
+                            <CardDescription>{t("alertThresholdsDesc")}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="space-y-1.5">
+                                <Label htmlFor="gap-warning">{t("gapWarningSec")}</Label>
+                                <Input
+                                    id="gap-warning"
+                                    type="number"
+                                    min={1}
+                                    value={thresholds.gapWarningSec}
+                                    onChange={(event) => updateThreshold("gapWarningSec", event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="gap-critical">{t("gapCriticalSec")}</Label>
+                                <Input
+                                    id="gap-critical"
+                                    type="number"
+                                    min={1}
+                                    value={thresholds.gapCriticalSec}
+                                    onChange={(event) => updateThreshold("gapCriticalSec", event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="jitter-warning">{t("jitterWarningSec")}</Label>
+                                <Input
+                                    id="jitter-warning"
+                                    type="number"
+                                    min={0.1}
+                                    step={0.1}
+                                    value={thresholds.jitterWarningSec}
+                                    onChange={(event) => updateThreshold("jitterWarningSec", event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label htmlFor="jitter-critical">{t("jitterCriticalSec")}</Label>
+                                <Input
+                                    id="jitter-critical"
+                                    type="number"
+                                    min={0.1}
+                                    step={0.1}
+                                    value={thresholds.jitterCriticalSec}
+                                    onChange={(event) => updateThreshold("jitterCriticalSec", event.target.value)}
+                                />
+                            </div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setThresholds(thresholdDefaults)}
+                            >
+                                {t("resetThresholds")}
+                            </Button>
                         </CardContent>
                     </Card>
                 </div>
@@ -321,28 +561,25 @@ export default function PluginHealthCenterClient() {
                         <CardHeader>
                             <CardTitle className="text-base flex items-center gap-2">
                                 <AlertTriangle className="w-4 h-4 text-amber-400" />
-                                {tr("Recent ingest failures", "Derniers echecs d'ingestion")}
+                                {t("recentIngestFailures")}
                             </CardTitle>
                             <CardDescription>
-                                {tr(
-                                    "Latest plugin validation/security failures recorded by the server.",
-                                    "Derniers echecs de validation/securite du plugin enregistres par le serveur."
-                                )}
+                                {t("recentIngestFailuresDesc")}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>{tr("When", "Quand")}</TableHead>
-                                        <TableHead>{tr("Action", "Action")}</TableHead>
+                                        <TableHead>{t("when")}</TableHead>
+                                        <TableHead>{t("action")}</TableHead>
                                         <TableHead>IP</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {(snapshot?.recentFailures || []).map((entry) => (
                                         <TableRow key={entry.id}>
-                                            <TableCell>{new Date(entry.createdAt).toLocaleString()}</TableCell>
+                                            <TableCell>{new Date(entry.createdAt).toLocaleString(locale)}</TableCell>
                                             <TableCell>{entry.action}</TableCell>
                                             <TableCell>{entry.ipAddress || "-"}</TableCell>
                                         </TableRow>
@@ -350,7 +587,7 @@ export default function PluginHealthCenterClient() {
                                     {(snapshot?.recentFailures || []).length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={3} className="text-center text-muted-foreground">
-                                                {tr("No recent failures detected.", "Aucun echec recent detecte.")}
+                                                {t("noRecentFailuresDetected")}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -363,27 +600,27 @@ export default function PluginHealthCenterClient() {
                         <CardHeader>
                             <CardTitle className="text-base flex items-center gap-2">
                                 <Timer className="w-4 h-4 text-cyan-400" />
-                                {tr("Plugin-reported metrics", "Metriques remontees par le plugin")}
+                                {t("pluginReportedMetrics")}
                             </CardTitle>
                             <CardDescription>
-                                {tr("Metrics expected from plugin queue telemetry.", "Metriques attendues via la telemetrie de file du plugin.")}
+                                {t("pluginReportedMetricsDesc")}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm">
                             <div className="flex items-center justify-between">
-                                <span>{tr("Queue depth", "Profondeur de file")}</span>
+                                <span>{t("queueDepth")}</span>
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.queueDepth ?? "-"}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>{tr("Retries", "Tentatives")}</span>
+                                <span>{t("retries")}</span>
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.retries ?? "-"}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>{tr("Last HTTP code", "Dernier code HTTP")}</span>
+                                <span>{t("lastHttpCode")}</span>
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.lastHttpCode ?? "-"}</span>
                             </div>
                             <p className="text-xs text-muted-foreground pt-2 border-t border-border/60">
-                                {snapshot?.pluginReportedMetrics.note || "-"}
+                                {pluginMetricsNote}
                             </p>
                         </CardContent>
                     </Card>

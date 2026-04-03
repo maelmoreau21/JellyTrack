@@ -8,6 +8,7 @@ import { normalizeResolution } from '@/lib/utils';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import { GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
 import { normalizeLanguageTag } from '@/lib/language';
+import { buildExcludedMediaClause } from "@/lib/mediaPolicy";
 
 type CategorizedItem = { title?: string; name?: string; type?: string; plays?: number; duration?: number };
 
@@ -56,16 +57,8 @@ function buildMediaTypeFilter(type: string | undefined, excludedLibraries: strin
     else if (type === 'music') AND.push({ type: { in: ["Audio", "Track"] } });
     else if (type === 'book') AND.push({ type: "Book" });
 
-    if (excludedLibraries.length > 0) {
-        AND.push({
-            NOT: {
-                OR: [
-                    { libraryName: { in: excludedLibraries } },
-                    { collectionType: { in: excludedLibraries } }
-                ]
-            }
-        });
-    }
+    const excludedClause = buildExcludedMediaClause(excludedLibraries);
+    if (excludedClause) AND.push(excludedClause);
 
     // BoxSets are usually pseudo-items we want to exclude from many stats
     AND.push({

@@ -131,6 +131,18 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
     }, [data, dataByType, selectedYear, selectedLibrary]);
 
     const totalPlays = processedData.reduce((sum, d) => sum + d.count, 0);
+    const totalCountLabel = useMemo(() => {
+        const rawValue = t.raw('playsTotal');
+        const base = typeof rawValue === 'string' ? rawValue : '{{count}} plays in {{year}}';
+
+        return base
+            .replace(/\{\{\s*count\s*\}\}/g, '__COUNT__')
+            .replace(/\{\{\s*year\s*\}\}/g, '__YEAR__')
+            .replace(/\{\s*count\s*\}/g, '{{count}}')
+            .replace(/\{\s*year\s*\}/g, '{{year}}')
+            .replace(/__COUNT__/g, '{{count}}')
+            .replace(/__YEAR__/g, '{{year}}');
+    }, [t]);
 
     return (
         <Card className="app-surface-soft dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 backdrop-blur-sm overflow-hidden flex flex-col">
@@ -216,7 +228,7 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                         labels={{
                             months: t('months').split(','),
                             weekdays: t('weekdays').split(','),
-                            totalCount: t('playsTotal'),
+                            totalCount: totalCountLabel,
                             legend: {
                                 less: t('less'),
                                 more: t('more')
