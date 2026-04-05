@@ -179,7 +179,7 @@ export default async function HealthPage() {
                             <CardDescription>{t("anomalyChartsDesc")}</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-2">
-                            <HealthAnomalyCharts timeline={snapshot.anomalyTimeline} breakdown={snapshot.anomalyBreakdown} />
+                            <HealthAnomalyCharts timeline={snapshot.anomalyTimeline} />
                         </CardContent>
                     </Card>
 
@@ -243,50 +243,7 @@ export default async function HealthPage() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="app-surface overflow-hidden border-border">
-                                <CardHeader className="px-4 py-3 border-b border-border">
-                                        <CardTitle className="text-lg text-foreground">{t("processingStatusTitle")}</CardTitle>
-                                        <CardDescription className="text-muted-foreground">{t("processingStatusDesc")}</CardDescription>
-                                    </CardHeader>
-                                <CardContent>
-                                    <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <ProcessingTile
-                                            Icon={RadioTower}
-                                            title={t("monitor")}
-                                            statusClass={sectionStatusClass(snapshot.status?.monitor?.status)}
-                                            statusLabel={formatSectionStatus(snapshot.status?.monitor?.status)}
-                                            lines={[
-                                                { label: t("lastPoll"), value: formatDate(snapshot.status?.monitor?.lastPollAt) },
-                                                { label: t("lastSuccess"), value: formatDate(snapshot.status?.monitor?.lastSuccessAt) },
-                                                snapshot.status?.monitor?.lastError ? { label: t("lastError"), value: snapshot.status?.monitor?.lastError } : null,
-                                            ]}
-                                        />
-
-                                        <ProcessingTile
-                                            Icon={RefreshCw}
-                                            title={t("sync")}
-                                            statusClass={sectionStatusClass(snapshot.status?.sync?.status)}
-                                            statusLabel={formatSectionStatus(snapshot.status?.sync?.status)}
-                                            lines={[
-                                                snapshot.status?.sync?.mode ? { label: t("mode"), value: String(snapshot.status.sync.mode) } : null,
-                                                { label: t("lastSuccess"), value: formatDate(snapshot.status?.sync?.lastSuccessAt) },
-                                                snapshot.status?.sync?.lastError ? { label: t("lastError"), value: snapshot.status?.sync?.lastError } : null,
-                                            ]}
-                                        />
-
-                                        <ProcessingTile
-                                            Icon={Clock3}
-                                            title={t("backup")}
-                                            statusClass={sectionStatusClass(snapshot.status?.backup?.status)}
-                                            statusLabel={formatSectionStatus(snapshot.status?.backup?.status)}
-                                            lines={[
-                                                { label: t("lastSuccess"), value: formatDate(snapshot.status?.backup?.lastSuccessAt) },
-                                                snapshot.status?.backup?.lastError ? { label: t("lastError"), value: snapshot.status?.backup?.lastError } : null,
-                                            ]}
-                                        />
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            {/* 'Statut de traitement' removed as requested */}
                         </div>
                     </div>
                 </section>
