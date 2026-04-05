@@ -32,13 +32,34 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
     }));
 
     const safeBreakdown: BreakdownPoint[] = (breakdown || []).map((b) => ({
-        source: b?.source ?? "unknown",
+        source: (b?.source ?? "unknown").toLowerCase().trim() || "unknown",
         value: typeof b?.value === "number" && Number.isFinite(b.value) ? b.value : 0,
     }));
 
+    const breakdownData = safeBreakdown
+        .filter((entry) => entry.value > 0)
+        .sort((a, b) => b.value - a.value);
+
+    const sourceColorMap: Record<string, string> = {
+        monitor: "#0ea5e9",
+        sync: "#f59e0b",
+        backup: "#ef4444",
+        restore: "#8b5cf6",
+        unknown: "#94a3b8",
+    };
+
+    const formatSourceLabel = (source: string) => {
+        const key = String(source || "unknown").toLowerCase();
+        if (key === "monitor") return t('monitor');
+        if (key === "sync") return t('sync');
+        if (key === "backup") return t('backup');
+        if (key === "restore") return t('restore');
+        return source || "unknown";
+    };
+
     // Detect whether there are any non-zero anomaly values
     const hasTimelineValues = safeTimeline.some(pt => (pt.monitorErrors || pt.syncErrors || pt.backupErrors || pt.cleanupOps || pt.syncSuccesses) > 0);
-    const hasBreakdownValues = safeBreakdown.some(b => (b.value || 0) > 0);
+    const hasBreakdownValues = breakdownData.length > 0;
 
     if (!hasTimelineValues && !hasBreakdownValues) {
         return (
@@ -104,38 +125,43 @@ export function HealthAnomalyCharts({ timeline, breakdown }: { timeline: Timelin
                 <div className="space-y-3">
                     <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('anomalyBreakdownTitle')}</h4>
                     <div className="app-surface min-w-0 rounded-lg border border-border p-2">
-                        <ResponsiveContainer width="100%" height={320} minHeight={200}>
-                            <BarChart data={safeBreakdown} margin={{ top: 10, right: 10, left: -25, bottom: 0 }} layout="vertical">
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} opacity={0.5} />
-                                <XAxis type="number" hide />
-                                <YAxis 
-                                    dataKey="source" 
-                                    type="category" 
-                                    stroke={chartAxisColor} 
-                                    fontSize={11} 
-                                    tickLine={false} 
-                                    axisLine={false} 
-                                    tickFormatter={(val) => {
-                                        try { return t(val.toLowerCase()); } catch { return val; }
-                                    }}
-                                    width={80}
-                                />
-                                <Tooltip 
-                                    cursor={{ fill: 'transparent' }}
-                                    contentStyle={{ ...chartTooltipStyle, borderRadius: '10px' }} 
-                                    formatter={(val: any) => [val, t('anomalyCumulativeImpact')]} 
-                                />
-                                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
-                                    {safeBreakdown.map((entry, index) => (
-                                        <Cell 
-                                            key={`cell-${index}`} 
-                                            fill={chartPalette[index % chartPalette.length]} 
-                                            fillOpacity={0.8}
-                                        />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                        {breakdownData.length === 0 ? (
+                            <div className="flex h-[320px] items-center justify-center px-4 text-center text-sm text-muted-foreground">
+                                {t('anomalyDetectedNone')}
+                            </div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height={320} minHeight={200}>
+                                <BarChart data={breakdownData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} layout="vertical">
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} opacity={0.5} />
+                                    <XAxis type="number" hide />
+                                    <YAxis
+                                        dataKey="source"
+                                        type="category"
+                                        stroke={chartAxisColor}
+                                        fontSize={11}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(val) => formatSourceLabel(String(val))}
+                                        width={110}
+                                    />
+                                    <Tooltip
+                                        cursor={{ fill: 'transparent' }}
+                                        contentStyle={{ ...chartTooltipStyle, borderRadius: '10px' }}
+                                        formatter={(val: number) => [val, t('anomalyCumulativeImpact')]}
+                                        labelFormatter={(label) => formatSourceLabel(String(label))}
+                                    />
+                                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
+                                        {breakdownData.map((entry, index) => (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={sourceColorMap[entry.source] || chartPalette[index % chartPalette.length]}
+                                                fillOpacity={0.85}
+                                            />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
             </div>

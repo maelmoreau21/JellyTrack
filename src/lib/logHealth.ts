@@ -103,6 +103,18 @@ export async function getLogHealthSnapshot() {
         ["restore", 0],
     ]);
 
+    const normalizeDetailCount = (details: unknown) => {
+        const raw = typeof details === "object" && details !== null
+            ? Number((details as Record<string, unknown>).count ?? 1)
+            : 1;
+
+        if (!Number.isFinite(raw) || raw <= 0) {
+            return 1;
+        }
+
+        return Math.max(1, Math.floor(raw));
+    };
+
     anomalyEvents.forEach((event) => {
         const key = event.createdAt.toISOString().slice(0, 10);
         const dayEntry = dailyMap.get(key);
@@ -110,24 +122,29 @@ export async function getLogHealthSnapshot() {
             return;
         }
 
-        const rawDetails = event.details as Record<string, unknown> | null;
-        const detailCount = typeof rawDetails?.count === "number" ? rawDetails.count : 1;
+        const detailCount = normalizeDetailCount(event.details);
+        const kind = (event.kind || "").toLowerCase();
+        const isErrorLike = kind.includes("error");
+        const isCleanupLike = kind.includes("ghost") || kind.includes("orphan") || kind.includes("open-playbacks");
+        const isSuccessLike = kind === "sync_success" || kind.includes("success") || kind.includes("ping") || kind.includes("ok");
 
-        if (event.kind.includes("error")) {
+        if (isErrorLike) {
             if (event.source === "monitor") dayEntry.monitorErrors += detailCount;
             if (event.source === "sync") dayEntry.syncErrors += detailCount;
             if (event.source === "backup") dayEntry.backupErrors += detailCount;
         }
 
-        if (event.kind.includes("ghost") || event.kind.includes("orphan") || event.kind.includes("open-playbacks")) {
+        if (isCleanupLike) {
             dayEntry.cleanupOps += detailCount;
         }
 
-        if (event.kind === "sync_success" || event.kind.includes("success") || event.kind.includes("ping") || event.kind.includes("ok")) {
+        if (isSuccessLike) {
             dayEntry.syncSuccesses += detailCount;
         }
 
-        sourceImpact.set(event.source, (sourceImpact.get(event.source) || 0) + detailCount);
+        if (isErrorLike || isCleanupLike) {
+            sourceImpact.set(event.source, (sourceImpact.get(event.source) || 0) + detailCount);
+        }
     });
 
     return {

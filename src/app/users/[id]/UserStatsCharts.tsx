@@ -83,7 +83,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
                     <CardDescription>{td('dayOfWeekActivityDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="h-[260px] w-full">
+                    <div className="h-[280px] w-full">
                         <DayOfWeekChart data={dayData} />
                     </div>
                 </CardContent>
@@ -111,7 +111,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
                     <CardDescription>{td('hourlyActivityDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="h-[260px] w-full">
+                    <div className="h-[280px] w-full">
                         <ActivityByHourChart data={hourData} />
                     </div>
                 </CardContent>

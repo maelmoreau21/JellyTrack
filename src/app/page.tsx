@@ -1090,7 +1090,7 @@ export default async function DashboardPage(props: {
 
               /* Dataviz Row : Multi-Axis Volume & PieChart */
               <div key="volumes" className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 min-w-0">
-                <Card className="col-span-1 lg:col-span-5 bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="col-span-1 lg:col-span-5 app-surface-soft border-border backdrop-blur-sm">
                   <CardHeader className="pb-1">
                     <CardTitle>{t('volumeHistory')}</CardTitle>
                     <CardDescription>{t('volumeHistoryDesc')}</CardDescription>
@@ -1106,7 +1106,7 @@ export default async function DashboardPage(props: {
                   </CardContent>
                 </Card>
 
-                <Card className="col-span-1 lg:col-span-2 bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="col-span-1 lg:col-span-2 app-surface-soft border-border backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle>{t('categoryBreakdown')}</CardTitle>
                     <CardDescription>{t('categoryBreakdownDesc')}</CardDescription>
@@ -1126,7 +1126,7 @@ export default async function DashboardPage(props: {
               </div>,
 
               /* Daily Plays by Library */
-              <Card key="libraryPlays" className="app-surface-soft dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+              <Card key="libraryPlays" className="app-surface-soft border-border backdrop-blur-sm">
                 <CardHeader className="pb-1">
                   <CardTitle>{t('libraryPlays')}</CardTitle>
                   <CardDescription>{t('libraryPlaysDesc')}</CardDescription>
@@ -1150,7 +1150,7 @@ export default async function DashboardPage(props: {
               /* Dataviz Row : Plateformes + Top Users + Live */
               <div key="platforms" className="grid gap-4 md:grid-cols-2 lg:grid-cols-8 min-w-0">
 
-                <Card className="col-span-2 app-surface-soft dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
+                <Card className="col-span-2 app-surface-soft border-border backdrop-blur-sm shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex gap-2"><Award className="w-5 h-5 text-yellow-500" /> {t('loyalUsers')}</CardTitle>
                     <CardDescription>{t('loyalUsersDesc')}</CardDescription>
@@ -1175,7 +1175,7 @@ export default async function DashboardPage(props: {
                   </CardContent>
                 </Card>
 
-                <Card className="col-span-3 app-surface-soft dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 shadow-sm">
+                <Card className="col-span-3 app-surface-soft border-border backdrop-blur-sm shadow-sm">
                   <CardHeader>
                     <CardTitle>{t('clientEcosystem')}</CardTitle>
                     <CardDescription>{t('clientEcosystemDesc')}</CardDescription>

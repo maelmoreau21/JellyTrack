@@ -26,7 +26,7 @@ export function CollapsibleCard({
     children,
 }: CollapsibleCardProps) {
     return (
-        <Card className={`bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm ${className}`}>
+        <Card className={`app-surface-soft border-border backdrop-blur-sm ${className}`}>
             <CardHeader className={headerClassName}>
                 <div className="flex items-center justify-between">
                     <div className="min-w-0 flex-1">

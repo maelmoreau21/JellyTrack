@@ -35,7 +35,15 @@ async function getCleanupData() {
     });
 
     // For Series/MusicAlbum: check if any child (episode/season/track) has plays
-    const ghostMedia = [];
+    const ghostMedia: Array<{
+        id: string;
+        jellyfinMediaId: string;
+        title: string;
+        type: string;
+        createdAt: Date;
+        dateAdded: Date | null;
+        durationMs: bigint | null;
+    }> = [];
     for (const media of parentGhostCandidates) {
         if (media.type === 'Movie') {
             // Movies have direct playback — already filtered by `none: {}`
@@ -62,7 +70,7 @@ async function getCleanupData() {
         }
     }
 
-    // 2. Abandoned Media (Never finished > 80% by any user)
+    // 2. Abandoned Media (never finished by any user)
     // For Movies and individual playable items (Episode, Audio)
     const mediaWithHistory = await prisma.media.findMany({
         where: {
@@ -79,6 +87,7 @@ async function getCleanupData() {
             durationMs: true,
             playbackHistory: {
                 select: {
+                    userId: true,
                     durationWatched: true,
                     startedAt: true,
                 }
@@ -86,7 +95,7 @@ async function getCleanupData() {
         }
     });
 
-    // Preload parent info for enriched titles (Episode â†’ Season â†’ Series, Audio â†’ Album)
+    // Preload parent info for enriched titles (Episode -> Season -> Series, Audio -> Album)
     const parentIds = new Set<string>();
     mediaWithHistory.forEach(m => { if (m.parentId) parentIds.add(m.parentId); });
     const parents = parentIds.size > 0
@@ -113,29 +122,51 @@ async function getCleanupData() {
         return media.title;
     }
 
-    const abandonedMedia = [];
+    const abandonedMedia: Array<{
+        id: string;
+        jellyfinMediaId: string;
+        title: string;
+        type: string;
+        parentId: string | null;
+        durationMs: bigint | null;
+        maxCompletion: number;
+        lastPlayed: Date;
+    }> = [];
 
     for (const media of mediaWithHistory) {
         if (!media.durationMs || Number(media.durationMs) === 0) continue;
 
-        // durationMs is in milliseconds (RunTimeTicks / 10000) — convert to seconds
-        const maxDurationSecs = Number(media.durationMs) / 1000;
-
-        let maxCompletionPercentage = 0;
+        const watchedByUser = new Map<string, number>();
         let lastPlayed = new Date(0);
 
         for (const history of media.playbackHistory) {
-            const completion = getCompletionMetrics({ type: media.type, durationMs: media.durationMs }, history.durationWatched).percent;
-            if (completion > maxCompletionPercentage) maxCompletionPercentage = completion;
+            if (history.durationWatched <= 0) continue;
+
+            const userKey = history.userId || 'anonymous';
+            watchedByUser.set(userKey, (watchedByUser.get(userKey) || 0) + history.durationWatched);
+
             if (history.startedAt > lastPlayed) lastPlayed = history.startedAt;
         }
 
-        const bestBucket = getCompletionMetrics({ type: media.type, durationMs: media.durationMs }, Math.round((maxCompletionPercentage / 100) * maxDurationSecs)).bucket;
-        if (maxCompletionPercentage > 0 && bestBucket !== 'completed') {
+        if (watchedByUser.size === 0) continue;
+
+        let bestCompletion = getCompletionMetrics({ type: media.type, durationMs: media.durationMs }, 0);
+
+        for (const totalWatchedSeconds of watchedByUser.values()) {
+            const completion = getCompletionMetrics(
+                { type: media.type, durationMs: media.durationMs },
+                totalWatchedSeconds
+            );
+            if (completion.percent > bestCompletion.percent) {
+                bestCompletion = completion;
+            }
+        }
+
+        if (bestCompletion.percent > 0 && bestCompletion.bucket !== 'completed') {
             abandonedMedia.push({
                 ...media,
                 title: getEnrichedTitle(media),
-                maxCompletion: maxCompletionPercentage,
+                maxCompletion: bestCompletion.percent,
                 lastPlayed
             });
         }

@@ -40,7 +40,7 @@ export function Navigation() {
                 Newsletter
             </Link>
             <Link
-                href="/settings"
+                href="/settings/plugin"
                 className={`text-sm font-medium transition-colors ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
             >
                 {t('settings')}

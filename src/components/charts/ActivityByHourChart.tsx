@@ -79,10 +79,10 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                 </div>
             )}
 
-            <ResponsiveContainer width="100%" height={selectedEntry ? 260 : 300} minHeight={260}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={180}>
                 <BarChart
                     data={data}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 18 }}
                     onClick={(e: { activeLabel?: unknown } | undefined) => {
                             const label = e?.activeLabel !== undefined ? String((e as { activeLabel?: unknown }).activeLabel) : undefined;
                             if (label !== undefined) setSelectedHour(prev => prev === label ? null : label);
@@ -97,6 +97,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         tickLine={false}
                         axisLine={false}
                         interval="preserveStartEnd"
+                        tickMargin={8}
                     />
                     <YAxis
                         stroke={chartAxisColor}

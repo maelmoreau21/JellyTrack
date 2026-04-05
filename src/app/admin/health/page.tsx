@@ -41,6 +41,22 @@ export default async function HealthPage() {
         return new Date(dateString).toLocaleString(locale);
     }
 
+    function formatSectionStatus(status: string | null | undefined) {
+        const normalized = (status || "idle").toLowerCase();
+        if (normalized === "error") return t("monitorStatusError");
+        if (normalized === "ok") return t("monitorStatusOk");
+        if (normalized === "running") return t("running");
+        return normalized;
+    }
+
+    function sectionStatusClass(status: string | null | undefined) {
+        const normalized = (status || "idle").toLowerCase();
+        if (normalized === "error") return "border-red-500/35 bg-red-500/10 text-red-600 dark:text-red-300";
+        if (normalized === "running") return "border-amber-500/35 bg-amber-500/10 text-amber-600 dark:text-amber-300";
+        if (normalized === "ok") return "border-emerald-500/35 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300";
+        return "border-zinc-500/25 bg-zinc-500/10 text-zinc-600 dark:text-zinc-300";
+    }
+
     return (
         <div className="flex-col md:flex">
             <div className="mx-auto w-full max-w-7xl flex-1 space-y-8 p-4 pt-4 md:p-8 md:pt-6">
@@ -78,7 +94,7 @@ export default async function HealthPage() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-xl font-semibold">{snapshot.status.monitor.status === "error" ? t("monitorStatusError") : t("monitorStatusOk")}</div>
+                                <div className="text-xl font-semibold">{formatSectionStatus(snapshot.status.monitor.status)}</div>
                                 <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                                     <Clock3 className="h-3 w-3" />
                                     {t("lastPoll")}: {formatDate(snapshot.status.monitor.lastPollAt)}
@@ -207,21 +223,50 @@ export default async function HealthPage() {
                                 <CardContent>
                                     <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div className="app-surface-soft p-3 rounded-lg border">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><RadioTower className="h-4 w-4 text-cyan-500" /> {t("monitor")}</div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><RadioTower className="h-4 w-4 text-cyan-500" /> {t("monitor")}</div>
+                                                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${sectionStatusClass(snapshot.status.monitor.status)}`}>
+                                                    {formatSectionStatus(snapshot.status.monitor.status)}
+                                                </span>
+                                            </div>
+                                            <div className="mt-2 text-xs text-muted-foreground">{t("lastPoll")}</div>
+                                            <div className="mt-1 text-sm font-medium">{formatDate(snapshot.status.monitor.lastPollAt)}</div>
                                             <div className="mt-2 text-xs text-muted-foreground">{t("lastSuccess")}</div>
                                             <div className="mt-1 text-sm font-medium">{formatDate(snapshot.status.monitor.lastSuccessAt)}</div>
+                                            {snapshot.status.monitor.lastError && (
+                                                <div className="mt-2 text-xs text-red-500/90">{t("lastError")}: {snapshot.status.monitor.lastError}</div>
+                                            )}
                                         </div>
 
                                         <div className="app-surface-soft p-3 rounded-lg border">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><RefreshCw className="h-4 w-4 text-amber-500" /> {t("sync")}</div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><RefreshCw className="h-4 w-4 text-amber-500" /> {t("sync")}</div>
+                                                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${sectionStatusClass(snapshot.status.sync.status)}`}>
+                                                    {formatSectionStatus(snapshot.status.sync.status)}
+                                                </span>
+                                            </div>
+                                            {snapshot.status.sync.mode && (
+                                                <div className="mt-2 text-xs text-muted-foreground">{t("mode")}: <span className="font-medium text-foreground">{snapshot.status.sync.mode}</span></div>
+                                            )}
                                             <div className="mt-2 text-xs text-muted-foreground">{t("lastSuccess")}</div>
-                                            <div className="mt-1 text-sm font-medium">{formatDate(snapshot.status.sync.lastSuccessAt)}{snapshot.status.sync.mode ? ` (${snapshot.status.sync.mode})` : ''}</div>
+                                            <div className="mt-1 text-sm font-medium">{formatDate(snapshot.status.sync.lastSuccessAt)}</div>
+                                            {snapshot.status.sync.lastError && (
+                                                <div className="mt-2 text-xs text-red-500/90">{t("lastError")}: {snapshot.status.sync.lastError}</div>
+                                            )}
                                         </div>
 
                                         <div className="app-surface-soft p-3 rounded-lg border">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><Clock3 className="h-4 w-4 text-emerald-500" /> {t("backup")}</div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><Clock3 className="h-4 w-4 text-emerald-500" /> {t("backup")}</div>
+                                                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${sectionStatusClass(snapshot.status.backup.status)}`}>
+                                                    {formatSectionStatus(snapshot.status.backup.status)}
+                                                </span>
+                                            </div>
                                             <div className="mt-2 text-xs text-muted-foreground">{t("lastSuccess")}</div>
                                             <div className="mt-1 text-sm font-medium">{formatDate(snapshot.status.backup.lastSuccessAt)}</div>
+                                            {snapshot.status.backup.lastError && (
+                                                <div className="mt-2 text-xs text-red-500/90">{t("lastError")}: {snapshot.status.backup.lastError}</div>
+                                            )}
                                         </div>
                                     </div>
                                 </CardContent>

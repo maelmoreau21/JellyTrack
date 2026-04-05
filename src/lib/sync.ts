@@ -328,6 +328,21 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                                     },
                                 });
                             } else {
+                                // Decide whether to update the stored resolution: only overwrite when
+                                // the incoming resolution represents an equal or better quality.
+                                const incomingRes = (item.Type === 'Series' ? (seriesResolutionMap.get(item.Id) || resolution) : resolution) ?? null;
+                                const getWeight = (r: string | null | undefined) => {
+                                    if (!r) return 0;
+                                    if (r === '4K') return 5;
+                                    if (r === '1440p') return 4;
+                                    if (r === '1080p') return 3;
+                                    if (r === '720p') return 2;
+                                    if (r === 'SD' || r === '480p') return 1;
+                                    return 0;
+                                };
+                                const existingRes = primary?.resolution ?? null;
+                                const finalResolution = getWeight(incomingRes) > getWeight(existingRes) ? incomingRes : existingRes;
+
                                 primary = await tx.media.update({
                                     where: { id: primary.id },
                                     data: {
@@ -338,7 +353,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                                         directors: directors ?? undefined,
                                         actors: actors ?? undefined,
                                         studios: studios ?? undefined,
-                                        resolution: (item.Type === 'Series' ? (seriesResolutionMap.get(item.Id) || resolution) : resolution) ?? undefined,
+                                        resolution: finalResolution ?? undefined,
                                         collectionType: collectionType ?? undefined,
                                         durationMs: durationMs ?? undefined,
                                         size: sizeVal ?? undefined,

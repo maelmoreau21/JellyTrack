@@ -36,7 +36,7 @@ const adminNavigationKeys = [
     { key: 'serverCompare', href: '/admin/server-compare', icon: GitCompareArrows },
     { key: 'users', href: '/users', icon: Users },
     { key: 'cleanup', href: '/admin/cleanup', icon: Eraser },
-    { key: 'settings', href: '/settings', icon: Settings },
+    { key: 'settings', href: '/settings/plugin', icon: Settings },
 ];
 
 export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {

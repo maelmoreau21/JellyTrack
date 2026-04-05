@@ -380,6 +380,9 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const genres = media.genres || [];
     const isMusic = ['Audio', 'MusicAlbum'].includes(media.type);
     const resolvedAlbumArtist = albumArtist || media.artist || null;
+    const artistHref = resolvedAlbumArtist
+        ? `/media/artist/${encodeURIComponent(resolvedAlbumArtist)}`
+        : (albumArtistId ? `/media/${albumArtistId}` : null);
     const headerFallbackId = media.parentId || albumId || undefined;
 
     // Build hierarchy subtitle breadcrumbs
@@ -398,16 +401,16 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 links.push(<Link key="series" href={`/media/${seriesId}`} className="hover:text-primary transition-colors">{seriesName}</Link>);
             }
         } else if (media.type === 'Audio') {
-            if (albumArtistId && albumArtist) {
-                links.push(<Link key="artist" href={`/media/${albumArtistId}`} className="hover:text-primary transition-colors">{albumArtist}</Link>);
+            if (artistHref && resolvedAlbumArtist) {
+                links.push(<Link key="artist" href={artistHref} className="hover:text-primary transition-colors">{resolvedAlbumArtist}</Link>);
             }
             if (albumId && albumName) {
                 if (links.length > 0) links.push(<span key="sep1" className="text-zinc-400 mx-1">-</span>);
                 links.push(<Link key="album" href={`/media/${albumId}`} className="hover:text-primary transition-colors">{albumName}</Link>);
             }
         } else if (media.type === 'MusicAlbum') {
-            if (albumArtistId && albumArtist) {
-                links.push(<Link key="artist" href={`/media/${albumArtistId}`} className="hover:text-primary transition-colors">{albumArtist}</Link>);
+            if (artistHref && resolvedAlbumArtist) {
+                links.push(<Link key="artist" href={artistHref} className="hover:text-primary transition-colors">{resolvedAlbumArtist}</Link>);
             }
         }
         
@@ -433,10 +436,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     {seasonId && seasonName && (
                         <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${seasonId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seasonName}</Link></>
                     )}
-                    {albumArtistId && albumArtist && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${albumArtistId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{albumArtist}</Link></>
+                    {artistHref && resolvedAlbumArtist && (
+                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={artistHref} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{resolvedAlbumArtist}</Link></>
                     )}
-                    {!albumArtistId && resolvedAlbumArtist && (
+                    {!artistHref && resolvedAlbumArtist && (
                         <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><span className="text-zinc-600 dark:text-zinc-300">{resolvedAlbumArtist}</span></>
                     )}
                     {albumId && albumName && (
@@ -447,8 +450,13 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 </nav>
 
                 {/* Quick navigation for Episodes / Audio tracks */}
-                {(seriesId || seasonId || albumId) && (
+                {(seriesId || seasonId || albumId || artistHref) && (
                     <div className="flex items-center gap-2 flex-wrap">
+                        {artistHref && resolvedAlbumArtist && (
+                            <Link href={artistHref} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-colors text-sm font-medium">
+                                <Headphones className="w-4 h-4" /> {resolvedAlbumArtist}
+                            </Link>
+                        )}
                         {seriesId && seriesName && (
                             <Link href={`/media/${seriesId}`} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 transition-colors text-sm font-medium">
                                 <Tv className="w-4 h-4" /> {t('viewSeries', { name: seriesName })}
@@ -490,7 +498,15 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             )}
                             {isMusic && (resolvedAlbumArtist || albumName) && (
                                 <div className="flex items-center gap-2 mt-3 flex-wrap text-sm text-zinc-500 dark:text-zinc-300">
-                                    {resolvedAlbumArtist && <span className="inline-flex items-center gap-1.5"><Headphones className="w-4 h-4" /> {resolvedAlbumArtist}</span>}
+                                    {resolvedAlbumArtist && (
+                                        artistHref ? (
+                                            <Link href={artistHref} className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
+                                                <Headphones className="w-4 h-4" /> {resolvedAlbumArtist}
+                                            </Link>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5"><Headphones className="w-4 h-4" /> {resolvedAlbumArtist}</span>
+                                        )
+                                    )}
                                     {albumName && <span className="inline-flex items-center gap-1.5"><Disc3 className="w-4 h-4" /> {albumName}</span>}
                                 </div>
                             )}

@@ -17,10 +17,10 @@ export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
     const maxCount = Math.max(...data.map(d => d.count), 0);
 
     return (
-        <ResponsiveContainer width="100%" height={300} minHeight={300}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={180}>
             <BarChart
                 data={data}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                margin={{ top: 10, right: 10, left: -20, bottom: 18 }}
             >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
                 <XAxis
@@ -29,6 +29,7 @@ export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
+                    tickMargin={8}
                 />
                 <YAxis
                     stroke={chartAxisColor}

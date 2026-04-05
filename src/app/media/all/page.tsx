@@ -87,6 +87,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
         const orClause = {
             OR: [
                 { title: { contains: q, mode: searchMode } },
+                { artist: { contains: q, mode: searchMode } },
                 { directors: { has: q } },
                 { actors: { has: q } },
                 { studios: { has: q } },

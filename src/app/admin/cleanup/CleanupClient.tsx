@@ -1,24 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Ghost, HeartCrack, Clock, Film, Tv, Music, BookOpen } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Ghost, HeartCrack, Clock, Film, Tv, Music, BookOpen, Search, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDistanceToNow, type Locale } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { useTranslations, useLocale } from "next-intl";
+import { cn } from "@/lib/utils";
 
 const DATE_LOCALES: Record<string, Locale> = { fr, en: enUS };
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+
+type PeriodValue = "all" | "30d" | "90d" | "180d" | "365d";
+type DateValue = Date | string | null | undefined;
+
+const PERIOD_TO_DAYS: Record<PeriodValue, number | null> = {
+    all: null,
+    "30d": 30,
+    "90d": 90,
+    "180d": 180,
+    "365d": 365,
+};
 
 interface GhostMedia {
     id: string;
     jellyfinMediaId: string;
     title: string;
     type: string;
-    createdAt: Date;
-    dateAdded?: Date | null;
+    createdAt: DateValue;
+    dateAdded?: DateValue;
 }
 
 interface AbandonedMedia {
@@ -27,7 +43,7 @@ interface AbandonedMedia {
     title: string;
     type: string;
     maxCompletion: number;
-    lastPlayed: Date;
+    lastPlayed: DateValue;
 }
 
 interface CleanupData {
@@ -71,47 +87,244 @@ function getCompletionLabel(pct: number, t: (key: string) => string) {
     return t('almost');
 }
 
+function toDate(value: DateValue): Date | null {
+    if (!value) return null;
+    const parsed = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function normalizeForSearch(value: string) {
+    return value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+}
+
+function matchesPeriod(referenceDate: DateValue, period: PeriodValue) {
+    const days = PERIOD_TO_DAYS[period];
+    if (!days) return true;
+
+    const date = toDate(referenceDate);
+    if (!date) return false;
+
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    return date >= cutoff;
+}
+
+function paginateItems<T>(items: T[], page: number, pageSize: number) {
+    const totalItems = items.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const currentPage = Math.max(1, Math.min(page, totalPages));
+    const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    const endIndex = totalItems === 0 ? 0 : Math.min(currentPage * pageSize, totalItems);
+    const pageItems = totalItems === 0 ? [] : items.slice(startIndex - 1, endIndex);
+
+    return {
+        totalItems,
+        totalPages,
+        currentPage,
+        startIndex,
+        endIndex,
+        pageItems,
+    };
+}
+
 export default function CleanupClient({ initialData }: { initialData: CleanupData }) {
     const t = useTranslations('cleanup');
+    const tc = useTranslations('common');
+    const tr = useTranslations('timeRange');
     const locale = useLocale();
     const dateFnsLocale = DATE_LOCALES[locale] || fr;
+
+    const [searchValue, setSearchValue] = useState("");
+    const [period, setPeriod] = useState<PeriodValue>("all");
+    const [pageSize, setPageSize] = useState<number>(25);
     const [ghostFilter, setGhostFilter] = useState<string>("all");
     const [abandonFilter, setAbandonFilter] = useState<string>("all");
+    const [ghostPage, setGhostPage] = useState(1);
+    const [abandonedPage, setAbandonedPage] = useState(1);
 
-    const filteredGhosts = ghostFilter === "all"
-        ? initialData.ghostMedia
-        : initialData.ghostMedia.filter(m => m.type === ghostFilter);
+    const searchQuery = normalizeForSearch(searchValue);
 
-    const filteredAbandoned = abandonFilter === "all"
-        ? initialData.abandonedMedia
-        : initialData.abandonedMedia.filter(m => m.type === abandonFilter);
+    const baseGhosts = useMemo(() => {
+        return initialData.ghostMedia.filter((media) => {
+            const title = normalizeForSearch(media.title);
+            const matchesSearch = searchQuery.length === 0 || title.includes(searchQuery);
+            const referenceDate = media.dateAdded || media.createdAt;
+            return matchesSearch && matchesPeriod(referenceDate, period);
+        });
+    }, [initialData.ghostMedia, period, searchQuery]);
+
+    const baseAbandoned = useMemo(() => {
+        return initialData.abandonedMedia.filter((media) => {
+            const title = normalizeForSearch(media.title);
+            const matchesSearch = searchQuery.length === 0 || title.includes(searchQuery);
+            return matchesSearch && matchesPeriod(media.lastPlayed, period);
+        });
+    }, [initialData.abandonedMedia, period, searchQuery]);
+
+    const filteredGhosts = useMemo(() => {
+        return ghostFilter === "all"
+            ? baseGhosts
+            : baseGhosts.filter((media) => media.type === ghostFilter);
+    }, [baseGhosts, ghostFilter]);
+
+    const filteredAbandoned = useMemo(() => {
+        return abandonFilter === "all"
+            ? baseAbandoned
+            : baseAbandoned.filter((media) => media.type === abandonFilter);
+    }, [abandonFilter, baseAbandoned]);
+
+    const ghostPageData = useMemo(
+        () => paginateItems(filteredGhosts, ghostPage, pageSize),
+        [filteredGhosts, ghostPage, pageSize]
+    );
+
+    const abandonedPageData = useMemo(
+        () => paginateItems(filteredAbandoned, abandonedPage, pageSize),
+        [filteredAbandoned, abandonedPage, pageSize]
+    );
+
+    useEffect(() => {
+        setGhostPage(1);
+        setAbandonedPage(1);
+    }, [searchQuery, period, pageSize]);
+
+    useEffect(() => {
+        setGhostPage(1);
+    }, [ghostFilter]);
+
+    useEffect(() => {
+        setAbandonedPage(1);
+    }, [abandonFilter]);
+
+    useEffect(() => {
+        if (ghostPage > ghostPageData.totalPages) {
+            setGhostPage(ghostPageData.totalPages);
+        }
+    }, [ghostPage, ghostPageData.totalPages]);
+
+    useEffect(() => {
+        if (abandonedPage > abandonedPageData.totalPages) {
+            setAbandonedPage(abandonedPageData.totalPages);
+        }
+    }, [abandonedPage, abandonedPageData.totalPages]);
 
     const ghostTypeCounts: Record<string, number> = { Movie: 0, Series: 0, MusicAlbum: 0 };
-    initialData.ghostMedia.forEach(m => {
+    baseGhosts.forEach(m => {
         if (m.type in ghostTypeCounts) {
             ghostTypeCounts[m.type] = (ghostTypeCounts[m.type] || 0) + 1;
         }
     });
 
     const abandonTypeCounts: Record<string, number> = { Movie: 0, Episode: 0, Audio: 0 };
-    initialData.abandonedMedia.forEach(m => {
+    baseAbandoned.forEach(m => {
         if (m.type in abandonTypeCounts) {
             abandonTypeCounts[m.type] = (abandonTypeCounts[m.type] || 0) + 1;
         }
     });
+
+    const periodOptions: Array<{ value: PeriodValue; label: string }> = [
+        { value: "all", label: tr('allTime') },
+        { value: "30d", label: tr('last30d') },
+        { value: "90d", label: "90d" },
+        { value: "180d", label: "180d" },
+        { value: "365d", label: "365d" },
+    ];
+
+    const renderPagination = (
+        pageData: ReturnType<typeof paginateItems>,
+        onPrevious: () => void,
+        onNext: () => void,
+    ) => (
+        <div className="flex flex-col gap-2 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-muted-foreground">
+                {pageData.startIndex}-{pageData.endIndex} / {pageData.totalItems}
+            </p>
+            <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={onPrevious} disabled={pageData.currentPage <= 1}>
+                    <ChevronLeft className="h-4 w-4" />
+                    {tc('previous')}
+                </Button>
+                <span className="text-xs text-muted-foreground min-w-[90px] text-center">
+                    {tc('page')} {pageData.currentPage}/{pageData.totalPages}
+                </span>
+                <Button size="sm" variant="outline" onClick={onNext} disabled={pageData.currentPage >= pageData.totalPages}>
+                    {tc('next')}
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+    );
+
+    const formatRelativeTime = (value: DateValue) => {
+        const parsed = toDate(value);
+        if (!parsed) return "-";
+        return formatDistanceToNow(parsed, { addSuffix: true, locale: dateFnsLocale });
+    };
+
+    const filterChipClass = (isActive: boolean, theme: "red" | "orange") => cn(
+        "text-xs px-3 py-1.5 rounded-full border transition-all",
+        isActive
+            ? theme === "red"
+                ? "bg-red-500/20 border-red-500/40 text-red-300 shadow-sm shadow-red-500/10"
+                : "bg-orange-500/20 border-orange-500/40 text-orange-300 shadow-sm shadow-orange-500/10"
+            : "border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+    );
 
     return (
         <Tabs defaultValue="ghosts" className="w-full">
             <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
                 <TabsTrigger value="ghosts" className="flex items-center gap-2">
                     <Ghost className="w-4 h-4" />
-                    {t('ghostMedia')} ({initialData.ghostMedia.length})
+                    {t('ghostMedia')} ({baseGhosts.length})
                 </TabsTrigger>
                 <TabsTrigger value="abandoned" className="flex items-center gap-2">
                     <HeartCrack className="w-4 h-4" />
-                    {t('abandonedMedia')} ({initialData.abandonedMedia.length})
+                    {t('abandonedMedia')} ({baseAbandoned.length})
                 </TabsTrigger>
             </TabsList>
+
+            <div className="mt-4 rounded-xl border border-zinc-200/60 dark:border-zinc-800/60 bg-background/40 backdrop-blur-sm p-3 sm:p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                        <Input
+                            value={searchValue}
+                            onChange={(event) => setSearchValue(event.target.value)}
+                            placeholder={tc('searchPlaceholder')}
+                            className="pl-9 bg-background/70"
+                        />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Select value={period} onValueChange={(value) => setPeriod(value as PeriodValue)}>
+                            <SelectTrigger className="w-[150px] bg-background/70 border-border">
+                                <CalendarRange className="h-4 w-4 text-zinc-500" />
+                                <SelectValue placeholder={tr('period')} />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border-border">
+                                {periodOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
+                            <SelectTrigger className="w-[120px] bg-background/70 border-border">
+                                <SelectValue placeholder="25" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border-border">
+                                {PAGE_SIZE_OPTIONS.map((value) => (
+                                    <SelectItem key={value} value={String(value)}>{value}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </div>
 
             <TabsContent value="ghosts" className="mt-6">
                 <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
@@ -120,7 +333,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                         <CardDescription>
                             {t('ghostDesc')}
                         </CardDescription>
-                        <div className="flex gap-2 pt-2">
+                        <div className="flex flex-wrap gap-2 pt-2">
                             {[
                                 { key: "all", label: t('allFilter') },
                                 { key: "Movie", label: `${t('moviesFilter')} (${ghostTypeCounts.Movie})` },
@@ -128,7 +341,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                 { key: "MusicAlbum", label: `${t('albumsFilter')} (${ghostTypeCounts.MusicAlbum})` },
                             ].map(f => (
                                 <button key={f.key} onClick={() => setGhostFilter(f.key)}
-                                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ghostFilter === f.key ? 'bg-red-500/20 border-red-500/40 text-red-300 shadow-sm shadow-red-500/10' : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50'}`}>
+                                    className={filterChipClass(ghostFilter === f.key, "red")}>
                                     {f.label}
                                 </button>
                             ))}
@@ -152,7 +365,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                             </TableCell>
                                         </TableRow>
                                     )}
-                                    {filteredGhosts.map((media) => (
+                                    {ghostPageData.pageItems.map((media) => (
                                         <TableRow key={media.id} className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30 transition-colors">
                                             <TableCell className="font-medium text-foreground">{media.title}</TableCell>
                                             <TableCell>
@@ -164,7 +377,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                             <TableCell className="text-muted-foreground text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <Clock className="w-3 h-3" />
-                                                    {formatDistanceToNow(new Date(media.dateAdded || media.createdAt), { addSuffix: true, locale: dateFnsLocale })}
+                                                    {formatRelativeTime(media.dateAdded || media.createdAt)}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -172,6 +385,11 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                 </TableBody>
                             </Table>
                         </div>
+                        {renderPagination(
+                            ghostPageData,
+                            () => setGhostPage((current) => Math.max(1, current - 1)),
+                            () => setGhostPage((current) => Math.min(ghostPageData.totalPages, current + 1))
+                        )}
                     </CardContent>
                 </Card>
             </TabsContent>
@@ -183,7 +401,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                         <CardDescription>
                             {t('abandonedDesc')}
                         </CardDescription>
-                        <div className="flex gap-2 pt-2">
+                        <div className="flex flex-wrap gap-2 pt-2">
                             {[
                                 { key: "all", label: t('allFilter') },
                                 { key: "Movie", label: `${t('moviesFilter')} (${abandonTypeCounts.Movie})` },
@@ -191,7 +409,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                 { key: "Audio", label: `${t('musicFilter')} (${abandonTypeCounts.Audio})` },
                             ].map(f => (
                                 <button key={f.key} onClick={() => setAbandonFilter(f.key)}
-                                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${abandonFilter === f.key ? 'bg-orange-500/20 border-orange-500/40 text-orange-300 shadow-sm shadow-orange-500/10' : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50'}`}>
+                                    className={filterChipClass(abandonFilter === f.key, "orange")}>
                                     {f.label}
                                 </button>
                             ))}
@@ -216,7 +434,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                             </TableCell>
                                         </TableRow>
                                     )}
-                                    {filteredAbandoned.map((media) => (
+                                    {abandonedPageData.pageItems.map((media) => (
                                         <TableRow key={media.id} className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800/20">
                                             <TableCell className="font-medium text-foreground max-w-[300px] truncate" title={media.title}>{media.title}</TableCell>
                                             <TableCell>
@@ -242,13 +460,18 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-muted-foreground text-sm">
-                                                {formatDistanceToNow(new Date(media.lastPlayed), { addSuffix: true, locale: dateFnsLocale })}
+                                                {formatRelativeTime(media.lastPlayed)}
                                             </TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
                             </Table>
                         </div>
+                        {renderPagination(
+                            abandonedPageData,
+                            () => setAbandonedPage((current) => Math.max(1, current - 1)),
+                            () => setAbandonedPage((current) => Math.min(abandonedPageData.totalPages, current + 1))
+                        )}
                     </CardContent>
                 </Card>
             </TabsContent>
