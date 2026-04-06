@@ -12,6 +12,7 @@ IMPORTANT (pour agents IA) — lire entièrement ce document avant de proposer d
 - Respectez strictement les conventions et l'architecture décrites ci‑dessous.
 - Mode d'installation principal de l'application : Docker (`docker-compose.yml` + image GHCR).
 - Le fichier `.env` est versionné comme exemple public : conserver des placeholders sûrs (`CHANGE_ME_*`), jamais de secrets réels.
+ - Ne **pas** effectuer de `commit`, `push`, création de branche ou `merge` dans le dépôt, sauf si l'utilisateur l'a **explicitement demandé**. Toute modification de code doit être approuvée par l'utilisateur avant d'être commise et poussée.
 
 ## 1. Stack technique (résumé)
 - Framework : `Next.js` (App Router, `src/app/`) — version utilisée : `16.x` (Next 16+ dans `package.json`).
