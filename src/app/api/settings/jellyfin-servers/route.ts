@@ -21,29 +21,35 @@ async function probeConnection(url: string, apiKey: string | null): Promise<{ st
     return { state: "no_api_key", message: "Clé API manquante." };
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
   try {
-    const res = await fetch(`${normalizedUrl}/System/Info`, {
-      method: "GET",
-      headers: { "X-Emby-Token": normalizedApiKey },
-      cache: "no-store",
-      signal: controller.signal,
+    const info = await fetchJellyfinSystemInfo({
+      url: normalizedUrl,
+      apiKey: normalizedApiKey,
     });
 
-    if (res.ok) {
+    if (info) {
       return { state: "online", message: "Connexion OK" };
     }
 
-    if (res.status === 401 || res.status === 403) {
-      return { state: "offline", message: "Clé API invalide." };
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const publicProbe = await fetch(`${normalizedUrl}/System/Info/Public`, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+    }).catch(() => null);
+    clearTimeout(timeout);
+
+    if (publicProbe?.ok) {
+      return {
+        state: "offline",
+        message: "Serveur accessible, mais clé API refusée/incompatible. Régénérez une clé API admin Jellyfin.",
+      };
     }
 
-    return { state: "offline", message: `Serveur indisponible (HTTP ${res.status}).` };
+    return { state: "offline", message: "Serveur indisponible ou endpoint System/Info non compatible." };
   } catch {
     return { state: "offline", message: "Serveur injoignable." };
-  } finally {
-    clearTimeout(timeout);
   }
 }
 

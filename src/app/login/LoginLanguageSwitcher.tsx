@@ -42,7 +42,7 @@ export function LoginLanguageSwitcher() {
                 disabled={isPending}
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all border ${
                     open
-                        ? "border-indigo-500/30 bg-indigo-500/10 text-zinc-900 dark:text-zinc-100 border-b-transparent rounded-b-none"
+                        ? "border-indigo-500/30 bg-indigo-500/10 text-zinc-900 dark:text-zinc-100"
                         : "border-zinc-300 dark:border-zinc-700/50 bg-white/80 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-600"
                 } ${isPending ? "opacity-50 cursor-wait" : ""}`}
             >
@@ -56,7 +56,7 @@ export function LoginLanguageSwitcher() {
             </button>
 
             {open && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 w-56 rounded-xl border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl p-1.5">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-56 rounded-xl border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl p-1.5 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200">
                     {AVAILABLE_LOCALES.map((loc) => (
                         <button
                             key={loc.code}

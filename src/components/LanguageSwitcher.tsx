@@ -39,7 +39,7 @@ export function LanguageSwitcher() {
             <button
                 onClick={() => setOpen(!open)}
                 disabled={isPending}
-                className={`group flex items-center gap-3 w-full rounded-2xl border px-3 py-3 text-sm transition-all ${open ? 'border-cyan-400/30 bg-cyan-400/10 text-zinc-900 dark:text-zinc-100 shadow-[0_12px_35px_rgba(8,145,178,0.12)] border-b-transparent rounded-b-none' : 'app-surface-soft border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700'} ${isPending ? 'opacity-50 cursor-wait' : ''}`}
+                className={`group flex items-center gap-3 w-full rounded-2xl border px-3 py-3 text-sm transition-all ${open ? 'border-cyan-400/30 bg-cyan-400/10 text-zinc-900 dark:text-zinc-100 shadow-[0_12px_35px_rgba(8,145,178,0.12)]' : 'app-surface-soft border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700'} ${isPending ? 'opacity-50 cursor-wait' : ''}`}
                 aria-label="Language"
                 aria-expanded={open}
             >
@@ -60,7 +60,7 @@ export function LanguageSwitcher() {
                 <ChevronDown className={`ml-auto w-4 h-4 text-zinc-400 dark:text-zinc-500 transition-transform group-hover:text-zinc-600 dark:group-hover:text-zinc-300 ${open ? 'rotate-180' : ''}`} />
             </button>
             {open && (
-                <div className="absolute top-full left-0 mt-2 z-[70] w-full overflow-hidden rounded-b-2xl border-x border-b app-surface p-2 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                <div className="absolute bottom-full left-0 mb-2 z-[70] w-full overflow-hidden rounded-2xl border app-surface p-2 shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 duration-200">
                     <div className="mb-2 rounded-xl border border-border/5 bg-muted/30 px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-zinc-400 dark:text-zinc-500">
                         Interface
                     </div>

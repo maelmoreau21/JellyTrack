@@ -25,6 +25,9 @@ export interface JellyfinAuthAttemptResult {
   user: JellyfinAuthResponse | null;
 }
 
+const JELLYTRACK_CLIENT_HEADER =
+  'MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="1.0.0"';
+
 function normalizeUrl(value: string | null | undefined): string {
   return String(value || "").trim().replace(/\/+$/, "");
 }
@@ -37,6 +40,29 @@ function normalizeApiKey(value: string | null | undefined): string | null {
 function getServerSortRank(server: Pick<JellyfinServerConnection, "isPrimary" | "name">): string {
   const prefix = server.isPrimary ? "0" : "1";
   return `${prefix}:${server.name.toLowerCase()}`;
+}
+
+function buildJellyfinApiKeyHeaders(apiKey: string): HeadersInit {
+  const token = String(apiKey || "").trim();
+  const authorizationValue = `${JELLYTRACK_CLIENT_HEADER}, Token="${token}"`;
+  return {
+    Accept: "application/json",
+    "X-Emby-Token": token,
+    "X-MediaBrowser-Token": token,
+    Authorization: authorizationValue,
+    "X-Emby-Authorization": authorizationValue,
+  };
+}
+
+function extractSystemInfo(data: unknown, fallbackUrl: string): { serverId: string; serverName: string } | null {
+  if (!data || typeof data !== "object") return null;
+
+  const record = data as Record<string, unknown>;
+  const serverId = String(record.Id || record.ServerId || "").trim();
+  const serverName = String(record.ServerName || record.LocalAddress || record.WanAddress || fallbackUrl).trim();
+
+  if (!serverId) return null;
+  return { serverId, serverName: serverName || fallbackUrl };
 }
 
 export async function getConfiguredJellyfinServers(): Promise<JellyfinServerConnection[]> {
@@ -135,46 +161,69 @@ export async function authenticateAgainstJellyfinDetailed(input: {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), Math.max(1500, input.timeoutMs ?? 7000));
   try {
-    const response = await fetch(`${baseUrl}/Users/AuthenticateByName`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization:
-          'MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="1.0.0"',
-      },
-      body: JSON.stringify({
-        Username: input.username,
-        Pw: input.password,
-      }),
-      signal: controller.signal,
-      cache: "no-store",
-    });
+    const authEndpoints = [
+      `${baseUrl}/Users/AuthenticateByName`,
+      `${baseUrl}/Users/authenticatebyname`,
+    ];
+    const authPayloads = [
+      { Username: input.username, Pw: input.password },
+      { Username: input.username, Password: input.password },
+      { username: input.username, password: input.password },
+    ];
 
-    if (response.status === 401 || response.status === 403) {
-      return { status: "invalid_credentials", user: null };
-    }
+    let sawServerError = false;
 
-    if (!response.ok) {
-      if (response.status >= 500) {
-        return { status: "unreachable", user: null };
+    for (const endpoint of authEndpoints) {
+      for (const payload of authPayloads) {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: JELLYTRACK_CLIENT_HEADER,
+            "X-Emby-Authorization": JELLYTRACK_CLIENT_HEADER,
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+          cache: "no-store",
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          return { status: "invalid_credentials", user: null };
+        }
+
+        if (!response.ok) {
+          if (response.status >= 500) {
+            sawServerError = true;
+          }
+          continue;
+        }
+
+        const data = await response.json().catch(() => null);
+        const userNode = (data && typeof data === "object" ? (data as Record<string, unknown>).User : null) as Record<string, unknown> | null;
+        const userId = String(userNode?.Id || "").trim();
+        const username = String(userNode?.Name || input.username || "").trim();
+
+        if (!userId || !username) {
+          continue;
+        }
+
+        const policy = ((userNode?.Policy as Record<string, unknown> | undefined) || {}) as Record<string, unknown>;
+        const isAdmin = policy.IsAdministrator === true;
+
+        return {
+          status: "success",
+          user: { userId, username, isAdmin },
+        };
       }
-      return { status: "error", user: null };
+
     }
 
-    const data = await response.json();
-    const userNode = (data?.User || {}) as Record<string, unknown>;
-    const userId = String(userNode.Id || "").trim();
-    const username = String(userNode.Name || input.username || "").trim();
+    if (sawServerError) {
+      return { status: "unreachable", user: null };
+    }
 
-    if (!userId || !username) return { status: "error", user: null };
-
-    const policy = (userNode.Policy || {}) as Record<string, unknown>;
-    const isAdmin = policy.IsAdministrator === true;
-
-    return {
-      status: "success",
-      user: { userId, username, isAdmin },
-    };
+    return { status: "error", user: null };
   } catch {
     return { status: "unreachable", user: null };
   } finally {
@@ -191,21 +240,32 @@ export async function fetchJellyfinSystemInfo(input: {
   if (!baseUrl || !apiKey) return null;
 
   try {
-    const response = await fetch(`${baseUrl}/System/Info`, {
-      method: "GET",
-      headers: { "X-Emby-Token": apiKey },
-      cache: "no-store",
-    });
+    const headers = buildJellyfinApiKeyHeaders(apiKey);
+    const candidates = [
+      `${baseUrl}/System/Info`,
+      `${baseUrl}/System/Info?api_key=${encodeURIComponent(apiKey)}`,
+      `${baseUrl}/System/Info/Public`,
+    ];
 
-    if (!response.ok) return null;
+    for (const endpoint of candidates) {
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers,
+        cache: "no-store",
+      });
 
-    const data = await response.json();
-    const record = (data || {}) as Record<string, unknown>;
-    const serverId = String(record.Id || record.ServerId || "").trim();
-    const serverName = String(record.ServerName || record.LocalAddress || record.WanAddress || baseUrl).trim();
+      if (!response.ok) {
+        continue;
+      }
 
-    if (!serverId) return null;
-    return { serverId, serverName: serverName || baseUrl };
+      const data = await response.json().catch(() => null);
+      const parsed = extractSystemInfo(data, baseUrl);
+      if (parsed) {
+        return parsed;
+      }
+    }
+
+    return null;
   } catch {
     return null;
   }
