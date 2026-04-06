@@ -150,7 +150,7 @@ export default function SettingsDataBackupsPage() {
                         </TableHeader>
                         <TableBody>
                             {loading ? (
-                                <TableRow><TableCell colSpan={4} className="text-center py-8 text-zinc-400">{t("loading")}</TableCell></TableRow>
+                                <TableRow><TableCell colSpan={4} className="text-center py-8 text-zinc-400">{tCommon("loading")}</TableCell></TableRow>
                             ) : backups.length === 0 ? (
                                 <TableRow><TableCell colSpan={4} className="text-center py-8 text-zinc-400">{t("noAutoBackups")}</TableCell></TableRow>
                             ) : (
