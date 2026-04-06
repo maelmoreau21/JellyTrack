@@ -44,13 +44,12 @@ function getServerSortRank(server: Pick<JellyfinServerConnection, "isPrimary" | 
 
 export function buildJellyfinApiKeyHeaders(apiKey: string): HeadersInit {
   const token = String(apiKey || "").trim();
-  const authorizationValue = `${JELLYTRACK_CLIENT_HEADER}, Token="${token}"`;
+  // Some Jellyfin versions reject API-key requests when Authorization-style
+  // headers are sent alongside token headers (400 "Error processing request").
+  // Keep API key requests token-only for maximum compatibility.
   return {
     Accept: "application/json",
     "X-Emby-Token": token,
-    "X-MediaBrowser-Token": token,
-    Authorization: authorizationValue,
-    "X-Emby-Authorization": authorizationValue,
   };
 }
 
