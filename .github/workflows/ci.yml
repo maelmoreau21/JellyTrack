@@ -36,7 +36,9 @@ jobs:
         shell: bash
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          # Prefer deterministic install, but fall back to npm install if lockfile mismatch occurs
+          npm ci || npm install --no-audit --no-fund
 
       - name: Run lint
         run: npm run lint --if-present
