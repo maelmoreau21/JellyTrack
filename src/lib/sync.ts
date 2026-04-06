@@ -4,7 +4,11 @@ import { normalizeJellyfinId, compactJellyfinId } from "@/lib/jellyfinId";
 import { cleanupOrphanedSessions } from "@/lib/cleanup";
 import { GHOST_LIBRARY_NAMES } from "./libraryUtils";
 import { ensureMasterServer } from "@/lib/serverRegistry";
-import { getConfiguredJellyfinServers } from "@/lib/jellyfinServers";
+import {
+    buildJellyfinApiKeyHeaders,
+    getConfiguredJellyfinServers,
+    resolveServerApiKey,
+} from "@/lib/jellyfinServers";
 
 /**
  * Fonction maîtresse de synchronisation de la librairie Jellyfin.
@@ -21,9 +25,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
     const syncTargets = configuredServers
         .map((server) => {
-            const apiKey = server.isPrimary
-                ? (primaryEnvApiKey || String(server.apiKey || '').trim())
-                : String(server.apiKey || '').trim();
+            const apiKey = resolveServerApiKey(server, primaryEnvApiKey) || "";
 
             return {
                 server,
@@ -142,7 +144,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
         for (const target of syncTargets) {
             const baseUrl = target.baseUrl;
-            const jellyfinHeaders = { "X-Emby-Token": target.apiKey };
+            const jellyfinHeaders = buildJellyfinApiKeyHeaders(target.apiKey);
             const currentServerId = target.server.id;
             const currentServerName = target.server.name;
 

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
-import { fetchJellyfinSystemInfo, getConfiguredJellyfinServers, maskSecret } from "@/lib/jellyfinServers";
+import {
+  fetchJellyfinSystemInfo,
+  getConfiguredJellyfinServers,
+  maskSecret,
+  resolveServerApiKey,
+} from "@/lib/jellyfinServers";
 import { getPluginKeySnapshot } from "@/lib/pluginKeyManager";
 import { deriveScopedPluginApiKey } from "@/lib/pluginServerKey";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
@@ -102,8 +107,7 @@ export async function GET() {
 
   const serversWithConnection = await Promise.all(
     servers.map(async (server) => {
-      const serverApiKey = normalizeSecret(server.apiKey);
-      const effectiveApiKey = server.isPrimary ? (primaryEnvApiKey || serverApiKey) : serverApiKey;
+      const effectiveApiKey = resolveServerApiKey(server, primaryEnvApiKey);
       const connection = await probeConnection(server.url, effectiveApiKey);
       const pluginScopedKey = deriveScopedPluginApiKey(snapshot.currentKey, server.jellyfinServerId);
 

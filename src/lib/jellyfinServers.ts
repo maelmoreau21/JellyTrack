@@ -42,7 +42,7 @@ function getServerSortRank(server: Pick<JellyfinServerConnection, "isPrimary" | 
   return `${prefix}:${server.name.toLowerCase()}`;
 }
 
-function buildJellyfinApiKeyHeaders(apiKey: string): HeadersInit {
+export function buildJellyfinApiKeyHeaders(apiKey: string): HeadersInit {
   const token = String(apiKey || "").trim();
   const authorizationValue = `${JELLYTRACK_CLIENT_HEADER}, Token="${token}"`;
   return {
@@ -52,6 +52,19 @@ function buildJellyfinApiKeyHeaders(apiKey: string): HeadersInit {
     Authorization: authorizationValue,
     "X-Emby-Authorization": authorizationValue,
   };
+}
+
+export function resolveServerApiKey(
+  server: Pick<JellyfinServerConnection, "isPrimary" | "apiKey">,
+  primaryEnvApiKey?: string | null
+): string | null {
+  const configuredApiKey = normalizeApiKey(server.apiKey);
+  if (!server.isPrimary) {
+    return configuredApiKey;
+  }
+
+  // Prefer persisted server configuration, then fall back to env for legacy single-server setups.
+  return configuredApiKey || normalizeApiKey(primaryEnvApiKey);
 }
 
 function extractSystemInfo(data: unknown, fallbackUrl: string): { serverId: string; serverName: string } | null {

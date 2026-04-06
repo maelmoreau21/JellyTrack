@@ -1,6 +1,10 @@
 import prisma from "./prisma";
 import { makeScopedLibraryExclusion, normalizeLibraryKey } from "./mediaPolicy";
-import { getConfiguredJellyfinServers } from "@/lib/jellyfinServers";
+import {
+  buildJellyfinApiKeyHeaders,
+  getConfiguredJellyfinServers,
+  resolveServerApiKey,
+} from "@/lib/jellyfinServers";
 
 /**
  * Common list of 'ghost' library names created by sync fallbacks
@@ -33,15 +37,13 @@ export async function getSanitizedLibraryNames() {
 
   for (const server of configuredServers) {
     const baseUrl = String(server.url || '').trim().replace(/\/+$/, '');
-    const apiKey = server.isPrimary
-      ? (primaryEnvApiKey || String(server.apiKey || '').trim())
-      : String(server.apiKey || '').trim();
+    const apiKey = resolveServerApiKey(server, primaryEnvApiKey) || '';
 
     if (!baseUrl || !apiKey) continue;
 
     try {
       const response = await fetch(`${baseUrl}/Library/VirtualFolders`, {
-        headers: { "X-Emby-Token": apiKey },
+        headers: buildJellyfinApiKeyHeaders(apiKey),
         cache: "no-store",
       });
       if (!response.ok) continue;
@@ -104,7 +106,7 @@ async function fetchServerVirtualFolderNames(baseUrl: string, apiKey: string): P
 
   try {
     const response = await fetch(`${normalizedUrl}/Library/VirtualFolders`, {
-      headers: { "X-Emby-Token": normalizedApiKey },
+      headers: buildJellyfinApiKeyHeaders(normalizedApiKey),
       cache: "no-store",
     });
     if (!response.ok) return [];
@@ -191,9 +193,7 @@ export async function getServerLibraryScopes(): Promise<ServerLibraryScope[]> {
   const liveLibraryResults = await Promise.all(
     configuredServers.map(async (server) => {
       const baseUrl = String(server.url || '').trim().replace(/\/+$/, '');
-      const apiKey = server.isPrimary
-        ? (primaryEnvApiKey || String(server.apiKey || '').trim())
-        : String(server.apiKey || '').trim();
+      const apiKey = resolveServerApiKey(server, primaryEnvApiKey) || '';
 
       const names = await fetchServerVirtualFolderNames(baseUrl, apiKey);
       return {
