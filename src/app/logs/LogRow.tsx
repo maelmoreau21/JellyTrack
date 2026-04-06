@@ -51,10 +51,12 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
   };
 
   const durationMs = useMemo(() => {
+    const fromMedia = Number(log.media?.durationMs ?? 0);
+    const safeFromMedia = Number.isFinite(fromMedia) && fromMedia > 0 ? fromMedia : 0;
     const fromLog = Number(log.durationWatched ?? 0) * 1000;
     const maxEvent = events.length ? Math.max(...events.map((e) => Number(e.positionMs || 0))) : 0;
-    return Math.max(fromLog, maxEvent, 1);
-  }, [log.durationWatched, events]);
+    return Math.max(safeFromMedia, fromLog, maxEvent, 1);
+  }, [log.media?.durationMs, log.durationWatched, events]);
 
   const groupedEvents = useMemo(() => {
     if (!events || events.length === 0) return [] as Array<{ key: number; pos: number; events: SafeTelemetryEvent[]; count: number; repType?: string }>;
@@ -70,7 +72,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
     const out = Array.from(map.entries()).map(([bucket, arr]) => {
       const posAvg = Math.floor(arr.reduce((s, a) => s + Number(a.positionMs || 0), 0) / arr.length);
-      const priority = ['pause', 'audio_change', 'subtitle_change'];
+      const priority = ['pause', 'audio_change', 'subtitle_change', 'seek'];
       let repType = arr[0].eventType;
       for (const p of priority) if (arr.some(a => a.eventType === p)) { repType = p; break; }
       return { key: bucket, pos: posAvg, events: arr, count: arr.length, repType };
@@ -370,6 +372,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                     <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-600 inline-block"/> ⏸ {t('timeline.legend.pause')}</span>
                     <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-sky-500 inline-block"/> 🔊 {t('timeline.legend.audio')}</span>
                     <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"/> 💬 {t('timeline.legend.subtitles')}</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-indigo-500 inline-block"/> 🔁 {t('timeline.label.seek')}</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-zinc-600 inline-block"/> • {t('timeline.label.default')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-zinc-400">{t('timeline.toggle.exact')}</span>

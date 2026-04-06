@@ -1703,6 +1703,28 @@ export async function POST(req: Request) {
             };
             const telemetryEvents: { eventType: string; positionMs: bigint; metadata?: string }[] = [];
 
+            // Seek tracking (manual skip / Intro Skipper style jumps)
+            const prevPositionMs = prevTick !== null ? Math.max(0, Math.floor(prevTick / 10_000)) : null;
+            const currentPositionMs = Number(positionMs);
+            const wallDeltaMs = prevTime !== null ? Math.max(0, now - prevTime) : null;
+            const seekDeltaMs = prevPositionMs !== null ? currentPositionMs - prevPositionMs : 0;
+            const seekThresholdMs = 20_000;
+            const expectedAdvanceBudgetMs = wallDeltaMs !== null ? Math.max(15_000, wallDeltaMs + 12_000) : 45_000;
+            const appearsSeek = prevPositionMs !== null
+                && Number.isFinite(currentPositionMs)
+                && Math.abs(seekDeltaMs) >= seekThresholdMs
+                && Math.abs(seekDeltaMs) > expectedAdvanceBudgetMs;
+            if (appearsSeek && positionMs > 0 && (!hasPausedState || !isPaused)) {
+                const metadata = {
+                    fromMs: prevPositionMs,
+                    toMs: currentPositionMs,
+                    deltaMs: seekDeltaMs,
+                    direction: seekDeltaMs >= 0 ? "forward" : "backward",
+                    source: "progress_delta",
+                };
+                telemetryEvents.push({ eventType: "seek", positionMs, metadata: JSON.stringify(metadata) });
+            }
+
             // Pause tracking
             const pauseKey = `pause:${activePlayback.id}`;
             const prevPauseState = await redis.get(pauseKey);

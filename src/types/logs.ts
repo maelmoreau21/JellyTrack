@@ -13,6 +13,7 @@ export type SafeMedia = {
   parentId?: string | null;
   artist?: string | null;
   resolution?: string | null;
+  durationMs?: string | null;
 };
 
 export type SafeUser = {

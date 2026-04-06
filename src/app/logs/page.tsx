@@ -273,7 +273,7 @@ export default async function LogsPage({
         where: whereClause,
         include: {
             user: { select: { id: true, username: true, jellyfinUserId: true } },
-            media: { select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true, resolution: true } },
+            media: { select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true, resolution: true, durationMs: true } },
             telemetryEvents: {
                 select: { eventType: true, positionMs: true, createdAt: true },
                 orderBy: { createdAt: 'desc' },
@@ -295,7 +295,14 @@ export default async function LogsPage({
         ...log,
         startedAt: log.startedAt instanceof Date ? log.startedAt.toISOString() : String(log.startedAt ?? ''),
         endedAt: log.endedAt instanceof Date ? log.endedAt.toISOString() : log.endedAt ? String(log.endedAt) : null,
-        media: log.media ? { ...log.media } : null,
+        media: log.media
+            ? {
+                ...log.media,
+                durationMs: log.media.durationMs !== null && log.media.durationMs !== undefined
+                    ? String(log.media.durationMs)
+                    : null,
+            }
+            : null,
         user: log.user ? { ...log.user } : null,
         telemetryEvents: Array.isArray(log.telemetryEvents) ? log.telemetryEvents.map((e) => {
             const rec = e as Record<string, unknown>;

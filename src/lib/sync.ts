@@ -113,6 +113,19 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         throw new Error(`Unable to fetch JSON from ${url.split('?')[0]}`);
     };
 
+    const extractHttpStatus = (error: unknown): number | null => {
+        const message = error instanceof Error ? error.message : String(error || "");
+        const match = message.match(/HTTP\s+(\d{3})/i);
+        if (!match) return null;
+        const status = Number(match[1]);
+        return Number.isFinite(status) ? status : null;
+    };
+
+    const isHttpStatus = (error: unknown, statuses: number[]): boolean => {
+        const status = extractHttpStatus(error);
+        return status !== null && statuses.includes(status);
+    };
+
     try {
         // --- AUTOMATIC GHOST CLEANUP ---
         // If we have items assigned to "ghost" libraries (Movies, TV Shows, etc.),
@@ -152,7 +165,21 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
             try {
                 // 1. Sync Users
-                const users = await fetchJsonWithRetry<Array<{ Id?: string; Name?: string }>>(`${baseUrl}/Users`, { headers: jellyfinHeaders });
+                let users: Array<{ Id?: string; Name?: string }> = [];
+                try {
+                    users = await fetchJsonWithRetry<Array<{ Id?: string; Name?: string }>>(`${baseUrl}/Users`, { headers: jellyfinHeaders });
+                } catch (usersError) {
+                    if (isHttpStatus(usersError, [400, 404, 405])) {
+                        console.warn(`[Sync] [${currentServerName}] /Users incompatible, trying /Users/Query fallback.`);
+                        const usersQuery = await fetchJsonWithRetry<{ Items?: Array<{ Id?: string; Name?: string }> }>(
+                            `${baseUrl}/Users/Query`,
+                            { headers: jellyfinHeaders },
+                        );
+                        users = usersQuery.Items || [];
+                    } else {
+                        throw usersError;
+                    }
+                }
                 let usersCount = 0;
                 for (const user of users) {
                     const jellyfinUserId = normalizeJellyfinId(user.Id);
@@ -169,34 +196,46 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 const libraryNameMap = new Map<string, string>();
                 const libraryCollectionMap = new Map<string, string>();
 
-                const folders = await fetchJsonWithRetry<Array<{ CollectionType?: string; Id?: string; ItemId?: string; Name?: string }>>(
-                    `${baseUrl}/Library/VirtualFolders`,
-                    { headers: jellyfinHeaders },
-                );
-                folders.forEach((f) => {
-                    if (f.CollectionType === 'boxsets') return;
-                    const keys = [f.Id, f.ItemId].filter(Boolean) as string[];
-                    keys.forEach(k => {
-                        if (f.Name) libraryNameMap.set(k, f.Name);
-                        if (f.CollectionType) libraryCollectionMap.set(k, f.CollectionType);
+                try {
+                    const folders = await fetchJsonWithRetry<Array<{ CollectionType?: string; Id?: string; ItemId?: string; Name?: string }>>(
+                        `${baseUrl}/Library/VirtualFolders`,
+                        { headers: jellyfinHeaders },
+                    );
+                    folders.forEach((f) => {
+                        if (f.CollectionType === 'boxsets') return;
+                        const keys = [f.Id, f.ItemId].filter(Boolean) as string[];
+                        keys.forEach(k => {
+                            if (f.Name) libraryNameMap.set(k, f.Name);
+                            if (f.CollectionType) libraryCollectionMap.set(k, f.CollectionType);
+                        });
                     });
-                });
+                } catch (foldersError) {
+                    console.warn(`[Sync] [${currentServerName}] VirtualFolders unavailable, continuing without library hints.`, foldersError);
+                }
 
-                const views = await fetchJsonWithRetry<{ Items?: Array<{ CollectionType?: string; Id?: string; ItemId?: string; Name?: string }> }>(
-                    `${baseUrl}/UserViews`,
-                    { headers: jellyfinHeaders },
-                );
-                (views.Items || []).forEach((v) => {
-                    if (v.CollectionType === 'boxsets') return;
-                    const keys = [v.Id, v.ItemId].filter(Boolean) as string[];
-                    keys.forEach(k => {
-                        if (v.Name) libraryNameMap.set(k, v.Name);
-                        if (v.CollectionType) libraryCollectionMap.set(k, v.CollectionType);
+                try {
+                    const views = await fetchJsonWithRetry<{ Items?: Array<{ CollectionType?: string; Id?: string; ItemId?: string; Name?: string }> }>(
+                        `${baseUrl}/UserViews`,
+                        { headers: jellyfinHeaders },
+                    );
+                    (views.Items || []).forEach((v) => {
+                        if (v.CollectionType === 'boxsets') return;
+                        const keys = [v.Id, v.ItemId].filter(Boolean) as string[];
+                        keys.forEach(k => {
+                            if (v.Name) libraryNameMap.set(k, v.Name);
+                            if (v.CollectionType) libraryCollectionMap.set(k, v.CollectionType);
+                        });
                     });
-                });
+                } catch (viewsError) {
+                    console.warn(`[Sync] [${currentServerName}] UserViews unavailable, continuing without view mapping.`, viewsError);
+                }
 
                 // 3. Sync Media Items
-                const baseItemsQuery = `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book,BoxSet&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios,RunTimeTicks,ProductionYear,Path`;
+                const baseItemsQueries = [
+                    `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book,BoxSet&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios,RunTimeTicks,ProductionYear,Path`,
+                    `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios,RunTimeTicks`,
+                    `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum&Recursive=true&Fields=DateCreated,Genres,MediaSources,ParentId,People,RunTimeTicks`,
+                ];
                 let recentFilters: string[] = [''];
                 if (options?.recentOnly) {
                     const sevenDaysAgo = new Date();
@@ -217,24 +256,50 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 const itemsById = new Map<string, JellyfinItem>();
 
                 for (const recentFilter of recentFilters) {
-                    let startIndex = 0;
-                    while (true) {
-                        const currentPageSize = startIndex >= SLOW_START_THRESHOLD ? SLOW_PAGE_SIZE : DEFAULT_PAGE_SIZE;
-                        const pageUrl = `${baseUrl}/Items?${baseItemsQuery}${recentFilter}&StartIndex=${startIndex}&Limit=${currentPageSize}`;
-                        const timeoutMs = startIndex >= SLOW_START_THRESHOLD ? 120000 : 60000;
-                        const retries = startIndex >= SLOW_START_THRESHOLD ? 6 : 4;
-                        console.log(`[Sync] [${currentServerName}] Fetching Items StartIndex=${startIndex} Limit=${currentPageSize} timeout=${timeoutMs} retries=${retries}`);
-                        const pageData = await fetchJsonWithRetry<{ Items?: JellyfinItem[] }>(pageUrl, { headers: jellyfinHeaders }, timeoutMs, retries);
-                        const pageItems: JellyfinItem[] = pageData.Items || [];
+                    let filterFetched = false;
+                    let filterError: unknown = null;
 
-                        for (const pageItem of pageItems) {
-                            const itemId = typeof pageItem?.Id === 'string' ? pageItem.Id : null;
-                            if (itemId) itemsById.set(itemId, pageItem);
+                    for (let queryIndex = 0; queryIndex < baseItemsQueries.length && !filterFetched; queryIndex++) {
+                        const baseItemsQuery = baseItemsQueries[queryIndex];
+                        try {
+                            let startIndex = 0;
+                            while (true) {
+                                const currentPageSize = startIndex >= SLOW_START_THRESHOLD ? SLOW_PAGE_SIZE : DEFAULT_PAGE_SIZE;
+                                const pageUrl = `${baseUrl}/Items?${baseItemsQuery}${recentFilter}&StartIndex=${startIndex}&Limit=${currentPageSize}`;
+                                const timeoutMs = startIndex >= SLOW_START_THRESHOLD ? 120000 : 60000;
+                                const retries = startIndex >= SLOW_START_THRESHOLD ? 6 : 4;
+                                console.log(`[Sync] [${currentServerName}] Fetching Items StartIndex=${startIndex} Limit=${currentPageSize} timeout=${timeoutMs} retries=${retries} queryVariant=${queryIndex + 1}`);
+                                const pageData = await fetchJsonWithRetry<{ Items?: JellyfinItem[] }>(pageUrl, { headers: jellyfinHeaders }, timeoutMs, retries);
+                                const pageItems: JellyfinItem[] = pageData.Items || [];
+
+                                for (const pageItem of pageItems) {
+                                    const itemId = typeof pageItem?.Id === 'string' ? pageItem.Id : null;
+                                    if (itemId) itemsById.set(itemId, pageItem);
+                                }
+
+                                if (pageItems.length < currentPageSize) break;
+                                startIndex += currentPageSize;
+                                if (startIndex >= 50000) break;
+                            }
+                            filterFetched = true;
+                        } catch (itemsError) {
+                            filterError = itemsError;
+                            if (isHttpStatus(itemsError, [400]) && queryIndex < baseItemsQueries.length - 1) {
+                                console.warn(`[Sync] [${currentServerName}] Items query variant ${queryIndex + 1} incompatible (HTTP 400), trying safer variant.`);
+                                continue;
+                            }
+                            break;
                         }
+                    }
 
-                        if (pageItems.length < currentPageSize) break;
-                        startIndex += currentPageSize;
-                        if (startIndex >= 50000) break;
+                    if (!filterFetched) {
+                        // Jellyfin may reject some recent-only filters (e.g. MinDateLastSaved) depending on version.
+                        if (recentFilter.includes("MinDateLastSaved") && isHttpStatus(filterError, [400])) {
+                            console.warn(`[Sync] [${currentServerName}] MinDateLastSaved unsupported, skipping this recent filter.`);
+                            continue;
+                        }
+                        if (filterError instanceof Error) throw filterError;
+                        throw new Error(`Unable to fetch Items for filter: ${recentFilter || "<full>"}`);
                     }
                 }
 
