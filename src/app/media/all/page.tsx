@@ -170,6 +170,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
     }
 
     const seriesChildStats = new Map<string, { plays: number; dur: number; dp: number; childCount: number }>();
+    let seriesResolutionMapLocal: Map<string, string> | undefined = undefined;
     if (seriesItems.length > 0) {
         const seriesJellyfinIds = seriesItems.map((m) => String(m.jellyfinMediaId));
         const seasons = await prisma.media.findMany({
@@ -180,12 +181,34 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
         const seasonIds = seasons.map((s) => s.jellyfinMediaId);
 
         if (seasonIds.length > 0) {
+            // Fetch episodes and include resolution so we can compute a representative resolution per series
             const episodes = await prisma.media.findMany({
                 where: { type: 'Episode', parentId: { in: seasonIds } },
-                select: { id: true, parentId: true },
+                select: { id: true, parentId: true, resolution: true },
             });
             const episodeIds = episodes.map((e) => e.id);
             const episodeById = new Map(episodes.map((e) => [e.id, e]));
+
+            // Build a map of most-frequent normalized resolution per series (mode)
+            const seriesResolutionCounts = new Map<string, Map<string, number>>();
+            for (const ep of episodes) {
+                const seriesJellyfinId = ep.parentId ? seasonToSeries.get(ep.parentId) : undefined;
+                if (!seriesJellyfinId) continue;
+                const norm = normalizeResolution(ep.resolution);
+                const counts = seriesResolutionCounts.get(seriesJellyfinId) || new Map<string, number>();
+                counts.set(norm, (counts.get(norm) || 0) + 1);
+                seriesResolutionCounts.set(seriesJellyfinId, counts);
+            }
+
+            const seriesResolutionMap = new Map<string, string>();
+            for (const [seriesId, counts] of seriesResolutionCounts.entries()) {
+                let best = 'Unknown';
+                let bestCount = -1;
+                for (const [res, cnt] of counts.entries()) {
+                    if (cnt > bestCount) { bestCount = cnt; best = res; }
+                }
+                seriesResolutionMap.set(seriesId, best);
+            }
 
             if (episodeIds.length > 0) {
                 const [episodeAgg, episodeDirectPlayAgg] = await Promise.all([
@@ -217,6 +240,9 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                     seriesChildStats.set(seriesJellyfinId, stats);
                 }
             }
+
+            // Attach the computed representative resolution map to the declared variable
+            seriesResolutionMapLocal = seriesResolutionMap;
         }
     }
 
@@ -310,7 +336,10 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
             durationHours,
             qualityPercent,
             childCount,
-            normalizedResolution: normalizeResolution(media.resolution),
+            // For Series, prefer the aggregated resolution computed from episodes (mode), fallback to media resolution
+            normalizedResolution: media.type === 'Series'
+                ? (typeof seriesResolutionMapLocal !== 'undefined' ? (seriesResolutionMapLocal.get(String(media.jellyfinMediaId)) || normalizeResolution(media.resolution)) : normalizeResolution(media.resolution))
+                : normalizeResolution(media.resolution),
             bitrateKbps
         };
     });
@@ -365,11 +394,17 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                                     <Badge className="px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase bg-yellow-500/90 text-black border-transparent backdrop-blur-sm">{media.bitrateKbps} KBPS</Badge>
                                 </div>
                             )}
-                            {showLibraryMediaBadges && media.type === 'Series' && media.plays > 0 && (
+                            {showLibraryMediaBadges && media.type === 'Series' && (
                                 <div className="absolute top-2 right-2 z-10">
-                                    <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase border-transparent ${media.qualityPercent >= 80 ? 'bg-emerald-500 text-black' : media.qualityPercent >= 50 ? 'bg-amber-500 text-black' : 'bg-red-500 text-white'}`}>
-                                        DP {Math.max(0, Math.min(100, media.qualityPercent))}%
-                                    </Badge>
+                                    {media.normalizedResolution && media.normalizedResolution !== 'Unknown' ? (
+                                        <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
+                                            {media.normalizedResolution === '4K' ? '4K UHD' : media.normalizedResolution}
+                                        </Badge>
+                                    ) : media.plays > 0 ? (
+                                        <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase border-transparent ${media.qualityPercent >= 80 ? 'bg-emerald-500 text-black' : media.qualityPercent >= 50 ? 'bg-amber-500 text-black' : 'bg-red-500 text-white'}`}>
+                                            DP {Math.max(0, Math.min(100, media.qualityPercent))}%
+                                        </Badge>
+                                    ) : null}
                                 </div>
                             )}
                         </div>

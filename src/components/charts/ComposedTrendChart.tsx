@@ -169,10 +169,10 @@ export function ComposedTrendChart({ data, series }: { data: TrendData[], series
                     })
                 ) : (
                     <>
-                        <Area hide={hidden.has("movieVolume")} yAxisId="left" type="monotone" dataKey="movieVolume" stackId="1" stroke="#38bdf8" strokeWidth={2.2} fill="#38bdf8" fillOpacity={0.18} name={t('movies')} activeDot={<GlowDot fill="#38bdf8" />} animationDuration={1200} animationEasing="ease-out" />
-                        <Area hide={hidden.has("seriesVolume")} yAxisId="left" type="monotone" dataKey="seriesVolume" stackId="1" stroke="#22c55e" strokeWidth={2.2} fill="#22c55e" fillOpacity={0.18} name={t('series')} activeDot={<GlowDot fill="#22c55e" />} animationDuration={1200} animationEasing="ease-out" />
-                        <Area hide={hidden.has("musicVolume")} yAxisId="left" type="monotone" dataKey="musicVolume" stackId="1" stroke="#f59e0b" strokeWidth={2.2} fill="#f59e0b" fillOpacity={0.18} name={t('music')} activeDot={<GlowDot fill="#f59e0b" />} animationDuration={1200} animationEasing="ease-out" />
-                        <Area hide={hidden.has("booksVolume")} yAxisId="left" type="monotone" dataKey="booksVolume" stackId="1" stroke="#a855f7" strokeWidth={2.2} fill="#a855f7" fillOpacity={0.18} name={t('books')} activeDot={<GlowDot fill="#a855f7" />} animationDuration={1200} animationEasing="ease-out" />
+                        <Line hide={hidden.has("movieVolume")} yAxisId="left" type="monotone" dataKey="movieVolume" stroke="#38bdf8" strokeWidth={2.2} dot={false} activeDot={<GlowDot fill="#38bdf8" />} name={t('movies')} animationDuration={1200} animationEasing="ease-out" />
+                        <Line hide={hidden.has("seriesVolume")} yAxisId="left" type="monotone" dataKey="seriesVolume" stroke="#22c55e" strokeWidth={2.2} dot={false} activeDot={<GlowDot fill="#22c55e" />} name={t('series')} animationDuration={1200} animationEasing="ease-out" />
+                        <Line hide={hidden.has("musicVolume")} yAxisId="left" type="monotone" dataKey="musicVolume" stroke="#f59e0b" strokeWidth={2.2} dot={false} activeDot={<GlowDot fill="#f59e0b" />} name={t('music')} animationDuration={1200} animationEasing="ease-out" />
+                        <Line hide={hidden.has("booksVolume")} yAxisId="left" type="monotone" dataKey="booksVolume" stroke="#a855f7" strokeWidth={2.2} dot={false} activeDot={<GlowDot fill="#a855f7" />} name={t('books')} animationDuration={1200} animationEasing="ease-out" />
                     </>
                 )}
 

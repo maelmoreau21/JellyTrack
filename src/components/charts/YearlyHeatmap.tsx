@@ -103,21 +103,28 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
         const yearEntries = sourceData.filter(d => d.date.startsWith(String(selectedYear)));
         const dataMap = new Map(yearEntries.map(d => [d.date, d]));
 
-        // Recompute levels based on this year's max using log scale
-        const counts = yearEntries.map(d => d.count);
-        const maxCount = counts.length > 0 ? Math.max(...counts) : 1;
-        const logMax = Math.log(maxCount + 1);
+        // Recompute levels based on the year's average (mean) so coloring reflects relative activity
+        const allDays = eachDayOfInterval({ start: jan1, end: dec31 });
+        const countsAll = allDays.map((d) => {
+            const ds = format(d, "yyyy-MM-dd");
+            return dataMap.get(ds)?.count || 0;
+        });
+        const sumAll = countsAll.reduce((s, v) => s + v, 0);
+        const mean = countsAll.length > 0 ? sumAll / countsAll.length : 0;
+
         const getLevel = (count: number): 0 | 1 | 2 | 3 | 4 => {
             if (count === 0) return 0;
-            const ratio = Math.log(count + 1) / logMax;
-            if (ratio < 0.3) return 1;
-            if (ratio < 0.55) return 2;
-            if (ratio < 0.8) return 3;
+            // If mean is 0 (no activity), fallback to a simple presence bucket
+            if (mean === 0) return 1;
+
+            const ratio = count / mean; // how many times above/below average
+            if (ratio < 0.5) return 1;
+            if (ratio < 1) return 2;
+            if (ratio < 2) return 3;
             return 4;
         };
 
         const yearData: HeatmapData[] = [];
-        const allDays = eachDayOfInterval({ start: jan1, end: dec31 });
         for (const date of allDays) {
             const dateStr = format(date, "yyyy-MM-dd");
             const existing = dataMap.get(dateStr);

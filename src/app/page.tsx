@@ -259,6 +259,12 @@ const getDashboardMetrics = unstable_cache(
       playbackBaseWhere.serverId = selectedServerScope;
     }
 
+    // Same playback where clause but WITHOUT zapping exclusions — used as a fallback
+    const playbackBaseWhereNoZap: Record<string, unknown> = { media: mediaWhere };
+    if (selectedServerScope) {
+      playbackBaseWhereNoZap.serverId = selectedServerScope;
+    }
+
     const userWhere = selectedServerScope ? { serverId: selectedServerScope } : undefined;
 
     // 3. Main period metrics + history loaded in parallel
@@ -442,10 +448,33 @@ const getDashboardMetrics = unstable_cache(
       count,
     }));
 
-    const dayCounts = new Array(7).fill(0);
+    // Day of week counts (0 = Sunday .. 6 = Saturday)
+    let dayCounts = new Array(7).fill(0);
     histories.forEach((h) => {
       dayCounts[h.startedAt.getDay()]++;
     });
+
+    // If all zero (no sessions after zapping filter), fallback to a query WITHOUT the zapping filter
+    // to provide a meaningful day-of-week distribution rather than an empty chart.
+    const totalDaySum = dayCounts.reduce((s, v) => s + v, 0);
+    if (totalDaySum === 0) {
+      try {
+        const fallback = await prisma.playbackHistory.findMany({
+          where: { ...playbackBaseWhereNoZap, startedAt: dateFilter },
+          select: { startedAt: true },
+        }) as { startedAt: Date }[];
+        if (fallback && fallback.length > 0) {
+          dayCounts = new Array(7).fill(0);
+          fallback.forEach((h) => {
+            const d = h.startedAt instanceof Date ? h.startedAt : new Date(h.startedAt as any);
+            dayCounts[d.getDay()]++;
+          });
+        }
+      } catch (e) {
+        // If fallback query fails, silently keep zeroed dayCounts — chart will show no data.
+      }
+    }
+
     const dayOfWeekChartData: DayOfWeekData[] = dayCounts.map((count, index) => ({
       day: String(index),
       count,
