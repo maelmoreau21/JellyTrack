@@ -480,6 +480,7 @@ const getDashboardMetrics = unstable_cache(
 
     const dayOfWeekChartData: DayOfWeekData[] = dayCounts.map((count, index) => ({
       day: String(index),
+      dayIndex: index,
       count,
     }));
 
@@ -752,13 +753,29 @@ export default async function DashboardPage(props: {
   const tc = await getTranslations('common');
 
   // Post-process cached data with translations
-  const DAY_NAMES = t('dayNames').split(',');
+  const DAY_NAMES = t('dayNames').split(',').map((name) => name.trim());
   const MONTH_NAMES = t('monthNames').split(',');
 
-  // Translate day of week labels
-  metrics.dayOfWeekChartData = metrics.dayOfWeekChartData.map((d: DayOfWeekData) => ({
-    ...d,
-    day: DAY_NAMES[parseInt(d.day)] || d.day,
+  // Normalize and localize day-of-week labels while keeping stable indexes.
+  const normalizedDayCounts = new Array(7).fill(0);
+  metrics.dayOfWeekChartData.forEach((entry: DayOfWeekData, fallbackIndex: number) => {
+    const idxFromData =
+      typeof entry.dayIndex === "number"
+        ? entry.dayIndex
+        : Number.parseInt(String(entry.day), 10);
+    const idx = Number.isInteger(idxFromData) && idxFromData >= 0 && idxFromData < 7
+      ? idxFromData
+      : fallbackIndex;
+    if (idx >= 0 && idx < 7) {
+      const numericCount = Number(entry.count ?? 0);
+      normalizedDayCounts[idx] += Number.isFinite(numericCount) ? numericCount : 0;
+    }
+  });
+
+  metrics.dayOfWeekChartData = DAY_NAMES.slice(0, 7).map((dayLabel: string, index: number) => ({
+    day: dayLabel,
+    dayIndex: index,
+    count: normalizedDayCounts[index] ?? 0,
   }));
 
   // Monthly data: pass MONTH_NAMES to chart component for client-side year navigation
@@ -1243,7 +1260,7 @@ export default async function DashboardPage(props: {
                 </CollapsibleCard>
                 <CollapsibleCard storageKey="dayOfWeek" title={t('dayOfWeekActivity')} description={t('dayOfWeekActivityDesc')} contentClassName="pl-0 pb-4">
                   <div className="h-[250px] min-h-[250px] w-full overflow-hidden">
-                    {metrics.dayOfWeekChartData.some((d: DayOfWeekData) => (d.count ?? 0) > 0) ? (
+                    {metrics.dayOfWeekChartData.some((d: DayOfWeekData) => Number(d.count ?? 0) > 0) ? (
                       <DayOfWeekChart data={metrics.dayOfWeekChartData} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-zinc-500 text-sm">{tc('noData')}</div>

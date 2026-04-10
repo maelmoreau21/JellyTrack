@@ -37,7 +37,7 @@ const LIBRARY_COLORS: Record<string, string> = {
 };
 
 const customTheme: ThemeInput = {
-    light: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
+    light: ['#d7f1e3', '#9fddbe', '#63c794', '#2fad74', '#1d7f55'],
     dark: ['#27272a', '#312e81', '#4338ca', '#4f46e5', '#6366f1'],
 };
 
@@ -109,20 +109,27 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
             const ds = format(d, "yyyy-MM-dd");
             return dataMap.get(ds)?.count || 0;
         });
-        const sumAll = countsAll.reduce((s, v) => s + v, 0);
-        const mean = countsAll.length > 0 ? sumAll / countsAll.length : 0;
+        const nonZeroCounts = countsAll.filter((count) => count > 0);
+        const sumNonZero = nonZeroCounts.reduce((sum, count) => sum + count, 0);
+        const mean = nonZeroCounts.length > 0 ? sumNonZero / nonZeroCounts.length : 0;
+        const maxCount = nonZeroCounts.length > 0 ? Math.max(...nonZeroCounts) : 0;
 
         const getLevel = (count: number): 0 | 1 | 2 | 3 | 4 => {
             if (count === 0) return 0;
-            // If mean is 0 (no activity), fallback to a simple presence bucket
             if (mean <= 0) return 1;
 
-            // Map counts to levels using a log2 scale so the year's average maps
-            // to the middle level (2). Each doubling/halving changes one level.
-            const ratio = count / mean;
-            const levelFloat = Math.log2(ratio) + 2; // mean -> 2, double -> 3, half -> 1
-            const clamped = Math.max(0, Math.min(4, Math.round(levelFloat)));
-            return clamped as 0 | 1 | 2 | 3 | 4;
+            // Average-centered buckets:
+            // - below mean => levels 1-2
+            // - above mean => levels 3-4, split by distance to yearly maximum
+            if (count <= mean) {
+                const lowRatio = count / mean;
+                return lowRatio < 0.5 ? 1 : 2;
+            }
+
+            if (maxCount <= mean) return 3;
+
+            const highRatio = (count - mean) / (maxCount - mean);
+            return highRatio < 0.45 ? 3 : 4;
         };
 
         const yearData: HeatmapData[] = [];

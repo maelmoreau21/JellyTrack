@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
@@ -7,6 +8,7 @@ import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartT
 export interface DayOfWeekData {
     day: string;
     count: number;
+    dayIndex?: number;
 }
 
 interface DayOfWeekChartProps {
@@ -14,12 +16,24 @@ interface DayOfWeekChartProps {
 }
 
 export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
-    const maxCount = Math.max(...data.map(d => d.count), 0);
+    const normalizedData = useMemo(
+        () =>
+            data.map((entry, index) => {
+                const numericCount = Number(entry.count ?? 0);
+                return {
+                    day: String(entry.day ?? index),
+                    count: Number.isFinite(numericCount) ? numericCount : 0,
+                    dayIndex: entry.dayIndex,
+                };
+            }),
+        [data]
+    );
+    const maxCount = normalizedData.length > 0 ? Math.max(...normalizedData.map((d) => d.count)) : 0;
 
     return (
-        <ResponsiveContainer width="100%" height="100%" minHeight={180}>
+        <ResponsiveContainer width="100%" height={220} minHeight={220}>
             <BarChart
-                data={data}
+                data={normalizedData}
                 margin={{ top: 10, right: 10, left: -20, bottom: 18 }}
             >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
@@ -49,13 +63,14 @@ export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
                 <Bar
                     dataKey="count"
                     radius={[4, 4, 0, 0]}
+                    minPointSize={2}
                     animationDuration={0}
                     animationEasing="linear"
                 >
-                    {data.map((entry, index) => (
+                    {normalizedData.map((entry, index) => (
                         <Cell
                             key={`cell-${index}`}
-                            fill={entry.count === maxCount && maxCount > 0 ? "#f97316" : "#10b981"}
+                            fill={entry.count === maxCount && maxCount > 0 ? "#ea580c" : "#059669"}
                         />
                     ))}
                 </Bar>
