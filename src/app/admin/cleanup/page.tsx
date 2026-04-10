@@ -162,7 +162,9 @@ async function getCleanupData() {
             }
         }
 
-        if (bestCompletion.percent > 0 && bestCompletion.bucket !== 'completed') {
+        // Only include media that reached at least the 'abandoned' or 'partial' bucket.
+        // Exclude 'skipped' ("Passé") items which have too little progress to be considered abandoned.
+        if (bestCompletion.percent > 0 && (bestCompletion.bucket === 'partial' || bestCompletion.bucket === 'abandoned')) {
             abandonedMedia.push({
                 ...media,
                 title: getEnrichedTitle(media),
