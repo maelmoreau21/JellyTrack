@@ -54,47 +54,47 @@
 
 :root {
   --radius: 0.75rem;
-  /* Pastel Mint (renforcée) - plus colorée, moins blanche */
-  --background: #D9F3E5;
-  --foreground: #0B2B26;
-  --card: #E1F7EA;
-  --card-foreground: #083231;
-  --popover: #E1F7EA;
-  --popover-foreground: #083231;
-  --primary: #10B981;
-  --primary-foreground: #FFFFFF;
-  --secondary: #BEE8D4;
-  --secondary-foreground: #083231;
-  --muted: #D2EBDD;
-  --muted-foreground: #46645C;
-  --accent: #34D399;
-  --accent-foreground: #FFFFFF;
-  --destructive: #DC2626;
-  --border: #BFDDCB;
-  --input: #E7F6EE;
-  --ring: #10B981;
-  --chart-1: #10B981;
-  --chart-2: #34D399;
-  --chart-3: #06B6D4;
-  --chart-4: #38BDF8;
-  --chart-5: #86EFAC;
-  --chart-axis-color: #6B9F91;
-  --chart-grid-color: rgba(11, 43, 38, 0.06);
-  --chart-tooltip-bg: rgba(234, 246, 239, 0.98);
-  --chart-tooltip-border: 1px solid rgba(11, 43, 38, 0.06);
+  /* Day mode: softer sage tones with stronger element contrast and less glare */
+  --background: #D6DED4;
+  --foreground: #13211D;
+  --card: #E4ECE2;
+  --card-foreground: #10201B;
+  --popover: #E4ECE2;
+  --popover-foreground: #10201B;
+  --primary: #1F7A6C;
+  --primary-foreground: #F4F9F7;
+  --secondary: #C5D2C4;
+  --secondary-foreground: #152520;
+  --muted: #CDD7CB;
+  --muted-foreground: #3E5550;
+  --accent: #2F8A79;
+  --accent-foreground: #F4F9F7;
+  --destructive: #C2413A;
+  --border: #A9B9A8;
+  --input: #DCE5DB;
+  --ring: #2F8A79;
+  --chart-1: #2F8A79;
+  --chart-2: #4F9C8A;
+  --chart-3: #3D7F98;
+  --chart-4: #618FAE;
+  --chart-5: #78A983;
+  --chart-axis-color: #5B746B;
+  --chart-grid-color: rgba(19, 33, 29, 0.12);
+  --chart-tooltip-bg: rgba(232, 238, 231, 0.98);
+  --chart-tooltip-border: 1px solid rgba(19, 33, 29, 0.14);
   --chart-tooltip-radius: 12px;
-  --chart-tooltip-box-shadow: 0 4px 12px rgba(2, 6, 23, 0.08);
+  --chart-tooltip-box-shadow: 0 4px 12px rgba(7, 12, 10, 0.12);
   --chart-tooltip-backdrop: none;
-  --chart-label-color: #4B6B63;
-  --chart-item-color: #083231;
-  --sidebar: #DBF2E5;
-  --sidebar-foreground: #0B2B26;
-  --sidebar-primary: #10B981;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #34D399;
-  --sidebar-accent-foreground: #083231;
-  --sidebar-border: #E6F9F0;
-  --sidebar-ring: #10B981;
+  --chart-label-color: #445C56;
+  --chart-item-color: #10201B;
+  --sidebar: #CFD9CE;
+  --sidebar-foreground: #13211D;
+  --sidebar-primary: #1F7A6C;
+  --sidebar-primary-foreground: #F4F9F7;
+  --sidebar-accent: #2F8A79;
+  --sidebar-accent-foreground: #10201B;
+  --sidebar-border: #AFC0AF;
+  --sidebar-ring: #2F8A79;
 }
 
 .dark {
@@ -179,7 +179,7 @@
   [data-slot="card"] {
     border-color: var(--border);
     background-color: var(--card);
-    box-shadow: 0 1px 2px rgba(2, 6, 23, 0.06);
+    box-shadow: 0 1px 2px rgba(7, 12, 10, 0.1);
   }
 
   .dark [data-slot="card"] {
@@ -193,7 +193,7 @@
   .app-surface {
     border: 1px solid var(--border);
     background: var(--card);
-    box-shadow: 0 1px 2px rgba(2, 6, 23, 0.06);
+    box-shadow: 0 1px 2px rgba(7, 12, 10, 0.1);
   }
 
   .dark .app-surface {
@@ -216,7 +216,8 @@
 
   .app-field {
     border: 1px solid var(--border);
-    background: rgba(225, 246, 235, 0.9);
+    background: var(--input);
+    color: var(--foreground);
   }
 
   .dark .app-field {
@@ -227,7 +228,7 @@
 
   .app-chip {
     border: 1px solid var(--border);
-    background: rgba(220, 242, 230, 0.88);
+    background: var(--secondary);
     color: var(--foreground);
   }
 
@@ -238,9 +239,9 @@
   }
 
   .app-chip-success {
-    border: 1px solid rgba(16, 185, 129, 0.35);
-    background: rgba(16, 185, 129, 0.12);
-    color: #047857;
+    border: 1px solid rgba(31, 122, 108, 0.38);
+    background: rgba(31, 122, 108, 0.14);
+    color: #0F4E44;
   }
 
   .dark .app-chip-success {
@@ -260,7 +261,7 @@
 
   .dashboard-page a:hover [data-slot="card"],
   .dashboard-page .dashboard-interactive:hover {
-    border-color: rgba(14, 116, 144, 0.32);
+    border-color: rgba(31, 122, 108, 0.45);
   }
 
   .dark .dashboard-page a:hover [data-slot="card"],
@@ -282,7 +283,7 @@
 
   .dashboard-page .dashboard-tablist {
     border: 1px solid var(--border);
-    background: rgba(224, 245, 234, 0.9);
+    background: var(--muted);
   }
 
   .dark .dashboard-page .dashboard-tablist {
@@ -292,7 +293,7 @@
 
   .dashboard-page .dashboard-pill {
     border: 1px solid var(--border);
-    background: rgba(223, 243, 231, 0.9);
+    background: var(--secondary);
   }
 
   .dark .dashboard-page .dashboard-pill {
