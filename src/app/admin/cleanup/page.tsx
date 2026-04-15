@@ -11,6 +11,16 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 async function getCleanupData() {
+    const globalSettings = await prisma.globalSettings.findUnique({
+        where: { id: "global" },
+        select: { resolutionThresholds: true },
+    });
+
+    const completionRules =
+        globalSettings?.resolutionThresholds && typeof globalSettings.resolutionThresholds === "object"
+            ? (globalSettings.resolutionThresholds as Record<string, unknown>).completionRules
+            : undefined;
+
     // Use defaults
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
@@ -83,6 +93,7 @@ async function getCleanupData() {
             jellyfinMediaId: true,
             title: true,
             type: true,
+            collectionType: true,
             parentId: true,
             durationMs: true,
             playbackHistory: {
@@ -150,12 +161,17 @@ async function getCleanupData() {
 
         if (watchedByUser.size === 0) continue;
 
-        let bestCompletion = getCompletionMetrics({ type: media.type, durationMs: media.durationMs }, 0);
+        let bestCompletion = getCompletionMetrics(
+            { type: media.type, collectionType: media.collectionType, durationMs: media.durationMs },
+            0,
+            completionRules
+        );
 
         for (const totalWatchedSeconds of watchedByUser.values()) {
             const completion = getCompletionMetrics(
-                { type: media.type, durationMs: media.durationMs },
-                totalWatchedSeconds
+                { type: media.type, collectionType: media.collectionType, durationMs: media.durationMs },
+                totalWatchedSeconds,
+                completionRules
             );
             if (completion.percent > bestCompletion.percent) {
                 bestCompletion = completion;

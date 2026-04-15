@@ -93,7 +93,10 @@
     "skipped": "Saltato",
     "title": "Assistente pulizia",
     "trackType": "Traccia",
-    "tried": "Provato"
+    "tried": "Provato",
+    "sortBy": "Sort by",
+    "sortByCompletion": "Completion (lowest first)",
+    "sortByLastAttempt": "Last attempt (most recent)"
   },
   "common": {
     "active": "Attivo",
@@ -695,7 +698,8 @@
     "noResults": "Nessun risultato",
     "placeholder": "Cerca…",
     "searching": "Ricerca in corso…",
-    "usersSection": "Utenti"
+    "usersSection": "Utenti",
+    "viewAll": "View all"
   },
   "settings": {
     "abandoned": "Abbandonato",
@@ -815,7 +819,38 @@
     "pluginKeyHidden": "Key hidden",
     "pluginKeyMaskedHint": "The saved API key is hidden for security. Regenerate it to display it once.",
     "pluginCopyUrl": "Copy URL",
-    "pluginUrlCopied": "URL copied to clipboard"
+    "pluginUrlCopied": "URL copied to clipboard",
+    "completionRulesDefault": "Default rule (other libraries)",
+    "completionRulesHint": "Adjust thresholds to define when playback is considered skipped, abandoned, partial, or completed for each library type.",
+    "noteLabel": "Note",
+    "serverScopeHint": "Toggle each library per server. Two libraries with the same name on different servers are handled separately.",
+    "serverStatusTitle": "Jellyfin server status",
+    "libraryBadgesDisplayTitle": "Library badge display",
+    "libraryBadgesDisplayDesc": "Show or hide resolution, series quality and bitrate badges in the Library tab.",
+    "libraryBadgesToggleTitle": "Show media badges",
+    "libraryBadgesToggleDesc": "Disable this option to visually lighten media cards.",
+    "schedulerSchedulesDesc": "Schedule each task automatically with an hourly interval.",
+    "schedulerSchedulesExample": "Recommended example: Recent sync 6h, full sync 48h, backup 24h.",
+    "schedulerRecentIntervalHint": "Automatic interval in hours (1-24)",
+    "schedulerFullIntervalHint": "Automatic interval in hours (24-168, multiple of 24)",
+    "schedulerBackupIntervalHint": "Automatic interval in hours (1-168)",
+    "serverDefaultName": "Server",
+    "serverConnected": "Connected",
+    "serverNoApiKey": "Missing API key",
+    "serverOffline": "Offline / invalid key",
+    "serverMissingUrl": "Missing URL",
+    "serverLibrariesDetected": "{count} libraries detected",
+    "serverNoLibrariesDetected": "No libraries detected for this server",
+    "serverPrimaryLabel": "primary server",
+    "serverSecondaryLabel": "secondary server",
+    "noLibrariesFoundHint": "Check each Jellyfin server URL and API key, then reload the page.",
+    "libraryExcludedState": "Excluded",
+    "libraryActiveState": "Active",
+    "legacyRulesTitle": "Legacy rules to review",
+    "legacyRulesDesc": "Some old exclusions could not be automatically linked to a server+library pair. You can remove them manually below.",
+    "legacyGlobalExclusionsTitle": "Global exclusions",
+    "legacyOrphanExclusionsTitle": "Unavailable server/library exclusions",
+    "removeExclusionLabel": "Remove this exclusion"
   },
   "timeRange": {
     "allTime": "Sempre",

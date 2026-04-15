@@ -78,8 +78,9 @@ export default function SchedulerSchedulesPage() {
                 <CardHeader>
                     <CardTitle>{t('saveSchedules')}</CardTitle>
                     <CardDescription>
-                        Planifiez chaque tâche automatiquement avec un intervalle en heures.
-                        Exemple recommandé: Synchro récente 6h, Synchro totale 48h, Sauvegarde 24h.
+                        {t('schedulerSchedulesDesc')}
+                        {' '}
+                        {t('schedulerSchedulesExample')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -94,7 +95,7 @@ export default function SchedulerSchedulesPage() {
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <div className="text-sm font-medium">{t('recentSync')}</div>
-                                    <div className="text-xs text-muted-foreground mt-1">Intervalle auto en heures (1-24)</div>
+                                    <div className="text-xs text-muted-foreground mt-1">{t('schedulerRecentIntervalHint')}</div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Clock3 className="w-4 h-4 text-sky-400" />
@@ -116,7 +117,7 @@ export default function SchedulerSchedulesPage() {
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <div className="text-sm font-medium">{t('fullSync')}</div>
-                                    <div className="text-xs text-muted-foreground mt-1">Intervalle auto en heures (24-168, multiple de 24)</div>
+                                    <div className="text-xs text-muted-foreground mt-1">{t('schedulerFullIntervalHint')}</div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Clock3 className="w-4 h-4 text-violet-400" />
@@ -143,7 +144,7 @@ export default function SchedulerSchedulesPage() {
                             <div className="flex items-center justify-between gap-3">
                                 <div>
                                     <div className="text-sm font-medium">{t('backupTask')}</div>
-                                    <div className="text-xs text-muted-foreground mt-1">Intervalle auto en heures (1-168)</div>
+                                    <div className="text-xs text-muted-foreground mt-1">{t('schedulerBackupIntervalHint')}</div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Clock3 className="w-4 h-4 text-amber-400" />

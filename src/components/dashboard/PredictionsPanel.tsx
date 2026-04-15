@@ -65,7 +65,7 @@ export function PredictionsPanel() {
     <div className="grid gap-4 md:grid-cols-2">
       {/* Trending Media */}
       {data.trendingMedia.length > 0 && (
-        <Card className="app-surface-soft border-border">
+        <Card className="app-surface-soft border-border soft-light-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-md flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-orange-500" />

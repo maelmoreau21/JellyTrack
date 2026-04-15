@@ -19,6 +19,7 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
 type PeriodValue = "all" | "30d" | "90d" | "180d" | "365d";
 type DateValue = Date | string | null | undefined;
+type AbandonedSortValue = "completion" | "lastAttempt";
 
 const PERIOD_TO_DAYS: Record<PeriodValue, number | null> = {
     all: null,
@@ -143,6 +144,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
     const [pageSize, setPageSize] = useState<number>(25);
     const [ghostFilter, setGhostFilter] = useState<string>("all");
     const [abandonFilter, setAbandonFilter] = useState<string>("all");
+    const [abandonedSort, setAbandonedSort] = useState<AbandonedSortValue>("completion");
     const [ghostPage, setGhostPage] = useState(1);
     const [abandonedPage, setAbandonedPage] = useState(1);
 
@@ -172,10 +174,24 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
     }, [baseGhosts, ghostFilter]);
 
     const filteredAbandoned = useMemo(() => {
-        return abandonFilter === "all"
+        const scoped = abandonFilter === "all"
             ? baseAbandoned
             : baseAbandoned.filter((media) => media.type === abandonFilter);
-    }, [abandonFilter, baseAbandoned]);
+
+        const sorted = [...scoped];
+
+        if (abandonedSort === "lastAttempt") {
+            sorted.sort((left, right) => {
+                const leftTs = toDate(left.lastPlayed)?.getTime() ?? 0;
+                const rightTs = toDate(right.lastPlayed)?.getTime() ?? 0;
+                return rightTs - leftTs;
+            });
+        } else {
+            sorted.sort((left, right) => left.maxCompletion - right.maxCompletion);
+        }
+
+        return sorted;
+    }, [abandonFilter, abandonedSort, baseAbandoned]);
 
     const ghostPageData = useMemo(
         () => paginateItems(filteredGhosts, ghostPage, pageSize),
@@ -206,7 +222,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
         const run = () => setAbandonedPage(1);
         if (typeof queueMicrotask === "function") queueMicrotask(run);
         else setTimeout(run, 0);
-    }, [abandonFilter]);
+    }, [abandonFilter, abandonedSort]);
 
     useEffect(() => {
         if (ghostPage > ghostPageData.totalPages) {
@@ -425,6 +441,17 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                     {f.label}
                                 </button>
                             ))}
+                        </div>
+                        <div className="pt-3">
+                            <Select value={abandonedSort} onValueChange={(value) => setAbandonedSort(value as AbandonedSortValue)}>
+                                <SelectTrigger className="w-full sm:w-[280px] bg-background/70 border-border">
+                                    <SelectValue placeholder={t('sortBy')} />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card border-border">
+                                    <SelectItem value="completion">{t('sortByCompletion')}</SelectItem>
+                                    <SelectItem value="lastAttempt">{t('sortByLastAttempt')}</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </CardHeader>
                     <CardContent>

@@ -137,6 +137,8 @@ Vous devez RELIRE `prisma/schema.prisma` avant toute proposition qui touche aux 
 ## 6. i18n & messages
 - Namespace : conserver les namespaces existants (`common`, `dashboard`, `media`, `logs`, etc.).
 - Quand vous ajoutez une clé de traduction, ajouter la même clé dans tous les fichiers `messages/*.json` (toutes les locales). Les clefs manquantes provoquent des libellés non traduits.
+- Ne pas mettre de texte en dur dans les composants ou pages. Toutes les chaînes destinées à l'UI (titres, labels, boutons, tableaux, messages, et attributs accessibles comme `alt`, `title`, `aria-*`, `placeholder`) doivent utiliser les fichiers de traduction `messages/*.json` via les APIs d'internationalisation : côté serveur `getTranslations()` + `tl('key')`, côté client `useTranslations()` + `t('key')`. Pour les textes riches contenant HTML ou éléments React, utilisez `t.rich()` ou l'équivalent. Les exceptions (texte technique non destiné à l'interface utilisateur) doivent être clairement documentées dans la PR.
+- Vérifiez les chaînes en dur avec les scripts existants (`scripts/check_translations.js`, `scripts/check_pages.js`) avant de soumettre une PR.
 - Utilisation :
 	- Server components : `const tl = await getTranslations('logs')` et `tl('key')`.
 	- Client components : `const t = useTranslations('logs')`.
