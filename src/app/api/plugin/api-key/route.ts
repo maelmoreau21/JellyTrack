@@ -47,7 +47,7 @@ export async function GET(req: Request) {
         : false;
 
     return NextResponse.json({
-        hasApiKey: !!snapshot.currentKey,
+        hasApiKey: !!snapshot.currentKeyHash,
         pluginLastSeen: settings?.pluginLastSeen || null,
         pluginVersion: settings?.pluginVersion || null,
         pluginServerName: settings?.pluginServerName || null,

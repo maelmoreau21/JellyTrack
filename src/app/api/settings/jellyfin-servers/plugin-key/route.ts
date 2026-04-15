@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
-import { getPluginKeySnapshot } from "@/lib/pluginKeyManager";
+import {
+  comparePluginApiKey,
+  getPluginKeySnapshot,
+  isPreviousPluginKeyValid,
+} from "@/lib/pluginKeyManager";
 import { deriveScopedPluginApiKey } from "@/lib/pluginServerKey";
 
 export const dynamic = "force-dynamic";
@@ -13,9 +17,20 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const id = String(body.id || "").trim();
   const jellyfinServerId = String(body.jellyfinServerId || "").trim();
+  const globalApiKey = String(body.globalApiKey || "").trim();
 
   if (!id && !jellyfinServerId) {
     return NextResponse.json({ error: "Serveur introuvable." }, { status: 400 });
+  }
+
+  if (!globalApiKey) {
+    return NextResponse.json(
+      {
+        error:
+          "Clé plugin globale requise. Régénérez-la depuis la sécurité plugin puis réessayez.",
+      },
+      { status: 400 },
+    );
   }
 
   const prismaAny = prisma as any;
@@ -42,14 +57,28 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (!snapshot.currentKey) {
+  if (!snapshot.currentKeyHash) {
     return NextResponse.json(
-      { error: "Aucune clé plugin globale active. Générez-la avant de connecter un plugin serveur." },
-      { status: 400 }
+      {
+        error:
+          "Aucune clé plugin globale active. Générez-la depuis la sécurité plugin avant de créer une clé serveur.",
+      },
+      { status: 400 },
     );
   }
 
-  const pluginApiKey = deriveScopedPluginApiKey(snapshot.currentKey, server.jellyfinServerId);
+  const currentMatches = await comparePluginApiKey(globalApiKey, snapshot.currentKeyHash);
+  let validGlobalKey = currentMatches;
+
+  if (!validGlobalKey && isPreviousPluginKeyValid(snapshot) && snapshot.previousKeyHash) {
+    validGlobalKey = await comparePluginApiKey(globalApiKey, snapshot.previousKeyHash);
+  }
+
+  if (!validGlobalKey) {
+    return NextResponse.json({ error: "Clé plugin globale invalide." }, { status: 401 });
+  }
+
+  const pluginApiKey = deriveScopedPluginApiKey(globalApiKey, server.jellyfinServerId);
   if (!pluginApiKey) {
     return NextResponse.json({ error: "Impossible de générer la clé plugin du serveur." }, { status: 500 });
   }

@@ -206,8 +206,8 @@ model GlobalSettings {
   wrappedEndMonth       Int      @default(1)     // Month (1-12) when current year Wrapped stops being available
   wrappedEndDay         Int      @default(31)    // Day (1-31) when current year Wrapped stops being available
   // Plugin connection system
-  pluginApiKey          String?  // API key for Jellyfin plugin authentication
-  pluginPreviousApiKey  String?  // Previous API key accepted during grace period after rotation
+  pluginApiKey          String?  // Hash (scrypt) of the current plugin API key (never store raw key)
+  pluginPreviousApiKey  String?  // Hash (scrypt) of previous plugin API key kept during grace period
   pluginPreviousApiKeyExpiresAt DateTime? // Expiration timestamp for the previous plugin key
   pluginKeyCreatedAt    DateTime? // Creation date of the currently active plugin key
   pluginKeyExpiresAt    DateTime? // Expiration date of the currently active plugin key

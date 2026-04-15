@@ -81,7 +81,7 @@ export async function GET() {
             connected: isConnected,
         },
         key: {
-            hasApiKey: !!snapshot.currentKey,
+            hasApiKey: !!snapshot.currentKeyHash,
             createdAt: snapshot.keyCreatedAt,
             expiresAt: snapshot.keyExpiresAt,
             expiresInDays,

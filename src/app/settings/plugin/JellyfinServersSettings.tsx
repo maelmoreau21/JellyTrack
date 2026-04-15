@@ -63,6 +63,7 @@ export function JellyfinServersSettings() {
   const [copiedPluginKeyServerId, setCopiedPluginKeyServerId] = useState<string | null>(null);
   const [pluginKeyVisible, setPluginKeyVisible] = useState<Record<string, boolean>>({});
   const [pluginKeyByServerId, setPluginKeyByServerId] = useState<Record<string, string>>({});
+  const [globalPluginApiKey, setGlobalPluginApiKey] = useState<string | null>(null);
   const [globalPluginKeyLoading, setGlobalPluginKeyLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -113,7 +114,11 @@ export function JellyfinServersSettings() {
     try {
       const res = await fetch('/api/plugin/api-key', { method: 'POST' });
       if (!res.ok) throw new Error('Erreur');
-      setMessage({ type: 'success', text: 'Clé plugin globale générée.' });
+      const json = await res.json().catch(() => ({}));
+      const nextGlobalKey = typeof json.apiKey === 'string' ? json.apiKey : '';
+      if (!nextGlobalKey) throw new Error('missing-key');
+      setGlobalPluginApiKey(nextGlobalKey);
+      setMessage({ type: 'success', text: 'Clé plugin globale générée. Copiez maintenant les clés serveur (la clé brute n est plus récupérable ensuite).' });
       await fetchInfo();
     } catch (e) {
       setMessage({ type: 'error', text: 'Impossible de générer la clé plugin globale.' });
@@ -122,14 +127,24 @@ export function JellyfinServersSettings() {
     }
   };
 
-  const fetchServerPluginKey = async (id?: string, jellyfinServerId?: string) => {
+  const fetchServerPluginKey = async (id?: string, jellyfinServerId?: string, explicitGlobalApiKey?: string) => {
     if (!id && !jellyfinServerId) return null;
+
+    const rawGlobalApiKey = explicitGlobalApiKey || globalPluginApiKey || '';
+    if (!rawGlobalApiKey) {
+      setMessage({
+        type: 'error',
+        text: 'La clé plugin globale brute n est pas disponible dans cette session. Régénérez-la puis reconnectez les serveurs.',
+      });
+      return null;
+    }
+
     setPluginLoadingServerId(id || null);
     try {
       const res = await fetch('/api/settings/jellyfin-servers/plugin-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, jellyfinServerId }),
+        body: JSON.stringify({ id, jellyfinServerId, globalApiKey: rawGlobalApiKey }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -176,8 +191,12 @@ export function JellyfinServersSettings() {
       // rotate global key first
       const rotateRes = await fetch('/api/plugin/api-key', { method: 'POST' });
       if (!rotateRes.ok) throw new Error('rotate failed');
+      const rotateJson = await rotateRes.json().catch(() => ({}));
+      const nextGlobalApiKey = typeof rotateJson.apiKey === 'string' ? rotateJson.apiKey : '';
+      if (!nextGlobalApiKey) throw new Error('missing global api key');
+      setGlobalPluginApiKey(nextGlobalApiKey);
       // then fetch server-scoped key
-      const key = await fetchServerPluginKey(id);
+      const key = await fetchServerPluginKey(id, undefined, nextGlobalApiKey);
       if (!key) return;
       setPluginKeyByServerId((prev) => ({ ...prev, [id]: key || '' }));
       setPluginKeyVisible((prev) => ({ ...prev, [id]: true }));

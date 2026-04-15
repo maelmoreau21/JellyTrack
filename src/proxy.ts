@@ -45,7 +45,7 @@ const ADMIN_PAGE_PATHS = [
 const REDIRECT_IF_NOT_ADMIN = ["/users", "/logs", "/media", "/recent"];
 
 export default withAuth(
-    function middleware(req) {
+    function proxy(req) {
         const token = req.nextauth.token;
         const pathname = req.nextUrl.pathname;
 

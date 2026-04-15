@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
-import { getPluginKeySnapshot } from "@/lib/pluginKeyManager";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
 
@@ -281,7 +280,7 @@ export async function POST(req: Request) {
 
     const ipAddress = getRequestIp(req);
 
-    let body: { action?: string } = {};
+    let body: { action?: string; apiKey?: string } = {};
     try {
         body = (await req.json()) as { action?: string };
     } catch {
@@ -318,9 +317,9 @@ export async function POST(req: Request) {
     }
 
     if (action === "force_heartbeat") {
-        const { snapshot } = await getPluginKeySnapshot();
-        if (!snapshot.currentKey) {
-            return NextResponse.json({ error: "Plugin API key is missing." }, { status: 400 });
+        const providedApiKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
+        if (!providedApiKey) {
+            return NextResponse.json({ error: "Plugin API key is required for manual heartbeat in hash-only mode." }, { status: 400 });
         }
 
         const identity = getMasterServerIdentityFromEnv();
@@ -340,7 +339,7 @@ export async function POST(req: Request) {
             method: "POST",
             headers: {
                 "content-type": "application/json",
-                authorization: `Bearer ${snapshot.currentKey}`,
+                authorization: `Bearer ${providedApiKey}`,
             },
             body: JSON.stringify(syntheticHeartbeat),
         }));

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash } from "node:crypto";
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { getGeoLocation } from "@/lib/geoip";
@@ -10,8 +10,8 @@ import { normalizeResolution, clampDuration } from '@/lib/utils';
 import { markMonitorPoll, appendHealthEvent } from "@/lib/systemHealth";
 import { consumePluginEventRateLimit } from "@/lib/pluginEventRateLimit";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
-import { getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
-import { verifyScopedPluginApiKey } from "@/lib/pluginServerKey";
+import { comparePluginApiKey, getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
+import { parsePluginApiKeyCandidate } from "@/lib/pluginServerKey";
 import {
     buildLegacyStreamRedisKey,
     buildStreamRedisKey,
@@ -87,68 +87,49 @@ async function verifyPluginAuth(req: Request): Promise<PluginAuthResult> {
         },
     });
 
-    const configuredKey = snapshot.currentKey?.trim() || null;
+    const currentKeyHash = snapshot.currentKeyHash?.trim() || null;
+    const previousKeyHash = snapshot.previousKeyHash?.trim() || null;
 
-    const bearerToken = extractBearerToken(req.headers.get("authorization"));
-    const apiKeyHeader = req.headers.get("x-api-key");
+    const bearerParsed = parsePluginApiKeyCandidate(extractBearerToken(req.headers.get("authorization")));
+    const headerParsed = parsePluginApiKeyCandidate(req.headers.get("x-api-key"));
 
-    if (safeApiKeyEquals(bearerToken, configuredKey)) {
-        return { authorized: true, usedPreviousKey: false, autoRotated, scopeServerId: null };
-    }
-
-    if (safeApiKeyEquals(apiKeyHeader, configuredKey)) {
-        return { authorized: true, usedPreviousKey: false, autoRotated, scopeServerId: null };
-    }
-
-    const scopedBearerCurrent = verifyScopedPluginApiKey(bearerToken, configuredKey);
-    if (scopedBearerCurrent.valid) {
+    if (await comparePluginApiKey(bearerParsed.rawKey, currentKeyHash)) {
         return {
             authorized: true,
             usedPreviousKey: false,
             autoRotated,
-            scopeServerId: scopedBearerCurrent.jellyfinServerId,
+            scopeServerId: bearerParsed.jellyfinServerId,
         };
     }
 
-    const scopedHeaderCurrent = verifyScopedPluginApiKey(apiKeyHeader, configuredKey);
-    if (scopedHeaderCurrent.valid) {
+    if (await comparePluginApiKey(headerParsed.rawKey, currentKeyHash)) {
         return {
             authorized: true,
             usedPreviousKey: false,
             autoRotated,
-            scopeServerId: scopedHeaderCurrent.jellyfinServerId,
+            scopeServerId: headerParsed.jellyfinServerId,
         };
     }
 
-    if (!isPreviousPluginKeyValid(snapshot) || !snapshot.previousKey) {
+    if (!isPreviousPluginKeyValid(snapshot) || !previousKeyHash) {
         return { authorized: false, usedPreviousKey: false, autoRotated, scopeServerId: null };
     }
 
-    if (safeApiKeyEquals(bearerToken, snapshot.previousKey)) {
-        return { authorized: true, usedPreviousKey: true, autoRotated, scopeServerId: null };
-    }
-
-    if (safeApiKeyEquals(apiKeyHeader, snapshot.previousKey)) {
-        return { authorized: true, usedPreviousKey: true, autoRotated, scopeServerId: null };
-    }
-
-    const scopedBearerPrevious = verifyScopedPluginApiKey(bearerToken, snapshot.previousKey);
-    if (scopedBearerPrevious.valid) {
+    if (await comparePluginApiKey(bearerParsed.rawKey, previousKeyHash)) {
         return {
             authorized: true,
             usedPreviousKey: true,
             autoRotated,
-            scopeServerId: scopedBearerPrevious.jellyfinServerId,
+            scopeServerId: bearerParsed.jellyfinServerId,
         };
     }
 
-    const scopedHeaderPrevious = verifyScopedPluginApiKey(apiKeyHeader, snapshot.previousKey);
-    if (scopedHeaderPrevious.valid) {
+    if (await comparePluginApiKey(headerParsed.rawKey, previousKeyHash)) {
         return {
             authorized: true,
             usedPreviousKey: true,
             autoRotated,
-            scopeServerId: scopedHeaderPrevious.jellyfinServerId,
+            scopeServerId: headerParsed.jellyfinServerId,
         };
     }
 
@@ -161,22 +142,6 @@ function extractBearerToken(headerValue: string | null): string | null {
     if (!match) return null;
     const token = match[1].trim();
     return token.length > 0 ? token : null;
-}
-
-function safeApiKeyEquals(candidateRaw: string | null, expected: string | null): boolean {
-    if (!candidateRaw) return false;
-    const candidate = candidateRaw.trim();
-    if (!candidate || !expected) return false;
-
-    const candidateBuffer = Buffer.from(candidate);
-    const expectedBuffer = Buffer.from(expected);
-    if (candidateBuffer.length !== expectedBuffer.length) return false;
-
-    try {
-        return timingSafeEqual(candidateBuffer, expectedBuffer);
-    } catch {
-        return false;
-    }
 }
 
 function getClientIp(req: Request): string {
