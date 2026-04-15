@@ -12,9 +12,12 @@ interface FallbackImageProps {
     width?: number;
     height?: number;
     unoptimized?: boolean;
+    sizes?: string;
+    loading?: "lazy" | "eager";
+    priority?: boolean;
 }
 
-export function FallbackImage({ src, alt, className, fill, width, height, unoptimized = true }: FallbackImageProps) {
+export function FallbackImage({ src, alt, className, fill, width, height, unoptimized = true, sizes, loading = "lazy", priority = false }: FallbackImageProps) {
     const [error, setError] = useState(!src || src.includes('undefined'));
 
     if (error) {
@@ -35,6 +38,9 @@ export function FallbackImage({ src, alt, className, fill, width, height, unopti
             width={!fill ? width : undefined}
             height={!fill ? height : undefined}
             unoptimized={unoptimized}
+            sizes={fill ? (sizes || "(max-width: 768px) 40vw, 180px") : sizes}
+            loading={priority ? undefined : loading}
+            priority={priority}
             onError={() => setError(true)}
         />
     );

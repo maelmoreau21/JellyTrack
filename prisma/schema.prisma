@@ -73,6 +73,10 @@ model Media {
   @@index([type])
   @@index([collectionType])
   @@index([jellyfinMediaId])
+  @@index([serverId, type])
+  @@index([serverId, collectionType])
+  @@index([serverId, parentId])
+  @@index([serverId, dateAdded])
 }
 
 model PlaybackHistory {
@@ -124,6 +128,10 @@ model PlaybackHistory {
   @@index([serverId, mediaId, startedAt])
   @@index([clientName])
   @@index([playMethod])
+  @@index([endedAt])
+  @@index([serverId, endedAt])
+  @@index([ipAddress, startedAt])
+  @@index([userId, country, startedAt])
 }
 
 model TelemetryEvent {
@@ -234,6 +242,7 @@ model AdminAuditLog {
   @@index([createdAt])
   @@index([action, createdAt])
   @@index([actorUserId, createdAt])
+  @@index([ipAddress, createdAt])
 }
 
 model SystemHealthState {
