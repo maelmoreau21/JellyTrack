@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
-import { getPluginKeySnapshot } from "@/lib/pluginKeyManager";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
 
@@ -19,6 +18,7 @@ const DEFAULT_GAP_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_GAP_WARNING_SEC
 const DEFAULT_GAP_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_GAP_CRITICAL_SEC || 180);
 const DEFAULT_JITTER_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_WARNING_SEC || 15);
 const DEFAULT_JITTER_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_CRITICAL_SEC || 30);
+const DEFAULT_HEARTBEAT_TIMEOUT_SEC = Number(process.env.PLUGIN_HEARTBEAT_TIMEOUT_SEC) || 600;
 
 function clampPositiveNumber(value: number, fallback: number): number {
     if (!Number.isFinite(value) || value <= 0) return fallback;
@@ -70,7 +70,11 @@ async function buildPluginHealthSnapshot(req: Request) {
     const now = Date.now();
     const nowDate = new Date(now);
     const dayAgo = new Date(now - 24 * 60 * 60 * 1000);
-    const staleThreshold = new Date(now - 5 * 60 * 1000);
+    const parsedHeartbeatTimeoutSec = Number(process.env.PLUGIN_HEARTBEAT_TIMEOUT_SEC);
+    const HEARTBEAT_TIMEOUT_SEC = Number.isFinite(parsedHeartbeatTimeoutSec) && parsedHeartbeatTimeoutSec > 0
+        ? parsedHeartbeatTimeoutSec
+        : DEFAULT_HEARTBEAT_TIMEOUT_SEC;
+    const staleThreshold = new Date(now - HEARTBEAT_TIMEOUT_SEC * 1000);
 
     const auditModel = (prisma as any).adminAuditLog;
 
@@ -201,12 +205,12 @@ async function buildPluginHealthSnapshot(req: Request) {
     return {
         generatedAt: nowDate.toISOString(),
         plugin: {
-            connected: heartbeatGapSec !== null ? heartbeatGapSec <= 120 : false,
+            connected: heartbeatGapSec !== null ? heartbeatGapSec <= HEARTBEAT_TIMEOUT_SEC : false,
             lastSeen: settings?.pluginLastSeen || null,
             version: settings?.pluginVersion || null,
             serverName: settings?.pluginServerName || null,
             hasApiKey: Boolean(settings?.pluginApiKey),
-            endpoint: `${new URL(req.url).origin}/api/plugin/events`,
+            endpoint: "/api/plugin/events",
         },
         heartbeat: {
             count24h: heartbeatEvents.length,
@@ -281,7 +285,7 @@ export async function POST(req: Request) {
 
     const ipAddress = getRequestIp(req);
 
-    let body: { action?: string } = {};
+    let body: { action?: string; apiKey?: string } = {};
     try {
         body = (await req.json()) as { action?: string };
     } catch {
@@ -289,14 +293,11 @@ export async function POST(req: Request) {
     }
 
     const action = typeof body.action === "string" ? body.action : "";
-    const origin = new URL(req.url).origin;
 
     if (action === "test_connection") {
+        const pluginEvents = await import("@/app/api/plugin/events/route");
         const start = Date.now();
-        const response = await fetch(`${origin}/api/plugin/events`, {
-            method: "GET",
-            cache: "no-store",
-        });
+        const response = await pluginEvents.GET();
         const latencyMs = Date.now() - start;
 
         await writeAdminAuditLog({
@@ -316,19 +317,20 @@ export async function POST(req: Request) {
             ok: response.ok,
             status: response.status,
             latencyMs,
-            endpoint: `${origin}/api/plugin/events`,
+            endpoint: "/api/plugin/events",
         });
     }
 
     if (action === "force_heartbeat") {
-        const { snapshot } = await getPluginKeySnapshot();
-        if (!snapshot.currentKey) {
-            return NextResponse.json({ error: "Plugin API key is missing." }, { status: 400 });
+        const providedApiKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
+        if (!providedApiKey) {
+            return NextResponse.json({ error: "Plugin API key is required for manual heartbeat in hash-only mode." }, { status: 400 });
         }
 
         const identity = getMasterServerIdentityFromEnv();
         const syntheticHeartbeat = {
             event: "Heartbeat",
+            eventSchemaVersion: 2,
             pluginVersion: "manual-probe",
             serverName: identity.name,
             serverId: identity.jellyfinServerId,
@@ -336,16 +338,16 @@ export async function POST(req: Request) {
             users: [],
         };
 
+        const pluginEvents = await import("@/app/api/plugin/events/route");
         const start = Date.now();
-        const response = await fetch(`${origin}/api/plugin/events`, {
+        const response = await pluginEvents.POST(new Request("http://localhost/api/plugin/events", {
             method: "POST",
             headers: {
                 "content-type": "application/json",
-                authorization: `Bearer ${snapshot.currentKey}`,
+                authorization: `Bearer ${providedApiKey}`,
             },
-            cache: "no-store",
             body: JSON.stringify(syntheticHeartbeat),
-        });
+        }));
         const latencyMs = Date.now() - start;
 
         const rawBody = await response.text();

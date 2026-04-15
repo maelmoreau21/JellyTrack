@@ -219,7 +219,7 @@ export function GranularAnalysisClient({
                     <CardContent>
                         <div className="space-y-4">
                             {data.topAbandoned.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-6">—</p>
+                                <p className="text-sm text-muted-foreground text-center py-6" aria-live="polite">{t.noData}</p>
                             ) : data.topAbandoned.map((m: any, i: number) => (
                                 <a
                                     key={i}

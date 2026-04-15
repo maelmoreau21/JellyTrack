@@ -1,21 +1,7 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-
-const SCOPED_PLUGIN_KEY_PREFIX = "jts2";
+const SCOPED_PLUGIN_KEY_PREFIX = "jts3";
 
 function normalizeValue(value: string | null | undefined): string {
   return String(value || "").trim();
-}
-
-function safeEquals(left: string, right: string): boolean {
-  const leftBuffer = Buffer.from(left);
-  const rightBuffer = Buffer.from(right);
-  if (leftBuffer.length !== rightBuffer.length) return false;
-
-  try {
-    return timingSafeEqual(leftBuffer, rightBuffer);
-  } catch {
-    return false;
-  }
 }
 
 function encodeServerId(serverId: string): string {
@@ -31,46 +17,44 @@ function decodeServerId(encoded: string): string | null {
   }
 }
 
-function buildScopedPluginKeySignature(seedPluginKey: string, jellyfinServerId: string): string {
-  return createHmac("sha256", seedPluginKey)
-    .update(`server:${jellyfinServerId}`)
-    .digest("base64url");
-}
-
-export function deriveScopedPluginApiKey(seedPluginKey: string | null | undefined, jellyfinServerId: string | null | undefined): string | null {
-  const normalizedSeed = normalizeValue(seedPluginKey);
+export function deriveScopedPluginApiKey(rawPluginKey: string | null | undefined, jellyfinServerId: string | null | undefined): string | null {
+  const normalizedKey = normalizeValue(rawPluginKey);
   const normalizedServerId = normalizeValue(jellyfinServerId);
-  if (!normalizedSeed || !normalizedServerId) return null;
+  if (!normalizedKey || !normalizedServerId) return null;
 
   const encodedServerId = encodeServerId(normalizedServerId);
-  const signature = buildScopedPluginKeySignature(normalizedSeed, normalizedServerId);
-  return `${SCOPED_PLUGIN_KEY_PREFIX}.${encodedServerId}.${signature}`;
+  return `${SCOPED_PLUGIN_KEY_PREFIX}.${encodedServerId}.${normalizedKey}`;
 }
 
-export function verifyScopedPluginApiKey(candidateToken: string | null | undefined, seedPluginKey: string | null | undefined): { valid: boolean; jellyfinServerId: string | null } {
+export function parsePluginApiKeyCandidate(candidateToken: string | null | undefined): { rawKey: string | null; jellyfinServerId: string | null; scoped: boolean } {
   const token = normalizeValue(candidateToken);
-  const normalizedSeed = normalizeValue(seedPluginKey);
-  if (!token || !normalizedSeed) {
-    return { valid: false, jellyfinServerId: null };
+  if (!token) {
+    return { rawKey: null, jellyfinServerId: null, scoped: false };
+  }
+
+  if (!token.startsWith(`${SCOPED_PLUGIN_KEY_PREFIX}.`)) {
+    return { rawKey: token, jellyfinServerId: null, scoped: false };
   }
 
   const parts = token.split(".");
   if (parts.length !== 3 || parts[0] !== SCOPED_PLUGIN_KEY_PREFIX) {
-    return { valid: false, jellyfinServerId: null };
+    return { rawKey: null, jellyfinServerId: null, scoped: false };
   }
 
   const serverId = decodeServerId(parts[1]);
+  const rawKey = normalizeValue(parts[2]);
+
   if (!serverId) {
-    return { valid: false, jellyfinServerId: null };
+    return { rawKey: null, jellyfinServerId: null, scoped: true };
   }
 
-  const expected = deriveScopedPluginApiKey(normalizedSeed, serverId);
-  if (!expected) {
-    return { valid: false, jellyfinServerId: null };
+  if (!rawKey) {
+    return { rawKey: null, jellyfinServerId: serverId, scoped: true };
   }
 
   return {
-    valid: safeEquals(token, expected),
+    rawKey,
     jellyfinServerId: serverId,
+    scoped: true,
   };
 }

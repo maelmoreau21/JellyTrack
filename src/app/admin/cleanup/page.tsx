@@ -11,8 +11,19 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 async function getCleanupData() {
+    const globalSettings = await prisma.globalSettings.findUnique({
+        where: { id: "global" },
+        select: { resolutionThresholds: true },
+    });
+
+    const completionRules =
+        globalSettings?.resolutionThresholds && typeof globalSettings.resolutionThresholds === "object"
+            ? (globalSettings.resolutionThresholds as Record<string, unknown>).completionRules
+            : undefined;
+
     // Use defaults
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const twoYearsAgo = new Date(Date.now() - 730 * 24 * 60 * 60 * 1000);
 
     // 1. Ghost Media: parent-level items (Movie, Series, MusicAlbum) with 0 plays on themselves or children
     // First, get all parent-level items added > 30 days ago
@@ -30,6 +41,7 @@ async function getCleanupData() {
             createdAt: true,
             dateAdded: true,
             durationMs: true,
+            size: true,
         },
         orderBy: { createdAt: 'asc' }
     });
@@ -43,6 +55,7 @@ async function getCleanupData() {
         createdAt: Date;
         dateAdded: Date | null;
         durationMs: bigint | null;
+        size: bigint | null;
     }> = [];
     for (const media of parentGhostCandidates) {
         if (media.type === 'Movie') {
@@ -83,6 +96,7 @@ async function getCleanupData() {
             jellyfinMediaId: true,
             title: true,
             type: true,
+            collectionType: true,
             parentId: true,
             durationMs: true,
             playbackHistory: {
@@ -150,12 +164,17 @@ async function getCleanupData() {
 
         if (watchedByUser.size === 0) continue;
 
-        let bestCompletion = getCompletionMetrics({ type: media.type, durationMs: media.durationMs }, 0);
+        let bestCompletion = getCompletionMetrics(
+            { type: media.type, collectionType: media.collectionType, durationMs: media.durationMs },
+            0,
+            completionRules
+        );
 
         for (const totalWatchedSeconds of watchedByUser.values()) {
             const completion = getCompletionMetrics(
-                { type: media.type, durationMs: media.durationMs },
-                totalWatchedSeconds
+                { type: media.type, collectionType: media.collectionType, durationMs: media.durationMs },
+                totalWatchedSeconds,
+                completionRules
             );
             if (completion.percent > bestCompletion.percent) {
                 bestCompletion = completion;
@@ -177,15 +196,47 @@ async function getCleanupData() {
     // Sort abandoned by lowest completion first
     abandonedMedia.sort((a, b) => a.maxCompletion - b.maxCompletion);
 
+    const staleMovieCandidates = ghostMedia
+        .filter((media) => {
+            if (media.type !== "Movie") return false;
+            const referenceDate = media.dateAdded || media.createdAt;
+            return referenceDate < twoYearsAgo;
+        })
+        .sort((left, right) => {
+            const leftRef = (left.dateAdded || left.createdAt).getTime();
+            const rightRef = (right.dateAdded || right.createdAt).getTime();
+            return leftRef - rightRef;
+        })
+        .slice(0, 10);
+
+    const staleMovieSizeBytes = staleMovieCandidates.reduce((sum, media) => {
+        return sum + (media.size || BigInt(0));
+    }, BigInt(0));
+
     return {
         ghostMedia: ghostMedia.map(item => ({
             ...item,
-            durationMs: item.durationMs ? Number(item.durationMs).toString() : null
+            durationMs: item.durationMs ? Number(item.durationMs).toString() : null,
+            size: item.size ? item.size.toString() : null,
         })),
         abandonedMedia: abandonedMedia.map(item => ({
             ...item,
             durationMs: item.durationMs ? Number(item.durationMs).toString() : null
-        }))
+        })),
+        recommendations: {
+            staleMoviesToDelete: {
+                count: staleMovieCandidates.length,
+                totalSizeBytes: staleMovieSizeBytes.toString(),
+                itemIds: staleMovieCandidates.map((media) => media.id),
+                items: staleMovieCandidates.map((media) => ({
+                    id: media.id,
+                    title: media.title,
+                    jellyfinMediaId: media.jellyfinMediaId,
+                    size: media.size ? media.size.toString() : null,
+                    dateAdded: media.dateAdded || media.createdAt,
+                })),
+            },
+        },
     };
 }
 

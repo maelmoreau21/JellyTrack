@@ -68,12 +68,26 @@ export async function initCronJobs(schedule: CronSchedule) {
 
     recentSyncTask = cron.schedule(recentSyncCronExpr, async () => {
         console.log(`[Cron] Déclenchement automatique de la synchronisation récente (toutes les ${schedule.recentSyncEveryHours}h)`);
-        await syncJellyfinLibrary({ recentOnly: true });
+        try {
+            const result = await syncJellyfinLibrary({ recentOnly: true });
+            if (!result?.success) {
+                console.warn(`[Cron] Synchronisation récente échouée: ${result?.error || "erreur inconnue"}`);
+            }
+        } catch (error) {
+            console.error("[Cron] Erreur non gérée durant la synchronisation récente:", error);
+        }
     });
 
     fullSyncTask = cron.schedule(fullSyncCronExpr, async () => {
         console.log(`[Cron] Déclenchement automatique de la synchronisation complète (toutes les ${schedule.fullSyncEveryHours}h)`);
-        await syncJellyfinLibrary({ recentOnly: false });
+        try {
+            const result = await syncJellyfinLibrary({ recentOnly: false });
+            if (!result?.success) {
+                console.warn(`[Cron] Synchronisation complète échouée: ${result?.error || "erreur inconnue"}`);
+            }
+        } catch (error) {
+            console.error("[Cron] Erreur non gérée durant la synchronisation complète:", error);
+        }
     });
 
     backupTask = cron.schedule(backupCronExpr, async () => {

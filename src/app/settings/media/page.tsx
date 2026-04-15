@@ -4,10 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { useTranslations } from "next-intl";
 import { ResolutionThresholds } from "@/components/settings/ResolutionThresholds";
 import { InfoIcon, Film, EyeOff } from "lucide-react";
-import { makeScopedLibraryExclusion, parseScopedLibraryExclusion } from "@/lib/mediaPolicy";
+import {
+    makeScopedLibraryExclusion,
+    normalizeCompletionRules,
+    parseScopedLibraryExclusion,
+    type CompletionRulesConfig,
+    type LibraryRule,
+} from "@/lib/mediaPolicy";
 
 type LibraryScope = {
     key: string;
@@ -32,6 +39,9 @@ function normalizeLibraryName(value: string | null | undefined): string {
 
 type ResolutionThreshold = { maxW: number; maxH: number };
 type ResolutionThresholdSettings = Record<string, ResolutionThreshold>;
+type CompletionRuleScope = "default" | "movies" | "tvshows" | "music" | "books" | "homevideos";
+
+const DEFAULT_COMPLETION_RULES = normalizeCompletionRules(null);
 
 const DEFAULT_RESOLUTION_THRESHOLDS: ResolutionThresholdSettings = {
     "480p": { maxW: 792, maxH: 528 },
@@ -70,6 +80,15 @@ function extractShowLibraryMediaBadges(raw: unknown): boolean {
     return true;
 }
 
+function extractCompletionRules(raw: unknown): CompletionRulesConfig {
+    if (!raw || typeof raw !== "object") {
+        return normalizeCompletionRules(null);
+    }
+
+    const candidate = raw as Record<string, unknown>;
+    return normalizeCompletionRules(candidate.completionRules);
+}
+
 export default function SettingsMediaPage() {
     const t = useTranslations("settings");
     const tc = useTranslations("common");
@@ -78,6 +97,7 @@ export default function SettingsMediaPage() {
     const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const [resolutionThresholds, setResolutionThresholds] = useState<ResolutionThresholdSettings>(sanitizeResolutionThresholds(null));
     const [showLibraryMediaBadges, setShowLibraryMediaBadges] = useState(true);
+    const [completionRules, setCompletionRules] = useState<CompletionRulesConfig>(DEFAULT_COMPLETION_RULES);
     const [excludedLibraryScopes, setExcludedLibraryScopes] = useState<string[]>([]);
     const [orphanScopedExclusions, setOrphanScopedExclusions] = useState<string[]>([]);
     const [legacyGlobalExclusions, setLegacyGlobalExclusions] = useState<string[]>([]);
@@ -102,6 +122,7 @@ export default function SettingsMediaPage() {
                     : null;
                 setResolutionThresholds(sanitizeResolutionThresholds(rawResolutionSettings));
                 setShowLibraryMediaBadges(extractShowLibraryMediaBadges(rawResolutionSettings));
+                setCompletionRules(extractCompletionRules(rawResolutionSettings));
 
                 if (serverRes.ok) {
                     const serverData = await serverRes.json().catch(() => ({}));
@@ -110,7 +131,7 @@ export default function SettingsMediaPage() {
                         .filter((entry: any) => entry && typeof entry === "object")
                         .map((entry: any) => ({
                             id: String(entry.id || ""),
-                            name: String(entry.name || "Serveur"),
+                            name: String(entry.name || t("serverDefaultName")),
                             url: String(entry.url || ""),
                             isPrimary: Boolean(entry.isPrimary),
                             connectionState:
@@ -254,6 +275,34 @@ export default function SettingsMediaPage() {
         setOrphanScopedExclusions((prev) => prev.filter((entry) => entry !== value));
     };
 
+    const updateCompletionRule = (scope: CompletionRuleScope, patch: Partial<LibraryRule>) => {
+        setCompletionRules((prev) => {
+            const next: CompletionRulesConfig = {
+                default: { ...prev.default },
+                libraries: { ...prev.libraries },
+            };
+
+            if (scope === "default") {
+                next.default = { ...next.default, ...patch };
+            } else {
+                const fallbackRule = prev.libraries[scope] || DEFAULT_COMPLETION_RULES.libraries[scope];
+                next.libraries[scope] = { ...fallbackRule, ...patch };
+            }
+
+            return normalizeCompletionRules(next);
+        });
+    };
+
+    const updateCompletionThreshold = (
+        scope: CompletionRuleScope,
+        key: "abandonedThreshold" | "partialThreshold" | "completedThreshold",
+        value: string,
+    ) => {
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed)) return;
+        updateCompletionRule(scope, { [key]: parsed } as Partial<LibraryRule>);
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setMsg(null);
@@ -267,6 +316,7 @@ export default function SettingsMediaPage() {
         const resolutionPayload = {
             ...sanitizeResolutionThresholds(resolutionThresholds),
             showLibraryMediaBadges,
+            completionRules: normalizeCompletionRules(completionRules),
         };
 
         try {
@@ -287,6 +337,15 @@ export default function SettingsMediaPage() {
             setSaving(false);
         }
     };
+
+    const completionRuleRows: Array<{ scope: CompletionRuleScope; label: string; rule: LibraryRule }> = [
+        { scope: "default", label: t("completionRulesDefault"), rule: completionRules.default },
+        { scope: "movies", label: tc("movies"), rule: completionRules.libraries.movies },
+        { scope: "tvshows", label: tc("tvshows"), rule: completionRules.libraries.tvshows },
+        { scope: "music", label: tc("music"), rule: completionRules.libraries.music },
+        { scope: "books", label: tc("books"), rule: completionRules.libraries.books },
+        { scope: "homevideos", label: tc("homevideos"), rule: completionRules.libraries.homevideos },
+    ];
 
     if (loading) return <div className="p-8 max-w-[900px] mx-auto">{tc("loading") || "Loading..."}</div>;
 
@@ -311,7 +370,7 @@ export default function SettingsMediaPage() {
                     <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-500/5 border border-blue-500/20 text-blue-600 dark:text-blue-400">
                         <InfoIcon className="h-5 w-5 mt-0.5 shrink-0" />
                         <div className="space-y-1">
-                            <div className="text-sm font-bold">Note</div>
+                            <div className="text-sm font-bold">{t("noteLabel")}</div>
                             <div className="text-xs opacity-90">
                                 {t("syncRequired")}
                             </div>
@@ -328,12 +387,12 @@ export default function SettingsMediaPage() {
                             {t("excludedLibrariesDesc") || "Les bibliothèques désactivées ci-dessous seront exclues de toutes les statistiques du dashboard."}
                         </p>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                            Décochez une bibliothèque serveur par serveur. Deux bibliothèques portant le même nom sur des serveurs différents sont gérées séparément.
+                            {t("serverScopeHint")}
                         </p>
 
                         {serverDiagnostics.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">État des serveurs Jellyfin</p>
+                                <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{t("serverStatusTitle")}</p>
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                                     {serverDiagnostics.map((server) => {
                                         const libraryCount = libraryCountByServerId.get(server.id) || 0;
@@ -356,20 +415,22 @@ export default function SettingsMediaPage() {
                                                         }`}
                                                     >
                                                         {server.connectionState === "online"
-                                                            ? "Connecté"
+                                                            ? t("serverConnected")
                                                             : server.connectionState === "no_api_key"
-                                                                ? "Clé API manquante"
-                                                                : "Hors ligne / clé invalide"}
+                                                                ? t("serverNoApiKey")
+                                                                : t("serverOffline")}
                                                     </span>
                                                 </div>
                                                 <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono break-all">
-                                                    {server.url || "URL manquante"}
+                                                    {server.url || t("serverMissingUrl")}
                                                 </div>
                                                 <div className="text-xs text-zinc-600 dark:text-zinc-300">
                                                     {libraryCount > 0
-                                                        ? `${libraryCount} bibliothèques détectées`
-                                                        : "Aucune bibliothèque détectée pour ce serveur"}
-                                                    {server.isPrimary ? " • serveur principal" : " • serveur secondaire"}
+                                                        ? t("serverLibrariesDetected", { count: libraryCount })
+                                                        : t("serverNoLibrariesDetected")}
+                                                    {server.isPrimary
+                                                        ? ` • ${t("serverPrimaryLabel")}`
+                                                        : ` • ${t("serverSecondaryLabel")}`}
                                                 </div>
                                                 {server.connectionMessage && (
                                                     <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{server.connectionMessage}</div>
@@ -383,7 +444,7 @@ export default function SettingsMediaPage() {
 
                         {groupedByServer.length === 0 ? (
                             <p className="text-sm text-zinc-400 italic">
-                                {t("noLibrariesFound") || "Aucune bibliothèque trouvée."} Vérifiez l&apos;URL et la clé API Jellyfin de chaque serveur, puis rechargez la page.
+                                {t("noLibrariesFound")} {t("noLibrariesFoundHint")}
                             </p>
                         ) : (
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -411,7 +472,7 @@ export default function SettingsMediaPage() {
                                                     >
                                                         <span className={`text-sm font-medium truncate ${isExcluded ? "line-through opacity-70" : ""}`}>{scope.libraryName}</span>
                                                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${isExcluded ? "bg-red-500/15 text-red-500" : "bg-emerald-500/15 text-emerald-500"}`}>
-                                                            {isExcluded ? "Exclue" : "Active"}
+                                                            {isExcluded ? t("libraryExcludedState") : t("libraryActiveState")}
                                                         </span>
                                                     </button>
                                                 );
@@ -424,14 +485,14 @@ export default function SettingsMediaPage() {
 
                         {(legacyGlobalExclusions.length > 0 || orphanScopedExclusions.length > 0) && (
                             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
-                                <div className="text-sm font-semibold text-amber-600 dark:text-amber-400">Règles héritées à vérifier</div>
+                                <div className="text-sm font-semibold text-amber-600 dark:text-amber-400">{t("legacyRulesTitle")}</div>
                                 <p className="text-xs text-amber-700/80 dark:text-amber-300/80">
-                                    Certaines exclusions anciennes n&apos;ont pas pu être reliées automatiquement à un serveur+bibliothèque. Vous pouvez les retirer manuellement ci-dessous.
+                                    {t("legacyRulesDesc")}
                                 </p>
 
                                 {legacyGlobalExclusions.length > 0 && (
                                     <div className="space-y-2">
-                                        <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Exclusions globales</div>
+                                        <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{t("legacyGlobalExclusionsTitle")}</div>
                                         <div className="flex flex-wrap gap-2">
                                             {legacyGlobalExclusions.map((value) => (
                                                 <button
@@ -439,7 +500,7 @@ export default function SettingsMediaPage() {
                                                     type="button"
                                                     onClick={() => removeLegacyExclusion(value)}
                                                     className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-700 dark:text-amber-300 hover:bg-amber-500/20"
-                                                    title="Retirer cette exclusion"
+                                                    title={t("removeExclusionLabel")}
                                                 >
                                                     {value} ×
                                                 </button>
@@ -450,7 +511,7 @@ export default function SettingsMediaPage() {
 
                                 {orphanScopedExclusions.length > 0 && (
                                     <div className="space-y-2">
-                                        <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Exclusions serveur/bibliothèque indisponibles</div>
+                                        <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{t("legacyOrphanExclusionsTitle")}</div>
                                         <div className="flex flex-wrap gap-2">
                                             {orphanScopedExclusions.map((value) => (
                                                 <button
@@ -458,7 +519,7 @@ export default function SettingsMediaPage() {
                                                     type="button"
                                                     onClick={() => removeOrphanScopedExclusion(value)}
                                                     className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-700 dark:text-amber-300 hover:bg-amber-500/20"
-                                                    title="Retirer cette exclusion"
+                                                    title={t("removeExclusionLabel")}
                                                 >
                                                     {value} ×
                                                 </button>
@@ -471,19 +532,80 @@ export default function SettingsMediaPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <h3 className="text-lg font-semibold">Affichage des badges en bibliothèque</h3>
+                        <h3 className="text-lg font-semibold">{t("libraryBadgesDisplayTitle")}</h3>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                            Affiche ou masque les badges de résolution, qualité série et bitrate dans l&apos;onglet Bibliothèque.
+                            {t("libraryBadgesDisplayDesc")}
                         </p>
                         <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-4">
                             <div>
-                                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Afficher les badges média</p>
-                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Désactive cette option pour alléger visuellement les cartes.</p>
+                                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{t("libraryBadgesToggleTitle")}</p>
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{t("libraryBadgesToggleDesc")}</p>
                             </div>
                             <Switch
                                 checked={showLibraryMediaBadges}
                                 onCheckedChange={(checked) => setShowLibraryMediaBadges(Boolean(checked))}
                             />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">{t("libraryRules")}</h3>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("libraryRulesDesc")}</p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("completionRulesHint")}</p>
+                        <div className="space-y-3">
+                            {completionRuleRows.map((entry) => (
+                                <div
+                                    key={entry.scope}
+                                    className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3"
+                                >
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{entry.label}</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-zinc-500 dark:text-zinc-400">{tc("active")}</span>
+                                            <Switch
+                                                checked={entry.rule.completionEnabled}
+                                                onCheckedChange={(checked) => updateCompletionRule(entry.scope, { completionEnabled: Boolean(checked) })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div className="space-y-1.5">
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("abandoned")}</p>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                max={100}
+                                                value={entry.rule.abandonedThreshold}
+                                                onChange={(event) => updateCompletionThreshold(entry.scope, "abandonedThreshold", event.target.value)}
+                                                disabled={!entry.rule.completionEnabled}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("partial")}</p>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                max={100}
+                                                value={entry.rule.partialThreshold}
+                                                onChange={(event) => updateCompletionThreshold(entry.scope, "partialThreshold", event.target.value)}
+                                                disabled={!entry.rule.completionEnabled}
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("completed")}</p>
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                max={100}
+                                                value={entry.rule.completedThreshold}
+                                                onChange={(event) => updateCompletionThreshold(entry.scope, "completedThreshold", event.target.value)}
+                                                disabled={!entry.rule.completionEnabled}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 

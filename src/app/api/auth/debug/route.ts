@@ -1,15 +1,15 @@
+import { NextResponse } from "next/server";
+import { requireAdmin, isAuthError } from "@/lib/auth";
+
 export async function GET() {
+  const auth = await requireAdmin();
+  if (isAuthError(auth)) return auth;
+
   try {
-    const mod = await import('@/lib/authOptions');
+    const mod = await import("@/lib/authOptions");
     const found = !!(mod && (mod.authOptions || mod.default));
-    return new Response(JSON.stringify({ ok: true, authOptionsFound: found }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: String(err) }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ ok: true, authOptionsFound: found }, { status: 200 });
+  } catch {
+    return NextResponse.json({ ok: false, error: "debug_check_failed" }, { status: 500 });
   }
 }

@@ -8,7 +8,6 @@ import {
   resolveServerApiKey,
 } from "@/lib/jellyfinServers";
 import { getPluginKeySnapshot } from "@/lib/pluginKeyManager";
-import { deriveScopedPluginApiKey } from "@/lib/pluginServerKey";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 
 export const dynamic = "force-dynamic";
@@ -93,7 +92,7 @@ export async function GET() {
       ipAddress: null,
     },
   });
-  const pluginKeyReady = Boolean(snapshot.currentKey);
+  const pluginKeyReady = Boolean(snapshot.currentKeyHash);
   const pluginRuntime = await prisma.globalSettings.findUnique({
     where: { id: "global" },
     select: {
@@ -109,7 +108,6 @@ export async function GET() {
     servers.map(async (server) => {
       const effectiveApiKey = resolveServerApiKey(server, primaryEnvApiKey);
       const connection = await probeConnection(server.url, effectiveApiKey);
-      const pluginScopedKey = deriveScopedPluginApiKey(snapshot.currentKey, server.jellyfinServerId);
 
       return {
         id: server.id,
@@ -120,8 +118,8 @@ export async function GET() {
         hasApiKey: !!effectiveApiKey,
         apiKeyMasked: maskSecret(effectiveApiKey),
         allowAuthFallback: server.allowAuthFallback,
-        hasPluginKey: !!pluginScopedKey,
-        pluginKeyMasked: maskSecret(pluginScopedKey),
+        hasPluginKey: pluginKeyReady,
+        pluginKeyMasked: pluginKeyReady ? "stored-as-hash" : "",
         connectionState: connection.state,
         connectionMessage: connection.message,
       };

@@ -1,6 +1,9 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import { promisify } from "node:util";
 import prisma from "@/lib/prisma";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
+
+const scryptAsync = promisify(scrypt);
 
 const MIN_ROTATION_DAYS = 7;
 const MAX_ROTATION_DAYS = 365;
@@ -9,6 +12,83 @@ const DEFAULT_ROTATION_DAYS = 90;
 const MIN_GRACE_HOURS = 1;
 const MAX_GRACE_HOURS = 168;
 const DEFAULT_GRACE_HOURS = 24;
+
+const PLUGIN_KEY_HASH_VERSION = "s1";
+const PLUGIN_KEY_HASH_BYTES = 64;
+
+function normalizePluginKey(value: string | null | undefined): string | null {
+    const normalized = String(value || "").trim();
+    return normalized.length > 0 ? normalized : null;
+}
+
+function isHashFormat(value: string | null | undefined): boolean {
+    const normalized = normalizePluginKey(value);
+    return Boolean(normalized && normalized.startsWith(`${PLUGIN_KEY_HASH_VERSION}$`));
+}
+
+function getPluginKeyPepper(): string {
+    return String(process.env.PLUGIN_KEY_PEPPER || "").trim();
+}
+
+function getHashInput(rawKey: string): string {
+    const pepper = getPluginKeyPepper();
+    if (!pepper) return rawKey;
+    return `${pepper}:${rawKey}`;
+}
+
+async function derivePluginKeyHash(rawKey: string, salt: Buffer): Promise<Buffer> {
+    const derived = await scryptAsync(getHashInput(rawKey), salt, PLUGIN_KEY_HASH_BYTES);
+    return Buffer.from(derived as Buffer);
+}
+
+function encodeStoredPluginKeyHash(salt: Buffer, digest: Buffer): string {
+    return `${PLUGIN_KEY_HASH_VERSION}$${salt.toString("base64url")}$${digest.toString("base64url")}`;
+}
+
+function parseStoredPluginKeyHash(storedHash: string): { salt: Buffer; digest: Buffer } | null {
+    const normalized = normalizePluginKey(storedHash);
+    if (!normalized) return null;
+
+    const parts = normalized.split("$");
+    if (parts.length !== 3) return null;
+    if (parts[0] !== PLUGIN_KEY_HASH_VERSION) return null;
+
+    try {
+        const salt = Buffer.from(parts[1], "base64url");
+        const digest = Buffer.from(parts[2], "base64url");
+        if (salt.length === 0 || digest.length === 0) return null;
+        return { salt, digest };
+    } catch {
+        return null;
+    }
+}
+
+async function hashPluginApiKey(rawKey: string): Promise<string> {
+    const salt = randomBytes(16);
+    const digest = await derivePluginKeyHash(rawKey, salt);
+    return encodeStoredPluginKeyHash(salt, digest);
+}
+
+export async function comparePluginApiKey(candidateRaw: string | null | undefined, storedHash: string | null | undefined): Promise<boolean> {
+    const candidate = normalizePluginKey(candidateRaw);
+    const stored = normalizePluginKey(storedHash);
+    if (!candidate || !stored) return false;
+
+    const parsed = parseStoredPluginKeyHash(stored);
+    if (!parsed) {
+        // Strict hash-only mode: reject malformed/legacy non-hash values.
+        return false;
+    }
+
+    const computed = await derivePluginKeyHash(candidate, parsed.salt);
+    if (computed.length !== parsed.digest.length) return false;
+
+    try {
+        return timingSafeEqual(computed, parsed.digest);
+    } catch {
+        return false;
+    }
+}
 
 interface PluginKeySettingsSnapshot {
     pluginApiKey: string | null;
@@ -22,8 +102,8 @@ interface PluginKeySettingsSnapshot {
 }
 
 export interface PluginKeySnapshot {
-    currentKey: string | null;
-    previousKey: string | null;
+    currentKeyHash: string | null;
+    previousKeyHash: string | null;
     previousKeyExpiresAt: Date | null;
     keyCreatedAt: Date | null;
     keyExpiresAt: Date | null;
@@ -61,14 +141,61 @@ function toSnapshot(settings: PluginKeySettingsSnapshot | null): PluginKeySnapsh
     const rotationGraceHours = sanitizeRotationGraceHours(settings?.pluginKeyRotationGraceHours);
 
     return {
-        currentKey: settings?.pluginApiKey ?? null,
-        previousKey: settings?.pluginPreviousApiKey ?? null,
+        currentKeyHash: settings?.pluginApiKey ?? null,
+        previousKeyHash: settings?.pluginPreviousApiKey ?? null,
         previousKeyExpiresAt: settings?.pluginPreviousApiKeyExpiresAt ?? null,
         keyCreatedAt: settings?.pluginKeyCreatedAt ?? null,
         keyExpiresAt: settings?.pluginKeyExpiresAt ?? null,
         rotationDays,
         autoRotateEnabled: settings?.pluginAutoRotateEnabled ?? false,
         rotationGraceHours,
+    };
+}
+
+async function migrateLegacyPlaintextPluginKeys(settings: PluginKeySettingsSnapshot | null): Promise<PluginKeySettingsSnapshot | null> {
+    if (!settings) return null;
+
+    const hasCurrentPlaintext = Boolean(settings.pluginApiKey) && !isHashFormat(settings.pluginApiKey);
+    const hasPreviousPlaintext = Boolean(settings.pluginPreviousApiKey) && !isHashFormat(settings.pluginPreviousApiKey);
+
+    if (!hasCurrentPlaintext && !hasPreviousPlaintext) {
+        return settings;
+    }
+
+    const updateData: Record<string, unknown> = {};
+
+    if (hasCurrentPlaintext && settings.pluginApiKey) {
+        updateData.pluginApiKey = await hashPluginApiKey(settings.pluginApiKey);
+    }
+
+    if (hasPreviousPlaintext && settings.pluginPreviousApiKey) {
+        updateData.pluginPreviousApiKey = await hashPluginApiKey(settings.pluginPreviousApiKey);
+    }
+
+    const updated = await prisma.globalSettings.update({
+        where: { id: "global" },
+        data: updateData,
+        select: {
+            pluginApiKey: true,
+            pluginPreviousApiKey: true,
+            pluginPreviousApiKeyExpiresAt: true,
+            pluginKeyCreatedAt: true,
+            pluginKeyExpiresAt: true,
+            pluginKeyRotationDays: true,
+            pluginAutoRotateEnabled: true,
+            pluginKeyRotationGraceHours: true,
+        },
+    });
+
+    return {
+        pluginApiKey: updated.pluginApiKey,
+        pluginPreviousApiKey: updated.pluginPreviousApiKey,
+        pluginPreviousApiKeyExpiresAt: updated.pluginPreviousApiKeyExpiresAt,
+        pluginKeyCreatedAt: updated.pluginKeyCreatedAt,
+        pluginKeyExpiresAt: updated.pluginKeyExpiresAt,
+        pluginKeyRotationDays: updated.pluginKeyRotationDays,
+        pluginAutoRotateEnabled: updated.pluginAutoRotateEnabled,
+        pluginKeyRotationGraceHours: updated.pluginKeyRotationGraceHours,
     };
 }
 
@@ -89,7 +216,7 @@ async function fetchSettings(): Promise<PluginKeySettingsSnapshot | null> {
 
     if (!settings) return null;
 
-    return {
+    const mapped: PluginKeySettingsSnapshot = {
         pluginApiKey: settings.pluginApiKey,
         pluginPreviousApiKey: settings.pluginPreviousApiKey,
         pluginPreviousApiKeyExpiresAt: settings.pluginPreviousApiKeyExpiresAt,
@@ -99,11 +226,13 @@ async function fetchSettings(): Promise<PluginKeySettingsSnapshot | null> {
         pluginAutoRotateEnabled: settings.pluginAutoRotateEnabled,
         pluginKeyRotationGraceHours: settings.pluginKeyRotationGraceHours,
     };
+
+    return migrateLegacyPlaintextPluginKeys(mapped);
 }
 
 function shouldAutoRotate(snapshot: PluginKeySnapshot, now: Date): boolean {
     if (!snapshot.autoRotateEnabled) return false;
-    if (!snapshot.currentKey) return false;
+    if (!snapshot.currentKeyHash) return false;
     if (!snapshot.keyExpiresAt) return false;
     return snapshot.keyExpiresAt.getTime() <= now.getTime();
 }
@@ -175,19 +304,20 @@ export async function rotatePluginApiKey(input: {
 }): Promise<{ apiKey: string; snapshot: PluginKeySnapshot }> {
     const now = new Date();
     const currentSettings = await fetchSettings();
-    const previousKey = currentSettings?.pluginApiKey ?? null;
+    const previousKeyHash = currentSettings?.pluginApiKey ?? null;
     const rotationDays = sanitizeRotationDays(currentSettings?.pluginKeyRotationDays);
     const rotationGraceHours = sanitizeRotationGraceHours(currentSettings?.pluginKeyRotationGraceHours);
 
     const newKey = `jt_${randomBytes(32).toString("hex")}`;
+    const newKeyHash = await hashPluginApiKey(newKey);
     const keyExpiresAt = computeExpiry(now, rotationDays);
-    const previousKeyExpiresAt = previousKey ? computeGraceExpiry(now, rotationGraceHours) : null;
+    const previousKeyExpiresAt = previousKeyHash ? computeGraceExpiry(now, rotationGraceHours) : null;
 
     const updated = await prisma.globalSettings.upsert({
         where: { id: "global" },
         update: {
-            pluginApiKey: newKey,
-            pluginPreviousApiKey: previousKey,
+            pluginApiKey: newKeyHash,
+            pluginPreviousApiKey: previousKeyHash,
             pluginPreviousApiKeyExpiresAt: previousKeyExpiresAt,
             pluginKeyCreatedAt: now,
             pluginKeyExpiresAt: keyExpiresAt,
@@ -196,8 +326,8 @@ export async function rotatePluginApiKey(input: {
         },
         create: {
             id: "global",
-            pluginApiKey: newKey,
-            pluginPreviousApiKey: previousKey,
+            pluginApiKey: newKeyHash,
+            pluginPreviousApiKey: previousKeyHash,
             pluginPreviousApiKeyExpiresAt: previousKeyExpiresAt,
             pluginKeyCreatedAt: now,
             pluginKeyExpiresAt: keyExpiresAt,
@@ -216,7 +346,7 @@ export async function rotatePluginApiKey(input: {
         },
     });
 
-    const action = previousKey ? "plugin.key.rotated" : "plugin.key.generated";
+    const action = previousKeyHash ? "plugin.key.rotated" : "plugin.key.generated";
 
     await writeAdminAuditLog({
         action,
@@ -295,7 +425,7 @@ export async function getPluginKeySnapshot(input?: {
 }
 
 export function isPreviousPluginKeyValid(snapshot: PluginKeySnapshot, now: Date = new Date()): boolean {
-    if (!snapshot.previousKey || !snapshot.previousKeyExpiresAt) return false;
+    if (!snapshot.previousKeyHash || !snapshot.previousKeyExpiresAt) return false;
     return snapshot.previousKeyExpiresAt.getTime() > now.getTime();
 }
 

@@ -289,12 +289,16 @@ export default async function WrappedPage({ params, searchParams }: WrappedPageP
         .slice(0, 5)
         .map(([title, seconds]) => ({ title, seconds }));
 
-    // Find all available years for this user
-    const yearsRes = await prisma.playbackHistory.findMany({
+    // Determine available years by inspecting the oldest playback record
+    const firstPlayback = await prisma.playbackHistory.findFirst({
         where: { userId: user.id },
+        orderBy: { startedAt: "asc" },
         select: { startedAt: true },
     });
-    const availableYears = Array.from(new Set(yearsRes.map(p => p.startedAt.getFullYear()))).sort((a, b) => b - a);
+    const firstYear = firstPlayback ? firstPlayback.startedAt.getFullYear() : requestedYear;
+    const startYear = Math.min(firstYear, requestedYear);
+    const availableYears: number[] = [];
+    for (let y = currentYear; y >= startYear; y--) availableYears.push(y);
 
     // Build category breakdowns
     const buildBreakdown = (key: string): CategoryBreakdown => {

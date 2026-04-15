@@ -18,6 +18,10 @@ export type LibraryRule = {
     abandonedThreshold: number;
 };
 export type LibraryRuleMap = Record<string, LibraryRule>;
+export type CompletionRulesConfig = {
+    default: LibraryRule;
+    libraries: LibraryRuleMap;
+};
 
 const LIBRARY_ALIASES: Record<string, string> = {
     movie: 'movies',
@@ -69,6 +73,13 @@ const LIBRARY_TYPE_MAP: Record<string, string[]> = {
 
 const LIBRARY_ORDER = ['movies', 'filmsuhd', 'tvshows', 'seriesuhd', 'music', 'books', 'homevideos', 'photos', 'livetv'];
 const SCOPED_LIBRARY_PREFIX = 'srvlib|';
+
+const DEFAULT_COMPLETION_RULE: LibraryRule = {
+    completionEnabled: true,
+    completedThreshold: 80,
+    partialThreshold: 20,
+    abandonedThreshold: 10,
+};
 
 function cleanKey(value: string) {
     return value
@@ -301,10 +312,42 @@ function clampCompletion(percent: number) {
     return Math.max(0, Math.min(100, percent));
 }
 
+function clampPercent(value: unknown, fallback: number) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return fallback;
+    return Math.max(0, Math.min(100, Math.round(numeric)));
+}
+
+function sanitizeLibraryRule(raw: unknown, fallback: LibraryRule): LibraryRule {
+    const source = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+    const completionEnabled = typeof source.completionEnabled === 'boolean'
+        ? source.completionEnabled
+        : fallback.completionEnabled;
+
+    let completedThreshold = clampPercent(source.completedThreshold, fallback.completedThreshold);
+    let partialThreshold = clampPercent(source.partialThreshold, fallback.partialThreshold);
+    let abandonedThreshold = clampPercent(source.abandonedThreshold, fallback.abandonedThreshold);
+
+    completedThreshold = Math.max(1, completedThreshold);
+    partialThreshold = Math.min(partialThreshold, completedThreshold - 1);
+    if (partialThreshold < 1) partialThreshold = 1;
+
+    abandonedThreshold = Math.min(abandonedThreshold, partialThreshold - 1);
+    if (abandonedThreshold < 0) abandonedThreshold = 0;
+
+    return {
+        completionEnabled,
+        completedThreshold,
+        partialThreshold,
+        abandonedThreshold,
+    };
+}
+
 export function getDefaultLibraryRule(libraryKey: string | null | undefined) {
     const normalized = normalizeLibraryKey(libraryKey);
     if (normalized === 'music') {
         return {
+            completionEnabled: true,
             completedThreshold: 60,
             partialThreshold: 30,
             abandonedThreshold: 12,
@@ -312,20 +355,60 @@ export function getDefaultLibraryRule(libraryKey: string | null | undefined) {
     }
 
     return {
+        completionEnabled: true,
         completedThreshold: 80,
         partialThreshold: 20,
         abandonedThreshold: 10,
     };
 }
 
-export function getCompletionMetrics(media: MediaLike, durationWatched: number) {
+export function normalizeCompletionRules(raw: unknown): CompletionRulesConfig {
+    const source = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+    const librariesRaw = source.libraries && typeof source.libraries === 'object'
+        ? (source.libraries as Record<string, unknown>)
+        : {};
+
+    const defaultRule = sanitizeLibraryRule(source.default, DEFAULT_COMPLETION_RULE);
+    const libraries: LibraryRuleMap = {};
+
+    for (const libraryKey of LIBRARY_ORDER) {
+        const fallback = getDefaultLibraryRule(libraryKey);
+        const directLibraryRule = librariesRaw[libraryKey] ?? source[libraryKey];
+        libraries[libraryKey] = sanitizeLibraryRule(directLibraryRule, fallback);
+    }
+
+    return {
+        default: defaultRule,
+        libraries,
+    };
+}
+
+function getRuleForMedia(media: MediaLike, completionRules: unknown): LibraryRule {
+    const normalizedRules = normalizeCompletionRules(completionRules);
+    const inferredLibraryKey = inferLibraryKey(media);
+
+    if (inferredLibraryKey && normalizedRules.libraries[inferredLibraryKey]) {
+        return normalizedRules.libraries[inferredLibraryKey];
+    }
+
+    return normalizedRules.default;
+}
+
+export function getCompletionMetrics(media: MediaLike, durationWatched: number, completionRules?: unknown) {
     const durationSeconds = media.durationMs ? Number(media.durationMs) / 1000 : 0;
     if (!Number.isFinite(durationSeconds) || durationSeconds <= 0 || durationWatched <= 0) {
         return { percent: 0, bucket: 'skipped' as CompletionBucket };
     }
 
     const percent = clampCompletion((durationWatched / durationSeconds) * 100);
-    const rule = getDefaultLibraryRule(media.collectionType || media.type);
+
+    const rule = completionRules !== undefined
+        ? getRuleForMedia(media, completionRules)
+        : getDefaultLibraryRule(media.collectionType || media.type);
+
+    if (!rule.completionEnabled) {
+        return { percent, bucket: 'skipped' as CompletionBucket };
+    }
     
     if (percent >= rule.completedThreshold) return { percent, bucket: 'completed' as CompletionBucket };
     if (percent >= rule.partialThreshold) return { percent, bucket: 'partial' as CompletionBucket };

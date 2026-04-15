@@ -251,7 +251,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                     {lib.topItem ? (
                                         <Link 
                                             href={`/media/${lib.topItem.id}`}
-                                            className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all group/item"
+                                            className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-card/85 dark:bg-zinc-950/40 border border-border/65 dark:border-zinc-800 hover:border-border dark:hover:border-zinc-700 hover:shadow-md transition-all group/item"
                                         >
                                             <div className={`relative ${lib.topItem.type === 'Episode' ? 'aspect-video w-16' : 'w-12 h-16 aspect-[2/3]'} rounded-md overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0`}>
                                                 <Image 
@@ -272,7 +272,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             </div>
                                         </Link>
                                     ) : (
-                                        <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-white/20 dark:bg-zinc-950/20 border border-dashed border-zinc-200 dark:border-zinc-800/60">
+                                        <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-muted/60 dark:bg-zinc-950/20 border border-dashed border-border/80 dark:border-zinc-800/60">
                                             <div className="w-12 h-16 rounded-md bg-zinc-100 dark:bg-zinc-900/50 flex items-center justify-center shrink-0">
                                                 <TrendingUp className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
                                             </div>
@@ -284,7 +284,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                     {lib.lastAdded ? (
                                         <Link 
                                             href={`/media/${lib.lastAdded.id}`}
-                                            className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all group/item"
+                                            className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-card/85 dark:bg-zinc-950/40 border border-border/65 dark:border-zinc-800 hover:border-border dark:hover:border-zinc-700 hover:shadow-md transition-all group/item"
                                         >
                                             <div className="relative w-12 h-16 aspect-[2/3] rounded-md overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0">
                                                 <Image 
@@ -308,7 +308,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             </div>
                                         </Link>
                                     ) : (
-                                        <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-white/20 dark:bg-zinc-950/20 border border-dashed border-zinc-200 dark:border-zinc-800/60">
+                                        <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-muted/60 dark:bg-zinc-950/20 border border-dashed border-border/80 dark:border-zinc-800/60">
                                             <div className="w-12 h-16 rounded-md bg-zinc-100 dark:bg-zinc-900/50 flex items-center justify-center shrink-0">
                                                 <Sparkles className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
                                             </div>

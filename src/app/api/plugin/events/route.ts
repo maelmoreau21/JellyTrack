@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash } from "node:crypto";
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { getGeoLocation } from "@/lib/geoip";
@@ -10,8 +10,8 @@ import { normalizeResolution, clampDuration } from '@/lib/utils';
 import { markMonitorPoll, appendHealthEvent } from "@/lib/systemHealth";
 import { consumePluginEventRateLimit } from "@/lib/pluginEventRateLimit";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
-import { getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
-import { verifyScopedPluginApiKey } from "@/lib/pluginServerKey";
+import { comparePluginApiKey, getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
+import { parsePluginApiKeyCandidate } from "@/lib/pluginServerKey";
 import {
     buildLegacyStreamRedisKey,
     buildStreamRedisKey,
@@ -40,6 +40,13 @@ const parsedMaxPluginEventBytes = Number(process.env.PLUGIN_EVENT_MAX_BYTES);
 const MAX_PLUGIN_EVENT_BYTES = Number.isFinite(parsedMaxPluginEventBytes)
     ? parsedMaxPluginEventBytes
     : 1024 * 1024;
+
+class PayloadTooLargeError extends Error {
+    constructor() {
+        super("payload_too_large");
+        this.name = "PayloadTooLargeError";
+    }
+}
 
 // When a new start event arrives but a session for the same user+media was
 // closed recently (within this window), prefer reopening that session
@@ -80,68 +87,49 @@ async function verifyPluginAuth(req: Request): Promise<PluginAuthResult> {
         },
     });
 
-    const configuredKey = snapshot.currentKey?.trim() || null;
+    const currentKeyHash = snapshot.currentKeyHash?.trim() || null;
+    const previousKeyHash = snapshot.previousKeyHash?.trim() || null;
 
-    const bearerToken = extractBearerToken(req.headers.get("authorization"));
-    const apiKeyHeader = req.headers.get("x-api-key");
+    const bearerParsed = parsePluginApiKeyCandidate(extractBearerToken(req.headers.get("authorization")));
+    const headerParsed = parsePluginApiKeyCandidate(req.headers.get("x-api-key"));
 
-    if (safeApiKeyEquals(bearerToken, configuredKey)) {
-        return { authorized: true, usedPreviousKey: false, autoRotated, scopeServerId: null };
-    }
-
-    if (safeApiKeyEquals(apiKeyHeader, configuredKey)) {
-        return { authorized: true, usedPreviousKey: false, autoRotated, scopeServerId: null };
-    }
-
-    const scopedBearerCurrent = verifyScopedPluginApiKey(bearerToken, configuredKey);
-    if (scopedBearerCurrent.valid) {
+    if (await comparePluginApiKey(bearerParsed.rawKey, currentKeyHash)) {
         return {
             authorized: true,
             usedPreviousKey: false,
             autoRotated,
-            scopeServerId: scopedBearerCurrent.jellyfinServerId,
+            scopeServerId: bearerParsed.jellyfinServerId,
         };
     }
 
-    const scopedHeaderCurrent = verifyScopedPluginApiKey(apiKeyHeader, configuredKey);
-    if (scopedHeaderCurrent.valid) {
+    if (await comparePluginApiKey(headerParsed.rawKey, currentKeyHash)) {
         return {
             authorized: true,
             usedPreviousKey: false,
             autoRotated,
-            scopeServerId: scopedHeaderCurrent.jellyfinServerId,
+            scopeServerId: headerParsed.jellyfinServerId,
         };
     }
 
-    if (!isPreviousPluginKeyValid(snapshot) || !snapshot.previousKey) {
+    if (!isPreviousPluginKeyValid(snapshot) || !previousKeyHash) {
         return { authorized: false, usedPreviousKey: false, autoRotated, scopeServerId: null };
     }
 
-    if (safeApiKeyEquals(bearerToken, snapshot.previousKey)) {
-        return { authorized: true, usedPreviousKey: true, autoRotated, scopeServerId: null };
-    }
-
-    if (safeApiKeyEquals(apiKeyHeader, snapshot.previousKey)) {
-        return { authorized: true, usedPreviousKey: true, autoRotated, scopeServerId: null };
-    }
-
-    const scopedBearerPrevious = verifyScopedPluginApiKey(bearerToken, snapshot.previousKey);
-    if (scopedBearerPrevious.valid) {
+    if (await comparePluginApiKey(bearerParsed.rawKey, previousKeyHash)) {
         return {
             authorized: true,
             usedPreviousKey: true,
             autoRotated,
-            scopeServerId: scopedBearerPrevious.jellyfinServerId,
+            scopeServerId: bearerParsed.jellyfinServerId,
         };
     }
 
-    const scopedHeaderPrevious = verifyScopedPluginApiKey(apiKeyHeader, snapshot.previousKey);
-    if (scopedHeaderPrevious.valid) {
+    if (await comparePluginApiKey(headerParsed.rawKey, previousKeyHash)) {
         return {
             authorized: true,
             usedPreviousKey: true,
             autoRotated,
-            scopeServerId: scopedHeaderPrevious.jellyfinServerId,
+            scopeServerId: headerParsed.jellyfinServerId,
         };
     }
 
@@ -154,22 +142,6 @@ function extractBearerToken(headerValue: string | null): string | null {
     if (!match) return null;
     const token = match[1].trim();
     return token.length > 0 ? token : null;
-}
-
-function safeApiKeyEquals(candidateRaw: string | null, expected: string | null): boolean {
-    if (!candidateRaw) return false;
-    const candidate = candidateRaw.trim();
-    if (!candidate || !expected) return false;
-
-    const candidateBuffer = Buffer.from(candidate);
-    const expectedBuffer = Buffer.from(expected);
-    if (candidateBuffer.length !== expectedBuffer.length) return false;
-
-    try {
-        return timingSafeEqual(candidateBuffer, expectedBuffer);
-    } catch {
-        return false;
-    }
 }
 
 function getClientIp(req: Request): string {
@@ -302,6 +274,15 @@ function resolvePluginSchemaVersion(payload: Record<string, any>): PluginSchemaV
     return { version: parsed, raw, explicit: true, valid: true };
 }
 
+function isPrismaUniqueConstraintError(error: unknown): boolean {
+    return Boolean(
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        (error as { code?: unknown }).code === "P2002"
+    );
+}
+
 async function upsertCanonicalUser(serverId: string, rawJellyfinUserId: unknown, rawUsername: unknown, bumpLastActive: boolean = false) {
     const jellyfinUserId = normalizeJellyfinId(rawJellyfinUserId);
     if (!jellyfinUserId) return null;
@@ -321,14 +302,37 @@ async function upsertCanonicalUser(serverId: string, rawJellyfinUserId: unknown,
         let primary = matches.find((u) => u.jellyfinUserId === jellyfinUserId) || matches[0] || null;
  
         if (!primary) {
-            primary = await tx.user.create({
-                data: {
-                    serverId,
-                    jellyfinUserId,
-                    username: username || jellyfinUserId,
-                    lastActive: bumpLastActive ? new Date() : undefined,
-                },
-            });
+            try {
+                primary = await tx.user.create({
+                    data: {
+                        serverId,
+                        jellyfinUserId,
+                        username: username || jellyfinUserId,
+                        lastActive: bumpLastActive ? new Date() : undefined,
+                    },
+                });
+            } catch (error) {
+                if (!isPrismaUniqueConstraintError(error)) {
+                    throw error;
+                }
+
+                primary = await tx.user.findFirst({
+                    where: { serverId, jellyfinUserId: { in: candidates } },
+                    orderBy: { createdAt: "asc" },
+                });
+                if (!primary) {
+                    throw error;
+                }
+
+                const fallbackUpdates: { jellyfinUserId?: string; username?: string; lastActive?: Date } = {};
+                if (primary.jellyfinUserId !== jellyfinUserId) fallbackUpdates.jellyfinUserId = jellyfinUserId;
+                if (username && username !== primary.username) fallbackUpdates.username = username;
+                if (bumpLastActive) fallbackUpdates.lastActive = new Date();
+
+                if (Object.keys(fallbackUpdates).length > 0) {
+                    primary = await tx.user.update({ where: { id: primary.id }, data: fallbackUpdates });
+                }
+            }
         } else {
             const updates: { jellyfinUserId?: string; username?: string; lastActive?: Date } = {};
             if (primary.jellyfinUserId !== jellyfinUserId) updates.jellyfinUserId = jellyfinUserId;
@@ -386,24 +390,57 @@ async function upsertCanonicalMedia(input: {
         let primary = matches.find((m) => m.jellyfinMediaId === jellyfinMediaId) || matches[0] || null;
 
         if (!primary) {
-            primary = await tx.media.create({
-                data: {
-                    serverId: input.serverId,
-                    jellyfinMediaId,
-                    title: input.title,
-                    type: input.type,
-                    collectionType: input.collectionType ?? null,
-                    genres: input.genres || [],
-                    resolution: input.resolution ?? null,
-                    durationMs: input.durationMs ?? null,
-                    parentId: input.parentId ?? null,
-                    artist: input.artist ?? null,
-                    libraryName: input.libraryName ?? null,
-                    directors: input.directors || [],
-                    actors: input.actors || [],
-                    studios: input.studios || [],
-                },
-            });
+            try {
+                primary = await tx.media.create({
+                    data: {
+                        serverId: input.serverId,
+                        jellyfinMediaId,
+                        title: input.title,
+                        type: input.type,
+                        collectionType: input.collectionType ?? null,
+                        genres: input.genres || [],
+                        resolution: input.resolution ?? null,
+                        durationMs: input.durationMs ?? null,
+                        parentId: input.parentId ?? null,
+                        artist: input.artist ?? null,
+                        libraryName: input.libraryName ?? null,
+                        directors: input.directors || [],
+                        actors: input.actors || [],
+                        studios: input.studios || [],
+                    },
+                });
+            } catch (error) {
+                if (!isPrismaUniqueConstraintError(error)) {
+                    throw error;
+                }
+
+                primary = await tx.media.findFirst({
+                    where: { serverId: input.serverId, jellyfinMediaId: { in: candidates } },
+                    orderBy: { createdAt: "asc" },
+                });
+                if (!primary) {
+                    throw error;
+                }
+
+                primary = await tx.media.update({
+                    where: { id: primary.id },
+                    data: {
+                        jellyfinMediaId,
+                        title: input.title,
+                        type: input.type,
+                        collectionType: input.collectionType ?? undefined,
+                        genres: input.genres ?? undefined,
+                        resolution: input.resolution ?? undefined,
+                        durationMs: input.durationMs ?? undefined,
+                        parentId: input.parentId ?? undefined,
+                        artist: input.artist ?? undefined,
+                        libraryName: input.libraryName ?? undefined,
+                        directors: input.directors ?? undefined,
+                        actors: input.actors ?? undefined,
+                        studios: input.studios ?? undefined,
+                    },
+                });
+            }
         } else {
             primary = await tx.media.update({
                 where: { id: primary.id },
@@ -587,6 +624,40 @@ function corsJson(body: unknown, init?: { status?: number }) {
     return NextResponse.json(body, { ...init, headers: CORS_HEADERS });
 }
 
+async function readRequestBodyWithLimit(req: Request, maxBytes: number): Promise<string> {
+    const reader = req.body?.getReader();
+    if (!reader) return "";
+
+    const decoder = new TextDecoder();
+    let totalBytes = 0;
+    let raw = "";
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (!value) continue;
+
+            totalBytes += value.byteLength;
+            if (totalBytes > maxBytes) {
+                try {
+                    await reader.cancel();
+                } catch {
+                    // Ignore cancellation errors while enforcing payload cap.
+                }
+                throw new PayloadTooLargeError();
+            }
+
+            raw += decoder.decode(value, { stream: true });
+        }
+
+        raw += decoder.decode();
+        return raw;
+    } finally {
+        reader.releaseLock();
+    }
+}
+
 // ────────────────────────────────────────────────────
 // POST /api/plugin/events — Receive events from the Jellyfin Plugin
 // ────────────────────────────────────────────────────
@@ -620,6 +691,24 @@ export async function POST(req: Request) {
             });
             return corsJson({ error: "Payload too large." }, { status: 413 });
         }
+    }
+
+    const preAuthRateLimit = await consumePluginEventRateLimit(`preauth:${requesterIp}`);
+    if (!preAuthRateLimit.allowed) {
+        await writeAdminAuditLog({
+            action: "plugin.events.rate_limited",
+            actorUsername: "plugin-client",
+            target: "/api/plugin/events",
+            ipAddress: requesterIp,
+            details: {
+                scope: "preauth",
+                retryAfterSeconds: preAuthRateLimit.retryAfterSeconds ?? null,
+            },
+        });
+        return corsJson(
+            { error: "Too many plugin events. Please retry later.", retryAfterSeconds: preAuthRateLimit.retryAfterSeconds },
+            { status: 429 }
+        );
     }
 
     const authResult = await verifyPluginAuth(req);
@@ -670,7 +759,19 @@ export async function POST(req: Request) {
 
     let payload: Record<string, any>;
     try {
-        const parsedPayload = await req.json();
+        const rawPayload = await readRequestBodyWithLimit(req, MAX_PLUGIN_EVENT_BYTES);
+        if (!rawPayload.trim()) {
+            await writeAdminAuditLog({
+                action: "plugin.events.invalid_payload",
+                actorUsername: "plugin-client",
+                target: "/api/plugin/events",
+                ipAddress: requesterIp,
+                details: { reason: "payload_empty" },
+            });
+            return corsJson({ error: "Invalid JSON payload." }, { status: 400 });
+        }
+
+        const parsedPayload = JSON.parse(rawPayload);
         if (!parsedPayload || typeof parsedPayload !== "object" || Array.isArray(parsedPayload)) {
             await writeAdminAuditLog({
                 action: "plugin.events.invalid_payload",
@@ -682,7 +783,21 @@ export async function POST(req: Request) {
             return corsJson({ error: "Invalid JSON payload." }, { status: 400 });
         }
         payload = parsedPayload as Record<string, any>;
-    } catch {
+    } catch (error) {
+        if (error instanceof PayloadTooLargeError) {
+            await writeAdminAuditLog({
+                action: "plugin.events.payload_too_large",
+                actorUsername: "plugin-client",
+                target: "/api/plugin/events",
+                ipAddress: requesterIp,
+                details: {
+                    contentLength: req.headers.get("content-length") || null,
+                    maxBytes: MAX_PLUGIN_EVENT_BYTES,
+                },
+            });
+            return corsJson({ error: "Payload too large." }, { status: 413 });
+        }
+
         await writeAdminAuditLog({
             action: "plugin.events.invalid_payload",
             actorUsername: "plugin-client",

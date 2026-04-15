@@ -93,7 +93,29 @@
     "skipped": "Пропущено",
     "title": "Система очистки",
     "trackType": "Трек",
-    "tried": "Начато"
+    "tried": "Начато",
+    "sortBy": "Sort by",
+    "sortByCompletion": "Completion (lowest first)",
+    "sortByLastAttempt": "Last attempt (most recent)",
+    "staleMoviesRecommendationTitle": "Automatic recommendation",
+    "staleMoviesRecommendationDesc": "{count} movies have never been watched for over 2 years and consume {size}. Do you want to delete them?",
+    "reviewStaleMoviesAction": "Review selection",
+    "dismissSuggestionAction": "Dismiss",
+    "staleMoviesFilterActive": "Smart filter active: old never-watched movies",
+    "noSuggestedStaleMovies": "None of the suggested movies are visible with current filters.",
+    "deleteConfirmWord": "DELETE",
+    "deleteDialogRequestFailed": "Failed to send deletion request to Jellyfin.",
+    "deleteToastSuccess": "{count} movie(s) deleted successfully.",
+    "deleteToastPartialError": "{count} deletion(s) failed.",
+    "deleteToastNoop": "No movie was deleted.",
+    "deleteStaleMoviesAction": "Delete now",
+    "deleteDialogTitle": "Confirm deletion of {count} movies",
+    "deleteDialogDescription": "These movies will be permanently deleted from Jellyfin (estimated gain: {size}).",
+    "deleteDialogNoItems": "No media to delete.",
+    "deleteDialogWarning": "Irreversible action: media files will be deleted in Jellyfin.",
+    "deleteDialogConfirmInputLabel": "Type {word} to confirm.",
+    "deleteDialogDeleting": "Deleting...",
+    "deleteDialogConfirmButton": "Confirm deletion"
   },
   "common": {
     "active": "Активен",
@@ -502,7 +524,14 @@
     "totalEntries": "записей всего",
     "typeFilter": "Тип медиа",
     "unknown": "Неизвестно",
-    "unknownMedia": "Элемент удалён"
+    "unknownMedia": "Элемент удалён",
+    "smartAlertsTitle": "Smart alerts",
+    "smartNewCountryLabel": "Connections from a new country",
+    "smartNewCountryDesc": "Sessions detected as first country/user occurrence.",
+    "smartIpBurstLabel": "IPs with abnormal activity",
+    "smartIpBurstItem": "{ip}: {count} attempts in 24h",
+    "smartNewCountryTag": "New country",
+    "smartIpBurstTag": "{count} attempts/24h"
   },
   "media": {
     "1080pLabel": "1080p FHD",
@@ -630,7 +659,11 @@
     "viewSeries": "Сериал: {name}",
     "viewers": "Зрители ({count})",
     "viewersDesc": "Кто смотрел этот контент.",
-    "viewsTitle": "Всего просмотров"
+    "viewsTitle": "Всего просмотров",
+    "markerIntroStart": "Opening credits start",
+    "markerIntroEnd": "Opening credits end",
+    "markerCreditsStart": "End credits start",
+    "markerCustom": "Metadata marker"
   },
   "nav": {
     "cleanup": "Очистка",
@@ -695,7 +728,8 @@
     "noResults": "Нет результатов",
     "placeholder": "Поиск…",
     "searching": "Поиск…",
-    "usersSection": "Пользователи"
+    "usersSection": "Пользователи",
+    "viewAll": "View all"
   },
   "settings": {
     "abandoned": "Прервано",
@@ -815,7 +849,38 @@
     "pluginKeyHidden": "Key hidden",
     "pluginKeyMaskedHint": "The saved API key is hidden for security. Regenerate it to display it once.",
     "pluginCopyUrl": "Copy URL",
-    "pluginUrlCopied": "URL copied to clipboard"
+    "pluginUrlCopied": "URL copied to clipboard",
+    "completionRulesDefault": "Default rule (other libraries)",
+    "completionRulesHint": "Adjust thresholds to define when playback is considered skipped, abandoned, partial, or completed for each library type.",
+    "noteLabel": "Note",
+    "serverScopeHint": "Toggle each library per server. Two libraries with the same name on different servers are handled separately.",
+    "serverStatusTitle": "Jellyfin server status",
+    "libraryBadgesDisplayTitle": "Library badge display",
+    "libraryBadgesDisplayDesc": "Show or hide resolution, series quality and bitrate badges in the Library tab.",
+    "libraryBadgesToggleTitle": "Show media badges",
+    "libraryBadgesToggleDesc": "Disable this option to visually lighten media cards.",
+    "schedulerSchedulesDesc": "Schedule each task automatically with an hourly interval.",
+    "schedulerSchedulesExample": "Recommended example: Recent sync 6h, full sync 48h, backup 24h.",
+    "schedulerRecentIntervalHint": "Automatic interval in hours (1-24)",
+    "schedulerFullIntervalHint": "Automatic interval in hours (24-168, multiple of 24)",
+    "schedulerBackupIntervalHint": "Automatic interval in hours (1-168)",
+    "serverDefaultName": "Server",
+    "serverConnected": "Connected",
+    "serverNoApiKey": "Missing API key",
+    "serverOffline": "Offline / invalid key",
+    "serverMissingUrl": "Missing URL",
+    "serverLibrariesDetected": "{count} libraries detected",
+    "serverNoLibrariesDetected": "No libraries detected for this server",
+    "serverPrimaryLabel": "primary server",
+    "serverSecondaryLabel": "secondary server",
+    "noLibrariesFoundHint": "Check each Jellyfin server URL and API key, then reload the page.",
+    "libraryExcludedState": "Excluded",
+    "libraryActiveState": "Active",
+    "legacyRulesTitle": "Legacy rules to review",
+    "legacyRulesDesc": "Some old exclusions could not be automatically linked to a server+library pair. You can remove them manually below.",
+    "legacyGlobalExclusionsTitle": "Global exclusions",
+    "legacyOrphanExclusionsTitle": "Unavailable server/library exclusions",
+    "removeExclusionLabel": "Remove this exclusion"
   },
   "timeRange": {
     "allTime": "За всё время",
@@ -1030,5 +1095,20 @@
     "stateWarning": "Warning",
     "stateCritical": "Critical",
     "stateUnknown": "N/A"
+  },
+  "securitySettings": {
+    "smartThresholdsSaved": "Smart thresholds saved.",
+    "smartThresholdsTitle": "Smart thresholds (anomalies)",
+    "smartThresholdsDesc": "Dynamic settings used by smart audit filters and anomaly detection.",
+    "ipAttemptThresholdLabel": "IP attempts (threshold)",
+    "ipWindowMinutesLabel": "IP window (minutes)",
+    "newCountryGraceMinutesLabel": "New country window (minutes)",
+    "actionsLabel": "Actions",
+    "saving": "Saving...",
+    "save": "Save",
+    "smartFilterLabel": "Smart filter",
+    "filterAllEvents": "All events",
+    "filterNewCountrySuccess": "Successful login from a new country",
+    "filterIpBurst": "Same IP >= {threshold} attempts"
   }
 }

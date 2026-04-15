@@ -1,13 +1,13 @@
 // Dynamic chart theme derived from CSS variables in globals.css
 export const chartPalette = [
-    "#38bdf8",
-    "#22c55e",
-    "#f59e0b",
-    "#a855f7",
-    "#f97316",
-    "#14b8a6",
-    "#f43f5e",
-    "#818cf8",
+    "var(--chart-soft-1, #38bdf8)",
+    "var(--chart-soft-2, #22c55e)",
+    "var(--chart-soft-3, #f59e0b)",
+    "var(--chart-soft-4, #a855f7)",
+    "var(--chart-soft-5, #f97316)",
+    "var(--chart-soft-6, #14b8a6)",
+    "var(--chart-soft-7, #f43f5e)",
+    "var(--chart-soft-8, #818cf8)",
 ];
 
 // Re-evaluate these at runtime if possible, or use CSS variable strings for Recharts components

@@ -47,4 +47,6 @@ export type SafeLog = {
   mediaSubtitle?: string | null;
   fallbackImageParentId?: string | null;
   bitrate?: number | null;
+  anomalyFlags?: string[];
+  ipBurstCount?: number | null;
 };

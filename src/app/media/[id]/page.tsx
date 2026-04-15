@@ -42,6 +42,28 @@ type DBMedia = {
     parentId?: string | null;
 };
 
+function parseFinitePositive(value: unknown): number | null {
+    if (typeof value === "number") {
+        return Number.isFinite(value) && value > 0 ? value : null;
+    }
+
+    if (typeof value === "string") {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    }
+
+    return null;
+}
+
+function ticksToMs(value: number | null): number | null {
+    if (!value || value <= 0) return null;
+    return value / 10_000;
+}
+
+function clampPercent(value: number): number {
+    return Math.max(0, Math.min(100, value));
+}
+
 export const dynamic = "force-dynamic";
 
 interface MediaProfilePageProps {
@@ -91,6 +113,9 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     let albumName: string | null = null;
     let albumArtist: string | null = null;
     let albumArtistId: string | null = null;
+    let introStartMs: number | null = null;
+    let introEndMs: number | null = null;
+    let creditsStartMs: number | null = null;
 
     try {
         const jellyfinUrl = process.env.JELLYFIN_URL;
@@ -118,6 +143,16 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 albumName = data.Album || null;
                 albumArtist = data.AlbumArtist || (data.AlbumArtists?.[0]?.Name || data.AlbumArtists?.[0] || null);
                 albumArtistId = data.AlbumArtists?.[0]?.Id || (data.ArtistItems?.[0]?.Id || null);
+
+                introStartMs =
+                    parseFinitePositive(data.IntroStartPositionMs) ??
+                    ticksToMs(parseFinitePositive(data.IntroStartPositionTicks));
+                introEndMs =
+                    parseFinitePositive(data.IntroEndPositionMs) ??
+                    ticksToMs(parseFinitePositive(data.IntroEndPositionTicks));
+                creditsStartMs =
+                    parseFinitePositive(data.CreditsPositionMs ?? data.CreditsStartPositionMs) ??
+                    ticksToMs(parseFinitePositive(data.CreditsPositionTicks ?? data.CreditsStartPositionTicks));
             }
         }
     } catch (err) {
@@ -281,6 +316,35 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
             dropoffBuckets[bucket].count++;
         });
     }
+
+    const dropoffMarkers = (() => {
+        const durationMs = media.durationMs ? Number(media.durationMs) : 0;
+        if (!Number.isFinite(durationMs) || durationMs <= 0) return [] as Array<{ key: string; percent: number }>;
+
+        const toPercent = (positionMs: number | null) => {
+            if (!positionMs || positionMs <= 0) return null;
+            return clampPercent((positionMs / durationMs) * 100);
+        };
+
+        const markers: Array<{ key: string; percent: number }> = [];
+        const introStartPercent = toPercent(introStartMs);
+        const introEndPercent = toPercent(introEndMs);
+        const creditsStartPercent = toPercent(creditsStartMs);
+
+        if (introStartPercent !== null) {
+            markers.push({ key: "introStart", percent: introStartPercent });
+        }
+        if (introEndPercent !== null) {
+            markers.push({ key: "introEnd", percent: introEndPercent });
+        }
+        if (creditsStartPercent !== null) {
+            markers.push({ key: "creditsStart", percent: creditsStartPercent });
+        }
+
+        return markers.filter((marker, index, arr) => {
+            return arr.findIndex((candidate) => candidate.key === marker.key) === index;
+        });
+    })();
 
     // Telemetry timeline: group pauses, audio & subtitle changes per session date
     const telemetryMap = new Map<string, { pauses: number; audioChanges: number; subtitleChanges: number }>();
@@ -707,7 +771,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 {mediaDurationSeconds && mediaDurationSeconds > 0 && (
                     <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
                         <CardHeader><CardTitle>{t('completionDist')}</CardTitle><CardDescription>{t('completionDistDesc')}</CardDescription></CardHeader>
-                        <CardContent><div className="h-[350px] w-full"><MediaDropoffChart data={dropoffBuckets} /></div></CardContent>
+                        <CardContent><div className="h-[350px] w-full"><MediaDropoffChart data={dropoffBuckets} markers={dropoffMarkers} /></div></CardContent>
                     </Card>
                 )}
 

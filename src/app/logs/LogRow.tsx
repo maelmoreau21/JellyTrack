@@ -19,6 +19,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
   const isTranscode = String(log.playMethod || "").toLowerCase().includes("transcode");
   const isParty = !!(log as any).partyId;
   const isAudioMedia = log.media?.type ? (String(log.media.type).toLowerCase().includes('audio') || String(log.media.type).toLowerCase() === 'track') : false;
+  const hasNewCountryAnomaly = Boolean(log.anomalyFlags?.includes('new_country'));
+  const hasIpBurstAnomaly = Boolean(log.anomalyFlags?.includes('ip_burst'));
 
   const events = useMemo<SafeTelemetryEvent[]>(() => {
     return (log.telemetryEvents || []).slice().sort((a, b) => {
@@ -174,6 +176,11 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                           } catch { return ''; }
                         })()}
                       </span>
+                      {hasNewCountryAnomaly && (
+                        <span className="mt-1 inline-flex w-fit rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
+                          {t('smartNewCountryTag')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </TableCell>
@@ -270,7 +277,19 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
             case 'ip':
               return (
                 <TableCell key="ip" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-                  <div className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded-sm w-fit">{log.ipAddress || '—'}</div>
+                  <div className={cn(
+                    "text-xs font-mono px-1.5 py-0.5 rounded-sm w-fit",
+                    hasIpBurstAnomaly
+                      ? "bg-red-500/15 text-red-300 border border-red-500/30"
+                      : "bg-muted"
+                  )}>
+                    {log.ipAddress || '—'}
+                  </div>
+                  {hasIpBurstAnomaly && (
+                    <div className="mt-1 text-[10px] text-red-400">
+                      {t('smartIpBurstTag', { count: log.ipBurstCount || 0 })}
+                    </div>
+                  )}
                 </TableCell>
               );
 

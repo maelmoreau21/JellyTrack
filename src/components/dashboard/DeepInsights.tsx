@@ -94,49 +94,7 @@ const getDeepInsights = unstable_cache(
             where: { id: { in: popMediaId } },
             select: { id: true, title: true, type: true, parentId: true, jellyfinMediaId: true, genres: true, directors: true, actors: true }
         });
-
-        // === Preload ALL Seasons, Series, and Albums for robust parent chain resolution ===
-        const allSeasons = await prisma.media.findMany({
-            where: {
-                type: 'Season',
-                ...(selectedServerScope ? { serverId: selectedServerScope } : {}),
-            },
-            select: { jellyfinMediaId: true, parentId: true, title: true }
-        });
-        const allSeries = await prisma.media.findMany({
-            where: {
-                type: 'Series',
-                ...(selectedServerScope ? { serverId: selectedServerScope } : {}),
-            },
-            select: { jellyfinMediaId: true, title: true }
-        });
-        const allAlbums = await prisma.media.findMany({
-            where: {
-                type: 'MusicAlbum',
-                ...(selectedServerScope ? { serverId: selectedServerScope } : {}),
-            },
-            select: { jellyfinMediaId: true, title: true, artist: true }
-        });
-
-        const seasonMap = new Map(allSeasons.map(s => [s.jellyfinMediaId, s]));
-        const seriesMap = new Map(allSeries.map(s => [s.jellyfinMediaId, s.title]));
-        const albumMap = new Map(allAlbums.map(a => [a.jellyfinMediaId, a.title]));
-
-        if (seasonMap.size === 0 && seriesMap.size > 0) {
-            console.warn("[DeepInsights] Aucune saison trouvée en BDD — les épisodes ne peuvent pas être agrégés par série. Lancez une synchronisation complète.");
-        }
-
-        function resolveSeriesTitle(parentId: string | null): string | null {
-            if (!parentId) return null;
-            const season = seasonMap.get(parentId);
-            if (season?.parentId) {
-                const seriesTitle = seriesMap.get(season.parentId);
-                if (seriesTitle) return seriesTitle;
-            }
-            const directSeries = seriesMap.get(parentId);
-            if (directSeries) return directSeries;
-            return null;
-        }
+        const resolvedMediaById = new Map(resolvedMedia.map((media) => [media.id, media]));
 
         // === DEDICATED SERIES AGGREGATION ===
         const episodeHistoryWhere: Record<string, unknown> = { media: { type: 'Episode' } };
@@ -153,10 +111,66 @@ const getDeepInsights = unstable_cache(
         const allEpisodes = episodeMediaIds.length > 0
             ? await prisma.media.findMany({
                 where: { id: { in: episodeMediaIds } },
-                select: { id: true, parentId: true, type: true, title: true }
+                select: { id: true, parentId: true, type: true, title: true, jellyfinMediaId: true }
             })
             : [];
         const episodeMap = new Map(allEpisodes.map(e => [e.id, e]));
+
+        const seasonCandidateIds = Array.from(
+            new Set(
+                allEpisodes
+                    .map((episode) => episode.parentId)
+                    .filter((value): value is string => Boolean(value))
+            )
+        );
+
+        const seasons = seasonCandidateIds.length > 0
+            ? await prisma.media.findMany({
+                where: {
+                    jellyfinMediaId: { in: seasonCandidateIds },
+                    type: 'Season',
+                    ...(selectedServerScope ? { serverId: selectedServerScope } : {}),
+                },
+                select: { jellyfinMediaId: true, parentId: true },
+            })
+            : [];
+
+        const seasonMap = new Map(seasons.map((season) => [season.jellyfinMediaId, season]));
+        const seriesCandidateIds = Array.from(
+            new Set([
+                ...seasonCandidateIds,
+                ...seasons
+                    .map((season) => season.parentId)
+                    .filter((value): value is string => Boolean(value)),
+            ])
+        );
+
+        const allSeries = seriesCandidateIds.length > 0
+            ? await prisma.media.findMany({
+                where: {
+                    jellyfinMediaId: { in: seriesCandidateIds },
+                    type: 'Series',
+                    ...(selectedServerScope ? { serverId: selectedServerScope } : {}),
+                },
+                select: { jellyfinMediaId: true, title: true },
+            })
+            : [];
+        const seriesMap = new Map(allSeries.map((series) => [series.jellyfinMediaId, series.title]));
+
+        function resolveSeriesTitle(parentId: string | null): string | null {
+            if (!parentId) return null;
+
+            const season = seasonMap.get(parentId);
+            if (season?.parentId) {
+                const fromSeason = seriesMap.get(season.parentId);
+                if (fromSeason) return fromSeason;
+            }
+
+            const directSeries = seriesMap.get(parentId);
+            if (directSeries) return directSeries;
+
+            return null;
+        }
 
         const seriesAgg = new Map<string, { plays: number; duration: number }>();
         allEpisodeHistory.forEach(h => {
@@ -191,6 +205,26 @@ const getDeepInsights = unstable_cache(
             : [];
         const audioMediaMap = new Map(allAudioMedia.map(a => [a.id, a]));
 
+        const albumCandidateIds = Array.from(
+            new Set(
+                allAudioMedia
+                    .map((audio) => audio.parentId)
+                    .filter((value): value is string => Boolean(value))
+            )
+        );
+
+        const albums = albumCandidateIds.length > 0
+            ? await prisma.media.findMany({
+                where: {
+                    jellyfinMediaId: { in: albumCandidateIds },
+                    type: 'MusicAlbum',
+                    ...(selectedServerScope ? { serverId: selectedServerScope } : {}),
+                },
+                select: { jellyfinMediaId: true, title: true },
+            })
+            : [];
+        const albumMap = new Map(albums.map((album) => [album.jellyfinMediaId, album.title]));
+
         const albumAgg = new Map<string, { plays: number; duration: number }>();
         allAudioHistory.forEach(h => {
             const audio = audioMediaMap.get(h.mediaId);
@@ -209,7 +243,7 @@ const getDeepInsights = unstable_cache(
         const actorAgg = new Map<string, { plays: number; duration: number }>();
 
         topMedia.forEach(m => {
-            const media = resolvedMedia.find(r => r.id === m.mediaId);
+            const media = resolvedMediaById.get(m.mediaId);
             if (!media) return;
             const lowerType = media.type.toLowerCase();
             const plays = m._count.id;
@@ -299,17 +333,73 @@ const getDeepInsights = unstable_cache(
             value: s._count.id
         }));
 
-        // --- Pro Telemetry: Resolution Matrix ---
-        const resolutionData = await prisma.playbackHistory.findMany({
+        const hasKnownCodec = (value: string | null | undefined) => {
+            if (!value) return false;
+            const normalized = String(value).trim().toLowerCase();
+            if (!normalized) return false;
+            return !['unknown', 'none', 'off', 'disabled', 'null', 'undefined', 'n/a', 'na', '-'].includes(normalized);
+        };
+
+        const telemetryRows = await prisma.playbackHistory.findMany({
             where: { ...(filteredWhere || {}), ...ZAPPING_CONDITION },
-            select: { media: { select: { resolution: true, type: true } } },
+            select: {
+                clientName: true,
+                deviceName: true,
+                audioLanguage: true,
+                audioCodec: true,
+                subtitleLanguage: true,
+                subtitleCodec: true,
+                media: {
+                    select: {
+                        resolution: true,
+                        type: true,
+                    },
+                },
+            },
         });
 
         const resolutionMap = new Map<string, number>();
-        resolutionData.forEach(r => {
-            const type = r.media?.type || "Unknown";
+        const audioMap = new Map<string, number>();
+        const subtitleMap = new Map<string, number>();
+        const deviceMap = new Map<string, number>();
+        const mediaTypesWithoutVisualTelemetry = new Set(['Audio', 'Track', 'MusicAlbum', 'Book', 'AudioBook']);
+
+        telemetryRows.forEach((row) => {
+            const mediaType = row.media?.type || "Unknown";
+
+            const device = row.deviceName || "?";
+            deviceMap.set(device, (deviceMap.get(device) || 0) + 1);
+
+            if (!mediaTypesWithoutVisualTelemetry.has(mediaType)) {
+                if (row.audioLanguage) {
+                    const lang = normalizeLanguageTag(row.audioLanguage);
+                    if (lang) {
+                        let codec = row.audioCodec ? String(row.audioCodec).trim() : '';
+                        if (codec.toLowerCase() === 'unknown') codec = '';
+
+                        const key = codec ? `${lang} (${codec})` : lang;
+                        audioMap.set(key, (audioMap.get(key) || 0) + 1);
+                    }
+                }
+
+                const subtitleLanguage = row.subtitleLanguage ? String(row.subtitleLanguage).trim() : '';
+                const subtitleCodec = row.subtitleCodec ? String(row.subtitleCodec).trim() : '';
+                const lang = normalizeLanguageTag(subtitleLanguage || null);
+                const hasCodec = hasKnownCodec(subtitleCodec);
+
+                if (!lang && !hasCodec) {
+                    subtitleMap.set('None', (subtitleMap.get('None') || 0) + 1);
+                } else if (lang) {
+                    const key = hasCodec ? `${lang} (${subtitleCodec})` : lang;
+                    subtitleMap.set(key, (subtitleMap.get(key) || 0) + 1);
+                } else {
+                    subtitleMap.set(subtitleCodec, (subtitleMap.get(subtitleCodec) || 0) + 1);
+                }
+            }
+
+            const type = row.media?.type || "Unknown";
             if (['Audio', 'Track', 'MusicAlbum', 'Book', 'AudioBook'].includes(type)) return;
-            const res = normalizeResolution(r.media?.resolution);
+            const res = normalizeResolution(row.media?.resolution);
             resolutionMap.set(res, (resolutionMap.get(res) || 0) + 1);
         });
 
@@ -318,84 +408,15 @@ const getDeepInsights = unstable_cache(
             .sort((a, b) => b.value - a.value)
             .slice(0, 8);
 
-        // --- Pro Telemetry: Audio & Subtitle distribution ---
-        const audioWhere = {
-            ...filteredWhere,
-            media: {
-                type: { notIn: ['Audio', 'Track', 'MusicAlbum', 'Book', 'AudioBook'] }
-            }
-        };
-
-        const hasKnownCodec = (value: string | null | undefined) => {
-            if (!value) return false;
-            const normalized = String(value).trim().toLowerCase();
-            if (!normalized) return false;
-            return !['unknown', 'none', 'off', 'disabled', 'null', 'undefined', 'n/a', 'na', '-'].includes(normalized);
-        };
-
-        const audioRows = await prisma.playbackHistory.findMany({
-            where: { ...audioWhere, ...ZAPPING_CONDITION },
-            select: { audioLanguage: true, audioCodec: true },
-        });
-        const audioMap = new Map<string, number>();
-
-        audioRows.forEach(a => {
-            if (a.audioLanguage) {
-                const lang = normalizeLanguageTag(a.audioLanguage);
-                if (lang) {
-                    let codec = a.audioCodec ? String(a.audioCodec).trim() : '';
-                    if (codec.toLowerCase() === 'unknown') codec = '';
-
-                    const key = codec ? `${lang} (${codec})` : lang;
-                    audioMap.set(key, (audioMap.get(key) || 0) + 1);
-                }
-            }
-        });
         const audioChartData = Array.from(audioMap.entries())
             .map(([name, value]) => ({ name, value }))
             .sort((a, b) => b.value - a.value)
             .slice(0, 8);
 
-        const subtitleRows = await prisma.playbackHistory.findMany({
-            where: { ...audioWhere, ...ZAPPING_CONDITION },
-            select: { subtitleLanguage: true, subtitleCodec: true },
-        });
-        const subtitleMap = new Map<string, number>();
-        subtitleRows.forEach(s => {
-            const subtitleLanguage = s.subtitleLanguage ? String(s.subtitleLanguage).trim() : '';
-            const subtitleCodec = s.subtitleCodec ? String(s.subtitleCodec).trim() : '';
-            const lang = normalizeLanguageTag(subtitleLanguage || null);
-            const hasCodec = hasKnownCodec(subtitleCodec);
-
-            if (!lang && !hasCodec) {
-                subtitleMap.set('None', (subtitleMap.get('None') || 0) + 1);
-                return;
-            }
-
-            if (lang) {
-                const key = hasCodec ? `${lang} (${subtitleCodec})` : lang;
-                subtitleMap.set(key, (subtitleMap.get(key) || 0) + 1);
-                return;
-            }
-
-            subtitleMap.set(subtitleCodec, (subtitleMap.get(subtitleCodec) || 0) + 1);
-        });
         const subtitleChartData = Array.from(subtitleMap.entries())
             .map(([name, value]) => ({ name, value }))
             .sort((a, b) => b.value - a.value)
             .slice(0, 8);
-
-        // --- Pro Telemetry: Device Ecosystem ---
-        const deviceData = await prisma.playbackHistory.findMany({
-            where: { ...(filteredWhere || {}), ...ZAPPING_CONDITION },
-            select: { clientName: true, deviceName: true },
-        });
-
-        const deviceMap = new Map<string, number>();
-        deviceData.forEach(d => {
-            const device = d.deviceName || "?";
-            deviceMap.set(device, (deviceMap.get(device) || 0) + 1);
-        });
 
         const deviceChartData = Array.from(deviceMap.entries())
             .map(([name, value]) => ({ name: name.length > 20 ? name.substring(0, 20) + "…" : name, value }))

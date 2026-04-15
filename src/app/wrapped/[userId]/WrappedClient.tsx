@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { ChevronRight, ChevronLeft, Share2, Play, Star, Calendar, Clock, X, Film, Tv, Music, BarChart3, TrendingUp, Headphones, BookOpen, Filter } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 
 interface CategoryBreakdown {
     totalSeconds: number;
@@ -141,7 +142,7 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
     const translatedTopGenre = data.topGenre === "unknown" ? t('unknown') : data.topGenre;
     const noDataLabel = t('noData');
 
-    const updateParams = (newParams: Record<string, string>) => {
+    const updateParams = useCallback((newParams: Record<string, string>) => {
         const params = new URLSearchParams(searchParams.toString());
         Object.entries(newParams).forEach(([k, v]) => {
             if (v) params.set(k, v);
@@ -150,9 +151,9 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
         router.push(`${pathname}?${params.toString()}`);
         setShowConfig(false);
         setCurrentSlide(0);
-    };
+    }, [router, pathname, searchParams]);
 
-    const slides = [
+    const slides = useMemo(() => [
         // 0 - Intro
         {
             title: `JellyTrack Wrapped ${data.year}`,
@@ -400,7 +401,7 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
                 </div>
             )
         }
-    ];
+    ], [data, t]);
 
     const nextSlide = () => {
         if (currentSlide < slides.length - 1) setCurrentSlide(c => c + 1);
@@ -439,16 +440,18 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
                     <div className="w-full max-w-sm space-y-8">
                         <div className="space-y-4">
                             <h3 className="text-xl font-bold flex items-center gap-2"><Calendar className="w-5 h-5 text-purple-400" /> {t('year')}</h3>
-                            <div className="grid grid-cols-2 gap-2">
-                                {data.availableYears.map(y => (
-                                    <button 
-                                        key={y} 
-                                        onClick={() => updateParams({ year: y.toString() })}
-                                        className={`p-3 rounded-xl border transition-all ${data.year === y ? 'bg-purple-600 border-purple-400 font-bold' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
-                                    >
-                                        {y}
-                                    </button>
-                                ))}
+                            <div>
+                                <Select defaultValue={data.year.toString()} onValueChange={(v) => updateParams({ year: v })}>
+                                    <SelectTrigger className="w-full bg-background/70 border-border">
+                                        <Calendar className="h-4 w-4 text-zinc-500" />
+                                        <SelectValue placeholder={String(data.year)} />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-card border-border">
+                                        {data.availableYears.map(y => (
+                                            <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 

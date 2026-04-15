@@ -223,7 +223,7 @@ export async function NetworkAnalysis({
         <div className="space-y-6">
             {/* Stats row */}
             <div className="grid gap-4 md:grid-cols-4">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-zinc-400">{t('totalSessions')}</CardTitle>
                     </CardHeader>
@@ -232,7 +232,7 @@ export async function NetworkAnalysis({
                         <p className="text-xs text-emerald-500 font-medium mt-1">{data.stats.directPlaySessions} DirectPlay</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-zinc-400">{t('transcodeRate')}</CardTitle>
                     </CardHeader>
@@ -241,7 +241,7 @@ export async function NetworkAnalysis({
                         <p className="text-xs text-muted-foreground mt-1">{data.stats.transcodeSessions} {t('transcodedSessions')}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-zinc-400">DirectStream</CardTitle>
                     </CardHeader>
@@ -250,7 +250,7 @@ export async function NetworkAnalysis({
                         <p className="text-xs text-muted-foreground mt-1">{t('remuxed')}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-zinc-400">{t('transcodeDuration')}</CardTitle>
                     </CardHeader>
@@ -263,7 +263,7 @@ export async function NetworkAnalysis({
 
             {/* Charts Row */}
             <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle>{t('directVsTranscodeByHour')}</CardTitle>
                         <CardDescription>{t('directVsTranscodeByHourDesc')}</CardDescription>
@@ -273,7 +273,7 @@ export async function NetworkAnalysis({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle>{t('transcodeByClient')}</CardTitle>
                         <CardDescription>{t('transcodeByClientDesc')}</CardDescription>
@@ -292,7 +292,7 @@ export async function NetworkAnalysis({
             </div>
 
             {/* Coupable Table */}
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         {t('mostTranscoded')}

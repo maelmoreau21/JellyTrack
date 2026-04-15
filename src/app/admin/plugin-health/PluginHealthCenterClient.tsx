@@ -187,10 +187,26 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
         setActionLoading(action);
         setNotice(null);
         try {
+            const payload: Record<string, string> = { action };
+
+            if (action === "force_heartbeat") {
+                const promptedApiKey = window.prompt(
+                    `${t("forceHeartbeat")} - API key`,
+                    "",
+                );
+
+                const normalizedApiKey = String(promptedApiKey || "").trim();
+                if (!normalizedApiKey) {
+                    throw new Error(t("actionFailed"));
+                }
+
+                payload.apiKey = normalizedApiKey;
+            }
+
             const res = await fetch("/api/admin/plugin/health", {
                 method: "POST",
                 headers: { "content-type": "application/json" },
-                body: JSON.stringify({ action }),
+                body: JSON.stringify(payload),
             });
 
             const body = await res.json().catch(() => ({}));

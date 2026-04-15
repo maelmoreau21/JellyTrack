@@ -1,4 +1,4 @@
-import { Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, ChevronLeft, ChevronRight, ShieldAlert, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogFilters } from "./LogFilters";
 import LogSearchBar from "./LogSearchBar";
@@ -12,6 +12,7 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import type { SafeLog, SafeMedia, SafeTelemetryEvent } from '@/types/logs';
 import type { Prisma } from '@prisma/client';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
+import { readSmartSecurityThresholdsFromResolutionSettings } from "@/lib/securitySmartThresholds";
 
 import Link from "next/link";
 import { getServerSession } from "next-auth";
@@ -171,10 +172,20 @@ export default async function LogsPage({
     const hourParam = params.hour || "";
     const dayParam = params.day || "";
 
-    const serverRows = await prisma.server.findMany({
-        select: { id: true, name: true, isActive: true, url: true, jellyfinServerId: true },
-        orderBy: { name: "asc" },
-    });
+    const [serverRows, smartSettingsSource] = await Promise.all([
+        prisma.server.findMany({
+            select: { id: true, name: true, isActive: true, url: true, jellyfinServerId: true },
+            orderBy: { name: "asc" },
+        }),
+        prisma.globalSettings.findUnique({
+            where: { id: "global" },
+            select: { resolutionThresholds: true },
+        }),
+    ]);
+    const smartThresholds = readSmartSecurityThresholdsFromResolutionSettings(smartSettingsSource?.resolutionThresholds);
+    const newCountryMatchWindowMs = smartThresholds.newCountryGraceMinutes * 60 * 1000;
+    const hotIpWindowMs = smartThresholds.ipWindowMinutes * 60 * 1000;
+    const hotIpThreshold = smartThresholds.ipAttemptThreshold;
     const jellytrackMode = (process.env.JELLYTRACK_MODE || "single").toLowerCase();
     const selectableServerOptions = buildSelectableServerOptions(serverRows);
     const multiServerEnabled = jellytrackMode === "multi" && selectableServerOptions.length > 1;
@@ -284,6 +295,91 @@ export default async function LogsPage({
         skip: (safePage - 1) * LOGS_PER_PAGE,
         take: LOGS_PER_PAGE,
     });
+
+    const anomalyFlagsByLogId = new Map<string, Set<string>>();
+    let newCountryAlerts = 0;
+    const hotIpCountByIp = new Map<string, number>();
+
+    const candidateUserIds = Array.from(new Set(logs.map((log) => log.userId).filter((value): value is string => typeof value === "string" && value.length > 0)));
+    const candidateCountries = Array.from(
+        new Set(
+            logs
+                .map((log) => log.country)
+                .filter((value): value is string => typeof value === "string" && value.length > 0 && value !== "Unknown")
+        )
+    );
+
+    if (candidateUserIds.length > 0 && candidateCountries.length > 0) {
+        const firstSeenRows = await prisma.playbackHistory.groupBy({
+            by: ["userId", "country"],
+            where: {
+                userId: { in: candidateUserIds },
+                country: { in: candidateCountries },
+            },
+            _min: { startedAt: true },
+        });
+
+        const firstSeenByPair = new Map<string, number>();
+        firstSeenRows.forEach((row) => {
+            if (!row.userId || !row.country || !row._min.startedAt) return;
+            firstSeenByPair.set(`${row.userId}:${row.country}`, row._min.startedAt.getTime());
+        });
+
+        logs.forEach((log) => {
+            if (!log.userId || !log.country || log.country === "Unknown") return;
+            const startedAtTs = log.startedAt.getTime();
+            const firstSeenTs = firstSeenByPair.get(`${log.userId}:${log.country}`);
+            if (typeof firstSeenTs !== "number") return;
+
+            if (Math.abs(startedAtTs - firstSeenTs) <= newCountryMatchWindowMs) {
+                const flags = anomalyFlagsByLogId.get(log.id) || new Set<string>();
+                flags.add("new_country");
+                anomalyFlagsByLogId.set(log.id, flags);
+                newCountryAlerts += 1;
+            }
+        });
+    }
+
+    const candidateIps = Array.from(
+        new Set(
+            logs
+                .map((log) => log.ipAddress)
+                .filter((value): value is string => typeof value === "string" && value.length > 0)
+        )
+    );
+
+    if (candidateIps.length > 0) {
+        const hotIpSince = new Date(Date.now() - hotIpWindowMs);
+        const hotIpRows = await prisma.playbackHistory.groupBy({
+            by: ["ipAddress"],
+            where: {
+                ipAddress: { in: candidateIps },
+                startedAt: { gte: hotIpSince },
+            },
+            _count: { _all: true },
+        });
+
+        hotIpRows.forEach((row) => {
+            if (!row.ipAddress || row._count._all < hotIpThreshold) return;
+            hotIpCountByIp.set(row.ipAddress, row._count._all);
+        });
+
+        logs.forEach((log) => {
+            if (!log.ipAddress) return;
+            const count = hotIpCountByIp.get(log.ipAddress);
+            if (!count || count < hotIpThreshold) return;
+
+            const flags = anomalyFlagsByLogId.get(log.id) || new Set<string>();
+            flags.add("ip_burst");
+            anomalyFlagsByLogId.set(log.id, flags);
+        });
+    }
+
+    const topHotIps = Array.from(hotIpCountByIp.entries())
+        .sort((left, right) => right[1] - left[1])
+        .slice(0, 3)
+        .map(([ipAddress, attempts]) => ({ ipAddress, attempts }));
+
     const activeStreams = await prisma.activeStream.findMany({
         select: { userId: true, mediaId: true, bitrate: true }
     });
@@ -318,6 +414,8 @@ export default async function LogsPage({
         }) : [],
         isActuallyActive: !log.endedAt && activePairSet.has(`${log.userId}:${log.mediaId}`),
         bitrate: activeStreamMap.get(`${log.userId}:${log.mediaId}`) ?? null,
+        anomalyFlags: Array.from(anomalyFlagsByLogId.get(log.id) || []),
+        ipBurstCount: log.ipAddress ? (hotIpCountByIp.get(log.ipAddress) ?? null) : null,
     }));
 
     const mediaIds = safeLogs
@@ -451,6 +549,43 @@ export default async function LogsPage({
                 </div>
 
                 <div className="space-y-4">
+                    {(newCountryAlerts > 0 || topHotIps.length > 0) && (
+                        <Card className="border-amber-500/30 bg-amber-500/5">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-base flex items-center gap-2">
+                                    <ShieldAlert className="w-4 h-4 text-amber-400" />
+                                    {tl('smartAlertsTitle')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid gap-2 md:grid-cols-2">
+                                    <div className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 p-3">
+                                        <div className="text-xs text-muted-foreground">{tl('smartNewCountryLabel')}</div>
+                                        <div className="mt-1 text-lg font-semibold text-amber-400">{newCountryAlerts}</div>
+                                        <p className="text-xs text-muted-foreground mt-1">{tl('smartNewCountryDesc')}</p>
+                                    </div>
+
+                                    <div className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 p-3">
+                                        <div className="text-xs text-muted-foreground">{tl('smartIpBurstLabel')}</div>
+                                        <div className="mt-1 flex items-center gap-2">
+                                            <AlertTriangle className="w-4 h-4 text-red-400" />
+                                            <span className="text-lg font-semibold text-red-400">{topHotIps.length}</span>
+                                        </div>
+                                        {topHotIps.length > 0 && (
+                                            <div className="mt-2 space-y-1">
+                                                {topHotIps.map((hotIp) => (
+                                                    <div key={hotIp.ipAddress} className="text-xs text-muted-foreground">
+                                                        {tl('smartIpBurstItem', { ip: hotIp.ipAddress, count: hotIp.attempts })}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     <Card className="border-0 shadow-sm bg-white dark:bg-zinc-900 ring-1 ring-zinc-200 dark:ring-zinc-800">
                         <CardContent className="space-y-4">
                             <div className="flex items-start gap-2 flex-wrap">

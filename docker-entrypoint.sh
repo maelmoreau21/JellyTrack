@@ -51,10 +51,16 @@ mkdir -p /app/.next/cache 2>/dev/null || true
 chown -R "$PUID:$PGID" /app/.next 2>/dev/null || true
 
 # ─── Prisma Migration ──────────────────────────────────────────────
-echo "Running Prisma db push..."
-su-exec "$PUID:$PGID" npx prisma db push --accept-data-loss --skip-generate
-
-echo "Prisma schema pushed successfully."
+if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; then
+  echo "Prisma migrations detected. Running prisma migrate deploy..."
+  su-exec "$PUID:$PGID" npx prisma migrate deploy
+  echo "Prisma migrations applied successfully."
+else
+  echo "No Prisma migrations found (missing or empty prisma/migrations)."
+  echo "Running prisma db push fallback to initialize schema..."
+  su-exec "$PUID:$PGID" npx prisma db push --skip-generate --accept-data-loss
+  echo "Prisma schema pushed successfully (fallback mode)."
+fi
 
 # ─── Launch App as the configured user ──────────────────────────────
 echo "Launching Next.js Standalone server..."

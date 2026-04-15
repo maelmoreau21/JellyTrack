@@ -54,47 +54,58 @@
 
 :root {
   --radius: 0.75rem;
-  /* Day mode: softer sage tones with stronger element contrast and less glare */
-  --background: #D6DED4;
-  --foreground: #13211D;
-  --card: #E4ECE2;
-  --card-foreground: #10201B;
-  --popover: #E4ECE2;
-  --popover-foreground: #10201B;
-  --primary: #1F7A6C;
-  --primary-foreground: #F4F9F7;
-  --secondary: #C5D2C4;
-  --secondary-foreground: #152520;
-  --muted: #CDD7CB;
-  --muted-foreground: #3E5550;
-  --accent: #2F8A79;
-  --accent-foreground: #F4F9F7;
-  --destructive: #C2413A;
-  --border: #A9B9A8;
-  --input: #DCE5DB;
-  --ring: #2F8A79;
-  --chart-1: #2F8A79;
-  --chart-2: #4F9C8A;
-  --chart-3: #3D7F98;
-  --chart-4: #618FAE;
-  --chart-5: #78A983;
-  --chart-axis-color: #5B746B;
-  --chart-grid-color: rgba(19, 33, 29, 0.12);
-  --chart-tooltip-bg: rgba(232, 238, 231, 0.98);
-  --chart-tooltip-border: 1px solid rgba(19, 33, 29, 0.14);
+  /* Soft light mode: pearl surfaces with vibrant but calm accents */
+  --background: #F4F6FA;
+  --foreground: #1E293B;
+  --card: #FBFCFE;
+  --card-foreground: #1E293B;
+  --popover: #FCFDFE;
+  --popover-foreground: #1E293B;
+  --primary: #4F46E5;
+  --primary-foreground: #EEF2FF;
+  --secondary: #E7ECF5;
+  --secondary-foreground: #334155;
+  --muted: #ECF1F8;
+  --muted-foreground: #5A6B82;
+  --accent: #10B981;
+  --accent-foreground: #ECFDF5;
+  --destructive: #D64545;
+  --border: #D8E1EC;
+  --input: #F1F5FA;
+  --ring: #6366F1;
+  --chart-1: #4F46E5;
+  --chart-2: #10B981;
+  --chart-3: #F4A261;
+  --chart-4: #0EA5E9;
+  --chart-5: #8B5CF6;
+  --chart-axis-color: #64748B;
+  --chart-grid-color: rgba(100, 116, 139, 0.18);
+  --chart-tooltip-bg: rgba(252, 253, 255, 0.98);
+  --chart-tooltip-border: 1px solid rgba(100, 116, 139, 0.25);
   --chart-tooltip-radius: 12px;
-  --chart-tooltip-box-shadow: 0 4px 12px rgba(7, 12, 10, 0.12);
+  --chart-tooltip-box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
   --chart-tooltip-backdrop: none;
-  --chart-label-color: #445C56;
-  --chart-item-color: #10201B;
-  --sidebar: #CFD9CE;
-  --sidebar-foreground: #13211D;
-  --sidebar-primary: #1F7A6C;
-  --sidebar-primary-foreground: #F4F9F7;
-  --sidebar-accent: #2F8A79;
-  --sidebar-accent-foreground: #10201B;
-  --sidebar-border: #AFC0AF;
-  --sidebar-ring: #2F8A79;
+  --chart-label-color: #60728A;
+  --chart-item-color: #233246;
+  --sidebar: #EEF3F9;
+  --sidebar-foreground: #1E293B;
+  --sidebar-primary: #4F46E5;
+  --sidebar-primary-foreground: #EEF2FF;
+  --sidebar-accent: #E4EBF5;
+  --sidebar-accent-foreground: #233246;
+  --sidebar-border: #CFDAE7;
+  --sidebar-ring: #6366F1;
+}
+
+html:not(.dark) {
+  --chart-soft-1: #355B84;
+  --chart-soft-2: #6C8B74;
+  --chart-soft-3: #9A6D4F;
+  --chart-soft-4: #5E6BA2;
+  --chart-soft-5: #7F885F;
+  --chart-soft-6: #8B6F95;
+  --chart-soft-7: #607D8B;
+  --chart-soft-8: #A07E5F;
 }
 
 .dark {
@@ -157,8 +168,11 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     font-family: var(--font-sora), "Segoe UI", system-ui, sans-serif;
-    background-attachment: scroll;
-    background-image: none;
+    background-attachment: fixed;
+    background-image:
+      radial-gradient(1200px 700px at 0% -15%, rgba(90, 77, 132, 0.08), transparent 60%),
+      radial-gradient(900px 540px at 100% -10%, rgba(63, 76, 138, 0.06), transparent 58%),
+      linear-gradient(180deg, #E9EEF3 0%, #E6EBF1 100%);
   }
 
   html.dark body {
@@ -179,7 +193,7 @@
   [data-slot="card"] {
     border-color: var(--border);
     background-color: var(--card);
-    box-shadow: 0 1px 2px rgba(7, 12, 10, 0.1);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 10px 28px rgba(15, 23, 42, 0.04);
   }
 
   .dark [data-slot="card"] {
@@ -193,7 +207,7 @@
   .app-surface {
     border: 1px solid var(--border);
     background: var(--card);
-    box-shadow: 0 1px 2px rgba(7, 12, 10, 0.1);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 10px 28px rgba(15, 23, 42, 0.04);
   }
 
   .dark .app-surface {
@@ -206,6 +220,12 @@
     border: 1px solid var(--border);
     background: var(--muted);
     box-shadow: none;
+  }
+
+  html:not(.dark) .soft-light-card {
+    border-color: rgba(98, 113, 134, 0.24);
+    background: linear-gradient(180deg, rgba(237, 242, 247, 0.96) 0%, var(--card) 100%);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 14px 28px rgba(15, 23, 42, 0.05);
   }
 
   .dark .app-surface-soft {
@@ -261,7 +281,7 @@
 
   .dashboard-page a:hover [data-slot="card"],
   .dashboard-page .dashboard-interactive:hover {
-    border-color: rgba(31, 122, 108, 0.45);
+    border-color: rgba(63, 76, 138, 0.42);
   }
 
   .dark .dashboard-page a:hover [data-slot="card"],

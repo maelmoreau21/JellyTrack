@@ -88,7 +88,7 @@ export default function AllMediaControls() {
               <button 
                 key={cat.id} 
                 onClick={() => toggleType(cat.id)} 
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap border ${isActive ? 'bg-white dark:bg-zinc-800 text-primary border-zinc-200 dark:border-zinc-700 shadow-sm' : 'bg-transparent text-zinc-500 border-transparent hover:bg-zinc-200/30 dark:hover:bg-zinc-800/30 hover:text-zinc-600 dark:hover:text-zinc-400'}`}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap border ${isActive ? 'bg-card dark:bg-zinc-800 text-primary border-border dark:border-zinc-700 shadow-sm' : 'bg-transparent text-zinc-500 border-transparent hover:bg-zinc-200/30 dark:hover:bg-zinc-800/30 hover:text-zinc-600 dark:hover:text-zinc-400'}`}
               >
                 <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-zinc-500 opacity-60'}`} />
                 <span className="hidden sm:inline">{cat.label}</span>

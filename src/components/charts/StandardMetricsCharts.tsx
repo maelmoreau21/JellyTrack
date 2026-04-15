@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, Legend, PieChart, Pie, Cell } from "recharts";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartPalette, chartTooltipStyle } from "@/lib/chartTheme";
@@ -59,7 +60,18 @@ export function StandardAreaChart({ data, dataKey, stroke, name, onClick }: { da
 }
 
 export function StandardPieChart({ data, nameKey, dataKey, onClick }: { data: Record<string, number | string | undefined>[], nameKey: string, dataKey: string, onClick?: (data: any) => void }) {
-    const filteredData = data.filter(item => (Number(item[dataKey]) || 0) > 0);
+    const filteredData = useMemo(
+        () => data.filter(item => (Number(item[dataKey]) || 0) > 0),
+        [data, dataKey]
+    );
+
+    const renderPieLabel = useCallback(({ name, percent }: { name?: string; percent?: number }) => {
+        const limit = 10;
+        const rawName = String(name || '');
+        const truncated = rawName.length > limit ? `${rawName.substring(0, limit)}…` : rawName;
+        const p = Number(percent || 0);
+        return p > 0.05 ? `${truncated} ${(p * 100).toFixed(0)}%` : '';
+    }, []);
     
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
@@ -75,14 +87,7 @@ export function StandardPieChart({ data, nameKey, dataKey, onClick }: { data: Re
                     dataKey={dataKey}
                     nameKey={nameKey}
                     stroke="none"
-                    label={({ name, percent }) => {
-                        // More aggressive truncation for mobile
-                        const isSmall = typeof window !== 'undefined' && window.innerWidth < 768;
-                        const limit = isSmall ? 6 : 12;
-                        const truncated = name && name.length > limit ? name.substring(0, limit) + '…' : name;
-                        const p = percent || 0; // Fix: Ensure percent is always a number
-                        return p > 0.05 ? `${truncated} ${(p * 100).toFixed(0)}%` : '';
-                    }}
+                    label={renderPieLabel}
                     labelLine={true}
                     fontSize={10}
                     onClick={onClick}

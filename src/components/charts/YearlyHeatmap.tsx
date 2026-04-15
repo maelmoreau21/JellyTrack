@@ -254,7 +254,7 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                             <TooltipProvider delayDuration={50}>
                                 <Tooltip>
                                     <TooltipTrigger asChild>{block}</TooltipTrigger>
-                                    <TooltipContent className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 pointer-events-none">
+                                    <TooltipContent className="bg-card dark:bg-zinc-800 text-foreground dark:text-zinc-100 border-border dark:border-zinc-700 pointer-events-none">
                                         <div className="flex flex-col text-xs space-y-1">
                                             <span className="font-semibold">{t('playsCount', { count: activity.count })}</span>
                                             <span className="text-zinc-400">
