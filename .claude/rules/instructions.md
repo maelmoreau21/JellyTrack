@@ -1,354 +1,205 @@
 ---
-description: "Instructions et mémoire pour agents IA — chargez pour travailler sur le projet JellyTrack"
+description: "Instructions et memoire pour agents IA - JellyTrack v1.4.0"
 paths:
-	- "."
-	- "src/**/*.ts"
+  - "."
+  - "src/**/*.ts"
 ---
 
-# JellyTrack — Instructions & mémoire pour agents IA
+# JellyTrack - Instructions & Memoire Agents IA (v1.4.0)
 
-IMPORTANT (pour agents IA) — lire entièrement ce document avant de proposer des modifications :
-- Ne pas « halluciner » modèles de données, répertoires ou clés i18n. Toujours vérifier `prisma/schema.prisma`, `messages/*.json` et les fichiers existants sous `src/`.
-- Respectez strictement les conventions et l'architecture décrites ci‑dessous.
-- Mode d'installation principal de l'application : Docker (`docker-compose.yml` + image GHCR).
-- Le fichier `.env` est versionné comme exemple public : conserver des placeholders sûrs (`CHANGE_ME_*`), jamais de secrets réels.
- - Ne **pas** effectuer de `commit`, `push`, création de branche ou `merge` dans le dépôt, sauf si l'utilisateur l'a **explicitement demandé**. Toute modification de code doit être approuvée par l'utilisateur avant d'être commise et poussée.
+IMPORTANT - lire integralement ce document avant toute modification.
 
-## 1. Stack technique (résumé)
-- Framework : `Next.js` (App Router, `src/app/`) — version utilisée : `16.x` (Next 16+ dans `package.json`).
-- Langage : `TypeScript` (option `strict: true`).
-- Base de données / ORM : `Prisma` (provider `postgresql`, `prisma/schema.prisma`).
-- Auth : `next-auth` (provider Jellyfin + fallback LDAP personnalisé dans `src/lib/auth.ts`).
-- Styling : `TailwindCSS` + composants `shadcn/ui` (primitives Radix dans `src/components/ui/`).
-- Icônes : `lucide-react`.
-- Graphiques : `recharts` (wrappés dans `src/components/charts/*`).
-- i18n : `next-intl` — fichiers de traduction sous `messages/*.json` (namespaces : `common`, `dashboard`, `media`, `logs`, ...).
+- Ne pas halluciner la structure de donnees: verifier systematiquement `prisma/schema.prisma`.
+- Ne pas halluciner les cles i18n: verifier `messages/*.json`.
+- Ne pas inventer de contrat plugin: verifier `src/app/api/plugin/events/route.ts`.
+- Ne pas faire de `commit`, `push`, creation de branche ou `merge` sans demande explicite utilisateur.
+- Le mode d'installation principal reste Docker (`docker-compose.yml`).
+- Le fichier `.env` est public et versionne comme exemple: placeholders uniquement (`CHANGE_ME_*`), jamais de secrets reels.
 
-## 1.bis Installation & exploitation (actuel)
-- Parcours recommandé utilisateur : `docker compose up -d` depuis la racine `JellyTrack/`.
-- Le plugin Jellyfin est recommandé via dépôt Jellyfin (`manifest.json` du dépôt `JellyTrack.Plugin`).
-- Le mode applicatif est piloté par `JELLYTRACK_MODE` (`single` par défaut, `multi` pour vues multi-serveur).
+## 1. Stack Technique Canonique
 
-## 2. Diagramme de flux des données
-```
-[Jellyfin API] -> [Webhooks / Cron jobs] -> [Prisma DB (Postgres)] -> [Next.js (server actions, unstable_cache)] -> [Client UI]
-```
+- Framework: Next.js 16 App Router (`src/app/`)
+- Langage: TypeScript strict
+- Auth web: next-auth avec proxy Next (`src/proxy.ts`)
+- ORM/DB: Prisma + PostgreSQL
+- Cache/temps reel: Redis (ioredis)
+- UI: Tailwind + composants `src/components/ui/*`
+- Graphiques: Recharts
+- i18n: next-intl + fichiers `messages/*.json`
 
-## 3. Conventions de structure du dépôt (points clés)
-- `src/app/*` : routes, layouts et pages (server components par défaut). Utilisez `use client` au début d'un fichier pour les composants client.
-- `src/app/api/*` : endpoints API côté serveur (webhooks, exports, actions admin).
-- `src/components/ui/*` : composants UI réutilisables (boutons, input, card) — éviter de dupliquer le style.
-- `src/components/dashboard/*` : composants complexes, server-fetched (`PredictionsPanel`, `HardwareMonitor`, etc.).
-- `src/components/charts/*` : wrappers pour `recharts` (toujours protéger par condition si données nulles). Inclut `HeatmapDrillDown` (modal drill-down), `AttendanceHeatmap` (mobile-responsive).
-- `src/lib/*` : utilitaires et wrappers (ex. `prisma.ts`, `jellyfin.ts`, `auth.ts`, `utils.ts`).
-- `prisma/` : `schema.prisma` + migrations historiées.
-- `messages/` : traductions JSON par locale (ex. `en.json`, `fr.json`).
-- Ne pas versionner de fichiers temporaires d'audit local, de rapports ad-hoc ou d'artefacts de build dans le dépôt app.
+## 2. Architecture Securite v1.4.0 (reference)
 
-Toujours réutiliser les composants existants sous `src/components/ui/` pour garantir une UX cohérente.
+### 2.1 Plugin API Key - Hash-at-Rest
 
-## 4. Schéma Prisma — référence canonique (extraits essentiels)
-Vous devez RELIRE `prisma/schema.prisma` avant toute proposition qui touche aux données. Voici le résumé exact des modèles (noms et champs tels qu'ils apparaissent dans `schema.prisma`) :
+Source: `src/lib/pluginKeyManager.ts` + `src/app/api/plugin/events/route.ts`
 
-- `model User` :
-	- `id String @id @default(uuid())`
-	- `jellyfinUserId String @unique`
-	- `username String`
-	- `isActive Boolean @default(true)`
-	- `createdAt DateTime @default(now())`
-	- `updatedAt DateTime @updatedAt`
-	- relations : `playbackHistory PlaybackHistory[]`, `activeStreams ActiveStream[]`
+- La cle plugin n'est plus stockee en clair: hash scrypt versionne (`s1$...`) avec salt.
+- Verification runtime: comparaison timing-safe entre cle brute recue et hash stocke.
+- Mode strict hash-only: une valeur non-hash/mal formee est rejetee.
+- Legacy plaintext: migration automatique vers hash a la lecture des settings.
+- Rotation geree (courante + precedente + fenetre de grace).
+- Option pepper: `PLUGIN_KEY_PEPPER`.
 
-- `model Media` :
-	- `id String @id @default(uuid())`
-	- `jellyfinMediaId String @unique`
-	- `title String`
-	- `type String` (ex. `Movie`, `Episode`, `Track`, `Audio`, `AudioBook`) — chaîne libre utilisée partout pour filtrer
-	- `collectionType String?` (ex. `movies`, `tvshows`)
-	- `libraryName String?`
-	- `genres String[]`
-	- `resolution String?` (ex. `4K`, `1080p`)
-	- `durationMs BigInt?`, `size BigInt?`
-	- `directors String[]`, `actors String[]`, `studios String[]`
-	- `parentId String?` (Jellyfin ParentId pour fallback d'images)
-	- `artist String?`, `dateAdded DateTime?`, `createdAt DateTime @default(now())`, `updatedAt DateTime @updatedAt`
-	- relations : `playbackHistory PlaybackHistory[]`, `activeStreams ActiveStream[]`
-	- index : `type`, `collectionType`, `jellyfinMediaId`
+Regle de conception:
+- Ne jamais reintroduire une persistance de cle brute en DB.
+- Toute nouvelle route admin sur la cle doit conserver ce modele hash-only.
 
-- `model PlaybackHistory` : (historique/ligne de log)
-	- `id String @id @default(uuid())`
-	- `userId String?` (nullable — sessions anonymes possibles)
-	- `mediaId String` (FK vers `Media.id`)
-	- `playMethod String` (ex. `DirectPlay`, `Transcode`)
-	- `clientName String?`, `deviceName String?`
-	- `ipAddress String?`, `country String?`, `city String?`
-	- `durationWatched Int @default(0)` (secondes)
-	- `startedAt DateTime @default(now())`, `endedAt DateTime?`
-	- `audioLanguage`, `audioCodec`, `subtitleLanguage`, `subtitleCodec` (nullable)
-	- `pauseCount Int @default(0)`, `audioChanges Int @default(0)`, `subtitleChanges Int @default(0)`
-	- relations : `user User?`, `media Media`, `telemetryEvents TelemetryEvent[]`
-	- indexes : `userId`, `mediaId`, `startedAt`, composite `userId+startedAt`, `mediaId+startedAt`, `clientName`, `playMethod`
+### 2.2 Auth plugin (transport)
 
-- `model TelemetryEvent` :
-	- `id String @id @default(uuid())`, `playbackId String`, `eventType String`, `positionMs BigInt`, `metadata String?`, `createdAt DateTime @default(now())`
-	- relation : `playback PlaybackHistory` (FK)
-	- indexes : `playbackId`, `eventType`, `playbackId+eventType`
+Source: `src/app/api/plugin/events/route.ts`
 
-- `model ActiveStream` : (représente un flux en cours)
-	- `id String @id @default(uuid())`
-	- `sessionId String @unique` (Jellyfin Session ID)
-	- `userId String`, `mediaId String`
-	- `playMethod String`, `clientName String?`, `deviceName String?`, `ipAddress String?`, `country String?`, `city String?`
-	- `videoCodec String?`, `audioCodec String?`, `transcodeFps Float?`, `bitrate Int?`
-	- `audioLanguage`, `subtitleLanguage`, `subtitleCodec` (nullable)
-	- `positionTicks BigInt?`, `startedAt DateTime @default(now())`, `lastPingAt DateTime @updatedAt`
-	- relations : `user User`, `media Media`
-	- index : `lastPingAt`
+- Le plugin peut envoyer la cle via:
+  - `Authorization: Bearer <token>`
+  - `X-Api-Key: <token>`
+- Les 2 formats sont verifies.
+- Les cles scopees sont supportees via prefixe `jts3.<serverIdBase64url>.<rawKey>` (`src/lib/pluginServerKey.ts`).
+- Si la cle est scopee, le `serverId` du token doit matcher celui du payload (sinon 403).
 
-- `model GlobalSettings` : singleton `id = "global"` (réglages globaux)
-	- champs pour webhooks, discord, quotas, `excludedLibraries String[]`, `defaultLocale`, `timeFormat`, `pluginApiKey`, `pluginLastSeen`, etc.
+### 2.3 Protection SSRF / Origine Webhook
 
-- `model SystemHealthState` et `SystemHealthEvent` : stockent l'état du moniteur/sync/backup et les événements associés.
+Source: `src/app/api/webhook/jellyfin/route.ts`
 
-- `model DailyStats` : (pré-agrégation pour performances dashboard)
-	- `id String @id @default(uuid())`
-	- `date DateTime` (date du jour agrégé)
-	- `userId String?`, `libraryName String?`, `mediaType String?`
-	- `totalPlays Int @default(0)`, `totalDuration Int @default(0)`, `uniqueUsers Int @default(0)`
-	- `@@unique([date, userId, libraryName, mediaType])`
-	- Usage : alimenté par `src/lib/dailyStatsAggregator.ts`, requêtable pour accélérer les vues dashboard sur de longues périodes.
+- L'endpoint webhook refuse les payloads si `ALLOWED_JELLYFIN_HOSTS` est vide.
+- Le host de `serverUrl` dans le payload est extrait et compare a une allowlist stricte.
+- Si host absent/invalide/non autorise: 403.
+- La taille du payload est cappee (`PLUGIN_EVENT_MAX_BYTES`).
 
-> Règles strictes :
-	- Ne PAS inventer de champs/relations non présents dans `schema.prisma`.
-	- Si vous devez modifier le schéma : demande explicite de l'utilisateur + plan de migration. Après modification, exécuter `npx prisma generate` et `npx prisma migrate` / `npx prisma db push` selon la procédure convenue.
+### 2.4 Proxy Next 16
 
-## 5. Patterns d'usage et recommandations pratiques
-- Requêtes Prisma : privilégier les champs indexés (`userId`, `mediaId`, `startedAt`, `clientName`, `playMethod`). Pour filtrer plusieurs types de media, utiliser :
-	```ts
-	where: { media: { type: { in: ['Movie','Episode'] } } }
-	```
-- Filtre par date : construire `startedAt` avec `gte`/`lte` (attention aux heures, utiliser `23:59:59.999` pour bornes inclusives).
-- Données BigInt / Date :
-	- `BigInt` peut nécessiter d'être serialisé en `string` pour l'envoi côté client (RSC/JSON). Exemple : `String(positionMs)`.
-	- `DateTime` => utiliser `.toISOString()` pour transport dans JSON.
-- Telemetry : `TelemetryEvent.metadata` est une chaîne JSON optionnelle (ne pas se fier à un schéma fixe sans vérification).
-- ActiveStream : représente l'état « live » ; `lastPingAt` est mis à jour par webhooks/heartbeats. Ne pas dédupliquer logique d'active stream côté client.
+Source: `src/proxy.ts`
 
-## 6. i18n & messages
-- Namespace : conserver les namespaces existants (`common`, `dashboard`, `media`, `logs`, etc.).
-- Quand vous ajoutez une clé de traduction, ajouter la même clé dans tous les fichiers `messages/*.json` (toutes les locales). Les clefs manquantes provoquent des libellés non traduits.
-- Ne pas mettre de texte en dur dans les composants ou pages. Toutes les chaînes destinées à l'UI (titres, labels, boutons, tableaux, messages, et attributs accessibles comme `alt`, `title`, `aria-*`, `placeholder`) doivent utiliser les fichiers de traduction `messages/*.json` via les APIs d'internationalisation : côté serveur `getTranslations()` + `tl('key')`, côté client `useTranslations()` + `t('key')`. Pour les textes riches contenant HTML ou éléments React, utilisez `t.rich()` ou l'équivalent. Les exceptions (texte technique non destiné à l'interface utilisateur) doivent être clairement documentées dans la PR.
-- Vérifiez les chaînes en dur avec les scripts existants (`scripts/check_translations.js`, `scripts/check_pages.js`) avant de soumettre une PR.
-- Utilisation :
-	- Server components : `const tl = await getTranslations('logs')` et `tl('key')`.
-	- Client components : `const t = useTranslations('logs')`.
+- Le proxy applique les regles d'autorisation pages/API.
+- Les API ne sont pas redirigees en HTML vers `/login`; elles gerent leurs erreurs JSON dans leurs handlers.
+- `api/plugin/events` est explicitement exclu du matcher proxy (endpoint machine-to-machine).
 
-## 7. UX / style et composants
-- Toujours réutiliser les composants sous `src/components/ui/` pour préserver l'UX.
-- Micro-interactions : `transition-all`, `hover:scale`, `group-hover:opacity-100`.
-- Glassmorphism : `backdrop-blur-md` + `bg-zinc-900/50` selon les cartes principales.
-- Charts : toujours envelopper `recharts` avec un rendu conditionnel pour éviter les crashs si données manquantes.
+## 3. Arborescence de Travail (vue utile)
 
-## 8. Variables d'environnement importantes
-- `DATABASE_URL` (Prisma)
-- `JELLYFIN_URL`, `JELLYFIN_API_KEY` (utilisés pour métadonnées Jellyfin dans `src/app/logs/page.tsx`)
-- `JELLYTRACK_MODE`, `JELLYFIN_SERVER_ID`, `JELLYFIN_SERVER_NAME` (mode single/multi-serveur)
-- `JELLYFIN_WEBHOOK_SECRET`, `NEXTAUTH_SECRET`, `ADMIN_PASSWORD` (sécurité)
-- Autres : consulter `.env` et `src/lib/*` pour usages spécifiques.
+- `src/app/*`: pages/routes App Router
+- `src/app/api/*`: APIs serveur
+- `src/proxy.ts`: politique d'acces globale
+- `src/lib/*`: logique metier (auth, sync, plugin key, SSRF/webhook, server registry)
+- `src/components/ui/*`: primitives UI a reutiliser en priorite
+- `src/components/dashboard/*`: blocs dashboard
+- `src/components/charts/*`: wrappers recharts
+- `prisma/schema.prisma`: source de verite du modele
+- `messages/*.json`: traductions multi-locales
 
-Règle `.env` :
-- `.env` est commité comme exemple public ; garder des valeurs de démonstration sûres.
-- Ne jamais y écrire de vrais secrets (production/dev réel).
+## 4. Prisma - Resume Canonique (v1.4.0)
 
-## 9. Scripts utiles (depuis la racine du projet)
-- `docker compose up -d` — méthode principale de lancement
-- `docker compose pull && docker compose up -d` — mise à jour de l'instance Docker
-- `npm run dev` — lancement en dev
-- `npm run build` — build de production (obligatoire avant finaliser une modification)
-- `npm run start` — démarrer la version buildée
-- `npx prisma generate` — régénère le client Prisma si le schéma change (à exécuter côté CI/dev après modifications de `schema.prisma`)
+Toujours relire `prisma/schema.prisma` avant toute modification data.
 
-## 10. Checklist PR / tâches avant merge (guide pour agents)
-1. Relire `prisma/schema.prisma` si la PR touche aux données.
-2. Ajouter/mettre à jour les clés i18n dans `messages/*.json` pour toutes les locales.
-3. Exécuter `npm run build` et corriger les erreurs TypeScript/Next.js.
-4. Si modifications Prisma : fournir migration planifiée + `npx prisma generate` et tests DB (ou instructions pour `npx prisma db push`).
-5. Vérifier l'UI via `npm run dev`, tester flux critiques (logs, exports, pages dashboard).
-6. Mitiger les warnings Turbopack/NFT : éviter les `import` top-level de `fs`/`path` dans le code serveur, préférer des imports dynamiques (`await import('fs')`) ou utiliser `/*turbopackIgnore: true*/` pour les imports dynamiques (p.ex. import(/*turbopackIgnore: true*/ `../../messages/${locale}.json`). Re-relancer `npm run build` et vérifier les warnings.
+Modeles cles:
 
-## 11. Règles pour éviter les « hallucinations »
-- Toujours vérifier :
-	- `prisma/schema.prisma` pour la structure des données
-	- `messages/*.json` pour les clefs de traduction
-	- `src/` pour les composants et utilitaires existants
-- Ne pas proposer de nouveaux champs, enums, ou relations sans mise à jour du `schema.prisma` et accord explicite.
-- Quand vous citez des valeurs attendues (ex. `Media.type`), basez-vous sur l'utilisation dans le code (`src/`) et sur `schema.prisma` (le champ est libre — préférer la cohérence avec les valeurs déjà utilisées : `Movie`, `Episode`, `Audio`, `AudioBook`, `Track`, `Season`, `Series`, `MusicAlbum`).
+- `Server`
+  - champs cle: `id`, `jellyfinServerId`, `name`, `url`, `jellyfinApiKey`, `allowAuthFallback`, `isActive`
+  - relation parent multi-serveur pour users/media/history/events/streams
+
+- `User`
+  - champs cle: `serverId`, `jellyfinUserId`, `username`, `lastActive`
+  - contrainte: `@@unique([jellyfinUserId, serverId])`
+
+- `Media`
+  - champs cle: `serverId`, `jellyfinMediaId`, `type`, `collectionType`, `libraryName`, `parentId`, `artist`
+  - contrainte: `@@unique([jellyfinMediaId, serverId])`
+
+- `PlaybackHistory`
+  - champs cle: `serverId`, `userId`, `mediaId`, `playMethod`, `durationWatched`, `startedAt`, `endedAt`
+
+- `TelemetryEvent`
+  - champs cle: `serverId`, `playbackId`, `eventType`, `positionMs`
+
+- `ActiveStream`
+  - champs cle: `serverId`, `sessionId`, `userId`, `mediaId`, `lastPingAt`
+  - contrainte: `@@unique([sessionId, serverId])`
+
+- `GlobalSettings`
+  - contient la gouvernance plugin key: `pluginApiKey` (hash), `pluginPreviousApiKey` (hash), expirations, rotation
+
+- `AdminAuditLog`, `SystemHealthState`, `SystemHealthEvent`, `DailyStats`
+
+Regles strictes:
+- Ne jamais proposer un champ inexistant.
+- Si schema change: demande explicite utilisateur + plan migration + regeneration Prisma.
+
+## 5. Contrat Plugin Ingestion (App)
+
+Source principale: `src/app/api/plugin/events/route.ts`
+
+- Types d'evenements acceptes:
+  - `Heartbeat`
+  - `PlaybackStart`
+  - `PlaybackProgress`
+  - `PlaybackStop`
+  - `LibraryChanged`
+- `eventSchemaVersion` est obligatoire et doit etre supporte (actuellement v2 strict).
+- Rate limiting pre-auth et post-auth.
+- Taille payload limitee.
+- Audit admin des echecs (401, 403, 413, schema invalide, etc.).
+
+## 6. I18n - Politique Obligatoire
+
+- Toute chaine UI doit venir de `messages/*.json`.
+- Ajouter toute nouvelle cle dans toutes les locales.
+- Utilisation:
+  - server components: `getTranslations()`
+  - client components: `useTranslations()`
+- Scripts de controle disponibles sous `scripts/`.
+
+## 7. Regles Qualite Zero Dette Technique
+
+Avant finalisation:
+
+1. Verifier les impacts schema si code data modifie.
+2. Verifier les traductions sur toutes locales.
+3. Executer `npm run build`.
+4. Executer les tests utiles (`npm run test` si pertinent).
+5. Verifier les endpoints critiques:
+   - `api/plugin/events`
+   - `api/webhook/jellyfin`
+   - `api/settings/jellyfin-servers`
+6. Verifier l'absence de secret et la conformite `.env` exemple.
+
+## 8. Variables d'Environnement Sensibles
+
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `ADMIN_PASSWORD`
+- `JELLYFIN_URL`
+- `JELLYFIN_API_KEY`
+- `JELLYFIN_WEBHOOK_SECRET`
+- `PLUGIN_KEY_PEPPER`
+- `ALLOWED_JELLYFIN_HOSTS`
+- `PLUGIN_EVENT_MAX_BYTES`
+- `JELLYTRACK_MODE`
+- `JELLYFIN_SERVER_ID`
+- `JELLYFIN_SERVER_NAME`
+
+Regle:
+- `.env` versionne = placeholders uniquement.
+
+## 9. Commandes de Reference
+
+- `docker compose up -d`
+- `docker compose pull && docker compose up -d`
+- `npm run dev`
+- `npm run build`
+- `npm run start`
+- `npx prisma generate` (uniquement apres changement schema)
+
+## 10. Anti-Hallucination Checklist
+
+Toujours verifier avant proposition:
+
+- `prisma/schema.prisma`
+- `messages/*.json`
+- `src/app/api/plugin/events/route.ts`
+- `src/lib/pluginKeyManager.ts`
+- `src/app/api/webhook/jellyfin/route.ts`
+- `src/proxy.ts`
+
+Si un doute persiste: lire le fichier, ne pas deviner.
 
 ---
 
-Ce document a pour but d'être la source de vérité pour les agents IA qui travaillent sur ce dépôt. Si vous trouvez un élément manquant ici (nouvelle table, nouveau namespace i18n, nouveau pattern), ajoutez-le à ce fichier et exécutez `npm run build` pour valider l'intégration.
-
-## 12. Modèle Logique de Données (MLD) — représentation SQL
-
-But : fournir au niveau relationnel (tables, clés, types) un MLD clair dérivé de `prisma/schema.prisma` pour les opérations DBA, requêtes SQL et conception d'index.
-
-Remarque sur les conventions : Prisma utilise des identifiants de type `String @id @default(uuid())`. Ci‑dessous les types Postgres usuels proposés (uuid, text, integer, bigint, timestamptz, jsonb, boolean). Adapter `DEFAULT` selon les extensions disponibles (`uuid_generate_v4()` ou `gen_random_uuid()`).
-
--- Table `users`
-CREATE TABLE users (
-	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-	jellyfin_user_id text NOT NULL UNIQUE,
-	username text NOT NULL,
-	is_active boolean NOT NULL DEFAULT true,
-	created_at timestamptz NOT NULL DEFAULT now(),
-	updated_at timestamptz NOT NULL DEFAULT now()
-);
-
--- Table `media`
-CREATE TABLE media (
-	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-	jellyfin_media_id text NOT NULL UNIQUE,
-	title text NOT NULL,
-	type text NOT NULL,
-	collection_type text NULL,
-	library_name text NULL,
-	genres text[] NOT NULL DEFAULT '{}',
-	resolution text NULL,
-	duration_ms bigint NULL,
-	size bigint NULL,
-	directors text[] NOT NULL DEFAULT '{}',
-	actors text[] NOT NULL DEFAULT '{}',
-	studios text[] NOT NULL DEFAULT '{}',
-	parent_id text NULL,
-	artist text NULL,
-	date_added timestamptz NULL,
-	created_at timestamptz NOT NULL DEFAULT now(),
-	updated_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_media_type ON media(type);
-CREATE INDEX idx_media_collection_type ON media(collection_type);
-
--- Table `playback_history`
-CREATE TABLE playback_history (
-	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-	user_id uuid NULL REFERENCES users(id) ON DELETE CASCADE,
-	media_id uuid NOT NULL REFERENCES media(id) ON DELETE CASCADE,
-	play_method text NOT NULL,
-	client_name text NULL,
-	device_name text NULL,
-	ip_address text NULL,
-	country text NULL,
-	city text NULL,
-	duration_watched integer NOT NULL DEFAULT 0,
-	started_at timestamptz NOT NULL DEFAULT now(),
-	ended_at timestamptz NULL,
-	audio_language text NULL,
-	audio_codec text NULL,
-	subtitle_language text NULL,
-	subtitle_codec text NULL,
-	pause_count integer NOT NULL DEFAULT 0,
-	audio_changes integer NOT NULL DEFAULT 0,
-	subtitle_changes integer NOT NULL DEFAULT 0
-);
-CREATE INDEX idx_playback_user ON playback_history(user_id);
-CREATE INDEX idx_playback_media ON playback_history(media_id);
-CREATE INDEX idx_playback_started_at ON playback_history(started_at);
-CREATE INDEX idx_playback_user_started ON playback_history(user_id, started_at);
-CREATE INDEX idx_playback_media_started ON playback_history(media_id, started_at);
-
--- Table `telemetry_event`
-CREATE TABLE telemetry_event (
-	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-	playback_id uuid NOT NULL REFERENCES playback_history(id) ON DELETE CASCADE,
-	event_type text NOT NULL,
-	position_ms bigint NOT NULL,
-	metadata jsonb NULL,
-	created_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_telemetry_playback ON telemetry_event(playback_id);
-CREATE INDEX idx_telemetry_event_type ON telemetry_event(event_type);
-CREATE INDEX idx_telemetry_playback_event ON telemetry_event(playback_id, event_type);
-
--- Table `active_stream`
-CREATE TABLE active_stream (
-	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-	session_id text NOT NULL UNIQUE,
-	user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-	media_id uuid NOT NULL REFERENCES media(id) ON DELETE CASCADE,
-	play_method text NOT NULL,
-	client_name text NULL,
-	device_name text NULL,
-	ip_address text NULL,
-	country text NULL,
-	city text NULL,
-	video_codec text NULL,
-	audio_codec text NULL,
-	transcode_fps real NULL,
-	bitrate integer NULL,
-	audio_language text NULL,
-	subtitle_language text NULL,
-	subtitle_codec text NULL,
-	position_ticks bigint NULL,
-	started_at timestamptz NOT NULL DEFAULT now(),
-	last_ping_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_active_last_ping ON active_stream(last_ping_at);
-
--- Table `global_settings` (singleton)
-CREATE TABLE global_settings (
-	id text PRIMARY KEY DEFAULT 'global',
-	discord_webhook_url text NULL,
-	discord_alert_condition text NOT NULL DEFAULT 'ALL',
-	discord_alerts_enabled boolean NOT NULL DEFAULT false,
-	max_concurrent_transcodes integer NOT NULL DEFAULT 0,
-	excluded_libraries text[] NOT NULL DEFAULT '{}',
-	sync_cron_hour integer NOT NULL DEFAULT 3,
-	sync_cron_minute integer NOT NULL DEFAULT 0,
-	backup_cron_hour integer NOT NULL DEFAULT 3,
-	backup_cron_minute integer NOT NULL DEFAULT 30,
-	default_locale text NOT NULL DEFAULT 'fr',
-	time_format text NOT NULL DEFAULT '24h',
-	wrapped_visible boolean NOT NULL DEFAULT true,
-	wrapped_period_enabled boolean NOT NULL DEFAULT true,
-	wrapped_start_month integer NOT NULL DEFAULT 12,
-	wrapped_start_day integer NOT NULL DEFAULT 1,
-	wrapped_end_month integer NOT NULL DEFAULT 1,
-	wrapped_end_day integer NOT NULL DEFAULT 31,
-	plugin_api_key text NULL,
-	plugin_last_seen timestamptz NULL,
-	plugin_version text NULL,
-	plugin_server_name text NULL,
-	updated_at timestamptz NOT NULL DEFAULT now()
-);
-
--- Table `system_health_state` / `system_health_event`
-CREATE TABLE system_health_state (
-	id text PRIMARY KEY DEFAULT 'global',
-	monitor jsonb NOT NULL,
-	sync jsonb NOT NULL,
-	backup jsonb NOT NULL,
-	updated_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE TABLE system_health_event (
-	id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-	state_id text NOT NULL REFERENCES system_health_state(id) ON DELETE CASCADE,
-	source text NOT NULL,
-	kind text NOT NULL,
-	message text NOT NULL,
-	details jsonb NULL,
-	created_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_health_created_at ON system_health_event(created_at);
-CREATE INDEX idx_health_source_created ON system_health_event(source, created_at);
-
-### Remarques MLD
-- Les relations 1→N : `media.playback_history`, `user.playback_history`, `playback_history.telemetry_event`.
-- Choix de types : `position_ms` et `position_ticks` doivent rester `bigint` pour conserver précision des ticks.
-- Pour les IDs UUID : choisir `uuid_generate_v4()` (extension `uuid-ossp`) ou `gen_random_uuid()` (extension `pgcrypto`).
-- Conservation et purge : prévoir une purge/archivage de `telemetry_event` > X mois si taille DB élevée.
-
-## 13. Détails Serveur & pipeline d'ingestion (résumé opérationnel)
-
-Ces notes décrivent le flux serveur principal et les points à connaître pour debugging et évolution.
-
-*** End Patch
+Ce document est la reference agents IA pour JellyTrack v1.4.0.
+Toute evolution structurelle (schema, securite, contrat plugin) doit mettre a jour ce fichier dans la meme PR.
