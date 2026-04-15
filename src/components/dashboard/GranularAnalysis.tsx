@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+// Card UI imports removed - not used in this server component
 import { unstable_cache } from "next/cache";
 import { format } from "date-fns";
 import { getTranslations, getLocale } from 'next-intl/server';

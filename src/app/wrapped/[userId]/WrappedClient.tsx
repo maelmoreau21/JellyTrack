@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { ChevronRight, ChevronLeft, Share2, Play, Star, Calendar, Clock, X, Film, Tv, Music, BarChart3, TrendingUp, Headphones, BookOpen, Filter } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -153,7 +153,7 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
         setCurrentSlide(0);
     }, [router, pathname, searchParams]);
 
-    const slides = useMemo(() => [
+    const slides = [
         // 0 - Intro
         {
             title: `JellyTrack Wrapped ${data.year}`,
@@ -401,7 +401,7 @@ export default function WrappedClient({ data }: { data: WrappedData }) {
                 </div>
             )
         }
-    ], [data, t]);
+    ];
 
     const nextSlide = () => {
         if (currentSlide < slides.length - 1) setCurrentSlide(c => c + 1);

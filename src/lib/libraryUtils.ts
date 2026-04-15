@@ -29,7 +29,7 @@ export type ServerLibraryScope = {
  * and the local Database, filtering out ghost names and pseudo-libraries.
  */
 export async function getSanitizedLibraryNames() {
-  let jellyfinNames: string[] = [];
+  const jellyfinNames: string[] = [];
 
   // 1. Fetch from all configured Jellyfin servers
   const configuredServers = await getConfiguredJellyfinServers().catch(() => []);

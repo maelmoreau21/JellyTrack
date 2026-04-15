@@ -349,6 +349,9 @@ export default async function LogsPage({
     );
 
     if (candidateIps.length > 0) {
+        // Date.now() is intentionally used here to compute a recent window on the server.
+        // The react compiler purity rule flags Date.now as impure; disable for this line.
+        // eslint-disable-next-line react-hooks/purity
         const hotIpSince = new Date(Date.now() - hotIpWindowMs);
         const hotIpRows = await prisma.playbackHistory.groupBy({
             by: ["ipAddress"],
