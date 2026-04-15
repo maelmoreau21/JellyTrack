@@ -10,7 +10,7 @@
     "retention:run": "node scripts/retention.js",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
