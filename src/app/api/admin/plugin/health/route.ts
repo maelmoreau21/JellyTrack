@@ -18,6 +18,7 @@ const DEFAULT_GAP_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_GAP_WARNING_SEC
 const DEFAULT_GAP_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_GAP_CRITICAL_SEC || 180);
 const DEFAULT_JITTER_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_WARNING_SEC || 15);
 const DEFAULT_JITTER_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_CRITICAL_SEC || 30);
+const DEFAULT_HEARTBEAT_TIMEOUT_SEC = Number(process.env.PLUGIN_HEARTBEAT_TIMEOUT_SEC) || 600;
 
 function clampPositiveNumber(value: number, fallback: number): number {
     if (!Number.isFinite(value) || value <= 0) return fallback;
@@ -69,7 +70,11 @@ async function buildPluginHealthSnapshot(req: Request) {
     const now = Date.now();
     const nowDate = new Date(now);
     const dayAgo = new Date(now - 24 * 60 * 60 * 1000);
-    const staleThreshold = new Date(now - 5 * 60 * 1000);
+    const parsedHeartbeatTimeoutSec = Number(process.env.PLUGIN_HEARTBEAT_TIMEOUT_SEC);
+    const HEARTBEAT_TIMEOUT_SEC = Number.isFinite(parsedHeartbeatTimeoutSec) && parsedHeartbeatTimeoutSec > 0
+        ? parsedHeartbeatTimeoutSec
+        : DEFAULT_HEARTBEAT_TIMEOUT_SEC;
+    const staleThreshold = new Date(now - HEARTBEAT_TIMEOUT_SEC * 1000);
 
     const auditModel = (prisma as any).adminAuditLog;
 
@@ -200,7 +205,7 @@ async function buildPluginHealthSnapshot(req: Request) {
     return {
         generatedAt: nowDate.toISOString(),
         plugin: {
-            connected: heartbeatGapSec !== null ? heartbeatGapSec <= 120 : false,
+            connected: heartbeatGapSec !== null ? heartbeatGapSec <= HEARTBEAT_TIMEOUT_SEC : false,
             lastSeen: settings?.pluginLastSeen || null,
             version: settings?.pluginVersion || null,
             serverName: settings?.pluginServerName || null,

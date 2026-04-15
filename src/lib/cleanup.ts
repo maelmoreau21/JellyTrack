@@ -15,7 +15,13 @@ import { clampDuration } from "@/lib/utils";
  */
 export async function cleanupOrphanedSessions() {
     const ORPHAN_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours (backstop)
-    const HEARTBEAT_TIMEOUT_MS = 5 * 60 * 1000;      // 5 minutes (stale stream)
+    const DEFAULT_HEARTBEAT_TIMEOUT_SEC = 600; // default to plugin heartbeat interval (10 minutes)
+    const parsedHeartbeatTimeoutSec = Number(process.env.PLUGIN_HEARTBEAT_TIMEOUT_SEC);
+    const HEARTBEAT_TIMEOUT_SEC =
+        Number.isFinite(parsedHeartbeatTimeoutSec) && parsedHeartbeatTimeoutSec > 0
+            ? parsedHeartbeatTimeoutSec
+            : DEFAULT_HEARTBEAT_TIMEOUT_SEC;
+    const HEARTBEAT_TIMEOUT_MS = HEARTBEAT_TIMEOUT_SEC * 1000;
     const now = new Date();
 
     try {
@@ -31,7 +37,9 @@ export async function cleanupOrphanedSessions() {
 
         let staleDeletedCount = 0;
         if (staleStreamList.length > 0) {
-            console.log(`[Cleanup] Found ${staleStreamList.length} stale streams (no heartbeat for 5+ mins).`);
+            console.log(
+                `[Cleanup] Found ${staleStreamList.length} stale streams (no heartbeat for ${HEARTBEAT_TIMEOUT_SEC}s).`
+            );
             for (const stream of staleStreamList) {
                 console.log(`[Cleanup] Removing ghost stream: ${stream.sessionId} ("${stream.media?.title || 'Unknown'}")`);
                 await prisma.activeStream.delete({ where: { id: stream.id } });
