@@ -86,12 +86,12 @@ type HeartbeatThresholds = {
 
 type Severity = "ok" | "warning" | "critical" | "na";
 
-const THRESHOLDS_STORAGE_KEY = "plugin-health-thresholds-v1";
+const THRESHOLDS_STORAGE_KEY = "plugin-health-thresholds-v2";
 const FALLBACK_THRESHOLDS: HeartbeatThresholds = {
-    gapWarningSec: 90,
-    gapCriticalSec: 180,
-    jitterWarningSec: 15,
-    jitterCriticalSec: 30,
+    gapWarningSec: 600,
+    gapCriticalSec: 900,
+    jitterWarningSec: 180,
+    jitterCriticalSec: 300,
 };
 
 function parsePositive(value: unknown, fallback: number): number {

@@ -153,3 +153,8 @@ Projet personnel — usage privé.
 ---
 
 Built with Next.js, Prisma, Redis & beaucoup de ☕
+
+## Dépôts liés
+
+- Application JellyTrack : https://github.com/maelmoreau21/JellyTrack
+- Plugin JellyTrack pour Jellyfin : https://github.com/maelmoreau21/JellyTrack.Plugin
