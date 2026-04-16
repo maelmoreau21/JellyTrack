@@ -14,11 +14,19 @@ const FAILURE_ACTIONS = [
     "plugin.events.invalid_content_type",
 ] as const;
 
-const DEFAULT_GAP_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_GAP_WARNING_SEC || 90);
-const DEFAULT_GAP_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_GAP_CRITICAL_SEC || 180);
-const DEFAULT_JITTER_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_WARNING_SEC || 15);
-const DEFAULT_JITTER_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_CRITICAL_SEC || 30);
-const DEFAULT_HEARTBEAT_TIMEOUT_SEC = Number(process.env.PLUGIN_HEARTBEAT_TIMEOUT_SEC) || 600;
+const rawHeartbeatTimeoutSec = Number(process.env.PLUGIN_HEARTBEAT_TIMEOUT_SEC);
+const DEFAULT_HEARTBEAT_TIMEOUT_SEC = Number.isFinite(rawHeartbeatTimeoutSec) && rawHeartbeatTimeoutSec > 0
+    ? rawHeartbeatTimeoutSec
+    : 600;
+const BASELINE_GAP_WARNING_SEC = Math.max(60, Math.round(DEFAULT_HEARTBEAT_TIMEOUT_SEC));
+const BASELINE_GAP_CRITICAL_SEC = Math.max(BASELINE_GAP_WARNING_SEC + 1, Math.round(DEFAULT_HEARTBEAT_TIMEOUT_SEC * 1.5));
+const BASELINE_JITTER_WARNING_SEC = Math.max(30, Math.round(DEFAULT_HEARTBEAT_TIMEOUT_SEC * 0.3));
+const BASELINE_JITTER_CRITICAL_SEC = Math.max(BASELINE_JITTER_WARNING_SEC + 1, Math.round(DEFAULT_HEARTBEAT_TIMEOUT_SEC * 0.5));
+
+const DEFAULT_GAP_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_GAP_WARNING_SEC);
+const DEFAULT_GAP_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_GAP_CRITICAL_SEC);
+const DEFAULT_JITTER_WARNING_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_WARNING_SEC);
+const DEFAULT_JITTER_CRITICAL_SEC = Number(process.env.PLUGIN_HEALTH_JITTER_CRITICAL_SEC);
 
 function clampPositiveNumber(value: number, fallback: number): number {
     if (!Number.isFinite(value) || value <= 0) return fallback;
@@ -26,10 +34,10 @@ function clampPositiveNumber(value: number, fallback: number): number {
 }
 
 const HEARTBEAT_THRESHOLD_DEFAULTS = {
-    gapWarningSec: clampPositiveNumber(DEFAULT_GAP_WARNING_SEC, 90),
-    gapCriticalSec: clampPositiveNumber(DEFAULT_GAP_CRITICAL_SEC, 180),
-    jitterWarningSec: clampPositiveNumber(DEFAULT_JITTER_WARNING_SEC, 15),
-    jitterCriticalSec: clampPositiveNumber(DEFAULT_JITTER_CRITICAL_SEC, 30),
+    gapWarningSec: clampPositiveNumber(DEFAULT_GAP_WARNING_SEC, BASELINE_GAP_WARNING_SEC),
+    gapCriticalSec: clampPositiveNumber(DEFAULT_GAP_CRITICAL_SEC, BASELINE_GAP_CRITICAL_SEC),
+    jitterWarningSec: clampPositiveNumber(DEFAULT_JITTER_WARNING_SEC, BASELINE_JITTER_WARNING_SEC),
+    jitterCriticalSec: clampPositiveNumber(DEFAULT_JITTER_CRITICAL_SEC, BASELINE_JITTER_CRITICAL_SEC),
 };
 
 if (HEARTBEAT_THRESHOLD_DEFAULTS.gapCriticalSec <= HEARTBEAT_THRESHOLD_DEFAULTS.gapWarningSec) {
