@@ -282,7 +282,7 @@ const getDashboardMetrics = unstable_cache(
           clientName: true,
           playMethod: true,
           userId: true,
-          media: { select: { type: true, durationMs: true } },
+          media: { select: { type: true, durationMs: true, parentId: true } },
         },
         orderBy: { startedAt: "asc" },
       }) as Promise<History[]>,
@@ -336,6 +336,8 @@ const getDashboardMetrics = unstable_cache(
       return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
     };
 
+    const seriesTracker = new Map<string, Set<string>>();
+
     histories.forEach((h) => {
       if (h.playMethod === "DirectPlay") directPlayCount++;
 
@@ -366,7 +368,17 @@ const getDashboardMetrics = unstable_cache(
         movieHours += hours;
       } else if (mType.includes("series") || mType.includes("episode")) {
         entry.seriesVolume += hours;
-        entry.seriesPlays += 1;
+        
+        // Tracking unique series per time bucket
+        const seriesId = h.media?.parentId || 'unknown';
+        if (!seriesTracker.has(key)) seriesTracker.set(key, new Set());
+        const bucketSeries = seriesTracker.get(key)!;
+        
+        if (!bucketSeries.has(seriesId)) {
+          entry.seriesPlays += 1;
+          bucketSeries.add(seriesId);
+        }
+
         seriesViews++;
         seriesHours += hours;
       } else if (mType.includes("audio") || mType.includes("track")) {

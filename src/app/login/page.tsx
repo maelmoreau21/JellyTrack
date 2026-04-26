@@ -18,8 +18,8 @@ export default async function LoginPage() {
                 <Card className="w-full max-w-sm bg-white/80 dark:bg-zinc-900/80 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-xl shadow-2xl">
                     <CardHeader className="space-y-3 pb-6 border-b border-zinc-200/60 dark:border-zinc-800/50">
                         <div className="flex flex-col items-center gap-3 text-center">
-                            <div className="p-3 bg-indigo-500/10 rounded-full border border-indigo-500/20">
-                                <Lock className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
+                            <div className="p-2 bg-white/10 rounded-xl border border-white/10 shadow-inner overflow-hidden">
+                                <img src="/logo.svg" alt="Logo" className="w-10 h-10" />
                             </div>
                             <div>
                                 <CardTitle className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">{t('title')}</CardTitle>

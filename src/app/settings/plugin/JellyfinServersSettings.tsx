@@ -314,10 +314,13 @@ export function JellyfinServersSettings() {
               <div className="lg:col-span-3 flex items-end">
                 <button
                   type="button"
-                  onClick={() => setGlobalPluginApiKey('')}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-amber-300/40 hover:bg-amber-500/20 text-xs font-medium"
+                  onClick={() => {
+                    setGlobalPluginApiKey('');
+                    setMessage({ type: 'success', text: 'Clé locale effacée de la session.' });
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-amber-300/40 hover:bg-amber-500/20 text-xs font-medium transition-colors"
                 >
-                  Effacer
+                  Effacer la locale
                 </button>
               </div>
             </div>

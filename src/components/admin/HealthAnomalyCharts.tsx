@@ -27,7 +27,7 @@ export function HealthAnomalyCharts({ timeline }: { timeline: TimelinePoint[] })
     }));
 
     // Detect whether there are any non-zero anomaly values
-    const hasTimelineValues = safeTimeline.some(pt => (pt.monitorErrors || pt.syncErrors || pt.backupErrors || pt.cleanupOps || pt.syncSuccesses) > 0);
+    const hasTimelineValues = safeTimeline.some(pt => (pt.monitorErrors || pt.syncErrors || pt.backupErrors || pt.cleanupOps) > 0);
 
     if (!hasTimelineValues) {
         return (
@@ -76,7 +76,6 @@ export function HealthAnomalyCharts({ timeline }: { timeline: TimelinePoint[] })
                             iconType="circle"
                             wrapperStyle={{ fontSize: "11px", fontWeight: 600, paddingBottom: "16px" }}
                         />
-                        <Area type="monotone" dataKey="syncSuccesses" name={t('anomalySyncSuccess')} stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.16} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
                         <Area type="monotone" dataKey="cleanupOps" name={t('anomalyCleanupOps')} stroke="#10b981" fill="#10b981" fillOpacity={0.16} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
                         <Area type="monotone" dataKey="monitorErrors" name={t('anomalyMonitorErrors')} stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.16} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
                         <Area type="monotone" dataKey="syncErrors" name={t('anomalySyncErrors')} stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.16} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />

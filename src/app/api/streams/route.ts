@@ -26,7 +26,7 @@ export async function GET(req: Request) {
             where: selectedServerScope ? { serverId: selectedServerScope } : undefined,
             include: {
                 user: { select: { username: true } },
-                media: { select: { title: true, type: true, parentId: true, artist: true, durationMs: true, jellyfinMediaId: true } }
+                media: { select: { title: true, type: true, parentId: true, artist: true, durationMs: true, jellyfinMediaId: true, size: true } }
             }
         });
 
@@ -107,7 +107,12 @@ export async function GET(req: Request) {
                     || payload?.isTranscoding === true
                     || payload?.IsTranscoding === true;
                     
-                totalBandwidthMbps += isTranscoding ? 12 : 6;
+                const streamBitrate = dbStream.bitrate ?? payload?.bitrate ?? (itemMedia.size && itemMedia.durationMs ? Math.round(Number(itemMedia.size) * 8 / (Number(itemMedia.durationMs) / 1000)) : null);
+                if (streamBitrate) {
+                    totalBandwidthMbps += streamBitrate / 1000000;
+                } else {
+                    totalBandwidthMbps += isTranscoding ? 12 : 6;
+                }
 
                 const itemMedia = dbStream.media;
                 const parentMedia = itemMedia.parentId ? mediaHierarchyMap.get(`${dbStream.serverId}:${itemMedia.parentId}`) : null;
