@@ -36,7 +36,7 @@ export async function getPredictions(): Promise<{
   const previousWeekStart = new Date(currentWeekStart);
   previousWeekStart.setDate(previousWeekStart.getDate() - 7);
 
-  const [currentWeek, previousWeek] = await Promise.all([
+  const [currentWeekRows, previousWeekRows] = await Promise.all([
     prisma.playbackHistory.groupBy({
       by: ["mediaId"],
       _count: { id: true },
@@ -44,8 +44,6 @@ export async function getPredictions(): Promise<{
         startedAt: { gte: currentWeekStart },
         durationWatched: { gte: 60 }, // Skip zaps
       },
-      orderBy: { _count: { id: "desc" } },
-      take: 100,
     }),
     prisma.playbackHistory.groupBy({
       by: ["mediaId"],
@@ -57,52 +55,106 @@ export async function getPredictions(): Promise<{
     }),
   ]);
 
-  const prevMap = new Map(previousWeek.map((p) => [p.mediaId, p._count.id]));
+  const allMediaIds = Array.from(new Set([
+    ...currentWeekRows.map(r => r.mediaId),
+    ...previousWeekRows.map(r => r.mediaId)
+  ]));
 
-  // Calculate growth + trend score
-  const growthData = currentWeek.map((c) => {
-    const prev = prevMap.get(c.mediaId) || 0;
-    const growth = prev > 0 ? ((c._count.id - prev) / prev) * 100 : c._count.id > 1 ? 100 : 0;
-    // Trend score = current plays * (1 + growth/100), weighted towards higher absolute plays
-    const trendScore = c._count.id * (1 + Math.max(0, growth) / 200);
-    return {
-      mediaId: c.mediaId,
-      currentWeekPlays: c._count.id,
-      previousWeekPlays: prev,
-      growthPercent: Math.round(growth),
-      trendScore,
-    };
+  const allMedia = await prisma.media.findMany({
+    where: { id: { in: allMediaIds } },
+    select: { id: true, title: true, type: true, parentId: true, jellyfinMediaId: true }
   });
 
-  // Sort by trend score and take top 10
-  const topTrending = growthData
-    .filter((d) => d.growthPercent > 0 || d.currentWeekPlays >= 3)
-    .sort((a, b) => b.trendScore - a.trendScore)
-    .slice(0, 10);
+  const mediaMap = new Map(allMedia.map(m => [m.id, m]));
 
-  // Resolve media info
-  const mediaIds = topTrending.map((t) => t.mediaId);
-  const mediaInfo = await prisma.media.findMany({
-    where: { id: { in: mediaIds } },
-    select: { id: true, title: true, jellyfinMediaId: true, type: true },
-  });
-  const mediaMap = new Map(mediaInfo.map((m) => [m.id, m]));
+  // Resolve Series hierarchy for episodes
+  const episodeMedia = allMedia.filter(m => m.type === 'Episode');
+  const seasonIds = Array.from(new Set(episodeMedia.map(m => m.parentId).filter(Boolean) as string[]));
+  
+  const seasons = seasonIds.length > 0 ? await prisma.media.findMany({
+    where: { jellyfinMediaId: { in: seasonIds }, type: 'Season' },
+    select: { jellyfinMediaId: true, parentId: true, title: true }
+  }) : [];
+  
+  const seasonMap = new Map(seasons.map(s => [s.jellyfinMediaId, s]));
+  const seriesIds = Array.from(new Set(seasons.map(s => s.parentId).filter(Boolean) as string[]));
 
-  const trendingMedia: TrendingItem[] = topTrending
-    .map((t) => {
-      const media = mediaMap.get(t.mediaId);
-      if (!media) return null;
+  const series = seriesIds.length > 0 ? await prisma.media.findMany({
+    where: { jellyfinMediaId: { in: seriesIds }, type: 'Series' },
+    select: { jellyfinMediaId: true, title: true }
+  }) : [];
+
+  const seriesMap = new Map(series.map(s => [s.jellyfinMediaId, s]));
+
+  type AggItem = {
+    id: string;
+    title: string;
+    type: string;
+    current: number;
+    previous: number;
+  };
+
+  const aggMap = new Map<string, AggItem>();
+
+  function processRows(rows: typeof currentWeekRows, isCurrent: boolean) {
+    rows.forEach(row => {
+      const media = mediaMap.get(row.mediaId);
+      if (!media) return;
+
+      let aggId = media.id;
+      let aggTitle = media.title;
+      let aggType = media.type;
+      let jfId = media.jellyfinMediaId;
+
+      if (media.type === 'Episode' && media.parentId) {
+        const season = seasonMap.get(media.parentId);
+        if (season && season.parentId) {
+          const s = seriesMap.get(season.parentId);
+          if (s) {
+            aggId = `series:${s.jellyfinMediaId}`;
+            aggTitle = s.title;
+            aggType = 'Series';
+            jfId = s.jellyfinMediaId;
+          }
+        }
+      }
+
+      const existing = aggMap.get(aggId) || { 
+        id: jfId, 
+        title: aggTitle, 
+        type: aggType, 
+        current: 0, 
+        previous: 0 
+      };
+
+      if (isCurrent) existing.current += row._count.id;
+      else existing.previous += row._count.id;
+
+      aggMap.set(aggId, existing);
+    });
+  }
+
+  processRows(currentWeekRows, true);
+  processRows(previousWeekRows, false);
+
+  const trendingMedia: TrendingItem[] = Array.from(aggMap.values())
+    .map(item => {
+      const growth = item.previous > 0 ? ((item.current - item.previous) / item.previous) * 100 : item.current > 1 ? 100 : 0;
+      const trendScore = item.current * (1 + Math.max(0, growth) / 200);
+      
       return {
-        title: media.title,
-        jellyfinMediaId: media.jellyfinMediaId,
-        mediaType: media.type,
-        currentWeekPlays: t.currentWeekPlays,
-        previousWeekPlays: t.previousWeekPlays,
-        growthPercent: t.growthPercent,
-        trendScore: Math.round(t.trendScore * 10) / 10,
+        title: item.title,
+        jellyfinMediaId: item.id,
+        mediaType: item.type,
+        currentWeekPlays: item.current,
+        previousWeekPlays: item.previous,
+        growthPercent: Math.round(growth),
+        trendScore: Math.round(trendScore * 10) / 10,
       };
     })
-    .filter(Boolean) as TrendingItem[];
+    .filter(d => d.growthPercent > 0 || d.currentWeekPlays >= 3)
+    .sort((a, b) => b.trendScore - a.trendScore)
+    .slice(0, 10);
 
   // --- 2. PEAK PREDICTIONS ---
   // Analyze the last 4 weeks to build a pattern per (dayOfWeek, hour)

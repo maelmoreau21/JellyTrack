@@ -6,6 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface LogFiltersProps {
     initialQuery: string;
@@ -30,9 +37,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
     const tc = useTranslations('common');
     const tch = useTranslations('charts');
 
-    const [isAdvancedOpen, setIsAdvancedOpen] = useState(
-        !!initialType || !!initialClient || !!initialAudio || !!initialSubtitle || !!initialDateFrom || !!initialDateTo || !!initialServers
-    );
+    const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
     const initialMediaTypes = initialType ? initialType.split(',').map(s => s.trim()).filter(Boolean) : [];
     const [mediaTypes, setMediaTypes] = useState<string[]>(initialMediaTypes);
     const validServerIds = new Set(serverOptions.map((server) => server.id));
@@ -85,13 +90,6 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
         router.push(`/logs?${params.toString()}`);
     };
 
-    const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const form = e.target.form;
-        if (form) {
-            // Request form dispatch to trigger handleSubmit properly
-            form.requestSubmit();
-        }
-    };
 
     return (
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -111,7 +109,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                     )}
                 </div>
                 <div className="flex flex-col md:flex-row gap-2 md:items-center w-full md:w-auto">
-                    <div className="flex items-center justify-between md:justify-start w-full md:w-auto gap-2 pl-1 md:pr-3">
+                    <div className="flex items-center justify-between md:justify-start w-full md:w-auto gap-4 pl-1 md:pr-3">
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"
@@ -131,42 +129,41 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
 
                         <Button 
                             type="button" 
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            className="h-10 md:h-9 bg-zinc-100 dark:bg-slate-700/50 border-0 md:hidden"
+                            className="h-10 md:h-9 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
                         >
-                            <Filter className="w-4 h-4" />
-                            {isAdvancedOpen ? tc('close') : tc('filters')}
+                            <Filter className={`w-4 h-4 mr-2 ${isAdvancedOpen ? 'text-primary' : ''}`} />
+                            <span className="text-sm font-semibold">{tc('filters')}</span>
                         </Button>
                     </div>
 
-                    <div className="grid grid-cols-2 md:flex md:flex-row gap-2 w-full md:w-auto">
-                        <Button 
-                            type="button" 
-                            variant="outline"
-                            size="sm"
-                            className="hidden md:flex h-10 md:h-9 bg-zinc-100 dark:bg-slate-700/50 border-0"
-                            onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                        >
-                            <Filter className="w-4 h-4 mr-2" />
-                            {isAdvancedOpen ? tc('close') : tc('filters')}
-                        </Button>
 
-                        <div className="app-field rounded-md px-3 py-2 text-sm flex flex-row items-center justify-between md:justify-start cursor-pointer hover:bg-zinc-100 dark:hover:bg-slate-700/50 relative group h-10 md:h-9">
-                            <span className="font-semibold mr-2 flex items-center gap-2 truncate"><ArrowUpDown className="w-4 h-4" /> {t('sortBy')}</span>
-                            <ChevronDown className="w-4 h-4 shrink-0" />
-                            <select
-                                name="sort"
-                                defaultValue={initialSort}
-                                onChange={handleSortChange}
-                                className="absolute w-full h-full opacity-0 cursor-pointer left-0 top-0"
+                    <div className="grid grid-cols-2 md:flex md:flex-row gap-2 w-full md:w-auto">
+                        <div className="relative group h-10 md:h-9">
+                            <Select 
+                                defaultValue={initialSort} 
+                                onValueChange={(val) => {
+                                    const params = new URLSearchParams(searchParams.toString());
+                                    params.set("sort", val);
+                                    params.delete("page");
+                                    router.push(`/logs?${params.toString()}`);
+                                }}
                             >
-                                <option value="date_desc">{t('sortDateDesc')}</option>
-                                <option value="date_asc">{t('sortDateAsc')}</option>
-                                <option value="duration_desc">{t('sortDurationDesc')}</option>
-                                <option value="duration_asc">{t('sortDurationAsc')}</option>
-                            </select>
+                                <SelectTrigger className="h-full w-full md:w-[200px] bg-zinc-100 dark:bg-slate-700/50 border-0 font-semibold text-zinc-700 dark:text-zinc-200">
+                                    <div className="flex items-center gap-2">
+                                        <ArrowUpDown className="w-4 h-4" />
+                                        <SelectValue placeholder={t('sortBy')} />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="date_desc">{t('sortDateDesc')}</SelectItem>
+                                    <SelectItem value="date_asc">{t('sortDateAsc')}</SelectItem>
+                                    <SelectItem value="duration_desc">{t('sortDurationDesc')}</SelectItem>
+                                    <SelectItem value="duration_asc">{t('sortDurationAsc')}</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         
                         <button type="submit" className="bg-primary text-primary-foreground font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors h-10 md:h-9 md:hidden lg:block order-last md:order-none">
@@ -186,92 +183,94 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
             </div>
 
             {isAdvancedOpen && (
-                <div className="col-span-1 md:col-span-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col gap-5 mt-2 transition-all">
+                <div className="col-span-1 md:col-span-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col gap-4 mt-1 transition-all">
                     
-                    {/* Media Type Segmented Control */}
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('typeFilter') || 'Type de média'}</label>
-                        <div className="flex flex-wrap items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-fit">
-                            {[
-                                { value: "", icon: null, labelKey: "all" },
-                                { value: "Movie", icon: Film, labelKey: "moviesFilter" },
-                                { value: "Episode", icon: Tv, labelKey: "seriesFilter" },
-                                { value: "Audio", icon: Music, labelKey: "musicFilter" },
-                                { value: "AudioBook", icon: BookOpen, labelKey: "booksFilter" },
-                            ].map(({ value, icon: Icon, labelKey }) => {
-                                const isActive = value ? mediaTypes.includes(value) : mediaTypes.length === 0;
-                                return (
-                                    <button
-                                        key={value || "all"}
-                                        type="button"
-                                        onClick={() => {
-                                            if (!value) {
-                                                setMediaTypes([]);
-                                            } else {
-                                                setMediaTypes(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
-                                            }
-                                        }}
-                                        className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                                            isActive
-                                                ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
-                                        }`}
-                                    >
-                                        {Icon && <Icon className="w-4 h-4" />}
-                                        {labelKey === "all" ? tc('all') : t(labelKey)}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {multiServerEnabled && serverOptions.length > 1 && (
-                        <div className="space-y-2">
-                            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{tch('server')}</label>
+                    <div className="flex flex-col lg:flex-row gap-6">
+                        {/* Media Type Segmented Control */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{t?.('typeFilter') || 'Type de média'}</label>
                             <div className="flex flex-wrap items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-fit">
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedServers([])}
-                                    className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                                        allServersSelected
-                                            ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                            : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
-                                    }`}
-                                >
-                                    {tc('all')}
-                                </button>
-
-                                {serverOptions.map((server) => {
-                                    const isActive = allServersSelected ? true : selectedServers.includes(server.id);
+                                {[
+                                    { value: "", icon: null, labelKey: "all" },
+                                    { value: "Movie", icon: Film, labelKey: "moviesFilter" },
+                                    { value: "Episode", icon: Tv, labelKey: "seriesFilter" },
+                                    { value: "Audio", icon: Music, labelKey: "musicFilter" },
+                                    { value: "AudioBook", icon: BookOpen, labelKey: "booksFilter" },
+                                ].map(({ value, icon: Icon, labelKey }) => {
+                                    const isActive = value ? mediaTypes.includes(value) : mediaTypes.length === 0;
                                     return (
                                         <button
-                                            key={server.id}
+                                            key={value || "all"}
                                             type="button"
                                             onClick={() => {
-                                                if (allServersSelected) {
-                                                    setSelectedServers([server.id]);
-                                                    return;
+                                                if (!value) {
+                                                    setMediaTypes([]);
+                                                } else {
+                                                    setMediaTypes(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
                                                 }
-                                                setSelectedServers((prev) =>
-                                                    prev.includes(server.id)
-                                                        ? prev.filter((id) => id !== server.id)
-                                                        : [...prev, server.id]
-                                                );
                                             }}
-                                            className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                                            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
                                                 isActive
                                                     ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
                                                     : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
                                             }`}
                                         >
-                                            <Server className="w-4 h-4" />
-                                            {server.name}
+                                            {Icon && <Icon className="w-3.5 h-3.5" />}
+                                            {labelKey === "all" ? tc('all') : t(labelKey)}
                                         </button>
                                     );
                                 })}
                             </div>
                         </div>
-                    )}
+
+                        {multiServerEnabled && serverOptions.length > 1 && (
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{tch('server')}</label>
+                                <div className="flex flex-wrap items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-fit">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedServers([])}
+                                        className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                                            allServersSelected
+                                                ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
+                                                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                                        }`}
+                                    >
+                                        {tc('all')}
+                                    </button>
+
+                                    {serverOptions.map((server) => {
+                                        const isActive = allServersSelected ? true : selectedServers.includes(server.id);
+                                        return (
+                                            <button
+                                                key={server.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (allServersSelected) {
+                                                        setSelectedServers([server.id]);
+                                                        return;
+                                                    }
+                                                    setSelectedServers((prev) =>
+                                                        prev.includes(server.id)
+                                                            ? prev.filter((id) => id !== server.id)
+                                                            : [...prev, server.id]
+                                                    );
+                                                }}
+                                                className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                                                    isActive
+                                                        ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
+                                                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                                                }`}
+                                            >
+                                                <Server className="w-3.5 h-3.5" />
+                                                {server.name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="space-y-1.5 flex flex-col">

@@ -63,7 +63,6 @@ export function JellyfinServersSettings() {
   const [copiedPluginKeyServerId, setCopiedPluginKeyServerId] = useState<string | null>(null);
   const [pluginKeyVisible, setPluginKeyVisible] = useState<Record<string, boolean>>({});
   const [pluginKeyByServerId, setPluginKeyByServerId] = useState<Record<string, string>>({});
-  const [globalPluginApiKey, setGlobalPluginApiKey] = useState<string | null>(null);
   const [globalPluginKeyLoading, setGlobalPluginKeyLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -128,24 +127,15 @@ export function JellyfinServersSettings() {
     }
   };
 
-  const fetchServerPluginKey = async (id?: string, jellyfinServerId?: string, explicitGlobalApiKey?: string) => {
+  const fetchServerPluginKey = async (id?: string, jellyfinServerId?: string) => {
     if (!id && !jellyfinServerId) return null;
-
-    const rawGlobalApiKey = explicitGlobalApiKey || globalPluginApiKey || '';
-    if (!rawGlobalApiKey) {
-      setMessage({
-        type: 'error',
-        text: 'La clé plugin globale brute n est pas disponible dans cette session. Collez votre clé globale ci-dessous pour dériver la clé serveur sans rotation.',
-      });
-      return null;
-    }
 
     setPluginLoadingServerId(id || null);
     try {
       const res = await fetch('/api/settings/jellyfin-servers/plugin-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, jellyfinServerId, globalApiKey: rawGlobalApiKey }),
+        body: JSON.stringify({ id, jellyfinServerId }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -292,40 +282,7 @@ export function JellyfinServersSettings() {
           </div>
         )}
 
-        {pluginKeyReady && (
-          <div className="p-3 rounded-md flex flex-col gap-3 text-sm border bg-amber-500/10 text-amber-100 border-amber-500/30">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 mt-0.5" />
-              <div>
-                <p className="font-semibold text-amber-50">Clé globale brute (optionnelle)</p>
-                <p className="text-amber-100/90">Collez votre clé plugin globale pour dériver les clés serveur sans rotation automatique.</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-2">
-              <div className="lg:col-span-9">
-                <Input
-                  type="password"
-                  value={globalPluginApiKey || ''}
-                  onChange={(event) => setGlobalPluginApiKey(event.target.value)}
-                  placeholder="jt_..."
-                  className="font-mono text-xs"
-                />
-              </div>
-              <div className="lg:col-span-3 flex items-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGlobalPluginApiKey('');
-                    setMessage({ type: 'success', text: 'Clé locale effacée de la session.' });
-                  }}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-amber-300/40 hover:bg-amber-500/20 text-xs font-medium transition-colors"
-                >
-                  Effacer la locale
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         <div className="space-y-3">
           {loading ? (

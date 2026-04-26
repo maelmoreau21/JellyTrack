@@ -531,7 +531,17 @@
     "smartIpBurstLabel": "IP avec activité anormale",
     "smartIpBurstItem": "{ip}: {count} tentatives sur 24h",
     "smartNewCountryTag": "Nouveau pays",
-    "smartIpBurstTag": "{count} tentatives/24h"
+    "smartIpBurstTag": "{count} tentatives/24h",
+    "tabApplication": "Application",
+    "tabSystem": "Système",
+    "system": {
+      "colAction": "Action",
+      "colSource": "Source",
+      "colMessage": "Message",
+      "colUser": "Acteur",
+      "typeAudit": "Audit",
+      "typeHealth": "Santé"
+    }
   },
   "media": {
     "1080pLabel": "1080p FHD",
