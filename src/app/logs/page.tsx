@@ -449,7 +449,7 @@ export default async function LogsPage({
     return (
         <div className="flex-col md:flex dashboard-page">
             <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1800px] mx-auto w-full">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 flex items-center gap-3">
                             <Terminal className="w-8 h-8 text-primary" />
@@ -460,34 +460,34 @@ export default async function LogsPage({
                             {totalCount > 0 && <span className="text-zinc-500"> — {totalCount} {tl('totalEntries')}</span>}
                         </p>
                     </div>
-                </div>
 
-                {/* Tab Switcher */}
-                <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-fit mb-6">
-                    <Link
-                        href={buildPageUrl(1, 'application')}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
-                            activeTab === 'application'
-                                ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
-                        )}
-                    >
-                        <PlayCircle className="w-4 h-4" />
-                        {tl('tabApplication')}
-                    </Link>
-                    <Link
-                        href={buildPageUrl(1, 'system')}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
-                            activeTab === 'system'
-                                ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
-                        )}
-                    >
-                        <Terminal className="w-4 h-4" />
-                        {tl('tabSystem')}
-                    </Link>
+                    {/* Tab Switcher moved to header */}
+                    <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg shadow-inner">
+                        <Link
+                            href={buildPageUrl(1, 'application')}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
+                                activeTab === 'application'
+                                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
+                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                            )}
+                        >
+                            <PlayCircle className="w-4 h-4" />
+                            {tl('tabApplication')}
+                        </Link>
+                        <Link
+                            href={buildPageUrl(1, 'system')}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
+                                activeTab === 'system'
+                                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
+                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                            )}
+                        >
+                            <Terminal className="w-4 h-4" />
+                            {tl('tabSystem')}
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="space-y-4">

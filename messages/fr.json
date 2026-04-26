@@ -446,7 +446,7 @@
     "password": "Mot de passe",
     "signIn": "Se connecter",
     "subtitle": "Authentification via Jellyfin",
-    "title": "Connexion Admin",
+    "title": "Connexion JellyTrack",
     "unexpectedError": "Erreur inattendue lors de la connexion.",
     "username": "Nom d'utilisateur",
     "verifying": "Vérification..."
@@ -490,7 +490,7 @@
     "searchPlaceholder": "Chercher par utilisateur, titre, IP...",
     "seasonType": "Saison",
     "seriesFilter": "Épisodes",
-    "sortBy": "Trier par",
+    "sortBy": "Trier",
     "sortDateAsc": "Date (Ancien en premier)",
     "sortDateDesc": "Date (Récent en premier)",
     "sortDurationAsc": "Durée (Court en premier)",

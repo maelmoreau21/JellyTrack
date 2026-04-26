@@ -18,6 +18,11 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: 'JellyTrack Dashboard',
   description: 'Advanced analytics for Jellyfin',
+  icons: {
+    icon: '/logo.svg',
+    shortcut: '/logo.svg',
+    apple: '/logo.svg',
+  },
 }
 
 export default async function RootLayout({

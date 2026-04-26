@@ -82,8 +82,8 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
         <>
             <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border bg-sidebar px-5">
                 <Link href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`} className="flex items-center gap-2 text-lg font-semibold tracking-tight text-sidebar-foreground transition-opacity hover:opacity-90">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent overflow-hidden">
-                        <img src="/logo.svg" alt="Logo" className="w-6 h-6" />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-sidebar-border bg-sidebar-accent overflow-hidden shadow-sm">
+                        <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
                     </div>
                     <span>JellyTrack</span>
                 </Link>
@@ -163,7 +163,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                     <Menu className="w-6 h-6" />
                 </button>
                 <Link href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`} className="ml-3 text-lg font-bold tracking-tight text-primary flex items-center gap-2">
-                    <img src="/logo.svg" alt="Logo" className="w-6 h-6" />
+                    <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
                     <span>JellyTrack</span>
                 </Link>
             </div>
