@@ -492,7 +492,7 @@
     "seriesFilter": "Épisodes",
     "sortBy": "Trier",
     "sortDateAsc": "Date (Ancien en premier)",
-    "sortDateDesc": "Date (Récent en premier)",
+    "sortDateDesc": "Trier",
     "sortDurationAsc": "Durée (Court en premier)",
     "sortDurationDesc": "Durée (Long en premier)",
     "subtitleFilter": "Sous-titres (Codec/Langue)",

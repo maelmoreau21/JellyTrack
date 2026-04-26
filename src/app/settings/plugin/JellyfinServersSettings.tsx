@@ -63,6 +63,7 @@ export function JellyfinServersSettings() {
   const [copiedPluginKeyServerId, setCopiedPluginKeyServerId] = useState<string | null>(null);
   const [pluginKeyVisible, setPluginKeyVisible] = useState<Record<string, boolean>>({});
   const [pluginKeyByServerId, setPluginKeyByServerId] = useState<Record<string, string>>({});
+  const [globalPluginApiKey, setGlobalPluginApiKey] = useState<string>('');
   const [globalPluginKeyLoading, setGlobalPluginKeyLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -372,13 +373,13 @@ export function JellyfinServersSettings() {
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-2">
                     <div className="xl:col-span-8 relative">
                       <Label className="text-xs">Clé plugin serveur</Label>
-                      <Input readOnly type={pluginKeyVisible[server.id] ? 'text' : 'password'} value={pluginKeyVisible[server.id] ? pluginKeyByServerId[server.id] || '' : server.pluginKeyMasked || ''} className="font-mono text-xs pr-10" placeholder={pluginKeyReady ? (hasGlobalPluginApiKey ? 'Cliquez sur Afficher' : 'Collez la clé globale ci-dessus') : 'Générez la clé plugin globale'} />
+                      <Input readOnly type={pluginKeyVisible[server.id] ? 'text' : 'password'} value={pluginKeyVisible[server.id] ? pluginKeyByServerId[server.id] || '' : server.pluginKeyMasked || ''} className="font-mono text-xs pr-10" placeholder={pluginKeyReady ? 'Cliquez sur Afficher' : 'Générez la clé plugin globale'} />
                       <button type="button" onClick={() => handleTogglePluginKeyVisibility(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="absolute right-2 top-[30px] text-zinc-500 hover:text-zinc-300 disabled:opacity-40">
                         {pluginKeyVisible[server.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                     <div className="xl:col-span-4 flex items-end">
-                      <button type="button" onClick={() => handleCopyPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id || (!hasGlobalPluginApiKey && !pluginKeyByServerId[server.id])} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
+                      <button type="button" onClick={() => handleCopyPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id || (!pluginKeyByServerId[server.id] && !server.hasPluginKey)} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
                         {pluginLoadingServerId === server.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
                         {copiedPluginKeyServerId === server.id ? 'Clé copiée' : 'Copier clé'}
                       </button>
@@ -386,7 +387,7 @@ export function JellyfinServersSettings() {
                   </div>
 
                   <div className="flex justify-end">
-                    <button type="button" onClick={() => handleDeriveServerPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id || !hasGlobalPluginApiKey} className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
+                    <button type="button" onClick={() => handleDeriveServerPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
                       {pluginLoadingServerId === server.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                       Deriver la cle serveur
                     </button>

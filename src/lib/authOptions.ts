@@ -8,6 +8,7 @@ import {
     getConfiguredJellyfinServers,
     type JellyfinAuthAttemptStatus,
 } from "@/lib/jellyfinServers";
+import { writeAdminAuditLog } from "@/lib/adminAudit";
 
 const authSecret = getResolvedAuthSecret();
 
@@ -144,6 +145,18 @@ export const authOptions: NextAuthOptions = {
 
                     // Successful login — reset rate limit counter
                     await resetLoginRateLimit(clientIp);
+
+                    // LOG AUDIT EVENT
+                    await writeAdminAuditLog({
+                        action: "Login successful",
+                        actorUserId: authenticatedUser.userId,
+                        actorUsername: authenticatedUser.username,
+                        ipAddress: clientIp,
+                        details: {
+                            server: authenticatedOn.name,
+                            isPrimary: authenticatedOn.isPrimary
+                        }
+                    });
 
                     return {
                         id: authenticatedUser.userId,

@@ -363,7 +363,7 @@ export default async function LogsPage({
     } else {
         // --- System Logs Logic (Audit & Health) ---
         const whereAudit: Prisma.AdminAuditLogWhereInput = {};
-        const whereHealth: Prisma.SystemHealthEventWhereInput = {};
+        const whereHealth: Prisma.SystemHealthEventWhereInput = { kind: { not: 'monitor_ping' } };
         
         if (query) {
             whereAudit.OR = [
