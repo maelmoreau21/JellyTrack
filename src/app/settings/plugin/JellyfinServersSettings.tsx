@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertCircle,
   CheckCircle2,
@@ -50,6 +51,7 @@ async function copyText(text: string): Promise<void> {
 }
 
 export function JellyfinServersSettings() {
+  const t = useTranslations("settings");
   const [servers, setServers] = useState<JellyfinServerRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -83,7 +85,7 @@ export function JellyfinServersSettings() {
     try {
       const res = await fetch('/api/settings/jellyfin-servers', { cache: 'no-store' });
       if (!res.ok) {
-        setMessage({ type: 'error', text: `Impossible de charger: ${res.status}` });
+        setMessage({ type: 'error', text: `${t('loadError')}: ${res.status}` });
         setLoading(false);
         return;
       }
@@ -95,7 +97,7 @@ export function JellyfinServersSettings() {
       setPluginConnected(Boolean(json.pluginConnected));
       setIsMultiMode(Boolean(json.isMultiMode));
     } catch (e) {
-      setMessage({ type: 'error', text: 'Erreur réseau lors du chargement des serveurs.' });
+      setMessage({ type: 'error', text: t('networkErrorFetchServers') });
     } finally {
       setLoading(false);
     }
@@ -119,10 +121,10 @@ export function JellyfinServersSettings() {
       const nextGlobalKey = typeof json.apiKey === 'string' ? json.apiKey : '';
       if (!nextGlobalKey) throw new Error('missing-key');
       setGlobalPluginApiKey(nextGlobalKey);
-      setMessage({ type: 'success', text: 'Clé plugin globale générée. Copiez maintenant les clés serveur (la clé brute n est plus récupérable ensuite).' });
+      setMessage({ type: 'success', text: t('globalPluginKeySuccess') });
       await fetchInfo();
     } catch (e) {
-      setMessage({ type: 'error', text: 'Impossible de générer la clé plugin globale.' });
+      setMessage({ type: 'error', text: t('globalPluginKeyError') });
     } finally {
       setGlobalPluginKeyLoading(false);
     }
@@ -136,17 +138,17 @@ export function JellyfinServersSettings() {
       const res = await fetch('/api/settings/jellyfin-servers/plugin-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, jellyfinServerId }),
+        body: JSON.stringify({ id, jellyfinServerId, globalApiKey: globalPluginApiKey }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        setMessage({ type: 'error', text: (err && err.error) || 'Impossible de récupérer la clé plugin.' });
+        setMessage({ type: 'error', text: (err && err.error) || t('pluginKeyFetchError') });
         return null;
       }
       const json = await res.json();
       return json.pluginApiKey as string | null;
     } catch (e) {
-      setMessage({ type: 'error', text: 'Erreur réseau lors de la récupération de la clé plugin.' });
+      setMessage({ type: 'error', text: t('networkErrorDeriveKey') });
       return null;
     } finally {
       setPluginLoadingServerId(null);
@@ -167,7 +169,7 @@ export function JellyfinServersSettings() {
       setCopiedPluginKeyServerId(id);
       setTimeout(() => setCopiedPluginKeyServerId((prev) => (prev === id ? null : prev)), 1800);
     } catch {
-      setMessage({ type: 'error', text: "Impossible de copier la clé plugin." });
+      setMessage({ type: 'error', text: t('copyKeyError') });
     }
   };
 
@@ -183,9 +185,9 @@ export function JellyfinServersSettings() {
       if (!key) return;
       setPluginKeyByServerId((prev) => ({ ...prev, [id]: key || '' }));
       setPluginKeyVisible((prev) => ({ ...prev, [id]: true }));
-      setMessage({ type: 'success', text: 'Clé plugin serveur dérivée depuis la clé globale actuelle.' });
+      setMessage({ type: 'success', text: t('serverPluginKeyDerived') });
     } catch {
-      setMessage({ type: 'error', text: 'Impossible de dériver la clé plugin serveur.' });
+      setMessage({ type: 'error', text: t('serverPluginKeyDeriveError') });
     }
   };
 
@@ -203,7 +205,7 @@ export function JellyfinServersSettings() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        setMessage({ type: 'error', text: (err && err.error) || 'Erreur lors de l ajout du serveur.' });
+        setMessage({ type: 'error', text: (err && err.error) || t('addServerError') });
         setSaving(false);
         return;
       }
@@ -212,10 +214,10 @@ export function JellyfinServersSettings() {
       setApiKey('');
       setAllowAuthFallback(true);
       setShowAddForm(false);
-      setMessage({ type: 'success', text: 'Serveur ajouté.' });
+      setMessage({ type: 'success', text: t('serverAddedSuccess') });
       await fetchInfo();
     } catch (e) {
-      setMessage({ type: 'error', text: "Erreur réseau lors de l'ajout du serveur." });
+      setMessage({ type: 'error', text: t('networkErrorAddServer') });
     } finally {
       setSaving(false);
     }
@@ -232,10 +234,10 @@ export function JellyfinServersSettings() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Plug className="w-5 h-5" />
-          Connexion Jellyfin
+          {t('pluginTitle')}
         </CardTitle>
         <CardDescription>
-          Un seul bloc par serveur: paramètres Jellyfin + connexion plugin. Le serveur principal est verrouillé.
+          {t('jellyfinConnectionDesc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -256,8 +258,8 @@ export function JellyfinServersSettings() {
           <div className="p-3 rounded-md flex items-start gap-2 text-sm border bg-amber-500/10 text-amber-200 border-amber-500/30">
             <AlertCircle className="w-4 h-4 mt-0.5" />
             <div>
-              <p className="font-semibold text-amber-100">Serveur principal indisponible</p>
-              <p className="text-amber-100/90">Connexion de secours disponible sur {fallbackServerInUse.name}.</p>
+              <p className="font-semibold text-amber-100">{t('primaryServerOffline')}</p>
+              <p className="text-amber-100/90">{t('fallbackServerInUse', { name: fallbackServerInUse.name })}</p>
             </div>
           </div>
         )}
@@ -267,8 +269,8 @@ export function JellyfinServersSettings() {
             <div className="flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5" />
               <div>
-                <p className="font-semibold text-red-200">Clé plugin globale manquante</p>
-                <p className="text-red-200/90">Générez-la pour activer les clés plugin de chaque serveur.</p>
+                <p className="font-semibold text-red-200">{t('globalPluginKeyMissing')}</p>
+                <p className="text-red-200/90">{t('globalPluginKeyMissingDesc')}</p>
               </div>
             </div>
             <button
@@ -278,7 +280,7 @@ export function JellyfinServersSettings() {
               className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-red-400/30 bg-red-500/20 hover:bg-red-500/30 text-red-100 text-xs font-medium disabled:opacity-60"
             >
               {globalPluginKeyLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              Generer la cle plugin globale
+              {t('generateGlobalPluginKey')}
             </button>
           </div>
         )}
@@ -287,9 +289,9 @@ export function JellyfinServersSettings() {
 
         <div className="space-y-3">
           {loading ? (
-            <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Chargement des serveurs...</div>
+            <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">{t('loadingServers')}</div>
           ) : servers.length === 0 ? (
-            <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">Aucun serveur configure.</div>
+            <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">{t('noServersConfigured')}</div>
           ) : (
             servers.map((server) => (
               <div key={server.id} className="rounded-lg border border-border p-4 space-y-3">
@@ -301,7 +303,7 @@ export function JellyfinServersSettings() {
                         server.isPrimary ? 'bg-primary/15 text-primary border-primary/30' : 'bg-zinc-500/10 text-zinc-300 border-zinc-500/30'
                       }`}>
                         <span className={`h-2 w-2 rounded-full ${server.isPrimary ? 'bg-primary' : 'bg-zinc-400'}`} />
-                        {server.isPrimary ? 'Serveur principal' : 'Serveur secondaire'}
+                        {server.isPrimary ? t('primaryServerLabel') : t('secondaryServerLabel')}
                       </span>
 
                       <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 ${
@@ -314,7 +316,7 @@ export function JellyfinServersSettings() {
                         <span className={`h-2 w-2 rounded-full ${
                           server.connectionState === 'online' ? 'bg-emerald-400' : server.connectionState === 'no_api_key' ? 'bg-zinc-400' : 'bg-red-400'
                         }`} />
-                        {server.connectionState === 'online' ? 'Jellyfin connecte' : server.connectionState === 'no_api_key' ? "Cle API manquante" : 'Jellyfin hors ligne'}
+                        {server.connectionState === 'online' ? t('jellyfinConnected') : server.connectionState === 'no_api_key' ? t('missingApiKey') : t('jellyfinOffline')}
                       </span>
 
                       <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 ${
@@ -327,7 +329,7 @@ export function JellyfinServersSettings() {
                         <span className={`h-2 w-2 rounded-full ${
                           getPluginStateForServer(server) === 'connected' ? 'bg-emerald-400 animate-pulse' : getPluginStateForServer(server) === 'ready' ? 'bg-amber-300' : 'bg-red-300'
                         }`} />
-                        {getPluginStateForServer(server) === 'connected' ? 'Plugin connecte' : getPluginStateForServer(server) === 'ready' ? 'Plugin pret' : 'Plugin non configure'}
+                        {getPluginStateForServer(server) === 'connected' ? t('pluginConnected') : getPluginStateForServer(server) === 'ready' ? t('pluginReady') : t('pluginNotConfigured')}
                       </span>
                     </div>
                   </div>
@@ -337,43 +339,43 @@ export function JellyfinServersSettings() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
                   <div className="lg:col-span-3">
-                    <Label className="text-xs">Nom du serveur</Label>
+                    <Label className="text-xs">{t('serverNameLabel')}</Label>
                     <Input value={server.name} readOnly className="text-xs" />
                   </div>
                   <div className="lg:col-span-5">
-                    <Label className="text-xs">URL serveur</Label>
+                    <Label className="text-xs">{t('serverUrlLabel')}</Label>
                     <Input value={server.url} readOnly className="font-mono text-xs" />
                   </div>
                   <div className="lg:col-span-4">
-                    <Label className="text-xs">Cle d&apos;API serveur</Label>
-                    <Input value={server.hasApiKey ? server.apiKeyMasked : 'non configuree'} readOnly className="font-mono text-xs" />
+                    <Label className="text-xs">{t('serverApiKeyLabel')}</Label>
+                    <Input value={server.hasApiKey ? server.apiKeyMasked : t('notConfigured')} readOnly className="font-mono text-xs" />
                   </div>
                 </div>
 
-                {server.isPrimary && <p className="text-[11px] text-muted-foreground">Serveur principal verrouille: ces champs viennent de la configuration Docker/.env.</p>}
+                {server.isPrimary && <p className="text-[11px] text-muted-foreground">{t('serverLockedDesc')}</p>}
 
                 <div className="rounded-lg border border-border p-3 space-y-2 bg-muted/10">
-                  <p className="text-xs font-semibold text-foreground">Connexion plugin ({server.name})</p>
+                  <p className="text-xs font-semibold text-foreground">{t('pluginConnectionFor', { name: server.name })}</p>
 
-                  {pluginLastSeen && <p className="text-[11px] text-muted-foreground">Dernier heartbeat plugin: {new Date(pluginLastSeen).toLocaleString('fr-FR')}</p>}
+                  {pluginLastSeen && <p className="text-[11px] text-muted-foreground">{t('lastHeartbeat', { date: new Date(pluginLastSeen).toLocaleString() })}</p>}
 
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-2">
                     <div className="xl:col-span-8">
-                      <Label className="text-xs">URL plugin</Label>
+                      <Label className="text-xs">{t('pluginUrlLabel')}</Label>
                       <Input value={effectivePluginEndpoint} readOnly className="font-mono text-xs" />
                     </div>
                     <div className="xl:col-span-4 flex items-end">
                       <button type="button" onClick={() => handleCopyPluginEndpoint(server.id)} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium">
                         <Copy className="w-3.5 h-3.5" />
-                        {copiedPluginEndpointServerId === server.id ? 'URL copiée' : 'Copier URL'}
+                        {copiedPluginEndpointServerId === server.id ? t('urlCopied') : t('copyUrl')}
                       </button>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-2">
                     <div className="xl:col-span-8 relative">
-                      <Label className="text-xs">Clé plugin serveur</Label>
-                      <Input readOnly type={pluginKeyVisible[server.id] ? 'text' : 'password'} value={pluginKeyVisible[server.id] ? pluginKeyByServerId[server.id] || '' : server.pluginKeyMasked || ''} className="font-mono text-xs pr-10" placeholder={pluginKeyReady ? 'Cliquez sur Afficher' : 'Générez la clé plugin globale'} />
+                      <Label className="text-xs">{t('serverPluginKeyLabel')}</Label>
+                      <Input readOnly type={pluginKeyVisible[server.id] ? 'text' : 'password'} value={pluginKeyVisible[server.id] ? pluginKeyByServerId[server.id] || '' : server.pluginKeyMasked || ''} className="font-mono text-xs pr-10" placeholder={pluginKeyReady ? t('clickToShow') : t('generateGlobalFirst')} />
                       <button type="button" onClick={() => handleTogglePluginKeyVisibility(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="absolute right-2 top-[30px] text-zinc-500 hover:text-zinc-300 disabled:opacity-40">
                         {pluginKeyVisible[server.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -381,7 +383,7 @@ export function JellyfinServersSettings() {
                     <div className="xl:col-span-4 flex items-end">
                       <button type="button" onClick={() => handleCopyPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id || (!pluginKeyByServerId[server.id] && !server.hasPluginKey)} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
                         {pluginLoadingServerId === server.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
-                        {copiedPluginKeyServerId === server.id ? 'Clé copiée' : 'Copier clé'}
+                        {copiedPluginKeyServerId === server.id ? t('keyCopied') : t('copyKey')}
                       </button>
                     </div>
                   </div>
@@ -389,7 +391,7 @@ export function JellyfinServersSettings() {
                   <div className="flex justify-end">
                     <button type="button" onClick={() => handleDeriveServerPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
                       {pluginLoadingServerId === server.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                      Deriver la cle serveur
+                      {t('deriveServerKey')}
                     </button>
                   </div>
                 </div>
@@ -403,42 +405,42 @@ export function JellyfinServersSettings() {
               <div className="flex justify-end">
               <button type="button" onClick={() => setShowAddForm((prev) => !prev)} className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-sm font-medium">
                 <Plus className="w-4 h-4" />
-                {showAddForm ? <>Masquer l&apos;ajout</> : <>Ajouter un serveur</>}
+                {showAddForm ? t('hideAddForm') : t('addServer')}
               </button>
             </div>
 
             {showAddForm && (
               <div className="rounded-lg border border-border p-3 space-y-3">
-                <p className="text-sm font-medium text-foreground">Nouveau serveur secondaire</p>
+                <p className="text-sm font-medium text-foreground">{t('newSecondaryServer')}</p>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
                   <div className="lg:col-span-3">
-                    <Label>Nom du serveur</Label>
+                    <Label>{t('serverNameLabel')}</Label>
                     <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jellyfin Salon" />
                   </div>
                   <div className="lg:col-span-5">
-                    <Label>URL serveur</Label>
+                    <Label>{t('serverUrlLabel')}</Label>
                     <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://jellyfin-secondaire.local" />
                   </div>
                   <div className="lg:col-span-4">
-                    <Label>Cle d&apos;API serveur</Label>
+                    <Label>{t('serverApiKeyLabel')}</Label>
                     <Input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="API key Jellyfin" type="password" />
                   </div>
                 </div>
 
                 <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
                   <input type="checkbox" checked={allowAuthFallback} onChange={(e) => setAllowAuthFallback(e.target.checked)} />
-                  Autoriser ce serveur en fallback d&apos;authentification
+                  {t('allowAuthFallback')}
                 </label>
 
                 <button type="button" onClick={handleAddServer} disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-sm font-medium disabled:opacity-60">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                  Ajouter ce serveur
+                  {t('addThisServer')}
                 </button>
               </div>
             )}
 
-            <p className="text-xs text-muted-foreground">Le bouton &quot;Ajouter un serveur&quot; reste disponible en permanence pour en ajouter autant que necessaire.</p>
+            <p className="text-xs text-muted-foreground">{t('addServerPermanentDesc')}</p>
           </div>
         ) : null}
       </CardContent>
