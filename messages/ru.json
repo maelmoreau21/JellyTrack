@@ -673,7 +673,10 @@
     "markerIntroStart": "Opening credits start",
     "markerIntroEnd": "Opening credits end",
     "markerCreditsStart": "End credits start",
-    "markerCustom": "Metadata marker"
+    "markerCustom": "Metadata marker",
+    "cast": "Актерский состав",
+    "backdrop": "Фоновое изображение",
+    "castDesc": "Актеры и съемочная группа."
   },
   "nav": {
     "cleanup": "Очистка",

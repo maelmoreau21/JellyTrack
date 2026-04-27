@@ -673,7 +673,10 @@
     "markerIntroStart": "Début du générique d'ouverture",
     "markerIntroEnd": "Fin du générique d'ouverture",
     "markerCreditsStart": "Début du générique de fin",
-    "markerCustom": "Repère metadata"
+    "markerCustom": "Repère metadata",
+    "cast": "Distribution",
+    "backdrop": "Image de fond",
+    "castDesc": "Acteurs et équipe technique."
   },
   "nav": {
     "cleanup": "Nettoyage",

@@ -673,7 +673,10 @@
     "markerIntroStart": "Opening credits start",
     "markerIntroEnd": "Opening credits end",
     "markerCreditsStart": "End credits start",
-    "markerCustom": "Metadata marker"
+    "markerCustom": "Metadata marker",
+    "cast": "演职人员",
+    "backdrop": "背景图",
+    "castDesc": "演员和技术团队。"
   },
   "nav": {
     "cleanup": "清理",

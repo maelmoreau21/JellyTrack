@@ -673,7 +673,10 @@
     "markerIntroStart": "Opening credits start",
     "markerIntroEnd": "Opening credits end",
     "markerCreditsStart": "End credits start",
-    "markerCustom": "Metadata marker"
+    "markerCustom": "Metadata marker",
+    "cast": "Cast & Crew",
+    "backdrop": "Backdrop",
+    "castDesc": "The actors and production team."
   },
   "nav": {
     "cleanup": "Cleanup",

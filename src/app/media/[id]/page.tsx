@@ -14,6 +14,15 @@ import type { TimelineEvent, SessionTimeline } from "./MediaTimelineChart";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 import { isZapped } from "@/lib/statsUtils";
+import { User2 } from "lucide-react";
+
+type Person = {
+    Name: string;
+    Id: string;
+    Role?: string;
+    Type?: string;
+    PrimaryImageTag?: string;
+};
 
 // Local types for playback and media records used in this page
 type PlaybackHistory = {
@@ -116,13 +125,16 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     let introStartMs: number | null = null;
     let introEndMs: number | null = null;
     let creditsStartMs: number | null = null;
+    let people: Person[] = [];
+    let hasBackdrop = false;
+    let hasLogo = false;
 
     try {
         const jellyfinUrl = process.env.JELLYFIN_URL;
         const jellyfinApiKey = process.env.JELLYFIN_API_KEY;
         if (jellyfinUrl && jellyfinApiKey) {
             const res = await fetch(
-                `${jellyfinUrl}/Items/${encodeURIComponent(id)}`,
+                `${jellyfinUrl}/Items/${encodeURIComponent(id)}?Fields=Overview,CommunityRating,ProductionYear,SeriesId,SeriesName,SeasonId,SeasonName,AlbumId,Album,AlbumArtist,AlbumArtists,IntroStartPositionMs,IntroStartPositionTicks,IntroEndPositionMs,IntroEndPositionTicks,CreditsPositionMs,CreditsStartPositionMs,CreditsPositionTicks,CreditsStartPositionTicks,People,ImageTags`,
                 {
                     headers: {
                         "X-Emby-Token": jellyfinApiKey,
@@ -143,6 +155,9 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 albumName = data.Album || null;
                 albumArtist = data.AlbumArtist || (data.AlbumArtists?.[0]?.Name || data.AlbumArtists?.[0] || null);
                 albumArtistId = data.AlbumArtists?.[0]?.Id || (data.ArtistItems?.[0]?.Id || null);
+                people = data.People || [];
+                hasBackdrop = !!(data.BackdropImageTags && data.BackdropImageTags.length > 0);
+                hasLogo = !!(data.ImageTags?.Logo);
 
                 introStartMs =
                     parseFinitePositive(data.IntroStartPositionMs) ??
@@ -539,45 +554,99 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     </div>
                 )}
 
-                {/* Header */}
-                <div className="flex flex-col md:flex-row gap-8">
-                    <div className={`relative ${media.type === 'Episode' ? 'w-full md:w-80 aspect-video' : ['MusicAlbum', 'Audio'].includes(media.type) ? 'w-48 aspect-square' : 'w-48 aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-lg overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-xl shrink-0`}>
-                        <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId)} alt={media.title} fill className="object-cover" />
-                    </div>
-                    <div className="flex-1 space-y-4">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight">{media.title}</h1>
-                            <HierarchyLinks />
-                            <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                <Badge variant="outline">{media.type}</Badge>
-                                {media.resolution && <Badge variant="secondary">{normalizedMediaResolution}</Badge>}
-                                {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
-                                {productionYear && <Badge variant="secondary" className="bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">{productionYear}</Badge>}
-                                {communityRating && <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30">â˜… {communityRating.toFixed(1)}</Badge>}
-                            </div>
-                            {genres.length > 0 && (
-                                <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-                                    {genres.map((g: string) => (<span key={g} className="text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded-full">{g}</span>))}
-                                </div>
-                            )}
-                            {isMusic && (resolvedAlbumArtist || albumName) && (
-                                <div className="flex items-center gap-2 mt-3 flex-wrap text-sm text-zinc-500 dark:text-zinc-300">
-                                    {resolvedAlbumArtist && (
-                                        artistHref ? (
-                                            <Link href={artistHref} className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
-                                                <Headphones className="w-4 h-4" /> {resolvedAlbumArtist}
-                                            </Link>
-                                        ) : (
-                                            <span className="inline-flex items-center gap-1.5"><Headphones className="w-4 h-4" /> {resolvedAlbumArtist}</span>
-                                        )
-                                    )}
-                                    {albumName && <span className="inline-flex items-center gap-1.5"><Disc3 className="w-4 h-4" /> {albumName}</span>}
-                                </div>
-                            )}
+                {/* Header with Backdrop */}
+                <div className="relative group overflow-hidden rounded-2xl border border-zinc-200/50 dark:border-white/5 shadow-2xl bg-zinc-100 dark:bg-zinc-950">
+                    {hasBackdrop && (
+                        <div className="absolute inset-0 z-0">
+                            <FallbackImage 
+                                src={getJellyfinImageUrl(media.jellyfinMediaId, "Backdrop")} 
+                                alt="Backdrop" 
+                                fill 
+                                className="object-cover opacity-30 dark:opacity-20 blur-xl scale-110" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-zinc-100 via-transparent to-transparent dark:from-zinc-950" />
                         </div>
-                        {overview && <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl line-clamp-5">{overview}</p>}
+                    )}
+                    
+                    <div className="relative z-10 flex flex-col md:flex-row gap-8 p-6 md:p-10">
+                        <div className={`relative ${media.type === 'Episode' ? 'w-full md:w-80 aspect-video' : ['MusicAlbum', 'Audio'].includes(media.type) ? 'w-48 aspect-square' : 'w-48 aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-xl overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-2xl shrink-0`}>
+                            <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId)} alt={media.title} fill className="object-cover" />
+                        </div>
+                        <div className="flex-1 space-y-4 py-2">
+                            <div>
+                                {hasLogo ? (
+                                    <div className="h-16 md:h-24 w-full max-w-[300px] relative mb-2">
+                                        <FallbackImage 
+                                            src={getJellyfinImageUrl(media.jellyfinMediaId, "Logo")} 
+                                            alt={media.title} 
+                                            fill 
+                                            className="object-contain object-left" 
+                                        />
+                                    </div>
+                                ) : (
+                                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-white">{media.title}</h1>
+                                )}
+                                <HierarchyLinks />
+                                <div className="flex items-center gap-2 mt-4 flex-wrap">
+                                    <Badge variant="outline" className="bg-white/50 dark:bg-white/5 backdrop-blur-sm">{media.type}</Badge>
+                                    {media.resolution && <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">{normalizedMediaResolution}</Badge>}
+                                    {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-zinc-600 dark:text-zinc-300 backdrop-blur-sm">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
+                                    {productionYear && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-zinc-600 dark:text-zinc-300 backdrop-blur-sm">{productionYear}</Badge>}
+                                    {communityRating && <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 backdrop-blur-sm">★ {communityRating.toFixed(1)}</Badge>}
+                                </div>
+                                {genres.length > 0 && (
+                                    <div className="flex items-center gap-1.5 mt-4 flex-wrap">
+                                        {genres.map((g: string) => (<span key={g} className="text-[10px] uppercase tracking-wider font-bold bg-zinc-200/50 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 px-2.5 py-1 rounded-md backdrop-blur-sm">{g}</span>))}
+                                    </div>
+                                )}
+                                {isMusic && (resolvedAlbumArtist || albumName) && (
+                                    <div className="flex items-center gap-4 mt-4 flex-wrap text-sm font-medium text-zinc-600 dark:text-zinc-300">
+                                        {resolvedAlbumArtist && (
+                                            artistHref ? (
+                                                <Link href={artistHref} className="inline-flex items-center gap-2 hover:text-primary transition-colors bg-white/50 dark:bg-white/5 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                                                    <Headphones className="w-4 h-4" /> {resolvedAlbumArtist}
+                                                </Link>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-2 bg-white/50 dark:bg-white/5 px-3 py-1.5 rounded-lg backdrop-blur-sm"><Headphones className="w-4 h-4" /> {resolvedAlbumArtist}</span>
+                                            )
+                                        )}
+                                        {albumName && <span className="inline-flex items-center gap-2 bg-white/50 dark:bg-white/5 px-3 py-1.5 rounded-lg backdrop-blur-sm"><Disc3 className="w-4 h-4" /> {albumName}</span>}
+                                    </div>
+                                )}
+                            </div>
+                            {overview && <p className="text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-3xl line-clamp-4">{overview}</p>}
+                        </div>
                     </div>
                 </div>
+
+                {/* Distribution / People Section */}
+                {people.length > 0 && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                <User2 className="w-5 h-5 text-primary" /> {t('cast')}
+                            </h2>
+                        </div>
+                        <div className="flex overflow-x-auto pb-4 gap-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+                            {people.slice(0, 24).map((person) => (
+                                <div key={person.Id} className="flex-shrink-0 w-28 text-center space-y-2 group">
+                                    <div className="relative w-28 h-28 rounded-full overflow-hidden ring-2 ring-zinc-200/50 dark:ring-white/10 group-hover:ring-primary/50 transition-all shadow-md">
+                                        <FallbackImage 
+                                            src={getJellyfinImageUrl(person.Id, "Primary")} 
+                                            alt={person.Name} 
+                                            fill 
+                                            className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                                        />
+                                    </div>
+                                    <div className="px-1">
+                                        <p className="text-xs font-bold text-zinc-900 dark:text-white truncate" title={person.Name}>{person.Name}</p>
+                                        <p className="text-[10px] text-zinc-500 truncate" title={person.Role}>{person.Role || person.Type}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* KPI Cards */}
                 <div className={`grid gap-4 grid-cols-2 ${isMusic ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
