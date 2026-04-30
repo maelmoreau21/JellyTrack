@@ -2,6 +2,7 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import { apiTSync } from "@/lib/i18n-api";
 import { getResolvedAuthSecret } from "@/lib/authSecret";
+import { isSessionTokenActive } from "@/lib/authSession";
 
 function escapeRegExp(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -48,6 +49,14 @@ export default withAuth(
     function proxy(req) {
         const token = req.nextauth.token;
         const pathname = req.nextUrl.pathname;
+        const hasActiveSession = isSessionTokenActive(token);
+
+        if (!hasActiveSession) {
+            if (matchesPath(pathname, "/api")) {
+                return NextResponse.next();
+            }
+            return NextResponse.redirect(new URL("/login", req.url));
+        }
 
         // 1. Admin: full access
         if (token?.isAdmin) {
@@ -90,7 +99,7 @@ export default withAuth(
                 if (matchesPath(pathname, "/api")) {
                     return true;
                 }
-                return !!token;
+                return isSessionTokenActive(token);
             },
         },
         pages: {

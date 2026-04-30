@@ -448,6 +448,8 @@
   "login": {
     "loadingForm": "Formulier laden...",
     "password": "Wachtwoord",
+    "rememberMe": "Onthoud mij",
+    "rememberMeHint": "Blijf 30 dagen aangemeld op dit apparaat.",
     "signIn": "Inloggen",
     "subtitle": "Authenticeer via Jellyfin",
     "title": "Admin-login",

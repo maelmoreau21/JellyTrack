@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Clock3, Disc3, Headphones, Music, PlayCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +81,7 @@ async function findArtistImageItemId(artistName: string): Promise<string | null>
 
 export default async function ArtistProfilePage({ params, searchParams: searchParamsPromise }: ArtistPageProps) {
     const auth = await requireAuth();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
 
     const { name } = await params;
     const searchParams = (await searchParamsPromise) || {};

@@ -448,6 +448,8 @@
   "login": {
     "loadingForm": "Загрузка...",
     "password": "Пароль",
+    "rememberMe": "Запомнить меня",
+    "rememberMeHint": "Оставаться в системе 30 дней на этом устройстве.",
     "signIn": "Войти",
     "subtitle": "Войти через Jellyfin",
     "title": "Панель администратора",

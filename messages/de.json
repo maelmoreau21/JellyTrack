@@ -448,6 +448,8 @@
   "login": {
     "loadingForm": "Loading form...",
     "password": "Password",
+    "rememberMe": "Angemeldet bleiben",
+    "rememberMeHint": "30 Tage auf diesem Gerät angemeldet bleiben.",
     "signIn": "Sign in",
     "subtitle": "Authenticate via Jellyfin",
     "title": "Admin Login",

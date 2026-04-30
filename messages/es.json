@@ -448,6 +448,8 @@
   "login": {
     "loadingForm": "Cargando formulario...",
     "password": "Contraseña",
+    "rememberMe": "Recordarme",
+    "rememberMeHint": "Mantener la sesión iniciada 30 días en este dispositivo.",
     "signIn": "Iniciar sesión",
     "subtitle": "Autenticarse vía Jellyfin",
     "title": "Inicio de sesión de administrador",

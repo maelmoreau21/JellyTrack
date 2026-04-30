@@ -444,6 +444,8 @@
   "login": {
     "loadingForm": "Chargement du formulaire...",
     "password": "Mot de passe",
+    "rememberMe": "Se souvenir de moi",
+    "rememberMeHint": "Rester connecté 30 jours sur cet appareil.",
     "signIn": "Se connecter",
     "subtitle": "Authentification via Jellyfin",
     "title": "Connexion JellyTrack",

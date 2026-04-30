@@ -18,6 +18,7 @@ export default function LoginForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -30,6 +31,7 @@ export default function LoginForm() {
                 redirect: false,
                 username,
                 password,
+                rememberMe: rememberMe ? "true" : "false",
                 callbackUrl
             });
 
@@ -84,6 +86,22 @@ export default function LoginForm() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+                    </div>
+                </div>
+
+                <div className="flex items-start gap-3 rounded-md border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-100/60 dark:bg-black/30 p-3">
+                    <input
+                        id="rememberMe"
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    />
+                    <div className="space-y-1">
+                        <Label htmlFor="rememberMe" className="cursor-pointer text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                            {t('rememberMe')}
+                        </Label>
+                        <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">{t('rememberMeHint')}</p>
                     </div>
                 </div>
             </CardContent>

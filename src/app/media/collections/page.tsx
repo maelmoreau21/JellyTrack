@@ -7,6 +7,7 @@ import { getSanitizedLibraryNames, GHOST_LIBRARY_NAMES } from "@/lib/libraryUtil
 import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from "@/lib/serverScope";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
@@ -68,7 +69,7 @@ type LibraryStatsEntry = {
 
 export default async function CollectionsPage({ searchParams }: { searchParams?: Promise<CollectionsSearchParams> }) {
     const auth = await requireAdmin();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
 
     const resolvedSearchParams = (searchParams ? await searchParams : {}) as CollectionsSearchParams;
 

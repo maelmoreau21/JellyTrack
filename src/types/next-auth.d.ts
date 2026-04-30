@@ -17,6 +17,7 @@ declare module "next-auth" {
         authServerName?: string;
         authServerUrl?: string;
         authServerIsPrimary?: boolean;
+        rememberMe?: boolean;
     }
 }
 
@@ -27,5 +28,8 @@ declare module "next-auth/jwt" {
         authServerName?: string;
         authServerUrl?: string;
         authServerIsPrimary?: boolean;
+        rememberMe?: boolean;
+        sessionExpiresAt?: number;
+        sessionExpired?: boolean;
     }
 }

@@ -13,10 +13,11 @@ import { buildSelectableServerOptions } from '@/lib/selectableServers';
 export const dynamic = "force-dynamic";
 
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { redirect } from 'next/navigation';
 
 export default async function AnalysisPage({ searchParams }: { searchParams?: Promise<{ servers?: string }> }) {
     const auth = await requireAdmin();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
 
     const t = await getTranslations('media');
     const tc = await getTranslations('common');

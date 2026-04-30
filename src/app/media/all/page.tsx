@@ -19,6 +19,7 @@ export const dynamic = "force-dynamic";
 const ITEMS_PER_PAGE = 50;
 
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 type AllMediaSearchParams = {
     excludeTypes?: string;
@@ -41,7 +42,7 @@ function shouldShowLibraryMediaBadges(resolutionThresholds: unknown): boolean {
 
 export default async function AllMediaPage({ searchParams: searchParamsPromise }: { searchParams?: Promise<AllMediaSearchParams> }) {
     const auth = await requireAdmin();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
 
     const searchParams = (await searchParamsPromise) || {};
     const t = await getTranslations('media');

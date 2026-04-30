@@ -448,6 +448,8 @@
   "login": {
     "loadingForm": "加载表单中...",
     "password": "密码",
+    "rememberMe": "记住我",
+    "rememberMeHint": "在此设备上保持登录 30 天。",
     "signIn": "登录",
     "subtitle": "使用 Jellyfin 凭据登录",
     "title": "管理员登录",

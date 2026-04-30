@@ -80,12 +80,13 @@ interface MediaProfilePageProps {
 }
 
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function MediaProfilePage({ params }: MediaProfilePageProps) {
     const { id } = await params;
 
     const auth = await requireAuth();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
     const isAdmin = auth.isAdmin;
     const sessionUserId = auth.jellyfinUserId;
     const sessionLinkedUserIds = auth.linkedJellyfinUserIds.length > 0

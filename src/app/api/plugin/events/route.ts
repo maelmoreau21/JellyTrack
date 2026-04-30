@@ -12,6 +12,7 @@ import { consumePluginEventRateLimit } from "@/lib/pluginEventRateLimit";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
 import { comparePluginApiKey, getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
 import { parsePluginApiKeyCandidate } from "@/lib/pluginServerKey";
+import { isValidDiscordWebhook } from "@/lib/webhookValidator";
 import {
     buildLegacyStreamRedisKey,
     buildStreamRedisKey,
@@ -1330,44 +1331,54 @@ export async function POST(req: Request) {
             // Discord notification
             try {
                 if (settings?.discordAlertsEnabled && settings?.discordWebhookUrl) {
-                    const condition = settings.discordAlertCondition || "ALL";
-                    let shouldSend = true;
-                    if (condition === "TRANSCODE_ONLY") {
-                        shouldSend = playMethod === "Transcode";
-                    } else if (condition === "NEW_IP_ONLY") {
-                        if (dbUser) {
-                            const pastCount = await prisma.playbackHistory.count({
-                                where: { serverId: sourceServer.id, userId: dbUser.id, ipAddress },
-                            });
-                            shouldSend = pastCount === 0;
+                    // SECURITY: Validate webhook URL to prevent SSRF attacks
+                    if (!isValidDiscordWebhook(settings.discordWebhookUrl)) {
+                        console.warn("[Plugin] Invalid Discord webhook URL: rejecting");
+                    } else {
+                        const condition = settings.discordAlertCondition || "ALL";
+                        let shouldSend = true;
+                        if (condition === "TRANSCODE_ONLY") {
+                            shouldSend = playMethod === "Transcode";
+                        } else if (condition === "NEW_IP_ONLY") {
+                            if (dbUser) {
+                                const pastCount = await prisma.playbackHistory.count({
+                                    where: { serverId: sourceServer.id, userId: dbUser.id, ipAddress },
+                                });
+                                shouldSend = pastCount === 0;
+                            }
                         }
-                    }
-                    if (shouldSend) {
-                        const appUrl = process.env.NEXTAUTH_URL || null;
-                        const posterUrl = appUrl
-                            ? `${appUrl}/api/jellyfin/image?itemId=${jellyfinMediaId}&type=Primary`
-                            : null;
-                        const embed: Record<string, unknown> = {
-                            title: `\uD83C\uDFAC Now Playing: ${title}`,
-                            color: 10181046,
-                            fields: [
-                                { name: "\uD83D\uDC64 User", value: username, inline: true },
-                                { name: "\uD83D\uDCF1 Device", value: `${clientName} (${deviceName})`, inline: true },
-                                { name: "\uD83C\uDF0D Location", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Unknown", inline: true },
-                            ],
-                            timestamp: new Date().toISOString(),
-                        };
-                        if (posterUrl) {
-                            embed.thumbnail = { url: posterUrl };
-                        }
+                        if (shouldSend) {
+                            const appUrl = process.env.NEXTAUTH_URL || null;
+                            const posterUrl = appUrl
+                                ? `${appUrl}/api/jellyfin/image?itemId=${jellyfinMediaId}&type=Primary`
+                                : null;
+                            const embed: Record<string, unknown> = {
+                                title: `🎬 Now Playing: ${title}`,
+                                color: 10181046,
+                                fields: [
+                                    { name: "👤 User", value: username, inline: true },
+                                    { name: "📱 Device", value: `${clientName} (${deviceName})`, inline: true },
+                                    { name: "🌍 Location", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Unknown", inline: true },
+                                ],
+                                timestamp: new Date().toISOString(),
+                            };
+                            if (posterUrl) {
+                                embed.thumbnail = { url: posterUrl };
+                            }
 
-                        await fetch(settings.discordWebhookUrl, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                embeds: [embed],
-                            }),
-                        });
+                            try {
+                                await fetch(settings.discordWebhookUrl, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                        embeds: [embed],
+                                    }),
+                                    signal: AbortSignal.timeout(10000),
+                                });
+                            } catch (fetchErr) {
+                                console.error("[Plugin] Discord webhook fetch failed:", fetchErr instanceof Error ? fetchErr.message : String(fetchErr));
+                            }
+                        }
                     }
                 }
             } catch (err) {
@@ -1384,22 +1395,32 @@ export async function POST(req: Request) {
                     if (transcodeCount > settings.maxConcurrentTranscodes) {
                         console.warn(`[Alert] Critical transcode threshold exceeded: ${transcodeCount}/${settings.maxConcurrentTranscodes}`);
                         if (settings.discordAlertsEnabled && settings.discordWebhookUrl) {
-                            await fetch(settings.discordWebhookUrl, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                    embeds: [{
-                                        title: `\u26A0\uFE0F Capacity Alert: Critical Transcode Usage`,
-                                        color: 16711680, // Red
-                                        description: `The number of simultaneous transcodes has reached a critical level.`,
-                                        fields: [
-                                            { name: "Current Transcodes", value: `${transcodeCount}`, inline: true },
-                                            { name: "Configured Threshold", value: `${settings.maxConcurrentTranscodes}`, inline: true },
-                                        ],
-                                        timestamp: new Date().toISOString(),
-                                    }],
-                                }),
-                            });
+                            // SECURITY: Validate webhook URL to prevent SSRF attacks
+                            if (!isValidDiscordWebhook(settings.discordWebhookUrl)) {
+                                console.warn("[Alert] Invalid Discord webhook URL: rejecting");
+                            } else {
+                                try {
+                                    await fetch(settings.discordWebhookUrl, {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            embeds: [{
+                                                title: `⚠️ Capacity Alert: Critical Transcode Usage`,
+                                                color: 16711680, // Red
+                                                description: `The number of simultaneous transcodes has reached a critical level.`,
+                                                fields: [
+                                                    { name: "Current Transcodes", value: `${transcodeCount}`, inline: true },
+                                                    { name: "Configured Threshold", value: `${settings.maxConcurrentTranscodes}`, inline: true },
+                                                ],
+                                                timestamp: new Date().toISOString(),
+                                            }],
+                                        }),
+                                        signal: AbortSignal.timeout(10000),
+                                    });
+                                } catch (fetchErr) {
+                                    console.error("[Alert] Discord webhook fetch failed:", fetchErr instanceof Error ? fetchErr.message : String(fetchErr));
+                                }
+                            }
                         }
                     }
                 }

@@ -444,6 +444,8 @@
   "login": {
     "loadingForm": "Loading form...",
     "password": "Password",
+    "rememberMe": "Remember me",
+    "rememberMeHint": "Stay signed in for 30 days on this device.",
     "signIn": "Sign in",
     "subtitle": "Authenticate via Jellyfin",
     "title": "Admin Login",

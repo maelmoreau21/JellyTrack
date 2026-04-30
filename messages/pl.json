@@ -448,6 +448,8 @@
   "login": {
     "loadingForm": "Przygotowanie...",
     "password": "Hasło",
+    "rememberMe": "Zapamiętaj mnie",
+    "rememberMeHint": "Pozostań zalogowany przez 30 dni na tym urządzeniu.",
     "signIn": "Zaloguj się",
     "subtitle": "Zaloguj się kontem Jellyfin",
     "title": "Panel administratora",

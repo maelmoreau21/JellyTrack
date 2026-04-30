@@ -1,8 +1,16 @@
 import type { NextAuthOptions } from "next-auth";
+import type { Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { checkLoginRateLimit, recordFailedLogin, resetLoginRateLimit } from "@/lib/rateLimit";
 import { getResolvedAuthSecret } from "@/lib/authSecret";
 import { headers, cookies } from "next/headers";
+import {
+    CURRENT_SESSION_MAX_AGE_SECONDS,
+    REMEMBERED_SESSION_MAX_AGE_SECONDS,
+    getSessionExpiresAtSeconds,
+    isSessionTokenActive,
+    parseRememberMe,
+} from "@/lib/authSession";
 import {
     authenticateAgainstJellyfinDetailed,
     getConfiguredJellyfinServers,
@@ -18,10 +26,12 @@ export const authOptions: NextAuthOptions = {
             name: "Jellyfin",
             credentials: {
                 username: { label: "Nom d'utilisateur", type: "text", placeholder: "Admin" },
-                password: { label: "Mot de passe Administrateur", type: "password", placeholder: "********" }
+                password: { label: "Mot de passe Administrateur", type: "password", placeholder: "********" },
+                rememberMe: { label: "Se souvenir de moi", type: "checkbox" }
             },
             async authorize(credentials) {
                 if (!credentials?.username || !credentials?.password) return null;
+                const rememberMe = parseRememberMe(credentials.rememberMe);
 
                 // Read locale from cookie for error messages
                 let locale = 'fr';
@@ -166,6 +176,7 @@ export const authOptions: NextAuthOptions = {
                         authServerName: authenticatedOn.name,
                         authServerUrl: authenticatedOn.url,
                         authServerIsPrimary: authenticatedOn.isPrimary,
+                        rememberMe,
                     };
                 } catch (error: unknown) {
                     const e = error as Error;
@@ -176,16 +187,42 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async jwt({ token, user }) {
+            const nowSeconds = Math.floor(Date.now() / 1000);
             if (user) {
+                const rememberMe = user.rememberMe === true;
                 token.isAdmin = user.isAdmin ?? false;
                 token.jellyfinUserId = user.jellyfinUserId ?? user.id;
                 token.authServerName = user.authServerName ?? "";
                 token.authServerUrl = user.authServerUrl ?? "";
                 token.authServerIsPrimary = user.authServerIsPrimary ?? true;
+                token.rememberMe = rememberMe;
+                token.sessionExpiresAt =
+                    nowSeconds + (rememberMe ? REMEMBERED_SESSION_MAX_AGE_SECONDS : CURRENT_SESSION_MAX_AGE_SECONDS);
+                token.sessionExpired = false;
+            } else if (getSessionExpiresAtSeconds(token) === null && typeof token.exp === "number") {
+                token.sessionExpiresAt = token.exp;
+            }
+
+            if (!isSessionTokenActive(token, nowSeconds)) {
+                token.sessionExpired = true;
+                token.isAdmin = false;
+                token.jellyfinUserId = "";
+                token.authServerName = "";
+                token.authServerUrl = "";
+                token.authServerIsPrimary = true;
             }
             return token;
         },
         async session({ session, token }) {
+            if (!isSessionTokenActive(token)) {
+                return {} as Session;
+            }
+
+            const sessionExpiresAt = getSessionExpiresAtSeconds(token);
+            if (sessionExpiresAt !== null) {
+                session.expires = new Date(sessionExpiresAt * 1000).toISOString();
+            }
+
             if (session.user) {
                 session.user.isAdmin = token.isAdmin ?? false;
                 session.user.jellyfinUserId = token.jellyfinUserId ?? "";
@@ -198,7 +235,7 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: "jwt",
-        maxAge: 7 * 24 * 60 * 60,
+        maxAge: REMEMBERED_SESSION_MAX_AGE_SECONDS,
     },
     pages: {
         signIn: '/login',
