@@ -2,16 +2,17 @@
 
 ## Primary method (recommended)
 
-Run JellyTrack with Docker first. The repository ships a committed `.env` example.
+Run JellyTrack with Docker first. The repository ships a committed `.env.example` template; real `.env*` files are intentionally ignored.
 
-1. Edit `.env` and replace every `CHANGE_ME_*` value.
-2. Start the stack:
+1. Copy `.env.example` to `.env`.
+2. Edit `.env` and replace every `CHANGE_ME_*` value.
+3. Start the stack:
 
 ```bash
 docker compose up -d
 ```
 
-3. Open `http://localhost:3000` (or the value of `APP_PORT` in your `.env`).
+4. Open `http://localhost:3000` (or the value of `APP_PORT` in your `.env`).
 
 ## Local source development (optional)
 

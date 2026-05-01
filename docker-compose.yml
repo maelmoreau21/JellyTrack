@@ -9,7 +9,7 @@ services:
     environment:
       # Database (entrypoint supports DB_* overrides first, then POSTGRES_*)
       POSTGRES_USER: ${POSTGRES_USER:-JellyTrack}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-JellyTrack_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_IP: ${POSTGRES_IP:-postgres}
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       POSTGRES_DB: ${POSTGRES_DB:-JellyTrack}
@@ -27,15 +27,15 @@ services:
 
       # Jellyfin source
       JELLYFIN_URL: ${JELLYFIN_URL:-http://jellyfin:8096}
-      JELLYFIN_API_KEY: ${JELLYFIN_API_KEY:-CHANGE_ME_JELLYFIN_API_KEY}
+      JELLYFIN_API_KEY: ${JELLYFIN_API_KEY:?Set JELLYFIN_API_KEY in .env}
       JELLYFIN_SERVER_ID: ${JELLYFIN_SERVER_ID:-master}
       JELLYFIN_SERVER_NAME: ${JELLYFIN_SERVER_NAME:-Master Jellyfin}
 
       # Security
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-CHANGE_ME_ADMIN_PASSWORD}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-CHANGE_ME_NEXTAUTH_SECRET}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?Set NEXTAUTH_SECRET in .env}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      JELLYFIN_WEBHOOK_SECRET: ${JELLYFIN_WEBHOOK_SECRET:-CHANGE_ME_WEBHOOK_SECRET}
+      JELLYFIN_WEBHOOK_SECRET: ${JELLYFIN_WEBHOOK_SECRET:?Set JELLYFIN_WEBHOOK_SECRET in .env}
 
       # Runtime user and backup location
       PUID: ${PUID:-1000}
@@ -57,7 +57,7 @@ services:
     container_name: JellyTrack_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-JellyTrack}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-JellyTrack_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: ${POSTGRES_DB:-JellyTrack}
     volumes:
       - JellyTrack_pgdata:/var/lib/postgresql/data

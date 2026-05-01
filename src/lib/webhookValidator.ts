@@ -18,6 +18,14 @@ const BLOCKED_INTERNAL_HOSTS = [
   process.env.NEXTAUTH_URL?.split("://")[1]?.split(":")[0] || "",
 ];
 
+function isAllowedDomain(hostname: string, allowedDomains: string[]): boolean {
+  const lower = hostname.toLowerCase();
+  return allowedDomains.some((domain) => {
+    const normalizedDomain = domain.toLowerCase();
+    return lower === normalizedDomain || lower.endsWith(`.${normalizedDomain}`);
+  });
+}
+
 function isInternalAddress(hostname: string): boolean {
   const lower = hostname.toLowerCase();
   
@@ -52,7 +60,7 @@ export function isValidDiscordWebhook(url: string): boolean {
 
     // Check if domain is Discord
     const hostname = parsed.hostname?.toLowerCase() || "";
-    if (!ALLOWED_WEBHOOK_DOMAINS.some(domain => hostname.endsWith(domain))) {
+    if (!isAllowedDomain(hostname, ALLOWED_WEBHOOK_DOMAINS)) {
       return false;
     }
 
@@ -86,7 +94,7 @@ export function isValidWebhookUrl(url: string, allowedDomains: string[] = ALLOWE
     const hostname = parsed.hostname?.toLowerCase() || "";
 
     // Check allowed domains
-    if (!allowedDomains.some(domain => hostname.endsWith(domain))) {
+    if (!isAllowedDomain(hostname, allowedDomains)) {
       return false;
     }
 

@@ -7,6 +7,7 @@ import { AVAILABLE_LOCALES } from "@/i18n/locales";
 import { getSanitizedLibraryNames, getServerLibraryScopes } from "@/lib/libraryUtils";
 import { revalidatePath } from "next/cache";
 import { normalizeSchedulerIntervals } from "@/lib/schedulerIntervals";
+import { isValidDiscordWebhook } from "@/lib/webhookValidator";
 
 export const dynamic = "force-dynamic";
 
@@ -142,16 +143,16 @@ export async function POST(req: NextRequest) {
 
         // Input validation — Discord webhook URL must be a valid Discord URL or null
         if (discordWebhookUrl !== undefined && discordWebhookUrl !== null && discordWebhookUrl !== "") {
-            try {
-                const parsed = new URL(discordWebhookUrl);
-                if (!parsed.hostname.endsWith("discord.com") && !parsed.hostname.endsWith("discordapp.com")) {
+            if (!isValidDiscordWebhook(discordWebhookUrl)) {
+                try {
+                    const parsed = new URL(discordWebhookUrl);
+                    if (parsed.protocol !== "https:") {
+                        return NextResponse.json({ error: await apiT('discordUrlHttps') }, { status: 400 });
+                    }
                     return NextResponse.json({ error: await apiT('discordUrlDomain') }, { status: 400 });
+                } catch {
+                    return NextResponse.json({ error: await apiT('discordUrlInvalid') }, { status: 400 });
                 }
-                if (parsed.protocol !== "https:") {
-                    return NextResponse.json({ error: await apiT('discordUrlHttps') }, { status: 400 });
-                }
-            } catch {
-                return NextResponse.json({ error: await apiT('discordUrlInvalid') }, { status: 400 });
             }
         }
 

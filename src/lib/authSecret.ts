@@ -12,6 +12,13 @@ const INVALID_SECRET_VALUES = new Set([
     "default",
 ]);
 
+const INVALID_SECRET_PATTERNS = [
+    /^change[_-]?me(?:[_-].*)?$/i,
+    /^your[_-].*$/i,
+    /^example(?:[_-].*)?$/i,
+    /placeholder/i,
+];
+
 let cachedSecret: ResolvedAuthSecret | null = null;
 let warnedAboutDerivedSecret = false;
 
@@ -20,6 +27,7 @@ function normalizeSecret(value: string | undefined) {
     const trimmed = value.trim();
     if (!trimmed) return null;
     if (INVALID_SECRET_VALUES.has(trimmed.toLowerCase())) return null;
+    if (INVALID_SECRET_PATTERNS.some((pattern) => pattern.test(trimmed))) return null;
     return trimmed;
 }
 
