@@ -9,7 +9,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
     const pathname = usePathname();
 
     const tabs = [
-        { href: '/settings/plugin', key: 'pluginTitle' },
+        { href: '/settings/plugin', key: 'pluginTitle', exact: true },
+        { href: '/settings/plugin/security', key: 'authSecurity' },
         { href: '/settings/scheduler', key: 'taskScheduler' },
         { href: '/settings/notifications', key: 'notifications' },
         { href: '/settings/media', key: 'mediaSettings' },
@@ -23,7 +24,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                     <main className="space-y-4 md:space-y-6 max-w-[1300px] mx-auto w-full">
                         <nav className="flex gap-2 overflow-auto pb-4 border-b border-zinc-800/40">
                             {tabs.map(tab => {
-                                const active = pathname?.startsWith(tab.href);
+                                const active = tab.exact ? pathname === tab.href : pathname?.startsWith(tab.href);
                                 return (
                                     <Link
                                         key={tab.href}

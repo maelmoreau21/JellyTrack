@@ -225,6 +225,8 @@ model GlobalSettings {
   pluginLastSeen        DateTime? // Last heartbeat from the plugin
   pluginVersion         String?  // Plugin version reported via heartbeat
   pluginServerName      String?  // Jellyfin server name reported via heartbeat
+  authRememberThirtyDaysEnabled Boolean @default(true) // Remembered web sessions expire after 30 days when enabled
+  authSessionsRevokedAt DateTime? // Invalidate web sessions issued before this timestamp
   resolutionThresholds  Json?    // Configurable boundaries for resolution detection (minWidth, minHeight, etc.)
   updatedAt             DateTime @updatedAt
 }

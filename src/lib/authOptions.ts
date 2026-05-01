@@ -6,11 +6,14 @@ import { getResolvedAuthSecret } from "@/lib/authSecret";
 import { headers, cookies } from "next/headers";
 import {
     CURRENT_SESSION_MAX_AGE_SECONDS,
+    INDEFINITE_SESSION_MAX_AGE_SECONDS,
     REMEMBERED_SESSION_MAX_AGE_SECONDS,
     getSessionExpiresAtSeconds,
     isSessionTokenActive,
+    isSessionTokenRevoked,
     parseRememberMe,
 } from "@/lib/authSession";
+import { getAuthSessionPolicy } from "@/lib/authPolicy";
 import {
     authenticateAgainstJellyfinDetailed,
     getConfiguredJellyfinServers,
@@ -188,22 +191,32 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async jwt({ token, user }) {
             const nowSeconds = Math.floor(Date.now() / 1000);
+            const sessionPolicy = await getAuthSessionPolicy();
             if (user) {
                 const rememberMe = user.rememberMe === true;
+                const rememberedMaxAge = sessionPolicy.rememberSessionsExpireAfterDays
+                    ? REMEMBERED_SESSION_MAX_AGE_SECONDS
+                    : INDEFINITE_SESSION_MAX_AGE_SECONDS;
+
                 token.isAdmin = user.isAdmin ?? false;
                 token.jellyfinUserId = user.jellyfinUserId ?? user.id;
                 token.authServerName = user.authServerName ?? "";
                 token.authServerUrl = user.authServerUrl ?? "";
                 token.authServerIsPrimary = user.authServerIsPrimary ?? true;
                 token.rememberMe = rememberMe;
+                token.rememberSessionLimitedTo30Days = sessionPolicy.rememberSessionsExpireAfterDays;
+                token.sessionIssuedAt = nowSeconds;
                 token.sessionExpiresAt =
-                    nowSeconds + (rememberMe ? REMEMBERED_SESSION_MAX_AGE_SECONDS : CURRENT_SESSION_MAX_AGE_SECONDS);
+                    nowSeconds + (rememberMe ? rememberedMaxAge : CURRENT_SESSION_MAX_AGE_SECONDS);
                 token.sessionExpired = false;
             } else if (getSessionExpiresAtSeconds(token) === null && typeof token.exp === "number") {
                 token.sessionExpiresAt = token.exp;
             }
 
-            if (!isSessionTokenActive(token, nowSeconds)) {
+            if (
+                isSessionTokenRevoked(token, sessionPolicy.sessionsRevokedAt) ||
+                !isSessionTokenActive(token, nowSeconds)
+            ) {
                 token.sessionExpired = true;
                 token.isAdmin = false;
                 token.jellyfinUserId = "";
@@ -235,7 +248,7 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: "jwt",
-        maxAge: REMEMBERED_SESSION_MAX_AGE_SECONDS,
+        maxAge: INDEFINITE_SESSION_MAX_AGE_SECONDS,
     },
     pages: {
         signIn: '/login',

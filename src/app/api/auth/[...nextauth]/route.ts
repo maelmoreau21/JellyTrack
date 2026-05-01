@@ -68,7 +68,9 @@ function makeCurrentSessionCookie(cookie: string): string {
         return cookie;
     }
 
-    return cookie.replace(/;\s*Expires=[^;]+(?=;|$)/i, "");
+    return cookie
+        .replace(/;\s*Expires=[^;]+(?=;|$)/i, "")
+        .replace(/;\s*Max-Age=[^;]+(?=;|$)/i, "");
 }
 
 function applySessionCookiePersistence(response: Response, rememberMe: boolean | null): Response {

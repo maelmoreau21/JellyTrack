@@ -29,7 +29,9 @@ declare module "next-auth/jwt" {
         authServerUrl?: string;
         authServerIsPrimary?: boolean;
         rememberMe?: boolean;
+        rememberSessionLimitedTo30Days?: boolean;
         sessionExpiresAt?: number;
+        sessionIssuedAt?: number;
         sessionExpired?: boolean;
     }
 }

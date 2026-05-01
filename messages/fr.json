@@ -844,6 +844,7 @@
     "pluginServerUrlDesc": "L'URL où votre instance JellyTrack est accessible.",
     "pluginStatus": "Statut du Plugin",
     "pluginTitle": "Connexion Jellyfin",
+    "authSecurity": "Sécurité",
     "pluginVersion": "Version du plugin",
     "preview": "Aperçu",
     "recentSync": "Synchro Récente",
@@ -1193,6 +1194,19 @@
     "smartFilterLabel": "Filtre intelligent",
     "filterAllEvents": "Tous les evenements",
     "filterNewCountrySuccess": "Connexion reussie depuis un nouveau pays",
-    "filterIpBurst": "Meme IP >= {threshold} tentatives"
+    "filterIpBurst": "Meme IP >= {threshold} tentatives",
+    "authSessionsTitle": "Sessions web",
+    "authSessionsDesc": "Controlez la duree des connexions memorisees et forcez la deconnexion globale.",
+    "authSessionsRememberThirtyDays": "Rester connecte 30 jours",
+    "authSessionsRememberThirtyDaysOn": "Quand la case de connexion est cochee, la session expire apres 30 jours sur cet appareil.",
+    "authSessionsRememberThirtyDaysOff": "Quand la case de connexion est cochee, la session reste active jusqu'a deconnexion manuelle.",
+    "authSessionsPolicySaved": "Politique de session sauvegardee.",
+    "authSessionsSavePolicy": "Sauvegarder la politique",
+    "authSessionsRevokeTitle": "Deconnecter tout le monde",
+    "authSessionsRevokeDesc": "Invalide toutes les sessions web existantes, y compris celle de cet administrateur.",
+    "authSessionsLastRevoked": "Derniere deconnexion globale : {date}",
+    "authSessionsRevokeButton": "Deconnecter tout le monde",
+    "authSessionsRevoking": "Deconnexion...",
+    "authSessionsRevokeConfirm": "Deconnecter tous les utilisateurs maintenant ? Vous devrez aussi vous reconnecter."
   }
 }
