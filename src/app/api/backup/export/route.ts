@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
-// No rules
 import { readSystemHealthState } from "@/lib/systemHealth";
 import { redactBackupData } from "@/lib/backupSecurity";
 
@@ -19,7 +18,6 @@ export async function GET() {
         const playbackHistory = await prisma.playbackHistory.findMany();
         const telemetryEvents = await prisma.telemetryEvent.findMany();
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
-        const libraryRules = null;
         const systemHealth = await readSystemHealthState({ eventLimit: 200 });
 
         const backupContent = {
@@ -32,7 +30,6 @@ export async function GET() {
                 playbackHistory,
                 telemetryEvents,
                 settings,
-                libraryRules,
                 systemHealth,
             })
         };

@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
-// No rules
 import { readSystemHealthState } from "@/lib/systemHealth";
 import { buildLegacyStreamRedisKey, buildStreamRedisKey } from "@/lib/serverRegistry";
 
@@ -9,7 +8,7 @@ export async function getLogHealthSnapshot() {
     anomalyWindowStart.setUTCHours(0, 0, 0, 0);
     anomalyWindowStart.setUTCDate(anomalyWindowStart.getUTCDate() - 13);
 
-    const [settings, activeStreams, openPlaybackHistory, healthState, discoveredLibraries, anomalyEvents] = await Promise.all([
+    const [settings, activeStreams, openPlaybackHistory, healthState, anomalyEvents] = await Promise.all([
         prisma.globalSettings.findUnique({ where: { id: "global" } }),
         prisma.activeStream.findMany({
             select: {
@@ -38,11 +37,6 @@ export async function getLogHealthSnapshot() {
             }
         }),
         readSystemHealthState({ eventLimit: 120 }),
-        prisma.media.findMany({
-            where: { libraryName: { not: null } },
-            select: { libraryName: true },
-            distinct: ['libraryName'],
-        }),
         prisma.systemHealthEvent.findMany({
             where: {
                 stateId: "global",
@@ -57,9 +51,6 @@ export async function getLogHealthSnapshot() {
             },
         }),
     ]);
-
-    // No rules
-    const discoveredNames = discoveredLibraries.map(l => l.libraryName as string);
 
     const activePairSet = new Set(activeStreams.map((stream) => `${stream.userId}:${stream.mediaId}`));
     const openPlaybackOrphans = openPlaybackHistory.filter((entry) => !activePairSet.has(`${entry.userId}:${entry.mediaId}`));

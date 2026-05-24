@@ -1,17 +1,13 @@
-// Module-level logging to surface import-time errors when Next.js loads this route
-console.log('[auth.route] module loaded');
 import type { NextRequest } from "next/server";
 import NextAuth from "next-auth";
 import { getToken } from "next-auth/jwt";
 import { authOptions } from "@/lib/authOptions";
 import { parseRememberMe } from "@/lib/authSession";
 
-console.log('[auth.route] creating handler');
 const nextAuthHandler = NextAuth(authOptions as any) as (
     req: NextRequest,
     context: AuthRouteContext
 ) => Promise<Response>;
-console.log('[auth.route] handler created');
 
 type AuthRouteContext = {
     params: Promise<{ nextauth: string[] }> | { nextauth: string[] };

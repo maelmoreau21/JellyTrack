@@ -30,6 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 eslint-report.json
+.codex-dev-server*.log
 
 # env files
 .env*

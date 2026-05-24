@@ -3,7 +3,6 @@ import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
 import { isAuthError } from "@/lib/auth";
 import { requireAdminMutation } from "@/lib/adminRequestGuard";
-// No rules
 import { replaceSystemHealthState } from "@/lib/systemHealth";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 
@@ -137,7 +136,7 @@ export async function POST(req: NextRequest) {
                 const cs = settings as Record<string, unknown>;
                 await tx.globalSettings.create({
                     data: {
-                        id: (cs['id'] as string) || "global",
+                        id: "global",
                         discordWebhookUrl: (cs['discordWebhookUrl'] as string) ?? null,
                         discordAlertCondition: (cs['discordAlertCondition'] as string) ?? "ALL",
                         discordAlertsEnabled: (cs['discordAlertsEnabled'] as boolean) ?? false,

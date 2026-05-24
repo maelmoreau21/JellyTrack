@@ -4,10 +4,10 @@ import prisma from "@/lib/prisma";
 import { isAuthError } from "@/lib/auth";
 import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { apiT } from "@/lib/i18n-api";
-// No rules
+import fs from "node:fs";
 import { replaceSystemHealthState } from "@/lib/systemHealth";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
-import { getBackupDirectory } from "@/lib/backupDir";
+import { resolveAutoBackupFile } from "@/lib/backupDir";
 
 export async function POST(req: NextRequest) {
     const auth = await requireAdminMutation(req);
@@ -20,26 +20,16 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: await apiT('fileNameInvalid') }, { status: 400 });
         }
 
-        // Dynamic imports for fs/path to avoid Turbopack tracing
-        const fs = await import('fs');
-        const path = await import('path');
-
-        // Security: prevent path traversal
-        const sanitized = path.basename(fileName);
-
-        // Security: only allow restoring auto-backup files
-        if (!sanitized.startsWith("JellyTrack-auto-") || !sanitized.endsWith(".json")) {
+        const backupFile = resolveAutoBackupFile(fileName);
+        if (!backupFile) {
             return NextResponse.json({ error: await apiT('fileAutoOnly') }, { status: 400 });
         }
 
-        const backupDir = getBackupDirectory();
-        const filePath = path.join(backupDir, sanitized);
-
-        if (!fs.existsSync(filePath)) {
+        if (!fs.existsSync(backupFile.filePath)) {
             return NextResponse.json({ error: await apiT('fileNotFound') }, { status: 404 });
         }
 
-        const raw = fs.readFileSync(filePath, "utf-8");
+        const raw = fs.readFileSync(backupFile.filePath, "utf-8");
         const backup = JSON.parse(raw);
 
         if (!backup.data) {
@@ -223,8 +213,8 @@ export async function POST(req: NextRequest) {
             await replaceSystemHealthState(systemHealth);
         }
 
-        console.log(`[Auto-Backup Restore] Successfully restored from ${sanitized}`);
-        return NextResponse.json({ success: true, message: await apiT('restoreSuccess', { fileName: sanitized }) });
+        console.log(`[Auto-Backup Restore] Successfully restored from ${backupFile.fileName}`);
+        return NextResponse.json({ success: true, message: await apiT('restoreSuccess', { fileName: backupFile.fileName }) });
 
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);

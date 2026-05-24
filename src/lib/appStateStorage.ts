@@ -1,45 +1,35 @@
+import fs from "node:fs";
+import path from "node:path";
 import { getBackupDirectory } from "@/lib/backupDir";
 
-// Avoid static top-level imports of 'fs' so Turbopack doesn't trace filesystem
-function getFS() {
-    try {
-        // Use eval('require') to avoid static analysis by the bundler
-         
-        const req = eval('require');
-        return req('fs');
-    } catch (e) {
-        throw new Error('Unable to load fs module dynamically');
-    }
-}
+const SAFE_STATE_FILE_PATTERN = /^[a-z0-9._-]+$/i;
 
 function getAppStateDir() {
     return getBackupDirectory();
 }
 
 function ensureAppStateDir() {
-    const fs = getFS();
     const APP_STATE_DIR = getAppStateDir();
     if (!fs.existsSync(APP_STATE_DIR)) {
         fs.mkdirSync(APP_STATE_DIR, { recursive: true });
     }
 }
 
+function resolveStateFilePath(fileName: string): string | null {
+    const safeName = String(fileName || "").trim();
+    if (!SAFE_STATE_FILE_PATTERN.test(safeName)) return null;
+    if (path.basename(safeName) !== safeName) return null;
+    return path.join(/*turbopackIgnore: true*/ getAppStateDir(), safeName);
+}
+
 export function readStateFile<T>(fileName: string, fallback: T): T {
     try {
         ensureAppStateDir();
-        const fs = getFS();
-        const APP_STATE_DIR = getAppStateDir();
-        const filePath = `${APP_STATE_DIR}/${fileName}`;
+        const filePath = resolveStateFilePath(fileName);
+        if (!filePath) return fallback;
         if (!fs.existsSync(filePath)) return fallback;
         return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
     } catch {
         return fallback;
     }
-}
-
-export function writeStateFile<T>(fileName: string, data: T) {
-    const fs = getFS();
-    ensureAppStateDir();
-    const APP_STATE_DIR = getAppStateDir();
-    fs.writeFileSync(`${APP_STATE_DIR}/${fileName}`, JSON.stringify(data, null, 2), "utf-8");
 }

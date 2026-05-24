@@ -1,5 +1,4 @@
 import prisma from "@/lib/prisma";
-// No rules
 import { appendHealthEvent, markBackupFinished, markBackupStarted, readSystemHealthState } from "@/lib/systemHealth";
 import { getBackupDirectory } from "@/lib/backupDir";
 import { redactBackupData } from "@/lib/backupSecurity";
@@ -27,7 +26,6 @@ export async function performAutoBackup(): Promise<string> {
         const playbackHistory = await prisma.playbackHistory.findMany();
         const telemetryEvents = await prisma.telemetryEvent.findMany();
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
-        // No rules
         const systemHealth = await readSystemHealthState();
 
         const backupContent = {
@@ -41,7 +39,6 @@ export async function performAutoBackup(): Promise<string> {
                 playbackHistory,
                 telemetryEvents,
                 settings,
-                // No rules
                 systemHealth,
             })
         };

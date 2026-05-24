@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   AlertCircle,
@@ -12,7 +12,6 @@ import {
   Plug,
   Plus,
   RefreshCw,
-  Server,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -65,7 +64,6 @@ export function JellyfinServersSettings() {
   const [copiedPluginKeyServerId, setCopiedPluginKeyServerId] = useState<string | null>(null);
   const [pluginKeyVisible, setPluginKeyVisible] = useState<Record<string, boolean>>({});
   const [pluginKeyByServerId, setPluginKeyByServerId] = useState<Record<string, string>>({});
-  const [globalPluginApiKey, setGlobalPluginApiKey] = useState<string>('');
   const [globalPluginKeyLoading, setGlobalPluginKeyLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -96,7 +94,7 @@ export function JellyfinServersSettings() {
       setPluginEndpointPath(json.pluginEndpointPath || '/api/plugin/events');
       setPluginConnected(Boolean(json.pluginConnected));
       setIsMultiMode(Boolean(json.isMultiMode));
-    } catch (e) {
+    } catch {
       setMessage({ type: 'error', text: t('networkErrorFetchServers') });
     } finally {
       setLoading(false);
@@ -104,7 +102,6 @@ export function JellyfinServersSettings() {
   };
 
   const effectivePluginEndpoint = typeof window !== 'undefined' ? `${window.location.origin}${pluginEndpointPath}` : pluginEndpointPath;
-  const hasGlobalPluginApiKey = Boolean((globalPluginApiKey || '').trim());
 
   const getPluginStateForServer = (server: JellyfinServerRow): PluginConnectionState => {
     if (server.hasPluginKey && pluginConnected) return 'connected';
@@ -113,6 +110,11 @@ export function JellyfinServersSettings() {
   };
 
   const handleGenerateGlobalPluginKey = async () => {
+    if (pluginKeyReady) {
+      const ok = window.confirm('Regenerer la cle plugin globale ? Les cles serveur devront etre derivees a nouveau.');
+      if (!ok) return;
+    }
+
     setGlobalPluginKeyLoading(true);
     try {
       const res = await fetch('/api/plugin/api-key', { method: 'POST' });
@@ -120,10 +122,9 @@ export function JellyfinServersSettings() {
       const json = await res.json().catch(() => ({}));
       const nextGlobalKey = typeof json.apiKey === 'string' ? json.apiKey : '';
       if (!nextGlobalKey) throw new Error('missing-key');
-      setGlobalPluginApiKey(nextGlobalKey);
       setMessage({ type: 'success', text: t('globalPluginKeySuccess') });
       await fetchInfo();
-    } catch (e) {
+    } catch {
       setMessage({ type: 'error', text: t('globalPluginKeyError') });
     } finally {
       setGlobalPluginKeyLoading(false);
@@ -138,7 +139,7 @@ export function JellyfinServersSettings() {
       const res = await fetch('/api/settings/jellyfin-servers/plugin-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, jellyfinServerId, globalApiKey: globalPluginApiKey }),
+        body: JSON.stringify({ id, jellyfinServerId }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -147,7 +148,7 @@ export function JellyfinServersSettings() {
       }
       const json = await res.json();
       return json.pluginApiKey as string | null;
-    } catch (e) {
+    } catch {
       setMessage({ type: 'error', text: t('networkErrorDeriveKey') });
       return null;
     } finally {
@@ -216,7 +217,7 @@ export function JellyfinServersSettings() {
       setShowAddForm(false);
       setMessage({ type: 'success', text: t('serverAddedSuccess') });
       await fetchInfo();
-    } catch (e) {
+    } catch {
       setMessage({ type: 'error', text: t('networkErrorAddServer') });
     } finally {
       setSaving(false);
@@ -264,28 +265,40 @@ export function JellyfinServersSettings() {
           </div>
         )}
 
-        {!pluginKeyReady && (
-          <div className="p-3 rounded-md flex flex-col gap-3 text-sm border bg-red-500/10 text-red-300 border-red-500/30 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className={`p-3 rounded-md flex flex-col gap-3 text-sm border sm:flex-row sm:items-center sm:justify-between ${
+            pluginKeyReady
+              ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+              : 'bg-red-500/10 text-red-300 border-red-500/30'
+          }`}
+        >
             <div className="flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5" />
               <div>
-                <p className="font-semibold text-red-200">{t('globalPluginKeyMissing')}</p>
-                <p className="text-red-200/90">{t('globalPluginKeyMissingDesc')}</p>
+                <p className={`font-semibold ${pluginKeyReady ? 'text-emerald-100' : 'text-red-200'}`}>
+                  {pluginKeyReady ? 'Cle plugin globale active' : t('globalPluginKeyMissing')}
+                </p>
+                <p className={pluginKeyReady ? 'text-emerald-100/90' : 'text-red-200/90'}>
+                  {pluginKeyReady
+                    ? 'Vous pouvez deriver ou copier une cle serveur sans ressaisir la cle globale.'
+                    : t('globalPluginKeyMissingDesc')}
+                </p>
               </div>
             </div>
             <button
               type="button"
               onClick={handleGenerateGlobalPluginKey}
               disabled={globalPluginKeyLoading}
-              className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-red-400/30 bg-red-500/20 hover:bg-red-500/30 text-red-100 text-xs font-medium disabled:opacity-60"
+              className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border text-xs font-medium disabled:opacity-60 ${
+                pluginKeyReady
+                  ? 'border-emerald-400/30 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-50'
+                  : 'border-red-400/30 bg-red-500/20 hover:bg-red-500/30 text-red-100'
+              }`}
             >
               {globalPluginKeyLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              {t('generateGlobalPluginKey')}
+              {pluginKeyReady ? 'Regenerer la cle globale' : t('generateGlobalPluginKey')}
             </button>
           </div>
-        )}
-
-
 
         <div className="space-y-3">
           {loading ? (
