@@ -24,7 +24,7 @@ export async function fetchJellyfinImage(itemId: string, type: string) {
     const response = await fetch(url, {
         method: 'GET',
         headers: {
-            'X-Emby-Token': apiKey,
+            Authorization: `MediaBrowser Token="${apiKey}"`,
         },
         next: { revalidate: 86400 }
     });

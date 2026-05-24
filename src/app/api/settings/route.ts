@@ -24,7 +24,7 @@ async function fetchJellyfinLibraryNames() {
         const response = await fetch(`${jellyfinUrl}/Library/VirtualFolders`, {
             method: "GET",
             headers: {
-                "X-Emby-Token": jellyfinApiKey,
+                Authorization: `MediaBrowser Token="${jellyfinApiKey}"`,
             },
             cache: "no-store",
         });

@@ -55,7 +55,7 @@ async function findArtistImageItemId(artistName: string): Promise<string | null>
     try {
         const url = `${jellyfinUrl}/Items?IncludeItemTypes=MusicArtist&Recursive=true&SearchTerm=${encodeURIComponent(artistName)}&Limit=25&Fields=SortName`;
         const res = await fetch(url, {
-            headers: { "X-Emby-Token": jellyfinApiKey },
+            headers: { Authorization: `MediaBrowser Token="${jellyfinApiKey}"` },
             next: { revalidate: 21600 },
         });
         if (!res.ok) return null;

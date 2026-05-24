@@ -138,7 +138,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 `${jellyfinUrl}/Items/${encodeURIComponent(id)}?Fields=Overview,CommunityRating,ProductionYear,SeriesId,SeriesName,SeasonId,SeasonName,AlbumId,Album,AlbumArtist,AlbumArtists,IntroStartPositionMs,IntroStartPositionTicks,IntroEndPositionMs,IntroEndPositionTicks,CreditsPositionMs,CreditsStartPositionMs,CreditsPositionTicks,CreditsStartPositionTicks,People,ImageTags`,
                 {
                     headers: {
-                        "X-Emby-Token": jellyfinApiKey,
+                        Authorization: `MediaBrowser Token="${jellyfinApiKey}"`,
                     },
                     next: { revalidate: 86400 },
                 }

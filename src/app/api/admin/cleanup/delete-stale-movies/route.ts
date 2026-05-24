@@ -46,7 +46,7 @@ async function deleteItemOnJellyfin(input: {
     }
 
     const fallbackResponse = await fetch(
-      `${endpoint}?api_key=${encodeURIComponent(input.apiKey)}`,
+      `${endpoint}?ApiKey=${encodeURIComponent(input.apiKey)}`,
       {
         method: "DELETE",
         headers: { Accept: "application/json" },
