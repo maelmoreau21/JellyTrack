@@ -1,8 +1,12 @@
-FROM node:20-alpine AS base
+# Declare BUILDPLATFORM argument
+ARG BUILDPLATFORM
+
+# Base image for the build environment (runs on the host build architecture)
+FROM --platform=$BUILDPLATFORM node:20-alpine AS build-base
 RUN apk add --no-cache libc6-compat openssl
 
-# 1. Install dependencies only when needed
-FROM base AS deps
+# 1. Install dependencies only when needed (on build platform)
+FROM build-base AS deps
 WORKDIR /app
 # Copy lockfile explicitly to ensure it's present in the build context
 COPY package.json package-lock.json ./
@@ -12,8 +16,8 @@ RUN apk add --no-cache python3 build-base git ca-certificates && \
     npm install -g npm@10 || true && \
     npm ci --no-audit --progress=false || npm install --no-audit --progress=false
 
-# 2. Rebuild the source code only when needed
-FROM base AS builder
+# 2. Rebuild the source code only when needed (on build platform)
+FROM build-base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
@@ -36,6 +40,8 @@ RUN NEXTAUTH_SECRET=build-placeholder npm run build
 
 # ── Clean up Prisma engines: keep only linux-musl (Alpine), remove all others ──
 # This saves ~50-60MB by removing Windows, macOS, Debian, etc. engine binaries
+# Note: Since we are building multi-arch, both amd64 and arm64 engine binaries contain 'linux-musl'
+# and will be kept.
 RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/@prisma/engines -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/@prisma/engines -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
@@ -45,8 +51,12 @@ RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-mus
     find /app/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
 
+# Base image for the target runner (runs on the target platform architecture, e.g. arm64 or amd64)
+FROM node:20-alpine AS run-base
+RUN apk add --no-cache libc6-compat openssl
+
 # 3. Production image, copy all the files and run next
-FROM base AS runner
+FROM run-base AS runner
 RUN apk add --no-cache su-exec shadow
 WORKDIR /app
 
