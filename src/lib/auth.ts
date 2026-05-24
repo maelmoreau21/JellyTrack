@@ -18,6 +18,7 @@ export interface AuthResult {
   linkedJellyfinUserIds: string[];
   linkedUserDbIds: string[];
   isAdmin: boolean;
+  authServerJellyfinServerId: string;
 }
 
 function uniq(values: string[]): string[] {
@@ -27,13 +28,22 @@ function uniq(values: string[]): string[] {
 export async function resolveLinkedAccounts(input: {
   jellyfinUserId?: string;
   username?: string;
+  authServerJellyfinServerId?: string;
 }): Promise<{ canonicalUsername: string | null; linkedJellyfinUserIds: string[]; linkedUserDbIds: string[] }> {
   const seedJellyfinUserId = input.jellyfinUserId?.trim() || "";
   const seedUsername = input.username?.trim() || "";
+  const authServerJellyfinServerId = input.authServerJellyfinServerId?.trim() || "";
+  const authServer = authServerJellyfinServerId
+    ? await prisma.server.findUnique({
+        where: { jellyfinServerId: authServerJellyfinServerId },
+        select: { id: true },
+      })
+    : null;
+  const serverScope = authServer?.id ? { serverId: authServer.id } : {};
 
   const direct = seedJellyfinUserId
     ? await prisma.user.findFirst({
-        where: { jellyfinUserId: seedJellyfinUserId },
+        where: { jellyfinUserId: seedJellyfinUserId, ...serverScope },
         orderBy: { createdAt: "asc" },
         select: { username: true },
       })
@@ -43,7 +53,7 @@ export async function resolveLinkedAccounts(input: {
 
   const byUsername = canonicalUsername
     ? await prisma.user.findMany({
-        where: { username: { equals: canonicalUsername, mode: "insensitive" } },
+        where: { username: { equals: canonicalUsername, mode: "insensitive" }, ...serverScope },
         orderBy: { createdAt: "asc" },
         select: { id: true, jellyfinUserId: true },
       })
@@ -51,7 +61,7 @@ export async function resolveLinkedAccounts(input: {
 
   const fallbackByJellyfinId = byUsername.length === 0 && seedJellyfinUserId
     ? await prisma.user.findMany({
-        where: { jellyfinUserId: seedJellyfinUserId },
+        where: { jellyfinUserId: seedJellyfinUserId, ...serverScope },
         orderBy: { createdAt: "asc" },
         select: { id: true, jellyfinUserId: true },
       })
@@ -75,10 +85,12 @@ export async function requireAuth(): Promise<AuthResult | NextResponse> {
     return NextResponse.json({ error: await apiT('unauthenticated') }, { status: 401 });
   }
   const user = (session.user as unknown) as { jellyfinUserId?: string; isAdmin?: boolean; name?: string } | undefined;
+  const authServerJellyfinServerId = String((session.user as { authServerJellyfinServerId?: string }).authServerJellyfinServerId || "");
   const username = user?.name?.trim() || "";
   const linked = await resolveLinkedAccounts({
     jellyfinUserId: user?.jellyfinUserId,
     username,
+    authServerJellyfinServerId,
   });
 
   return {
@@ -88,6 +100,7 @@ export async function requireAuth(): Promise<AuthResult | NextResponse> {
     linkedJellyfinUserIds: linked.linkedJellyfinUserIds,
     linkedUserDbIds: linked.linkedUserDbIds,
     isAdmin: user?.isAdmin === true,
+    authServerJellyfinServerId,
   };
 }
 

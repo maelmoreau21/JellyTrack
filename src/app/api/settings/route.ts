@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { apiT } from "@/lib/i18n-api";
 import { AVAILABLE_LOCALES } from "@/i18n/locales";
 // No more library rules
@@ -115,7 +116,7 @@ export async function GET() {
 
 // Endpoint to update global settings (admin only)
 export async function POST(req: NextRequest) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     try {

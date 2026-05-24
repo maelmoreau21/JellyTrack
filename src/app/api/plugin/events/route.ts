@@ -11,8 +11,9 @@ import { markMonitorPoll, appendHealthEvent } from "@/lib/systemHealth";
 import { consumePluginEventRateLimit } from "@/lib/pluginEventRateLimit";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
 import { comparePluginApiKey, getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
-import { parsePluginApiKeyCandidate } from "@/lib/pluginServerKey";
+import { parsePluginApiKeyCandidate, verifyScopedPluginApiKey } from "@/lib/pluginServerKey";
 import { isValidDiscordWebhook } from "@/lib/webhookValidator";
+import { getClientIp } from "@/lib/requestIp";
 import {
     buildLegacyStreamRedisKey,
     buildStreamRedisKey,
@@ -94,21 +95,41 @@ async function verifyPluginAuth(req: Request): Promise<PluginAuthResult> {
     const bearerParsed = parsePluginApiKeyCandidate(extractBearerToken(req.headers.get("authorization")));
     const headerParsed = parsePluginApiKeyCandidate(req.headers.get("x-api-key"));
 
-    if (await comparePluginApiKey(bearerParsed.rawKey, currentKeyHash)) {
+    const bearerScopedCurrent = verifyScopedPluginApiKey(bearerParsed.scopedToken, currentKeyHash);
+    if (bearerScopedCurrent.valid) {
         return {
             authorized: true,
             usedPreviousKey: false,
             autoRotated,
-            scopeServerId: bearerParsed.jellyfinServerId,
+            scopeServerId: bearerScopedCurrent.jellyfinServerId,
         };
     }
 
-    if (await comparePluginApiKey(headerParsed.rawKey, currentKeyHash)) {
+    const headerScopedCurrent = verifyScopedPluginApiKey(headerParsed.scopedToken, currentKeyHash);
+    if (headerScopedCurrent.valid) {
         return {
             authorized: true,
             usedPreviousKey: false,
             autoRotated,
-            scopeServerId: headerParsed.jellyfinServerId,
+            scopeServerId: headerScopedCurrent.jellyfinServerId,
+        };
+    }
+
+    if (!bearerParsed.scoped && await comparePluginApiKey(bearerParsed.rawKey, currentKeyHash)) {
+        return {
+            authorized: true,
+            usedPreviousKey: false,
+            autoRotated,
+            scopeServerId: null,
+        };
+    }
+
+    if (!headerParsed.scoped && await comparePluginApiKey(headerParsed.rawKey, currentKeyHash)) {
+        return {
+            authorized: true,
+            usedPreviousKey: false,
+            autoRotated,
+            scopeServerId: null,
         };
     }
 
@@ -116,21 +137,41 @@ async function verifyPluginAuth(req: Request): Promise<PluginAuthResult> {
         return { authorized: false, usedPreviousKey: false, autoRotated, scopeServerId: null };
     }
 
-    if (await comparePluginApiKey(bearerParsed.rawKey, previousKeyHash)) {
+    const bearerScopedPrevious = verifyScopedPluginApiKey(bearerParsed.scopedToken, previousKeyHash);
+    if (bearerScopedPrevious.valid) {
         return {
             authorized: true,
             usedPreviousKey: true,
             autoRotated,
-            scopeServerId: bearerParsed.jellyfinServerId,
+            scopeServerId: bearerScopedPrevious.jellyfinServerId,
         };
     }
 
-    if (await comparePluginApiKey(headerParsed.rawKey, previousKeyHash)) {
+    const headerScopedPrevious = verifyScopedPluginApiKey(headerParsed.scopedToken, previousKeyHash);
+    if (headerScopedPrevious.valid) {
         return {
             authorized: true,
             usedPreviousKey: true,
             autoRotated,
-            scopeServerId: headerParsed.jellyfinServerId,
+            scopeServerId: headerScopedPrevious.jellyfinServerId,
+        };
+    }
+
+    if (!bearerParsed.scoped && await comparePluginApiKey(bearerParsed.rawKey, previousKeyHash)) {
+        return {
+            authorized: true,
+            usedPreviousKey: true,
+            autoRotated,
+            scopeServerId: null,
+        };
+    }
+
+    if (!headerParsed.scoped && await comparePluginApiKey(headerParsed.rawKey, previousKeyHash)) {
+        return {
+            authorized: true,
+            usedPreviousKey: true,
+            autoRotated,
+            scopeServerId: null,
         };
     }
 
@@ -145,29 +186,11 @@ function extractBearerToken(headerValue: string | null): string | null {
     return token.length > 0 ? token : null;
 }
 
-function getClientIp(req: Request): string {
-    const forwardedFor = req.headers.get("x-forwarded-for");
-    if (forwardedFor) {
-        const first = forwardedFor.split(",")[0]?.trim();
-        if (first) return cleanIp(first);
-    }
-
-    return cleanIp(req.headers.get("x-real-ip") || "unknown");
-}
-
 function getPluginEventRateLimitIdentifier(req: Request): string {
     const token = extractBearerToken(req.headers.get("authorization")) || req.headers.get("x-api-key") || "no-key";
     const tokenHash = createHash("sha256").update(token).digest("hex").slice(0, 16);
-    const ip = getClientIp(req);
+    const ip = getClientIp(req, "unknown") || "unknown";
     return `${ip}:${tokenHash}`;
-}
-
-function cleanIp(ip: string | null | undefined): string {
-    if (!ip) return "Unknown";
-    let cleaned = ip.trim();
-    if (cleaned.includes("::ffff:")) cleaned = cleaned.split("::ffff:")[1];
-    else if (cleaned.includes(":") && !cleaned.includes("::")) cleaned = cleaned.split(":")[0];
-    return cleaned;
 }
 
 function computeProgressPercent(positionTicks: number, runTimeTicks: number | null): number {
@@ -663,7 +686,7 @@ async function readRequestBodyWithLimit(req: Request, maxBytes: number): Promise
 // POST /api/plugin/events — Receive events from the Jellyfin Plugin
 // ────────────────────────────────────────────────────
 export async function POST(req: Request) {
-    const requesterIp = getClientIp(req);
+    const requesterIp = getClientIp(req, "unknown") || "unknown";
     const contentType = (req.headers.get("content-type") || "").toLowerCase();
     if (!contentType.includes("application/json")) {
         await writeAdminAuditLog({

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
 
@@ -288,7 +289,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     const ipAddress = getRequestIp(req);

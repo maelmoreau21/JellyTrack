@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
-import { requireAdmin, isAuthError } from "@/lib/auth";
+import { isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 // No rules
 import { replaceSystemHealthState } from "@/lib/systemHealth";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
@@ -9,7 +10,7 @@ import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     try {

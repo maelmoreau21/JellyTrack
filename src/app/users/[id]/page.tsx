@@ -59,6 +59,9 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
     const linkedAccounts = await resolveLinkedAccounts({
         jellyfinUserId,
         username: user.username || session?.user?.name || undefined,
+        authServerJellyfinServerId: isAdmin
+            ? undefined
+            : (session?.user as { authServerJellyfinServerId?: string } | undefined)?.authServerJellyfinServerId,
     });
     const linkedUserIds = linkedAccounts.linkedJellyfinUserIds.length > 0
         ? linkedAccounts.linkedJellyfinUserIds

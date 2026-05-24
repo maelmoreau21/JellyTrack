@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncJellyfinLibrary } from "@/lib/sync";
-import { requireAdmin, isAuthError } from "@/lib/auth";
+import { isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { apiT } from "@/lib/i18n-api";
 
 export async function POST(req: NextRequest) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
     try {
         const body = await req.json().catch(() => ({}));

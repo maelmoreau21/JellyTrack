@@ -31,23 +31,7 @@ export default async function RootLayout({
 }) {
   const locale = await getLocale();
   const messages = await getMessages();
-
-  // Evaluate wrapped visibility for Sidebar
-  const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } }) as any;
-  let isWrappedVisible = true;
-  if (settings?.wrappedVisible === false) {
-      isWrappedVisible = false;
-  } else if (settings?.wrappedPeriodEnabled !== false && settings) {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const startMonthRaw = settings.wrappedStartMonth || 12;
-      const endMonthRaw = settings.wrappedEndMonth || 1;
-      const start = new Date(currentYear, startMonthRaw - 1, settings.wrappedStartDay || 1);
-      const end = new Date(currentYear + (endMonthRaw < startMonthRaw ? 1 : 0), endMonthRaw - 1, settings.wrappedEndDay || 31);
-      if (now < start || now > end) {
-          isWrappedVisible = false;
-      }
-  }
+  const isWrappedVisible = await getWrappedVisibility();
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -66,4 +50,27 @@ export default async function RootLayout({
       </body>
     </html>
   )
+}
+
+async function getWrappedVisibility() {
+  try {
+    const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } }) as any;
+    if (settings?.wrappedVisible === false) {
+      return false;
+    }
+
+    if (settings?.wrappedPeriodEnabled !== false && settings) {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const startMonthRaw = settings.wrappedStartMonth || 12;
+      const endMonthRaw = settings.wrappedEndMonth || 1;
+      const start = new Date(currentYear, startMonthRaw - 1, settings.wrappedStartDay || 1);
+      const end = new Date(currentYear + (endMonthRaw < startMonthRaw ? 1 : 0), endMonthRaw - 1, settings.wrappedEndDay || 31);
+      return now >= start && now <= end;
+    }
+  } catch (error) {
+    console.warn('[layout] Unable to load global settings, using default wrapped visibility.', error);
+  }
+
+  return true;
 }

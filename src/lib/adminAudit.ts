@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { getClientIp } from "@/lib/requestIp";
 
 interface AuditEntryInput {
     action: string;
@@ -10,26 +11,7 @@ interface AuditEntryInput {
 }
 
 export function getRequestIp(req: Request): string | null {
-    const forwardedFor = req.headers.get("x-forwarded-for");
-    if (forwardedFor) {
-        const first = forwardedFor.split(",")[0]?.trim();
-        if (first) return normalizeIp(first);
-    }
-
-    return normalizeIp(req.headers.get("x-real-ip"));
-}
-
-function normalizeIp(value: string | null): string | null {
-    if (!value) return null;
-
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-
-    if (trimmed.startsWith("::ffff:")) {
-        return trimmed.slice(7);
-    }
-
-    return trimmed;
+    return getClientIp(req, null);
 }
 
 export async function writeAdminAuditLog(input: AuditEntryInput): Promise<void> {

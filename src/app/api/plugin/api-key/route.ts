@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { getRequestIp } from "@/lib/adminAudit";
 import {
     computeDaysUntilExpiry,
@@ -65,7 +66,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     const { apiKey, snapshot } = await rotatePluginApiKey({
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     await revokePluginApiKey({
@@ -101,7 +102,7 @@ export async function DELETE(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     let payload: Record<string, unknown>;

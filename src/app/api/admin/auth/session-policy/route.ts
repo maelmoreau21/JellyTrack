@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { getAuthSessionPolicy } from "@/lib/authPolicy";
-import { writeAdminAuditLog } from "@/lib/adminAudit";
+import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
 
 export const dynamic = "force-dynamic";
-
-function getClientIp(req: NextRequest): string {
-    const forwarded = req.headers.get("x-forwarded-for");
-    return forwarded?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
-}
 
 export async function GET() {
     const auth = await requireAdmin();
@@ -23,7 +19,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     const body = (await req.json().catch(() => ({}))) as {
@@ -53,7 +49,7 @@ export async function PATCH(req: NextRequest) {
         action: "Auth session policy updated",
         actorUserId: auth.jellyfinUserId || null,
         actorUsername: auth.username || null,
-        ipAddress: getClientIp(req),
+        ipAddress: getRequestIp(req),
         details: {
             rememberSessionsExpireAfterDays: updated.authRememberThirtyDaysEnabled,
         },
@@ -66,7 +62,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     const body = (await req.json().catch(() => ({}))) as { action?: unknown };
@@ -94,7 +90,7 @@ export async function POST(req: NextRequest) {
         action: "Auth sessions revoked",
         actorUserId: auth.jellyfinUserId || null,
         actorUsername: auth.username || null,
-        ipAddress: getClientIp(req),
+        ipAddress: getRequestIp(req),
         details: {
             revokedAt: updated.authSessionsRevokedAt?.toISOString() ?? revokedAt.toISOString(),
         },

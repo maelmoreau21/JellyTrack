@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 // No rules
 import { readSystemHealthState } from "@/lib/systemHealth";
+import { redactBackupData } from "@/lib/backupSecurity";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ export async function GET() {
         const backupContent = {
             version: "1.0",
             exportDate: new Date().toISOString(),
-            data: {
+            data: redactBackupData({
                 servers,
                 users,
                 media,
@@ -33,7 +34,7 @@ export async function GET() {
                 settings,
                 libraryRules,
                 systemHealth,
-            }
+            })
         };
 
         // BigInt-safe JSON serializer (Prisma returns BigInt for durationMs, positionTicks, etc.)

@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import { normalizeBitrateToKbps } from "@/lib/bitrate";
+import { buildCsvRow } from "@/lib/csv";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +104,24 @@ export async function GET(request: Request) {
     const activeStreams = await prisma.activeStream.findMany({ select: { userId: true, mediaId: true, bitrate: true, audioCodec: true } });
     const activeMap = new Map(activeStreams.map((a) => [`${a.userId}:${a.mediaId}`, { bitrate: a.bitrate ?? null, audioCodec: a.audioCodec ?? '' }] as [string, { bitrate: number | null; audioCodec: string }]));
 
-    let csvContent = "Id,Date,User,Media Title,Media Type,Client,Device,IP Address,Country,Play Method,Duration (s),Resolution,Audio Bitrate (kbps),Audio Codec,Audio Language,Subtitle Codec\n";
+    let csvContent = buildCsvRow([
+        "Id",
+        "Date",
+        "User",
+        "Media Title",
+        "Media Type",
+        "Client",
+        "Device",
+        "IP Address",
+        "Country",
+        "Play Method",
+        "Duration (s)",
+        "Resolution",
+        "Audio Bitrate (kbps)",
+        "Audio Codec",
+        "Audio Language",
+        "Subtitle Codec",
+    ]) + "\n";
 
     logs.forEach((log) => {
         const key = `${log.userId}:${log.mediaId}`;
@@ -114,10 +132,10 @@ export async function GET(request: Request) {
             log.id,
             log.startedAt.toISOString(),
             log.user?.username || 'Unknown',
-            `"${(log.media?.title || 'Unknown').replace(/"/g, '""')}"`,
+            log.media?.title || 'Unknown',
             log.media?.type || 'Unknown',
-            `"${(log.clientName || '').replace(/"/g, '""')}"`,
-            `"${(log.deviceName || '').replace(/"/g, '""')}"`,
+            log.clientName || '',
+            log.deviceName || '',
             log.ipAddress || '',
             log.country || '',
             log.playMethod || '',
@@ -128,7 +146,7 @@ export async function GET(request: Request) {
             log.audioLanguage || '',
             log.subtitleCodec || ''
         ];
-        csvContent += row.join(",") + "\n";
+        csvContent += buildCsvRow(row) + "\n";
     });
 
     return new NextResponse(csvContent, {

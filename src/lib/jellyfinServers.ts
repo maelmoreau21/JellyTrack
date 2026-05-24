@@ -104,6 +104,7 @@ export async function getConfiguredJellyfinServers(): Promise<JellyfinServerConn
   const masterUrl = normalizeUrl(masterIdentity.url);
   const list: JellyfinServerConnection[] = rows.map((row) => {
     const rowUrl = normalizeUrl(row.url);
+    const rowApiKey = normalizeApiKey(row.jellyfinApiKey);
     const isPrimary =
       row.id === ensuredMaster.id ||
       row.jellyfinServerId === masterIdentity.jellyfinServerId ||
@@ -113,8 +114,8 @@ export async function getConfiguredJellyfinServers(): Promise<JellyfinServerConn
       id: row.id,
       jellyfinServerId: row.jellyfinServerId,
       name: row.name,
-      url: rowUrl,
-      apiKey: normalizeApiKey(row.jellyfinApiKey),
+      url: isPrimary && !rowApiKey ? masterUrl : rowUrl,
+      apiKey: rowApiKey,
       allowAuthFallback: row.allowAuthFallback === true,
       isPrimary,
     };
@@ -255,9 +256,12 @@ export async function fetchJellyfinSystemInfo(input: {
     const headers = buildJellyfinApiKeyHeaders(apiKey);
     const candidates = [
       `${baseUrl}/System/Info`,
-      `${baseUrl}/System/Info?api_key=${encodeURIComponent(apiKey)}`,
       `${baseUrl}/System/Info/Public`,
     ];
+
+    if (process.env.JELLYFIN_ALLOW_API_KEY_QUERY_FALLBACK === "true") {
+      candidates.splice(1, 0, `${baseUrl}/System/Info?api_key=${encodeURIComponent(apiKey)}`);
+    }
 
     for (const endpoint of candidates) {
       const response = await fetch(endpoint, {

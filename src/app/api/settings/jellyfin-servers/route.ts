@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import {
   fetchJellyfinSystemInfo,
   getConfiguredJellyfinServers,
@@ -142,7 +143,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminMutation(req);
   if (isAuthError(auth)) return auth;
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -207,7 +208,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminMutation(req);
   if (isAuthError(auth)) return auth;
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -262,7 +263,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminMutation(req);
   if (isAuthError(auth)) return auth;
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;

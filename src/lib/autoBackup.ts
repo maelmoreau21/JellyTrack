@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 // No rules
 import { appendHealthEvent, markBackupFinished, markBackupStarted, readSystemHealthState } from "@/lib/systemHealth";
 import { getBackupDirectory } from "@/lib/backupDir";
+import { redactBackupData } from "@/lib/backupSecurity";
 
 const MAX_BACKUPS = 5;
 
@@ -33,7 +34,7 @@ export async function performAutoBackup(): Promise<string> {
             version: "1.0",
             exportDate: new Date().toISOString(),
             type: "auto-backup",
-            data: {
+            data: redactBackupData({
                 servers,
                 users,
                 media,
@@ -42,7 +43,7 @@ export async function performAutoBackup(): Promise<string> {
                 settings,
                 // No rules
                 systemHealth,
-            }
+            })
         };
 
         // Generate filename with date

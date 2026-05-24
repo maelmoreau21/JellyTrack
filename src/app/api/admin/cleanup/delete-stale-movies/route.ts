@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { requireAdmin, isAuthError } from "@/lib/auth";
+import { isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { getConfiguredJellyfinServers, buildJellyfinApiKeyHeaders, resolveServerApiKey } from "@/lib/jellyfinServers";
 import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
 
@@ -36,6 +37,14 @@ async function deleteItemOnJellyfin(input: {
 
     if (primaryResponse.ok) return { ok: true };
 
+    if (process.env.JELLYFIN_ALLOW_API_KEY_QUERY_FALLBACK !== "true") {
+      const primaryText = await primaryResponse.text().catch(() => "");
+      return {
+        ok: false,
+        error: `HTTP ${primaryResponse.status}${primaryText ? ` - ${truncate(primaryText)}` : ""}`,
+      };
+    }
+
     const fallbackResponse = await fetch(
       `${endpoint}?api_key=${encodeURIComponent(input.apiKey)}`,
       {
@@ -59,7 +68,7 @@ async function deleteItemOnJellyfin(input: {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminMutation(req);
   if (isAuthError(auth)) return auth;
 
   const actorUserId = auth.linkedUserDbIds[0] ?? null;

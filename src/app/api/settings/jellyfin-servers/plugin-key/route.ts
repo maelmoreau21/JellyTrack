@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAdmin, isAuthError } from "@/lib/auth";
+import { isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import {
   comparePluginApiKey,
   getPluginKeySnapshot,
@@ -11,7 +12,7 @@ import { deriveScopedPluginApiKey } from "@/lib/pluginServerKey";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin();
+  const auth = await requireAdminMutation(req);
   if (isAuthError(auth)) return auth;
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -69,16 +70,20 @@ export async function POST(req: NextRequest) {
 
   const currentMatches = await comparePluginApiKey(globalApiKey, snapshot.currentKeyHash);
   let validGlobalKey = currentMatches;
+  let signingHash = currentMatches ? snapshot.currentKeyHash : null;
 
   if (!validGlobalKey && isPreviousPluginKeyValid(snapshot) && snapshot.previousKeyHash) {
     validGlobalKey = await comparePluginApiKey(globalApiKey, snapshot.previousKeyHash);
+    if (validGlobalKey) {
+      signingHash = snapshot.previousKeyHash;
+    }
   }
 
   if (!validGlobalKey) {
     return NextResponse.json({ error: "Clé plugin globale invalide." }, { status: 401 });
   }
 
-  const pluginApiKey = deriveScopedPluginApiKey(globalApiKey, server.jellyfinServerId);
+  const pluginApiKey = deriveScopedPluginApiKey(signingHash, server.jellyfinServerId);
   if (!pluginApiKey) {
     return NextResponse.json({ error: "Impossible de générer la clé plugin du serveur." }, { status: 500 });
   }

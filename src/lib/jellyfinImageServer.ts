@@ -2,6 +2,7 @@ import "server-only";
 
 import prisma from "@/lib/prisma";
 import { buildJellyfinApiKeyHeaders } from "@/lib/jellyfinServers";
+import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 
 type JellyfinConnection = {
     baseUrl: string;
@@ -24,12 +25,20 @@ async function resolveJellyfinConnection(serverId?: string | null): Promise<Jell
     if (serverId) {
         const server = await prisma.server.findUnique({
             where: { id: serverId },
-            select: { url: true, jellyfinApiKey: true },
+            select: { url: true, jellyfinApiKey: true, jellyfinServerId: true },
         });
 
         if (server) {
-            const baseUrl = normalizeUrl(server.url) || envBaseUrl;
-            const apiKey = normalizeApiKey(server.jellyfinApiKey) || envApiKey;
+            const serverApiKey = normalizeApiKey(server.jellyfinApiKey);
+            if (serverApiKey) {
+                const baseUrl = normalizeUrl(server.url) || envBaseUrl;
+                return baseUrl ? { baseUrl, apiKey: serverApiKey } : null;
+            }
+
+            const master = getMasterServerIdentityFromEnv();
+            const isPrimaryServer = server.jellyfinServerId === master.jellyfinServerId;
+            const baseUrl = isPrimaryServer ? envBaseUrl : "";
+            const apiKey = isPrimaryServer ? envApiKey : null;
             if (baseUrl && apiKey) {
                 return { baseUrl, apiKey };
             }
@@ -61,8 +70,7 @@ export async function fetchJellyfinJson<T>(path: string, serverId?: string | nul
     if (!connection) return null;
 
     try {
-        const separator = path.includes("?") ? "&" : "?";
-        const url = `${connection.baseUrl}${path}${separator}api_key=${encodeURIComponent(connection.apiKey)}`;
+        const url = `${connection.baseUrl}${path}`;
         const response = await fetch(url, {
             method: "GET",
             headers: buildJellyfinApiKeyHeaders(connection.apiKey),

@@ -7,6 +7,7 @@ export const INDEFINITE_SESSION_MAX_AGE_SECONDS = 10 * 365 * DAY_SECONDS;
 export type AuthSessionTokenLike = {
   sessionExpiresAt?: unknown;
   sessionIssuedAt?: unknown;
+  sessionExpired?: unknown;
   iat?: unknown;
   exp?: unknown;
 };
@@ -29,6 +30,7 @@ export function isSessionTokenActive(
   token: AuthSessionTokenLike | null | undefined,
   nowSeconds = Math.floor(Date.now() / 1000)
 ): boolean {
+  if (token?.sessionExpired === true) return false;
   const expiresAt = getSessionExpiresAtSeconds(token);
   return expiresAt !== null && expiresAt > nowSeconds;
 }

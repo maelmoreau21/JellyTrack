@@ -20,6 +20,8 @@ import {
     type JellyfinAuthAttemptStatus,
 } from "@/lib/jellyfinServers";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
+import { getClientIpFromHeaders } from "@/lib/requestIp";
+import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 
 const authSecret = getResolvedAuthSecret();
 
@@ -43,8 +45,7 @@ export const authOptions: NextAuthOptions = {
 
                 // SECURITY: Rate-limit login attempts by IP
                 const headersList = await headers();
-                const forwarded = headersList.get("x-forwarded-for");
-                const clientIp = forwarded?.split(",")[0]?.trim() || headersList.get("x-real-ip") || "unknown";
+                const clientIp = getClientIpFromHeaders(headersList, "unknown") || "unknown";
                 
                 const { allowed, retryAfterSeconds } = await checkLoginRateLimit(clientIp);
                 if (!allowed) {
@@ -56,10 +57,11 @@ export const authOptions: NextAuthOptions = {
 
                 const configuredServers = await getConfiguredJellyfinServers().catch(() => []);
 
-                const candidates: Array<{ url: string; name: string; isPrimary: boolean }> = [];
+                const masterIdentity = getMasterServerIdentityFromEnv();
+                const candidates: Array<{ url: string; name: string; isPrimary: boolean; jellyfinServerId: string }> = [];
                 const seenUrls = new Set<string>();
 
-                const pushCandidate = (candidate: { url: string; name: string; isPrimary: boolean }) => {
+                const pushCandidate = (candidate: { url: string; name: string; isPrimary: boolean; jellyfinServerId: string }) => {
                     const normalizedUrl = String(candidate.url || "").trim().replace(/\/+$/, "");
                     if (!normalizedUrl || seenUrls.has(normalizedUrl)) return;
                     candidates.push({ ...candidate, url: normalizedUrl });
@@ -67,7 +69,12 @@ export const authOptions: NextAuthOptions = {
                 };
 
                 if (primaryUrl) {
-                    pushCandidate({ url: primaryUrl, name: primaryName, isPrimary: true });
+                    pushCandidate({
+                        url: primaryUrl,
+                        name: primaryName,
+                        isPrimary: true,
+                        jellyfinServerId: masterIdentity.jellyfinServerId,
+                    });
                 }
 
                 for (const server of configuredServers) {
@@ -76,6 +83,7 @@ export const authOptions: NextAuthOptions = {
                         url: server.url,
                         name: server.name,
                         isPrimary: false,
+                        jellyfinServerId: server.jellyfinServerId,
                     });
                 }
 
@@ -171,13 +179,18 @@ export const authOptions: NextAuthOptions = {
                         }
                     });
 
+                    const allowFallbackAdmin = process.env.ALLOW_FALLBACK_ADMIN === "true";
+                    const jellyTrackIsAdmin =
+                        authenticatedUser.isAdmin && (authenticatedOn.isPrimary || allowFallbackAdmin);
+
                     return {
                         id: authenticatedUser.userId,
                         name: authenticatedUser.username,
-                        isAdmin: authenticatedUser.isAdmin,
+                        isAdmin: jellyTrackIsAdmin,
                         jellyfinUserId: authenticatedUser.userId,
                         authServerName: authenticatedOn.name,
                         authServerUrl: authenticatedOn.url,
+                        authServerJellyfinServerId: authenticatedOn.jellyfinServerId,
                         authServerIsPrimary: authenticatedOn.isPrimary,
                         rememberMe,
                     };
@@ -202,6 +215,7 @@ export const authOptions: NextAuthOptions = {
                 token.jellyfinUserId = user.jellyfinUserId ?? user.id;
                 token.authServerName = user.authServerName ?? "";
                 token.authServerUrl = user.authServerUrl ?? "";
+                token.authServerJellyfinServerId = user.authServerJellyfinServerId ?? "";
                 token.authServerIsPrimary = user.authServerIsPrimary ?? true;
                 token.rememberMe = rememberMe;
                 token.rememberSessionLimitedTo30Days = sessionPolicy.rememberSessionsExpireAfterDays;
@@ -222,6 +236,7 @@ export const authOptions: NextAuthOptions = {
                 token.jellyfinUserId = "";
                 token.authServerName = "";
                 token.authServerUrl = "";
+                token.authServerJellyfinServerId = "";
                 token.authServerIsPrimary = true;
             }
             return token;
@@ -241,6 +256,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.jellyfinUserId = token.jellyfinUserId ?? "";
                 session.user.authServerName = String(token.authServerName || "");
                 session.user.authServerUrl = String(token.authServerUrl || "");
+                session.user.authServerJellyfinServerId = String(token.authServerJellyfinServerId || "");
                 session.user.authServerIsPrimary = token.authServerIsPrimary !== false;
             }
             return session;
