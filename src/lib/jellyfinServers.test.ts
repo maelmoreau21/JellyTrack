@@ -7,7 +7,7 @@ describe("fetchJellyfinSystemInfo", () => {
     vi.restoreAllMocks();
   });
 
-  it("does not put the API key in the URL unless legacy fallback is enabled", async () => {
+  it("does not put the API key in the URL", async () => {
     const urls: string[] = [];
     vi.stubGlobal("fetch", vi.fn(async (url: string) => {
       urls.push(url);
@@ -17,6 +17,6 @@ describe("fetchJellyfinSystemInfo", () => {
     await fetchJellyfinSystemInfo({ url: "https://jellyfin.example", apiKey: "secret-key" });
 
     expect(urls.length).toBeGreaterThan(0);
-    expect(urls.every((url) => !url.includes("api_key="))).toBe(true);
+    expect(urls.every((url) => !/[?&]ApiKey=/i.test(url))).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 services:
   JellyTrack:
-    image: ghcr.io/maelmoreau21/JellyTrack:latest
+    image: ghcr.io/maelmoreau21/jellytrack:latest
     container_name: JellyTrack_app
     env_file:
       - .env

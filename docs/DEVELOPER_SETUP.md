@@ -30,14 +30,26 @@ npm ci
 docker compose up -d postgres redis
 ```
 
-3. Generate Prisma client and sync schema:
+3. Set `DATABASE_URL` for the local process if it is empty in `.env`:
+
+```bash
+export DATABASE_URL="postgresql://JellyTrack:CHANGE_ME_POSTGRES_PASSWORD@localhost:5432/JellyTrack"
+```
+
+On PowerShell:
+
+```powershell
+$env:DATABASE_URL = "postgresql://JellyTrack:CHANGE_ME_POSTGRES_PASSWORD@localhost:5432/JellyTrack"
+```
+
+4. Generate Prisma client and sync schema:
 
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
-4. Start the dev server:
+5. Start the dev server:
 
 ```bash
 npm run dev

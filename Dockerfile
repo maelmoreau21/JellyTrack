@@ -41,7 +41,7 @@ RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-mus
     find /app/node_modules/@prisma/engines -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/prisma -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    # Remove Prisma CLI's bundled engines (schema-engine, migration-engine) — we only use db push
+    # Keep only Alpine-compatible Prisma schema/migration engines for runtime setup
     find /app/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
 

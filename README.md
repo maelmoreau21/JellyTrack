@@ -23,62 +23,58 @@
 
 ---
 
-## 🚀 Installation (Méthode Recommandée : Docker)
+## 🚀 Installation Docker
 
-L'utilisation de **Docker Compose** est le moyen le plus simple et recommandé pour déployer JellyTrack.
+Le dépôt contient déjà un `docker-compose.yml` complet. La méthode recommandée est donc :
 
-### 1. Déploiement
-
-Créez un fichier `docker-compose.yml` :
-
-```yaml
-services:
-  jellytrack:
-    image: ghcr.io/maelmoreau21/jellytrack:latest
-    container_name: jellytrack
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://jellytrack:CHANGE_ME_DB_PASS@db:5432/jellytrack
-      - REDIS_URL=redis://redis:6379
-      - JELLYFIN_URL=http://your-jellyfin-ip:8096
-      - ADMIN_PASSWORD=CHANGE_ME_ADMIN_PASS
-      - NEXTAUTH_SECRET=CHANGE_ME_AUTH_SECRET
-      - NEXTAUTH_URL=http://localhost:3000
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-
-  db:
-    image: postgres:15-alpine
-    container_name: jellytrack-db
-    environment:
-      - POSTGRES_USER=jellytrack
-      - POSTGRES_PASSWORD=CHANGE_ME_DB_PASS
-      - POSTGRES_DB=jellytrack
-    volumes:
-      - jellytrack-db-data:/var/lib/postgresql/data
-    restart: unless-stopped
-
-  redis:
-    image: redis:alpine
-    container_name: jellytrack-redis
-    restart: unless-stopped
-
-volumes:
-  jellytrack-db-data:
-```
-
-### 2. Lancement
+### 1. Configuration
 
 ```bash
+cp .env.example .env
+```
+
+Modifiez `.env` et remplacez toutes les valeurs `CHANGE_ME_*`.
+
+Important pour Docker : si Jellyfin tourne dans un autre conteneur ou sur une autre machine, `JELLYFIN_URL` doit être une adresse joignable depuis le conteneur JellyTrack. Évitez `127.0.0.1` sauf si Jellyfin est dans le même conteneur.
+
+### 2. Lancement ou mise à jour
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Pour tester une modification locale avant publication de l'image :
+
+```bash
+docker build -t ghcr.io/maelmoreau21/jellytrack:latest .
 docker compose up -d
 ```
 
 ### 3. Accès
 
 Rendez-vous sur `http://localhost:3000` et connectez-vous avec votre `ADMIN_PASSWORD`.
+
+### Jellyfin 10.12 / 12 beta
+
+JellyTrack utilise l'en-tête `Authorization: MediaBrowser Token="..."` pour les appels Jellyfin récents. Les anciens accès par clé API dans l'URL (`?ApiKey=...`) ont été retirés.
+
+1. Créez une clé API dans Jellyfin : **Tableau de bord** > **Avancé** > **Clés API**.
+2. Renseignez `JELLYFIN_API_KEY` dans `.env`.
+3. Installez ou mettez à jour le plugin compagnon JellyTrack.
+4. Dans JellyTrack, allez dans **Paramètres** > **Connexion Jellyfin**, générez la clé plugin, puis copiez l'URL plugin et la clé dans la configuration du plugin Jellyfin.
+
+### Base existante / erreur Prisma P3005
+
+Si les logs affichent `Error: P3005` et `The database schema is not empty`, la base existe déjà mais n'a pas encore la table d'historique Prisma. Le conteneur sait maintenant baseliner les migrations incluses puis synchroniser le schéma sans accepter de perte de données par défaut.
+
+Si vous voulez repartir de zéro, supprimez le volume PostgreSQL avec prudence :
+
+```bash
+docker compose down
+docker volume rm jellytrack_JellyTrack_pgdata
+docker compose up -d
+```
 
 ---
 

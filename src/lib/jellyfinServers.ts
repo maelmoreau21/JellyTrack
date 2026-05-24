@@ -257,10 +257,6 @@ export async function fetchJellyfinSystemInfo(input: {
       `${baseUrl}/System/Info/Public`,
     ];
 
-    if (process.env.JELLYFIN_ALLOW_API_KEY_QUERY_FALLBACK === "true") {
-      candidates.splice(1, 0, `${baseUrl}/System/Info?ApiKey=${encodeURIComponent(apiKey)}`);
-    }
-
     for (const endpoint of candidates) {
       const response = await fetch(endpoint, {
         method: "GET",

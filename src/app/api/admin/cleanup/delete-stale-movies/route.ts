@@ -37,29 +37,10 @@ async function deleteItemOnJellyfin(input: {
 
     if (primaryResponse.ok) return { ok: true };
 
-    if (process.env.JELLYFIN_ALLOW_API_KEY_QUERY_FALLBACK !== "true") {
-      const primaryText = await primaryResponse.text().catch(() => "");
-      return {
-        ok: false,
-        error: `HTTP ${primaryResponse.status}${primaryText ? ` - ${truncate(primaryText)}` : ""}`,
-      };
-    }
-
-    const fallbackResponse = await fetch(
-      `${endpoint}?ApiKey=${encodeURIComponent(input.apiKey)}`,
-      {
-        method: "DELETE",
-        headers: { Accept: "application/json" },
-        cache: "no-store",
-      },
-    );
-
-    if (fallbackResponse.ok) return { ok: true };
-
-    const fallbackText = await fallbackResponse.text().catch(() => "");
+    const primaryText = await primaryResponse.text().catch(() => "");
     return {
       ok: false,
-      error: `HTTP ${fallbackResponse.status}${fallbackText ? ` - ${truncate(fallbackText)}` : ""}`,
+      error: `HTTP ${primaryResponse.status}${primaryText ? ` - ${truncate(primaryText)}` : ""}`,
     };
   } catch (error) {
     const text = error instanceof Error ? error.message : "Unknown deletion error";
