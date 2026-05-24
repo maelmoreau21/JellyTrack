@@ -9,10 +9,7 @@ const scriptSrc = process.env.NODE_ENV === 'production'
 const nextConfig: NextConfig = {
   output: "standalone",
   typescript: {
-    // Note: ignoreBuildErrors: false would catch existing TypeScript issues in charts.
-    // Keeping true for now to maintain build stability.
-    // TODO: Fix TypeScript errors in chart components and set to false
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   env: {
     APP_VERSION: process.env.npm_package_version || '0.0.0',

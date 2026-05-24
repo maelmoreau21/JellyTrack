@@ -10,6 +10,7 @@ import {
     Legend,
     Sector,
 } from "recharts";
+import type { PieSectorDataItem } from "recharts";
 // Keep a typed alias to avoid sprinkling `any` in JSX usage while preserving
 // the component reference.
 const PieTyped = Pie as unknown as typeof Pie;
@@ -34,7 +35,7 @@ type ActiveShapeProps = {
     startAngle: number;
     endAngle: number;
     fill?: string;
-    payload: { name: string; value?: number };
+    payload?: { name?: string; value?: number };
     value?: number;
     percent?: number;
 };
@@ -55,7 +56,7 @@ function renderActiveShape(props: ActiveShapeProps) {
                 style={{ transition: "none" }}
             />
             <text x={cx} y={cy - 8} textAnchor="middle" fill={activeTextColor} fontSize={13} fontWeight={600}>
-                {payload.name}
+                {payload?.name ?? ""}
             </text>
             <text x={cx} y={cy + 12} textAnchor="middle" fill={secondaryTextColor} fontSize={11}>
                 {value} ({((percent ?? 0) * 100).toFixed(0)}%)
@@ -66,7 +67,6 @@ function renderActiveShape(props: ActiveShapeProps) {
 
 export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
     const t = useTranslations('dashboard');
-    const [activeIndex, setActiveIndex] = useState<number>(-1);
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
     const COLORS: Record<string, string> = {
@@ -136,9 +136,7 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
                         animationDuration={0}
                         animationBegin={0}
                         animationEasing="linear"
-                        activeShape={renderActiveShape as unknown as React.FC<ActiveShapeProps>}
-                        onMouseEnter={(d: { value?: number; name?: string } | undefined, index: number) => setActiveIndex(index)}
-                        onMouseLeave={() => setActiveIndex(-1)}
+                        activeShape={renderActiveShape as unknown as (props: PieSectorDataItem) => React.ReactElement | null}
                     >
                         {filteredData.map((entry, index) => (
                             <Cell
@@ -152,10 +150,10 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
                         contentStyle={chartTooltipStyle}
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
-                        formatter={(value: number | string | null | undefined, name?: string) => {
+                        formatter={(value: unknown, name?: unknown) => {
                             const n = Number(value ?? 0);
                             const pct = total > 0 ? ((n / total) * 100).toFixed(0) : '0';
-                            return [`${n} sessions (${pct}%)`, name ?? ''] as [string, string];
+                            return [`${n} sessions (${pct}%)`, String(name ?? '')] as [string, string];
                         }}
                         animationDuration={0}
                     />

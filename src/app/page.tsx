@@ -91,7 +91,7 @@ type History = {
   clientName?: string | null;
   playMethod?: string | null;
   userId?: string | null;
-  media?: { type?: string | null; durationMs?: bigint | null } | null;
+  media?: { type?: string | null; durationMs?: bigint | null; parentId?: string | null } | null;
 };
 
 type TrendEntry = {
@@ -421,7 +421,7 @@ const getDashboardMetrics = unstable_cache(
 
     const directPlayPercent = histories.length > 0 ? Math.round((directPlayCount / histories.length) * 100) : 100;
 
-    const topUsersAgg = (await prisma.playbackHistory.groupBy({
+    const topUsersAgg = (await (prisma.playbackHistory as any).groupBy({
       by: ["userId"],
       _sum: { durationWatched: true },
       where: { ...playbackBaseWhere, startedAt: dateFilter, userId: { not: null } },

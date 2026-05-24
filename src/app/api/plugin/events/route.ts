@@ -12,8 +12,8 @@ import { consumePluginEventRateLimit } from "@/lib/pluginEventRateLimit";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
 import { comparePluginApiKey, getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
 import { parsePluginApiKeyCandidate, verifyScopedPluginApiKey } from "@/lib/pluginServerKey";
-import { isValidDiscordWebhook } from "@/lib/webhookValidator";
-import { getClientIp } from "@/lib/requestIp";
+import { isValidDiscordWebhook, safeFetchWebhook } from "@/lib/webhookValidator";
+import { getClientIp, normalizeIp } from "@/lib/requestIp";
 import {
     buildLegacyStreamRedisKey,
     buildStreamRedisKey,
@@ -279,6 +279,12 @@ function parseFiniteNumber(raw: unknown): number | null {
     return null;
 }
 
+function cleanIp(raw: unknown): string | null {
+    if (typeof raw !== "string") return null;
+    const firstForwardedValue = raw.split(",")[0]?.trim() || raw;
+    return normalizeIp(firstForwardedValue);
+}
+
 function resolvePluginSchemaVersion(payload: Record<string, any>): PluginSchemaVersionResult {
     const raw =
         payload.eventSchemaVersion ??
@@ -340,13 +346,14 @@ async function upsertCanonicalUser(serverId: string, rawJellyfinUserId: unknown,
                     throw error;
                 }
 
-                primary = await tx.user.findFirst({
+                const fallbackPrimary = await tx.user.findFirst({
                     where: { serverId, jellyfinUserId: { in: candidates } },
                     orderBy: { createdAt: "asc" },
                 });
-                if (!primary) {
+                if (!fallbackPrimary) {
                     throw error;
                 }
+                primary = fallbackPrimary;
 
                 const fallbackUpdates: { jellyfinUserId?: string; username?: string; lastActive?: Date } = {};
                 if (primary.jellyfinUserId !== jellyfinUserId) fallbackUpdates.jellyfinUserId = jellyfinUserId;
@@ -368,18 +375,23 @@ async function upsertCanonicalUser(serverId: string, rawJellyfinUserId: unknown,
             }
         }
  
-        const duplicates = matches.filter((u) => u.id !== primary!.id);
+        if (!primary) {
+            throw new Error("Unable to upsert canonical user.");
+        }
+
+        const primaryUser = primary;
+        const duplicates = matches.filter((u) => u.id !== primaryUser.id);
         for (const duplicate of duplicates) {
-            await tx.playbackHistory.updateMany({ where: { userId: duplicate.id }, data: { userId: primary!.id } });
-            await tx.activeStream.updateMany({ where: { userId: duplicate.id }, data: { userId: primary!.id } });
+            await tx.playbackHistory.updateMany({ where: { userId: duplicate.id }, data: { userId: primaryUser.id } });
+            await tx.activeStream.updateMany({ where: { userId: duplicate.id }, data: { userId: primaryUser.id } });
             await tx.user.delete({ where: { id: duplicate.id } });
             console.warn("[Plugin] User merged after ID normalization", {
-                kept: primary!.jellyfinUserId,
+                kept: primaryUser.jellyfinUserId,
                 removed: duplicate.jellyfinUserId,
             });
         }
  
-        return primary;
+        return primaryUser;
     });
 }
 
@@ -438,13 +450,14 @@ async function upsertCanonicalMedia(input: {
                     throw error;
                 }
 
-                primary = await tx.media.findFirst({
+                const fallbackPrimary = await tx.media.findFirst({
                     where: { serverId: input.serverId, jellyfinMediaId: { in: candidates } },
                     orderBy: { createdAt: "asc" },
                 });
-                if (!primary) {
+                if (!fallbackPrimary) {
                     throw error;
                 }
+                primary = fallbackPrimary;
 
                 primary = await tx.media.update({
                     where: { id: primary.id },
@@ -486,18 +499,23 @@ async function upsertCanonicalMedia(input: {
             });
         }
 
-        const duplicates = matches.filter((m) => m.id !== primary!.id);
+        if (!primary) {
+            throw new Error("Unable to upsert canonical media.");
+        }
+
+        const primaryMedia = primary;
+        const duplicates = matches.filter((m) => m.id !== primaryMedia.id);
         for (const duplicate of duplicates) {
-            await tx.playbackHistory.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primary!.id } });
-            await tx.activeStream.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primary!.id } });
+            await tx.playbackHistory.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primaryMedia.id } });
+            await tx.activeStream.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primaryMedia.id } });
             await tx.media.delete({ where: { id: duplicate.id } });
             console.warn("[Plugin] Media merged after ID normalization", {
-                kept: primary!.jellyfinMediaId,
+                kept: primaryMedia.jellyfinMediaId,
                 removed: duplicate.jellyfinMediaId,
             });
         }
 
-        return primary;
+        return primaryMedia;
     });
 }
 
@@ -1390,14 +1408,13 @@ export async function POST(req: Request) {
                             }
 
                             try {
-                                await fetch(settings.discordWebhookUrl, {
+                                await safeFetchWebhook(settings.discordWebhookUrl, {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({
                                         embeds: [embed],
                                     }),
-                                    signal: AbortSignal.timeout(10000),
-                                });
+                                }, isValidDiscordWebhook);
                             } catch (fetchErr) {
                                 console.error("[Plugin] Discord webhook fetch failed:", fetchErr instanceof Error ? fetchErr.message : String(fetchErr));
                             }
@@ -1423,7 +1440,7 @@ export async function POST(req: Request) {
                                 console.warn("[Alert] Invalid Discord webhook URL: rejecting");
                             } else {
                                 try {
-                                    await fetch(settings.discordWebhookUrl, {
+                                    await safeFetchWebhook(settings.discordWebhookUrl, {
                                         method: "POST",
                                         headers: { "Content-Type": "application/json" },
                                         body: JSON.stringify({
@@ -1438,8 +1455,7 @@ export async function POST(req: Request) {
                                                 timestamp: new Date().toISOString(),
                                             }],
                                         }),
-                                        signal: AbortSignal.timeout(10000),
-                                    });
+                                    }, isValidDiscordWebhook);
                                 } catch (fetchErr) {
                                     console.error("[Alert] Discord webhook fetch failed:", fetchErr instanceof Error ? fetchErr.message : String(fetchErr));
                                 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { requireAdminMutation } from "@/lib/adminRequestGuard";
@@ -51,7 +52,7 @@ export async function PATCH(req: NextRequest) {
   const mergedResolutionSettings = mergeSmartSecurityThresholdsIntoResolutionSettings(
     existing?.resolutionThresholds,
     thresholds,
-  );
+  ) as Prisma.InputJsonObject;
 
   await prisma.globalSettings.upsert({
     where: { id: "global" },
@@ -68,7 +69,7 @@ export async function PATCH(req: NextRequest) {
     actorUsername: auth.username || null,
     ipAddress: getRequestIp(req),
     target: "/api/admin/security/smart-settings",
-    details: thresholds,
+    details: { ...thresholds },
   });
 
   return NextResponse.json({ thresholds });

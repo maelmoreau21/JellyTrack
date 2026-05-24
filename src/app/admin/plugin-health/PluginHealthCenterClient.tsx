@@ -497,7 +497,7 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
                                         />
                                         <YAxis unit="s" allowDecimals={false} />
                                         <Tooltip
-                                            formatter={(value: number | string, name: string) => {
+                                            formatter={(value: unknown, name: unknown) => {
                                                 const numeric = typeof value === "number" ? value : Number(value);
                                                 const pretty = Number.isFinite(numeric) ? `${Math.round(numeric * 100) / 100}s` : "-";
                                                 return [pretty, name === "intervalSec" ? t("intervalSeries") : t("jitterSeries")];

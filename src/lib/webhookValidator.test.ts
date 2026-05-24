@@ -25,5 +25,7 @@ describe("isValidDiscordWebhook", () => {
       isValidDiscordWebhook("http://discord.com/api/webhooks/123456789/token")
     ).toBe(false);
     expect(isValidDiscordWebhook("https://discord.com/api/channels/123")).toBe(false);
+    expect(isValidDiscordWebhook("https://discord.com/foo/webhooks/123456789/token")).toBe(false);
+    expect(isValidDiscordWebhook("https://discord.com/api/webhooks/not-a-number/token")).toBe(false);
   });
 });

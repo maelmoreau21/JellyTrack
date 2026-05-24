@@ -69,8 +69,16 @@ export function isValidDiscordWebhook(url: string): boolean {
       return false;
     }
 
-    // Must have webhook path pattern
-    if (!parsed.pathname.includes("/webhooks/")) {
+    // Must match the Discord webhook path format exactly:
+    // /api/webhooks/{webhookId}/{token}
+    const pathParts = parsed.pathname.split("/").filter(Boolean);
+    if (
+      pathParts.length !== 4 ||
+      pathParts[0] !== "api" ||
+      pathParts[1] !== "webhooks" ||
+      !/^\d+$/.test(pathParts[2]) ||
+      pathParts[3].length === 0
+    ) {
       return false;
     }
 
@@ -119,7 +127,7 @@ export async function safeFetchWebhook(
   validator: (url: string) => boolean = isValidWebhookUrl
 ): Promise<Response> {
   if (!validator(url)) {
-    throw new Error(`Invalid or suspicious webhook URL: ${url}`);
+    throw new Error("Invalid or suspicious webhook URL.");
   }
 
   return fetch(url, {

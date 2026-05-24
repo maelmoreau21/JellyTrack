@@ -43,6 +43,8 @@ export async function GET() {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Disposition": `attachment; filename="JellyTrack-backup-${new Date().toISOString().split('T')[0]}.json"`,
+                "Cache-Control": "no-store, max-age=0",
+                "Pragma": "no-cache",
             }
         });
 

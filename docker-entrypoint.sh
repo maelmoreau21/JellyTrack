@@ -21,6 +21,10 @@ fi
 
 if [ "$rebuild_db" = true ]; then
   DB_USER=${DB_USER:-${POSTGRES_USER:-JellyTrack}}
+  if [ -z "${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}" ] && [ "${NODE_ENV:-}" = "production" ]; then
+    echo "ERROR: DB_PASSWORD or POSTGRES_PASSWORD must be set in production."
+    exit 1
+  fi
   DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:-JellyTrack_password}}
   DB_HOST=${DB_HOST:-${POSTGRES_IP:-postgres}}
   DB_PORT=${DB_PORT:-${POSTGRES_PORT:-5432}}

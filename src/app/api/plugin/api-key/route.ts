@@ -12,6 +12,11 @@ import {
     updatePluginKeyRotationPolicy,
 } from "@/lib/pluginKeyManager";
 
+const SENSITIVE_RESPONSE_HEADERS = {
+    "Cache-Control": "no-store, max-age=0",
+    "Pragma": "no-cache",
+};
+
 /**
  * GET /api/plugin/api-key — Retrieve key presence + connection status (never returns stored key)
  * POST /api/plugin/api-key — Generate a new plugin API key (replaces existing)
@@ -62,7 +67,7 @@ export async function GET(req: Request) {
         rotationGraceHours: snapshot.rotationGraceHours,
         expiresInDays: computeDaysUntilExpiry(snapshot.keyExpiresAt),
         autoRotated,
-    });
+    }, { headers: SENSITIVE_RESPONSE_HEADERS });
 }
 
 export async function POST(req: Request) {
@@ -85,7 +90,7 @@ export async function POST(req: Request) {
         previousKeyGraceUntil: snapshot.previousKeyExpiresAt,
         rotationDays: snapshot.rotationDays,
         rotationGraceHours: snapshot.rotationGraceHours,
-    });
+    }, { headers: SENSITIVE_RESPONSE_HEADERS });
 }
 
 export async function DELETE(req: Request) {
@@ -98,7 +103,7 @@ export async function DELETE(req: Request) {
         ipAddress: getRequestIp(req),
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { headers: SENSITIVE_RESPONSE_HEADERS });
 }
 
 export async function PATCH(req: Request) {
@@ -139,5 +144,5 @@ export async function PATCH(req: Request) {
         keyExpiresAt: snapshot.keyExpiresAt,
         previousKeyGraceUntil: snapshot.previousKeyExpiresAt,
         expiresInDays: computeDaysUntilExpiry(snapshot.keyExpiresAt),
-    });
+    }, { headers: SENSITIVE_RESPONSE_HEADERS });
 }

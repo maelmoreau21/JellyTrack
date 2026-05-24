@@ -38,7 +38,7 @@ export function ClientCategoryChart({ data }: ClientCategoryChartProps) {
                 <YAxis type="category" dataKey="category" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} width={70} />
                 <Tooltip
                     contentStyle={chartTooltipStyle}
-                    formatter={(value: number | string | null | undefined) => [`${value ?? 0} sessions`, "Sessions"]}
+                    formatter={(value: unknown) => [`${value ?? 0} sessions`, "Sessions"]}
                     labelStyle={chartLabelStyle}
                     itemStyle={chartItemStyle}
                     cursor={{ fill: 'rgba(99, 102, 241, 0.06)' }}

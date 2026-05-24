@@ -8,6 +8,11 @@ import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
 
 export const dynamic = "force-dynamic";
 
+const SENSITIVE_RESPONSE_HEADERS = {
+  "Cache-Control": "no-store, max-age=0",
+  "Pragma": "no-cache",
+};
+
 export async function POST(req: NextRequest) {
   const auth = await requireAdminMutation(req);
   if (isAuthError(auth)) return auth;
@@ -77,6 +82,6 @@ export async function POST(req: NextRequest) {
       pluginApiKey,
       pluginEndpointPath: "/api/plugin/events",
     },
-    { status: 200 }
+    { status: 200, headers: SENSITIVE_RESPONSE_HEADERS }
   );
 }

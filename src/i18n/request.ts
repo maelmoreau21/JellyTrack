@@ -1,5 +1,6 @@
 import { getRequestConfig } from 'next-intl/server';
 import { cookies } from 'next/headers';
+import type { AbstractIntlMessages } from 'use-intl/core';
 import enMessages from '../../messages/en.json';
 import fallbackMessages from '../../messages/fallback.json';
 import { DEFAULT_LOCALE, isSupportedLocale } from './locales';
@@ -44,6 +45,6 @@ export default getRequestConfig(async () => {
 
     return {
         locale,
-        messages: mergeMessages(localeMessages, mergeMessages(fallbackMessages, enMessages))
+        messages: mergeMessages(localeMessages, mergeMessages(fallbackMessages, enMessages)) as AbstractIntlMessages
     };
 });

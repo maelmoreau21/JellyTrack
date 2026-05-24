@@ -97,7 +97,7 @@ export const authOptions: NextAuthOptions = {
                         username: string;
                         isAdmin: boolean;
                     } | null = null;
-                    let authenticatedOn: { url: string; name: string; isPrimary: boolean } | null = null;
+                    let authenticatedOn: { url: string; name: string; isPrimary: boolean; jellyfinServerId: string } | null = null;
                     let primaryStatus: JellyfinAuthAttemptStatus | "skipped" = "skipped";
                     let fallbackAttempted = false;
                     let fallbackUnreachableOnly = true;

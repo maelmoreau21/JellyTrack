@@ -184,10 +184,13 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 for (const user of users) {
                     const jellyfinUserId = normalizeJellyfinId(user.Id);
                     if (!jellyfinUserId) continue;
+                    const username = typeof user.Name === "string" && user.Name.trim()
+                        ? user.Name.trim()
+                        : jellyfinUserId;
                     await prisma.user.upsert({
                         where: { jellyfinUserId_serverId: { jellyfinUserId, serverId: currentServerId } },
-                        update: { username: user.Name },
-                        create: { serverId: currentServerId, jellyfinUserId, username: user.Name },
+                        update: { username },
+                        create: { serverId: currentServerId, jellyfinUserId, username },
                     });
                     usersCount++;
                 }

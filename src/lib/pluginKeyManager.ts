@@ -27,7 +27,11 @@ function isHashFormat(value: string | null | undefined): boolean {
 }
 
 function getPluginKeyPepper(): string {
-    return String(process.env.PLUGIN_KEY_PEPPER || "").trim();
+    const pepper = String(process.env.PLUGIN_KEY_PEPPER || "").trim();
+    if (!pepper && process.env.NODE_ENV === "production") {
+        throw new Error("[PluginKey] PLUGIN_KEY_PEPPER is required in production.");
+    }
+    return pepper;
 }
 
 function getPluginKeyLegacyPeppers(): string[] {

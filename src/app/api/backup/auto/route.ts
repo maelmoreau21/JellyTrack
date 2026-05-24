@@ -23,7 +23,12 @@ export async function GET() {
             })
             .sort((a: { date: string }, b: { date: string }) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-        return NextResponse.json({ backups: files });
+        return NextResponse.json({ backups: files }, {
+            headers: {
+                "Cache-Control": "no-store, max-age=0",
+                "Pragma": "no-cache",
+            },
+        });
 
     } catch (e: unknown) {
         // Directory might not exist yet
@@ -32,7 +37,12 @@ export async function GET() {
             code = (e as { code?: unknown }).code;
         }
         if (typeof code === 'string' && code === 'ENOENT') {
-            return NextResponse.json({ backups: [] });
+            return NextResponse.json({ backups: [] }, {
+                headers: {
+                    "Cache-Control": "no-store, max-age=0",
+                    "Pragma": "no-cache",
+                },
+            });
         }
         const msg = e instanceof Error ? e.message : String(e);
         console.error("[Auto-Backup List] Error:", e);
