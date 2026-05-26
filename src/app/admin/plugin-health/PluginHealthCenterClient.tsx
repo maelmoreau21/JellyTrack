@@ -26,6 +26,8 @@ type HealthSnapshot = {
         lastSeen: string | null;
         version: string | null;
         serverName: string | null;
+        jellyfinVersion: string | null;
+        schemaVersion: number | null;
         hasApiKey: boolean;
         endpoint: string;
     };
@@ -66,7 +68,18 @@ type HealthSnapshot = {
         queueDepth: number | null;
         retries: number | null;
         lastHttpCode: number | null;
+        coalescedProgressEvents: number | null;
         note: string;
+    };
+    telemetrySettings: {
+        precisionProfile: string;
+        playingIntervalSeconds: number;
+        pausedIntervalSeconds: number;
+        staleSessionTimeoutSeconds: number;
+        mergeWindowSeconds: number;
+        seekThresholdSeconds: number;
+        retryQueueSize: number;
+        retryFlushBatchSize: number;
     };
     recentFailures: Array<{
         id: string;
@@ -393,6 +406,14 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
                                 <span>{t("server")}</span>
                                 <span className="font-medium truncate">{snapshot?.plugin.serverName || "-"}</span>
                             </div>
+                            <div className="flex items-center justify-between gap-3 text-muted-foreground">
+                                <span>Jellyfin</span>
+                                <span className="font-medium">{snapshot?.plugin.jellyfinVersion || "-"}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 text-muted-foreground">
+                                <span>Schema</span>
+                                <span className="font-medium">{snapshot?.plugin.schemaVersion ?? "-"}</span>
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -643,6 +664,18 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
                             <div className="flex items-center justify-between">
                                 <span>{t("lastHttpCode")}</span>
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.lastHttpCode ?? "-"}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>Progress coalesces</span>
+                                <span className="font-medium">{snapshot?.pluginReportedMetrics.coalescedProgressEvents ?? "-"}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>Profil</span>
+                                <span className="font-medium">{snapshot?.telemetrySettings?.precisionProfile || "-"}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-muted-foreground">
+                                <span>Lecture / pause</span>
+                                <span>{snapshot?.telemetrySettings ? `${snapshot.telemetrySettings.playingIntervalSeconds}s / ${snapshot.telemetrySettings.pausedIntervalSeconds}s` : "-"}</span>
                             </div>
                             <p className="text-xs text-muted-foreground pt-2 border-t border-border/60">
                                 {pluginMetricsNote}

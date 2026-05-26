@@ -12,10 +12,12 @@ import {
   Plug,
   Plus,
   RefreshCw,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 type JellyfinServerRow = {
   id: string;
@@ -33,6 +35,36 @@ type JellyfinServerRow = {
 };
 
 type PluginConnectionState = "connected" | "ready" | "missing";
+type PluginTelemetrySettings = {
+  precisionProfile: "very_precise" | "balanced" | "minimal";
+  playingIntervalSeconds: number;
+  pausedIntervalSeconds: number;
+  staleSessionTimeoutSeconds: number;
+  mergeWindowSeconds: number;
+  seekThresholdSeconds: number;
+  trackPauseResume: boolean;
+  trackSeek: boolean;
+  trackAudioSubtitleChanges: boolean;
+  trackSessionEnded: boolean;
+  retryQueueSize: number;
+  retryFlushBatchSize: number;
+};
+type NumericTelemetryKey = "playingIntervalSeconds" | "pausedIntervalSeconds" | "staleSessionTimeoutSeconds" | "mergeWindowSeconds" | "seekThresholdSeconds" | "retryQueueSize" | "retryFlushBatchSize";
+
+const DEFAULT_TELEMETRY_SETTINGS: PluginTelemetrySettings = {
+  precisionProfile: "very_precise",
+  playingIntervalSeconds: 5,
+  pausedIntervalSeconds: 30,
+  staleSessionTimeoutSeconds: 90,
+  mergeWindowSeconds: 300,
+  seekThresholdSeconds: 20,
+  trackPauseResume: true,
+  trackSeek: true,
+  trackAudioSubtitleChanges: true,
+  trackSessionEnded: true,
+  retryQueueSize: 500,
+  retryFlushBatchSize: 50,
+};
 
 async function copyText(text: string): Promise<void> {
   try {
@@ -66,6 +98,8 @@ export function JellyfinServersSettings() {
   const [pluginKeyByServerId, setPluginKeyByServerId] = useState<Record<string, string>>({});
   const [globalPluginKeyLoading, setGlobalPluginKeyLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [telemetrySettings, setTelemetrySettings] = useState<PluginTelemetrySettings>(DEFAULT_TELEMETRY_SETTINGS);
+  const [telemetrySaving, setTelemetrySaving] = useState<boolean>(false);
 
   const [isMultiMode, setIsMultiMode] = useState<boolean>(false);
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
@@ -94,6 +128,14 @@ export function JellyfinServersSettings() {
       setPluginEndpointPath(json.pluginEndpointPath || '/api/plugin/events');
       setPluginConnected(Boolean(json.pluginConnected));
       setIsMultiMode(Boolean(json.isMultiMode));
+
+      const settingsRes = await fetch('/api/settings', { cache: 'no-store' });
+      if (settingsRes.ok) {
+        const settingsJson = await settingsRes.json().catch(() => ({}));
+        if (settingsJson.pluginTelemetrySettings) {
+          setTelemetrySettings({ ...DEFAULT_TELEMETRY_SETTINGS, ...settingsJson.pluginTelemetrySettings });
+        }
+      }
     } catch {
       setMessage({ type: 'error', text: t('networkErrorFetchServers') });
     } finally {
@@ -194,6 +236,59 @@ export function JellyfinServersSettings() {
 
   const handleTogglePluginKeyVisibility = (id: string) => {
     setPluginKeyVisible((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const applyTelemetryPreset = (profile: PluginTelemetrySettings["precisionProfile"]) => {
+    if (profile === "minimal") {
+      setTelemetrySettings({
+        ...DEFAULT_TELEMETRY_SETTINGS,
+        precisionProfile: "minimal",
+        playingIntervalSeconds: 30,
+        pausedIntervalSeconds: 120,
+        staleSessionTimeoutSeconds: 300,
+        retryQueueSize: 250,
+        retryFlushBatchSize: 25,
+      });
+      return;
+    }
+
+    if (profile === "balanced") {
+      setTelemetrySettings({
+        ...DEFAULT_TELEMETRY_SETTINGS,
+        precisionProfile: "balanced",
+        playingIntervalSeconds: 15,
+        pausedIntervalSeconds: 60,
+        staleSessionTimeoutSeconds: 180,
+      });
+      return;
+    }
+
+    setTelemetrySettings(DEFAULT_TELEMETRY_SETTINGS);
+  };
+
+  const updateTelemetryNumber = (key: NumericTelemetryKey, value: string) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return;
+    setTelemetrySettings((prev) => ({ ...prev, [key]: Math.max(0, Math.round(parsed)) }));
+  };
+
+  const handleSaveTelemetry = async () => {
+    setTelemetrySaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pluginTelemetrySettings: telemetrySettings }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Erreur sauvegarde telemetrie');
+      setMessage({ type: 'success', text: 'Reglages de telemetrie sauvegardes.' });
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Erreur sauvegarde telemetrie' });
+    } finally {
+      setTelemetrySaving(false);
+    }
   };
 
   const handleAddServer = async () => {
@@ -299,6 +394,97 @@ export function JellyfinServersSettings() {
               {pluginKeyReady ? 'Regenerer la cle globale' : t('generateGlobalPluginKey')}
             </button>
           </div>
+
+        <div className="rounded-lg border border-border p-4 space-y-4 bg-muted/10">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-1">
+              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <SlidersHorizontal className="w-4 h-4 text-primary" />
+                Telemetrie Jellyfin 12 beta
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Profil tres precis par defaut : transitions immediates, progression fine en lecture, et ralentissement automatique quand la lecture est en pause.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {([
+                ["very_precise", "Tres precis"],
+                ["balanced", "Equilibre"],
+                ["minimal", "Trafic minimal"],
+              ] as const).map(([profile, label]) => (
+                <button
+                  key={profile}
+                  type="button"
+                  onClick={() => applyTelemetryPreset(profile)}
+                  className={`rounded-md border px-3 py-1.5 text-xs font-medium ${
+                    telemetrySettings.precisionProfile === profile
+                      ? 'border-primary/40 bg-primary/15 text-primary'
+                      : 'border-border hover:bg-muted'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Intervalle lecture (s)</Label>
+              <Input type="number" min={1} value={telemetrySettings.playingIntervalSeconds} onChange={(e) => updateTelemetryNumber('playingIntervalSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Intervalle pause (s)</Label>
+              <Input type="number" min={5} value={telemetrySettings.pausedIntervalSeconds} onChange={(e) => updateTelemetryNumber('pausedIntervalSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Session inactive (s)</Label>
+              <Input type="number" min={30} value={telemetrySettings.staleSessionTimeoutSeconds} onChange={(e) => updateTelemetryNumber('staleSessionTimeoutSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Fusion reprise (s)</Label>
+              <Input type="number" min={0} value={telemetrySettings.mergeWindowSeconds} onChange={(e) => updateTelemetryNumber('mergeWindowSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Seuil seek (s)</Label>
+              <Input type="number" min={5} value={telemetrySettings.seekThresholdSeconds} onChange={(e) => updateTelemetryNumber('seekThresholdSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">File retry max</Label>
+              <Input type="number" min={10} value={telemetrySettings.retryQueueSize} onChange={(e) => updateTelemetryNumber('retryQueueSize', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Flush retry max</Label>
+              <Input type="number" min={1} value={telemetrySettings.retryFlushBatchSize} onChange={(e) => updateTelemetryNumber('retryFlushBatchSize', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            {([
+              ["trackPauseResume", "Pause / reprise"],
+              ["trackSeek", "Seek / avance rapide"],
+              ["trackAudioSubtitleChanges", "Audio / sous-titres"],
+              ["trackSessionEnded", "Depart utilisateur"],
+            ] as const).map(([key, label]) => (
+              <div key={key} className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
+                <span className="text-xs font-medium">{label}</span>
+                <Switch checked={Boolean(telemetrySettings[key])} onCheckedChange={(checked) => setTelemetrySettings((prev) => ({ ...prev, [key]: Boolean(checked) }))} />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleSaveTelemetry}
+              disabled={telemetrySaving}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-60"
+            >
+              {telemetrySaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              Sauvegarder la telemetrie
+            </button>
+          </div>
+        </div>
 
         <div className="space-y-3">
           {loading ? (

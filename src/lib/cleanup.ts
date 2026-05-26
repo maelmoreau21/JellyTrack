@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { appendHealthEvent } from "@/lib/systemHealth";
 import { clampDuration } from "@/lib/utils";
+import { getCachedPluginIngestSettings } from "@/lib/pluginTelemetrySettings";
 
 /**
  * Robust utility to close orphaned playback sessions.
@@ -17,10 +18,12 @@ export async function cleanupOrphanedSessions() {
     const ORPHAN_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 24 hours (backstop)
     const DEFAULT_HEARTBEAT_TIMEOUT_SEC = 600; // default to plugin heartbeat interval (10 minutes)
     const parsedHeartbeatTimeoutSec = Number(process.env.PLUGIN_HEARTBEAT_TIMEOUT_SEC);
-    const HEARTBEAT_TIMEOUT_SEC =
+    const envHeartbeatTimeoutSec =
         Number.isFinite(parsedHeartbeatTimeoutSec) && parsedHeartbeatTimeoutSec > 0
             ? parsedHeartbeatTimeoutSec
             : DEFAULT_HEARTBEAT_TIMEOUT_SEC;
+    const pluginSettings = await getCachedPluginIngestSettings().catch(() => null);
+    const HEARTBEAT_TIMEOUT_SEC = pluginSettings?.telemetry.staleSessionTimeoutSeconds || envHeartbeatTimeoutSec;
     const HEARTBEAT_TIMEOUT_MS = HEARTBEAT_TIMEOUT_SEC * 1000;
     const now = new Date();
 

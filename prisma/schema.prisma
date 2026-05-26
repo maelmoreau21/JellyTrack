@@ -117,6 +117,7 @@ model PlaybackHistory {
   user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   media           Media     @relation(fields: [mediaId], references: [id], onDelete: Cascade)
   telemetryEvents TelemetryEvent[]
+  activeStreams    ActiveStream[]
 
   @@index([serverId])
   @@index([userId])
@@ -160,6 +161,7 @@ model ActiveStream {
   sessionId       String   // Jellyfin Session ID
   userId          String
   mediaId         String
+  playbackId      String?
   
   // Streaming Info
   playMethod      String   // "DirectPlay", "Transcode"
@@ -188,9 +190,11 @@ model ActiveStream {
   server          Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   media           Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  playback        PlaybackHistory? @relation(fields: [playbackId], references: [id], onDelete: SetNull)
 
   @@unique([sessionId, serverId])
   @@index([serverId])
+  @@index([playbackId])
   @@index([lastPingAt])
   @@index([serverId, lastPingAt])
 }
@@ -226,6 +230,7 @@ model GlobalSettings {
   pluginLastSeen        DateTime? // Last heartbeat from the plugin
   pluginVersion         String?  // Plugin version reported via heartbeat
   pluginServerName      String?  // Jellyfin server name reported via heartbeat
+  pluginTelemetrySettings Json?   // Plugin telemetry precision/profile settings
   authRememberThirtyDaysEnabled Boolean @default(true) // Remembered web sessions expire after 30 days when enabled
   authSessionsRevokedAt DateTime? // Invalidate web sessions issued before this timestamp
   resolutionThresholds  Json?    // Configurable boundaries for resolution detection (minWidth, minHeight, etc.)
