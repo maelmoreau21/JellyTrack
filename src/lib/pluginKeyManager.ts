@@ -191,7 +191,7 @@ function toSnapshot(settings: PluginKeySettingsSnapshot | null): PluginKeySnapsh
         keyCreatedAt: settings?.pluginKeyCreatedAt ?? null,
         keyExpiresAt: settings?.pluginKeyExpiresAt ?? null,
         rotationDays,
-        autoRotateEnabled: settings?.pluginAutoRotateEnabled ?? false,
+        autoRotateEnabled: false,
         rotationGraceHours,
     };
 }
@@ -274,76 +274,8 @@ async function fetchSettings(): Promise<PluginKeySettingsSnapshot | null> {
     return migrateLegacyPlaintextPluginKeys(mapped);
 }
 
-function shouldAutoRotate(snapshot: PluginKeySnapshot, now: Date): boolean {
-    if (!snapshot.autoRotateEnabled) return false;
-    if (!snapshot.currentKeyHash) return false;
-    if (!snapshot.keyExpiresAt) return false;
-    return snapshot.keyExpiresAt.getTime() <= now.getTime();
-}
-
-export async function updatePluginKeyRotationPolicy(input: {
-    autoRotateEnabled?: boolean;
-    rotationDays?: number;
-    rotationGraceHours?: number;
-    context?: RotationAuditContext;
-}): Promise<PluginKeySnapshot> {
-    const settings = await fetchSettings();
-
-    const rotationDays = input.rotationDays !== undefined
-        ? sanitizeRotationDays(input.rotationDays)
-        : sanitizeRotationDays(settings?.pluginKeyRotationDays);
-
-    const rotationGraceHours = input.rotationGraceHours !== undefined
-        ? sanitizeRotationGraceHours(input.rotationGraceHours)
-        : sanitizeRotationGraceHours(settings?.pluginKeyRotationGraceHours);
-
-    const autoRotateEnabled = input.autoRotateEnabled !== undefined
-        ? Boolean(input.autoRotateEnabled)
-        : settings?.pluginAutoRotateEnabled ?? false;
-
-    const updated = await prisma.globalSettings.upsert({
-        where: { id: "global" },
-        update: {
-            pluginKeyRotationDays: rotationDays,
-            pluginAutoRotateEnabled: autoRotateEnabled,
-            pluginKeyRotationGraceHours: rotationGraceHours,
-        },
-        create: {
-            id: "global",
-            pluginKeyRotationDays: rotationDays,
-            pluginAutoRotateEnabled: autoRotateEnabled,
-            pluginKeyRotationGraceHours: rotationGraceHours,
-        },
-        select: {
-            pluginApiKey: true,
-            pluginPreviousApiKey: true,
-            pluginPreviousApiKeyExpiresAt: true,
-            pluginKeyCreatedAt: true,
-            pluginKeyExpiresAt: true,
-            pluginKeyRotationDays: true,
-            pluginAutoRotateEnabled: true,
-            pluginKeyRotationGraceHours: true,
-        },
-    });
-
-    await writeAdminAuditLog({
-        action: "plugin.key.policy_updated",
-        actorUserId: input.context?.actorUserId ?? null,
-        actorUsername: input.context?.actorUsername ?? null,
-        ipAddress: input.context?.ipAddress ?? null,
-        target: "pluginApiKey",
-        details: {
-            pluginKeyRotationDays: rotationDays,
-            pluginAutoRotateEnabled: autoRotateEnabled,
-            pluginKeyRotationGraceHours: rotationGraceHours,
-        },
-    });
-
-    return toSnapshot(updated);
-}
-
 export async function rotatePluginApiKey(input: {
-    reason: "manual" | "automatic";
+    reason: "manual";
     context?: RotationAuditContext;
 }): Promise<{ apiKey: string; snapshot: PluginKeySnapshot }> {
     const now = new Date();
@@ -395,7 +327,7 @@ export async function rotatePluginApiKey(input: {
     await writeAdminAuditLog({
         action,
         actorUserId: input.context?.actorUserId ?? null,
-        actorUsername: input.context?.actorUsername ?? (input.reason === "automatic" ? "system:auto-rotation" : null),
+        actorUsername: input.context?.actorUsername ?? null,
         ipAddress: input.context?.ipAddress ?? null,
         target: "pluginApiKey",
         details: {
@@ -444,23 +376,9 @@ export async function revokePluginApiKey(context?: RotationAuditContext): Promis
     });
 }
 
-export async function getPluginKeySnapshot(input?: {
-    rotateIfExpired?: boolean;
-    context?: RotationAuditContext;
-}): Promise<{ snapshot: PluginKeySnapshot; autoRotated: boolean }> {
+export async function getPluginKeySnapshot(): Promise<{ snapshot: PluginKeySnapshot; autoRotated: boolean }> {
     const settings = await fetchSettings();
     const snapshot = toSnapshot(settings);
-
-    if (input?.rotateIfExpired) {
-        const now = new Date();
-        if (shouldAutoRotate(snapshot, now)) {
-            const rotated = await rotatePluginApiKey({ reason: "automatic", context: input.context });
-            return {
-                snapshot: rotated.snapshot,
-                autoRotated: true,
-            };
-        }
-    }
 
     return {
         snapshot,

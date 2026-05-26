@@ -19,7 +19,7 @@
 > ### 🚨 LE PLUGIN JELLYFIN EST OBLIGATOIRE
 > JellyTrack **ne peut pas** collecter de données sans son plugin compagnon installé sur votre serveur Jellyfin.
 > 
-> [👉 Cliquez ici pour configurer le plugin](https://github.com/maelmoreau21/JellyTrack.Plugin)
+> [👉 Cliquez ici pour configurer le plugin](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
 
 ---
 
@@ -92,10 +92,10 @@ docker compose up -d
 
 Une fois le serveur installé, vous devez configurer le plugin sur votre instance Jellyfin pour commencer à recevoir des données.
 
-**Dépôt du Plugin :** [JellyTrack.Plugin](https://github.com/maelmoreau21/JellyTrack.Plugin)
+**Dépôt du Plugin :** [Jellyfin.Plugin.JellyTrack](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
 
 1. Dans Jellyfin : **Tableau de bord** > **Plugins** > **Dépôts**.
-2. URL du dépôt : `https://raw.githubusercontent.com/maelmoreau21/JellyTrack.Plugin/main/manifest.json`
+2. URL du dépôt : `https://raw.githubusercontent.com/maelmoreau21/Jellyfin.Plugin.JellyTrack/main/manifest.json`
 3. Installez le plugin **JellyTrack** depuis le catalogue.
 
 ---

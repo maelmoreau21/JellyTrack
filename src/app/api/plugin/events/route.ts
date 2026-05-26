@@ -84,13 +84,7 @@ interface PluginAuthResult {
 }
 
 async function verifyPluginAuth(req: Request): Promise<PluginAuthResult> {
-    const { snapshot, autoRotated } = await getPluginKeySnapshot({
-        rotateIfExpired: true,
-        context: {
-            actorUsername: "system:plugin-ingest",
-            ipAddress: getClientIp(req),
-        },
-    });
+    const { snapshot, autoRotated } = await getPluginKeySnapshot();
 
     const currentKeyHash = snapshot.currentKeyHash?.trim() || null;
     const previousKeyHash = snapshot.previousKeyHash?.trim() || null;

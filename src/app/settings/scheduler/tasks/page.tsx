@@ -77,7 +77,7 @@ export default function SchedulerTasksPage() {
                             <p className="text-xs text-muted-foreground mt-1 ml-6">{t('recentSyncDesc')}</p>
                             <div className="mt-2 ml-6 inline-flex items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[11px] text-sky-300">
                                 <Clock3 className="w-3 h-3" />
-                                Toutes les {intervals.recentSyncEveryHours}h
+                                {t('schedulerEveryHours', { hours: intervals.recentSyncEveryHours })}
                             </div>
                             {taskStatus.recentSync.msg && (
                                 <div className={`mt-2 ml-6 text-xs ${taskStatus.recentSync.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -104,7 +104,7 @@ export default function SchedulerTasksPage() {
                             <p className="text-xs text-muted-foreground mt-1 ml-6">{t('fullSyncDesc') || t('autoNightlyAt')}</p>
                             <div className="mt-2 ml-6 inline-flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-2 py-0.5 text-[11px] text-violet-300">
                                 <Clock3 className="w-3 h-3" />
-                                Toutes les {intervals.fullSyncEveryHours}h
+                                {t('schedulerEveryHours', { hours: intervals.fullSyncEveryHours })}
                             </div>
                             {taskStatus.fullSync.msg && (
                                 <div className={`mt-2 ml-6 text-xs ${taskStatus.fullSync.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -131,7 +131,7 @@ export default function SchedulerTasksPage() {
                             <p className="text-xs text-muted-foreground mt-1 ml-6">{t('backupTaskDesc') || t('autoNightlyAt')}</p>
                             <div className="mt-2 ml-6 inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-300">
                                 <Clock3 className="w-3 h-3" />
-                                Toutes les {intervals.backupEveryHours}h
+                                {t('schedulerEveryHours', { hours: intervals.backupEveryHours })}
                             </div>
                             {taskStatus.backup.msg && (
                                 <div className={`mt-2 ml-6 text-xs ${taskStatus.backup.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>

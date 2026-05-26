@@ -85,14 +85,7 @@ export async function GET() {
   const jellytrackMode = String(process.env.JELLYTRACK_MODE || "single").trim().toLowerCase();
   const isMultiMode = jellytrackMode === "multi";
 
-  const { snapshot } = await getPluginKeySnapshot({
-    rotateIfExpired: true,
-    context: {
-      actorUserId: auth.linkedUserDbIds[0] ?? null,
-      actorUsername: auth.username || null,
-      ipAddress: null,
-    },
-  });
+  const { snapshot } = await getPluginKeySnapshot();
   const pluginKeyReady = Boolean(snapshot.currentKeyHash);
   const pluginRuntime = await prisma.globalSettings.findUnique({
     where: { id: "global" },

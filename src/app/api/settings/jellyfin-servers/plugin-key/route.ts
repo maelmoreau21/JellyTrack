@@ -39,15 +39,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Serveur introuvable." }, { status: 404 });
   }
 
-  const ipAddress = getRequestIp(req);
-  const { snapshot } = await getPluginKeySnapshot({
-    rotateIfExpired: true,
-    context: {
-      actorUserId: auth.linkedUserDbIds[0] ?? null,
-      actorUsername: auth.username || null,
-      ipAddress,
-    },
-  });
+  const { snapshot } = await getPluginKeySnapshot();
 
   if (!snapshot.currentKeyHash) {
     return NextResponse.json(
@@ -63,6 +55,8 @@ export async function POST(req: NextRequest) {
   if (!pluginApiKey) {
     return NextResponse.json({ error: "Impossible de generer la cle plugin du serveur." }, { status: 500 });
   }
+
+  const ipAddress = getRequestIp(req);
 
   await writeAdminAuditLog({
     action: "plugin.key.server_derived",
