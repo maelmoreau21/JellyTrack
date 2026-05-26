@@ -1,10 +1,10 @@
 "use client";
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { useTranslations } from 'next-intl';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { useTranslations } from "next-intl";
 
 type TelemetryEvent = {
   eventType?: string | null;
@@ -21,6 +21,9 @@ type SessionType = {
   pauseCount?: number | null;
   audioChanges?: number | null;
   subtitleChanges?: number | null;
+  seekCount?: number | null;
+  rewatchCount?: number | null;
+  speedChangeCount?: number | null;
   telemetryEvents?: TelemetryEvent[];
 };
 
@@ -45,50 +48,72 @@ function formatTime(ms: number): string {
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  return `${m}:${String(s).padStart(2, '0')}`;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-function parseChangeDetail(metadata: unknown): string {
-  if (!metadata) return '';
+function formatRate(value: unknown): string | null {
+  const numberValue = typeof value === "number"
+    ? value
+    : typeof value === "string"
+      ? Number(value.replace(/^x/i, ""))
+      : NaN;
+  if (!Number.isFinite(numberValue)) return null;
+  return `x${numberValue.toFixed(2).replace(/\.?0+$/, "")}`;
+}
+
+function parseChangeDetail(eventType: string, metadata: unknown): string {
+  if (!metadata) return "";
   try {
-    const mdRaw = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+    const mdRaw = typeof metadata === "string" ? JSON.parse(metadata) : metadata;
     const md = mdRaw as Record<string, unknown> | undefined;
-    if (!md) return '';
+    if (!md) return "";
+
+    if (eventType === "seek" || eventType === "replay") {
+      const from = typeof md.fromLabel === "string" ? md.fromLabel : null;
+      const to = typeof md.toLabel === "string" ? md.toLabel : null;
+      if (from && to) return `${from} -> ${to}`;
+    }
+
+    if (eventType === "speed_change") {
+      const from = typeof md.fromRateLabel === "string" ? md.fromRateLabel : formatRate(md.fromRate);
+      const to = typeof md.toRateLabel === "string" ? md.toRateLabel : formatRate(md.toRate);
+      return from && to ? `${from} -> ${to}` : to || "";
+    }
 
     const fmt = (side: unknown) => {
-      if (!side) return '—';
-      if (typeof side === 'string' || typeof side === 'number') return String(side);
+      if (!side) return "-";
+      if (typeof side === "string" || typeof side === "number") return String(side);
       const s = side as Record<string, unknown>;
-      const language = typeof s.language === 'string' ? s.language : undefined;
-      const index = typeof s.index === 'number' ? `#${s.index}` : undefined;
-      const codec = typeof s.codec === 'string' ? ` (${s.codec})` : '';
+      const language = typeof s.language === "string" ? s.language : undefined;
+      const index = typeof s.index === "number" ? `#${s.index}` : undefined;
+      const codec = typeof s.codec === "string" ? ` (${s.codec})` : "";
       return `${language ?? index ?? String(side)}${codec}`;
     };
 
-    if (Object.prototype.hasOwnProperty.call(md, 'from') && Object.prototype.hasOwnProperty.call(md, 'to')) {
-      return `${fmt(md.from)} → ${fmt(md.to)}`;
+    if (Object.prototype.hasOwnProperty.call(md, "from") && Object.prototype.hasOwnProperty.call(md, "to")) {
+      return `${fmt(md.from)} -> ${fmt(md.to)}`;
     }
   } catch {
-    return '';
+    return "";
   }
-  return '';
+  return "";
 }
 
 function formatCreatedAt(value: string | number | null | undefined): string {
-  if (value === null || value === undefined) return '';
+  if (value === null || value === undefined) return "";
   const date = new Date(String(value));
-  if (Number.isNaN(date.getTime())) return '';
-  return format(date, 'PPpp');
+  if (Number.isNaN(date.getTime())) return "";
+  return format(date, "PPpp");
 }
 
 export default function SessionModal({ open, onClose, session }: { open: boolean; onClose: () => void; session: SessionType }) {
-  const t = useTranslations('logs');
+  const t = useTranslations("logs");
   if (!open) return null;
 
   const normalizedEvents: NormalizedEvent[] = (session.telemetryEvents || [])
     .map((ev) => {
-      const eventType = String(ev.eventType || '').trim();
+      const eventType = String(ev.eventType || "").trim();
       const numericPosition = Number(ev.positionMs || 0);
       const positionMs = Number.isFinite(numericPosition) ? Math.max(0, numericPosition) : 0;
       return {
@@ -110,7 +135,6 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
     ? Math.max(...normalizedEvents.map((ev) => ev.positionMs))
     : 0;
 
-  // Use real media duration when available, otherwise fallback to watched/event range.
   const totalDurationMs = mediaDurationMs > 0
     ? mediaDurationMs
     : Math.max(watchedDurationMs, maxEventPositionMs, 1);
@@ -130,8 +154,8 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
   const groupedEvents: GroupedEvent[] = Array.from(groupedMap.entries())
     .map(([bucket, events]) => {
       const avg = Math.floor(events.reduce((sum, ev) => sum + ev.positionMs, 0) / Math.max(events.length, 1));
-      const priority = ['pause', 'audio_change', 'subtitle_change', 'seek', 'stop'];
-      let repType = events[0]?.eventType || 'default';
+      const priority = ["pause", "audio_change", "subtitle_change", "seek", "replay", "speed_change", "stop"];
+      let repType = events[0]?.eventType || "default";
       for (const type of priority) {
         if (events.some((ev) => ev.eventType === type)) {
           repType = type;
@@ -151,19 +175,25 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
   const eventCounts = normalizedEvents.reduce(
     (acc, ev) => {
       switch (ev.eventType) {
-        case 'pause':
+        case "pause":
           acc.pause += 1;
           break;
-        case 'audio_change':
+        case "audio_change":
           acc.audio += 1;
           break;
-        case 'subtitle_change':
+        case "subtitle_change":
           acc.subtitles += 1;
           break;
-        case 'seek':
+        case "seek":
           acc.seek += 1;
           break;
-        case 'stop':
+        case "replay":
+          acc.replay += 1;
+          break;
+        case "speed_change":
+          acc.speed += 1;
+          break;
+        case "stop":
           acc.stop += 1;
           break;
         default:
@@ -172,23 +202,27 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
       }
       return acc;
     },
-    { pause: 0, audio: 0, subtitles: 0, seek: 0, stop: 0, other: 0 },
+    { pause: 0, audio: 0, subtitles: 0, seek: 0, replay: 0, speed: 0, stop: 0, other: 0 },
   );
 
   const getEventMeta = (type: string) => {
     switch (type) {
-      case 'pause':
-        return { marker: 'bg-amber-500', icon: '⏸', label: t('timeline.label.pause') };
-      case 'audio_change':
-        return { marker: 'bg-sky-500', icon: '🔊', label: t('timeline.label.audio_change') };
-      case 'subtitle_change':
-        return { marker: 'bg-emerald-500', icon: '💬', label: t('timeline.label.subtitle_change') };
-      case 'seek':
-        return { marker: 'bg-indigo-500', icon: '🔁', label: t('timeline.label.seek') };
-      case 'stop':
-        return { marker: 'bg-rose-500', icon: '⏹', label: t('timeline.label.stop') };
+      case "pause":
+        return { marker: "bg-amber-500", icon: "Pause", label: t("timeline.label.pause") };
+      case "audio_change":
+        return { marker: "bg-sky-500", icon: "A", label: t("timeline.label.audio_change") };
+      case "subtitle_change":
+        return { marker: "bg-emerald-500", icon: "Sub", label: t("timeline.label.subtitle_change") };
+      case "seek":
+        return { marker: "bg-orange-500", icon: "Skip", label: t("timeline.label.seek") };
+      case "replay":
+        return { marker: "bg-green-500", icon: "Replay", label: t("timeline.label.replay") };
+      case "speed_change":
+        return { marker: "bg-blue-500", icon: "x", label: t("timeline.label.speed_change") };
+      case "stop":
+        return { marker: "bg-rose-500", icon: "Stop", label: t("timeline.label.stop") };
       default:
-        return { marker: 'bg-zinc-500', icon: '•', label: `${t('timeline.label.default')} (${type || '?'})` };
+        return { marker: "bg-zinc-500", icon: "-", label: `${t("timeline.label.default")} (${type || "?"})` };
     }
   };
 
@@ -196,16 +230,14 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
     const s = Math.floor((posMs || 0) / 1000);
     const mediaId = session.media?.jellyfinMediaId;
     if (!mediaId) return;
-    const url = `/media/${mediaId}?t=${s}`;
-    window.open(url, '_blank');
+    window.open(`/media/${mediaId}?t=${s}`, "_blank");
   };
 
   const copyJump = (posMs: number) => {
     const s = Math.floor((posMs || 0) / 1000);
     const mediaId = session.media?.jellyfinMediaId;
     if (!mediaId) return;
-    const url = `${window.location.origin}/media/${mediaId}?t=${s}`;
-    navigator.clipboard?.writeText(url).catch(() => {});
+    navigator.clipboard?.writeText(`${window.location.origin}/media/${mediaId}?t=${s}`).catch(() => {});
   };
 
   return (
@@ -214,23 +246,25 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
       <div className="relative app-surface rounded-xl w-[95%] md:w-[900px] max-h-[85vh] overflow-auto p-6 shadow-2xl border border-border/50">
         <div className="flex items-start gap-4">
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-foreground">{session.media?.title || t('unknownMedia')}</h3>
-            <div className="text-sm text-muted-foreground font-medium">{session.user?.username} — {session.clientName || t('unknown')}</div>
+            <h3 className="text-xl font-bold text-foreground">{session.media?.title || t("unknownMedia")}</h3>
+            <div className="text-sm text-muted-foreground font-medium">{session.user?.username} - {session.clientName || t("unknown")}</div>
             <div className="mt-3 space-y-2">
-              <div className="flex items-center gap-3">
-                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t('timeline.legend.pause')}: {eventCounts.pause || (session.pauseCount ?? 0)}</Badge>
-                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t('timeline.legend.audio')}: {eventCounts.audio || (session.audioChanges ?? 0)}</Badge>
-                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t('timeline.legend.subtitles')}: {eventCounts.subtitles || (session.subtitleChanges ?? 0)}</Badge>
-                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t('timeline.label.seek')}: {eventCounts.seek}</Badge>
-                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t('timeline.stop')}: {eventCounts.stop}</Badge>
+              <div className="flex items-center gap-3 flex-wrap">
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t("timeline.legend.pause")}: {eventCounts.pause || (session.pauseCount ?? 0)}</Badge>
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t("timeline.legend.audio")}: {eventCounts.audio || (session.audioChanges ?? 0)}</Badge>
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t("timeline.legend.subtitles")}: {eventCounts.subtitles || (session.subtitleChanges ?? 0)}</Badge>
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t("timeline.label.seek")}: {eventCounts.seek || (session.seekCount ?? 0)}</Badge>
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t("timeline.label.replay")}: {eventCounts.replay || (session.rewatchCount ?? 0)}</Badge>
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t("timeline.label.speed_change")}: {eventCounts.speed || (session.speedChangeCount ?? 0)}</Badge>
+                <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t("timeline.stop")}: {eventCounts.stop}</Badge>
                 {eventCounts.other > 0 ? (
-                  <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t('timeline.label.default')}: {eventCounts.other}</Badge>
+                  <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t("timeline.label.default")}: {eventCounts.other}</Badge>
                 ) : null}
               </div>
 
               <div className="mt-2">
-              <div className="mt-2 text-xs text-muted-foreground mb-2">{t('timeline.title')} · {formatTime(totalDurationMs)}</div>
-              <div className="w-full app-surface-soft border border-border/50 rounded-lg relative overflow-hidden p-3">
+                <div className="mt-2 text-xs text-muted-foreground mb-2">{t("timeline.title")} - {formatTime(totalDurationMs)}</div>
+                <div className="w-full app-surface-soft border border-border/50 rounded-lg relative overflow-hidden p-3">
                   <div className="relative h-14">
                     <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-zinc-300/40 dark:bg-zinc-800/60" />
                     <div
@@ -239,21 +273,21 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
                     />
 
                     {groupedEvents.length === 0 ? (
-                      <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">{t('timeline.noEvents')}</div>
+                      <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">{t("timeline.noEvents")}</div>
                     ) : (
                       groupedEvents.map((group, idx) => {
                         const pct = totalDurationMs > 0
                           ? Math.min(99, Math.max(1, (group.pos / totalDurationMs) * 100))
                           : 1;
                         const meta = getEventMeta(group.repType);
-                        const detail = parseChangeDetail(group.events[0]?.metadata);
+                        const detail = parseChangeDetail(group.repType, group.events[0]?.metadata);
                         return (
                           <button
                             key={group.key || idx}
                             className="absolute top-1/2 -translate-y-1/2 z-10"
-                            style={{ left: `${pct}%`, transform: 'translate(-50%, -50%)' }}
+                            style={{ left: `${pct}%`, transform: "translate(-50%, -50%)" }}
                             onClick={() => jumpTo(group.pos)}
-                            title={`${meta.icon} ${meta.label}${detail ? ` — ${detail}` : ''} @ ${formatTime(group.pos)}${group.count > 1 ? ` (${group.count})` : ''}`}
+                            title={`${meta.icon} ${meta.label}${detail ? ` - ${detail}` : ""} @ ${formatTime(group.pos)}${group.count > 1 ? ` (${group.count})` : ""}`}
                           >
                             <span className={`block h-10 w-[3px] rounded-full ${meta.marker}`} />
                             {group.count > 1 ? (
@@ -276,23 +310,23 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
 
                 <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                   {groupedEvents.length === 0 ? (
-                    <div className="text-xs text-muted-foreground">{t('timeline.noEvents')}</div>
+                    <div className="text-xs text-muted-foreground">{t("timeline.noEvents")}</div>
                   ) : groupedEvents.map((group, i: number) => {
                     const meta = getEventMeta(group.repType);
-                    const detail = parseChangeDetail(group.events[0]?.metadata);
+                    const detail = parseChangeDetail(group.repType, group.events[0]?.metadata);
                     const createdAtLabel = formatCreatedAt(group.events[0]?.createdAt);
                     return (
                       <div key={group.key || i} className="p-3 rounded-lg app-surface-soft border border-border/50 hover:border-primary/30 transition-colors">
-                        <div className="font-bold text-[12px] text-foreground">{meta.icon} {meta.label}{group.count > 1 ? ` · ${group.count}` : ''}</div>
+                        <div className="font-bold text-[12px] text-foreground">{meta.icon} {meta.label}{group.count > 1 ? ` - ${group.count}` : ""}</div>
                         {createdAtLabel ? (
                           <div className="text-muted-foreground text-[11px] font-medium">{createdAtLabel}</div>
                         ) : null}
                         <div className="mt-1 text-[11px] text-foreground/80">
-                          {formatTime(group.pos)} · {Math.round((group.pos / totalDurationMs) * 100)}%{detail ? ` · ${detail}` : ''}
+                          {formatTime(group.pos)} - {Math.round((group.pos / totalDurationMs) * 100)}%{detail ? ` - ${detail}` : ""}
                         </div>
                         <div className="mt-3 flex gap-2">
-                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => jumpTo(group.pos)}>Jump</Button>
-                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => copyJump(group.pos)}>Copy</Button>
+                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => jumpTo(group.pos)}>{t("timeline.action.jump")}</Button>
+                          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => copyJump(group.pos)}>{t("timeline.action.copy")}</Button>
                         </div>
                       </div>
                     );
@@ -303,7 +337,7 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
           </div>
 
           <div className="flex-shrink-0">
-            <button aria-label="Close" onClick={onClose} className="app-field px-3 py-2">Close</button>
+            <button aria-label={t("timeline.action.close")} onClick={onClose} className="app-field px-3 py-2">{t("timeline.action.close")}</button>
           </div>
         </div>
       </div>

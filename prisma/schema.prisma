@@ -112,6 +112,10 @@ model PlaybackHistory {
   pauseCount       Int       @default(0) // Number of times playback was paused
   audioChanges     Int       @default(0) // Number of audio track switches
   subtitleChanges  Int       @default(0) // Number of subtitle track switches
+  seekCount         Int       @default(0) // Number of forward/backward manual jumps
+  rewatchCount      Int       @default(0) // Number of backward jumps / replayed passages
+  speedChangeCount  Int       @default(0) // Number of playback speed bucket changes
+  maxPlaybackRate   Float?    // Highest observed or estimated playback rate
   
   server          Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
   user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -181,6 +185,7 @@ model ActiveStream {
   audioLanguage    String?
   subtitleLanguage String?
   subtitleCodec    String?
+  playbackRate     Float?
   
   // Tick updates
   positionTicks   BigInt?   // Position actuelle de lecture

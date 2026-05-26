@@ -96,6 +96,7 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get("type") || "Primary";
     const fallbackId = searchParams.get("fallbackId");
     const serverId = searchParams.get("serverId");
+    const noStore = searchParams.has("v") || searchParams.has("cacheBust");
 
     if (!itemId) {
         return new NextResponse("Item ID is required", { status: 400 });
@@ -118,7 +119,7 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        let response = await fetchJellyfinImage(itemId, type, serverId);
+        let response = await fetchJellyfinImage(itemId, type, serverId, noStore);
         const attemptedIds = new Set<string>([itemId]);
 
         const tryCandidate = async (candidate: string | null | undefined): Promise<boolean> => {
@@ -126,7 +127,7 @@ export async function GET(req: NextRequest) {
             if (!candidateId || attemptedIds.has(candidateId)) return false;
 
             attemptedIds.add(candidateId);
-            const candidateResponse = await fetchJellyfinImage(candidateId, type, serverId);
+            const candidateResponse = await fetchJellyfinImage(candidateId, type, serverId, noStore);
             if (!candidateResponse.ok) return false;
 
             response = candidateResponse;
@@ -189,7 +190,7 @@ export async function GET(req: NextRequest) {
         // On récupère le type de contenu depuis le serveur originel pour notre proxy (souvent image/jpeg ou image/webp)
         headers.set('Content-Type', response.headers.get('Content-Type') || 'image/jpeg');
         // Mise en cache navigateur longue durée pour soulager l'API
-        headers.set('Cache-Control', 'public, max-age=604800, immutable');
+        headers.set('Cache-Control', noStore ? 'no-store' : 'public, max-age=604800, immutable');
 
         return new NextResponse(buffer, { headers });
     } catch (e) {

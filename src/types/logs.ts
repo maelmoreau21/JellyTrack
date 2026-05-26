@@ -46,6 +46,10 @@ export type SafeLog = {
   pauseCount?: number | null;
   audioChanges?: number | null;
   subtitleChanges?: number | null;
+  seekCount?: number | null;
+  rewatchCount?: number | null;
+  speedChangeCount?: number | null;
+  maxPlaybackRate?: number | null;
   ipAddress?: string | null;
   country?: string | null;
   city?: string | null;

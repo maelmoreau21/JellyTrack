@@ -162,5 +162,53 @@
     "uniqueGenres": "Unique Genres",
     "videoQuality": "Overall Video Quality",
     "videoQualityDesc": "Distribution by certified resolution."
+  },
+  "mediaProfile": {
+    "behaviorTitle": "Detailed behavior",
+    "behaviorDesc": "Skipped or replayed passages, playback speed and language switches detected from useful telemetry events.",
+    "skippedRewatchedTitle": "Skipped / replayed passages",
+    "noBehaviorSignals": "No detailed signal yet.",
+    "rangeSessions": "{count} sessions",
+    "skippedPassages": "Skipped passages",
+    "replayedPassages": "Rewatched passages",
+    "speedDistribution": "Playback speed",
+    "sourceEstimated": "(estimated)",
+    "maxSpeed": "Max speed",
+    "audioSubtitleSwitches": "Audio / subtitle switches",
+    "speedChanges": "Speed changes",
+    "colJumps": "Jumps",
+    "colReplays": "Replays",
+    "colMaxSpeed": "Max speed",
+    "posterRotate": "Change poster",
+    "posterRotateSuccess": "Poster changed.",
+    "posterRotateMissing": "No Poster Rotator pool found, or the pool is empty.",
+    "posterRotateError": "Unable to change poster.",
+    "timeline_seek": "Skipped passage",
+    "timeline_replay": "Replayed passage",
+    "timeline_speed_change": "Speed change",
+    "timeline": {
+      "label": {
+        "seek": "Skipped passage",
+        "replay": "Replayed passage",
+        "speed_change": "Speed"
+      }
+    }
+  },
+  "logs": {
+    "timeline": {
+      "label": {
+        "replay": "Replay",
+        "speed_change": "Speed change"
+      },
+      "legend": {
+        "replay": "Replay",
+        "speed": "Speed"
+      },
+      "action": {
+        "jump": "Open",
+        "copy": "Copy",
+        "close": "Close"
+      }
+    }
   }
 }

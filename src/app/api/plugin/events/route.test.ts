@@ -384,4 +384,125 @@ describe("/api/plugin/events schema v3 ingestion", () => {
             create: expect.objectContaining({ playbackId: "playback-1" }),
         }));
     });
+
+    it("records backward progress jumps as replay events with range metadata", async () => {
+        const now = Date.now();
+        mocks.prisma.media.findFirst.mockResolvedValue(streamMedia);
+        mocks.prisma.activeStream.findUnique.mockResolvedValue({
+            ...activeStream,
+            clientName: "Jellyfin Web",
+            deviceName: "Chrome",
+            playMethod: "DirectPlay",
+            ipAddress: "127.0.0.1",
+            user: streamUser,
+            media: streamMedia,
+        });
+        mocks.prisma.playbackHistory.findUnique.mockResolvedValue({ ...activePlayback, maxPlaybackRate: null });
+        mocks.redis.get.mockImplementation(async (key: string) => {
+            if (key === "dur:playback-1") return "30";
+            if (key === "last_time:playback-1") return String(now - 5_000);
+            if (key === "last_tick:playback-1") return String(500_000_000);
+            return null;
+        });
+
+        const response = await POST(requestFor({
+            event: "PlaybackProgress",
+            eventSchemaVersion: 3,
+            serverId: "jellyfin-main",
+            sessionId: "session-1",
+            positionTicks: 200_000_000,
+            isPaused: false,
+            user: { jellyfinUserId: "jf-user-1", username: "Alice" },
+            media: {
+                jellyfinMediaId: "jf-media-1",
+                title: "The Movie",
+                type: "Movie",
+                collectionType: "movies",
+                durationMs: 600_000,
+            },
+            session: {
+                clientName: "Jellyfin Web",
+                deviceName: "Chrome",
+                playMethod: "DirectPlay",
+                ipAddress: "127.0.0.1",
+            },
+        }));
+
+        expect(response.status).toBe(200);
+        const createManyData = mocks.prisma.telemetryEvent.createMany.mock.calls[0][0].data;
+        expect(createManyData).toEqual(expect.arrayContaining([
+            expect.objectContaining({ eventType: "replay" }),
+        ]));
+        const replayEvent = createManyData.find((event: { eventType: string }) => event.eventType === "replay");
+        expect(JSON.parse(replayEvent.metadata)).toEqual(expect.objectContaining({
+            fromMs: 50_000,
+            toMs: 20_000,
+            direction: "backward",
+            rangeLabel: "0:20 -> 0:50",
+        }));
+        expect(mocks.prisma.playbackHistory.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({
+                seekCount: { increment: 1 },
+                rewatchCount: { increment: 1 },
+            }),
+        }));
+    });
+
+    it("records a lightweight speed signal from stable progress deltas", async () => {
+        const now = Date.now();
+        mocks.prisma.media.findFirst.mockResolvedValue(streamMedia);
+        mocks.prisma.activeStream.findUnique.mockResolvedValue({
+            ...activeStream,
+            clientName: "Jellyfin Web",
+            deviceName: "Chrome",
+            playMethod: "DirectPlay",
+            ipAddress: "127.0.0.1",
+            user: streamUser,
+            media: streamMedia,
+        });
+        mocks.prisma.playbackHistory.findUnique.mockResolvedValue({ ...activePlayback, maxPlaybackRate: null });
+        mocks.redis.get.mockImplementation(async (key: string) => {
+            if (key === "dur:playback-1") return "30";
+            if (key === "last_time:playback-1") return String(now - 10_000);
+            if (key === "last_tick:playback-1") return String(100_000_000);
+            return null;
+        });
+
+        const response = await POST(requestFor({
+            event: "PlaybackProgress",
+            eventSchemaVersion: 3,
+            serverId: "jellyfin-main",
+            sessionId: "session-1",
+            positionTicks: 250_000_000,
+            isPaused: false,
+            user: { jellyfinUserId: "jf-user-1", username: "Alice" },
+            media: {
+                jellyfinMediaId: "jf-media-1",
+                title: "The Movie",
+                type: "Movie",
+                collectionType: "movies",
+                durationMs: 600_000,
+            },
+            session: {
+                clientName: "Jellyfin Web",
+                deviceName: "Chrome",
+                playMethod: "DirectPlay",
+                ipAddress: "127.0.0.1",
+            },
+        }));
+
+        expect(response.status).toBe(200);
+        const createManyData = mocks.prisma.telemetryEvent.createMany.mock.calls[0][0].data;
+        const speedEvent = createManyData.find((event: { eventType: string }) => event.eventType === "speed_change");
+        expect(speedEvent).toBeTruthy();
+        expect(JSON.parse(speedEvent.metadata)).toEqual(expect.objectContaining({
+            toRate: 1.5,
+            toRateLabel: "x1.5",
+            source: "estimated",
+            initial: true,
+        }));
+        expect(mocks.prisma.playbackHistory.update).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ maxPlaybackRate: 1.5 }),
+        }));
+    });
 });

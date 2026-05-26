@@ -509,12 +509,16 @@
         "pause": "Pausa",
         "seek": "Búsqueda (Seek)",
         "stop": "Stop",
-        "subtitle_change": "Cambio de subtítulo"
+        "subtitle_change": "Cambio de subtítulo",
+        "replay": "Repetición",
+        "speed_change": "Cambio de velocidad"
       },
       "legend": {
         "audio": "Audio",
         "pause": "Pausa",
-        "subtitles": "Subtítulos"
+        "subtitles": "Subtítulos",
+        "replay": "Repetición",
+        "speed": "Velocidad"
       },
       "noEvents": "No hay eventos registrados.",
       "stop": "Stop",
@@ -523,6 +527,11 @@
         "30s": "30s",
         "5s": "5s",
         "exact": "Exacto"
+      },
+      "action": {
+        "jump": "Abrir",
+        "copy": "Copiar",
+        "close": "Cerrar"
       }
     },
     "title": "Registros de auditoría",
@@ -658,7 +667,9 @@
         "pause": "Pausa",
         "stop": "Parar",
         "subtitle_change": "Subtítulos",
-        "seek": "Salto de reproducción"
+        "seek": "Pasaje saltado",
+        "replay": "Pasaje repetido",
+        "speed_change": "Velocidad"
       }
     },
     "timelineDesc": "Línea de tiempo de eventos detallada para esta sesión.",
@@ -683,7 +694,29 @@
     "markerCustom": "Metadata marker",
     "cast": "Reparto",
     "backdrop": "Imagen de fondo",
-    "castDesc": "Actores y equipo técnico."
+    "castDesc": "Actores y equipo técnico.",
+    "behaviorTitle": "Comportamiento detallado",
+    "behaviorDesc": "Pasajes saltados o repetidos, velocidad de reproducción y cambios de idioma detectados desde eventos útiles.",
+    "skippedRewatchedTitle": "Pasajes saltados / repetidos",
+    "noBehaviorSignals": "Aún no hay señales detalladas.",
+    "rangeSessions": "{count} sesiones",
+    "skippedPassages": "Pasajes saltados",
+    "replayedPassages": "Pasajes repetidos",
+    "speedDistribution": "Velocidad de reproducción",
+    "sourceEstimated": "(estimado)",
+    "maxSpeed": "Velocidad máx.",
+    "audioSubtitleSwitches": "Cambios de audio / subtítulos",
+    "speedChanges": "Cambios de velocidad",
+    "colJumps": "Saltos",
+    "colReplays": "Repeticiones",
+    "colMaxSpeed": "Vel. máx.",
+    "posterRotate": "Cambiar póster",
+    "posterRotateSuccess": "Póster cambiado.",
+    "posterRotateMissing": "No se encontró un pool de Poster Rotator o está vacío.",
+    "posterRotateError": "No se pudo cambiar el póster.",
+    "timeline_seek": "Pasaje saltado",
+    "timeline_replay": "Pasaje repetido",
+    "timeline_speed_change": "Cambio de velocidad"
   },
   "nav": {
     "cleanup": "Limpieza",

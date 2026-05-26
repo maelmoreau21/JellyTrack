@@ -509,12 +509,16 @@
         "pause": "Pauze",
         "seek": "Seek",
         "stop": "Stop",
-        "subtitle_change": "Ondertitelwijziging"
+        "subtitle_change": "Ondertitelwijziging",
+        "replay": "Herhaling",
+        "speed_change": "Snelheidswijziging"
       },
       "legend": {
         "audio": "Audio",
         "pause": "Pauze",
-        "subtitles": "Ondertitels"
+        "subtitles": "Ondertitels",
+        "replay": "Herhaling",
+        "speed": "Snelheid"
       },
       "noEvents": "Geen gebeurtenissen geregistreerd.",
       "stop": "Stop",
@@ -523,6 +527,11 @@
         "30s": "30s",
         "5s": "5s",
         "exact": "Exact"
+      },
+      "action": {
+        "jump": "Openen",
+        "copy": "Kopiëren",
+        "close": "Sluiten"
       }
     },
     "title": "Auditlogs",
@@ -658,7 +667,9 @@
         "pause": "Pauze",
         "stop": "Stop",
         "subtitle_change": "Ondertitels",
-        "seek": "Afspeelsprong"
+        "seek": "Overgeslagen passage",
+        "replay": "Opnieuw bekeken",
+        "speed_change": "Snelheid"
       }
     },
     "timelineDesc": "Gedetailleerde gebeurtenissentijdlijn voor deze sessie.",
@@ -683,7 +694,29 @@
     "markerCustom": "Metadata marker",
     "cast": "Cast",
     "backdrop": "Achtergrondafbeelding",
-    "castDesc": "Acteurs en filmploeg."
+    "castDesc": "Acteurs en filmploeg.",
+    "behaviorTitle": "Gedetailleerd gedrag",
+    "behaviorDesc": "Overgeslagen of opnieuw bekeken passages, afspeelsnelheid en taalwissels uit nuttige telemetrie.",
+    "skippedRewatchedTitle": "Overgeslagen / opnieuw bekeken passages",
+    "noBehaviorSignals": "Nog geen gedetailleerd signaal.",
+    "rangeSessions": "{count} sessies",
+    "skippedPassages": "Overgeslagen passages",
+    "replayedPassages": "Opnieuw bekeken passages",
+    "speedDistribution": "Afspeelsnelheid",
+    "sourceEstimated": "(geschat)",
+    "maxSpeed": "Max. snelheid",
+    "audioSubtitleSwitches": "Audio- / ondertitelwissels",
+    "speedChanges": "Snelheidswijzigingen",
+    "colJumps": "Sprongen",
+    "colReplays": "Herhalingen",
+    "colMaxSpeed": "Max. snelheid",
+    "posterRotate": "Poster wijzigen",
+    "posterRotateSuccess": "Poster gewijzigd.",
+    "posterRotateMissing": "Geen Poster Rotator-pool gevonden, of de pool is leeg.",
+    "posterRotateError": "Poster kon niet worden gewijzigd.",
+    "timeline_seek": "Overgeslagen passage",
+    "timeline_replay": "Opnieuw bekeken passage",
+    "timeline_speed_change": "Snelheidswijziging"
   },
   "nav": {
     "cleanup": "Opschonen",

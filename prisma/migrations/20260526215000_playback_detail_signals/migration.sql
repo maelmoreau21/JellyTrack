@@ -1,0 +1,6 @@
+ALTER TABLE "PlaybackHistory" ADD COLUMN "seekCount" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "PlaybackHistory" ADD COLUMN "rewatchCount" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "PlaybackHistory" ADD COLUMN "speedChangeCount" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "PlaybackHistory" ADD COLUMN "maxPlaybackRate" DOUBLE PRECISION;
+
+ALTER TABLE "ActiveStream" ADD COLUMN "playbackRate" DOUBLE PRECISION;

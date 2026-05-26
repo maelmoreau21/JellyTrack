@@ -5,12 +5,13 @@ import { FallbackImage } from "@/components/FallbackImage";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Clock, Eye, Timer, ArrowLeft, ChevronRight, Pause, Languages, Headphones, Tv, Music, Disc3, Play, Film, ListMusic, Activity } from "lucide-react";
+import { Clock, Eye, Timer, ArrowLeft, ChevronRight, Pause, Languages, Headphones, Tv, Music, Disc3, Play, Film, ListMusic, Activity, FastForward, RotateCcw, Gauge } from "lucide-react";
 import Link from "next/link";
 import MediaDropoffChart from "./MediaDropoffChart";
 import TelemetryChart from "./TelemetryChart";
 import MediaTimelineChart from "./MediaTimelineChart";
 import type { TimelineEvent, SessionTimeline } from "./MediaTimelineChart";
+import PosterRotatorPoster from "./PosterRotatorPoster";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 import { isZapped } from "@/lib/statsUtils";
@@ -32,6 +33,10 @@ type PlaybackHistory = {
     pauseCount?: number;
     audioChanges?: number;
     subtitleChanges?: number;
+    seekCount?: number;
+    rewatchCount?: number;
+    speedChangeCount?: number;
+    maxPlaybackRate?: number | null;
     startedAt: Date;
     playMethod?: string;
     audioLanguage?: string | null;
@@ -71,6 +76,53 @@ function ticksToMs(value: number | null): number | null {
 
 function clampPercent(value: number): number {
     return Math.max(0, Math.min(100, value));
+}
+
+function formatPositionMs(ms: number): string {
+    const totalSec = Math.floor(Math.max(0, ms) / 1000);
+    const hours = Math.floor(totalSec / 3600);
+    const minutes = Math.floor((totalSec % 3600) / 60);
+    const seconds = totalSec % 60;
+    if (hours > 0) return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function parseTelemetryMetadata(value: unknown): Record<string, unknown> | null {
+    if (!value) return null;
+    try {
+        const parsed = typeof value === "string" ? JSON.parse(value) : value;
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed as Record<string, unknown>
+            : null;
+    } catch {
+        return null;
+    }
+}
+
+function formatRate(value: unknown): string | null {
+    const numericValue = typeof value === "number"
+        ? value
+        : typeof value === "string"
+            ? Number(value.replace(/^x/i, ""))
+            : NaN;
+    if (!Number.isFinite(numericValue)) return null;
+    return `x${numericValue.toFixed(2).replace(/\.?0+$/, "")}`;
+}
+
+function formatChangeSide(side: unknown): string {
+    if (!side) return "-";
+    if (typeof side === "string" || typeof side === "number") return String(side);
+    if (typeof side === "object") {
+        const record = side as Record<string, unknown>;
+        const label = typeof record.language === "string"
+            ? record.language
+            : record.index !== undefined
+                ? `#${String(record.index)}`
+                : "-";
+        const codec = typeof record.codec === "string" ? ` (${record.codec})` : "";
+        return `${label}${codec}`;
+    }
+    return String(side);
 }
 
 export const dynamic = "force-dynamic";
@@ -318,6 +370,13 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const totalPauses = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.pauseCount || 0), 0);
     const totalAudioChanges = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.audioChanges || 0), 0);
     const totalSubChanges = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.subtitleChanges || 0), 0);
+    const totalSeekCount = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.seekCount || 0), 0);
+    const totalRewatchCount = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.rewatchCount || 0), 0);
+    const totalSpeedChanges = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.speedChangeCount || 0), 0);
+    const maxPlaybackRate = effectiveHistory.reduce((acc: number | null, h: PlaybackHistory) => {
+        if (!h.maxPlaybackRate || !Number.isFinite(h.maxPlaybackRate)) return acc;
+        return acc === null ? h.maxPlaybackRate : Math.max(acc, h.maxPlaybackRate);
+    }, null);
 
     // Drop-off buckets
     const mediaDurationSeconds = media.durationMs ? Number(media.durationMs) / 1000 : null;
@@ -379,11 +438,13 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const playbackIds = effectiveHistory.map((h: PlaybackHistory) => h.id);
     let timelineEvents: TimelineEvent[] = [];
     let sessionTimelines: SessionTimeline[] = [];
+    let rawTelemetryEvents: Array<{ eventType: string; positionMs: bigint; playbackId: string; metadata: string | null }> = [];
     if (playbackIds.length > 0 && mediaDurationSeconds && mediaDurationSeconds > 0) {
         const rawEvents = await prisma.telemetryEvent.findMany({
             where: { playbackId: { in: playbackIds } },
             select: { eventType: true, positionMs: true, playbackId: true, metadata: true },
         });
+        rawTelemetryEvents = rawEvents;
         // Aggregate by eventType + position bucket (each bucket = 1% of duration)
         const durationMs = mediaDurationSeconds * 1000;
         const bucketCount = 50;
@@ -424,6 +485,58 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
             }));
     }
     const hasTimelineEvents = timelineEvents.length > 0;
+    const playbackUserMap = new Map(effectiveHistory.map((h: PlaybackHistory) => [h.id, h.user?.username || tc('deletedUser')]));
+    const jumpSignalMap = new Map<string, { eventType: "seek" | "replay"; label: string; count: number; playbacks: Set<string> }>();
+    const speedSignalMap = new Map<string, { label: string; count: number; estimated: number }>();
+    const languageSwitchMap = new Map<string, { label: string; count: number; kind: "audio" | "subtitle" }>();
+
+    for (const event of rawTelemetryEvents) {
+        const eventType = event.eventType;
+        const metadata = parseTelemetryMetadata(event.metadata);
+
+        if ((eventType === "seek" || eventType === "replay") && metadata) {
+            const fromMs = parseFinitePositive(metadata.fromMs) ?? Number(event.positionMs);
+            const toMs = parseFinitePositive(metadata.toMs) ?? Number(event.positionMs);
+            const label = typeof metadata.rangeLabel === "string"
+                ? metadata.rangeLabel
+                : `${formatPositionMs(Math.min(fromMs, toMs))} -> ${formatPositionMs(Math.max(fromMs, toMs))}`;
+            const key = `${eventType}:${label}`;
+            const entry = jumpSignalMap.get(key) || { eventType: eventType as "seek" | "replay", label, count: 0, playbacks: new Set<string>() };
+            entry.count += 1;
+            entry.playbacks.add(event.playbackId);
+            jumpSignalMap.set(key, entry);
+        }
+
+        if (eventType === "speed_change" && metadata) {
+            const label = typeof metadata.toRateLabel === "string" ? metadata.toRateLabel : formatRate(metadata.toRate);
+            if (label) {
+                const entry = speedSignalMap.get(label) || { label, count: 0, estimated: 0 };
+                entry.count += 1;
+                if (metadata.source === "estimated") entry.estimated += 1;
+                speedSignalMap.set(label, entry);
+            }
+        }
+
+        if ((eventType === "audio_change" || eventType === "subtitle_change") && metadata) {
+            const label = `${formatChangeSide(metadata.from)} -> ${formatChangeSide(metadata.to)}`;
+            const key = `${eventType}:${label}`;
+            const entry = languageSwitchMap.get(key) || {
+                label,
+                count: 0,
+                kind: eventType === "audio_change" ? "audio" : "subtitle",
+            };
+            entry.count += 1;
+            languageSwitchMap.set(key, entry);
+        }
+    }
+
+    const jumpSignals = Array.from(jumpSignalMap.values())
+        .map((entry) => ({ ...entry, sessions: entry.playbacks.size, users: Array.from(entry.playbacks).map((id) => playbackUserMap.get(id)).filter(Boolean) }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+    const speedSignals = Array.from(speedSignalMap.values()).sort((a, b) => b.count - a.count).slice(0, 6);
+    const languageSwitchSignals = Array.from(languageSwitchMap.values()).sort((a, b) => b.count - a.count).slice(0, 6);
+    const hasBehaviorSignals = jumpSignals.length > 0 || speedSignals.length > 0 || languageSwitchSignals.length > 0;
 
     // Unique users who watched this
     const userMap = new Map<string, { username: string; jellyfinUserId: string; sessions: number; totalSeconds: number }>();
@@ -570,9 +683,14 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     )}
                     
                     <div className="relative z-10 flex flex-col md:flex-row gap-8 p-6 md:p-10">
-                        <div className={`relative ${media.type === 'Episode' ? 'w-full md:w-80 aspect-video' : ['MusicAlbum', 'Audio'].includes(media.type) ? 'w-48 aspect-square' : 'w-48 aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-xl overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-2xl shrink-0`}>
-                            <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId)} alt={media.title} fill className="object-cover" />
-                        </div>
+                        <PosterRotatorPoster
+                            mediaId={media.jellyfinMediaId}
+                            serverId={media.serverId}
+                            title={media.title}
+                            src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId)}
+                            canRotate={isAdmin}
+                            className={`relative ${media.type === 'Episode' ? 'w-full md:w-80 aspect-video' : ['MusicAlbum', 'Audio'].includes(media.type) ? 'w-48 aspect-square' : 'w-48 aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-xl overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-2xl shrink-0`}
+                        />
                         <div className="flex-1 space-y-4 py-2">
                             <div>
                                 {hasLogo ? (
@@ -755,10 +873,13 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             <div className="grid gap-4 md:grid-cols-3">
                                 {[
                                     { label: t('pausesLabel'), value: totalPauses, color: 'bg-yellow-500', icon: <Pause className="h-4 w-4 text-yellow-500" /> },
+                                    { label: t('skippedPassages'), value: totalSeekCount, color: 'bg-orange-500', icon: <FastForward className="h-4 w-4 text-orange-500" /> },
+                                    { label: t('replayedPassages'), value: totalRewatchCount, color: 'bg-green-500', icon: <RotateCcw className="h-4 w-4 text-green-500" /> },
+                                    { label: t('speedChanges'), value: totalSpeedChanges, color: 'bg-blue-500', icon: <Gauge className="h-4 w-4 text-blue-500" /> },
                                     { label: t('audioChanges'), value: totalAudioChanges, color: 'bg-purple-500', icon: <Headphones className="h-4 w-4 text-purple-500" /> },
                                     { label: t('subtitleChanges'), value: totalSubChanges, color: 'bg-cyan-500', icon: <Languages className="h-4 w-4 text-cyan-500" /> },
                                 ].map((metric) => {
-                                    const maxVal = Math.max(totalPauses, totalAudioChanges, totalSubChanges, 1);
+                                    const maxVal = Math.max(totalPauses, totalSeekCount, totalRewatchCount, totalSpeedChanges, totalAudioChanges, totalSubChanges, 1);
                                     const pct = Math.round((metric.value / maxVal) * 100);
                                     return (
                                         <div key={metric.label} className="space-y-2">
@@ -772,6 +893,65 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                         </div>
                                     );
                                 })}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {hasBehaviorSignals && (
+                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Activity className="w-4 h-4" /> {t('behaviorTitle')}</CardTitle>
+                            <CardDescription>{t('behaviorDesc')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-5 lg:grid-cols-3">
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold flex items-center gap-2"><FastForward className="w-4 h-4 text-orange-500" /> {t('skippedRewatchedTitle')}</h3>
+                                    {jumpSignals.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
+                                    ) : jumpSignals.map((entry) => (
+                                        <div key={`${entry.eventType}:${entry.label}`} className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 p-3">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="font-mono text-xs">{entry.label}</span>
+                                                <Badge variant="outline">{entry.count}</Badge>
+                                            </div>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                {entry.eventType === 'replay' ? t('replayedPassages') : t('skippedPassages')} - {t('rangeSessions', { count: entry.sessions })}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold flex items-center gap-2"><Gauge className="w-4 h-4 text-blue-500" /> {t('speedDistribution')}</h3>
+                                    {speedSignals.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
+                                    ) : speedSignals.map((entry) => (
+                                        <div key={entry.label} className="flex items-center justify-between rounded-md border border-zinc-200/70 dark:border-zinc-800/70 px-3 py-2">
+                                            <span className="font-mono text-sm font-semibold">{entry.label}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {entry.count} {entry.estimated > 0 ? t('sourceEstimated') : ''}
+                                            </span>
+                                        </div>
+                                    ))}
+                                    {maxPlaybackRate && (
+                                        <p className="text-xs text-muted-foreground">{t('maxSpeed')}: {formatRate(maxPlaybackRate)}</p>
+                                    )}
+                                </div>
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold flex items-center gap-2"><RotateCcw className="w-4 h-4 text-cyan-500" /> {t('audioSubtitleSwitches')}</h3>
+                                    {languageSwitchSignals.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
+                                    ) : languageSwitchSignals.map((entry) => (
+                                        <div key={`${entry.kind}:${entry.label}`} className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 px-3 py-2">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="text-xs">{entry.label}</span>
+                                                <Badge variant="outline">{entry.count}</Badge>
+                                            </div>
+                                            <p className="mt-1 text-[11px] text-muted-foreground">{entry.kind === 'audio' ? t('audioChanges') : t('subtitleChanges')}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -874,15 +1054,15 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     <CardHeader><CardTitle>{t('detailedHistory')}</CardTitle><CardDescription>{t('sessionsTotal', { count: totalViews })}</CardDescription></CardHeader>
                     <CardContent>
                         <div className="border rounded-md overflow-x-auto border-zinc-200 dark:border-zinc-800/50">
-                            <Table className="min-w-[680px] md:min-w-[900px]">
+                            <Table className="min-w-[860px] md:min-w-[1080px]">
                                 <TableHeader>
                                     <TableRow className="border-zinc-200 dark:border-zinc-800">
-                                        <TableHead>{t('colUser')}</TableHead><TableHead>{t('colDate')}</TableHead><TableHead className="hidden md:table-cell">{t('colMethod')}</TableHead><TableHead>{t('colAudio')}</TableHead>{!isMusic && <TableHead className="hidden lg:table-cell">{t('colSubtitles')}</TableHead>}<TableHead className="text-center hidden md:table-cell">{t('colPauses')}</TableHead><TableHead className="text-right">{t('colDuration')}</TableHead>
+                                        <TableHead>{t('colUser')}</TableHead><TableHead>{t('colDate')}</TableHead><TableHead className="hidden md:table-cell">{t('colMethod')}</TableHead><TableHead>{t('colAudio')}</TableHead>{!isMusic && <TableHead className="hidden lg:table-cell">{t('colSubtitles')}</TableHead>}<TableHead className="text-center hidden md:table-cell">{t('colPauses')}</TableHead><TableHead className="text-center hidden lg:table-cell">{t('colJumps')}</TableHead><TableHead className="text-center hidden xl:table-cell">{t('colReplays')}</TableHead><TableHead className="text-center hidden xl:table-cell">{t('colMaxSpeed')}</TableHead><TableHead className="text-right">{t('colDuration')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {effectiveHistory.length === 0 ? (
-                                        <TableRow><TableCell colSpan={isMusic ? 5 : 6} className="text-center h-24 text-muted-foreground">{t('noSession')}</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={isMusic ? 9 : 10} className="text-center h-24 text-muted-foreground">{t('noSession')}</TableCell></TableRow>
                                     ) : effectiveHistory.slice(0, 200).map((h) => {
                                         const isTranscode = h.playMethod?.toLowerCase().includes("transcode");
                                         return (
@@ -895,6 +1075,9 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                 <TableCell className="text-sm">{h.audioLanguage ? <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{h.audioLanguage}{h.audioCodec ? ` (${h.audioCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>
                                                 {!isMusic && <TableCell className="text-sm hidden lg:table-cell">{h.subtitleLanguage ? <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{h.subtitleLanguage}{h.subtitleCodec ? ` (${h.subtitleCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>}
                                                 <TableCell className="text-center hidden md:table-cell">{(h.pauseCount || 0) > 0 ? <span className="text-yellow-400 font-medium">{h.pauseCount}</span> : <span className="text-zinc-500">0</span>}</TableCell>
+                                                <TableCell className="text-center hidden lg:table-cell">{(h.seekCount || 0) > 0 ? <span className="text-orange-400 font-medium">{h.seekCount}</span> : <span className="text-zinc-500">0</span>}</TableCell>
+                                                <TableCell className="text-center hidden xl:table-cell">{(h.rewatchCount || 0) > 0 ? <span className="text-green-400 font-medium">{h.rewatchCount}</span> : <span className="text-zinc-500">0</span>}</TableCell>
+                                                <TableCell className="text-center hidden xl:table-cell">{h.maxPlaybackRate ? <span className="font-mono text-xs">{formatRate(h.maxPlaybackRate)}</span> : <span className="text-zinc-500 text-xs">-</span>}</TableCell>
                                                 <TableCell className="text-right whitespace-nowrap font-medium">{h.durationWatched > 0 ? `${Math.floor(h.durationWatched / 60)} min` : <span className="text-zinc-500 text-xs">0 min</span>}</TableCell>
                                             </TableRow>
                                         );

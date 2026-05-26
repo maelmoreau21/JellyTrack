@@ -509,12 +509,16 @@
         "pause": "Пауза",
         "seek": "Перемотка",
         "stop": "Stop",
-        "subtitle_change": "Смена субт."
+        "subtitle_change": "Смена субт.",
+        "replay": "Повтор",
+        "speed_change": "Изменение скорости"
       },
       "legend": {
         "audio": "Звук",
         "pause": "Паузы",
-        "subtitles": "Субтитры"
+        "subtitles": "Субтитры",
+        "replay": "Повтор",
+        "speed": "Скорость"
       },
       "noEvents": "Событий не зафиксировано.",
       "stop": "Stop",
@@ -523,6 +527,11 @@
         "30s": "30с",
         "5s": "5с",
         "exact": "Точно"
+      },
+      "action": {
+        "jump": "Открыть",
+        "copy": "Копировать",
+        "close": "Закрыть"
       }
     },
     "title": "Журналы аудита",
@@ -658,7 +667,9 @@
         "pause": "Пауза",
         "stop": "Стоп",
         "subtitle_change": "Субтитры",
-        "seek": "Skachok vosproizvedeniya"
+        "seek": "Пропущенный фрагмент",
+        "replay": "Пересмотренный фрагмент",
+        "speed_change": "Скорость"
       }
     },
     "timelineDesc": "Детальный список событий внутри сессии.",
@@ -683,7 +694,29 @@
     "markerCustom": "Metadata marker",
     "cast": "Актерский состав",
     "backdrop": "Фоновое изображение",
-    "castDesc": "Актеры и съемочная группа."
+    "castDesc": "Актеры и съемочная группа.",
+    "behaviorTitle": "Подробное поведение",
+    "behaviorDesc": "Пропущенные или пересмотренные фрагменты, скорость воспроизведения и смена языков по полезным событиям телеметрии.",
+    "skippedRewatchedTitle": "Пропущенные / пересмотренные фрагменты",
+    "noBehaviorSignals": "Подробных сигналов пока нет.",
+    "rangeSessions": "{count} сеансов",
+    "skippedPassages": "Пропущенные фрагменты",
+    "replayedPassages": "Пересмотренные фрагменты",
+    "speedDistribution": "Скорость воспроизведения",
+    "sourceEstimated": "(оценка)",
+    "maxSpeed": "Макс. скорость",
+    "audioSubtitleSwitches": "Смена аудио / субтитров",
+    "speedChanges": "Изменения скорости",
+    "colJumps": "Переходы",
+    "colReplays": "Повторы",
+    "colMaxSpeed": "Макс. скорость",
+    "posterRotate": "Сменить постер",
+    "posterRotateSuccess": "Постер изменён.",
+    "posterRotateMissing": "Пул Poster Rotator не найден или он пуст.",
+    "posterRotateError": "Не удалось сменить постер.",
+    "timeline_seek": "Пропущенный фрагмент",
+    "timeline_replay": "Пересмотренный фрагмент",
+    "timeline_speed_change": "Изменение скорости"
   },
   "nav": {
     "cleanup": "Очистка",

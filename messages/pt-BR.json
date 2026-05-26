@@ -509,12 +509,16 @@
         "pause": "Pausa",
         "seek": "Seek",
         "stop": "Stop",
-        "subtitle_change": "Alt. de legenda"
+        "subtitle_change": "Alt. de legenda",
+        "replay": "Revisão",
+        "speed_change": "Mudança de velocidade"
       },
       "legend": {
         "audio": "Áudio",
         "pause": "Pausas",
-        "subtitles": "Legendas"
+        "subtitles": "Legendas",
+        "replay": "Revisão",
+        "speed": "Velocidade"
       },
       "noEvents": "Nenhum evento registrado.",
       "stop": "Stop",
@@ -523,6 +527,11 @@
         "30s": "30s",
         "5s": "5s",
         "exact": "Exato"
+      },
+      "action": {
+        "jump": "Abrir",
+        "copy": "Copiar",
+        "close": "Fechar"
       }
     },
     "title": "Logs de auditoria",
@@ -658,7 +667,9 @@
         "pause": "Pausa",
         "stop": "Parar",
         "subtitle_change": "Legendas",
-        "seek": "Salto de reprodução"
+        "seek": "Trecho pulado",
+        "replay": "Trecho revisto",
+        "speed_change": "Velocidade"
       }
     },
     "timelineDesc": "Histórico detalhado de eventos para esta sessão.",
@@ -683,7 +694,29 @@
     "markerCustom": "Metadata marker",
     "cast": "Elenco",
     "backdrop": "Imagem de fundo",
-    "castDesc": "Atores e equipe técnica."
+    "castDesc": "Atores e equipe técnica.",
+    "behaviorTitle": "Comportamento detalhado",
+    "behaviorDesc": "Trechos pulados ou revistos, velocidade de reprodução e trocas de idioma detectadas por eventos úteis.",
+    "skippedRewatchedTitle": "Trechos pulados / revistos",
+    "noBehaviorSignals": "Ainda não há sinal detalhado.",
+    "rangeSessions": "{count} sessões",
+    "skippedPassages": "Trechos pulados",
+    "replayedPassages": "Trechos revistos",
+    "speedDistribution": "Velocidade de reprodução",
+    "sourceEstimated": "(estimado)",
+    "maxSpeed": "Velocidade máx.",
+    "audioSubtitleSwitches": "Trocas de áudio / legendas",
+    "speedChanges": "Mudanças de velocidade",
+    "colJumps": "Saltos",
+    "colReplays": "Revisões",
+    "colMaxSpeed": "Vel. máx.",
+    "posterRotate": "Trocar pôster",
+    "posterRotateSuccess": "Pôster alterado.",
+    "posterRotateMissing": "Nenhum pool do Poster Rotator encontrado, ou o pool está vazio.",
+    "posterRotateError": "Não foi possível trocar o pôster.",
+    "timeline_seek": "Trecho pulado",
+    "timeline_replay": "Trecho revisto",
+    "timeline_speed_change": "Mudança de velocidade"
   },
   "nav": {
     "cleanup": "Limpeza",

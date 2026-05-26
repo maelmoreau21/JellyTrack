@@ -49,7 +49,7 @@ async function resolveJellyfinConnection(serverId?: string | null): Promise<Jell
     return { baseUrl: envBaseUrl, apiKey: envApiKey };
 }
 
-export async function fetchJellyfinImage(itemId: string, type: string, serverId?: string | null) {
+export async function fetchJellyfinImage(itemId: string, type: string, serverId?: string | null, noStore = false) {
     const connection = await resolveJellyfinConnection(serverId);
 
     if (!connection) {
@@ -61,7 +61,7 @@ export async function fetchJellyfinImage(itemId: string, type: string, serverId?
     return fetch(url, {
         method: "GET",
         headers: buildJellyfinApiKeyHeaders(connection.apiKey),
-        next: { revalidate: 86400 },
+        ...(noStore ? { cache: "no-store" as const } : { next: { revalidate: 86400 } }),
     });
 }
 
@@ -81,5 +81,43 @@ export async function fetchJellyfinJson<T>(path: string, serverId?: string | nul
         return await response.json() as T;
     } catch {
         return null;
+    }
+}
+
+export async function postJellyfinJson<T>(path: string, serverId?: string | null, body?: unknown): Promise<{ ok: boolean; status: number; data: T | null; text: string }> {
+    const connection = await resolveJellyfinConnection(serverId);
+    if (!connection) {
+        return { ok: false, status: 503, data: null, text: "Jellyfin connection is not configured." };
+    }
+
+    try {
+        const response = await fetch(`${connection.baseUrl}${path}`, {
+            method: "POST",
+            headers: {
+                ...buildJellyfinApiKeyHeaders(connection.apiKey),
+                "Content-Type": "application/json",
+            },
+            body: body === undefined ? undefined : JSON.stringify(body),
+            cache: "no-store",
+        });
+
+        const text = await response.text();
+        let data: T | null = null;
+        if (text.trim()) {
+            try {
+                data = JSON.parse(text) as T;
+            } catch {
+                data = null;
+            }
+        }
+
+        return { ok: response.ok, status: response.status, data, text };
+    } catch (error) {
+        return {
+            ok: false,
+            status: 502,
+            data: null,
+            text: error instanceof Error ? error.message : "Jellyfin request failed.",
+        };
     }
 }

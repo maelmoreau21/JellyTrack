@@ -509,12 +509,16 @@
         "pause": "Pause",
         "seek": "Saut de lecture",
         "stop": "Arrêt",
-        "subtitle_change": "Chgt Sous-titre"
+        "subtitle_change": "Chgt Sous-titre",
+        "replay": "Retour / relecture",
+        "speed_change": "Changement de vitesse"
       },
       "legend": {
         "audio": "Audio",
         "pause": "Pause",
-        "subtitles": "Sous-titres"
+        "subtitles": "Sous-titres",
+        "replay": "Relecture",
+        "speed": "Vitesse"
       },
       "noEvents": "Aucun événement enregistré.",
       "stop": "Arrêt",
@@ -523,6 +527,11 @@
         "30s": "30s",
         "5s": "5s",
         "exact": "Exact"
+      },
+      "action": {
+        "jump": "Ouvrir",
+        "copy": "Copier",
+        "close": "Fermer"
       }
     },
     "title": "Journaux",
@@ -658,7 +667,9 @@
         "pause": "Pause",
         "stop": "Arrêt",
         "subtitle_change": "Sous-titre",
-        "seek": "Saut de lecture"
+        "seek": "Passage sauté",
+        "replay": "Passage revu",
+        "speed_change": "Vitesse"
       }
     },
     "timelineDesc": "Chronologie détaillée des événements pour cette session.",
@@ -683,7 +694,29 @@
     "markerCustom": "Repère metadata",
     "cast": "Distribution",
     "backdrop": "Image de fond",
-    "castDesc": "Acteurs et équipe technique."
+    "castDesc": "Acteurs et équipe technique.",
+    "behaviorTitle": "Analyse des passages",
+    "behaviorDesc": "Passages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.",
+    "skippedRewatchedTitle": "Passages sautés / revus",
+    "noBehaviorSignals": "Aucun signal détaillé pour l'instant.",
+    "rangeSessions": "{count} sessions",
+    "skippedPassages": "Passages sautés",
+    "replayedPassages": "Passages revus",
+    "speedDistribution": "Vitesses de lecture",
+    "sourceEstimated": "(estimé)",
+    "maxSpeed": "Vitesse max",
+    "audioSubtitleSwitches": "Changements audio / sous-titres",
+    "speedChanges": "Changements de vitesse",
+    "colJumps": "Sauts",
+    "colReplays": "Retours",
+    "colMaxSpeed": "Vitesse max",
+    "posterRotate": "Changer l'affiche",
+    "posterRotateSuccess": "Affiche changée.",
+    "posterRotateMissing": "Aucun pool Poster Rotator trouvé, ou le pool est vide.",
+    "posterRotateError": "Impossible de changer l'affiche.",
+    "timeline_seek": "Passage sauté",
+    "timeline_replay": "Passage revu",
+    "timeline_speed_change": "Changement de vitesse"
   },
   "nav": {
     "cleanup": "Nettoyage",
@@ -1276,8 +1309,8 @@
     "rateLimited24h": "Limités 24 h",
     "oldKeyUsage24h": "Ancienne clé utilisée 24 h",
     "keyActions30d": "Actions clés 30 j",
-    "newKeyTitle": "Nouvelle cl? (affichage unique)",
-    "newKeyDesc": "Copiez cette cl? maintenant. Elle ne sera plus visible ensuite.",
+    "newKeyTitle": "Nouvelle clé (affichage unique)",
+    "newKeyDesc": "Copiez cette clé maintenant. Elle ne sera plus visible ensuite.",
     "copy": "Copier",
     "hide": "Masquer",
     "recentSecurityEventsTitle": "Événements de sécurité récents",
@@ -1311,14 +1344,14 @@
   "dbWithoutRedisDesc": "Certains compteurs temps réel utilisent le repli base de données car Redis est indisponible.",
   "excludedLibrariesDesc": "Bibliothèques exclues des statistiques et traitements automatiques.",
   "excludedLibrariesTitle": "Bibliothèques exclues",
-  "lastPoll": "Dernier relev?",
-  "logHealth": "Sant? des logs",
+  "lastPoll": "Dernier relevé",
+  "logHealth": "Santé des logs",
   "logHealthDesc": "État des logs applicatifs, audit et santé.",
   "monitor": "Surveillance",
   "monitorStatusError": "Erreur",
   "monitorStatusOk": "OK",
   "multiServerComparator": {
-    "desc": "Comparez activit?, disponibilit? et usages entre vos serveurs Jellyfin.",
+    "desc": "Comparez activité, disponibilité et usages entre vos serveurs Jellyfin.",
     "disabled": "Ajoutez un serveur secondaire pour activer la comparaison.",
     "title": "Comparaison multi-serveurs"
   },
@@ -1339,7 +1372,7 @@
     "colSource": "Source",
     "colUser": "Utilisateur",
     "typeAudit": "Audit",
-    "typeHealth": "Sant?"
+    "typeHealth": "Santé"
   },
   "timeline": {
     "label": {

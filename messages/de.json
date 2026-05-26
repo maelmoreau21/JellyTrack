@@ -509,12 +509,16 @@
         "pause": "Pause",
         "seek": "Seek",
         "stop": "Stop",
-        "subtitle_change": "Subtitle Change"
+        "subtitle_change": "Subtitle Change",
+        "replay": "Wiederholung",
+        "speed_change": "Geschwindigkeitswechsel"
       },
       "legend": {
         "audio": "Audio",
         "pause": "Pause",
-        "subtitles": "Subtitles"
+        "subtitles": "Subtitles",
+        "replay": "Wiederholung",
+        "speed": "Tempo"
       },
       "noEvents": "No events recorded.",
       "stop": "Stop",
@@ -523,6 +527,11 @@
         "30s": "30s",
         "5s": "5s",
         "exact": "Exact"
+      },
+      "action": {
+        "jump": "Öffnen",
+        "copy": "Kopieren",
+        "close": "Schließen"
       }
     },
     "title": "Audit Logs",
@@ -658,7 +667,9 @@
         "pause": "Pause",
         "stop": "Stop",
         "subtitle_change": "Subtitle",
-        "seek": "Wiedergabesprung"
+        "seek": "Übersprungene Passage",
+        "replay": "Erneut gesehen",
+        "speed_change": "Tempo"
       }
     },
     "timelineDesc": "Detailed event timeline for this session.",
@@ -683,7 +694,29 @@
     "markerCustom": "Metadata marker",
     "cast": "Besetzung",
     "backdrop": "Hintergrundbild",
-    "castDesc": "Schauspieler und Filmteam."
+    "castDesc": "Schauspieler und Filmteam.",
+    "behaviorTitle": "Detailliertes Verhalten",
+    "behaviorDesc": "Übersprungene oder erneut gesehene Passagen, Wiedergabegeschwindigkeit und Sprachwechsel aus nützlichen Telemetrieereignissen.",
+    "skippedRewatchedTitle": "Übersprungene / erneut gesehene Passagen",
+    "noBehaviorSignals": "Noch kein detailliertes Signal.",
+    "rangeSessions": "{count} Sitzungen",
+    "skippedPassages": "Übersprungene Passagen",
+    "replayedPassages": "Erneut gesehene Passagen",
+    "speedDistribution": "Wiedergabegeschwindigkeit",
+    "sourceEstimated": "(geschätzt)",
+    "maxSpeed": "Max. Geschwindigkeit",
+    "audioSubtitleSwitches": "Audio- / Untertitelwechsel",
+    "speedChanges": "Geschwindigkeitswechsel",
+    "colJumps": "Sprünge",
+    "colReplays": "Wiederholungen",
+    "colMaxSpeed": "Max. Tempo",
+    "posterRotate": "Poster wechseln",
+    "posterRotateSuccess": "Poster geändert.",
+    "posterRotateMissing": "Kein Poster-Rotator-Pool gefunden oder der Pool ist leer.",
+    "posterRotateError": "Poster konnte nicht geändert werden.",
+    "timeline_seek": "Übersprungene Passage",
+    "timeline_replay": "Erneut gesehene Passage",
+    "timeline_speed_change": "Geschwindigkeitswechsel"
   },
   "nav": {
     "cleanup": "Bereinigung",

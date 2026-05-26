@@ -236,6 +236,189 @@ function shouldPromoteDurationToWallClock(input: {
     return input.computedDurationS <= input.wallClockS * 0.5;
 }
 
+const COMMON_PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4];
+
+type PlaybackRateSource = "jellyfin" | "estimated";
+
+type PlaybackRateObservation = {
+    rate: number;
+    bucket: number;
+    source: PlaybackRateSource;
+    confidence: number;
+    wallDeltaMs?: number;
+    positionDeltaMs?: number;
+};
+
+function parseObservedAtMs(payload: Record<string, any>): number | null {
+    const raw =
+        payload.observedAtUtc ??
+        payload.ObservedAtUtc ??
+        payload.timestamp ??
+        payload.Timestamp;
+
+    if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
+        return raw > 10_000_000_000 ? Math.round(raw) : Math.round(raw * 1000);
+    }
+
+    if (typeof raw === "string" && raw.trim()) {
+        const parsed = Date.parse(raw);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    return null;
+}
+
+function parsePlaybackRate(raw: unknown): number | null {
+    const value = typeof raw === "number"
+        ? raw
+        : typeof raw === "string"
+            ? Number(raw.trim().replace(/^x/i, ""))
+            : NaN;
+
+    if (!Number.isFinite(value) || value < 0.25 || value > 4) {
+        return null;
+    }
+
+    return value;
+}
+
+function readPlaybackRate(payload: Record<string, any>, sessionPayload: Record<string, any>): number | null {
+    return parsePlaybackRate(
+        payload.playbackRate ??
+        payload.PlaybackRate ??
+        payload.playbackSpeed ??
+        payload.PlaybackSpeed ??
+        payload.speed ??
+        payload.Speed ??
+        sessionPayload.playbackRate ??
+        sessionPayload.PlaybackRate ??
+        sessionPayload.playbackSpeed ??
+        sessionPayload.PlaybackSpeed ??
+        sessionPayload.speed ??
+        sessionPayload.Speed
+    );
+}
+
+function bucketPlaybackRate(rate: number): number {
+    return COMMON_PLAYBACK_RATES.reduce((best, candidate) => (
+        Math.abs(candidate - rate) < Math.abs(best - rate) ? candidate : best
+    ), COMMON_PLAYBACK_RATES[0]);
+}
+
+function formatPlaybackRate(rate: number | null | undefined): string | null {
+    if (!Number.isFinite(Number(rate))) return null;
+    return `x${Number(rate).toFixed(2).replace(/\.?0+$/, "")}`;
+}
+
+function formatPositionLabel(ms: number | null | undefined): string | null {
+    if (!Number.isFinite(Number(ms)) || Number(ms) < 0) return null;
+    const totalSeconds = Math.floor(Number(ms) / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function buildJumpMetadata(input: {
+    fromMs: number;
+    toMs: number;
+    deltaMs: number;
+    source: string;
+    existing?: Record<string, unknown> | null;
+}) {
+    const direction = input.deltaMs >= 0 ? "forward" : "backward";
+    const rangeStartMs = Math.min(input.fromMs, input.toMs);
+    const rangeEndMs = Math.max(input.fromMs, input.toMs);
+
+    return {
+        ...(input.existing || {}),
+        fromMs: input.fromMs,
+        toMs: input.toMs,
+        deltaMs: input.deltaMs,
+        direction,
+        source: input.source,
+        fromLabel: formatPositionLabel(input.fromMs),
+        toLabel: formatPositionLabel(input.toMs),
+        rangeStartMs,
+        rangeEndMs,
+        rangeLabel: `${formatPositionLabel(rangeStartMs)} -> ${formatPositionLabel(rangeEndMs)}`,
+    };
+}
+
+function inferJumpFromMetadata(metadata: Record<string, unknown>, fallbackPositionMs: number): {
+    fromMs: number;
+    toMs: number;
+    deltaMs: number;
+    direction: "forward" | "backward";
+} | null {
+    const fromMsRaw = parseFiniteNumber(metadata.fromMs);
+    const toMsRaw = parseFiniteNumber(metadata.toMs);
+    const fromTicks = parseFiniteNumber(metadata.fromTicks);
+    const toTicks = parseFiniteNumber(metadata.toTicks);
+
+    const fromMs = fromMsRaw ?? (fromTicks !== null ? Math.floor(fromTicks / 10_000) : null);
+    const toMs = toMsRaw ?? (toTicks !== null ? Math.floor(toTicks / 10_000) : fallbackPositionMs);
+
+    if (fromMs === null || toMs === null) return null;
+
+    const rawDelta = parseFiniteNumber(metadata.deltaMs);
+    const deltaMs = rawDelta ?? (toMs - fromMs);
+    const directionRaw = typeof metadata.direction === "string" ? metadata.direction.toLowerCase() : "";
+    const direction = directionRaw === "backward" || deltaMs < 0 ? "backward" : "forward";
+
+    return { fromMs, toMs, deltaMs, direction };
+}
+
+function estimatePlaybackRate(input: {
+    explicitRate: number | null;
+    isPaused: boolean;
+    appearsSeek: boolean;
+    prevTime: number | null;
+    prevTick: number | null;
+    now: number;
+    positionTicks: number;
+}): PlaybackRateObservation | null {
+    if (input.explicitRate !== null) {
+        const bucket = bucketPlaybackRate(input.explicitRate);
+        return {
+            rate: input.explicitRate,
+            bucket,
+            source: "jellyfin",
+            confidence: 1,
+        };
+    }
+
+    if (input.isPaused || input.appearsSeek || input.prevTime === null || input.prevTick === null) {
+        return null;
+    }
+
+    const wallDeltaMs = input.now - input.prevTime;
+    const positionDeltaMs = (input.positionTicks - input.prevTick) / 10_000;
+    if (wallDeltaMs < 2_000 || wallDeltaMs > 60_000 || positionDeltaMs <= 0) {
+        return null;
+    }
+
+    const rate = positionDeltaMs / wallDeltaMs;
+    if (!Number.isFinite(rate) || rate < 0.25 || rate > 4) {
+        return null;
+    }
+
+    const bucket = bucketPlaybackRate(rate);
+    const confidence = wallDeltaMs >= 10_000 ? 0.8 : 0.6;
+
+    return {
+        rate,
+        bucket,
+        source: "estimated",
+        confidence,
+        wallDeltaMs: Math.round(wallDeltaMs),
+        positionDeltaMs: Math.round(positionDeltaMs),
+    };
+}
+
 interface PluginSchemaVersionResult {
     version: number;
     raw: unknown;
@@ -675,6 +858,8 @@ async function cleanupPlaybackRedisKeys(playbackId: string) {
         `last_time:${playbackId}`,
         `last_tick:${playbackId}`,
         `start_pos:${playbackId}`,
+        `rate:${playbackId}`,
+        `jump:${playbackId}`,
     );
 }
 
@@ -1438,6 +1623,7 @@ export async function POST(req: Request) {
             if (sessionId && dbUser && dbMedia) {
                 const runTimeTicks = media.durationMs ? Number(media.durationMs) * 10_000 : null;
                 const playbackPositionTicks = Number(session.positionTicks || 0);
+                const playbackRate = readPlaybackRate(payload, session);
                 const progressPercent = computeProgressPercent(playbackPositionTicks, runTimeTicks);
                 const mediaSubtitle = await buildMediaSubtitle({
                     serverId: sourceServer.id,
@@ -1469,6 +1655,7 @@ export async function POST(req: Request) {
                         audioLanguage: (session.audioLanguage || session.AudioLanguage || "").split(' ')[0] || null,
                         subtitleLanguage: (session.subtitleLanguage || session.SubtitleLanguage || "").split(' ')[0] || null,
                         subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                        playbackRate,
                         positionTicks: session.positionTicks != null ? BigInt(session.positionTicks) : null,
                     },
                     create: {
@@ -1490,6 +1677,7 @@ export async function POST(req: Request) {
                         audioLanguage: (session.audioLanguage || session.AudioLanguage || "").split(' ')[0] || null,
                         subtitleLanguage: (session.subtitleLanguage || session.SubtitleLanguage || "").split(' ')[0] || null,
                         subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                        playbackRate,
                         positionTicks: session.positionTicks != null ? BigInt(session.positionTicks) : null,
                     },
                 });
@@ -1542,6 +1730,8 @@ export async function POST(req: Request) {
                     SubtitleLanguage: session.subtitleLanguage || session.SubtitleLanguage || null,
                     subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
                     SubtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                    playbackRate,
+                    PlaybackRate: playbackRate,
                     subtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
                     SubtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
                 });
@@ -1707,6 +1897,8 @@ export async function POST(req: Request) {
             const changeType = typeof changeTypeRaw === "string" ? changeTypeRaw.trim().toLowerCase() : "";
             const positionTicks = Number(payload.positionTicks ?? payload.PositionTicks ?? sessionPayload.positionTicks ?? sessionPayload.PositionTicks ?? 0);
             const positionMs = positionTicks > 0 ? BigInt(Math.floor(positionTicks / 10_000)) : BigInt(0);
+            const positionMsNumber = Number(positionMs);
+            const explicitPlaybackRate = readPlaybackRate(payload, sessionPayload);
             const jellyfinUserId = normalizeJellyfinId(userPayload.jellyfinUserId || userPayload.JellyfinUserId || userPayload.id || payload.userId);
             const jellyfinMediaId = normalizeJellyfinId(mediaPayload.jellyfinMediaId || mediaPayload.JellyfinMediaId || mediaPayload.id || payload.mediaId);
 
@@ -1743,30 +1935,71 @@ export async function POST(req: Request) {
                 }
             }
 
-            const validTypes = new Set(["pause", "resume", "seek", "audio_change", "subtitle_change"]);
+            const validTypes = new Set(["pause", "resume", "seek", "audio_change", "subtitle_change", "speed_change"]);
             if (!validTypes.has(changeType)) {
                 return corsJson({ error: `Unsupported state change: ${changeType || "unknown"}` }, { status: 400 });
             }
 
             if (playbackId) {
+                const rawMetadata = payload.metadata || payload.Metadata || {};
+                const metadataRecord = rawMetadata && typeof rawMetadata === "object" && !Array.isArray(rawMetadata)
+                    ? rawMetadata as Record<string, unknown>
+                    : {};
+                const jumpDetails = changeType === "seek"
+                    ? inferJumpFromMetadata(metadataRecord, positionMsNumber)
+                    : null;
+                const storedEventType = jumpDetails?.direction === "backward" ? "replay" : changeType;
                 const updateData: Record<string, unknown> = {};
                 if (changeType === "pause") updateData.pauseCount = { increment: 1 };
                 if (changeType === "audio_change") updateData.audioChanges = { increment: 1 };
                 if (changeType === "subtitle_change") updateData.subtitleChanges = { increment: 1 };
+                if (changeType === "seek") updateData.seekCount = { increment: 1 };
+                if (storedEventType === "replay") updateData.rewatchCount = { increment: 1 };
+                if (changeType === "speed_change") {
+                    updateData.speedChangeCount = { increment: 1 };
+                    const rate = parsePlaybackRate(metadataRecord.toRate ?? metadataRecord.rate ?? explicitPlaybackRate);
+                    if (rate !== null) updateData.maxPlaybackRate = rate;
+                }
                 if (Object.keys(updateData).length > 0) {
                     await prisma.playbackHistory.update({ where: { id: playbackId }, data: updateData });
                 }
 
-                const metadata = payload.metadata || payload.Metadata || {};
+                const metadata = jumpDetails
+                    ? buildJumpMetadata({
+                        fromMs: jumpDetails.fromMs,
+                        toMs: jumpDetails.toMs,
+                        deltaMs: jumpDetails.deltaMs,
+                        source: typeof metadataRecord.source === "string" ? metadataRecord.source : "state_change",
+                        existing: metadataRecord,
+                    })
+                    : {
+                        ...metadataRecord,
+                        ...(explicitPlaybackRate !== null && changeType === "speed_change"
+                            ? {
+                                toRate: explicitPlaybackRate,
+                                toRateLabel: formatPlaybackRate(explicitPlaybackRate),
+                                source: "jellyfin",
+                                confidence: 1,
+                            }
+                            : {}),
+                    };
                 await prisma.telemetryEvent.create({
                     data: {
                         serverId: sourceServer.id,
                         playbackId,
-                        eventType: changeType,
+                        eventType: storedEventType,
                         positionMs,
-                        metadata: metadata && typeof metadata === "object" ? JSON.stringify(metadata) : null,
+                        metadata: Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null,
                     },
                 });
+
+                if (jumpDetails) {
+                    await redis.setex(`jump:${playbackId}`, 30, JSON.stringify({
+                        fromMs: jumpDetails.fromMs,
+                        toMs: jumpDetails.toMs,
+                        at: Date.now(),
+                    }));
+                }
             }
 
             const redisKey = buildStreamRedisKey(sourceServer.id, sessionId);
@@ -1796,6 +2029,10 @@ export async function POST(req: Request) {
                         parsed.SubtitleLanguage = sessionPayload.subtitleLanguage || sessionPayload.SubtitleLanguage || parsed.SubtitleLanguage || null;
                         parsed.subtitleCodec = sessionPayload.subtitleCodec || sessionPayload.SubtitleCodec || parsed.subtitleCodec || null;
                         parsed.SubtitleCodec = sessionPayload.subtitleCodec || sessionPayload.SubtitleCodec || parsed.SubtitleCodec || null;
+                    }
+                    if (explicitPlaybackRate !== null) {
+                        parsed.playbackRate = explicitPlaybackRate;
+                        parsed.PlaybackRate = explicitPlaybackRate;
                     }
                     if (positionTicks > 0) {
                         parsed.positionTicks = positionTicks;
@@ -1872,6 +2109,7 @@ export async function POST(req: Request) {
             const subtitleCodec = sessionPayload.subtitleCodec || sessionPayload.SubtitleCodec || null;
             const transcodeFps = sessionPayload.transcodeFps ?? sessionPayload.TranscodeFps ?? null;
             const bitrate = sessionPayload.bitrate ?? sessionPayload.Bitrate ?? null;
+            const explicitPlaybackRate = readPlaybackRate(payload, sessionPayload);
             const seriesName = mediaPayload.seriesName || mediaPayload.SeriesName || null;
             const seasonName = mediaPayload.seasonName || mediaPayload.SeasonName || null;
             const albumArtist = mediaPayload.albumArtist || mediaPayload.AlbumArtist || null;
@@ -1911,6 +2149,7 @@ export async function POST(req: Request) {
                         subtitleCodec: true,
                         transcodeFps: true,
                         bitrate: true,
+                        playbackRate: true,
                         user: { select: { id: true, username: true, jellyfinUserId: true } },
                         media: {
                             select: {
@@ -1946,6 +2185,7 @@ export async function POST(req: Request) {
             const resolvedSubtitleCodec = subtitleCodec || existingStream?.subtitleCodec || null;
             const resolvedTranscodeFps = transcodeFps ?? existingStream?.transcodeFps ?? null;
             const resolvedBitrate = bitrate ?? existingStream?.bitrate ?? null;
+            const resolvedPlaybackRate = explicitPlaybackRate ?? parsePlaybackRate(existingStream?.playbackRate);
 
             const ingestSettings = await getCachedPluginIngestSettings();
             if (isLibraryExcluded({ serverId: sourceServer.id, libraryName: resolvedLibraryName, collectionType: resolvedCollectionType, type: resolvedType }, ingestSettings.excludedLibraries)) {
@@ -2153,7 +2393,8 @@ export async function POST(req: Request) {
             let curDur = parseFloat(prevDurRaw || "0");
             const prevTime = prevTimeRaw ? parseInt(prevTimeRaw, 10) : null;
             const prevTick = prevTickRaw ? parseInt(prevTickRaw, 10) : null;
-            const now = Date.now();
+            const observedAtMs = parseObservedAtMs(payload);
+            const now = observedAtMs ?? Date.now();
 
             if (!isPaused && prevTime !== null && prevTick !== null) {
                 const wallDeltaS = (now - prevTime) / 1000;
@@ -2203,14 +2444,109 @@ export async function POST(req: Request) {
                 && Math.abs(seekDeltaMs) >= seekThresholdMs
                 && Math.abs(seekDeltaMs) > expectedAdvanceBudgetMs;
             if (appearsSeek && positionMs > 0 && (!hasPausedState || !isPaused)) {
-                const metadata = {
+                const metadata = buildJumpMetadata({
                     fromMs: prevPositionMs,
                     toMs: currentPositionMs,
                     deltaMs: seekDeltaMs,
-                    direction: seekDeltaMs >= 0 ? "forward" : "backward",
                     source: "progress_delta",
-                };
-                telemetryEvents.push({ eventType: "seek", positionMs, metadata: JSON.stringify(metadata) });
+                });
+                const previousJumpRaw = await redis.get(`jump:${activePlayback.id}`);
+                let duplicateJump = false;
+                if (previousJumpRaw) {
+                    try {
+                        const previousJump = JSON.parse(previousJumpRaw) as Record<string, unknown>;
+                        const previousFromMs = parseFiniteNumber(previousJump.fromMs);
+                        const previousToMs = parseFiniteNumber(previousJump.toMs);
+                        if (previousFromMs !== null && previousToMs !== null) {
+                            duplicateJump = Math.abs(previousFromMs - prevPositionMs) <= 1_500
+                                && Math.abs(previousToMs - currentPositionMs) <= 1_500;
+                        }
+                    } catch {
+                        duplicateJump = false;
+                    }
+                }
+
+                if (!duplicateJump) {
+                    updates.seekCount = { increment: 1 };
+                    if (seekDeltaMs < 0) {
+                        updates.rewatchCount = { increment: 1 };
+                    }
+                    telemetryEvents.push({
+                        eventType: seekDeltaMs < 0 ? "replay" : "seek",
+                        positionMs,
+                        metadata: JSON.stringify(metadata),
+                    });
+                    await redis.setex(`jump:${activePlayback.id}`, 30, JSON.stringify({
+                        fromMs: prevPositionMs,
+                        toMs: currentPositionMs,
+                        at: now,
+                    }));
+                }
+            }
+
+            const rateObservation = estimatePlaybackRate({
+                explicitRate: explicitPlaybackRate,
+                isPaused,
+                appearsSeek,
+                prevTime,
+                prevTick,
+                now,
+                positionTicks,
+            });
+            if (rateObservation && positionMs > 0) {
+                const currentMaxRate = parsePlaybackRate((activePlayback as Record<string, unknown>).maxPlaybackRate);
+                if (currentMaxRate === null || rateObservation.bucket > currentMaxRate) {
+                    updates.maxPlaybackRate = rateObservation.bucket;
+                }
+
+                const rateKey = `rate:${activePlayback.id}`;
+                const previousRateRaw = await redis.get(rateKey);
+                let previousRate: { bucket?: number; rate?: number; at?: number } | null = null;
+                if (previousRateRaw) {
+                    try {
+                        previousRate = JSON.parse(previousRateRaw) as { bucket?: number; rate?: number; at?: number };
+                    } catch {
+                        previousRate = null;
+                    }
+                }
+
+                const previousBucket = parsePlaybackRate(previousRate?.bucket);
+                const previousRateValue = parsePlaybackRate(previousRate?.rate);
+                const previousAt = typeof previousRate?.at === "number" && Number.isFinite(previousRate.at)
+                    ? previousRate.at
+                    : null;
+                const bucketChanged = previousBucket === null || Math.abs(previousBucket - rateObservation.bucket) > 0.001;
+                const outsideCooldown = previousAt === null || now - previousAt >= 15_000;
+
+                if (bucketChanged && outsideCooldown) {
+                    if (previousBucket !== null) {
+                        updates.speedChangeCount = { increment: 1 };
+                    }
+                    telemetryEvents.push({
+                        eventType: "speed_change",
+                        positionMs,
+                        metadata: JSON.stringify({
+                            fromRate: previousRateValue,
+                            fromRateLabel: formatPlaybackRate(previousRateValue),
+                            toRate: rateObservation.bucket,
+                            toRateRaw: Number(rateObservation.rate.toFixed(3)),
+                            toRateLabel: formatPlaybackRate(rateObservation.bucket),
+                            source: rateObservation.source,
+                            confidence: rateObservation.confidence,
+                            wallDeltaMs: rateObservation.wallDeltaMs ?? null,
+                            positionDeltaMs: rateObservation.positionDeltaMs ?? null,
+                            initial: previousBucket === null,
+                        }),
+                    });
+                }
+
+                await redis.setex(rateKey, 86400, JSON.stringify({
+                    rate: rateObservation.rate,
+                    bucket: rateObservation.bucket,
+                    source: rateObservation.source,
+                    confidence: rateObservation.confidence,
+                    at: now,
+                }));
             }
 
             // Pause tracking
@@ -2334,6 +2670,7 @@ export async function POST(req: Request) {
                         audioLanguage: resolvedAudioLanguage,
                         subtitleLanguage: resolvedSubtitleLanguage,
                         subtitleCodec: resolvedSubtitleCodec,
+                        playbackRate: resolvedPlaybackRate,
                         positionTicks: positionTicks > 0 ? BigInt(positionTicks) : null,
                     },
                     create: {
@@ -2355,6 +2692,7 @@ export async function POST(req: Request) {
                         audioLanguage: resolvedAudioLanguage,
                         subtitleLanguage: resolvedSubtitleLanguage,
                         subtitleCodec: resolvedSubtitleCodec,
+                        playbackRate: resolvedPlaybackRate,
                         positionTicks: positionTicks > 0 ? BigInt(positionTicks) : null,
                     },
                 });
@@ -2430,6 +2768,8 @@ export async function POST(req: Request) {
                     SubtitleLanguage: resolvedSubtitleLanguage,
                     subtitleCodec: resolvedSubtitleCodec,
                     SubtitleCodec: resolvedSubtitleCodec,
+                    playbackRate: resolvedPlaybackRate,
+                    PlaybackRate: resolvedPlaybackRate,
                     subtitleStreamIndex: subtitleStreamIndex ?? parsed?.subtitleStreamIndex ?? parsed?.SubtitleStreamIndex ?? null,
                     SubtitleStreamIndex: subtitleStreamIndex ?? parsed?.SubtitleStreamIndex ?? parsed?.subtitleStreamIndex ?? null,
                 };

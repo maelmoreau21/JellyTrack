@@ -509,12 +509,16 @@
         "pause": "Pauza",
         "seek": "Przewijanie",
         "stop": "Stop",
-        "subtitle_change": "Zmiana napisów"
+        "subtitle_change": "Zmiana napisów",
+        "replay": "Powtórka",
+        "speed_change": "Zmiana szybkości"
       },
       "legend": {
         "audio": "Dźwięk",
         "pause": "Pauzy",
-        "subtitles": "Napisy"
+        "subtitles": "Napisy",
+        "replay": "Powtórka",
+        "speed": "Szybkość"
       },
       "noEvents": "Brak zarejestrowanych zdarzeń.",
       "stop": "Stop",
@@ -523,6 +527,11 @@
         "30s": "30s",
         "5s": "5s",
         "exact": "Punkt"
+      },
+      "action": {
+        "jump": "Otwórz",
+        "copy": "Kopiuj",
+        "close": "Zamknij"
       }
     },
     "title": "Logi systemowe",
@@ -658,7 +667,9 @@
         "pause": "Pauza",
         "stop": "Stop",
         "subtitle_change": "Napisy",
-        "seek": "Skok odtwarzania"
+        "seek": "Pominięty fragment",
+        "replay": "Powtórzony fragment",
+        "speed_change": "Szybkość"
       }
     },
     "timelineDesc": "Szczegółowa lista zdarzeń wewnątrz sesji.",
@@ -683,7 +694,29 @@
     "markerCustom": "Metadata marker",
     "cast": "Obsada",
     "backdrop": "Tło",
-    "castDesc": "Aktorzy i ekipa techniczna."
+    "castDesc": "Aktorzy i ekipa techniczna.",
+    "behaviorTitle": "Szczegółowe zachowanie",
+    "behaviorDesc": "Pominięte lub ponownie oglądane fragmenty, szybkość odtwarzania i zmiany języka z użytecznych zdarzeń telemetrycznych.",
+    "skippedRewatchedTitle": "Pominięte / obejrzane ponownie fragmenty",
+    "noBehaviorSignals": "Brak szczegółowych sygnałów.",
+    "rangeSessions": "{count} sesji",
+    "skippedPassages": "Pominięte fragmenty",
+    "replayedPassages": "Powtórzone fragmenty",
+    "speedDistribution": "Szybkość odtwarzania",
+    "sourceEstimated": "(szacowane)",
+    "maxSpeed": "Maks. szybkość",
+    "audioSubtitleSwitches": "Zmiany audio / napisów",
+    "speedChanges": "Zmiany szybkości",
+    "colJumps": "Skoki",
+    "colReplays": "Powtórki",
+    "colMaxSpeed": "Maks. szybkość",
+    "posterRotate": "Zmień plakat",
+    "posterRotateSuccess": "Plakat zmieniony.",
+    "posterRotateMissing": "Nie znaleziono puli Poster Rotator albo pula jest pusta.",
+    "posterRotateError": "Nie udało się zmienić plakatu.",
+    "timeline_seek": "Pominięty fragment",
+    "timeline_replay": "Powtórzony fragment",
+    "timeline_speed_change": "Zmiana szybkości"
   },
   "nav": {
     "cleanup": "Czyszczenie",

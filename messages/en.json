@@ -509,12 +509,16 @@
         "pause": "Pause",
         "seek": "Seek",
         "stop": "Stop",
-        "subtitle_change": "Subtitle Change"
+        "subtitle_change": "Subtitle Change",
+        "replay": "Replay",
+        "speed_change": "Speed change"
       },
       "legend": {
         "audio": "Audio",
         "pause": "Pause",
-        "subtitles": "Subtitles"
+        "subtitles": "Subtitles",
+        "replay": "Replay",
+        "speed": "Speed"
       },
       "noEvents": "No events recorded.",
       "stop": "Stop",
@@ -523,6 +527,11 @@
         "30s": "30s",
         "5s": "5s",
         "exact": "Exact"
+      },
+      "action": {
+        "jump": "Open",
+        "copy": "Copy",
+        "close": "Close"
       }
     },
     "title": "Audit Logs",
@@ -658,7 +667,9 @@
         "pause": "Pause",
         "stop": "Stop",
         "subtitle_change": "Subtitle",
-        "seek": "Playback jump"
+        "seek": "Skipped passage",
+        "replay": "Replayed passage",
+        "speed_change": "Speed"
       }
     },
     "timelineDesc": "Detailed event timeline for this session.",
@@ -683,7 +694,29 @@
     "markerCustom": "Metadata marker",
     "cast": "Cast & Crew",
     "backdrop": "Backdrop",
-    "castDesc": "The actors and production team."
+    "castDesc": "The actors and production team.",
+    "behaviorTitle": "Detailed behavior",
+    "behaviorDesc": "Skipped or replayed passages, playback speed and language switches detected from useful telemetry events.",
+    "skippedRewatchedTitle": "Skipped / replayed passages",
+    "noBehaviorSignals": "No detailed signal yet.",
+    "rangeSessions": "{count} sessions",
+    "skippedPassages": "Skipped passages",
+    "replayedPassages": "Rewatched passages",
+    "speedDistribution": "Playback speed",
+    "sourceEstimated": "(estimated)",
+    "maxSpeed": "Max speed",
+    "audioSubtitleSwitches": "Audio / subtitle switches",
+    "speedChanges": "Speed changes",
+    "colJumps": "Jumps",
+    "colReplays": "Replays",
+    "colMaxSpeed": "Max speed",
+    "posterRotate": "Change poster",
+    "posterRotateSuccess": "Poster changed.",
+    "posterRotateMissing": "No Poster Rotator pool found, or the pool is empty.",
+    "posterRotateError": "Unable to change poster.",
+    "timeline_seek": "Skipped passage",
+    "timeline_replay": "Replayed passage",
+    "timeline_speed_change": "Speed change"
   },
   "nav": {
     "cleanup": "Cleanup",

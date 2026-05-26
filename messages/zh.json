@@ -509,12 +509,16 @@
         "pause": "暂停动作",
         "seek": "跳转/定位",
         "stop": "Stop",
-        "subtitle_change": "字幕切换"
+        "subtitle_change": "字幕切换",
+        "replay": "重看",
+        "speed_change": "速度变化"
       },
       "legend": {
         "audio": "音频调整",
         "pause": "播放暂停",
-        "subtitles": "字幕交互"
+        "subtitles": "字幕交互",
+        "replay": "重看",
+        "speed": "速度"
       },
       "noEvents": "该会话内未记录到精细遥测事件。",
       "stop": "Stop",
@@ -523,6 +527,11 @@
         "30s": "30秒级",
         "5s": "5秒级",
         "exact": "精准级"
+      },
+      "action": {
+        "jump": "打开",
+        "copy": "复制",
+        "close": "关闭"
       }
     },
     "title": "审计日志",
@@ -658,7 +667,9 @@
         "pause": "暂停",
         "stop": "停止",
         "subtitle_change": "字幕切换",
-        "seek": "播放跳转"
+        "seek": "跳过片段",
+        "replay": "重看片段",
+        "speed_change": "速度"
       }
     },
     "timelineDesc": "针对该会话的精细化用户交互列表。",
@@ -683,7 +694,29 @@
     "markerCustom": "Metadata marker",
     "cast": "演职人员",
     "backdrop": "背景图",
-    "castDesc": "演员和技术团队。"
+    "castDesc": "演员和技术团队。",
+    "behaviorTitle": "详细行为",
+    "behaviorDesc": "从有效遥测事件中检测跳过、重看、播放速度和音轨/字幕切换。",
+    "skippedRewatchedTitle": "跳过 / 重看的片段",
+    "noBehaviorSignals": "暂无详细信号。",
+    "rangeSessions": "{count} 个会话",
+    "skippedPassages": "跳过片段",
+    "replayedPassages": "重看片段",
+    "speedDistribution": "播放速度",
+    "sourceEstimated": "（估算）",
+    "maxSpeed": "最高速度",
+    "audioSubtitleSwitches": "音轨 / 字幕切换",
+    "speedChanges": "速度变化",
+    "colJumps": "跳转",
+    "colReplays": "重看",
+    "colMaxSpeed": "最高速度",
+    "posterRotate": "更换海报",
+    "posterRotateSuccess": "海报已更换。",
+    "posterRotateMissing": "未找到 Poster Rotator 池，或池为空。",
+    "posterRotateError": "无法更换海报。",
+    "timeline_seek": "跳过片段",
+    "timeline_replay": "重看片段",
+    "timeline_speed_change": "速度变化"
   },
   "nav": {
     "cleanup": "清理",
