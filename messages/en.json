@@ -63,7 +63,8 @@
     "vsAverage": "vs avg.",
     "watchTime": "Watch time",
     "weekdays": "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
-    "yearlyActivity": "Yearly Activity"
+    "yearlyActivity": "Yearly Activity",
+    "viewLogs": "View logs"
   },
   "cleanup": {
     "abandoned": "Abandoned",
@@ -191,7 +192,8 @@
     "unknownSeries": "Unknown series",
     "view": "view",
     "viewers": "viewers",
-    "views": "views"
+    "views": "views",
+    "directStream": "Direct stream"
   },
   "dashboard": {
     "abandoned": "Abandoned",
@@ -420,7 +422,8 @@
     "subtitles": "Subtitles",
     "subtitlesDesc": "Enabled vs Disabled and languages.",
     "worstCompletion": "Worst Completion Rates",
-    "worstCompletionDesc": "Top 5 most repeatedly abandoned media."
+    "worstCompletionDesc": "Top 5 most repeatedly abandoned media.",
+    "unknown": "Unknown"
   },
   "hardware": {
     "cpuUsage": "CPU Usage",
@@ -439,7 +442,8 @@
     "timelineView": "Timeline View",
     "cardsView": "Cards View",
     "transcodeAbbr": "TC",
-    "directPlayAbbr": "DP"
+    "directPlayAbbr": "DP",
+    "unknown": "Unknown"
   },
   "login": {
     "loadingForm": "Loading form...",
@@ -790,7 +794,7 @@
     "completionRulesDefault": "Default rule (other libraries)",
     "completionRulesHint": "Adjust thresholds to define when playback is considered skipped, abandoned, partial, or completed for each library type.",
     "manage": "Manage",
-    "maxConcurrentTranscodesDesc": "0 = disabled. Alert when number exceeds this threshold.",
+    "maxConcurrentTranscodesDesc": "0 = disabled. Alert if the number exceeds this threshold.",
     "maxConcurrentTranscodesLabel": "Max Concurrent Transcodes",
     "maxHeight": "Max Height (px)",
     "maxWidth": "Max Width (px)",
@@ -954,7 +958,6 @@
     "quickActions": "Quick Actions",
     "quickActionsDesc": "Buttons and shortcuts for frequent actions.",
     "maxConcurrentTranscodesTitle": "Simultaneous Transcodes Threshold",
-    "maxConcurrentTranscodesDesc": "0 = disabled. Alert if the number exceeds this threshold.",
     "backupsCount": "Backups",
     "totalSize": "Total Size",
     "latestBackup": "Latest Backup",
@@ -965,7 +968,34 @@
     "file": "File",
     "actions": "Actions",
     "confirmDeleteBackup": "Delete this backup?",
-    "confirmRestoreBackup": "Restoring will replace your current database. Continue?"
+    "confirmRestoreBackup": "Restoring will replace your current database. Continue?",
+    "backupError": "Error creating backup.",
+    "deleteError": "Error deleting backup.",
+    "restoreError": "Error restoring backup.",
+    "saving": "Saving...",
+    "globalPluginKeyRegenerateConfirm": "Regenerate the global plugin key? Server keys will need to be derived again.",
+    "globalPluginKeyActive": "Global plugin key active",
+    "globalPluginKeyActiveDesc": "You can derive or copy a server key without entering the global key again.",
+    "regenerateGlobalPluginKey": "Regenerate global key",
+    "telemetrySaved": "Telemetry settings saved.",
+    "telemetrySaveError": "Error while saving telemetry settings.",
+    "pluginTelemetryTitle": "Plugin telemetry precision",
+    "pluginTelemetryDesc": "Very precise by default: immediate transitions, fine playback progress, and slower updates while playback is paused.",
+    "telemetryPresetVeryPrecise": "Very precise",
+    "telemetryPresetBalanced": "Balanced",
+    "telemetryPresetMinimal": "Minimal traffic",
+    "telemetryPlayingInterval": "Playing interval (s)",
+    "telemetryPausedInterval": "Paused interval (s)",
+    "telemetryStaleSession": "Stale session (s)",
+    "telemetryMergeWindow": "Merge window (s)",
+    "telemetrySeekThreshold": "Seek threshold (s)",
+    "telemetryRetryQueueSize": "Max retry queue",
+    "telemetryRetryFlushBatchSize": "Max retry flush",
+    "telemetryTrackPauseResume": "Pause / resume",
+    "telemetryTrackSeek": "Seek / fast-forward",
+    "telemetryTrackAudioSubtitleChanges": "Audio / subtitles",
+    "telemetryTrackSessionEnded": "User departure",
+    "telemetrySave": "Save telemetry"
   },
   "timeRange": {
     "allTime": "All time",
@@ -1179,7 +1209,11 @@
     "stateOk": "OK",
     "stateWarning": "Warning",
     "stateCritical": "Critical",
-    "stateUnknown": "N/A"
+    "stateUnknown": "N/A",
+    "schemaVersion": "Schema",
+    "progressCoalesces": "Progress coalesces",
+    "precisionProfile": "Profile",
+    "playbackIntervals": "Playing / paused"
   },
   "securitySettings": {
     "smartThresholdsSaved": "Smart thresholds saved.",
@@ -1208,5 +1242,62 @@
     "authSessionsRevokeButton": "Sign everyone out",
     "authSessionsRevoking": "Signing out...",
     "authSessionsRevokeConfirm": "Sign out every user now? You will also need to sign in again."
+  },
+  "anomalyChartsDesc": "Operational anomalies detected from backups, sync, cleanup and monitoring.",
+  "anomalyChartsTitle": "Anomaly charts",
+  "dbWithoutRedis": "Database without Redis",
+  "dbWithoutRedisDesc": "Some live counters use database fallback because Redis is not available.",
+  "excludedLibrariesDesc": "Libraries excluded from statistics and automated processing.",
+  "excludedLibrariesTitle": "Excluded libraries",
+  "lastPoll": "Last poll",
+  "logHealth": "Log health",
+  "logHealthDesc": "Status of application, audit and health logs.",
+  "monitor": "Monitor",
+  "monitorStatusError": "Error",
+  "monitorStatusOk": "OK",
+  "multiServerComparator": {
+    "desc": "Compare activity, availability and usage across your Jellyfin servers.",
+    "disabled": "Add a secondary server to enable comparison.",
+    "title": "Multi-server comparison"
+  },
+  "never": "Never",
+  "noExcludedLibraries": "No excluded libraries.",
+  "noOrphanPlaybacks": "No orphan playback sessions.",
+  "openPlaybackOrphans": "Open playback orphans",
+  "orphanPlaybacksDesc": "Playback sessions that stayed open without a clean stop event.",
+  "orphanPlaybacksTitle": "Playback orphans",
+  "playbackHistoryNote": "Playback history is built from plugin events and may change after reconciliation.",
+  "recentClosuresDesc": "Recently finalized playback sessions.",
+  "recentClosuresTitle": "Recent closures",
+  "redisOrphan": "Redis orphan",
+  "redisOrphanDesc": "Session state still present in Redis without an active playback record.",
+  "running": "Running",
+  "system": {
+    "colMessage": "Message",
+    "colSource": "Source",
+    "colUser": "User",
+    "typeAudit": "Audit",
+    "typeHealth": "Health"
+  },
+  "timeline": {
+    "label": {
+      "audio_change": "Audio change",
+      "default": "Event",
+      "pause": "Pause",
+      "seek": "Seek",
+      "stop": "Stop",
+      "subtitle_change": "Subtitle change"
+    },
+    "legend": {
+      "audio": "Audio",
+      "pause": "Pause",
+      "subtitles": "Subtitles"
+    },
+    "noEvents": "No timeline events.",
+    "stop": "Stop",
+    "title": "Timeline",
+    "toggle": {
+      "exact": "Exact"
+    }
   }
 }

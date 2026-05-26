@@ -63,7 +63,8 @@
     "vsAverage": "vs moy.",
     "watchTime": "Temps visionnage",
     "weekdays": "Dim,Lun,Mar,Mer,Jeu,Ven,Sam",
-    "yearlyActivity": "Activité Annuelle"
+    "yearlyActivity": "Activité Annuelle",
+    "viewLogs": "Voir les logs"
   },
   "cleanup": {
     "abandoned": "Abandonné",
@@ -191,7 +192,8 @@
     "unknownSeries": "Série inconnue",
     "view": "vue",
     "viewers": "spectateurs",
-    "views": "vues"
+    "views": "vues",
+    "directStream": "Direct stream"
   },
   "dashboard": {
     "abandoned": "Abandonné",
@@ -420,7 +422,8 @@
     "subtitles": "Sous-titres",
     "subtitlesDesc": "Activés vs Désactivés et langues.",
     "worstCompletion": "Pires Taux de Complétion",
-    "worstCompletionDesc": "Top 5 des médias abandonnés de manière répétée."
+    "worstCompletionDesc": "Top 5 des médias abandonnés de manière répétée.",
+    "unknown": "Inconnu"
   },
   "hardware": {
     "cpuUsage": "Utilisation CPU",
@@ -439,7 +442,8 @@
     "timelineView": "Vue Timeline",
     "cardsView": "Vue Cartes",
     "transcodeAbbr": "TC",
-    "directPlayAbbr": "DP"
+    "directPlayAbbr": "DP",
+    "unknown": "Inconnu"
   },
   "login": {
     "loadingForm": "Chargement du formulaire...",
@@ -954,7 +958,6 @@
     "quickActions": "Actions rapides",
     "quickActionsDesc": "Boutons et raccourcis pour les actions fréquentes.",
     "maxConcurrentTranscodesTitle": "Seuil de Transcodes Simultanés",
-    "maxConcurrentTranscodesDesc": "0 = désactivé. Alerte si le nombre dépasse ce seuil.",
     "backupsCount": "Sauvegardes",
     "totalSize": "Taille totale",
     "latestBackup": "Dernière sauvegarde",
@@ -965,7 +968,34 @@
     "file": "Fichier",
     "actions": "Actions",
     "confirmDeleteBackup": "Supprimer cette sauvegarde ?",
-    "confirmRestoreBackup": "La restauration remplacera votre base actuelle. Continuer ?"
+    "confirmRestoreBackup": "La restauration remplacera votre base actuelle. Continuer ?",
+    "backupError": "Erreur lors de la cr?ation de la sauvegarde.",
+    "deleteError": "Erreur lors de la suppression de la sauvegarde.",
+    "restoreError": "Erreur lors de la restauration de la sauvegarde.",
+    "saving": "Enregistrement...",
+    "globalPluginKeyRegenerateConfirm": "R?g?n?rer la cl? plugin globale ? Les cl?s serveur devront ?tre d?riv?es ? nouveau.",
+    "globalPluginKeyActive": "Cl? plugin globale active",
+    "globalPluginKeyActiveDesc": "Vous pouvez d?river ou copier une cl? serveur sans ressaisir la cl? globale.",
+    "regenerateGlobalPluginKey": "R?g?n?rer la cl? globale",
+    "telemetrySaved": "R?glages de t?l?m?trie sauvegard?s.",
+    "telemetrySaveError": "Erreur lors de la sauvegarde des r?glages de t?l?m?trie.",
+    "pluginTelemetryTitle": "Pr?cision de t?l?m?trie plugin",
+    "pluginTelemetryDesc": "Profil tr?s pr?cis par d?faut : transitions imm?diates, progression fine en lecture et ralentissement automatique pendant les pauses.",
+    "telemetryPresetVeryPrecise": "Tr?s pr?cis",
+    "telemetryPresetBalanced": "?quilibr?",
+    "telemetryPresetMinimal": "Trafic minimal",
+    "telemetryPlayingInterval": "Intervalle lecture (s)",
+    "telemetryPausedInterval": "Intervalle pause (s)",
+    "telemetryStaleSession": "Session inactive (s)",
+    "telemetryMergeWindow": "Fusion reprise (s)",
+    "telemetrySeekThreshold": "Seuil seek (s)",
+    "telemetryRetryQueueSize": "File retry max",
+    "telemetryRetryFlushBatchSize": "Flush retry max",
+    "telemetryTrackPauseResume": "Pause / reprise",
+    "telemetryTrackSeek": "Seek / avance rapide",
+    "telemetryTrackAudioSubtitleChanges": "Audio / sous-titres",
+    "telemetryTrackSessionEnded": "D?part utilisateur",
+    "telemetrySave": "Sauvegarder la t?l?m?trie"
   },
   "timeRange": {
     "allTime": "Tout temps",
@@ -1179,7 +1209,11 @@
     "stateOk": "OK",
     "stateWarning": "Warning",
     "stateCritical": "Critical",
-    "stateUnknown": "N/A"
+    "stateUnknown": "N/A",
+    "schemaVersion": "Schema",
+    "progressCoalesces": "Progressions fusionn?es",
+    "precisionProfile": "Profil",
+    "playbackIntervals": "Lecture / pause"
   },
   "securitySettings": {
     "smartThresholdsSaved": "Seuils smart sauvegardes.",
@@ -1208,5 +1242,62 @@
     "authSessionsRevokeButton": "Deconnecter tout le monde",
     "authSessionsRevoking": "Deconnexion...",
     "authSessionsRevokeConfirm": "Deconnecter tous les utilisateurs maintenant ? Vous devrez aussi vous reconnecter."
+  },
+  "anomalyChartsDesc": "Anomalies op?rationnelles d?tect?es depuis les sauvegardes, synchronisations, nettoyages et surveillances.",
+  "anomalyChartsTitle": "Graphiques des anomalies",
+  "dbWithoutRedis": "Base sans Redis",
+  "dbWithoutRedisDesc": "Certains compteurs temps r?el utilisent le repli base de donn?es car Redis est indisponible.",
+  "excludedLibrariesDesc": "Biblioth?ques exclues des statistiques et traitements automatiques.",
+  "excludedLibrariesTitle": "Biblioth?ques exclues",
+  "lastPoll": "Dernier relev?",
+  "logHealth": "Sant? des logs",
+  "logHealthDesc": "?tat des logs applicatifs, audit et sant?.",
+  "monitor": "Surveillance",
+  "monitorStatusError": "Erreur",
+  "monitorStatusOk": "OK",
+  "multiServerComparator": {
+    "desc": "Comparez activit?, disponibilit? et usages entre vos serveurs Jellyfin.",
+    "disabled": "Ajoutez un serveur secondaire pour activer la comparaison.",
+    "title": "Comparaison multi-serveurs"
+  },
+  "never": "Jamais",
+  "noExcludedLibraries": "Aucune biblioth?que exclue.",
+  "noOrphanPlaybacks": "Aucune lecture orpheline.",
+  "openPlaybackOrphans": "Lectures orphelines ouvertes",
+  "orphanPlaybacksDesc": "Sessions de lecture rest?es ouvertes sans ?v?nement stop propre.",
+  "orphanPlaybacksTitle": "Lectures orphelines",
+  "playbackHistoryNote": "L historique de lecture est construit depuis les ?v?nements plugin et peut changer apr?s r?conciliation.",
+  "recentClosuresDesc": "Sessions de lecture finalis?es r?cemment.",
+  "recentClosuresTitle": "Fermetures r?centes",
+  "redisOrphan": "Orphelin Redis",
+  "redisOrphanDesc": "?tat de session encore pr?sent dans Redis sans lecture active associ?e.",
+  "running": "En cours",
+  "system": {
+    "colMessage": "Message",
+    "colSource": "Source",
+    "colUser": "Utilisateur",
+    "typeAudit": "Audit",
+    "typeHealth": "Sant?"
+  },
+  "timeline": {
+    "label": {
+      "audio_change": "Changement audio",
+      "default": "?v?nement",
+      "pause": "Pause",
+      "seek": "Seek",
+      "stop": "Stop",
+      "subtitle_change": "Changement sous-titres"
+    },
+    "legend": {
+      "audio": "Audio",
+      "pause": "Pause",
+      "subtitles": "Sous-titres"
+    },
+    "noEvents": "Aucun ?v?nement dans la timeline.",
+    "stop": "Stop",
+    "title": "Timeline",
+    "toggle": {
+      "exact": "Exact"
+    }
   }
 }

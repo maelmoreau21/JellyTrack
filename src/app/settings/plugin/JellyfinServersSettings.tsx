@@ -153,14 +153,14 @@ export function JellyfinServersSettings() {
 
   const handleGenerateGlobalPluginKey = async () => {
     if (pluginKeyReady) {
-      const ok = window.confirm('Regenerer la cle plugin globale ? Les cles serveur devront etre derivees a nouveau.');
+      const ok = window.confirm(t('globalPluginKeyRegenerateConfirm'));
       if (!ok) return;
     }
 
     setGlobalPluginKeyLoading(true);
     try {
       const res = await fetch('/api/plugin/api-key', { method: 'POST' });
-      if (!res.ok) throw new Error('Erreur');
+      if (!res.ok) throw new Error(t('globalPluginKeyError'));
       const json = await res.json().catch(() => ({}));
       const nextGlobalKey = typeof json.apiKey === 'string' ? json.apiKey : '';
       if (!nextGlobalKey) throw new Error('missing-key');
@@ -282,10 +282,10 @@ export function JellyfinServersSettings() {
         body: JSON.stringify({ pluginTelemetrySettings: telemetrySettings }),
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || 'Erreur sauvegarde telemetrie');
-      setMessage({ type: 'success', text: 'Reglages de telemetrie sauvegardes.' });
+      if (!res.ok) throw new Error(typeof body.error === 'string' ? body.error : t('telemetrySaveError'));
+      setMessage({ type: 'success', text: t('telemetrySaved') });
     } catch (error) {
-      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Erreur sauvegarde telemetrie' });
+      setMessage({ type: 'error', text: error instanceof Error && error.message ? error.message : t('telemetrySaveError') });
     } finally {
       setTelemetrySaving(false);
     }
@@ -371,11 +371,11 @@ export function JellyfinServersSettings() {
               <AlertCircle className="w-4 h-4 mt-0.5" />
               <div>
                 <p className={`font-semibold ${pluginKeyReady ? 'text-emerald-100' : 'text-red-200'}`}>
-                  {pluginKeyReady ? 'Cle plugin globale active' : t('globalPluginKeyMissing')}
+                  {pluginKeyReady ? t('globalPluginKeyActive') : t('globalPluginKeyMissing')}
                 </p>
                 <p className={pluginKeyReady ? 'text-emerald-100/90' : 'text-red-200/90'}>
                   {pluginKeyReady
-                    ? 'Vous pouvez deriver ou copier une cle serveur sans ressaisir la cle globale.'
+                    ? t('globalPluginKeyActiveDesc')
                     : t('globalPluginKeyMissingDesc')}
                 </p>
               </div>
@@ -391,7 +391,7 @@ export function JellyfinServersSettings() {
               }`}
             >
               {globalPluginKeyLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              {pluginKeyReady ? 'Regenerer la cle globale' : t('generateGlobalPluginKey')}
+              {pluginKeyReady ? t('regenerateGlobalPluginKey') : t('generateGlobalPluginKey')}
             </button>
           </div>
 
@@ -400,17 +400,17 @@ export function JellyfinServersSettings() {
             <div className="space-y-1">
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <SlidersHorizontal className="w-4 h-4 text-primary" />
-                Telemetrie Jellyfin 12 beta
+                {t('pluginTelemetryTitle')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Profil tres precis par defaut : transitions immediates, progression fine en lecture, et ralentissement automatique quand la lecture est en pause.
+                {t('pluginTelemetryDesc')}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               {([
-                ["very_precise", "Tres precis"],
-                ["balanced", "Equilibre"],
-                ["minimal", "Trafic minimal"],
+                ["very_precise", "telemetryPresetVeryPrecise"],
+                ["balanced", "telemetryPresetBalanced"],
+                ["minimal", "telemetryPresetMinimal"],
               ] as const).map(([profile, label]) => (
                 <button
                   key={profile}
@@ -422,7 +422,7 @@ export function JellyfinServersSettings() {
                       : 'border-border hover:bg-muted'
                   }`}
                 >
-                  {label}
+                  {t(label)}
                 </button>
               ))}
             </div>
@@ -430,44 +430,44 @@ export function JellyfinServersSettings() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Intervalle lecture (s)</Label>
+              <Label className="text-xs">{t('telemetryPlayingInterval')}</Label>
               <Input type="number" min={1} value={telemetrySettings.playingIntervalSeconds} onChange={(e) => updateTelemetryNumber('playingIntervalSeconds', e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Intervalle pause (s)</Label>
+              <Label className="text-xs">{t('telemetryPausedInterval')}</Label>
               <Input type="number" min={5} value={telemetrySettings.pausedIntervalSeconds} onChange={(e) => updateTelemetryNumber('pausedIntervalSeconds', e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Session inactive (s)</Label>
+              <Label className="text-xs">{t('telemetryStaleSession')}</Label>
               <Input type="number" min={30} value={telemetrySettings.staleSessionTimeoutSeconds} onChange={(e) => updateTelemetryNumber('staleSessionTimeoutSeconds', e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Fusion reprise (s)</Label>
+              <Label className="text-xs">{t('telemetryMergeWindow')}</Label>
               <Input type="number" min={0} value={telemetrySettings.mergeWindowSeconds} onChange={(e) => updateTelemetryNumber('mergeWindowSeconds', e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Seuil seek (s)</Label>
+              <Label className="text-xs">{t('telemetrySeekThreshold')}</Label>
               <Input type="number" min={5} value={telemetrySettings.seekThresholdSeconds} onChange={(e) => updateTelemetryNumber('seekThresholdSeconds', e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">File retry max</Label>
+              <Label className="text-xs">{t('telemetryRetryQueueSize')}</Label>
               <Input type="number" min={10} value={telemetrySettings.retryQueueSize} onChange={(e) => updateTelemetryNumber('retryQueueSize', e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Flush retry max</Label>
+              <Label className="text-xs">{t('telemetryRetryFlushBatchSize')}</Label>
               <Input type="number" min={1} value={telemetrySettings.retryFlushBatchSize} onChange={(e) => updateTelemetryNumber('retryFlushBatchSize', e.target.value)} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             {([
-              ["trackPauseResume", "Pause / reprise"],
-              ["trackSeek", "Seek / avance rapide"],
-              ["trackAudioSubtitleChanges", "Audio / sous-titres"],
-              ["trackSessionEnded", "Depart utilisateur"],
+              ["trackPauseResume", "telemetryTrackPauseResume"],
+              ["trackSeek", "telemetryTrackSeek"],
+              ["trackAudioSubtitleChanges", "telemetryTrackAudioSubtitleChanges"],
+              ["trackSessionEnded", "telemetryTrackSessionEnded"],
             ] as const).map(([key, label]) => (
               <div key={key} className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-                <span className="text-xs font-medium">{label}</span>
+                <span className="text-xs font-medium">{t(label)}</span>
                 <Switch checked={Boolean(telemetrySettings[key])} onCheckedChange={(checked) => setTelemetrySettings((prev) => ({ ...prev, [key]: Boolean(checked) }))} />
               </div>
             ))}
@@ -481,7 +481,7 @@ export function JellyfinServersSettings() {
               className="inline-flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-60"
             >
               {telemetrySaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              Sauvegarder la telemetrie
+              {t('telemetrySave')}
             </button>
           </div>
         </div>

@@ -411,7 +411,7 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
                                 <span className="font-medium">{snapshot?.plugin.jellyfinVersion || "-"}</span>
                             </div>
                             <div className="flex items-center justify-between gap-3 text-muted-foreground">
-                                <span>Schema</span>
+                                <span>{t("schemaVersion")}</span>
                                 <span className="font-medium">{snapshot?.plugin.schemaVersion ?? "-"}</span>
                             </div>
                         </CardContent>
@@ -666,15 +666,15 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.lastHttpCode ?? "-"}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Progress coalesces</span>
+                                <span>{t("progressCoalesces")}</span>
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.coalescedProgressEvents ?? "-"}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Profil</span>
+                                <span>{t("precisionProfile")}</span>
                                 <span className="font-medium">{snapshot?.telemetrySettings?.precisionProfile || "-"}</span>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
-                                <span>Lecture / pause</span>
+                                <span>{t("playbackIntervals")}</span>
                                 <span>{snapshot?.telemetrySettings ? `${snapshot.telemetrySettings.playingIntervalSeconds}s / ${snapshot.telemetrySettings.pausedIntervalSeconds}s` : "-"}</span>
                             </div>
                             <p className="text-xs text-muted-foreground pt-2 border-t border-border/60">
