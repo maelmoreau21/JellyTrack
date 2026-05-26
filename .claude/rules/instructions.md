@@ -1,86 +1,86 @@
 ---
-description: "Instructions et memoire pour agents IA - JellyTrack v1.5.1"
+description: "Instructions and memory for AI agents - JellyTrack (all versions)"
 paths:
   - "."
   - "src/**/*.ts"
 ---
 
-# JellyTrack - Instructions & Memoire Agents IA (v1.5.1)
+# JellyTrack - Instructions & Memory for AI Agents (all versions)
 
-IMPORTANT - lire integralement ce document avant toute modification.
+IMPORTANT - read this document fully before any change.
 
-- IMPORTANT - LE PLUGIN JELLYFIN EST OBLIGATOIRE : JellyTrack ne fonctionne pas sans son plugin compagnon.
-- Le mode d'installation RECOMMANDÉ et CANONIQUE est Docker (`docker-compose.yml`).
-- Ne pas halluciner la structure de donnees: verifier systematiquement `prisma/schema.prisma`.
-- Ne pas halluciner les cles i18n: verifier `messages/*.json`.
-- Ne pas inventer de contrat plugin: verifier `src/app/api/plugin/events/route.ts`.
-- Ne pas faire de `commit`, `push`, creation de branche ou `merge` sans demande explicite utilisateur.
-- Le fichier `.env` est public et versionne comme exemple: placeholders uniquement (`CHANGE_ME_*`), jamais de secrets reels.
+- IMPORTANT - THE JELLYFIN PLUGIN IS REQUIRED: JellyTrack does not work without its companion plugin.
+- The recommended and canonical install mode is Docker (`docker-compose.yml`).
+- Do not hallucinate the data model: always verify `prisma/schema.prisma`.
+- Do not hallucinate i18n keys: verify `messages/*.json`.
+- Do not invent plugin contracts: verify `src/app/api/plugin/events/route.ts`.
+- Do not `commit`, `push`, create branches, or `merge` without explicit user request.
+- The `.env` file is public and versioned as an example: placeholders only (`CHANGE_ME_*`), never real secrets.
 
-## 1. Stack Technique Canonique
+## 1. Canonical Tech Stack
 
 - Framework: Next.js 16 App Router (`src/app/`)
-- Langage: TypeScript strict
-- Auth web: next-auth avec proxy Next (`src/proxy.ts`)
+- Language: TypeScript (strict)
+- Web auth: next-auth with Next proxy (`src/proxy.ts`)
 - ORM/DB: Prisma + PostgreSQL
-- Cache/temps reel: Redis (ioredis)
-- UI: Tailwind + composants `src/components/ui/*`
-- Graphiques: Recharts
-- i18n: next-intl + fichiers `messages/*.json`
+- Cache/real time: Redis (ioredis)
+- UI: Tailwind + components `src/components/ui/*`
+- Charts: Recharts
+- i18n: next-intl + `messages/*.json`
 
-## 2. Architecture Securite v1.5.1 (reference)
+## 2. Security Architecture (reference, all versions)
 
 ### 2.1 Plugin API Key - Hash-at-Rest
 Source: `src/lib/pluginKeyManager.ts` + `src/app/api/plugin/events/route.ts`
-- La cle plugin est stockee sous forme de hash scrypt versionne (`s1$...`).
-- Toute modification des settings plugin via l'UI (`JellyfinServersSettings.tsx`) se concentre sur la **generation** de nouvelles cles. L'UI ne permet plus de coller manuellement une cle brute pour eviter les erreurs humaines et renforcer la securite.
+- The plugin key is stored as a versioned scrypt hash (`s1$...`).
+- Any plugin settings change via the UI (`JellyfinServersSettings.tsx`) focuses on **generating** new keys. The UI no longer allows pasting a raw key to avoid human error and improve security.
 
 ### 2.2 Audit & Logs
 Source: `src/lib/adminAudit.ts` + `src/app/logs/page.tsx`
-- **Audit de Connexion** : Chaque connexion reussie est enregistree via `writeAdminAuditLog` dans `authOptions.ts`.
-- **Filtrage des Logs** : Les logs de type `monitor_ping` (heartbeats) sont désormais filtres au niveau de la requete Prisma dans `logs/page.tsx` pour ne pas polluer l'interface. Ils restent stockes en DB mais sont invisibles dans l'onglet "Système" par defaut.
+- **Login Audit**: Each successful login is recorded via `writeAdminAuditLog` in `authOptions.ts`.
+- **Log Filtering**: `monitor_ping` logs (heartbeats) are filtered at the Prisma query in `logs/page.tsx` to avoid UI noise. They remain stored in the DB but are hidden in the "System" tab by default.
 
-### 2.3 Branding & Logo (v1.5.1)
-- Le logo officiel est `public/logo.svg`.
-- **Optimisation** : Le logo a été optimisé en version "borderless" (sans marges inutiles) pour une visibilité maximale en tant que favicon et icône d'application.
-- Pour une fiabilite maximale (eviter les problemes de chargement de fichiers statiques sur la page de login), le code SVG est **inclus directement (inlined)** dans `src/app/login/page.tsx` et `src/components/Sidebar.tsx`.
-- **Note** : Le logo doit être présent et visible sur toutes les interfaces principales pour renforcer l'identité visuelle.
+### 2.3 Branding & Logo (reference, all versions)
+- The official logo is `public/logo.svg`.
+- **Optimization**: The logo is a "borderless" version (no extra margins) for maximum visibility as a favicon and app icon.
+- For maximum reliability (avoid static file loading issues on the login page), the SVG code is **inlined** in `src/app/login/page.tsx` and `src/components/Sidebar.tsx`.
+- **Note**: The logo must be present and visible on all main interfaces to reinforce the visual identity.
 
-## 3. Arborescence de Travail (vue utile)
+## 3. Working Tree (useful view)
 
-- `src/app/*`: pages/routes App Router
-- `src/app/api/*`: APIs serveur
-- `src/proxy.ts`: politique d'acces globale
-- `src/lib/*`: logique metier (auth, sync, plugin key, SSRF/webhook, server registry)
-- `src/components/ui/*`: primitives UI a reutiliser en priorite
-- `src/components/dashboard/*`: blocs dashboard
-- `src/components/charts/*`: wrappers recharts
-- `prisma/schema.prisma`: source de verite du modele
-- `messages/*.json`: traductions multi-locales
+- `src/app/*`: App Router pages/routes
+- `src/app/api/*`: server APIs
+- `src/proxy.ts`: global access policy
+- `src/lib/*`: business logic (auth, sync, plugin key, SSRF/webhook, server registry)
+- `src/components/ui/*`: UI primitives to reuse first
+- `src/components/dashboard/*`: dashboard blocks
+- `src/components/charts/*`: Recharts wrappers
+- `prisma/schema.prisma`: source of truth for the model
+- `messages/*.json`: multi-locale translations
 
-## 4. Prisma - Resume Canonique (v1.5.1)
+## 4. Prisma - Canonical Summary (all versions)
 
-Modeles cles:
+Key models:
 - `Server`: `id`, `jellyfinServerId`, `name`, `url`, `jellyfinApiKey`, `isActive`.
 - `User`: `serverId`, `jellyfinUserId`, `username`, `lastActive`.
 - `Media`: `serverId`, `jellyfinMediaId`, `type`, `collectionType`, `libraryName`.
 - `PlaybackHistory`: `serverId`, `userId`, `mediaId`, `playMethod`, `startedAt`, `endedAt`.
-- `AdminAuditLog`: Historique des actions sensibles (connexions, modifications settings).
-- `SystemHealthEvent`: Evenements de sante (sync, plugin connection). *Note: `monitor_ping` est le type dominant ici.*
+- `AdminAuditLog`: history of sensitive actions (logins, settings changes).
+- `SystemHealthEvent`: health events (sync, plugin connection). *Note: `monitor_ping` is the dominant type here.*
 
-## 5. I18n - Politique Obligatoire
+## 5. i18n - Mandatory Policy
 
-- Toute chaine UI doit venir de `messages/*.json`.
-- **Modification Recente** : La cle `sortDateDesc` dans `logs` a ete renomee en "Trier" pour optimiser l'espace UI dans le selecteur de tri.
+- All UI strings must come from `messages/*.json`.
+- The `logs.sortDateDesc` key is labeled "Trier" to optimize UI space in the sort selector.
 
-## 6. Regles Qualite Zero Dette Technique
+## 6. Zero Tech Debt Quality Rules
 
-Avant finalisation:
-1. Verifier les impacts schema si code data modifie.
-2. Verifier les traductions sur toutes locales.
-3. Executer `npm run build`.
-4. Verifier que le logo inlined est présent et correspond à la version optimisée (v1.5.1).
+Before finalization:
+1. Check schema impact if data code changed.
+2. Verify translations across all locales.
+3. Run `npm run build`.
+4. Verify the inlined logo is present and matches the optimized version.
 
 ---
-Ce document est la reference agents IA pour JellyTrack v1.5.1.
-Toute evolution structurelle doit mettre a jour ce fichier.
+This document is the AI agent reference for JellyTrack (all versions).
+Any structural change must update this file.

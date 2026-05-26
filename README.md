@@ -10,22 +10,22 @@
 </p>
 
 <p align="center">
-  <strong>Observabilité et analytics pour Jellyfin : sessions en direct, historique enrichi et métriques de lecture.</strong>
+  <strong>Observability and analytics for Jellyfin: live sessions, enriched history, and playback metrics.</strong>
 </p>
 
 ---
 
 > [!CAUTION]
-> ### 🚨 LE PLUGIN JELLYFIN EST OBLIGATOIRE
-> JellyTrack **ne peut pas** collecter de données sans son plugin compagnon installé sur votre serveur Jellyfin.
-> 
-> [👉 Cliquez ici pour configurer le plugin](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
+> ### 🚨 THE JELLYFIN PLUGIN IS REQUIRED
+> JellyTrack **cannot** collect data without its companion plugin installed on your Jellyfin server.
+>
+> [👉 Click here to configure the plugin](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
 
 ---
 
-## 🚀 Installation Docker
+## 🚀 Docker Installation
 
-Le dépôt contient déjà un `docker-compose.yml` complet. La méthode recommandée est donc :
+The repository already includes a complete `docker-compose.yml`. The recommended method is:
 
 ### 1. Configuration
 
@@ -33,42 +33,42 @@ Le dépôt contient déjà un `docker-compose.yml` complet. La méthode recomman
 cp .env.example .env
 ```
 
-Modifiez `.env` et remplacez toutes les valeurs `CHANGE_ME_*`.
+Edit `.env` and replace all `CHANGE_ME_*` values.
 
-Important pour Docker : si Jellyfin tourne dans un autre conteneur ou sur une autre machine, `JELLYFIN_URL` doit être une adresse joignable depuis le conteneur JellyTrack. Évitez `127.0.0.1` sauf si Jellyfin est dans le même conteneur.
+Important for Docker: if Jellyfin runs in another container or on another machine, `JELLYFIN_URL` must be reachable from the JellyTrack container. Avoid `127.0.0.1` unless Jellyfin is in the same container.
 
-### 2. Lancement ou mise à jour
+### 2. Start or update
 
 ```bash
 docker compose pull
 docker compose up -d
 ```
 
-Pour tester une modification locale avant publication de l'image :
+To test a local change before publishing the image:
 
 ```bash
 docker build -t ghcr.io/maelmoreau21/jellytrack:latest .
 docker compose up -d
 ```
 
-### 3. Accès
+### 3. Access
 
-Rendez-vous sur `http://localhost:3000` et connectez-vous avec votre `ADMIN_PASSWORD`.
+Go to `http://localhost:3000` and log in with your `ADMIN_PASSWORD`.
 
 ### Jellyfin 10.12 / 12 beta
 
-JellyTrack utilise l'en-tête `Authorization: MediaBrowser Token="..."` pour les appels Jellyfin récents. Les anciens accès par clé API dans l'URL (`?ApiKey=...`) ont été retirés.
+JellyTrack uses the `Authorization: MediaBrowser Token="..."` header for recent Jellyfin versions. The old URL API key access (`?ApiKey=...`) has been removed.
 
-1. Créez une clé API dans Jellyfin : **Tableau de bord** > **Avancé** > **Clés API**.
-2. Renseignez `JELLYFIN_API_KEY` dans `.env`.
-3. Installez ou mettez à jour le plugin compagnon JellyTrack.
-4. Dans JellyTrack, allez dans **Paramètres** > **Connexion Jellyfin**, générez la clé plugin, puis copiez l'URL plugin et la clé dans la configuration du plugin Jellyfin.
+1. Create an API key in Jellyfin: **Dashboard** > **Advanced** > **API Keys**.
+2. Set `JELLYFIN_API_KEY` in `.env`.
+3. Install or update the JellyTrack companion plugin.
+4. In JellyTrack, go to **Settings** > **Jellyfin Connection**, generate the plugin key, then copy the plugin URL and key into the Jellyfin plugin configuration.
 
-### Base existante / erreur Prisma P3005
+### Existing database / Prisma P3005 error
 
-Si les logs affichent `Error: P3005` et `The database schema is not empty`, la base existe déjà mais n'a pas encore la table d'historique Prisma. Le conteneur sait maintenant baseliner les migrations incluses puis synchroniser le schéma sans accepter de perte de données par défaut.
+If the logs show `Error: P3005` and `The database schema is not empty`, the database already exists but does not include Prisma's migration history table. The container can now baseline the included migrations and then sync the schema without data loss by default.
 
-Si vous voulez repartir de zéro, supprimez le volume PostgreSQL avec prudence :
+If you want to start from scratch, remove the PostgreSQL volume carefully:
 
 ```bash
 docker compose down
@@ -78,29 +78,29 @@ docker compose up -d
 
 ---
 
-## 🌟 Fonctionnalités
+## 🌟 Features
 
-- **Dashboard Live** : Visualisez qui regarde quoi en temps réel (Direct Play vs Transcode, débit, etc.).
-- **Historique Enrichi** : Détails techniques complets (codecs, sous-titres, langues).
-- **Statistiques & Tendances** : Tops utilisateurs, médias les plus vus, graphiques d'activité.
-- **Journaux Système & Audit** : Suivi de la santé de la synchronisation.
-- **Sécurité** : Authentification via Jellyfin, hachage des clés API, support multi-serveur.
-
----
-
-## 🔌 Configuration du Plugin
-
-Une fois le serveur installé, vous devez configurer le plugin sur votre instance Jellyfin pour commencer à recevoir des données.
-
-**Dépôt du Plugin :** [Jellyfin.Plugin.JellyTrack](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
-
-1. Dans Jellyfin : **Tableau de bord** > **Plugins** > **Dépôts**.
-2. URL du dépôt : `https://raw.githubusercontent.com/maelmoreau21/Jellyfin.Plugin.JellyTrack/main/manifest.json`
-3. Installez le plugin **JellyTrack** depuis le catalogue.
+- **Live Dashboard**: See who is watching what in real time (Direct Play vs Transcode, bitrate, etc.).
+- **Enriched History**: Full technical details (codecs, subtitles, languages).
+- **Stats & Trends**: Top users, most-watched media, activity charts.
+- **System & Audit Logs**: Track synchronization health.
+- **Security**: Jellyfin authentication, API key hashing, multi-server support.
 
 ---
 
-## 📄 Licence
+## 🔌 Plugin Configuration
 
-Projet personnel — usage privé.
-Built with Next.js, Prisma, Redis & beaucoup de ☕
+Once the server is installed, you must configure the plugin on your Jellyfin instance to start receiving data.
+
+**Plugin repository:** [Jellyfin.Plugin.JellyTrack](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
+
+1. In Jellyfin: **Dashboard** > **Plugins** > **Repositories**.
+2. Repository URL: `https://raw.githubusercontent.com/maelmoreau21/Jellyfin.Plugin.JellyTrack/main/manifest.json`
+3. Install the **JellyTrack** plugin from the catalog.
+
+---
+
+## 📄 License
+
+Personal project — private use.
+Built with Next.js, Prisma, Redis & lots of ☕
