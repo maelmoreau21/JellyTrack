@@ -171,12 +171,12 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                                 if (idx < sortedYears.length - 1) setSelectedYear(sortedYears[idx + 1]);
                             }}
                             disabled={!canGoPrev}
-                            className="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="p-1 rounded-md hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title={t('previousYear')}
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </button>
-                        <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100/50 dark:bg-zinc-800/50 px-3 py-1 rounded-md min-w-[60px] text-center">
+                        <span className="app-chip text-sm font-medium px-3 py-1 rounded-md min-w-[60px] text-center">
                             {selectedYear}
                         </span>
                         <button
@@ -185,14 +185,14 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                                 if (idx > 0) setSelectedYear(sortedYears[idx - 1]);
                             }}
                             disabled={!canGoNext}
-                            className="p-1 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="p-1 rounded-md hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title={t('nextYear')}
                         >
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
                 </CardTitle>
-                <CardDescription className="text-zinc-400">
+                <CardDescription className="text-muted-foreground">
                     {t('playsInYear', { count: totalPlays, year: selectedYear })}
                 </CardDescription>
                 {libraryTypes && libraryTypes.length > 1 && (
@@ -202,7 +202,7 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                             className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
                                 selectedLibrary === '_total'
                                     ? 'bg-indigo-600 text-white'
-                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                                    : 'app-chip text-muted-foreground hover:bg-muted hover:text-foreground'
                             }`}
                         >
                             {t('all')}
@@ -219,7 +219,7 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                                     className={`px-2.5 py-1 text-xs rounded-full transition-colors ${
                                         selectedLibrary === lib
                                             ? 'text-white'
-                                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                                            : 'app-chip text-muted-foreground hover:bg-muted hover:text-foreground'
                                     }`}
                                     style={selectedLibrary === lib ? { backgroundColor: bgColor || '#6366f1' } : undefined}
                                 >
@@ -254,10 +254,10 @@ export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }
                             <TooltipProvider delayDuration={50}>
                                 <Tooltip>
                                     <TooltipTrigger asChild>{block}</TooltipTrigger>
-                                    <TooltipContent className="bg-card dark:bg-zinc-800 text-foreground dark:text-zinc-100 border-border dark:border-zinc-700 pointer-events-none">
+                                    <TooltipContent className="app-surface text-foreground border-border pointer-events-none">
                                         <div className="flex flex-col text-xs space-y-1">
                                             <span className="font-semibold">{t('playsCount', { count: activity.count })}</span>
-                                            <span className="text-zinc-400">
+                                            <span className="text-muted-foreground">
                                                 {format(new Date(activity.date), "EEEE d MMMM yyyy", { locale: dateFnsLocale })}
                                             </span>
                                         </div>

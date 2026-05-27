@@ -321,7 +321,7 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
         if (severity === "ok") {
             return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">{t("stateOk")}</Badge>;
         }
-        return <Badge className="bg-zinc-500/15 text-zinc-300 border-zinc-500/30">{t("stateUnknown")}</Badge>;
+        return <Badge className="bg-zinc-500/15 text-muted-foreground border-zinc-500/30">{t("stateUnknown")}</Badge>;
     }, [t]);
 
     const heartbeatSeries = snapshot?.heartbeat.intervalSeries24h || [];

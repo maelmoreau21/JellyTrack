@@ -96,7 +96,7 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                     disabled={!canGoBack}
                     className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
-                    <ChevronLeft className="w-4 h-4 text-zinc-300" />
+                    <ChevronLeft className="w-4 h-4 text-muted-foreground" />
                 </button>
                 <span className="text-sm font-semibold text-zinc-200 min-w-[4rem] text-center">
                     {selectedYear}
@@ -106,7 +106,7 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                     disabled={!canGoForward}
                     className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
-                    <ChevronRight className="w-4 h-4 text-zinc-300" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </button>
             </div>
 

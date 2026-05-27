@@ -235,8 +235,8 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
   return (
     <div ref={containerRef} className="w-full">
       <Table className="table-fixed border-separate border-spacing-0">
-        <TableHeader className="sticky top-0 z-30 bg-background/80 dark:bg-background/90 backdrop-blur-md">
-          <TableRow className="hover:bg-transparent border-b border-zinc-200 dark:border-zinc-800">
+        <TableHeader className="sticky top-0 z-30 app-surface-soft backdrop-blur-md">
+          <TableRow className="hover:bg-transparent border-b border-border">
             {columns.map((col, idx) => {
               const isResizing = resizingIdx === idx;
               return (
@@ -282,7 +282,7 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
         <TableBody>
           {flattened.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center py-8 text-zinc-400">{t('noResults')}</TableCell>
+              <TableCell colSpan={columns.length} className="text-center py-8 text-muted-foreground">{t('noResults')}</TableCell>
             </TableRow>
           ) : (
             flattened.map((item, idx) => item.type === 'party' ? (

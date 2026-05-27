@@ -140,7 +140,7 @@ export function PredictionsPanel() {
                         }`}
                         style={{ width: `${barWidth}%` }}
                       />
-                      <span className="absolute right-2 top-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                      <span className="absolute right-2 top-0.5 text-[10px] font-medium text-zinc-600 dark:text-muted-foreground">
                         ~{peak.predictedSessions.toFixed(0)}
                       </span>
                     </div>

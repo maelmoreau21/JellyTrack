@@ -59,14 +59,14 @@ export default function LoginForm() {
                 )}
 
                 <div className="space-y-2">
-                    <Label htmlFor="username" className="text-zinc-600 dark:text-zinc-300 font-medium">{t('username')}</Label>
+                    <Label htmlFor="username" className="text-foreground/80 dark:text-slate-300 font-medium">{t('username')}</Label>
                     <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-zinc-400 dark:text-zinc-500" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             id="username"
                             required
                             placeholder="Jellyfin User"
-                            className="pl-10 bg-zinc-100/80 dark:bg-slate-900/70 border-zinc-300 dark:border-white/10 text-zinc-900 dark:text-slate-200 focus-visible:ring-cyan-400 placeholder:text-zinc-400 dark:placeholder:text-slate-500 h-10"
+                            className="app-field pl-10 text-foreground focus-visible:ring-cyan-400 placeholder:text-muted-foreground h-10"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                         />
@@ -74,34 +74,34 @@ export default function LoginForm() {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="password" className="text-zinc-600 dark:text-zinc-300 font-medium">{t('password')}</Label>
+                    <Label htmlFor="password" className="text-foreground/80 dark:text-slate-300 font-medium">{t('password')}</Label>
                     <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-400 dark:text-zinc-500" />
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             id="password"
                             type="password"
                             required
                             placeholder=".........."
-                            className="pl-10 bg-zinc-100/80 dark:bg-slate-900/70 border-zinc-300 dark:border-white/10 text-zinc-900 dark:text-slate-200 focus-visible:ring-cyan-400 placeholder:text-zinc-400 dark:placeholder:text-slate-500 h-10"
+                            className="app-field pl-10 text-foreground focus-visible:ring-cyan-400 placeholder:text-muted-foreground h-10"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-md border border-zinc-200/70 dark:border-white/10 bg-zinc-100/60 dark:bg-slate-900/60 p-3">
+                <div className="app-surface-soft flex items-start gap-3 rounded-md border p-3">
                     <input
                         id="rememberMe"
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 accent-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        className="mt-0.5 h-4 w-4 rounded border-border accent-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                     />
                     <div className="space-y-1">
-                        <Label htmlFor="rememberMe" className="cursor-pointer text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                        <Label htmlFor="rememberMe" className="cursor-pointer text-sm font-medium text-foreground">
                             {t('rememberMe')}
                         </Label>
-                        <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">{t('rememberMeHint')}</p>
+                        <p className="text-xs leading-5 text-muted-foreground">{t('rememberMeHint')}</p>
                     </div>
                 </div>
             </CardContent>

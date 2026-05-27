@@ -186,7 +186,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
 
     return (
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('playTime')}</CardTitle>
                     <Clock className="h-4 w-4 text-orange-500" />
@@ -195,14 +195,14 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                     <div className="text-2xl font-bold">{totalHours}h</div>
                     <p className="text-xs text-muted-foreground">{t('cumulTotal')}</p>
                     {lastActive && (
-                        <div className="mt-2 text-[10px] text-zinc-500 pt-2 border-t border-zinc-200/50 dark:border-zinc-800/50">
+                        <div className="mt-2 text-[10px] text-zinc-500 pt-2 border-t border-border">
                             {tu('colLastActive')}: {new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastActive))}
                         </div>
                     )}
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('sessions')}</CardTitle>
                     <Hash className="h-4 w-4 text-emerald-500" />
@@ -213,7 +213,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('topGenres')}</CardTitle>
                     <PlayCircle className="h-4 w-4 text-pink-500" />
@@ -224,7 +224,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('completionRate')}</CardTitle>
                     <Percent className="h-4 w-4 text-cyan-500" />
@@ -235,7 +235,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('peakActivity')}</CardTitle>
                     <Zap className="h-4 w-4 text-yellow-500" />
@@ -246,7 +246,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('bestStreak')}</CardTitle>
                     <Calendar className="h-4 w-4 text-red-500" />
@@ -257,7 +257,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('uniqueContent')}</CardTitle>
                     <Layers className="h-4 w-4 text-teal-500" />
@@ -268,7 +268,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('favFormat')}</CardTitle>
                     <Film className="h-4 w-4 text-indigo-500" />
@@ -280,7 +280,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
             </Card>
 
             {topMedia && (
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm col-span-2">
+                <Card className="app-surface col-span-2">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">{t('mostWatched')}</CardTitle>
                         <Trophy className="h-4 w-4 text-amber-500" />
@@ -292,7 +292,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </Card>
             )}
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('favClient')}</CardTitle>
                     <Monitor className="h-4 w-4 text-blue-500" />
@@ -303,7 +303,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('favDevice')}</CardTitle>
                     <Smartphone className="h-4 w-4 text-purple-500" />

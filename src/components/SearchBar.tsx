@@ -13,7 +13,7 @@ function getTypeIcon(type: string) {
     case "Movie": return <Film className="w-4 h-4 text-blue-400" />;
     case "Series": return <Tv className="w-4 h-4 text-green-400" />;
     case "MusicAlbum": return <Music className="w-4 h-4 text-yellow-400" />;
-    default: return <Film className="w-4 h-4 text-zinc-400" />;
+    default: return <Film className="w-4 h-4 text-muted-foreground" />;
   }
 }
 
@@ -82,10 +82,10 @@ export function SearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => { if (hasResults) setIsOpen(true); }}
           placeholder={t('placeholder')}
-          className="w-full bg-zinc-100/60 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/50 rounded-lg pl-9 pr-8 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+          className="w-full app-surface-soft rounded-lg pl-9 pr-8 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
         />
         {query && (
-          <button onClick={close} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+          <button onClick={close} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-foreground transition-colors">
             <X className="w-4 h-4" />
           </button>
         )}
@@ -93,18 +93,18 @@ export function SearchBar() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/50 rounded-lg shadow-xl z-50 max-h-[400px] overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1.5 app-surface border border-border rounded-lg shadow-xl z-50 max-h-[400px] overflow-y-auto">
           {isLoading && (
-            <div className="px-4 py-3 text-xs text-zinc-500">{t('searching')}</div>
+            <div className="px-4 py-3 text-xs text-muted-foreground">{t('searching')}</div>
           )}
 
           {!isLoading && !hasResults && query.length >= 2 && (
-            <div className="px-4 py-6 text-center text-zinc-500 text-sm">{t('noResults')}</div>
+            <div className="px-4 py-6 text-center text-muted-foreground text-sm">{t('noResults')}</div>
           )}
 
           {results.media.length > 0 && (
             <div>
-              <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50">
+              <div className="app-surface-nested px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {t('mediaSection')}
               </div>
               {results.media.map((m) => (
@@ -112,10 +112,10 @@ export function SearchBar() {
                   key={m.jellyfinMediaId}
                   href={`/media/${m.jellyfinMediaId}`}
                   onClick={close}
-                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors"
                 >
                   {getTypeIcon(m.type)}
-                  <span className="text-sm text-zinc-700 dark:text-zinc-200 truncate">{m.title}</span>
+                  <span className="text-sm text-foreground truncate">{m.title}</span>
                 </Link>
               ))}
             </div>
@@ -123,7 +123,7 @@ export function SearchBar() {
 
           {results.users.length > 0 && (
             <div>
-              <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50">
+              <div className="app-surface-nested px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {t('usersSection')}
               </div>
               {results.users.map((u) => (
@@ -131,10 +131,10 @@ export function SearchBar() {
                   key={u.jellyfinUserId}
                   href={`/users/${u.jellyfinUserId}`}
                   onClick={close}
-                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800/70 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors"
                 >
                   <User className="w-4 h-4 text-purple-400" />
-                  <span className="text-sm text-zinc-700 dark:text-zinc-200 truncate">{u.username}</span>
+                  <span className="text-sm text-foreground truncate">{u.username}</span>
                 </Link>
               ))}
             </div>

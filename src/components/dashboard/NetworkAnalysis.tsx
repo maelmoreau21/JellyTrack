@@ -328,7 +328,7 @@ export async function NetworkAnalysis({
                                                 <Badge variant="outline" className={`text-xs ${
                                                     row.resolution === "4K" ? 'border-amber-500/30 text-amber-400' :
                                                     row.resolution === "1080p" ? 'border-blue-500/30 text-blue-400' :
-                                                    'border-zinc-600 text-zinc-400'
+                                                    'border-zinc-600 text-muted-foreground'
                                                 }`}>
                                                     {row.resolution}
                                                 </Badge>

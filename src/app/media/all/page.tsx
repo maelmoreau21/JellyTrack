@@ -385,7 +385,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                             <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.parentId || undefined)} alt={media.title} fill className="object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50" />
                             {showLibraryMediaBadges && (media.normalizedResolution && !['MusicAlbum', 'Season', 'Series'].includes(media.type)) && (
                                 <div className="absolute top-2 right-2 z-10">
-                                    <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
+                                    <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-muted-foreground border-zinc-700'}`}>
                                         {media.normalizedResolution === '4K' ? '4K UHD' : media.normalizedResolution}
                                     </Badge>
                                 </div>
@@ -398,7 +398,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                             {showLibraryMediaBadges && media.type === 'Series' && (
                                 <div className="absolute top-2 right-2 z-10">
                                     {media.normalizedResolution && media.normalizedResolution !== 'Unknown' ? (
-                                        <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
+                                        <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-muted-foreground border-zinc-700'}`}>
                                             {media.normalizedResolution === '4K' ? '4K UHD' : media.normalizedResolution}
                                         </Badge>
                                     ) : media.plays > 0 ? (
@@ -425,7 +425,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                     {safePage > 1 && (
                         <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-zinc-800"><ChevronLeft className="w-4 h-4" /> {tc('previous')}</Link>
                     )}
-                    <div className="flex items-center gap-2"><span className="text-sm font-medium text-zinc-400">{tc('page')} {safePage} / {totalPages}</span></div>
+                    <div className="flex items-center gap-2"><span className="text-sm font-medium text-muted-foreground">{tc('page')} {safePage} / {totalPages}</span></div>
                     {safePage < totalPages && (
                         <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-zinc-800">{tc('next')} <ChevronRight className="w-4 h-4" /></Link>
                     )}

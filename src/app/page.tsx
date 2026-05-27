@@ -973,7 +973,7 @@ export default async function DashboardPage(props: {
         {/* Today Stats Banner */}
         <div className="dashboard-banner flex flex-wrap items-center gap-2 rounded-xl px-3 py-3 md:gap-3 md:px-4">
           <CalendarDays className="h-5 w-5 text-primary shrink-0" />
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{t('today')}</span>
+          <span className="text-sm font-medium text-zinc-700 dark:text-muted-foreground">{t('today')}</span>
           <div className="flex flex-wrap items-center gap-3 md:gap-6 ml-0 md:ml-2">
             <div className="flex items-center gap-1.5">
               <PlayCircle className="h-3.5 w-3.5 text-blue-400" />

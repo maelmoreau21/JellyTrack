@@ -10,7 +10,7 @@ export default function LoadingMediaPage() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-                    <Card className="col-span-2 bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="col-span-2 app-surface">
                         <CardHeader>
                             <Skeleton className="h-6 w-1/3 bg-zinc-200 dark:bg-zinc-800" />
                         </CardHeader>
@@ -19,7 +19,7 @@ export default function LoadingMediaPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="col-span-1 bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="col-span-1 app-surface">
                         <CardHeader>
                             <Skeleton className="h-6 w-1/2 bg-zinc-200 dark:bg-zinc-800" />
                         </CardHeader>
@@ -32,7 +32,7 @@ export default function LoadingMediaPage() {
                     </Card>
                 </div>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                <Card className="app-surface">
                     <CardHeader>
                         <Skeleton className="h-6 w-48 bg-zinc-200 dark:bg-zinc-800" />
                         <Skeleton className="h-4 w-96 bg-zinc-200 dark:bg-zinc-800 mt-2" />

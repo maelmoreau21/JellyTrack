@@ -200,7 +200,7 @@ export default async function UsersPage({
                             <div className="app-surface-soft rounded-md border border-zinc-200/50 dark:border-zinc-700/50 overflow-x-auto">
                                 <Table className="min-w-[700px]">
                                     <TableHeader className="app-field">
-                                        <TableRow className="border-zinc-200 dark:border-zinc-800">
+                                        <TableRow className="border-border">
                                             <TableHead className="w-[80px]">{t('colRank')}</TableHead>
                                             <TableHead>{t('colUser')}</TableHead>
                                             <TableHead>{t('colTotalTime')}</TableHead>

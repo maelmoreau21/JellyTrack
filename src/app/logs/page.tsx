@@ -635,14 +635,14 @@ export default async function LogsPage({
                     </div>
 
                     {/* Tab Switcher moved to header */}
-                    <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg shadow-inner">
+                    <div className="app-surface-soft flex items-center p-1 rounded-lg shadow-inner">
                         <Link
                             href={buildPageUrl(1, 'application')}
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
                                 activeTab === 'application'
-                                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                                    ? "bg-primary/15 text-primary shadow-sm border border-primary/25"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                         >
                             <PlayCircle className="w-4 h-4" />
@@ -653,8 +653,8 @@ export default async function LogsPage({
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
                                 activeTab === 'system'
-                                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                                    ? "bg-primary/15 text-primary shadow-sm border border-primary/25"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                         >
                             <Terminal className="w-4 h-4" />
@@ -674,11 +674,11 @@ export default async function LogsPage({
                             </CardHeader>
                             <CardContent>
                                 <div className="grid gap-2 md:grid-cols-2">
-                                    <div className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 p-3">
+                                    <div className="rounded-md border border-border p-3">
                                         <div className="text-xs text-muted-foreground">{tl('smartNewCountryLabel')}</div>
                                         <div className="mt-1 text-lg font-semibold text-amber-400">{newCountryAlerts}</div>
                                     </div>
-                                    <div className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 p-3">
+                                    <div className="rounded-md border border-border p-3">
                                         <div className="text-xs text-muted-foreground">{tl('smartIpBurstLabel')}</div>
                                         <div className="mt-1 flex items-center gap-2">
                                             <AlertTriangle className="w-4 h-4 text-red-400" />
@@ -690,7 +690,7 @@ export default async function LogsPage({
                         </Card>
                     )}
 
-                    <Card className="border-0 shadow-sm bg-white dark:bg-zinc-900 ring-1 ring-zinc-200 dark:ring-zinc-800">
+                    <Card className="app-surface shadow-sm ring-1 ring-border/70">
                         <CardContent className="space-y-4 pt-6">
                             <div className="flex items-start gap-2 flex-wrap">
                                 <div className="flex-1 w-full relative z-10">
@@ -705,7 +705,7 @@ export default async function LogsPage({
                             </div>
 
                             {activeTab === 'application' && (
-                                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
+                                <div className="pt-2 border-t border-border/70 space-y-4">
                                     <ServerFilter servers={selectableServerOptions} enabled={multiServerEnabled} showOutsideDashboard />
                                     <LogFilters 
                                         initialQuery={query} initialSort={sort} initialHideZapped={hideZapped} initialType={typeFilter}
@@ -731,9 +731,9 @@ export default async function LogsPage({
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-zinc-200/50 dark:border-zinc-700/50 flex-wrap">
+                        <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-border/70 flex-wrap">
                             {safePage > 1 && (
-                                <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
+                                <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-muted">
                                     <ChevronLeft className="w-4 h-4" /> {tc('previous')}
                                 </Link>
                             )}
@@ -754,7 +754,7 @@ export default async function LogsPage({
                                                 href={buildPageUrl(item as number)}
                                                 className={`px-2.5 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition-colors ${item === safePage
                                                         ? "bg-primary text-primary-foreground"
-                                                        : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-zinc-900 dark:hover:text-zinc-100"
+                                                        : "text-foreground/75 hover:bg-muted hover:text-foreground"
                                                     }`}
                                             >
                                                 {item}
@@ -763,7 +763,7 @@ export default async function LogsPage({
                                     )}
                             </div>
                             {safePage < totalPages && (
-                                <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
+                                <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-muted">
                                     {tc('next')} <ChevronRight className="w-4 h-4" />
                                 </Link>
                             )}

@@ -322,15 +322,15 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
     return (
         <div className="flex-col md:flex">
             <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
-                <nav className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400 flex-wrap">
+                <nav className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
                     <Link href="/media" className="flex items-center gap-1 hover:text-zinc-900 dark:hover:text-white transition-colors">
                         <ArrowLeft className="w-4 h-4" /> {tProfile('library')}
                     </Link>
-                    <span className="text-zinc-400">/</span>
+                    <span className="text-muted-foreground">/</span>
                     <span className="text-zinc-900 dark:text-slate-200 font-medium truncate max-w-xs">{artistName}</span>
                 </nav>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                <Card className="app-surface">
                     <CardContent className="p-4 md:p-6">
                         <div className="flex flex-col md:flex-row gap-6">
                             <div className="relative w-40 h-40 rounded-xl overflow-hidden ring-1 ring-zinc-300/40 dark:ring-white/10 bg-zinc-200 dark:bg-zinc-900 shrink-0">
@@ -362,7 +362,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                 </Card>
 
                 <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium">Albums</CardTitle>
                         </CardHeader>
@@ -371,7 +371,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium">Titres</CardTitle>
                         </CardHeader>
@@ -380,7 +380,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium">Lectures</CardTitle>
                         </CardHeader>
@@ -389,7 +389,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium">Temps d&apos;écoute</CardTitle>
                         </CardHeader>
@@ -399,7 +399,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                     </Card>
                 </div>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                <Card className="app-surface">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><Disc3 className="w-5 h-5 text-purple-400" /> Albums</CardTitle>
                         <CardDescription>Retour rapide vers les albums de cet artiste.</CardDescription>
@@ -434,14 +434,14 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                     </CardContent>
                 </Card>
 
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                <Card className="app-surface">
                     <CardHeader className="gap-3">
                         <div className="flex items-start justify-between gap-3 flex-wrap">
                             <div>
                                 <CardTitle className="flex items-center gap-2"><Music className="w-5 h-5 text-cyan-400" /> Titres</CardTitle>
                                 <CardDescription>Top titres lies a cet artiste.</CardDescription>
                             </div>
-                            <div className="flex items-center gap-2 rounded-lg border border-zinc-200/60 dark:border-zinc-700/60 px-2 py-1.5 bg-zinc-100/60 dark:bg-zinc-800/30">
+                            <div className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5 bg-zinc-100/60 dark:bg-zinc-800/30">
                                 <span className="text-xs text-zinc-500">Par page</span>
                                 {[25, 50].map((size) => (
                                     <Link
@@ -481,7 +481,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                                         </div>
 
                                         <div className="text-xs text-zinc-500 shrink-0 text-right">
-                                            <div className="font-semibold text-zinc-300">{track.plays} vues</div>
+                                            <div className="font-semibold text-muted-foreground">{track.plays} vues</div>
                                             <div>{track.minutes} min lues</div>
                                         </div>
                                     </div>

@@ -80,7 +80,7 @@ export default async function HealthPage() {
         if (normalized === "error") return "border-red-500/35 bg-red-500/10 text-red-600 dark:text-red-300";
         if (normalized === "running") return "border-amber-500/35 bg-amber-500/10 text-amber-600 dark:text-amber-300";
         if (normalized === "ok") return "border-emerald-500/35 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300";
-        return "border-zinc-500/25 bg-zinc-500/10 text-zinc-600 dark:text-zinc-300";
+        return "border-zinc-500/25 bg-zinc-500/10 text-foreground/80 dark:text-slate-300";
     }
 
     
@@ -230,7 +230,7 @@ export default async function HealthPage() {
                             <Card className="app-surface border-border">
                                 <CardHeader>
                                     <CardTitle className="text-lg flex items-center gap-2">
-                                        <Library className="h-5 w-5 text-zinc-400" />
+                                        <Library className="h-5 w-5 text-muted-foreground" />
                                         {t("excludedLibrariesTitle")}
                                     </CardTitle>
                                     <CardDescription>{t("excludedLibrariesDesc")}</CardDescription>

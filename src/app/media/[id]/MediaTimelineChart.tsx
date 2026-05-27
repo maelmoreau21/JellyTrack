@@ -195,12 +195,12 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                 onClick={() => toggleType(et)}
                                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
                                     activeTypes.has(et)
-                                        ? "border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800"
-                                        : "border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 opacity-40"
+                                        ? "border-primary/30 bg-primary/15 text-primary"
+                                        : "border-border bg-muted/40 opacity-55"
                                 }`}
                             >
                                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EVENT_COLORS[et] }} />
-                                <span className="text-zinc-700 dark:text-zinc-300">
+                                <span className="text-foreground/80">
                                     {EVENT_TOKENS[et]} {t(`timeline.label.${et}`)}
                                 </span>
                             </button>
@@ -210,7 +210,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                         <select
                             value={selectedUser}
                             onChange={(e) => setSelectedUser(e.target.value)}
-                            className="text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md px-2 py-1.5 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                            className="app-field text-xs rounded-md px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
                         >
                             <option value="all">{t("allUsers")}</option>
                             {uniqueUsers.map(([uid, name]) => (
@@ -221,7 +221,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                 </div>
 
                 <div className="relative w-full">
-                    <div className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full mb-1" />
+                    <div className="w-full h-2 bg-[var(--surface-nested)] rounded-full mb-1" />
 
                     <div className="flex w-full gap-px" style={{ height: "120px" }}>
                         {bucketData.map((bucket, i) => {
@@ -262,8 +262,8 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                         </div>
                                     </TooltipTrigger>
                                     {total > 0 && (
-                                        <TooltipContent className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 text-xs space-y-1">
-                                            <p className="font-semibold text-zinc-300">
+                                        <TooltipContent className="app-surface text-xs space-y-1">
+                                            <p className="font-semibold text-muted-foreground">
                                                 {formatMs(bucket.startMs)} - {formatMs(bucket.endMs)}
                                             </p>
                                             {segments.map(seg => (
@@ -279,7 +279,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                         })}
                     </div>
 
-                    <div className="flex justify-between text-[10px] text-zinc-500 mt-1 px-0.5">
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1 px-0.5">
                         <span>0:00</span>
                         <span>{formatMs(durationMs * 0.25)}</span>
                         <span>{formatMs(durationMs * 0.5)}</span>
@@ -289,8 +289,8 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                 </div>
 
                 {sessions.length > 0 && filteredSessions.length > 0 && (
-                    <div className="space-y-1.5 mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800/50">
-                        <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">
+                    <div className="space-y-1.5 mt-3 pt-3 border-t border-border/50">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                             {t("sessionDetail")} ({filteredSessions.length})
                         </h4>
                         <div className="max-h-[220px] overflow-y-auto space-y-1 pr-1 scrollbar-thin">
@@ -298,19 +298,19 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                 <div key={session.id} className="flex items-center gap-2 group">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <span className="text-[10px] text-zinc-500 w-20 shrink-0 truncate cursor-default">
+                                            <span className="text-[10px] text-muted-foreground w-20 shrink-0 truncate cursor-default">
                                                 {session.username}
                                             </span>
                                         </TooltipTrigger>
-                                        <TooltipContent className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 text-xs">
+                                        <TooltipContent className="app-surface text-xs">
                                             <p>{session.username}</p>
-                                            <p className="text-zinc-400">{new Date(session.startedAt).toLocaleDateString(undefined, { day: "2-digit", month: "2-digit", year: "numeric" })}</p>
-                                            <p className="text-zinc-400">{Math.round(session.durationWatched / 60)} min - {t("eventsCount", { count: session.events.length })}</p>
+                                            <p className="text-muted-foreground">{new Date(session.startedAt).toLocaleDateString(undefined, { day: "2-digit", month: "2-digit", year: "numeric" })}</p>
+                                            <p className="text-muted-foreground">{Math.round(session.durationWatched / 60)} min - {t("eventsCount", { count: session.events.length })}</p>
                                         </TooltipContent>
                                     </Tooltip>
-                                    <div className="relative flex-1 h-5 bg-zinc-800/30 rounded border border-zinc-200 dark:border-zinc-800/50 group-hover:border-zinc-700/50 transition-colors">
+                                    <div className="relative flex-1 h-5 bg-[var(--surface-nested)] rounded border border-border/50 group-hover:border-primary/30 transition-colors">
                                         <div
-                                            className="absolute inset-y-0 left-0 bg-zinc-700/20 rounded-l"
+                                            className="absolute inset-y-0 left-0 bg-primary/10 rounded-l"
                                             style={{ width: `${Math.min((session.durationWatched * 1000 / durationMs) * 100, 100)}%` }}
                                         />
                                         {session.events
@@ -327,14 +327,14 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                                                 style={{ left: `${pct}%`, backgroundColor: color, opacity: 0.85 }}
                                                             />
                                                         </TooltipTrigger>
-                                                        <TooltipContent className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 text-xs">
+                                                        <TooltipContent className="app-surface text-xs">
                                                             {EVENT_TOKENS[evt.eventType]} {t(`timeline_${evt.eventType}`)}{detail ? ` - ${detail}` : ""} @ {formatMs(evt.positionMs)}
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 );
                                             })}
                                     </div>
-                                    <span className="text-[10px] text-zinc-600 w-10 text-right shrink-0">
+                                    <span className="text-[10px] text-muted-foreground w-10 text-right shrink-0">
                                         {Math.round(session.durationWatched / 60)}m
                                     </span>
                                 </div>

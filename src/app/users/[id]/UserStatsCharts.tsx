@@ -79,7 +79,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
 
     return (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mt-6">
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader>
                     <CardTitle>{td('dayOfWeekActivity')}</CardTitle>
                     <CardDescription>{td('dayOfWeekActivityDesc')}</CardDescription>
@@ -95,7 +95,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader>
                     <CardTitle>{td('completionRate')}</CardTitle>
                     <CardDescription>{td('completionRateDesc')}</CardDescription>
@@ -111,7 +111,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm md:col-span-2 xl:col-span-1">
+            <Card className="app-surface md:col-span-2 xl:col-span-1">
                 <CardHeader>
                     <CardTitle>{td('hourlyActivity')}</CardTitle>
                     <CardDescription>{td('hourlyActivityDesc')}</CardDescription>

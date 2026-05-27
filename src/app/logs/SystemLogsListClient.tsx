@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslations } from 'next-intl';
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { format } from 'date-fns';
@@ -39,8 +39,8 @@ export default function SystemLogsListClient({ logs, locale }: { logs: SystemLog
     return (
         <div className="w-full">
             <Table>
-                <TableHeader className="bg-zinc-50 dark:bg-zinc-900/50 backdrop-blur-md">
-                    <TableRow className="border-b border-zinc-200 dark:border-zinc-800">
+                <TableHeader className="app-surface-soft backdrop-blur-md">
+                    <TableRow className="border-b border-border">
                         <TableHead className="w-[180px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('colDate')}</TableHead>
                         <TableHead className="w-[100px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('colStatus')}</TableHead>
                         <TableHead className="w-[200px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('system.colSource')}</TableHead>
@@ -51,7 +51,7 @@ export default function SystemLogsListClient({ logs, locale }: { logs: SystemLog
                 <TableBody>
                     {filteredLogs.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={5} className="text-center py-12 text-zinc-400">
+                            <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
                                 <div className="flex flex-col items-center gap-2">
                                     <Activity className="w-8 h-8 opacity-20" />
                                     {t('noResults')}
@@ -60,8 +60,8 @@ export default function SystemLogsListClient({ logs, locale }: { logs: SystemLog
                         </TableRow>
                     ) : (
                         filteredLogs.map((entry) => (
-                            <TableRow key={entry.id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors border-b border-zinc-100 dark:border-zinc-800/50">
-                                <TableCell className="py-4 font-medium text-[11px] text-zinc-500">
+                            <TableRow key={entry.id} className="group hover:bg-muted/60 transition-colors border-b border-border/70">
+                                <TableCell className="py-4 font-medium text-[11px] text-muted-foreground">
                                     {format(new Date(entry.createdAt), 'PPp', { locale: dateLocale })}
                                 </TableCell>
                                 <TableCell className="py-4">
@@ -80,11 +80,11 @@ export default function SystemLogsListClient({ logs, locale }: { logs: SystemLog
                                             "p-2 rounded-lg shadow-sm border border-transparent",
                                             entry.type === 'audit' 
                                                 ? "bg-indigo-50 dark:bg-indigo-500/10 border-indigo-100/50 dark:border-indigo-500/20" 
-                                                : "bg-zinc-100 dark:bg-zinc-800 border-zinc-200/50 dark:border-zinc-700/30"
+                                                : "app-surface-soft border-border"
                                         )}>
                                             {getIcon(entry)}
                                         </div>
-                                        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                                        <span className="text-xs font-bold text-foreground tracking-tight">
                                             {entry.type === 'audit' ? (entry.action || 'Audit') : (entry.source || 'Système')}
                                         </span>
                                     </div>
@@ -92,18 +92,18 @@ export default function SystemLogsListClient({ logs, locale }: { logs: SystemLog
                                 <TableCell className="py-4">
                                     {entry.actorUsername ? (
                                         <div className="flex flex-col gap-0.5">
-                                            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">{entry.actorUsername}</span>
-                                            {entry.ipAddress && <span className="text-[10px] text-zinc-400 font-mono tracking-tighter">{entry.ipAddress}</span>}
+                                            <span className="text-xs font-bold text-foreground">{entry.actorUsername}</span>
+                                            {entry.ipAddress && <span className="text-[10px] text-muted-foreground font-mono tracking-tighter">{entry.ipAddress}</span>}
                                         </div>
                                     ) : (
-                                        <span className="text-xs text-zinc-400 italic">Système</span>
+                                        <span className="text-xs text-muted-foreground italic">Système</span>
                                     )}
                                 </TableCell>
                                 <TableCell className="py-4">
                                     <div className="flex flex-col gap-2 max-w-xl">
-                                        <span className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">{entry.message || entry.action}</span>
+                                        <span className="text-sm leading-relaxed text-foreground/80">{entry.message || entry.action}</span>
                                         {entry.details && typeof entry.details === 'object' && Object.keys(entry.details).length > 0 && (
-                                            <div className="text-[10px] bg-zinc-100/30 dark:bg-slate-900/60 p-3 rounded-xl mt-1 font-mono break-all max-h-40 overflow-y-auto border border-zinc-200/50 dark:border-white/10 shadow-inner">
+                                            <div className="app-surface-soft text-[10px] p-3 rounded-xl mt-1 font-mono break-all max-h-40 overflow-y-auto border shadow-inner">
                                                 <pre className="whitespace-pre-wrap opacity-80">{JSON.stringify(entry.details, null, 2)}</pre>
                                             </div>
                                         )}

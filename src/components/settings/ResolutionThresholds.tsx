@@ -38,10 +38,10 @@ export function ResolutionThresholds({ value, onChange }: ResolutionThresholdsPr
       {Object.entries(DEFAULT_THRESHOLDS).map(([key, def]) => {
         const current = thresholds[key] || def;
         return (
-          <div key={key} className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 space-y-3">
+          <div key={key} className="p-4 rounded-lg app-surface-soft border border-border space-y-3">
             <div className="flex justify-between items-center">
               <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">{t(`resThreshold${key}`)}</h4>
-              <span className="text-xs text-zinc-400 font-mono uppercase">{key}</span>
+              <span className="text-xs text-muted-foreground font-mono uppercase">{key}</span>
             </div>
             
             <div className="grid grid-cols-2 gap-3">

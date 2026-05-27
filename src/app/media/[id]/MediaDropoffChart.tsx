@@ -127,7 +127,7 @@ export default function MediaDropoffChart({ data, markers = [] }: { data: Dropof
                         >
                             <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: marker.color }} />
                             <span>{marker.label}</span>
-                            <span className="text-zinc-400">{Math.round(marker.safePercent)}%</span>
+                            <span className="text-muted-foreground">{Math.round(marker.safePercent)}%</span>
                         </div>
                     ))}
                 </div>

@@ -586,7 +586,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 links.push(<Link key="series" href={`/media/${seriesId}`} className="hover:text-primary transition-colors">{seriesName}</Link>);
             }
             if (seasonId && seasonName) {
-                if (links.length > 0) links.push(<span key="sep1" className="text-zinc-400 mx-1">-</span>);
+                if (links.length > 0) links.push(<span key="sep1" className="text-muted-foreground mx-1">-</span>);
                 links.push(<Link key="season" href={`/media/${seasonId}`} className="hover:text-primary transition-colors">{seasonName}</Link>);
             }
         } else if (media.type === 'Season') {
@@ -598,7 +598,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 links.push(<Link key="artist" href={artistHref} className="hover:text-primary transition-colors">{resolvedAlbumArtist}</Link>);
             }
             if (albumId && albumName) {
-                if (links.length > 0) links.push(<span key="sep1" className="text-zinc-400 mx-1">-</span>);
+                if (links.length > 0) links.push(<span key="sep1" className="text-muted-foreground mx-1">-</span>);
                 links.push(<Link key="album" href={`/media/${albumId}`} className="hover:text-primary transition-colors">{albumName}</Link>);
             }
         } else if (media.type === 'MusicAlbum') {
@@ -609,7 +609,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         
         if (links.length === 0) return null;
         return (
-            <div className="text-xl font-medium text-zinc-500 dark:text-zinc-400 mt-1 flex items-center flex-wrap">
+            <div className="text-xl font-medium text-muted-foreground mt-1 flex items-center flex-wrap">
                 {links}
             </div>
         );
@@ -619,26 +619,26 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         <div className="flex-col md:flex">
             <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
                 {/* Breadcrumb */}
-                <nav className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400 flex-wrap">
+                <nav className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
                     <Link href="/media" className="flex items-center gap-1 hover:text-zinc-900 dark:hover:text-white transition-colors">
                         <ArrowLeft className="w-4 h-4" /> {t('library')}
                     </Link>
                     {seriesId && seriesName && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${seriesId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seriesName}</Link></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><Link href={`/media/${seriesId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seriesName}</Link></>
                     )}
                     {seasonId && seasonName && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${seasonId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seasonName}</Link></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><Link href={`/media/${seasonId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seasonName}</Link></>
                     )}
                     {artistHref && resolvedAlbumArtist && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={artistHref} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{resolvedAlbumArtist}</Link></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><Link href={artistHref} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{resolvedAlbumArtist}</Link></>
                     )}
                     {!artistHref && resolvedAlbumArtist && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><span className="text-zinc-600 dark:text-zinc-300">{resolvedAlbumArtist}</span></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><span className="text-foreground/80 dark:text-slate-300">{resolvedAlbumArtist}</span></>
                     )}
                     {albumId && albumName && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${albumId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{albumName}</Link></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><Link href={`/media/${albumId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{albumName}</Link></>
                     )}
-                    <ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" />
                     <span className="text-zinc-900 dark:text-slate-200 font-medium truncate max-w-xs">{media.title}</span>
                 </nav>
 
@@ -709,17 +709,17 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                 <div className="flex items-center gap-2 mt-4 flex-wrap">
                                     <Badge variant="outline" className="bg-white/50 dark:bg-white/5 backdrop-blur-sm">{media.type}</Badge>
                                     {media.resolution && <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">{normalizedMediaResolution}</Badge>}
-                                    {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-zinc-600 dark:text-zinc-300 backdrop-blur-sm">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
-                                    {productionYear && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-zinc-600 dark:text-zinc-300 backdrop-blur-sm">{productionYear}</Badge>}
+                                    {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-foreground/80 dark:text-slate-300 backdrop-blur-sm">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
+                                    {productionYear && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-foreground/80 dark:text-slate-300 backdrop-blur-sm">{productionYear}</Badge>}
                                     {communityRating && <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 backdrop-blur-sm">★ {communityRating.toFixed(1)}</Badge>}
                                 </div>
                                 {genres.length > 0 && (
                                     <div className="flex items-center gap-1.5 mt-4 flex-wrap">
-                                        {genres.map((g: string) => (<span key={g} className="text-[10px] uppercase tracking-wider font-bold bg-zinc-200/50 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 px-2.5 py-1 rounded-md backdrop-blur-sm">{g}</span>))}
+                                        {genres.map((g: string) => (<span key={g} className="text-[10px] uppercase tracking-wider font-bold bg-zinc-200/50 dark:bg-white/5 text-muted-foreground px-2.5 py-1 rounded-md backdrop-blur-sm">{g}</span>))}
                                     </div>
                                 )}
                                 {isMusic && (resolvedAlbumArtist || albumName) && (
-                                    <div className="flex items-center gap-4 mt-4 flex-wrap text-sm font-medium text-zinc-600 dark:text-zinc-300">
+                                    <div className="flex items-center gap-4 mt-4 flex-wrap text-sm font-medium text-foreground/80 dark:text-slate-300">
                                         {resolvedAlbumArtist && (
                                             artistHref ? (
                                                 <Link href={artistHref} className="inline-flex items-center gap-2 hover:text-primary transition-colors bg-white/50 dark:bg-white/5 px-3 py-1.5 rounded-lg backdrop-blur-sm">
@@ -733,7 +733,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                     </div>
                                 )}
                             </div>
-                            {overview && <p className="text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-3xl line-clamp-4">{overview}</p>}
+                            {overview && <p className="text-sm md:text-base text-zinc-600 dark:text-muted-foreground leading-relaxed max-w-3xl line-clamp-4">{overview}</p>}
                         </div>
                     </div>
                 </div>
@@ -772,7 +772,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                     {/* Children: Seasons / Episodes / Tracks */}
                     {children.length > 0 && (
-                        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 col-span-full mb-2">
+                        <Card className="app-surface col-span-full mb-2">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     {media.type === 'Series' ? <><Film className="w-5 h-5 text-indigo-400" /> {t('seasons', { count: children.length })}</> :
@@ -786,10 +786,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="border rounded-md overflow-x-auto border-zinc-200 dark:border-zinc-800/50">
+                                <div className="border rounded-md overflow-x-auto border-border/50">
                                     <Table className="min-w-[700px]">
                                         <TableHeader>
-                                            <TableRow className="border-zinc-200 dark:border-zinc-800">
+                                            <TableRow className="border-border">
                                                 <TableHead className="w-12">#</TableHead>
                                                 <TableHead>{t('colTitle')}</TableHead>
                                                 <TableHead className="text-center">{t('colType')}</TableHead>
@@ -800,7 +800,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                         </TableHeader>
                                         <TableBody>
                                             {children.map((child, idx) => (
-                                                <TableRow key={child.jellyfinMediaId} className="border-zinc-200 dark:border-zinc-800/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
+                                                <TableRow key={child.jellyfinMediaId} className="border-border/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
                                                     <TableCell className="text-zinc-500 text-sm">{idx + 1}</TableCell>
                                                     <TableCell>
                                                         <Link
@@ -845,20 +845,20 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             </CardContent>
                         </Card>
                     )}
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('totalTime')}</CardTitle><Clock className="h-4 w-4 text-orange-500" /></CardHeader>
                         <CardContent><div className="text-2xl font-bold">{totalHours}h</div><p className="text-xs text-muted-foreground mt-1">{t('cumulated')}</p></CardContent>
                     </Card>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('viewsTitle')}</CardTitle><Eye className="h-4 w-4 text-blue-500" /></CardHeader>
                         <CardContent><div className="text-2xl font-bold">{totalViews}</div><p className="text-xs text-muted-foreground mt-1">{t('uniqueSessions')}</p></CardContent>
                     </Card>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('avgDuration')}</CardTitle><Timer className="h-4 w-4 text-emerald-500" /></CardHeader>
                         <CardContent><div className="text-2xl font-bold">{avgMinutes} min</div><p className="text-xs text-muted-foreground mt-1">{t('perSession')}</p></CardContent>
                     </Card>
                     {isMusic && (
-                        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                        <Card className="app-surface">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('pauses')}</CardTitle><Pause className="h-4 w-4 text-yellow-500" /></CardHeader>
                             <CardContent><div className="text-2xl font-bold">{totalPauses}</div><p className="text-xs text-muted-foreground mt-1">{t('total')}</p></CardContent>
                         </Card>
@@ -867,7 +867,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Telemetry Visual Summary (films/series only) */}
                 {!isMusic && (
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader><CardTitle className="flex items-center gap-2"><Activity className="w-4 h-4" /> {t('telemetrySummary')}</CardTitle><CardDescription>{t('telemetryDesc')}</CardDescription></CardHeader>
                         <CardContent>
                             <div className="grid gap-4 md:grid-cols-3">
@@ -899,7 +899,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 )}
 
                 {hasBehaviorSignals && (
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Activity className="w-4 h-4" /> {t('behaviorTitle')}</CardTitle>
                             <CardDescription>{t('behaviorDesc')}</CardDescription>
@@ -911,7 +911,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                     {jumpSignals.length === 0 ? (
                                         <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
                                     ) : jumpSignals.map((entry) => (
-                                        <div key={`${entry.eventType}:${entry.label}`} className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 p-3">
+                                        <div key={`${entry.eventType}:${entry.label}`} className="rounded-md border border-border p-3">
                                             <div className="flex items-center justify-between gap-3">
                                                 <span className="font-mono text-xs">{entry.label}</span>
                                                 <Badge variant="outline">{entry.count}</Badge>
@@ -927,7 +927,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                     {speedSignals.length === 0 ? (
                                         <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
                                     ) : speedSignals.map((entry) => (
-                                        <div key={entry.label} className="flex items-center justify-between rounded-md border border-zinc-200/70 dark:border-zinc-800/70 px-3 py-2">
+                                        <div key={entry.label} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
                                             <span className="font-mono text-sm font-semibold">{entry.label}</span>
                                             <span className="text-xs text-muted-foreground">
                                                 {entry.count} {entry.estimated > 0 ? t('sourceEstimated') : ''}
@@ -943,7 +943,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                     {languageSwitchSignals.length === 0 ? (
                                         <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
                                     ) : languageSwitchSignals.map((entry) => (
-                                        <div key={`${entry.kind}:${entry.label}`} className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 px-3 py-2">
+                                        <div key={`${entry.kind}:${entry.label}`} className="rounded-md border border-border px-3 py-2">
                                             <div className="flex items-center justify-between gap-3">
                                                 <span className="text-xs">{entry.label}</span>
                                                 <Badge variant="outline">{entry.count}</Badge>
@@ -959,7 +959,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Users + Language Distribution */}
                 <div className={`grid gap-4 ${isMusic ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader><CardTitle>{t('viewers', { count: userList.length })}</CardTitle><CardDescription>{t('viewersDesc')}</CardDescription></CardHeader>
                         <CardContent>
                             <div className="space-y-3 max-h-[300px] overflow-y-auto">
@@ -967,7 +967,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                     userList.map((u) => (
                                         <div key={u.jellyfinUserId} className="flex items-center justify-between">
                                             <Link href={`/users/${u.jellyfinUserId}`} className="text-sm font-medium text-primary hover:underline truncate max-w-[120px]">{u.username}</Link>
-                                            <div className="flex items-center gap-3 text-xs text-zinc-400">
+                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                                 <span>{u.sessions} session{u.sessions > 1 ? 's' : ''}</span>
                                                 <span className="font-medium">{(u.totalSeconds / 3600).toFixed(1)}h</span>
                                             </div>
@@ -977,7 +977,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             </div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader><CardTitle className="flex items-center gap-2"><Headphones className="w-4 h-4" /> {t('audioLanguages')}</CardTitle></CardHeader>
                         <CardContent>
                             <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -987,7 +987,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                             <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-2 py-1 rounded">{lang}</span>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-24 h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.round((count / totalViews) * 100)}%` }} /></div>
-                                                <span className="text-xs text-zinc-400 w-8 text-right">{count}</span>
+                                                <span className="text-xs text-muted-foreground w-8 text-right">{count}</span>
                                             </div>
                                         </div>
                                     ))
@@ -996,7 +996,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                         </CardContent>
                     </Card>
                     {!isMusic && (
-                        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                        <Card className="app-surface">
                             <CardHeader><CardTitle className="flex items-center gap-2"><Languages className="w-4 h-4" /> {t('subtitlesTitle')}</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -1006,7 +1006,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                 <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-2 py-1 rounded">{lang}</span>
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-24 h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-cyan-500 rounded-full" style={{ width: `${Math.round((count / totalViews) * 100)}%` }} /></div>
-                                                    <span className="text-xs text-zinc-400 w-8 text-right">{count}</span>
+                                                    <span className="text-xs text-muted-foreground w-8 text-right">{count}</span>
                                                 </div>
                                             </div>
                                         ))
@@ -1019,7 +1019,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Drop-off Chart */}
                 {mediaDurationSeconds && mediaDurationSeconds > 0 && (
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader><CardTitle>{t('completionDist')}</CardTitle><CardDescription>{t('completionDistDesc')}</CardDescription></CardHeader>
                         <CardContent><div className="h-[350px] w-full"><MediaDropoffChart data={dropoffBuckets} markers={dropoffMarkers} /></div></CardContent>
                     </Card>
@@ -1027,7 +1027,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Positional Telemetry Timeline */}
                 {hasTimelineEvents && mediaDurationSeconds && (
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Activity className="w-4 h-4" /> {t('timelineTitle')}</CardTitle>
                             <CardDescription>{t('timelineDesc')}</CardDescription>
@@ -1040,7 +1040,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Telemetry Timeline Chart */}
                 {hasTelemetry && (
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader>
                             <CardTitle>{t('telemetryTimeline')}</CardTitle>
                             <CardDescription>{isMusic ? t('telemetryTimelineMusicDesc') : t('telemetryTimelineVideoDesc')}</CardDescription>
@@ -1050,13 +1050,13 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 )}
 
                 {/* Detailed History */}
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                <Card className="app-surface">
                     <CardHeader><CardTitle>{t('detailedHistory')}</CardTitle><CardDescription>{t('sessionsTotal', { count: totalViews })}</CardDescription></CardHeader>
                     <CardContent>
-                        <div className="border rounded-md overflow-x-auto border-zinc-200 dark:border-zinc-800/50">
+                        <div className="border rounded-md overflow-x-auto border-border/50">
                             <Table className="min-w-[860px] md:min-w-[1080px]">
                                 <TableHeader>
-                                    <TableRow className="border-zinc-200 dark:border-zinc-800">
+                                    <TableRow className="border-border">
                                         <TableHead>{t('colUser')}</TableHead><TableHead>{t('colDate')}</TableHead><TableHead className="hidden md:table-cell">{t('colMethod')}</TableHead><TableHead>{t('colAudio')}</TableHead>{!isMusic && <TableHead className="hidden lg:table-cell">{t('colSubtitles')}</TableHead>}<TableHead className="text-center hidden md:table-cell">{t('colPauses')}</TableHead><TableHead className="text-center hidden lg:table-cell">{t('colJumps')}</TableHead><TableHead className="text-center hidden xl:table-cell">{t('colReplays')}</TableHead><TableHead className="text-center hidden xl:table-cell">{t('colMaxSpeed')}</TableHead><TableHead className="text-right">{t('colDuration')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -1066,11 +1066,11 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                     ) : effectiveHistory.slice(0, 200).map((h) => {
                                         const isTranscode = h.playMethod?.toLowerCase().includes("transcode");
                                         return (
-                                            <TableRow key={h.id} className="border-zinc-200 dark:border-zinc-800/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
+                                            <TableRow key={h.id} className="border-border/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
                                                 <TableCell className="font-medium text-primary">
                                                     {h.user ? <Link href={`/users/${h.user.jellyfinUserId}`} className="hover:underline">{h.user.username || tc('deletedUser')}</Link> : <span className="text-zinc-500">{tc('deletedUser')}</span>}
                                                 </TableCell>
-                                                <TableCell className="text-sm text-zinc-400 whitespace-nowrap">{new Date(h.startedAt).toLocaleString(locale, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</TableCell>
+                                                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{new Date(h.startedAt).toLocaleString(locale, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</TableCell>
                                                 <TableCell className="hidden md:table-cell"><Badge variant={isTranscode ? "destructive" : "default"} className={isTranscode ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-500"}>{h.playMethod || "DirectPlay"}</Badge></TableCell>
                                                 <TableCell className="text-sm">{h.audioLanguage ? <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{h.audioLanguage}{h.audioCodec ? ` (${h.audioCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>
                                                 {!isMusic && <TableCell className="text-sm hidden lg:table-cell">{h.subtitleLanguage ? <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{h.subtitleLanguage}{h.subtitleCodec ? ` (${h.subtitleCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>}

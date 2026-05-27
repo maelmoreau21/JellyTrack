@@ -499,7 +499,7 @@ export function JellyfinServersSettings() {
                     <p className="text-sm font-semibold text-foreground">{server.name}</p>
                     <div className="flex flex-wrap items-center gap-2 text-[11px]">
                       <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 ${
-                        server.isPrimary ? 'bg-primary/15 text-primary border-primary/30' : 'bg-zinc-500/10 text-zinc-300 border-zinc-500/30'
+                        server.isPrimary ? 'bg-primary/15 text-primary border-primary/30' : 'bg-zinc-500/10 text-muted-foreground border-zinc-500/30'
                       }`}>
                         <span className={`h-2 w-2 rounded-full ${server.isPrimary ? 'bg-primary' : 'bg-zinc-400'}`} />
                         {server.isPrimary ? t('primaryServerLabel') : t('secondaryServerLabel')}
@@ -509,7 +509,7 @@ export function JellyfinServersSettings() {
                         server.connectionState === 'online'
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                           : server.connectionState === 'no_api_key'
-                          ? 'bg-zinc-500/10 text-zinc-300 border-zinc-500/30'
+                          ? 'bg-zinc-500/10 text-muted-foreground border-zinc-500/30'
                           : 'bg-red-500/10 text-red-400 border-red-500/30'
                       }`}>
                         <span className={`h-2 w-2 rounded-full ${
@@ -575,7 +575,7 @@ export function JellyfinServersSettings() {
                     <div className="xl:col-span-8 relative">
                       <Label className="text-xs">{t('serverPluginKeyLabel')}</Label>
                       <Input readOnly type={pluginKeyVisible[server.id] ? 'text' : 'password'} value={pluginKeyVisible[server.id] ? pluginKeyByServerId[server.id] || '' : server.pluginKeyMasked || ''} className="font-mono text-xs pr-10" placeholder={pluginKeyReady ? t('clickToShow') : t('generateGlobalFirst')} />
-                      <button type="button" onClick={() => handleTogglePluginKeyVisibility(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="absolute right-2 top-[30px] text-zinc-500 hover:text-zinc-300 disabled:opacity-40">
+                      <button type="button" onClick={() => handleTogglePluginKeyVisibility(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="absolute right-2 top-[30px] text-zinc-500 hover:text-foreground disabled:opacity-40">
                         {pluginKeyVisible[server.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>

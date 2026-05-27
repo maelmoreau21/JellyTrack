@@ -140,7 +140,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
       <TableRow 
         onClick={() => onOpenDetails?.(log)}
         className={cn(
-          "cursor-pointer even:bg-zinc-500/5 dark:even:bg-white/5 hover:bg-zinc-500/10 dark:hover:bg-white/10 border-zinc-200/50 dark:border-zinc-800/50 transition-colors",
+          "cursor-pointer even:bg-zinc-500/5 dark:even:bg-white/5 hover:bg-zinc-500/10 dark:hover:bg-white/10 border-border transition-colors",
           isParty && "border-l-2 border-l-violet-500/40"
         )}
       >
@@ -148,7 +148,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
           switch (colKey) {
             case 'date':
               return (
-                <TableCell key="date" className={cn("font-medium whitespace-nowrap pr-3 border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="date" className={cn("font-medium whitespace-nowrap pr-3 border-r border-border")}>
                   <div className="flex items-center gap-1.5 min-w-0">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }} 
@@ -167,7 +167,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                           } catch { return '—'; }
                         })()}
                       </span>
-                      <span className="text-[10px] text-zinc-500 font-normal">
+                      <span className="text-[10px] text-muted-foreground font-normal">
                         {(() => {
                           try {
                             const d = new Date(log.startedAt);
@@ -188,21 +188,21 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'startedAt':
               return (
-                <TableCell key="startedAt" className={cn("hidden md:table-cell whitespace-nowrap text-xs text-zinc-500 border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="startedAt" className={cn("hidden md:table-cell whitespace-nowrap text-xs text-muted-foreground border-r border-border")}>
                   {log.startedAt ? new Date(log.startedAt).toLocaleTimeString() : '—'}
                 </TableCell>
               );
 
             case 'endedAt':
               return (
-                <TableCell key="endedAt" className={cn("hidden md:table-cell whitespace-nowrap border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="endedAt" className={cn("hidden md:table-cell whitespace-nowrap border-r border-border")}>
                   {log.endedAt ? new Date(log.endedAt).toLocaleString() : '—'}
                 </TableCell>
               );
 
             case 'user':
               return (
-                <TableCell key="user" className={cn("font-semibold text-primary pl-3 border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="user" className={cn("font-semibold text-primary pl-3 border-r border-border")}>
                   {log.user ? (
                     <Link href={`/users/${log.user.jellyfinUserId}`} className="hover:underline">{log.user.username}</Link>
                   ) : '—'}
@@ -211,7 +211,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'media':
               return (
-                <TableCell key="media" className={cn("overflow-hidden border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="media" className={cn("overflow-hidden border-r border-border")}>
                   <div className="flex items-center gap-2 md:gap-3 w-full overflow-hidden" title={log.media?.title || 'Unknown'}>
                     <div className={`relative ${log.media?.type === 'Episode' ? 'aspect-video w-20' : isAudioMedia ? 'aspect-square w-12 md:w-14' : 'aspect-[2/3] w-12 md:w-14'} bg-muted rounded-md shrink-0 overflow-hidden ring-1 ring-zinc-200/50 dark:ring-white/10`}>
                       {log.media?.jellyfinMediaId ? (
@@ -231,7 +231,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                           {displayTitle}
                         </Link>
                       ) : (
-                        <span className="truncate font-medium text-zinc-400 italic">
+                        <span className="truncate font-medium text-muted-foreground italic">
                           {t('unknownMedia')}
                         </span>
                       )}
@@ -240,7 +240,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                        log.mediaSubtitle !== 'Unknown' && 
                        log.mediaSubtitle.trim().length > 0 &&
                        log.mediaSubtitle !== displayTitle ? (
-                        <span className="text-xs text-zinc-500 truncate flex items-center gap-1" title={log.mediaSubtitle}>{log.mediaSubtitle}</span>
+                        <span className="text-xs text-muted-foreground truncate flex items-center gap-1" title={log.mediaSubtitle}>{log.mediaSubtitle}</span>
                       ) : null}
                     </div>
                   </div>
@@ -249,15 +249,15 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'client':
               return (
-                <TableCell key="client" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="client" className={cn("hidden lg:table-cell border-r border-border")}>
                   <div className="text-sm font-semibold">{log.clientName || '—'}</div>
                 </TableCell>
               );
 
             case 'resolution':
               return (
-                <TableCell key="resolution" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-                  <div className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/50 w-fit">
+                <TableCell key="resolution" className={cn("hidden lg:table-cell border-r border-border")}>
+                  <div className="text-xs font-medium px-2 py-0.5 rounded app-chip w-fit">
                     {!isAudioMedia && normalizedResolution && normalizedResolution !== 'Unknown' 
                       ? normalizedResolution 
                       : '—'}
@@ -267,8 +267,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'audioBitrate':
               return (
-                <TableCell key="audioBitrate" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
-                  <div className="text-xs text-zinc-500">
+                <TableCell key="audioBitrate" className={cn("hidden lg:table-cell border-r border-border")}>
+                  <div className="text-xs text-muted-foreground">
                     {typeof log.bitrate === 'number' && log.bitrate > 0 ? `${log.bitrate} kbps` : '—'}
                   </div>
                 </TableCell>
@@ -276,7 +276,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'ip':
               return (
-                <TableCell key="ip" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="ip" className={cn("hidden lg:table-cell border-r border-border")}>
                   <div className={cn(
                     "text-xs font-mono px-1.5 py-0.5 rounded-sm w-fit",
                     hasIpBurstAnomaly
@@ -295,7 +295,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'country':
               return (
-                <TableCell key="country" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="country" className={cn("hidden lg:table-cell border-r border-border")}>
                   <div className="text-xs">
                     {(() => {
                       if (!log.country || log.country === 'Unknown') {
@@ -309,7 +309,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'status':
               return (
-                <TableCell key="status" className={cn("hidden md:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="status" className={cn("hidden md:table-cell border-r border-border")}>
                   <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
                     {log.playMethod || 'DirectPlay'}
                   </Badge>
@@ -318,7 +318,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'codecs':
               return (
-                <TableCell key="codecs" className={cn("hidden lg:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50")}>
+                <TableCell key="codecs" className={cn("hidden lg:table-cell border-r border-border")}>
                   {isTranscode && log.videoCodec ? (
                     <div className="flex flex-col text-xs text-muted-foreground font-mono">
                       <span>V: {log.videoCodec}</span>
@@ -332,7 +332,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'duration':
               return (
-                <TableCell key="duration" className={cn("text-right whitespace-nowrap hidden md:table-cell border-r border-zinc-200/50 dark:border-zinc-800/50 last:border-r-0")}>
+                <TableCell key="duration" className={cn("text-right whitespace-nowrap hidden md:table-cell border-r border-border last:border-r-0")}>
                   {log.isActuallyActive
                     ? (
                       <span className="text-amber-500/80 animate-pulse text-xs uppercase tracking-wider font-semibold flex flex-row items-center justify-end gap-1"><span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>Active</span>
@@ -344,17 +344,17 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'pauseCount':
               return (
-                <TableCell key="pauseCount" className={cn("hidden lg:table-cell text-sm border-r border-zinc-200/50 dark:border-zinc-800/50")}>{log.pauseCount ?? 0}</TableCell>
+                <TableCell key="pauseCount" className={cn("hidden lg:table-cell text-sm border-r border-border")}>{log.pauseCount ?? 0}</TableCell>
               );
 
             case 'audioChanges':
               return (
-                <TableCell key="audioChanges" className={cn("hidden lg:table-cell text-sm border-r border-zinc-200/50 dark:border-zinc-800/50")}>{log.audioChanges ?? 0}</TableCell>
+                <TableCell key="audioChanges" className={cn("hidden lg:table-cell text-sm border-r border-border")}>{log.audioChanges ?? 0}</TableCell>
               );
 
             case 'subtitleChanges':
               return (
-                <TableCell key="subtitleChanges" className={cn("hidden lg:table-cell text-sm border-r border-zinc-200/50 dark:border-zinc-800/50 last:border-r-0")}>{log.subtitleChanges ?? 0}</TableCell>
+                <TableCell key="subtitleChanges" className={cn("hidden lg:table-cell text-sm border-r border-border last:border-r-0")}>{log.subtitleChanges ?? 0}</TableCell>
               );
 
             default:
@@ -364,30 +364,30 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
       </TableRow>
 
       {/* Expanded row */}
-      <TableRow className={`${open ? '' : 'hidden'} bg-muted/10 dark:bg-slate-900/60`}> 
+      <TableRow className={`${open ? '' : 'hidden'} bg-muted/20`}>
         <TableCell colSpan={visibleColumns.length} className="px-4 py-3">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">{t('timeline.legend.pause')}:</span>
-                <Badge className="bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{log.pauseCount ?? 0}</Badge>
+                <span className="text-xs text-muted-foreground">{t('timeline.legend.pause')}:</span>
+                <Badge className="app-chip">{log.pauseCount ?? 0}</Badge>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">{t('timeline.legend.audio')}:</span>
-                <Badge className="bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{log.audioChanges ?? 0}</Badge>
+                <span className="text-xs text-muted-foreground">{t('timeline.legend.audio')}:</span>
+                <Badge className="app-chip">{log.audioChanges ?? 0}</Badge>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">{t('timeline.legend.subtitles')}:</span>
-                <Badge className="bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">{log.subtitleChanges ?? 0}</Badge>
+                <span className="text-xs text-muted-foreground">{t('timeline.legend.subtitles')}:</span>
+                <Badge className="app-chip">{log.subtitleChanges ?? 0}</Badge>
               </div>
-              <div className="ml-auto text-xs text-zinc-500">{t('colStartedAt')}: {log.startedAt ? new Date(log.startedAt).toLocaleString() : '—'} — {t('colEndedAt')}: {log.endedAt ? new Date(log.endedAt).toLocaleString() : '—'}</div>
+              <div className="ml-auto text-xs text-muted-foreground">{t('colStartedAt')}: {log.startedAt ? new Date(log.startedAt).toLocaleString() : '—'} — {t('colEndedAt')}: {log.endedAt ? new Date(log.endedAt).toLocaleString() : '—'}</div>
             </div>
 
             <div>
               <div className="flex items-center justify-between">
-                <div className="text-xs text-zinc-400 mb-2">{t('timeline.title')}</div>
+                <div className="text-xs text-muted-foreground mb-2">{t('timeline.title')}</div>
                 <div className="flex items-center gap-2 text-xs">
-                  <div className="hidden sm:flex items-center gap-2 text-zinc-500">
+                  <div className="hidden sm:flex items-center gap-2 text-muted-foreground">
                     <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-600 inline-block"/> ⏸ {t('timeline.legend.pause')}</span>
                     <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-sky-500 inline-block"/> 🔊 {t('timeline.legend.audio')}</span>
                     <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"/> 💬 {t('timeline.legend.subtitles')}</span>
@@ -395,7 +395,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                     <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-zinc-600 inline-block"/> • {t('timeline.label.default')}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-zinc-400">{t('timeline.toggle.exact')}</span>
+                    <span className="text-xs text-muted-foreground">{t('timeline.toggle.exact')}</span>
                   </div>
                 </div>
               </div>
@@ -403,14 +403,14 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
               <div className="w-full">
                 <div className="app-surface-soft border rounded-md p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="text-xs text-zinc-400">{t('timeline.title')}</div>
-                    <div className="text-xs text-zinc-400">{`Events: ${events.length}`}</div>
+                    <div className="text-xs text-muted-foreground">{t('timeline.title')}</div>
+                    <div className="text-xs text-muted-foreground">{`Events: ${events.length}`}</div>
                   </div>
                   <div className="relative h-8 md:h-6 app-surface-soft rounded-full overflow-visible py-2">
-                    <div className="absolute inset-0 bg-zinc-200/40 dark:bg-zinc-800/40 pointer-events-none" />
+                    <div className="absolute inset-0 bg-[var(--surface-nested)] pointer-events-none" />
 
                     {groupedEvents.length === 0 ? (
-                      <div className="absolute inset-0 flex items-center justify-center text-zinc-400">{t('timeline.noEvents')}</div>
+                      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">{t('timeline.noEvents')}</div>
                     ) : (
                       groupedEvents.map((g, idx: number) => {
                         const pos = Number(g.pos || 0);
@@ -428,7 +428,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                               <span className="leading-none">{meta.icon}</span>
                             </button>
                             {g.count > 1 && (
-                              <div className="mt-1 text-[10px] text-zinc-500 text-center">{g.count}</div>
+                              <div className="mt-1 text-[10px] text-muted-foreground text-center">{g.count}</div>
                             )}
                           </div>
                         );
@@ -436,7 +436,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                     )}
                   </div>
 
-                  <div className="flex justify-between text-[11px] text-zinc-500 mt-2 px-1">
+                  <div className="flex justify-between text-[11px] text-muted-foreground mt-2 px-1">
                     <div>0:00</div>
                     <div className="text-center">{formatTime(Math.floor(durationMs / 2))}</div>
                     <div className="text-right">{formatTime(durationMs)}</div>
@@ -446,7 +446,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
               <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
                 {groupedEvents.length === 0 && (
-                  <div className="text-zinc-400">{t('timeline.noEvents')}</div>
+                  <div className="text-muted-foreground">{t('timeline.noEvents')}</div>
                 )}
                     {groupedEvents.map((g, idx: number) => {
                   const meta = getEventMeta(g.repType);
@@ -456,7 +456,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                       <div className={`${meta.color} w-6 h-6 rounded-full flex items-center justify-center text-xs text-white`}>{meta.icon}</div>
                       <div className="flex-1">
                         <div className="text-[12px] font-medium">{meta.label}{g.count>1 ? ` · ${g.count}` : ''}</div>
-                        <div className="text-zinc-400 text-[11px]">{formatTime(g.pos)} — {Math.round((g.pos / durationMs) * 100)}%{detail ? ` · ${detail}` : ''}</div>
+                        <div className="text-muted-foreground text-[11px]">{formatTime(g.pos)} — {Math.round((g.pos / durationMs) * 100)}%{detail ? ` · ${detail}` : ''}</div>
                       </div>
                     </div>
                   );

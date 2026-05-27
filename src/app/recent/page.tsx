@@ -29,7 +29,7 @@ function getTypeBadge(type: string, tc: (k: string) => string) {
     case "Episode": return { label: tc('episode'), color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: Tv };
     case "MusicAlbum": return { label: tc('album'), color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30", icon: Music };
     case "Audio": return { label: tc('track'), color: "bg-orange-500/20 text-orange-400 border-orange-500/30", icon: Music };
-    default: return { label: type, color: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30", icon: BookOpen };
+    default: return { label: type, color: "bg-zinc-500/20 text-muted-foreground border-zinc-500/30", icon: BookOpen };
   }
 }
 
@@ -184,7 +184,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                   {/* Hover overlay with metadata */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
                     <h3 className="text-sm font-bold text-white truncate">{media.title}</h3>
-                    <div className="flex items-center gap-2 text-[11px] text-zinc-300 mt-1">
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-1">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {dateAdded.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" })}
@@ -196,7 +196,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                     {media.genres.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {media.genres.slice(0, 3).map(g => (
-                          <span key={g} className="text-[10px] bg-zinc-200/60 dark:bg-white/10 text-zinc-600 dark:text-zinc-300 px-1.5 py-0.5 rounded-full">{g}</span>
+                          <span key={g} className="text-[10px] bg-zinc-200/60 dark:bg-white/10 text-foreground/80 dark:text-slate-300 px-1.5 py-0.5 rounded-full">{g}</span>
                         ))}
                       </div>
                     )}
@@ -215,7 +215,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                   <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
                     <Clock className="w-3 h-3" />
                     {dateAdded.toLocaleDateString(locale, { day: "numeric", month: "short" })}
-                    {plays > 0 && <span className="text-zinc-400 ml-1">· {plays} {plays > 1 ? tc('views') : tc('view')}</span>}
+                    {plays > 0 && <span className="text-muted-foreground ml-1">· {plays} {plays > 1 ? tc('views') : tc('view')}</span>}
                   </p>
                 </div>
               </Link>
