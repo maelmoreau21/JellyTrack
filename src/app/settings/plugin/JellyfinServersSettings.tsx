@@ -363,17 +363,17 @@ export function JellyfinServersSettings() {
         <div
           className={`p-3 rounded-md flex flex-col gap-3 text-sm border sm:flex-row sm:items-center sm:justify-between ${
             pluginKeyReady
-              ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-              : 'bg-red-500/10 text-red-300 border-red-500/30'
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/30'
+              : 'bg-red-50 text-red-800 border-red-300 dark:bg-red-500/10 dark:text-red-200 dark:border-red-500/30'
           }`}
         >
             <div className="flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5" />
               <div>
-                <p className={`font-semibold ${pluginKeyReady ? 'text-emerald-100' : 'text-red-200'}`}>
+                <p className={`font-semibold ${pluginKeyReady ? 'text-emerald-900 dark:text-emerald-100' : 'text-red-900 dark:text-red-200'}`}>
                   {pluginKeyReady ? t('globalPluginKeyActive') : t('globalPluginKeyMissing')}
                 </p>
-                <p className={pluginKeyReady ? 'text-emerald-100/90' : 'text-red-200/90'}>
+                <p className={pluginKeyReady ? 'text-emerald-800 dark:text-emerald-100/90' : 'text-red-800 dark:text-red-200/90'}>
                   {pluginKeyReady
                     ? t('globalPluginKeyActiveDesc')
                     : t('globalPluginKeyMissingDesc')}
@@ -386,8 +386,8 @@ export function JellyfinServersSettings() {
               disabled={globalPluginKeyLoading}
               className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border text-xs font-medium disabled:opacity-60 ${
                 pluginKeyReady
-                  ? 'border-emerald-400/30 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-50'
-                  : 'border-red-400/30 bg-red-500/20 hover:bg-red-500/30 text-red-100'
+                  ? 'border-emerald-500/35 bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:border-emerald-400/30 dark:bg-emerald-500/20 dark:hover:bg-emerald-500/30 dark:text-emerald-50'
+                  : 'border-red-500/35 bg-red-100 text-red-900 hover:bg-red-200 dark:border-red-400/30 dark:bg-red-500/20 dark:hover:bg-red-500/30 dark:text-red-100'
               }`}
             >
               {globalPluginKeyLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}

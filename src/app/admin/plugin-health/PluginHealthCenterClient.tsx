@@ -316,7 +316,7 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
             return <Badge className="bg-red-500/15 text-red-400 border-red-500/30">{t("stateCritical")}</Badge>;
         }
         if (severity === "warning") {
-            return <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30">{t("stateWarning")}</Badge>;
+            return <Badge className="bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-400/40">{t("stateWarning")}</Badge>;
         }
         if (severity === "ok") {
             return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">{t("stateOk")}</Badge>;

@@ -14,10 +14,10 @@ import type { SafeLog, SafeTelemetryEvent } from '@/types/logs';
 export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: SafeLog; visibleColumns: string[]; onOpenDetails?: (log: SafeLog)=>void }) {
   const t = useTranslations('logs');
   const [open, setOpen] = useState(false);
-  const [bucketMs, setBucketMs] = useState<number>(0); // 0 = exact positions
+  const bucketMs = 0; // 0 = exact positions
 
   const isTranscode = String(log.playMethod || "").toLowerCase().includes("transcode");
-  const isParty = !!(log as any).partyId;
+  const isParty = Boolean((log as SafeLog & { partyId?: unknown }).partyId);
   const isAudioMedia = log.media?.type ? (String(log.media.type).toLowerCase().includes('audio') || String(log.media.type).toLowerCase() === 'track') : false;
   const hasNewCountryAnomaly = Boolean(log.anomalyFlags?.includes('new_country'));
   const hasIpBurstAnomaly = Boolean(log.anomalyFlags?.includes('ip_burst'));
@@ -74,7 +74,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
     const out = Array.from(map.entries()).map(([bucket, arr]) => {
       const posAvg = Math.floor(arr.reduce((s, a) => s + Number(a.positionMs || 0), 0) / arr.length);
-      const priority = ['pause', 'audio_change', 'subtitle_change', 'seek'];
+      const priority = ['pause', 'audio_change', 'subtitle_change', 'seek', 'replay', 'speed_change', 'stop'];
       let repType = arr[0].eventType;
       for (const p of priority) if (arr.some(a => a.eventType === p)) { repType = p; break; }
       return { key: bucket, pos: posAvg, events: arr, count: arr.length, repType };
@@ -97,11 +97,14 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
   const getEventMeta = (type: string | null | undefined) => {
     switch (type) {
-      case 'pause': return { color: 'bg-amber-600', label: t('timeline.label.pause'), icon: '⏸' };
-      case 'audio_change': return { color: 'bg-sky-500', label: t('timeline.label.audio_change'), icon: '🔊' };
-      case 'subtitle_change': return { color: 'bg-emerald-500', label: t('timeline.label.subtitle_change'), icon: '💬' };
-      case 'seek': return { color: 'bg-indigo-500', label: t('timeline.label.seek'), icon: '🔁' };
-      default: return { color: 'bg-zinc-700', label: String(type || t('timeline.label.default')).replace(/_/g, ' '), icon: '•' };
+      case 'pause': return { color: 'bg-amber-600', label: t('timeline.label.pause'), icon: 'P' };
+      case 'audio_change': return { color: 'bg-sky-500', label: t('timeline.label.audio_change'), icon: 'A' };
+      case 'subtitle_change': return { color: 'bg-emerald-500', label: t('timeline.label.subtitle_change'), icon: 'Sub' };
+      case 'seek': return { color: 'bg-orange-500', label: t('timeline.label.seek'), icon: 'S' };
+      case 'replay': return { color: 'bg-green-500', label: t('timeline.label.replay'), icon: 'R' };
+      case 'speed_change': return { color: 'bg-blue-500', label: t('timeline.label.speed_change'), icon: 'x' };
+      case 'stop': return { color: 'bg-rose-500', label: t('timeline.label.stop'), icon: 'End' };
+      default: return { color: 'bg-zinc-700', label: String(type || t('timeline.label.default')).replace(/_/g, ' '), icon: '-' };
     }
   };
 
@@ -111,6 +114,22 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
       const mdRaw = typeof ev.metadata === 'string' ? JSON.parse(ev.metadata) : ev.metadata;
       const md = mdRaw as Record<string, unknown> | undefined;
       if (!md) return '';
+
+      if (ev.eventType === 'seek' || ev.eventType === 'replay') {
+        const fromMs = Number(md.fromMs);
+        const toMs = Number(md.toMs);
+        const from = typeof md.fromLabel === 'string'
+          ? md.fromLabel
+          : Number.isFinite(fromMs) && fromMs >= 0
+            ? formatTime(fromMs)
+            : null;
+        const to = typeof md.toLabel === 'string'
+          ? md.toLabel
+          : Number.isFinite(toMs) && toMs >= 0
+            ? formatTime(toMs)
+            : null;
+        if (from !== null && to !== null) return `${from} -> ${to}`;
+      }
 
       const hasFrom = Object.prototype.hasOwnProperty.call(md, 'from');
       const hasTo = Object.prototype.hasOwnProperty.call(md, 'to');
@@ -380,6 +399,14 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                 <span className="text-xs text-muted-foreground">{t('timeline.legend.subtitles')}:</span>
                 <Badge className="app-chip">{log.subtitleChanges ?? 0}</Badge>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{t('timeline.label.seek')}:</span>
+                <Badge className="app-chip">{log.seekCount ?? events.filter((event) => event.eventType === 'seek').length}</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{t('timeline.label.replay')}:</span>
+                <Badge className="app-chip">{log.rewatchCount ?? events.filter((event) => event.eventType === 'replay').length}</Badge>
+              </div>
               <div className="ml-auto text-xs text-muted-foreground">{t('colStartedAt')}: {log.startedAt ? new Date(log.startedAt).toLocaleString() : '—'} — {t('colEndedAt')}: {log.endedAt ? new Date(log.endedAt).toLocaleString() : '—'}</div>
             </div>
 
@@ -388,11 +415,12 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                 <div className="text-xs text-muted-foreground mb-2">{t('timeline.title')}</div>
                 <div className="flex items-center gap-2 text-xs">
                   <div className="hidden sm:flex items-center gap-2 text-muted-foreground">
-                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-600 inline-block"/> ⏸ {t('timeline.legend.pause')}</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-sky-500 inline-block"/> 🔊 {t('timeline.legend.audio')}</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"/> 💬 {t('timeline.legend.subtitles')}</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-indigo-500 inline-block"/> 🔁 {t('timeline.label.seek')}</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-zinc-600 inline-block"/> • {t('timeline.label.default')}</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-600 inline-block"/> Pause {t('timeline.legend.pause')}</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-sky-500 inline-block"/> A {t('timeline.legend.audio')}</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"/> Sub {t('timeline.legend.subtitles')}</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-500 inline-block"/> Skip {t('timeline.label.seek')}</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500 inline-block"/> Replay {t('timeline.label.replay')}</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-zinc-600 inline-block"/> Other {t('timeline.label.default')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-muted-foreground">{t('timeline.toggle.exact')}</span>
@@ -416,7 +444,6 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                         const pos = Number(g.pos || 0);
                         const pct = Number.isFinite(durationMs) && durationMs > 0 ? Math.min(99, Math.max(1, Math.round((pos / durationMs) * 100))) : 1;
                         const meta = getEventMeta(g.repType);
-                        const size = g.count > 1 ? 10 : 8;
                         const detail = formatChangeDetail(g.events && g.events[0] ? g.events[0] : null);
                         return (
                           <div key={g.key ?? idx} className="absolute top-1/2 z-20" style={{ left: `${pct}%`, transform: 'translate(-50%, -50%)' }}>

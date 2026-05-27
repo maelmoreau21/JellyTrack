@@ -46,6 +46,25 @@ function GlowDot({ cx, cy, fill }: GlowDotProps) {
     );
 }
 
+function formatCompactHours(rawValue: unknown): string {
+    const value = Number(rawValue);
+    if (!Number.isFinite(value)) return String(rawValue ?? "");
+    if (value === 0) return "0h";
+
+    const absValue = Math.abs(value);
+    const sign = value < 0 ? "-" : "";
+    if (absValue < 1 / 60) {
+        return `${sign}${Math.max(1, Math.round(absValue * 3600))}s`;
+    }
+    if (absValue < 1) {
+        return `${sign}${Math.round(absValue * 60)}m`;
+    }
+    if (absValue < 10) {
+        return `${sign}${absValue.toFixed(1).replace(/\.0$/, "")}h`;
+    }
+    return `${sign}${Math.round(absValue)}h`;
+}
+
 export function ComposedTrendChart({ data, series }: { data: TrendData[], series?: ChartSeries[] }) {
     const t = useTranslations('charts');
     const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -56,7 +75,7 @@ export function ComposedTrendChart({ data, series }: { data: TrendData[], series
             ? value
             : String(value ?? "");
         if (label === t('server')) return [t('maxActiveStreams', { count: countValue }), label];
-        return [`${Number(value).toFixed(1)}h`, label];
+        return [formatCompactHours(value), label];
     };
 
     const toggleLegend = (payload: unknown) => {
@@ -94,7 +113,7 @@ export function ComposedTrendChart({ data, series }: { data: TrendData[], series
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => `${val}h`}
+                    tickFormatter={formatCompactHours}
                 />
                 <YAxis
                     yAxisId="right"

@@ -69,6 +69,19 @@ function parseFinitePositive(value: unknown): number | null {
     return null;
 }
 
+function parseFiniteNonNegative(value: unknown): number | null {
+    if (typeof value === "number") {
+        return Number.isFinite(value) && value >= 0 ? value : null;
+    }
+
+    if (typeof value === "string") {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+    }
+
+    return null;
+}
+
 function ticksToMs(value: number | null): number | null {
     if (!value || value <= 0) return null;
     return value / 10_000;
@@ -495,11 +508,11 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         const metadata = parseTelemetryMetadata(event.metadata);
 
         if ((eventType === "seek" || eventType === "replay") && metadata) {
-            const fromMs = parseFinitePositive(metadata.fromMs) ?? Number(event.positionMs);
-            const toMs = parseFinitePositive(metadata.toMs) ?? Number(event.positionMs);
-            const label = typeof metadata.rangeLabel === "string"
-                ? metadata.rangeLabel
-                : `${formatPositionMs(Math.min(fromMs, toMs))} -> ${formatPositionMs(Math.max(fromMs, toMs))}`;
+            const fromMs = parseFiniteNonNegative(metadata.fromMs) ?? Number(event.positionMs);
+            const toMs = parseFiniteNonNegative(metadata.toMs) ?? Number(event.positionMs);
+            const fromLabel = typeof metadata.fromLabel === "string" ? metadata.fromLabel : formatPositionMs(fromMs);
+            const toLabel = typeof metadata.toLabel === "string" ? metadata.toLabel : formatPositionMs(toMs);
+            const label = `${fromLabel} -> ${toLabel}`;
             const key = `${eventType}:${label}`;
             const entry = jumpSignalMap.get(key) || { eventType: eventType as "seek" | "replay", label, count: 0, playbacks: new Set<string>() };
             entry.count += 1;

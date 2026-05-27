@@ -52,6 +52,15 @@ function formatTime(ms: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+function parsePositionMs(value: unknown): number | null {
+  const parsed = typeof value === "number"
+    ? value
+    : typeof value === "string"
+      ? Number(value)
+      : NaN;
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
 function formatRate(value: unknown): string | null {
   const numberValue = typeof value === "number"
     ? value
@@ -70,9 +79,11 @@ function parseChangeDetail(eventType: string, metadata: unknown): string {
     if (!md) return "";
 
     if (eventType === "seek" || eventType === "replay") {
-      const from = typeof md.fromLabel === "string" ? md.fromLabel : null;
-      const to = typeof md.toLabel === "string" ? md.toLabel : null;
-      if (from && to) return `${from} -> ${to}`;
+      const fromMs = parsePositionMs(md.fromMs);
+      const toMs = parsePositionMs(md.toMs);
+      const from = typeof md.fromLabel === "string" ? md.fromLabel : fromMs !== null ? formatTime(fromMs) : null;
+      const to = typeof md.toLabel === "string" ? md.toLabel : toMs !== null ? formatTime(toMs) : null;
+      if (from !== null && to !== null) return `${from} -> ${to}`;
     }
 
     if (eventType === "speed_change") {
