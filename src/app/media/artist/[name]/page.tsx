@@ -327,7 +327,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                         <ArrowLeft className="w-4 h-4" /> {tProfile('library')}
                     </Link>
                     <span className="text-zinc-400">/</span>
-                    <span className="text-zinc-900 dark:text-white font-medium truncate max-w-xs">{artistName}</span>
+                    <span className="text-zinc-900 dark:text-slate-200 font-medium truncate max-w-xs">{artistName}</span>
                 </nav>
 
                 <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">

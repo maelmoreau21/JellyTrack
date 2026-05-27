@@ -41,7 +41,7 @@ function GlowDot({ cx, cy, fill }: GlowDotProps) {
     return (
         <g>
             <circle cx={cx} cy={cy} r={8} fill={fill} fillOpacity={0.2} />
-            <circle cx={cx} cy={cy} r={5} fill={fill} stroke="#0c0c14" strokeWidth={2} />
+            <circle cx={cx} cy={cy} r={5} fill={fill} stroke="var(--background)" strokeWidth={2} />
         </g>
     );
 }

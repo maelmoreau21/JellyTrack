@@ -364,7 +364,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
       </TableRow>
 
       {/* Expanded row */}
-      <TableRow className={`${open ? '' : 'hidden'} bg-muted/10 dark:bg-zinc-950/60`}> 
+      <TableRow className={`${open ? '' : 'hidden'} bg-muted/10 dark:bg-slate-900/60`}> 
         <TableCell colSpan={visibleColumns.length} className="px-4 py-3">
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3 flex-wrap">

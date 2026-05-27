@@ -977,17 +977,17 @@ export default async function DashboardPage(props: {
           <div className="flex flex-wrap items-center gap-3 md:gap-6 ml-0 md:ml-2">
             <div className="flex items-center gap-1.5">
               <PlayCircle className="h-3.5 w-3.5 text-blue-400" />
-              <span className="text-sm font-semibold text-zinc-900 dark:text-white">{metrics.todayPlays}</span>
+              <span className="text-sm font-semibold metric-glow-blue">{metrics.todayPlays}</span>
               <span className="text-xs text-zinc-500">{t('readings')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 text-orange-400" />
-              <span className="text-sm font-semibold text-zinc-900 dark:text-white">{metrics.todayHours}h</span>
+              <span className="text-sm font-semibold metric-glow-amber">{metrics.todayHours}h</span>
               <span className="text-xs text-zinc-500">{t('watched')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="text-sm font-semibold text-zinc-900 dark:text-white">{metrics.todayActiveUsers}</span>
+              <span className="text-sm font-semibold metric-glow-emerald">{metrics.todayActiveUsers}</span>
               <span className="text-xs text-zinc-500">{t('activeUsers')}</span>
             </div>
           </div>
@@ -1010,7 +1010,7 @@ export default async function DashboardPage(props: {
                     <Activity className="h-4 w-4 text-emerald-500" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{activeStreamsCount}</div>
+                    <div className="text-2xl font-bold metric-glow-emerald">{activeStreamsCount}</div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                       {t('managedByServer')}
                     </p>
@@ -1024,7 +1024,7 @@ export default async function DashboardPage(props: {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-2">
-                      <div className="text-2xl font-bold">{metrics.totalPlays.toLocaleString()}</div>
+                      <div className="text-2xl font-bold metric-glow-cyan">{metrics.totalPlays.toLocaleString()}</div>
                       {timeRange !== "all" && metrics.playsGrowth !== 0 && (
                         <div className={`flex items-center text-xs font-semibold px-1.5 py-0.5 rounded-full ${metrics.playsGrowth >= 0 ? 'text-emerald-500 bg-emerald-500/10' : 'text-red-500 bg-red-500/10'}`}>
                           {metrics.playsGrowth >= 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
@@ -1044,7 +1044,7 @@ export default async function DashboardPage(props: {
                     <MonitorPlay className="h-4 w-4 text-primary" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{metrics.directPlayPercent}%<span className="text-xs font-normal text-muted-foreground ml-1">DP</span></div>
+                    <div className="text-2xl font-bold metric-glow-violet">{metrics.directPlayPercent}%<span className="text-xs font-normal text-muted-foreground ml-1">DP</span></div>
                     <p className="text-xs text-muted-foreground mt-1">{t('directPlayDesc')}</p>
                   </CardContent>
                 </Card>
@@ -1057,7 +1057,7 @@ export default async function DashboardPage(props: {
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-2">
-                        <div className="text-2xl font-bold">{metrics.hoursWatched.toLocaleString()}h</div>
+                        <div className="text-2xl font-bold metric-glow-amber">{metrics.hoursWatched.toLocaleString()}h</div>
                         {timeRange !== "all" && (
                           <div className={`flex items-center text-xs font-semibold px-1.5 py-0.5 rounded-full ${metrics.hoursGrowth >= 0 ? 'text-emerald-500 bg-emerald-500/10' : 'text-red-500 bg-red-500/10'}`}>
                             {metrics.hoursGrowth >= 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
@@ -1079,7 +1079,7 @@ export default async function DashboardPage(props: {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center gap-2">
-                      <div className="text-2xl font-bold">{metrics.currentActiveUsers}</div>
+                      <div className="text-2xl font-bold metric-glow-pink">{metrics.currentActiveUsers}</div>
                       {timeRange !== "all" && metrics.activeUsersGrowth !== 0 && (
                         <div className={`flex items-center text-xs font-semibold px-1.5 py-0.5 rounded-full ${metrics.activeUsersGrowth >= 0 ? 'text-emerald-500 bg-emerald-500/10' : 'text-red-500 bg-red-500/10'}`}>
                           {metrics.activeUsersGrowth >= 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
@@ -1103,7 +1103,7 @@ export default async function DashboardPage(props: {
                       <Film className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-2xl font-bold text-zinc-900 dark:text-white">{metrics.breakdown.movieViews} <span className="text-sm font-normal text-zinc-500">{t('moviesViews')}</span></div>
+                      <div className="text-2xl font-bold metric-glow-blue">{metrics.breakdown.movieViews} <span className="text-sm font-normal text-zinc-500 dark:text-slate-400">{t('moviesViews')}</span></div>
                       <p className="text-xs text-blue-500 font-medium">{metrics.breakdown.movieHours}h {t('moviesWatched')}</p>
                     </CardContent>
                   </Card>
@@ -1116,7 +1116,7 @@ export default async function DashboardPage(props: {
                       <Tv className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-2xl font-bold text-zinc-900 dark:text-white">{metrics.breakdown.seriesViews} <span className="text-sm font-normal text-zinc-500">{t('seriesPlays')}</span></div>
+                      <div className="text-2xl font-bold metric-glow-emerald">{metrics.breakdown.seriesViews} <span className="text-sm font-normal text-zinc-500 dark:text-slate-400">{t('seriesPlays')}</span></div>
                       <p className="text-xs text-green-500 font-medium">{metrics.breakdown.seriesHours}h {t('seriesWatched')}</p>
                     </CardContent>
                   </Card>
@@ -1129,7 +1129,7 @@ export default async function DashboardPage(props: {
                       <Music className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-2xl font-bold text-zinc-900 dark:text-white">{metrics.breakdown.musicViews} <span className="text-sm font-normal text-zinc-500">{t('musicTitles')}</span></div>
+                      <div className="text-2xl font-bold metric-glow-amber">{metrics.breakdown.musicViews} <span className="text-sm font-normal text-zinc-500 dark:text-slate-400">{t('musicTitles')}</span></div>
                       <p className="text-xs text-yellow-500 font-medium">{metrics.breakdown.musicHours}h {t('musicListened')}</p>
                     </CardContent>
                   </Card>
@@ -1142,7 +1142,7 @@ export default async function DashboardPage(props: {
                       <BookOpen className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-2xl font-bold text-zinc-900 dark:text-white">{metrics.breakdown.booksViews} <span className="text-sm font-normal text-zinc-500">{t('booksOpened')}</span></div>
+                      <div className="text-2xl font-bold metric-glow-violet">{metrics.breakdown.booksViews} <span className="text-sm font-normal text-zinc-500 dark:text-slate-400">{t('booksOpened')}</span></div>
                       <p className="text-xs text-purple-500 font-medium">{metrics.breakdown.booksHours}h {t('booksSpent')}</p>
                     </CardContent>
                   </Card>
@@ -1317,7 +1317,7 @@ export default async function DashboardPage(props: {
               /* Expansion: Server Load Timeline */
               <div key="server-load" className="grid gap-4 md:grid-cols-1">
                 <CollapsibleCard storageKey="serverLoad" title={t('serverLoad')} description={t('serverLoadDesc')}>
-                  <ComposedTrendChart data={metrics.serverLoadData} series={[{ key: "peakStreams", color: "#ef4444", name: t('activeStreams'), type: "line" }]} />
+                  <ComposedTrendChart data={metrics.serverLoadData} series={[{ key: "peakStreams", color: "var(--chart-soft-7)", name: t('activeStreams'), type: "line" }]} />
                 </CollapsibleCard>
               </div>
             ]} />

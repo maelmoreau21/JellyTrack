@@ -103,7 +103,7 @@ export default function SystemLogsListClient({ logs, locale }: { logs: SystemLog
                                     <div className="flex flex-col gap-2 max-w-xl">
                                         <span className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">{entry.message || entry.action}</span>
                                         {entry.details && typeof entry.details === 'object' && Object.keys(entry.details).length > 0 && (
-                                            <div className="text-[10px] bg-zinc-100/30 dark:bg-zinc-950/50 p-3 rounded-xl mt-1 font-mono break-all max-h-40 overflow-y-auto border border-zinc-200/50 dark:border-zinc-800/80 shadow-inner">
+                                            <div className="text-[10px] bg-zinc-100/30 dark:bg-slate-900/60 p-3 rounded-xl mt-1 font-mono break-all max-h-40 overflow-y-auto border border-zinc-200/50 dark:border-white/10 shadow-inner">
                                                 <pre className="whitespace-pre-wrap opacity-80">{JSON.stringify(entry.details, null, 2)}</pre>
                                             </div>
                                         )}

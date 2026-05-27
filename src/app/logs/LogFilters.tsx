@@ -275,24 +275,24 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="space-y-1.5 flex flex-col">
                             <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('clientFilter') || 'Client / App'}</label>
-                            <Input name="client" type="text" placeholder="ex: Jellyfin Web, Android" defaultValue={initialClient} className="h-9 bg-white dark:bg-zinc-950/50" />
+                            <Input name="client" type="text" placeholder="ex: Jellyfin Web, Android" defaultValue={initialClient} className="h-9 bg-white dark:bg-slate-900/70" />
                         </div>
                         <div className="space-y-1.5 flex flex-col">
                             <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('audioFilter') || 'Audio (Code/Langue)'}</label>
-                            <Input name="audio" type="text" placeholder="ex: aac, fre, eng" defaultValue={initialAudio} className="h-9 bg-white dark:bg-zinc-950/50" />
+                            <Input name="audio" type="text" placeholder="ex: aac, fre, eng" defaultValue={initialAudio} className="h-9 bg-white dark:bg-slate-900/70" />
                         </div>
                         <div className="space-y-1.5 flex flex-col">
                             <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('subtitleFilter') || 'Sous-titres (Code/Langue)'}</label>
-                            <Input name="subtitle" type="text" placeholder="ex: subrip, eng, fre" defaultValue={initialSubtitle} className="h-9 bg-white dark:bg-zinc-950/50" />
+                            <Input name="subtitle" type="text" placeholder="ex: subrip, eng, fre" defaultValue={initialSubtitle} className="h-9 bg-white dark:bg-slate-900/70" />
                         </div>
                         <div className="space-y-1.5 grid grid-cols-2 gap-2">
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('dateFrom') || 'Date (Depuis)'}</label>
-                                <Input name="dateFrom" type="date" defaultValue={initialDateFrom} className="h-9 bg-white dark:bg-zinc-950/50" />
+                                <Input name="dateFrom" type="date" defaultValue={initialDateFrom} className="h-9 bg-white dark:bg-slate-900/70" />
                             </div>
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('dateTo') || 'Date (Jusqu\'au)'}</label>
-                                <Input name="dateTo" type="date" defaultValue={initialDateTo} className="h-9 bg-white dark:bg-zinc-950/50" />
+                                <Input name="dateTo" type="date" defaultValue={initialDateTo} className="h-9 bg-white dark:bg-slate-900/70" />
                             </div>
                         </div>
                     </div>

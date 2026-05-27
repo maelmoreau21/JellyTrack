@@ -91,7 +91,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                                 </linearGradient>
                                 <mask id="holeMaskSidebar">
                                     <rect x="0" y="0" width="100" height="100" fill="#ffffff" />
-                                    <circle cx="50" cy="39" r="10" fill="#000000" />
+                                    <circle cx="50" cy="39" r="10" fill="black" />
                                 </mask>
                             </defs>
                             <path d="M 20 55 A 30 30 0 0 1 80 55 Z" fill="url(#jellyGradSidebar)" mask="url(#holeMaskSidebar)" />
@@ -187,7 +187,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                             </linearGradient>
                             <mask id="holeMaskMobile">
                                 <rect x="0" y="0" width="100" height="100" fill="#ffffff" />
-                                <circle cx="50" cy="39" r="10" fill="#000000" />
+                                <circle cx="50" cy="39" r="10" fill="black" />
                             </mask>
                         </defs>
                         <path d="M 20 55 A 30 30 0 0 1 80 55 Z" fill="url(#jellyGradMobile)" mask="url(#holeMaskMobile)" />

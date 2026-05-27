@@ -69,9 +69,9 @@ export default function StatsDeepAnalysis() {
     };
 
     const sections = [
-        { title: t('topDirectors') || 'Top Directors', icon: Video, items: data.topDirectors, color: "text-sky-400", bg: "bg-sky-400/10", actionText: t('topDirectors') || 'directed titles' },
-        { title: t('topActors') || 'Top Actors', icon: User, items: data.topActors, color: "text-violet-400", bg: "bg-violet-400/10", actionText: t('topActors') || 'appearances' },
-        { title: t('topStudios') || 'Top Studios', icon: Building2, items: data.topStudios, color: "text-emerald-400", bg: "bg-emerald-400/10", actionText: t('topStudios') || 'produced titles' },
+        { title: t('topDirectors') || 'Top Directors', icon: Video, items: data.topDirectors, color: "text-sky-400", bg: "bg-sky-400/10", glow: "metric-glow-cyan", actionText: t('topDirectors') || 'directed titles' },
+        { title: t('topActors') || 'Top Actors', icon: User, items: data.topActors, color: "text-violet-400", bg: "bg-violet-400/10", glow: "metric-glow-violet", actionText: t('topActors') || 'appearances' },
+        { title: t('topStudios') || 'Top Studios', icon: Building2, items: data.topStudios, color: "text-emerald-400", bg: "bg-emerald-400/10", glow: "metric-glow-emerald", actionText: t('topStudios') || 'produced titles' },
     ];
 
     return (
@@ -101,7 +101,7 @@ export default function StatsDeepAnalysis() {
                                         <div className="flex-1 min-w-0 pr-4">
                                             <div className="text-sm font-bold text-foreground truncate group-hover/item:text-primary transition-colors">{item.name}</div>
                                             <div className="text-[11px] font-medium text-muted-foreground truncate mt-0.5 group-hover/item:text-foreground/70 transition-colors">
-                                                <span className="text-primary font-bold">{item.count}</span> {section.actionText}
+                                                <span className={`${section.glow} font-bold`}>{item.count}</span> {section.actionText}
                                             </div>
                                         </div>
                                         <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 group-hover/item:text-primary transition-colors" />

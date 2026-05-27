@@ -64,9 +64,9 @@ function StreamCard({ stream }: { stream: LiveStream }) {
     }
 
     return (
-        <div className="flex items-center gap-4 p-3 border rounded-lg border-border/50 app-surface-soft hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <div className="flex items-center gap-4 p-3 border rounded-lg border-border/50 app-surface-soft hover:bg-slate-900/5 dark:hover:bg-white/5 transition-colors">
             {mediaHref ? (
-                <Link href={mediaHref} className="-m-1 flex min-w-0 flex-1 items-center gap-4 rounded-md p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5">
+                <Link href={mediaHref} className="-m-1 flex min-w-0 flex-1 items-center gap-4 rounded-md p-1 transition-colors hover:bg-slate-900/5 dark:hover:bg-white/5">
                     {posterId ? (
                         <div className={`relative ${widthClass} ${aspectClass} bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10`}>
                             <FallbackImage
@@ -357,7 +357,7 @@ export function LiveStreamsPanel({
                     {streams.length >= 3 && (
                         <button
                                 onClick={() => setForceCards(!forceCards)}
-                                className="p-1.5 rounded-md border border-border/50 app-surface-soft hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                                className="p-1.5 rounded-md border border-border/50 app-surface-soft hover:bg-slate-900/5 dark:hover:bg-white/5 transition-colors"
                                 title={forceCards ? t('timelineView') : t('cardsView')}
                             >
                             {forceCards ? <Rows3 className="w-4 h-4 text-muted-foreground" /> : <LayoutList className="w-4 h-4 text-muted-foreground" />}

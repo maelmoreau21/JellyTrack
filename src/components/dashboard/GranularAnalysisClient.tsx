@@ -85,7 +85,7 @@ export function GranularAnalysisClient({
                         <StandardBarChart 
                             data={data.dailyData} 
                             dataKey="totalPlays" 
-                            fill="#3b82f6" 
+                            fill="var(--chart-soft-5)" 
                             name={t.playsPerDay} 
                             onClick={(d) => handleLogDrillDown({ dateFrom: d.time, dateTo: d.time })}
                         />
@@ -101,7 +101,7 @@ export function GranularAnalysisClient({
                         <StandardAreaChart 
                             data={data.dailyData} 
                             dataKey="totalDuration" 
-                            stroke="#f59e0b" 
+                            stroke="var(--chart-soft-6)" 
                             name={t.durationPerDay} 
                             onClick={(d) => handleLogDrillDown({ dateFrom: d.time, dateTo: d.time })}
                         />
@@ -238,7 +238,7 @@ export function GranularAnalysisClient({
                                             className="h-full rounded-full transition-all duration-300"
                                             style={{
                                                 width: `${m.completion}%`,
-                                                backgroundColor: m.completion < 10 ? 'var(--chart-5)' : m.completion < 50 ? 'var(--chart-4)' : 'var(--chart-3)'
+                                                backgroundColor: m.completion < 10 ? 'var(--chart-soft-7)' : m.completion < 50 ? 'var(--chart-soft-6)' : 'var(--chart-soft-4)'
                                             }}
                                         />
                                     </div>

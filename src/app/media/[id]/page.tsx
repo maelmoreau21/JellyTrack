@@ -639,7 +639,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                         <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${albumId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{albumName}</Link></>
                     )}
                     <ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
-                    <span className="text-zinc-900 dark:text-white font-medium truncate max-w-xs">{media.title}</span>
+                    <span className="text-zinc-900 dark:text-slate-200 font-medium truncate max-w-xs">{media.title}</span>
                 </nav>
 
                 {/* Quick navigation for Episodes / Audio tracks */}
@@ -669,7 +669,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 )}
 
                 {/* Header with Backdrop */}
-                <div className="relative group overflow-hidden rounded-2xl border border-zinc-200/50 dark:border-white/5 shadow-2xl bg-zinc-100 dark:bg-zinc-950">
+                <div className="relative group overflow-hidden rounded-2xl border border-zinc-200/50 dark:border-white/5 shadow-2xl bg-zinc-100 dark:bg-slate-900">
                     {hasBackdrop && (
                         <div className="absolute inset-0 z-0">
                             <FallbackImage 
@@ -703,7 +703,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                         />
                                     </div>
                                 ) : (
-                                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-white">{media.title}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-slate-200">{media.title}</h1>
                                 )}
                                 <HierarchyLinks />
                                 <div className="flex items-center gap-2 mt-4 flex-wrap">
@@ -758,7 +758,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                         />
                                     </div>
                                     <div className="px-1">
-                                        <p className="text-xs font-bold text-zinc-900 dark:text-white truncate" title={person.Name}>{person.Name}</p>
+                                        <p className="text-xs font-bold text-zinc-900 dark:text-slate-200 truncate" title={person.Name}>{person.Name}</p>
                                         <p className="text-[10px] text-zinc-500 truncate" title={person.Role}>{person.Role || person.Type}</p>
                                     </div>
                                 </div>

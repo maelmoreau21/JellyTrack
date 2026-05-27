@@ -30,7 +30,7 @@ export default async function AboutPage() {
             </div>
 
             {/* Features */}
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Heart className="w-5 h-5 text-rose-400" />
@@ -50,7 +50,7 @@ export default async function AboutPage() {
             </Card>
 
             {/* Tech Stack */}
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Server className="w-5 h-5 text-sky-400" />
@@ -62,7 +62,7 @@ export default async function AboutPage() {
                         {techStackNames.map((name, i) => {
                             const Icon = techStackIcons[i];
                             return (
-                                <div key={name} className="flex items-start gap-3 p-3 rounded-lg bg-zinc-100/50 dark:bg-black/20 border border-zinc-200/50 dark:border-zinc-800/50">
+                                <div key={name} className="flex items-start gap-3 p-3 rounded-lg bg-zinc-100/50 dark:bg-slate-900/60 border border-zinc-200/50 dark:border-white/10">
                                     <Icon className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                                     <div>
                                         <div className="flex items-baseline gap-1.5">
@@ -79,7 +79,7 @@ export default async function AboutPage() {
             </Card>
 
             {/* Links & Credits */}
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Github className="w-5 h-5" />

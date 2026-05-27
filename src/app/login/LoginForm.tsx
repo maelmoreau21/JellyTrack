@@ -66,7 +66,7 @@ export default function LoginForm() {
                             id="username"
                             required
                             placeholder="Jellyfin User"
-                            className="pl-10 bg-zinc-100/80 dark:bg-black/50 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white focus-visible:ring-indigo-500 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 h-10"
+                            className="pl-10 bg-zinc-100/80 dark:bg-slate-900/70 border-zinc-300 dark:border-white/10 text-zinc-900 dark:text-slate-200 focus-visible:ring-cyan-400 placeholder:text-zinc-400 dark:placeholder:text-slate-500 h-10"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                         />
@@ -82,14 +82,14 @@ export default function LoginForm() {
                             type="password"
                             required
                             placeholder=".........."
-                            className="pl-10 bg-zinc-100/80 dark:bg-black/50 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white focus-visible:ring-indigo-500 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 h-10"
+                            className="pl-10 bg-zinc-100/80 dark:bg-slate-900/70 border-zinc-300 dark:border-white/10 text-zinc-900 dark:text-slate-200 focus-visible:ring-cyan-400 placeholder:text-zinc-400 dark:placeholder:text-slate-500 h-10"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-md border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-100/60 dark:bg-black/30 p-3">
+                <div className="flex items-start gap-3 rounded-md border border-zinc-200/70 dark:border-white/10 bg-zinc-100/60 dark:bg-slate-900/60 p-3">
                     <input
                         id="rememberMe"
                         type="checkbox"

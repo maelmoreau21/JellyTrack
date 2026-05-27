@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList, ReferenceLine } from "recharts";
 import ResponsiveContainer from "../../../components/charts/ResponsiveContainerGuard";
+import { chartGridColor, chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
 
 interface DropoffData {
     range: string;
@@ -63,19 +64,19 @@ export default function MediaDropoffChart({ data, markers = [] }: { data: Dropof
         <div className="relative h-full w-full">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={enrichedData} margin={{ top: 26, right: 20, bottom: 5, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} vertical={false} />
                     <XAxis
                         dataKey="label"
-                        tick={{ fill: '#a1a1aa', fontSize: 10 }}
+                        tick={{ fill: 'var(--chart-axis-color)', fontSize: 10 }}
                         angle={-30}
                         textAnchor="end"
                         height={60}
                     />
-                    <YAxis tick={{ fill: '#a1a1aa', fontSize: 12 }} allowDecimals={false} />
+                    <YAxis tick={{ fill: 'var(--chart-axis-color)', fontSize: 12 }} allowDecimals={false} />
                     <Tooltip
-                        contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#f4f4f5' }}
-                        labelStyle={{ color: '#e4e4e7' }}
-                        itemStyle={{ color: '#e4e4e7' }}
+                        contentStyle={chartTooltipStyle}
+                        labelStyle={chartLabelStyle}
+                        itemStyle={chartItemStyle}
                         formatter={(value: unknown, _name: unknown, props?: { payload?: { pct?: number; range?: string } }) => {
                             const count = Number(value ?? 0);
                             const safeCount = Number.isFinite(count) ? count : 0;
@@ -103,7 +104,7 @@ export default function MediaDropoffChart({ data, markers = [] }: { data: Dropof
                                 const pct = Number(v ?? 0);
                                 return Number.isFinite(pct) && pct > 0 ? `${pct}%` : '';
                             }}
-                            style={{ fill: '#a1a1aa', fontSize: 10 }}
+                            style={{ fill: 'var(--chart-label-color)', fontSize: 10 }}
                         />
                         {enrichedData.map((_, index) => {
                             // Gradient: red (early stop) to green (completed)
@@ -122,7 +123,7 @@ export default function MediaDropoffChart({ data, markers = [] }: { data: Dropof
                     {markerLines.map((marker) => (
                         <div
                             key={`legend-${marker.key}`}
-                            className="inline-flex items-center gap-2 rounded-md border border-zinc-700/60 bg-zinc-950/80 px-2 py-1 text-[10px] text-zinc-100"
+                            className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/85 px-2 py-1 text-[10px] text-slate-200"
                         >
                             <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: marker.color }} />
                             <span>{marker.label}</span>

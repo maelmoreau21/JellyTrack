@@ -45,7 +45,7 @@ export function HardwareMonitor() {
                     </div>
                     <div>
                         <p className="text-xs font-medium text-zinc-400">{t('cpuUsage')}</p>
-                        <p className="text-xl font-bold">{stats.cpu.usagePercent}%</p>
+                        <p className="text-xl font-bold metric-glow-blue">{stats.cpu.usagePercent}%</p>
                     </div>
                 </CardContent>
             </Card>
@@ -57,7 +57,7 @@ export function HardwareMonitor() {
                     </div>
                     <div>
                         <p className="text-xs font-medium text-zinc-400">{t('ram', { total: stats.memory.totalGb })}</p>
-                        <p className="text-xl font-bold">{stats.memory.usagePercent}%</p>
+                        <p className="text-xl font-bold metric-glow-violet">{stats.memory.usagePercent}%</p>
                     </div>
                 </CardContent>
             </Card>
@@ -69,7 +69,7 @@ export function HardwareMonitor() {
                     </div>
                     <div>
                         <p className="text-xs font-medium text-zinc-400">{t('temperature')}</p>
-                        <p className="text-xl font-bold">
+                        <p className="text-xl font-bold metric-glow-rose">
                             {stats.temperature.main > 0 ? `${stats.temperature.main}°C` : 'N/A'}
                         </p>
                     </div>

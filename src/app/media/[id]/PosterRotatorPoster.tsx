@@ -57,7 +57,7 @@ export default function PosterRotatorPoster({ mediaId, serverId, title, src, can
                         type="button"
                         size="icon-sm"
                         variant="secondary"
-                        className="bg-white/90 text-zinc-900 shadow-md hover:bg-white dark:bg-zinc-950/90 dark:text-zinc-100"
+                        className="bg-white/90 text-zinc-900 shadow-md hover:bg-white dark:bg-slate-900/90 dark:text-slate-200"
                         onClick={rotatePoster}
                         disabled={status === "loading"}
                         title={t("posterRotate")}
@@ -66,7 +66,7 @@ export default function PosterRotatorPoster({ mediaId, serverId, title, src, can
                         <RefreshCw className={status === "loading" ? "animate-spin" : ""} />
                     </Button>
                     {status !== "idle" && status !== "loading" && (
-                        <div className="max-w-48 rounded-md border border-zinc-200/70 bg-white/95 px-2 py-1 text-[11px] font-medium text-zinc-700 shadow-lg dark:border-zinc-700/70 dark:bg-zinc-950/95 dark:text-zinc-200">
+                        <div className="max-w-48 rounded-md border border-zinc-200/70 bg-white/95 px-2 py-1 text-[11px] font-medium text-zinc-700 shadow-lg dark:border-white/10 dark:bg-slate-900/95 dark:text-slate-200">
                             {status === "success" && t("posterRotateSuccess")}
                             {status === "missing" && t("posterRotateMissing")}
                             {status === "error" && t("posterRotateError")}

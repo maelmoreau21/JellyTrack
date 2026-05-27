@@ -107,7 +107,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="relative z-10">
-                        <div className="text-4xl font-black tracking-tight text-foreground bg-clip-text">
+                        <div className="text-4xl font-black tracking-tight metric-glow-cyan bg-clip-text">
                             {totalTB}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium flex items-center gap-1.5 opacity-80">
@@ -141,7 +141,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="relative z-10">
-                        <div className="text-4xl font-black tracking-tight text-foreground bg-clip-text">
+                        <div className="text-4xl font-black tracking-tight metric-glow-amber bg-clip-text">
                             {timeLabel.replace('jours', 'j').replace('heures', 'h')}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium flex items-center gap-1.5 opacity-80">
@@ -154,7 +154,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
             {/* Library Details Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-8 pb-2 border-b border-zinc-200/50 dark:border-zinc-800/80">
                 <div className="space-y-1">
-                    <h3 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-3">
+                    <h3 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-slate-200 flex items-center gap-3">
                         <Database className="w-7 h-7 text-primary" />
                         {t('libraryDetailsTitle') || 'Détails par Collection'}
                     </h3>
@@ -193,7 +193,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                     const displayName = getDisplayName(lib);
 
                     return (
-                        <Card key={idx} className="app-surface-soft border-border group hover:border-primary/30 transition-colors shadow-sm hover:shadow-xl hover:shadow-black/5 flex flex-col overflow-hidden">
+                        <Card key={idx} className="app-surface-soft border-border group hover:border-primary/30 transition-colors shadow-sm hover:shadow-xl hover:shadow-slate-900/10 flex flex-col overflow-hidden">
                         {/* Dynamic top-edge decoration based on content type */}
                         <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${getGradientType(lib.collectionType, lib.name)} via-primary/20 top-border-glow`} />
                         <div className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-b ${getGradientType(lib.collectionType, lib.name)} opacity-50 pointer-events-none`} />
@@ -206,7 +206,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             <div className="flex items-center gap-2 min-w-0">
                                                 {getIconPrefix(lib.collectionType, lib.name)}
                                                 <div className="flex items-center gap-2 min-w-0">
-                                                    <CardTitle className="text-xl font-bold pr-2 text-zinc-900 dark:text-zinc-100 line-clamp-2 whitespace-normal break-words">{displayName}</CardTitle>
+                                                    <CardTitle className="text-xl font-bold pr-2 text-zinc-900 dark:text-slate-200 line-clamp-2 whitespace-normal break-words">{displayName}</CardTitle>
                                                     {lib.name && lib.name !== displayName ? (
                                                         <span className="text-xs text-zinc-500 ml-1 px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">{lib.name}</span>
                                                     ) : null}
@@ -251,7 +251,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                     {lib.topItem ? (
                                         <Link 
                                             href={`/media/${lib.topItem.id}`}
-                                            className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-card/85 dark:bg-zinc-950/40 border border-border/65 dark:border-zinc-800 hover:border-border dark:hover:border-zinc-700 hover:shadow-md transition-all group/item"
+                                            className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-card/85 dark:bg-slate-900/70 border border-border/65 dark:border-white/10 hover:border-border dark:hover:border-cyan-400/30 hover:shadow-md transition-all group/item"
                                         >
                                             <div className={`relative ${lib.topItem.type === 'Episode' ? 'aspect-video w-16' : 'w-12 h-16 aspect-[2/3]'} rounded-md overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0`}>
                                                 <Image 
@@ -272,7 +272,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             </div>
                                         </Link>
                                     ) : (
-                                        <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-muted/60 dark:bg-zinc-950/20 border border-dashed border-border/80 dark:border-zinc-800/60">
+                                        <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-muted/60 dark:bg-slate-900/50 border border-dashed border-border/80 dark:border-white/10">
                                             <div className="w-12 h-16 rounded-md bg-zinc-100 dark:bg-zinc-900/50 flex items-center justify-center shrink-0">
                                                 <TrendingUp className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
                                             </div>
@@ -284,7 +284,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                     {lib.lastAdded ? (
                                         <Link 
                                             href={`/media/${lib.lastAdded.id}`}
-                                            className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-card/85 dark:bg-zinc-950/40 border border-border/65 dark:border-zinc-800 hover:border-border dark:hover:border-zinc-700 hover:shadow-md transition-all group/item"
+                                            className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-card/85 dark:bg-slate-900/70 border border-border/65 dark:border-white/10 hover:border-border dark:hover:border-cyan-400/30 hover:shadow-md transition-all group/item"
                                         >
                                             <div className="relative w-12 h-16 aspect-[2/3] rounded-md overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0">
                                                 <Image 
@@ -308,7 +308,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             </div>
                                         </Link>
                                     ) : (
-                                        <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-muted/60 dark:bg-zinc-950/20 border border-dashed border-border/80 dark:border-zinc-800/60">
+                                        <div className="flex-1 flex items-center gap-3 p-3 rounded-xl bg-muted/60 dark:bg-slate-900/50 border border-dashed border-border/80 dark:border-white/10">
                                             <div className="w-12 h-16 rounded-md bg-zinc-100 dark:bg-zinc-900/50 flex items-center justify-center shrink-0">
                                                 <Sparkles className="w-5 h-5 text-zinc-300 dark:text-zinc-700" />
                                             </div>

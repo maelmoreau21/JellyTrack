@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { useRouter } from "next/navigation";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
+import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartPalette, chartTooltipStyle } from "@/lib/chartTheme";
 
 export interface GenreData {
     name: string;
@@ -22,7 +23,7 @@ interface GenreDistributionChartProps {
     data: GenreData[];
 }
 
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308'];
+const COLORS = chartPalette;
 
 export function GenreDistributionChart({ data }: GenreDistributionChartProps) {
     const t = useTranslations('charts');
@@ -51,21 +52,21 @@ export function GenreDistributionChart({ data }: GenreDistributionChartProps) {
                 onClick={handleBarClick}
                 style={{ cursor: "pointer" }}
             >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#333" />
-                <XAxis type="number" stroke="#888888" fontSize={10} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} />
+                <XAxis type="number" stroke={chartAxisColor} fontSize={10} tickLine={false} axisLine={false} />
                 <YAxis
                     dataKey="name"
                     type="category"
-                    stroke="#888888"
+                    stroke={chartAxisColor}
                     fontSize={10}
                     tickLine={false}
                     axisLine={false}
                 />
                 <Tooltip
-                    contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px", color: "#f4f4f5" }}
-                    labelStyle={{ color: "#a1a1aa" }}
-                    itemStyle={{ color: "#e4e4e7" }}
-                    cursor={{ fill: '#27272a', opacity: 0.5 }}
+                    contentStyle={chartTooltipStyle}
+                    labelStyle={chartLabelStyle}
+                    itemStyle={chartItemStyle}
+                    cursor={{ fill: 'rgba(34, 211, 238, 0.08)' }}
                 />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
                     {data.map((entry, index) => (
