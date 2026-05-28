@@ -1,12 +1,12 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { PlayCircle, Server, Database, Palette, BarChart3, Shield, Clock, Github, Heart, ExternalLink } from "lucide-react";
+import { PlayCircle, Server, Database, Palette, BarChart3, Shield, Clock, GitBranch, Heart, ExternalLink } from "lucide-react";
 import { getTranslations } from 'next-intl/server';
 
 const version = process.env.APP_VERSION || "1.0.0";
 
 const techStackIcons = [Server, Palette, Database, BarChart3, Shield, Clock];
 const techStackNames = ["Next.js", "React", "Prisma", "Recharts", "NextAuth.js", "Node-Cron"];
-const techStackVersions = ["16", "19", "5", "3", "4", "4"];
+const techStackVersions = ["16", "19", "7", "3", "4", "4"];
 const techStackKeys = ["techNextjs", "techReact", "techPrisma", "techRecharts", "techNextAuth", "techCron"] as const;
 
 export default async function AboutPage() {
@@ -82,7 +82,7 @@ export default async function AboutPage() {
             <Card className="app-surface backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Github className="w-5 h-5" />
+                        <GitBranch className="w-5 h-5" />
                         {t('linksCredits')}
                     </CardTitle>
                 </CardHeader>
@@ -94,7 +94,7 @@ export default async function AboutPage() {
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 text-sm text-foreground/80 dark:text-slate-300 hover:text-primary transition-colors"
                         >
-                            <Github className="w-4 h-4" />
+                            <GitBranch className="w-4 h-4" />
                             {t('githubSource')}
                             <ExternalLink className="w-3 h-3 text-zinc-500" />
                         </a>

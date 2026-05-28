@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
 import { format } from "date-fns";
 import { getTranslations, getLocale } from 'next-intl/server';
-import { buildExcludedMediaClause, getAvailableLibraryKeys, getCompletionMetrics, normalizeLibraryKey } from '@/lib/mediaPolicy';
+import { buildExcludedMediaClause, getAvailableLibraryKeys, getCumulativeCompletionEntries, normalizeLibraryKey } from '@/lib/mediaPolicy';
 import { normalizeLanguageTag } from '@/lib/language';
 import { formatHour } from "@/lib/utils";
 import { GranularAnalysisClient } from "./GranularAnalysisClient";
@@ -51,6 +51,7 @@ const getGranularData = unstable_cache(
             select: {
                 startedAt: true,
                 durationWatched: true,
+                mediaId: true,
                 userId: true,
                 audioLanguage: true,
                 subtitleLanguage: true,
@@ -64,13 +65,6 @@ const getGranularData = unstable_cache(
         const hourlyMap = new Map<string, { time: string; plays: number; duration: number }>();
         const collections = new Set<string>();
         const completionMap = new Map<string, { totalCompletion: number, sessions: number }>();
-        const userMediaCompletionMap = new Map<string, {
-            title: string;
-            mediaId: string;
-            durationMs: bigint | null;
-            type: string | null;
-            durationWatched: number;
-        }>();
         const audioMap = new Map<string, number>();
         const subMap = new Map<string, number>();
         const subtitleIgnoredTypes = new Set(['Audio', 'Track', 'MusicAlbum', 'Book', 'AudioBook']);
@@ -125,40 +119,6 @@ const getGranularData = unstable_cache(
                 hourEntry.duration += durationH;
             }
 
-            if (h.media.durationMs) {
-                const completion = getCompletionMetrics(h.media as any, h.durationWatched);
-                if (!completionMap.has(lib)) {
-                    completionMap.set(lib, { totalCompletion: 0, sessions: 0 });
-                }
-                const compEntry = completionMap.get(lib)!;
-                compEntry.totalCompletion += completion.percent;
-                compEntry.sessions += 1;
-
-                if (completion.bucket === 'skipped') dropSkipped++;
-                else if (completion.bucket === 'abandoned') dropAbandoned++;
-                else if (completion.bucket === 'partial') dropAlmost++;
-                else dropFinished++;
-
-                const mediaKey = h.media.jellyfinMediaId || h.media.title || '';
-                if (mediaKey) {
-                    const userKey = h.userId || 'anonymous';
-                    const userMediaKey = `${userKey}::${mediaKey}`;
-
-                    if (!userMediaCompletionMap.has(userMediaKey)) {
-                        userMediaCompletionMap.set(userMediaKey, {
-                            title: h.media.title || '?',
-                            mediaId: h.media.jellyfinMediaId || '',
-                            durationMs: h.media.durationMs,
-                            type: h.media.type || null,
-                            durationWatched: 0,
-                        });
-                    }
-
-                    const entry = userMediaCompletionMap.get(userMediaKey)!;
-                    entry.durationWatched += h.durationWatched;
-                }
-            }
-
             if (h.audioLanguage) {
                 const lang = normalizeLanguageTag(h.audioLanguage);
                 if (lang) {
@@ -179,6 +139,51 @@ const getGranularData = unstable_cache(
                 } else {
                     subMap.set('UNKNOWN', (subMap.get('UNKNOWN') || 0) + 1);
                 }
+            }
+        });
+
+        const completionReferenceHistory = history.length > 0
+            ? await prisma.playbackHistory.findMany({
+                where: {
+                    ...(mediaWhere ? { media: mediaWhere } : {}),
+                    ...(selectedServerScope ? { serverId: selectedServerScope } : {}),
+                },
+                select: {
+                    durationWatched: true,
+                    mediaId: true,
+                    userId: true,
+                    media: { select: { libraryName: true, collectionType: true, type: true, durationMs: true, title: true, jellyfinMediaId: true } },
+                },
+            })
+            : [];
+        const completionEntries = getCumulativeCompletionEntries(history, completionReferenceHistory);
+        const mediaDropMap = new Map<string, { title: string; mediaId: string; completion: number; count: number }>();
+        completionEntries.forEach((entry) => {
+            const media = entry.media || {};
+            const lib = normalizeLibraryKey(media.collectionType || media.libraryName || media.type) || 'other';
+            if (!completionMap.has(lib)) {
+                completionMap.set(lib, { totalCompletion: 0, sessions: 0 });
+            }
+            const compEntry = completionMap.get(lib)!;
+            compEntry.totalCompletion += entry.completion.percent;
+            compEntry.sessions += 1;
+
+            if (entry.completion.bucket === 'skipped') dropSkipped++;
+            else if (entry.completion.bucket === 'abandoned') dropAbandoned++;
+            else if (entry.completion.bucket === 'partial') dropAlmost++;
+            else dropFinished++;
+
+            if (entry.completion.bucket !== 'completed' && entry.completion.bucket !== 'skipped') {
+                const mediaKey = media.jellyfinMediaId || media.title || entry.key;
+                const aggregate = mediaDropMap.get(mediaKey) || {
+                    title: media.title || '?',
+                    mediaId: media.jellyfinMediaId || '',
+                    completion: 0,
+                    count: 0,
+                };
+                aggregate.completion += entry.completion.percent;
+                aggregate.count += 1;
+                mediaDropMap.set(mediaKey, aggregate);
             }
         });
 
@@ -207,30 +212,6 @@ const getGranularData = unstable_cache(
             { name: "almost", value: dropAlmost, fill: "#eab308" },
             { name: "finished", value: dropFinished, fill: "#22c55e" },
         ];
-
-        const mediaDropMap = new Map<string, { title: string; mediaId: string; completion: number; count: number }>();
-        userMediaCompletionMap.forEach((entry) => {
-            const completion = getCompletionMetrics(
-                { type: entry.type, durationMs: entry.durationMs },
-                entry.durationWatched
-            );
-
-            if (completion.bucket === 'completed' || completion.bucket === 'skipped') return;
-
-            const mapKey = entry.mediaId || entry.title;
-            if (!mediaDropMap.has(mapKey)) {
-                mediaDropMap.set(mapKey, {
-                    title: entry.title,
-                    mediaId: entry.mediaId,
-                    completion: 0,
-                    count: 0,
-                });
-            }
-
-            const aggregate = mediaDropMap.get(mapKey)!;
-            aggregate.completion += completion.percent;
-            aggregate.count += 1;
-        });
 
         const topAbandoned = Array.from(mediaDropMap.values())
             .filter(m => m.count >= 1)

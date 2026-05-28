@@ -511,7 +511,8 @@
         "stop": "Stop",
         "subtitle_change": "Zmiana napisów",
         "replay": "Powtórka",
-        "speed_change": "Zmiana szybkości"
+        "speed_change": "Zmiana szybkości",
+        "download": "Download"
       },
       "legend": {
         "audio": "Dźwięk",
@@ -669,7 +670,8 @@
         "subtitle_change": "Napisy",
         "seek": "Pominięty fragment",
         "replay": "Powtórzony fragment",
-        "speed_change": "Szybkość"
+        "speed_change": "Szybkość",
+        "download": "Download"
       }
     },
     "timelineDesc": "Szczegółowa lista zdarzeń wewnątrz sesji.",
@@ -716,7 +718,9 @@
     "posterRotateError": "Nie udało się zmienić plakatu.",
     "timeline_seek": "Pominięty fragment",
     "timeline_replay": "Powtórzony fragment",
-    "timeline_speed_change": "Zmiana szybkości"
+    "timeline_speed_change": "Zmiana szybkości",
+    "timeline_download": "Download",
+    "languageSegments": "Language periods"
   },
   "nav": {
     "cleanup": "Czyszczenie",

@@ -511,7 +511,8 @@
         "stop": "Stop",
         "subtitle_change": "Ondertitelwijziging",
         "replay": "Herhaling",
-        "speed_change": "Snelheidswijziging"
+        "speed_change": "Snelheidswijziging",
+        "download": "Download"
       },
       "legend": {
         "audio": "Audio",
@@ -669,7 +670,8 @@
         "subtitle_change": "Ondertitels",
         "seek": "Overgeslagen passage",
         "replay": "Opnieuw bekeken",
-        "speed_change": "Snelheid"
+        "speed_change": "Snelheid",
+        "download": "Download"
       }
     },
     "timelineDesc": "Gedetailleerde gebeurtenissentijdlijn voor deze sessie.",
@@ -716,7 +718,9 @@
     "posterRotateError": "Poster kon niet worden gewijzigd.",
     "timeline_seek": "Overgeslagen passage",
     "timeline_replay": "Opnieuw bekeken passage",
-    "timeline_speed_change": "Snelheidswijziging"
+    "timeline_speed_change": "Snelheidswijziging",
+    "timeline_download": "Download",
+    "languageSegments": "Language periods"
   },
   "nav": {
     "cleanup": "Opschonen",

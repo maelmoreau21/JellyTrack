@@ -30,6 +30,7 @@ type PlaybackHistory = {
     id: string;
     user?: { username?: string; jellyfinUserId?: string } | null;
     durationWatched: number;
+    eventSource?: string | null;
     pauseCount?: number;
     audioChanges?: number;
     subtitleChanges?: number;
@@ -502,6 +503,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const jumpSignalMap = new Map<string, { eventType: "seek" | "replay"; label: string; count: number; playbacks: Set<string> }>();
     const speedSignalMap = new Map<string, { label: string; count: number; estimated: number }>();
     const languageSwitchMap = new Map<string, { label: string; count: number; kind: "audio" | "subtitle" }>();
+    const languageSegmentMap = new Map<string, { label: string; range: string; count: number; sessions: Set<string>; kind: "audio" | "subtitle" }>();
 
     for (const event of rawTelemetryEvents) {
         const eventType = event.eventType;
@@ -543,13 +545,86 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         }
     }
 
+    const eventsByPlaybackForSegments = new Map<string, typeof rawTelemetryEvents>();
+    rawTelemetryEvents.forEach((event) => {
+        const list = eventsByPlaybackForSegments.get(event.playbackId) || [];
+        list.push(event);
+        eventsByPlaybackForSegments.set(event.playbackId, list);
+    });
+
+    const addLanguageSegments = (
+        playback: PlaybackHistory,
+        kind: "audio" | "subtitle",
+        initialLabel: string | null,
+        eventsForPlayback: typeof rawTelemetryEvents,
+    ) => {
+        const changeType = kind === "audio" ? "audio_change" : "subtitle_change";
+        const changes = eventsForPlayback
+            .filter((event) => event.eventType === changeType)
+            .map((event) => ({ ...event, positionNumber: Number(event.positionMs), metadata: parseTelemetryMetadata(event.metadata) }))
+            .filter((event) => Number.isFinite(event.positionNumber) && event.positionNumber >= 0)
+            .sort((left, right) => left.positionNumber - right.positionNumber);
+
+        let currentLabel = initialLabel || null;
+        if (!currentLabel && changes[0]?.metadata?.from) {
+            currentLabel = formatChangeSide(changes[0].metadata.from);
+        }
+        if (!currentLabel || currentLabel === "-") return;
+
+        let startMs = 0;
+        const sessionEndMs = Math.max(
+            playback.durationWatched * 1000,
+            ...changes.map((change) => change.positionNumber),
+            1,
+        );
+
+        const pushSegment = (endMs: number) => {
+            if (!currentLabel || endMs <= startMs) return;
+            const range = `${formatPositionMs(startMs)} -> ${formatPositionMs(endMs)}`;
+            const key = `${kind}:${currentLabel}:${range}`;
+            const entry = languageSegmentMap.get(key) || {
+                label: currentLabel,
+                range,
+                count: 0,
+                sessions: new Set<string>(),
+                kind,
+            };
+            entry.count += 1;
+            entry.sessions.add(playback.id);
+            languageSegmentMap.set(key, entry);
+        };
+
+        for (const change of changes) {
+            pushSegment(change.positionNumber);
+            currentLabel = formatChangeSide(change.metadata?.to);
+            startMs = change.positionNumber;
+        }
+        pushSegment(sessionEndMs);
+    };
+
+    effectiveHistory.forEach((history: PlaybackHistory) => {
+        const eventsForPlayback = eventsByPlaybackForSegments.get(history.id) || [];
+        const audioInitial = history.audioLanguage
+            ? `${history.audioLanguage}${history.audioCodec ? ` (${history.audioCodec})` : ""}`
+            : null;
+        const subtitleInitial = history.subtitleLanguage
+            ? `${history.subtitleLanguage}${history.subtitleCodec ? ` (${history.subtitleCodec})` : ""}`
+            : null;
+        addLanguageSegments(history, "audio", audioInitial, eventsForPlayback);
+        addLanguageSegments(history, "subtitle", subtitleInitial, eventsForPlayback);
+    });
+
     const jumpSignals = Array.from(jumpSignalMap.values())
         .map((entry) => ({ ...entry, sessions: entry.playbacks.size, users: Array.from(entry.playbacks).map((id) => playbackUserMap.get(id)).filter(Boolean) }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 6);
     const speedSignals = Array.from(speedSignalMap.values()).sort((a, b) => b.count - a.count).slice(0, 6);
     const languageSwitchSignals = Array.from(languageSwitchMap.values()).sort((a, b) => b.count - a.count).slice(0, 6);
-    const hasBehaviorSignals = jumpSignals.length > 0 || speedSignals.length > 0 || languageSwitchSignals.length > 0;
+    const languageSegments = Array.from(languageSegmentMap.values())
+        .map((entry) => ({ ...entry, sessionsCount: entry.sessions.size }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+    const hasBehaviorSignals = jumpSignals.length > 0 || speedSignals.length > 0 || languageSwitchSignals.length > 0 || languageSegments.length > 0;
 
     // Unique users who watched this
     const userMap = new Map<string, { username: string; jellyfinUserId: string; sessions: number; totalSeconds: number }>();
@@ -964,6 +1039,20 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                             <p className="mt-1 text-[11px] text-muted-foreground">{entry.kind === 'audio' ? t('audioChanges') : t('subtitleChanges')}</p>
                                         </div>
                                     ))}
+                                    {languageSegments.length > 0 && (
+                                        <div className="pt-2 space-y-2 border-t border-border/60">
+                                            <p className="text-xs font-medium text-muted-foreground">{t('languageSegments')}</p>
+                                            {languageSegments.map((entry) => (
+                                                <div key={`${entry.kind}:${entry.label}:${entry.range}`} className="rounded-md border border-border px-3 py-2">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <span className="text-xs font-medium">{entry.label}</span>
+                                                        <Badge variant="outline">{entry.sessionsCount}</Badge>
+                                                    </div>
+                                                    <p className="mt-1 font-mono text-[11px] text-muted-foreground">{entry.range}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>

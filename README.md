@@ -10,97 +10,122 @@
 </p>
 
 <p align="center">
-  <strong>Observability and analytics for Jellyfin: live sessions, enriched history, and playback metrics.</strong>
+  <strong>Observability and analytics for Jellyfin: live sessions, enriched history, downloads, and fine playback telemetry.</strong>
 </p>
 
 ---
 
 > [!CAUTION]
-> ### 🚨 THE JELLYFIN PLUGIN IS REQUIRED
-> JellyTrack **cannot** collect data without its companion plugin installed on your Jellyfin server.
+> JellyTrack requires the companion Jellyfin plugin. Without it, JellyTrack cannot collect playback, download, seek, language, or telemetry events.
 >
-> [👉 Click here to configure the plugin](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
+> Plugin repository: [Jellyfin.Plugin.JellyTrack](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
 
----
+## What JellyTrack Tracks
 
-## 🚀 Docker Installation
+- Live sessions: user, device, client, direct play/transcode, bitrate, IP and GeoIP.
+- Playback history: completed, partial, and abandoned media using cumulative user + media history.
+- Downloads: a downloaded media item is counted as one complete view and full watched duration.
+- Fine telemetry: pause/resume, seek ranges, replay ranges, playback speed changes, audio language changes, and subtitle language changes.
+- Behavior insights: skipped passages are shown as `from -> to` ranges, and language periods are derived from initial language plus later changes.
 
-The repository already includes a complete `docker-compose.yml`. The recommended method is:
+## Docker Installation
 
-### 1. Configuration
+The canonical install mode is Docker Compose.
+
+1. Copy the example environment:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and replace all `CHANGE_ME_*` values.
+2. Edit `.env` and replace every `CHANGE_ME_*` value.
 
-Important for Docker: if Jellyfin runs in another container or on another machine, `JELLYFIN_URL` must be reachable from the JellyTrack container. Avoid `127.0.0.1` unless Jellyfin is in the same container.
-
-### 2. Start or update
+3. Start or update JellyTrack:
 
 ```bash
 docker compose pull
 docker compose up -d
 ```
 
-To test a local change before publishing the image:
+To test local code before publishing an image:
 
 ```bash
 docker build -t ghcr.io/maelmoreau21/jellytrack:latest .
 docker compose up -d
 ```
 
-### 3. Access
+JellyTrack runs on `http://localhost:3000` by default.
 
-Go to `http://localhost:3000` and log in with your `ADMIN_PASSWORD`.
+## Runtime Notes
 
-### Jellyfin 10.12 / 12 beta
+- Docker uses Node 24.
+- Prisma 7 stores its CLI datasource URL in `prisma.config.ts`.
+- Runtime database access uses `@prisma/adapter-pg` with `DATABASE_URL`.
+- `npx prisma generate` must be run after schema changes.
+- Migrations live in `prisma/migrations`.
 
-JellyTrack uses the `Authorization: MediaBrowser Token="..."` header for recent Jellyfin versions. The old URL API key access (`?ApiKey=...`) has been removed.
+## Jellyfin Plugin Configuration
 
-1. Create an API key in Jellyfin: **Dashboard** > **Advanced** > **API Keys**.
-2. Set `JELLYFIN_API_KEY` in `.env`.
-3. Install or update the JellyTrack companion plugin.
-4. In JellyTrack, go to **Settings** > **Jellyfin Connection**, generate the plugin key, then copy the plugin URL and key into the Jellyfin plugin configuration.
+1. In Jellyfin, open Dashboard > Plugins > Repositories.
+2. Add this repository URL:
 
-### Existing database / Prisma P3005 error
-
-If the logs show `Error: P3005` and `The database schema is not empty`, the database already exists but does not include Prisma's migration history table. The container can now baseline the included migrations and then sync the schema without data loss by default.
-
-If you want to start from scratch, remove the PostgreSQL volume carefully:
-
-```bash
-docker compose down
-docker volume rm jellytrack_JellyTrack_pgdata
-docker compose up -d
+```text
+https://raw.githubusercontent.com/maelmoreau21/Jellyfin.Plugin.JellyTrack/main/manifest.json
 ```
 
----
+3. Install the JellyTrack plugin.
+4. In JellyTrack, open Settings > Jellyfin Connection, generate a plugin key, then copy the plugin endpoint and key into Jellyfin.
 
-## 🌟 Features
+For Jellyfin 10.12 / 12 beta and later, configure `JELLYFIN_API_KEY` in `.env`; JellyTrack uses the `Authorization: MediaBrowser Token="..."` header.
 
-- **Live Dashboard**: See who is watching what in real time (Direct Play vs Transcode, bitrate, etc.).
-- **Enriched History**: Full technical details (codecs, subtitles, languages).
-- **Stats & Trends**: Top users, most-watched media, activity charts.
-- **System & Audit Logs**: Track synchronization health.
-- **Security**: Jellyfin authentication, API key hashing, multi-server support.
+## Plugin Event Contract
 
----
+The plugin posts JSON to:
 
-## 🔌 Plugin Configuration
+```text
+POST /api/plugin/events
+```
 
-Once the server is installed, you must configure the plugin on your Jellyfin instance to start receiving data.
+The canonical download event is:
 
-**Plugin repository:** [Jellyfin.Plugin.JellyTrack](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
+```json
+{
+  "event": "MediaDownloaded",
+  "eventId": "stable-plugin-event-id",
+  "observedAt": "2026-05-28T18:00:00.000Z",
+  "user": { "id": "jellyfin-user-id", "username": "Mael" },
+  "media": {
+    "id": "jellyfin-item-id",
+    "title": "Movie title",
+    "type": "Movie",
+    "durationMs": 7200000,
+    "libraryName": "Films"
+  }
+}
+```
 
-1. In Jellyfin: **Dashboard** > **Plugins** > **Repositories**.
-2. Repository URL: `https://raw.githubusercontent.com/maelmoreau21/Jellyfin.Plugin.JellyTrack/main/manifest.json`
-3. Install the **JellyTrack** plugin from the catalog.
+Accepted download aliases are `ItemDownloaded` and `DownloadCompleted`. JellyTrack stores downloads with `PlaybackHistory.eventSource = "download"`, `playMethod = "Download"`, full `durationWatched`, and a `TelemetryEvent` of type `download`. `sourceEventId` deduplicates plugin retries per server.
 
----
+## Completion And Abandon Rules
 
-## 📄 License
+JellyTrack classifies completion cumulatively by user + media. If someone starts a movie today and finishes it tomorrow, or several days later, the media becomes completed and should not remain abandoned. Period filters still limit views and duration for the selected period, but abandonment considers later resume history.
 
-Personal project — private use.
-Built with Next.js, Prisma, Redis & lots of ☕
+Downloads always count as complete views, including audio and short media, unless the media belongs to an excluded library.
+
+## Development
+
+```bash
+npm install
+npx prisma generate
+npm run test
+npm run check:i18n
+npm run lint
+npm run build
+npm outdated --json
+```
+
+`npm outdated --json` is expected to return `{}` after dependency updates.
+
+## License
+
+Personal project for private use.

@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import { getTranslations } from 'next-intl/server';
 import { cookies } from "next/headers";
-import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from "@/lib/serverScope";
+import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
+import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
 import { Activity, ArrowUpRight, Gauge, Server, Zap } from "lucide-react";
 

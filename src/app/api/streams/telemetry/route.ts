@@ -40,6 +40,8 @@ export async function GET(req: NextRequest) {
             select: {
                 id: true,
                 userId: true,
+                eventSource: true,
+                sourceEventId: true,
                 durationWatched: true,
                 startedAt: true,
                 endedAt: true,

@@ -1,9 +1,19 @@
 type MediaLike = {
+    id?: string | null;
+    jellyfinMediaId?: string | null;
+    title?: string | null;
     serverId?: string | null;
     libraryName?: string | null;
     collectionType?: string | null;
     type?: string | null;
     durationMs?: number | bigint | null;
+};
+
+export type CompletionHistoryLike = {
+    userId?: string | null;
+    mediaId?: string | null;
+    durationWatched: number;
+    media?: MediaLike | null;
 };
 
 export type CompletionBucket = 'completed' | 'partial' | 'abandoned' | 'skipped';
@@ -415,6 +425,46 @@ export function getCompletionMetrics(media: MediaLike, durationWatched: number, 
     if (percent >= rule.abandonedThreshold) return { percent, bucket: 'abandoned' as CompletionBucket };
 
     return { percent, bucket: 'skipped' as CompletionBucket };
+}
+
+function getCompletionHistoryKey(history: CompletionHistoryLike): string | null {
+    const media = history.media || {};
+    const mediaKey = history.mediaId || media.id || media.jellyfinMediaId || media.title || null;
+    if (!mediaKey) return null;
+    return `${history.userId || 'anonymous'}::${media.serverId || 'server'}::${mediaKey}`;
+}
+
+export function getCumulativeCompletionEntries(
+    scopedHistories: CompletionHistoryLike[],
+    referenceHistories: CompletionHistoryLike[] = scopedHistories,
+    completionRules?: unknown,
+) {
+    const scopedKeys = new Set<string>();
+    for (const history of scopedHistories) {
+        const key = getCompletionHistoryKey(history);
+        if (key) scopedKeys.add(key);
+    }
+
+    const cumulative = new Map<string, { media: MediaLike; durationWatched: number }>();
+    for (const history of referenceHistories) {
+        const key = getCompletionHistoryKey(history);
+        if (!key || !scopedKeys.has(key)) continue;
+        if (!history.media) continue;
+
+        const entry = cumulative.get(key) || { media: history.media, durationWatched: 0 };
+        entry.durationWatched += history.durationWatched || 0;
+        if (!entry.media.durationMs && history.media.durationMs) {
+            entry.media = history.media;
+        }
+        cumulative.set(key, entry);
+    }
+
+    return Array.from(cumulative.entries()).map(([key, entry]) => ({
+        key,
+        media: entry.media,
+        durationWatched: entry.durationWatched,
+        completion: getCompletionMetrics(entry.media, entry.durationWatched, completionRules),
+    }));
 }
 
 import { isZapped } from "./statsUtils";

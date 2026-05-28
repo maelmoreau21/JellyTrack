@@ -511,7 +511,8 @@
         "stop": "Stop",
         "subtitle_change": "Смена субт.",
         "replay": "Повтор",
-        "speed_change": "Изменение скорости"
+        "speed_change": "Изменение скорости",
+        "download": "Download"
       },
       "legend": {
         "audio": "Звук",
@@ -669,7 +670,8 @@
         "subtitle_change": "Субтитры",
         "seek": "Пропущенный фрагмент",
         "replay": "Пересмотренный фрагмент",
-        "speed_change": "Скорость"
+        "speed_change": "Скорость",
+        "download": "Download"
       }
     },
     "timelineDesc": "Детальный список событий внутри сессии.",
@@ -716,7 +718,9 @@
     "posterRotateError": "Не удалось сменить постер.",
     "timeline_seek": "Пропущенный фрагмент",
     "timeline_replay": "Пересмотренный фрагмент",
-    "timeline_speed_change": "Изменение скорости"
+    "timeline_speed_change": "Изменение скорости",
+    "timeline_download": "Download",
+    "languageSegments": "Language periods"
   },
   "nav": {
     "cleanup": "Очистка",

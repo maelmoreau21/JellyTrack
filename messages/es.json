@@ -511,7 +511,8 @@
         "stop": "Stop",
         "subtitle_change": "Cambio de subtítulo",
         "replay": "Repetición",
-        "speed_change": "Cambio de velocidad"
+        "speed_change": "Cambio de velocidad",
+        "download": "Download"
       },
       "legend": {
         "audio": "Audio",
@@ -669,7 +670,8 @@
         "subtitle_change": "Subtítulos",
         "seek": "Pasaje saltado",
         "replay": "Pasaje repetido",
-        "speed_change": "Velocidad"
+        "speed_change": "Velocidad",
+        "download": "Download"
       }
     },
     "timelineDesc": "Línea de tiempo de eventos detallada para esta sesión.",
@@ -716,7 +718,9 @@
     "posterRotateError": "No se pudo cambiar el póster.",
     "timeline_seek": "Pasaje saltado",
     "timeline_replay": "Pasaje repetido",
-    "timeline_speed_change": "Cambio de velocidad"
+    "timeline_speed_change": "Cambio de velocidad",
+    "timeline_download": "Download",
+    "languageSegments": "Language periods"
   },
   "nav": {
     "cleanup": "Limpieza",

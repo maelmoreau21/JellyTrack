@@ -511,7 +511,8 @@
         "stop": "Stop",
         "subtitle_change": "Cambio sottotitoli",
         "replay": "Replay",
-        "speed_change": "Cambio velocità"
+        "speed_change": "Cambio velocità",
+        "download": "Download"
       },
       "legend": {
         "audio": "Audio",
@@ -669,7 +670,8 @@
         "subtitle_change": "Sottotitoli",
         "seek": "Passaggio saltato",
         "replay": "Passaggio rivisto",
-        "speed_change": "Velocità"
+        "speed_change": "Velocità",
+        "download": "Download"
       }
     },
     "timelineDesc": "Cronologia dettagliata degli eventi per questa sessione.",
@@ -716,7 +718,9 @@
     "posterRotateError": "Impossibile cambiare poster.",
     "timeline_seek": "Passaggio saltato",
     "timeline_replay": "Passaggio rivisto",
-    "timeline_speed_change": "Cambio velocità"
+    "timeline_speed_change": "Cambio velocità",
+    "timeline_download": "Download",
+    "languageSegments": "Language periods"
   },
   "nav": {
     "cleanup": "Pulizia",

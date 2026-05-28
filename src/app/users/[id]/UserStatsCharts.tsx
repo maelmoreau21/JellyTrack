@@ -4,6 +4,7 @@ import { DayOfWeekChart, DayOfWeekData } from "@/components/charts/DayOfWeekChar
 import { CompletionRatioChart, CompletionData } from "@/components/charts/CompletionRatioChart";
 import { ActivityByHourChart, ActivityHourData } from "@/components/charts/ActivityByHourChart";
 import { getTranslations } from 'next-intl/server';
+import { getCumulativeCompletionEntries } from "@/lib/mediaPolicy";
 
 export default async function UserStatsCharts({ userId, userIds = [], userDbIds = [] }: { userId: string; userIds?: string[]; userDbIds?: string[] }) {
     const t = await getTranslations('userProfile');
@@ -28,6 +29,8 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
         select: {
             startedAt: true,
             durationWatched: true,
+            userId: true,
+            mediaId: true,
             media: { select: { durationMs: true } }
         },
     });
@@ -40,7 +43,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
     let partial = 0;
     let abandoned = 0;
 
-    type StatsSession = { startedAt: Date; durationWatched: number; media?: { durationMs?: bigint | null } | null };
+    type StatsSession = { startedAt: Date; durationWatched: number; userId?: string | null; mediaId?: string | null; media?: { durationMs?: bigint | null } | null };
     histories.forEach((session: StatsSession) => {
         const startedAt = new Date(session.startedAt);
         const day = startedAt.getDay();
@@ -48,15 +51,12 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
         dayCounts[day]++;
         if (hour >= 0 && hour <= 23) hourCounts[hour]++;
 
-        const mediaDurS = session.media?.durationMs ? Number(session.media.durationMs) / 1000 : 0;
-        if (session.durationWatched <= 0 || mediaDurS <= 0) {
-            return;
-        }
+    });
 
-        const pct = session.durationWatched / mediaDurS;
-        if (pct >= 0.8) completed++;
-        else if (pct >= 0.2) partial++;
-        else if (pct >= 0.1) abandoned++;
+    getCumulativeCompletionEntries(histories).forEach(({ completion }) => {
+        if (completion.bucket === 'completed') completed++;
+        else if (completion.bucket === 'partial') partial++;
+        else if (completion.bucket === 'abandoned') abandoned++;
     });
 
     const dayNames = t('dayNames').split(',');

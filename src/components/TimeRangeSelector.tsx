@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, X } from "lucide-react";
-import { format, parse } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import type { Locale } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
@@ -99,7 +99,6 @@ export function TimeRangeSelector() {
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-card border-border" align="end">
                         <Calendar
-                            initialFocus
                             mode="range"
                             defaultMonth={date?.from}
                             selected={date}

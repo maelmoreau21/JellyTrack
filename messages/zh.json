@@ -511,7 +511,8 @@
         "stop": "Stop",
         "subtitle_change": "字幕切换",
         "replay": "重看",
-        "speed_change": "速度变化"
+        "speed_change": "速度变化",
+        "download": "Download"
       },
       "legend": {
         "audio": "音频调整",
@@ -669,7 +670,8 @@
         "subtitle_change": "字幕切换",
         "seek": "跳过片段",
         "replay": "重看片段",
-        "speed_change": "速度"
+        "speed_change": "速度",
+        "download": "Download"
       }
     },
     "timelineDesc": "针对该会话的精细化用户交互列表。",
@@ -716,7 +718,9 @@
     "posterRotateError": "无法更换海报。",
     "timeline_seek": "跳过片段",
     "timeline_replay": "重看片段",
-    "timeline_speed_change": "速度变化"
+    "timeline_speed_change": "速度变化",
+    "timeline_download": "Download",
+    "languageSegments": "Language periods"
   },
   "nav": {
     "cleanup": "清理",

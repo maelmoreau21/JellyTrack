@@ -2,7 +2,7 @@ import { Clock, Monitor, Smartphone, PlayCircle, Hash, Film, Calendar, Zap, Trop
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
 import { getTranslations, getLocale } from 'next-intl/server';
-import { getCompletionMetrics, isZapped } from "@/lib/mediaPolicy";
+import { getCumulativeCompletionEntries, isZapped } from "@/lib/mediaPolicy";
 // No more library rules
 
 export default async function UserInfo({ userId, userIds = [], userDbIds = [] }: { userId: string; userIds?: string[]; userDbIds?: string[] }) {
@@ -19,6 +19,9 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
         select: { username: true, jellyfinUserId: true, lastActive: true, playbackHistory: {
                 select: {
                     durationWatched: true,
+                    eventSource: true,
+                    userId: true,
+                    mediaId: true,
                     clientName: true,
                     deviceName: true,
                     startedAt: true,
@@ -55,18 +58,20 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
 
     type PlaybackSession = {
         durationWatched: number;
+        eventSource?: string | null;
         clientName?: string | null;
         deviceName?: string | null;
         startedAt: Date;
+        userId?: string | null;
+        mediaId?: string | null;
         media?: { genres?: string[]; type?: string; durationMs?: bigint | null; title?: string; jellyfinMediaId?: string } | null;
     };
 
-    mergedHistory.forEach((session: any) => {
-        const s = session as any;
-        if (isZapped(s)) return;
-        totalSeconds += s.durationWatched;
-        if (s.clientName) clientCounts.set(s.clientName, (clientCounts.get(s.clientName) || 0) + 1);
-        if (s.deviceName) deviceCounts.set(s.deviceName, (deviceCounts.get(s.deviceName) || 0) + 1);
+    mergedHistory.forEach((session: PlaybackSession) => {
+        if (isZapped(session)) return;
+        totalSeconds += session.durationWatched;
+        if (session.clientName) clientCounts.set(session.clientName, (clientCounts.get(session.clientName) || 0) + 1);
+        if (session.deviceName) deviceCounts.set(session.deviceName, (deviceCounts.get(session.deviceName) || 0) + 1);
 
         const date = new Date(session.startedAt);
         if (!firstWatched || date < firstWatched) firstWatched = date;
@@ -99,12 +104,11 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
             m.count += 1;
         }
 
-        // Completion rate
-        if (session.media?.durationMs) {
-            const completion = getCompletionMetrics(session.media, session.durationWatched);
-            totalCompletions += completion.percent;
-            completionCount++;
-        }
+    });
+
+    getCumulativeCompletionEntries(mergedHistory.filter((session: PlaybackSession) => !isZapped(session))).forEach(({ completion }) => {
+        totalCompletions += completion.percent;
+        completionCount++;
     });
 
     const sessionCount = mergedHistory.filter(s => !isZapped(s)).length;

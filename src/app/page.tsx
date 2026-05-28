@@ -41,7 +41,7 @@ import { YearlyHeatmap } from "@/components/charts/YearlyHeatmap";
 import { DraggableDashboard } from "@/components/dashboard/DraggableDashboard";
 import { HardwareMonitor } from "@/components/dashboard/HardwareMonitor";
 import { LiveStreamsPanel } from "@/components/dashboard/LiveStreamsPanel";
-import { buildExcludedMediaClause, getCompletionMetrics, isZapped } from "@/lib/mediaPolicy";
+import { buildExcludedMediaClause, getCumulativeCompletionEntries } from "@/lib/mediaPolicy";
 import { ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { getLogHealthSnapshot } from "@/lib/logHealth";
 import { categorizeClient } from "@/lib/utils";
@@ -52,7 +52,8 @@ import { MediaFilter } from "@/components/dashboard/MediaFilter";
 import { PredictionsPanel } from "@/components/dashboard/PredictionsPanel";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import { buildLegacyStreamRedisKey, buildStreamRedisKey } from "@/lib/serverRegistry";
-import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from "@/lib/serverScope";
+import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
+import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
 
 
@@ -88,6 +89,7 @@ type LiveStream = {
 type History = {
   startedAt: Date;
   durationWatched: number;
+  mediaId?: string | null;
   clientName?: string | null;
   playMethod?: string | null;
   userId?: string | null;
@@ -279,6 +281,7 @@ const getDashboardMetrics = unstable_cache(
         select: {
           startedAt: true,
           durationWatched: true,
+          mediaId: true,
           clientName: true,
           playMethod: true,
           userId: true,
@@ -549,11 +552,25 @@ const getDashboardMetrics = unstable_cache(
       hours: parseFloat(hours.toFixed(1)),
     }));
 
+    const completionReferenceHistories: History[] = histories.length === 0
+      ? []
+      : currentStartDate
+        ? await prisma.playbackHistory.findMany({
+          where: playbackBaseWhere,
+          select: {
+            durationWatched: true,
+            mediaId: true,
+            userId: true,
+            startedAt: true,
+            media: { select: { type: true, durationMs: true, parentId: true } },
+          },
+        }) as History[]
+        : histories;
+
     let completed = 0;
     let partial = 0;
     let abandoned = 0;
-    histories.forEach((h) => {
-      const completion = getCompletionMetrics(h.media || {}, h.durationWatched);
+    getCumulativeCompletionEntries(histories, completionReferenceHistories).forEach(({ completion }) => {
       if (completion.bucket === "completed") completed++;
       else if (completion.bucket === "partial") partial++;
       else if (completion.bucket === "abandoned") abandoned++;

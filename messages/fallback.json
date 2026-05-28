@@ -190,15 +190,19 @@
       "label": {
         "seek": "Skipped passage",
         "replay": "Replayed passage",
-        "speed_change": "Speed"
+        "speed_change": "Speed",
+        "download": "Download"
       }
-    }
+    },
+    "timeline_download": "Download",
+    "languageSegments": "Language periods"
   },
   "logs": {
     "timeline": {
       "label": {
         "replay": "Replay",
-        "speed_change": "Speed change"
+        "speed_change": "Speed change",
+        "download": "Download"
       },
       "legend": {
         "replay": "Replay",

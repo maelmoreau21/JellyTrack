@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-export type EventType = "pause" | "stop" | "audio_change" | "subtitle_change" | "seek" | "replay" | "speed_change";
+export type EventType = "pause" | "stop" | "download" | "audio_change" | "subtitle_change" | "seek" | "replay" | "speed_change";
 
 export interface TimelineEvent {
     eventType: EventType;
@@ -35,6 +35,7 @@ const EVENT_COLORS: Record<EventType, string> = {
     seek: "#f97316",
     replay: "#22c55e",
     speed_change: "#3b82f6",
+    download: "#8b5cf6",
     audio_change: "#a855f7",
     subtitle_change: "#06b6d4",
 };
@@ -45,11 +46,12 @@ const EVENT_TOKENS: Record<EventType, string> = {
     seek: "Skip",
     replay: "Replay",
     speed_change: "x",
+    download: "D",
     audio_change: "A",
     subtitle_change: "Sub",
 };
 
-const EVENT_TYPES: EventType[] = ["stop", "pause", "seek", "replay", "speed_change", "audio_change", "subtitle_change"];
+const EVENT_TYPES: EventType[] = ["stop", "download", "pause", "seek", "replay", "speed_change", "audio_change", "subtitle_change"];
 
 function formatMs(ms: number): string {
     const totalSec = Math.floor(ms / 1000);
@@ -148,7 +150,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
             data.push({
                 startMs: i * bucketSize,
                 endMs: (i + 1) * bucketSize,
-                events: { stop: 0, pause: 0, seek: 0, replay: 0, speed_change: 0, audio_change: 0, subtitle_change: 0 },
+                events: { stop: 0, download: 0, pause: 0, seek: 0, replay: 0, speed_change: 0, audio_change: 0, subtitle_change: 0 },
             });
         }
 

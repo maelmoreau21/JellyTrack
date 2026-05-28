@@ -38,6 +38,8 @@ export type SafeLog = {
   // additional optional fields used in UI
   clientName?: string | null;
   playMethod?: string | null;
+  eventSource?: string | null;
+  sourceEventId?: string | null;
   videoCodec?: string | null;
   audioLanguage?: string | null;
   audioCodec?: string | null;

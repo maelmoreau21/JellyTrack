@@ -2,7 +2,7 @@
 ARG BUILDPLATFORM
 
 # Base image for the build environment (runs on the host build architecture)
-FROM --platform=$BUILDPLATFORM node:20-alpine AS build-base
+FROM --platform=$BUILDPLATFORM node:24-alpine AS build-base
 RUN apk add --no-cache libc6-compat openssl
 
 # 1. Install dependencies only when needed (on build platform)
@@ -21,7 +21,12 @@ FROM build-base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy Prisma schema first to cache the generate step
+# Provide dummy variables so Prisma/Next.js build steps do not connect to a real DB.
+ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+ENV DATABASE_URL=${DATABASE_URL}
+
+# Copy Prisma config and schema first to cache the generate step
+COPY prisma.config.ts ./prisma.config.ts
 COPY prisma ./prisma
 RUN npx prisma generate
 
@@ -30,10 +35,6 @@ COPY . .
 
 # Environment variables for build time
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Provide dummy variables so Next.js build doesn't crash trying to connect to a real DB
-ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
-ENV DATABASE_URL=${DATABASE_URL}
 
 # Build Next.js project
 RUN NEXTAUTH_SECRET=build-placeholder npm run build
@@ -52,7 +53,7 @@ RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-mus
     find /app/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
 
 # Base image for the target runner (runs on the target platform architecture, e.g. arm64 or amd64)
-FROM node:20-alpine AS run-base
+FROM node:24-alpine AS run-base
 RUN apk add --no-cache libc6-compat openssl
 
 # 3. Production image, copy all the files and run next
@@ -75,6 +76,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Prisma: schema + client + CLI (already stripped of non-linux engines in builder)
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma

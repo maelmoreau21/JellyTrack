@@ -230,6 +230,8 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
         return { marker: "bg-green-500", icon: "Replay", label: t("timeline.label.replay") };
       case "speed_change":
         return { marker: "bg-blue-500", icon: "x", label: t("timeline.label.speed_change") };
+      case "download":
+        return { marker: "bg-violet-500", icon: "Download", label: t("timeline.label.download") };
       case "stop":
         return { marker: "bg-rose-500", icon: "Stop", label: t("timeline.label.stop") };
       default:

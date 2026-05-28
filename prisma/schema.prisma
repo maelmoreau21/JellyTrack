@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Server {
@@ -88,6 +87,8 @@ model PlaybackHistory {
   
   // Streaming Info
   playMethod      String    // e.g., "DirectPlay", "Transcode", "DirectStream"
+  eventSource     String    @default("playback") // "playback" or "download"
+  sourceEventId   String?   // Idempotency key from plugin-originated non-playback events
   clientName      String?   // e.g., "Jellyfin Web", "Android TV"
   deviceName      String?   // e.g., "Chrome", "Nvidia Shield"
   
@@ -134,6 +135,8 @@ model PlaybackHistory {
   @@index([serverId, mediaId, startedAt])
   @@index([clientName])
   @@index([playMethod])
+  @@index([eventSource])
+  @@unique([serverId, sourceEventId])
   @@index([endedAt])
   @@index([serverId, endedAt])
   @@index([ipAddress, startedAt])

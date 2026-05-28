@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => {
             findMany: vi.fn(),
             create: vi.fn(),
             update: vi.fn(),
+            delete: vi.fn(),
         },
         playbackHistory: {
             findUnique: vi.fn(),
@@ -133,6 +134,7 @@ vi.mock("@/lib/serverRegistry", () => ({
 }));
 
 import { POST } from "./route";
+import { isLibraryExcluded } from "@/lib/mediaPolicy";
 
 function resetMockTree(value: unknown) {
     if (!value || typeof value !== "object") return;
@@ -200,6 +202,13 @@ describe("/api/plugin/events schema v3 ingestion", () => {
         resetMockTree(mocks.redis);
 
         mocks.prisma.globalSettings.upsert.mockResolvedValue({});
+        mocks.prisma.$transaction.mockImplementation(async (callback: any) => callback(mocks.prisma));
+        mocks.prisma.user.findMany.mockResolvedValue([]);
+        mocks.prisma.user.create.mockResolvedValue(streamUser);
+        mocks.prisma.media.findMany.mockResolvedValue([]);
+        mocks.prisma.media.create.mockResolvedValue(streamMedia);
+        mocks.prisma.playbackHistory.findFirst.mockResolvedValue(null);
+        mocks.prisma.playbackHistory.create.mockResolvedValue({ ...activePlayback, id: "download-playback-1" });
         mocks.prisma.telemetryEvent.create.mockResolvedValue({});
         mocks.prisma.telemetryEvent.createMany.mockResolvedValue({ count: 0 });
         mocks.prisma.playbackHistory.update.mockImplementation(async ({ where, data }) => ({
@@ -213,6 +222,120 @@ describe("/api/plugin/events schema v3 ingestion", () => {
         mocks.redis.get.mockResolvedValue(null);
         mocks.redis.setex.mockResolvedValue("OK");
         mocks.redis.del.mockResolvedValue(1);
+    });
+
+    it("records a downloaded movie as a completed download view", async () => {
+        const response = await POST(requestFor({
+            event: "MediaDownloaded",
+            eventSchemaVersion: 3,
+            serverId: "jellyfin-main",
+            sourceEventId: "download-event-1",
+            observedAtUtc: "2026-05-28T12:00:00.000Z",
+            user: { jellyfinUserId: "jf-user-1", username: "Alice" },
+            media: {
+                jellyfinMediaId: "jf-media-1",
+                title: "The Movie",
+                type: "Movie",
+                collectionType: "movies",
+                durationMs: 600_000,
+                libraryName: "Films",
+            },
+            session: { clientName: "Jellyfin Web", deviceName: "Chrome" },
+        }));
+
+        expect(response.status).toBe(200);
+        expect(mocks.prisma.playbackHistory.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({
+                playMethod: "Download",
+                eventSource: "download",
+                sourceEventId: "download-event-1",
+                durationWatched: 600,
+                startedAt: new Date("2026-05-28T12:00:00.000Z"),
+                endedAt: new Date("2026-05-28T12:00:00.000Z"),
+            }),
+        }));
+        expect(mocks.prisma.telemetryEvent.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({
+                eventType: "download",
+                positionMs: BigInt(600_000),
+            }),
+        }));
+    });
+
+    it("deduplicates downloaded media events by sourceEventId and accepts legacy aliases", async () => {
+        mocks.prisma.playbackHistory.findFirst.mockResolvedValueOnce({ id: "existing-download" });
+
+        const response = await POST(requestFor({
+            event: "ItemDownloaded",
+            eventSchemaVersion: 3,
+            serverId: "jellyfin-main",
+            sourceEventId: "download-event-1",
+            user: { jellyfinUserId: "jf-user-1", username: "Alice" },
+            media: { jellyfinMediaId: "jf-media-1", title: "The Movie", type: "Movie", durationMs: 600_000 },
+        }));
+
+        expect(response.status).toBe(200);
+        const body = await response.json();
+        expect(body).toEqual(expect.objectContaining({ duplicate: true, playbackId: "existing-download" }));
+        expect(mocks.prisma.playbackHistory.create).not.toHaveBeenCalled();
+    });
+
+    it("records downloaded audio as a completed download view", async () => {
+        mocks.prisma.media.create.mockResolvedValueOnce({
+            ...streamMedia,
+            id: "audio-db-1",
+            type: "Audio",
+            collectionType: "music",
+            durationMs: BigInt(180_000),
+        });
+
+        const response = await POST(requestFor({
+            event: "DownloadCompleted",
+            eventSchemaVersion: 3,
+            serverId: "jellyfin-main",
+            sourceEventId: "download-audio-1",
+            user: { jellyfinUserId: "jf-user-1", username: "Alice" },
+            media: { jellyfinMediaId: "jf-audio-1", title: "Song", type: "Audio", collectionType: "music", durationMs: 180_000 },
+        }));
+
+        expect(response.status).toBe(200);
+        expect(mocks.prisma.playbackHistory.create).toHaveBeenCalledWith(expect.objectContaining({
+            data: expect.objectContaining({
+                eventSource: "download",
+                durationWatched: 180,
+            }),
+        }));
+    });
+
+    it("ignores downloaded media from excluded libraries", async () => {
+        vi.mocked(isLibraryExcluded).mockReturnValueOnce(true);
+
+        const response = await POST(requestFor({
+            event: "MediaDownloaded",
+            eventSchemaVersion: 3,
+            serverId: "jellyfin-main",
+            sourceEventId: "download-event-excluded",
+            user: { jellyfinUserId: "jf-user-1", username: "Alice" },
+            media: { jellyfinMediaId: "jf-media-1", title: "The Movie", type: "Movie", durationMs: 600_000, libraryName: "Private" },
+        }));
+
+        expect(response.status).toBe(200);
+        const body = await response.json();
+        expect(body).toEqual(expect.objectContaining({ ignored: true }));
+        expect(mocks.prisma.playbackHistory.create).not.toHaveBeenCalled();
+    });
+
+    it("rejects malformed downloaded media events", async () => {
+        const response = await POST(requestFor({
+            event: "MediaDownloaded",
+            eventSchemaVersion: 3,
+            serverId: "jellyfin-main",
+            sourceEventId: "bad-download",
+            user: { jellyfinUserId: "jf-user-1", username: "Alice" },
+        }));
+
+        expect(response.status).toBe(400);
+        expect(mocks.prisma.playbackHistory.create).not.toHaveBeenCalled();
     });
 
     it("records pause, resume, and seek state changes immediately for schema v3", async () => {

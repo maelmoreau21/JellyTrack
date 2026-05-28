@@ -32,6 +32,7 @@ const CORS_HEADERS = {
 
 const ALLOWED_PLUGIN_EVENTS = new Set([
     "Heartbeat",
+    "MediaDownloaded",
     "PlaybackStart",
     "PlaybackProgress",
     "PlaybackStop",
@@ -39,6 +40,7 @@ const ALLOWED_PLUGIN_EVENTS = new Set([
     "SessionEnded",
     "LibraryChanged",
 ]);
+const DOWNLOAD_EVENT_ALIASES = new Set(["ItemDownloaded", "DownloadCompleted"]);
 const CURRENT_PLUGIN_EVENT_SCHEMA_VERSION = 3;
 const MIN_SUPPORTED_PLUGIN_EVENT_SCHEMA_VERSION = 2;
 const parsedMaxPluginEventBytes = Number(process.env.PLUGIN_EVENT_MAX_BYTES);
@@ -193,6 +195,10 @@ function getPluginEventRateLimitIdentifier(req: Request): string {
 function computeProgressPercent(positionTicks: number, runTimeTicks: number | null): number {
     if (!runTimeTicks || runTimeTicks <= 0) return 0;
     return Math.min(100, Math.max(0, Math.round((positionTicks / runTimeTicks) * 100)));
+}
+
+function normalizePluginEventName(event: string): string {
+    return DOWNLOAD_EVENT_ALIASES.has(event) ? "MediaDownloaded" : event;
 }
 
 const AUDIO_WALL_CLOCK_TYPES = new Set(["audio", "track", "audiobook"]);
@@ -748,6 +754,225 @@ async function buildMediaSubtitle(input: {
     return parent.title;
 }
 
+function readTrimmedString(...values: unknown[]): string | null {
+    for (const value of values) {
+        if (typeof value === "string" && value.trim()) {
+            return value.trim();
+        }
+        if (typeof value === "number" && Number.isFinite(value)) {
+            return String(value);
+        }
+    }
+    return null;
+}
+
+function parseDurationMsFromPayload(mediaPayload: Record<string, unknown>): bigint | null {
+    const durationMs = parseFiniteNumber(mediaPayload.durationMs ?? mediaPayload.DurationMs);
+    if (durationMs !== null && durationMs > 0) {
+        return BigInt(Math.round(durationMs));
+    }
+
+    const runTimeTicks = parseFiniteNumber(mediaPayload.runTimeTicks ?? mediaPayload.RunTimeTicks);
+    if (runTimeTicks !== null && runTimeTicks > 0) {
+        return BigInt(Math.round(runTimeTicks / 10_000));
+    }
+
+    return null;
+}
+
+function buildDownloadSourceEventId(
+    payload: Record<string, any>,
+    sourceServerId: string,
+    jellyfinUserId: string,
+    jellyfinMediaId: string,
+): string | null {
+    const direct = readTrimmedString(
+        payload.sourceEventId,
+        payload.SourceEventId,
+        payload.eventId,
+        payload.EventId,
+        payload.downloadId,
+        payload.DownloadId,
+    );
+    if (direct) return direct;
+
+    const observedAtMs = parseObservedAtMs(payload);
+    if (!observedAtMs) return null;
+
+    return createHash("sha256")
+        .update(`${sourceServerId}:${jellyfinUserId}:${jellyfinMediaId}:${observedAtMs}`)
+        .digest("hex");
+}
+
+async function handleMediaDownloadedEvent(payload: Record<string, any>, sourceServer: { id: string }) {
+    const userPayload = (payload.user || payload.User || {}) as Record<string, unknown>;
+    const mediaPayload = (payload.media || payload.Media || payload.item || payload.Item || {}) as Record<string, unknown>;
+    const sessionPayload = (payload.session || payload.Session || payload.client || payload.Client || {}) as Record<string, unknown>;
+
+    const jellyfinUserId = normalizeJellyfinId(
+        userPayload.jellyfinUserId ||
+        userPayload.JellyfinUserId ||
+        userPayload.id ||
+        userPayload.Id ||
+        payload.userId ||
+        payload.UserId,
+    );
+    const jellyfinMediaId = normalizeJellyfinId(
+        mediaPayload.jellyfinMediaId ||
+        mediaPayload.JellyfinMediaId ||
+        mediaPayload.id ||
+        mediaPayload.Id ||
+        payload.mediaId ||
+        payload.MediaId ||
+        payload.itemId ||
+        payload.ItemId,
+    );
+
+    if (!jellyfinUserId || !jellyfinMediaId) {
+        return corsJson({ error: "Missing userId or mediaId." }, { status: 400 });
+    }
+
+    const username = readTrimmedString(
+        userPayload.username,
+        userPayload.Username,
+        userPayload.name,
+        userPayload.Name,
+    ) || "Unknown";
+    const title = readTrimmedString(
+        mediaPayload.title,
+        mediaPayload.Title,
+        mediaPayload.name,
+        mediaPayload.Name,
+    ) || "Unknown";
+    const type = readTrimmedString(mediaPayload.type, mediaPayload.Type) || "Unknown";
+    const collectionType = readTrimmedString(mediaPayload.collectionType, mediaPayload.CollectionType) || inferLibraryKey({ type });
+    const libraryName = readTrimmedString(mediaPayload.libraryName, mediaPayload.LibraryName);
+    const parentItemId = normalizeJellyfinId(readTrimmedString(mediaPayload.parentId, mediaPayload.ParentId));
+    const rawGenres = mediaPayload.genres || mediaPayload.Genres;
+    const genres = Array.isArray(rawGenres) ? rawGenres.filter((genre): genre is string => typeof genre === "string") : [];
+    const resolution = readTrimmedString(mediaPayload.resolution, mediaPayload.Resolution);
+
+    const ingestSettings = await getCachedPluginIngestSettings();
+    if (isLibraryExcluded({ serverId: sourceServer.id, libraryName, collectionType, type }, ingestSettings.excludedLibraries)) {
+        console.log("[Plugin] MediaDownloaded ignored due excluded library", {
+            serverId: sourceServer.id,
+            jellyfinUserId,
+            jellyfinMediaId,
+            libraryName,
+            collectionType: collectionType || null,
+            type,
+        });
+        return corsJson({ success: true, ignored: true, message: "Library excluded." });
+    }
+
+    const [dbUser, dbMedia] = await Promise.all([
+        upsertCanonicalUser(sourceServer.id, jellyfinUserId, username, true),
+        upsertCanonicalMedia({
+            serverId: sourceServer.id,
+            rawJellyfinMediaId: jellyfinMediaId,
+            title,
+            type,
+            collectionType,
+            genres,
+            resolution: resolution ? normalizeResolution(resolution) : null,
+            durationMs: parseDurationMsFromPayload(mediaPayload),
+            parentId: parentItemId,
+            artist: readTrimmedString(mediaPayload.artist, mediaPayload.Artist, mediaPayload.albumArtist, mediaPayload.AlbumArtist),
+            libraryName,
+        }),
+    ]);
+
+    if (!dbUser || !dbMedia) {
+        return corsJson({ error: "Unable to resolve canonical user/media." }, { status: 400 });
+    }
+
+    const durationMs = dbMedia.durationMs ? Number(dbMedia.durationMs) : 0;
+    if (!Number.isFinite(durationMs) || durationMs <= 0) {
+        return corsJson({ error: "Downloaded media requires a positive duration." }, { status: 400 });
+    }
+
+    const sourceEventId = buildDownloadSourceEventId(payload, sourceServer.id, jellyfinUserId, jellyfinMediaId);
+    if (sourceEventId) {
+        const existing = await prisma.playbackHistory.findFirst({
+            where: { serverId: sourceServer.id, sourceEventId },
+            select: { id: true },
+        });
+        if (existing) {
+            return corsJson({ success: true, duplicate: true, playbackId: existing.id, message: "MediaDownloaded already processed." });
+        }
+    }
+
+    const observedAtMs = parseObservedAtMs(payload);
+    const completedAt = observedAtMs ? new Date(observedAtMs) : new Date();
+    const ipAddress = cleanIp(
+        sessionPayload.ipAddress ||
+        sessionPayload.IpAddress ||
+        payload.ipAddress ||
+        payload.IpAddress ||
+        null,
+    );
+    const geoData = getGeoLocation(ipAddress);
+    const durationWatched = Math.ceil(durationMs / 1000);
+    const audioLanguage = readTrimmedString(sessionPayload.audioLanguage, sessionPayload.AudioLanguage);
+    const audioCodec = readTrimmedString(sessionPayload.audioCodec, sessionPayload.AudioCodec);
+    const subtitleLanguage = readTrimmedString(sessionPayload.subtitleLanguage, sessionPayload.SubtitleLanguage);
+    const subtitleCodec = readTrimmedString(sessionPayload.subtitleCodec, sessionPayload.SubtitleCodec);
+
+    try {
+        const playback = await prisma.playbackHistory.create({
+            data: {
+                serverId: sourceServer.id,
+                userId: dbUser.id,
+                mediaId: dbMedia.id,
+                playMethod: "Download",
+                eventSource: "download",
+                sourceEventId: sourceEventId || null,
+                clientName: readTrimmedString(sessionPayload.clientName, sessionPayload.ClientName, payload.clientName, payload.ClientName) || "Download",
+                deviceName: readTrimmedString(sessionPayload.deviceName, sessionPayload.DeviceName, payload.deviceName, payload.DeviceName),
+                ipAddress,
+                country: geoData.country,
+                city: geoData.city,
+                durationWatched,
+                startedAt: completedAt,
+                endedAt: completedAt,
+                bitrate: dbMedia.size && dbMedia.durationMs ? Math.round(Number(dbMedia.size) * 8000 / Number(dbMedia.durationMs)) : null,
+                audioLanguage,
+                audioCodec,
+                subtitleLanguage,
+                subtitleCodec,
+            },
+        });
+
+        await prisma.telemetryEvent.create({
+            data: {
+                serverId: sourceServer.id,
+                playbackId: playback.id,
+                eventType: "download",
+                positionMs: BigInt(durationMs),
+                metadata: JSON.stringify({
+                    sourceEventId,
+                    fullView: true,
+                    durationMs,
+                    event: "MediaDownloaded",
+                }),
+            },
+        });
+
+        return corsJson({ success: true, playbackId: playback.id, message: "MediaDownloaded processed." });
+    } catch (error) {
+        if (sourceEventId && isPrismaUniqueConstraintError(error)) {
+            const existing = await prisma.playbackHistory.findFirst({
+                where: { serverId: sourceServer.id, sourceEventId },
+                select: { id: true },
+            });
+            if (existing) {
+                return corsJson({ success: true, duplicate: true, playbackId: existing.id, message: "MediaDownloaded already processed." });
+            }
+        }
+        throw error;
+    }
+}
+
 // Acquire a short Redis-based lock for a user+media pair to avoid concurrent
 // creation of duplicate PlaybackHistory rows when multiple plugin events
 // arrive in parallel (PlaybackStart vs PlaybackProgress bootstrap).
@@ -1206,15 +1431,16 @@ export async function POST(req: Request) {
 
     try {
         const eventRaw = payload.event || payload.Event;
-        const event = typeof eventRaw === "string" ? eventRaw.trim() : "";
+        const rawEvent = typeof eventRaw === "string" ? eventRaw.trim() : "";
+        const event = normalizePluginEventName(rawEvent);
         const schemaVersionResult = resolvePluginSchemaVersion(payload);
 
-        if (!event) {
+        if (!rawEvent) {
             return corsJson({ error: "Missing 'event' field." }, { status: 400 });
         }
 
         if (!ALLOWED_PLUGIN_EVENTS.has(event)) {
-            return corsJson({ error: `Unknown event: ${event}` }, { status: 400 });
+            return corsJson({ error: `Unknown event: ${rawEvent}` }, { status: 400 });
         }
 
         if (!schemaVersionResult.valid) {
@@ -1314,6 +1540,11 @@ export async function POST(req: Request) {
         }
 
         console.log(`[Plugin] Event received: ${event}`);
+
+        // ────── MediaDownloaded ──────
+        if (event === "MediaDownloaded") {
+            return handleMediaDownloadedEvent(payload, sourceServer);
+        }
 
         // ────── Heartbeat ──────
         if (event === "Heartbeat") {

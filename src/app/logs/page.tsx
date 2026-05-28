@@ -25,7 +25,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from "@/lib/serverScope";
+import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
+import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
 
 export const dynamic = "force-dynamic";
@@ -415,7 +416,7 @@ export default async function LogsPage({
                 user: { select: { id: true, username: true, jellyfinUserId: true } },
                 media: { select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true, resolution: true, durationMs: true } },
                 telemetryEvents: {
-                    select: { eventType: true, positionMs: true, createdAt: true },
+                    select: { eventType: true, positionMs: true, createdAt: true, metadata: true },
                     orderBy: { createdAt: 'desc' },
                     take: MAX_TELEMETRY_EVENTS_PER_LOG,
                 },

@@ -137,6 +137,8 @@ export async function POST(req: NextRequest) {
                             endedAt: ph.endedAt ? new Date(ph.endedAt) : null,
                             durationWatched: ph.durationWatched || 0,
                             playMethod: ph.playMethod,
+                            eventSource: ph.eventSource || "playback",
+                            sourceEventId: ph.sourceEventId || null,
                             clientName: ph.clientName,
                             deviceName: ph.deviceName,
                             ipAddress: ph.ipAddress,
@@ -149,6 +151,10 @@ export async function POST(req: NextRequest) {
                             pauseCount: ph.pauseCount || 0,
                             audioChanges: ph.audioChanges || 0,
                             subtitleChanges: ph.subtitleChanges || 0,
+                            seekCount: ph.seekCount || 0,
+                            rewatchCount: ph.rewatchCount || 0,
+                            speedChangeCount: ph.speedChangeCount || 0,
+                            maxPlaybackRate: ph.maxPlaybackRate || null,
                         }
                     });
                 }

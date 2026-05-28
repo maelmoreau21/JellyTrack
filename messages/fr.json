@@ -511,7 +511,8 @@
         "stop": "Arrêt",
         "subtitle_change": "Chgt Sous-titre",
         "replay": "Retour / relecture",
-        "speed_change": "Changement de vitesse"
+        "speed_change": "Changement de vitesse",
+        "download": "Téléchargement"
       },
       "legend": {
         "audio": "Audio",
@@ -669,7 +670,8 @@
         "subtitle_change": "Sous-titre",
         "seek": "Passage sauté",
         "replay": "Passage revu",
-        "speed_change": "Vitesse"
+        "speed_change": "Vitesse",
+        "download": "Téléchargement"
       }
     },
     "timelineDesc": "Chronologie détaillée des événements pour cette session.",
@@ -716,7 +718,9 @@
     "posterRotateError": "Impossible de changer l'affiche.",
     "timeline_seek": "Passage sauté",
     "timeline_replay": "Passage revu",
-    "timeline_speed_change": "Changement de vitesse"
+    "timeline_speed_change": "Changement de vitesse",
+    "timeline_download": "Téléchargement",
+    "languageSegments": "Périodes de langue"
   },
   "nav": {
     "cleanup": "Nettoyage",

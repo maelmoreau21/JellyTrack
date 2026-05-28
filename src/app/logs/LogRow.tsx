@@ -103,6 +103,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
       case 'seek': return { color: 'bg-orange-500', label: t('timeline.label.seek'), icon: 'S' };
       case 'replay': return { color: 'bg-green-500', label: t('timeline.label.replay'), icon: 'R' };
       case 'speed_change': return { color: 'bg-blue-500', label: t('timeline.label.speed_change'), icon: 'x' };
+      case 'download': return { color: 'bg-violet-500', label: t('timeline.label.download'), icon: 'D' };
       case 'stop': return { color: 'bg-rose-500', label: t('timeline.label.stop'), icon: 'End' };
       default: return { color: 'bg-zinc-700', label: String(type || t('timeline.label.default')).replace(/_/g, ' '), icon: '-' };
     }

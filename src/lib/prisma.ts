@@ -1,7 +1,13 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 
 const prismaClientSingleton = () => {
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+  });
+
   return new PrismaClient({
+    adapter,
     log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
   })
 }
@@ -17,7 +23,7 @@ function createPrismaStub() {
   const modelHandler: ProxyHandler<Record<string, unknown>> = {
     get(_t, prop: string) {
       if (prop === '$connect' || prop === '$disconnect') return async () => {};
-      return async (..._args: unknown[]) => {
+      return async () => {
         if (prop === 'findMany') return [];
         if (prop === 'groupBy') return [];
         if (prop === 'findUnique' || prop === 'findFirst' || prop === 'findUniqueOrThrow') return null;

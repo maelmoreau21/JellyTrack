@@ -14,7 +14,8 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import { buildExcludedMediaClause } from '@/lib/mediaPolicy';
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import { cookies } from "next/headers";
-import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from "@/lib/serverScope";
+import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
+import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
 
 export const dynamic = "force-dynamic";

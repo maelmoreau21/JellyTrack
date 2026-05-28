@@ -511,7 +511,8 @@
         "stop": "Stop",
         "subtitle_change": "Subtitle Change",
         "replay": "Replay",
-        "speed_change": "Speed change"
+        "speed_change": "Speed change",
+        "download": "Download"
       },
       "legend": {
         "audio": "Audio",
@@ -669,7 +670,8 @@
         "subtitle_change": "Subtitle",
         "seek": "Skipped passage",
         "replay": "Replayed passage",
-        "speed_change": "Speed"
+        "speed_change": "Speed",
+        "download": "Download"
       }
     },
     "timelineDesc": "Detailed event timeline for this session.",
@@ -716,7 +718,9 @@
     "posterRotateError": "Unable to change poster.",
     "timeline_seek": "Skipped passage",
     "timeline_replay": "Replayed passage",
-    "timeline_speed_change": "Speed change"
+    "timeline_speed_change": "Speed change",
+    "timeline_download": "Download",
+    "languageSegments": "Language periods"
   },
   "nav": {
     "cleanup": "Cleanup",
