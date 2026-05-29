@@ -114,7 +114,7 @@ export function LanguageSwitcher() {
                                 className="w-5 h-3.5 object-cover rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
                             />
                             <span className="flex-1 text-left">{loc.label}</span>
-                            {loc.code === selectedLocale && <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">Actif</span>}
+                            {loc.code === selectedLocale && <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">Active</span>}
                         </button>
                     ))}
                 </div>
