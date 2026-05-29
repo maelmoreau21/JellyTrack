@@ -39,6 +39,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Build Next.js project
 RUN NEXTAUTH_SECRET=build-placeholder npm run build
 
+# Prune devDependencies to keep only production dependencies (including prisma CLI)
+RUN npm prune --omit=dev
+
 # ── Clean up Prisma engines: keep only linux-musl (Alpine), remove all others ──
 # This saves ~50-60MB by removing Windows, macOS, Debian, etc. engine binaries
 # Note: Since we are building multi-arch, both amd64 and arm64 engine binaries contain 'linux-musl'
@@ -75,18 +78,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Prisma: schema + client + CLI (already stripped of non-linux engines in builder)
-COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/package.json ./package.json
-
-# Force copy serverExternalPackages (not bundled by Next.js standalone)
-COPY --from=builder /app/node_modules/geoip-country ./node_modules/geoip-country
-COPY --from=builder /app/node_modules/node-cron ./node_modules/node-cron
+# Production dependencies: pruned node_modules (already stripped of devDependencies and non-linux Prisma engines)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 # OCI labels — links the GHCR package to the GitHub repo
 LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTrack"
