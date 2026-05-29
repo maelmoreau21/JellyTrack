@@ -218,7 +218,7 @@ model GlobalSettings {
   syncCronMinute        Int      @default(0)     // Minute (0-59) for daily full sync
   backupCronHour        Int      @default(3)     // Hour (0-23) for daily auto-backup
   backupCronMinute      Int      @default(30)    // Minute (0-59) for daily auto-backup
-  defaultLocale         String   @default("fr")  // Default language for new users (fr, en)
+  defaultLocale         String   @default("en")  // Default language for new users (fr, en)
   timeFormat            String   @default("24h") // Time display format: "12h" or "24h"
   wrappedVisible        Boolean  @default(true)  // Whether the Wrapped feature is visible to users
   wrappedPeriodEnabled  Boolean  @default(true)

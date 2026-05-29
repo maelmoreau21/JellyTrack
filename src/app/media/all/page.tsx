@@ -370,7 +370,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
 
     return (
         <div className="p-6 max-w-[1400px] mx-auto">
-            <h1 className="text-2xl font-bold mb-4">{t('allMedia') || 'Tous les médias'}</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('allMedia') || 'All media'}</h1>
             <div className="mb-4">
                 <ServerFilter
                     servers={selectableServerOptions}

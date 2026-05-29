@@ -271,7 +271,7 @@ export async function POST(req: NextRequest) {
                 syncCronMinute: syncCronMinute !== undefined ? Number(syncCronMinute) : 0,
                 backupCronHour: backupCronHour !== undefined ? Number(backupCronHour) : 3,
                 backupCronMinute: backupCronMinute !== undefined ? Number(backupCronMinute) : 30,
-                defaultLocale: defaultLocale || "fr",
+                defaultLocale: defaultLocale || "en",
                 wrappedVisible: wrappedVisible !== undefined ? Boolean(wrappedVisible) : true,
                 wrappedPeriodEnabled: wrappedPeriodEnabled !== undefined ? Boolean(wrappedPeriodEnabled) : true,
                 wrappedStartMonth: wrappedStartMonth !== undefined ? Number(wrappedStartMonth) : 12,

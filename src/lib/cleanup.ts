@@ -104,7 +104,7 @@ export async function cleanupOrphanedSessions() {
             await appendHealthEvent({
                 source: 'monitor',
                 kind: 'orphan-cleanup',
-                message: `Nettoyage : ${staleDeletedCount} flux fantômes supprimés, ${closedCount} lectures fermées.`,
+                message: `Cleanup: ${staleDeletedCount} ghost streams removed, ${closedCount} playbacks closed.`,
                 details: { staleStreams: staleDeletedCount, closedHistory: closedCount }
             });
         }

@@ -11,13 +11,13 @@ import {
 } from "@/lib/jellyfinServers";
 
 /**
- * Fonction maîtresse de synchronisation de la librairie Jellyfin.
- * Interroge l'API Jellyfin pour récupérer les Utilisateurs et les Médias (Films, Séries, Épisodes),
- * et effectue un Upsert massif dans la base PostgreSQL via Prisma.
+ * Main synchronization function for the Jellyfin library.
+ * Queries the Jellyfin API to fetch Users and Media (Movies, Series, Episodes),
+ * and performs a massive Upsert in the PostgreSQL database via Prisma.
  */
 export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
-    const mode = options?.recentOnly ? 'récente (7 derniers jours)' : 'complète';
-    console.log(`[Sync] Démarrage de la synchronisation ${mode} de la librairie Jellyfin...`);
+    const mode = options?.recentOnly ? 'recent (last 7 days)' : 'full';
+    console.log(`[Sync] Starting ${mode} synchronization of the Jellyfin library...`);
     await markSyncStarted(options?.recentOnly ? 'recent' : 'full');
 
     const configuredServers = await getConfiguredJellyfinServers();
@@ -65,10 +65,10 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 const isAbort = err.name === 'AbortError';
                 const errorMsg = isAbort ? `Timeout (${timeout}ms)` : (err.message || "Unknown Network Error");
                 
-                console.warn(`[Sync Warning] Tentative ${i + 1}/${maxRetries} échouée pour ${url.split('?')[0]}: ${errorMsg}`);
+                console.warn(`[Sync Warning] Attempt ${i + 1}/${maxRetries} failed for ${url.split('?')[0]}: ${errorMsg}`);
                 
                 if (i === maxRetries - 1) {
-                    console.error(`[Sync Error] Échec final après ${maxRetries} tentatives. URL: ${url}. Erreur:`, e);
+                    console.error(`[Sync Error] Final failure after ${maxRetries} attempts. URL: ${url}. Error:`, e);
                     throw e;
                 }
                 await new Promise(r => setTimeout(r, 2000 * (i + 1)));
@@ -161,7 +161,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             const currentServerId = target.server.id;
             const currentServerName = target.server.name;
 
-            console.log(`[Sync] Début synchronisation serveur: ${currentServerName} (${target.server.jellyfinServerId})`);
+            console.log(`[Sync] Starting server synchronization: ${currentServerName} (${target.server.jellyfinServerId})`);
 
             try {
                 // 1. Sync Users
@@ -561,7 +561,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 totalUsersCount += usersCount;
                 totalMediaCount += mediaCount;
 
-                console.log(`[Sync] Serveur ${currentServerName} terminé: users=${usersCount}, media=${mediaCount}`);
+                console.log(`[Sync] Server ${currentServerName} finished: users=${usersCount}, media=${mediaCount}`);
             } catch (serverError: unknown) {
                 let normalizedError = 'Unknown error';
                 if (serverError instanceof Error) normalizedError = serverError.message;
@@ -575,7 +575,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     name: currentServerName,
                     error: normalizedError,
                 });
-                console.error(`[Sync] Échec serveur ${currentServerName}:`, normalizedError);
+                console.error(`[Sync] Server ${currentServerName} failed:`, normalizedError);
             }
         }
 
@@ -589,7 +589,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             await appendHealthEvent({
                 source: 'sync',
                 kind: 'sync_partial',
-                message: `Synchronisation partielle: ${failedServers.length} serveur(s) en échec.`,
+                message: `Partial synchronization: ${failedServers.length} server(s) failed.`,
                 details: { count: failedServers.length, failedServers }
             });
         }
@@ -598,7 +598,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             await appendHealthEvent({
                 source: 'sync',
                 kind: 'sync_success',
-                message: `Synchronisation réussie : ${totalMediaCount} médias traités.`,
+                message: `Successful synchronization: ${totalMediaCount} media processed.`,
                 details: { count: 1, mediaProcessed: totalMediaCount, usersProcessed: totalUsersCount }
             });
         }

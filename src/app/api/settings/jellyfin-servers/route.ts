@@ -18,12 +18,12 @@ type ConnectionState = "online" | "offline" | "no_api_key";
 async function probeConnection(url: string, apiKey: string | null): Promise<{ state: ConnectionState; message: string }> {
   const normalizedUrl = normalizeUrl(url);
   if (!normalizedUrl) {
-    return { state: "offline", message: "URL serveur manquante." };
+    return { state: "offline", message: "Server URL missing." };
   }
 
   const normalizedApiKey = normalizeSecret(apiKey);
   if (!normalizedApiKey) {
-    return { state: "no_api_key", message: "Clé API manquante." };
+    return { state: "no_api_key", message: "API key missing." };
   }
 
   try {
@@ -33,7 +33,7 @@ async function probeConnection(url: string, apiKey: string | null): Promise<{ st
     });
 
     if (info) {
-      return { state: "online", message: "Connexion OK" };
+      return { state: "online", message: "Connection OK" };
     }
 
     const controller = new AbortController();
@@ -48,13 +48,13 @@ async function probeConnection(url: string, apiKey: string | null): Promise<{ st
     if (publicProbe?.ok) {
       return {
         state: "offline",
-        message: "Serveur accessible, mais clé API refusée/incompatible. Régénérez une clé API admin Jellyfin.",
+        message: "Server reachable, but API key rejected/incompatible. Regenerate a Jellyfin admin API key.",
       };
     }
 
-    return { state: "offline", message: "Serveur indisponible ou endpoint System/Info non compatible." };
+    return { state: "offline", message: "Server unavailable or incompatible System/Info endpoint." };
   } catch {
-    return { state: "offline", message: "Serveur injoignable." };
+    return { state: "offline", message: "Server unreachable." };
   }
 }
 
@@ -146,25 +146,25 @@ export async function POST(req: NextRequest) {
   const allowAuthFallback = asBoolean(body.allowAuthFallback, true);
 
   if (!url) {
-    return NextResponse.json({ error: "URL serveur Jellyfin requise." }, { status: 400 });
+    return NextResponse.json({ error: "Jellyfin server URL required." }, { status: 400 });
   }
   if (!apiKey) {
-    return NextResponse.json({ error: "Clé API Jellyfin requise." }, { status: 400 });
+    return NextResponse.json({ error: "Jellyfin API key required." }, { status: 400 });
   }
 
   try {
     const parsed = new URL(url);
     if (!["http:", "https:"].includes(parsed.protocol)) {
-      return NextResponse.json({ error: "URL Jellyfin invalide." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid Jellyfin URL." }, { status: 400 });
     }
   } catch {
-    return NextResponse.json({ error: "URL Jellyfin invalide." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid Jellyfin URL." }, { status: 400 });
   }
 
   const info = await fetchJellyfinSystemInfo({ url, apiKey });
   if (!info) {
     return NextResponse.json(
-      { error: "Connexion Jellyfin impossible. Vérifiez l'URL et la clé API." },
+      { error: "Unable to connect to Jellyfin. Check the URL and API key." },
       { status: 400 }
     );
   }
@@ -207,14 +207,14 @@ export async function PATCH(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const id = String(body.id || "").trim();
   if (!id) {
-    return NextResponse.json({ error: "Serveur introuvable." }, { status: 400 });
+    return NextResponse.json({ error: "Server not found." }, { status: 400 });
   }
 
   const master = getMasterServerIdentityFromEnv();
   const prismaAny = prisma as any;
   const existing = await prismaAny.server.findUnique({ where: { id } });
   if (!existing) {
-    return NextResponse.json({ error: "Serveur introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Server not found." }, { status: 404 });
   }
 
   const nextName =
@@ -223,7 +223,7 @@ export async function PATCH(req: NextRequest) {
       : String(body.name || "").trim();
 
   if (!nextName) {
-    return NextResponse.json({ error: "Nom du serveur requis." }, { status: 400 });
+    return NextResponse.json({ error: "Server name required." }, { status: 400 });
   }
 
   const nextAllowFallback =
@@ -262,7 +262,7 @@ export async function DELETE(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const id = String(body.id || "").trim();
   if (!id) {
-    return NextResponse.json({ error: "Serveur introuvable." }, { status: 400 });
+    return NextResponse.json({ error: "Server not found." }, { status: 400 });
   }
 
   const prismaAny = prisma as any;

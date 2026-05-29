@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
                         syncCronMinute: (cs['syncCronMinute'] as number) ?? 0,
                         backupCronHour: (cs['backupCronHour'] as number) ?? 3,
                         backupCronMinute: (cs['backupCronMinute'] as number) ?? 30,
-                        defaultLocale: (cs['defaultLocale'] as string) ?? "fr",
+                        defaultLocale: (cs['defaultLocale'] as string) ?? "en",
                         timeFormat: (cs['timeFormat'] as string) ?? "24h",
                     }
                 });

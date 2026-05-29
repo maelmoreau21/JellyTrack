@@ -85,7 +85,7 @@ export default function SystemLogsListClient({ logs, locale }: { logs: SystemLog
                                             {getIcon(entry)}
                                         </div>
                                         <span className="text-xs font-bold text-foreground tracking-tight">
-                                            {entry.type === 'audit' ? (entry.action || 'Audit') : (entry.source || 'Système')}
+                                            {entry.type === 'audit' ? (entry.action || 'Audit') : (entry.source || 'System')}
                                         </span>
                                     </div>
                                 </TableCell>
@@ -96,7 +96,7 @@ export default function SystemLogsListClient({ logs, locale }: { logs: SystemLog
                                             {entry.ipAddress && <span className="text-[10px] text-muted-foreground font-mono tracking-tighter">{entry.ipAddress}</span>}
                                         </div>
                                     ) : (
-                                        <span className="text-xs text-muted-foreground italic">Système</span>
+                                        <span className="text-xs text-muted-foreground italic">System</span>
                                     )}
                                 </TableCell>
                                 <TableCell className="py-4">

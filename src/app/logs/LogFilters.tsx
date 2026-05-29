@@ -188,7 +188,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Media Type Segmented Control */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t?.('typeFilter') || 'Type de média'}</label>
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t?.('typeFilter') || 'Media type'}</label>
                             <div className="app-surface-nested flex flex-wrap items-center p-1 rounded-lg w-fit">
                                 {[
                                     { value: "", icon: null, labelKey: "all" },
@@ -278,20 +278,20 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                             <Input name="client" type="text" placeholder="ex: Jellyfin Web, Android" defaultValue={initialClient} className="app-field h-9" />
                         </div>
                         <div className="space-y-1.5 flex flex-col">
-                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('audioFilter') || 'Audio (Code/Langue)'}</label>
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('audioFilter') || 'Audio (Code/Language)'}</label>
                             <Input name="audio" type="text" placeholder="ex: aac, fre, eng" defaultValue={initialAudio} className="app-field h-9" />
                         </div>
                         <div className="space-y-1.5 flex flex-col">
-                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('subtitleFilter') || 'Sous-titres (Code/Langue)'}</label>
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('subtitleFilter') || 'Subtitles (Code/Language)'}</label>
                             <Input name="subtitle" type="text" placeholder="ex: subrip, eng, fre" defaultValue={initialSubtitle} className="app-field h-9" />
                         </div>
                         <div className="space-y-1.5 grid grid-cols-2 gap-2">
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('dateFrom') || 'Date (Depuis)'}</label>
+                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('dateFrom') || 'Date (From)'}</label>
                                 <Input name="dateFrom" type="date" defaultValue={initialDateFrom} className="app-field h-9" />
                             </div>
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('dateTo') || 'Date (Jusqu\'au)'}</label>
+                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('dateTo') || 'Date (To)'}</label>
                                 <Input name="dateTo" type="date" defaultValue={initialDateTo} className="app-field h-9" />
                             </div>
                         </div>

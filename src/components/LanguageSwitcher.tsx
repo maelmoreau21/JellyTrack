@@ -70,7 +70,7 @@ export function LanguageSwitcher() {
                     <Globe className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1 text-left">
-                    <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Langue</div>
+                    <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Language</div>
                     <div className="mt-0.5 flex items-center gap-2">
                         <img 
                             src={`https://flagcdn.com/w40/${current.iso}.png`} 

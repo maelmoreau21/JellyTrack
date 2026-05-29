@@ -11,12 +11,12 @@ export async function register() {
         const { cleanupOrphanedSessions } = await import('@/lib/cleanup');
         const { normalizeSchedulerIntervals, DEFAULT_SCHEDULER_INTERVALS } = await import('@/lib/schedulerIntervals');
 
-        console.log("[Instrumentation] Démarrage des tâches de fond...");
+        console.log("[Instrumentation] Starting background tasks...");
 
         // Initial cleanup of orphaned sessions on startup
         cleanupOrphanedSessions().catch(err => console.error("[Instrumentation] Initial cleanup error:", err));
 
-        // Lire la planification des tâches depuis la BDD
+        // Read task schedule from the database
         let syncCronHour = 3, syncCronMinute = 0, backupCronHour = 3, backupCronMinute = 30;
         let recentSyncEveryHours = DEFAULT_SCHEDULER_INTERVALS.recentSyncEveryHours;
         let fullSyncEveryHours = DEFAULT_SCHEDULER_INTERVALS.fullSyncEveryHours;
@@ -39,10 +39,10 @@ export async function register() {
                 backupEveryHours = schedulerIntervals.backupEveryHours;
             }
         } catch (err) {
-            console.warn("[Instrumentation] Impossible de lire les paramètres cron, utilisation des valeurs par défaut:", err);
+            console.warn("[Instrumentation] Unable to read cron settings, using defaults:", err);
         }
 
-        // Initialiser les tâches cron avec la planification configurée
+        // Initialize cron tasks with configured schedule
         await initCronJobs({
             syncCronHour,
             syncCronMinute,

@@ -18,10 +18,10 @@ export default function AllMediaControls() {
   const excludedTypes = excludedParam ? excludedParam.split(',') : [];
 
   const categories = [
-    { id: 'all', label: tc('all') || 'Tout', icon: Filter },
-    { id: 'Movie', label: tc('movies') || 'Films', icon: Film },
-    { id: 'Series', label: tc('series') || 'Séries', icon: Tv },
-    { id: 'MusicAlbum', label: tc('music') || 'Musique', icon: Music },
+    { id: 'all', label: tc('all') || 'All', icon: Filter },
+    { id: 'Movie', label: tc('movies') || 'Movies', icon: Film },
+    { id: 'Series', label: tc('series') || 'Series', icon: Tv },
+    { id: 'MusicAlbum', label: tc('music') || 'Music', icon: Music },
   ];
 
   const allSelected = excludedTypes.length === 0;
@@ -101,7 +101,7 @@ export default function AllMediaControls() {
           <Input 
             value={query} 
             onChange={(e) => setQuery(e.target.value)} 
-            placeholder={tc('searchPlaceholder') || 'Rechercher...'} 
+            placeholder={tc('searchPlaceholder') || 'Search...'} 
             className="app-field w-full pl-9 pr-10 focus-visible:ring-1 focus-visible:ring-primary/50 text-base md:text-sm shadow-sm"
           />
           <SearchIcon className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />

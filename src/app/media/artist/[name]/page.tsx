@@ -350,11 +350,11 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
 
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-zinc-500">
-                                    <Headphones className="w-3.5 h-3.5" /> Artiste
+                                    <Headphones className="w-3.5 h-3.5" /> Artist
                                 </div>
                                 <h1 className="text-3xl font-bold tracking-tight mt-1">{artistName}</h1>
                                 <p className="text-sm text-zinc-500 mt-2">
-                                    {albumsWithStats.length} album{albumsWithStats.length > 1 ? "s" : ""} • {allTracks.length} titre{allTracks.length > 1 ? "s" : ""}
+                                    {albumsWithStats.length} album{albumsWithStats.length > 1 ? "s" : ""} • {allTracks.length} track{allTracks.length > 1 ? "s" : ""}
                                 </p>
                             </div>
                         </div>
@@ -373,7 +373,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
 
                     <Card className="app-surface">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Titres</CardTitle>
+                            <CardTitle className="text-sm font-medium">Tracks</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{allTracks.length}</div>
@@ -382,7 +382,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
 
                     <Card className="app-surface">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Lectures</CardTitle>
+                            <CardTitle className="text-sm font-medium">Plays</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{totalPlays}</div>
@@ -391,7 +391,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
 
                     <Card className="app-surface">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium">Temps d&apos;écoute</CardTitle>
+                            <CardTitle className="text-sm font-medium">Listening Time</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{totalHours}h</div>
@@ -402,11 +402,11 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                 <Card className="app-surface">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2"><Disc3 className="w-5 h-5 text-purple-400" /> Albums</CardTitle>
-                        <CardDescription>Retour rapide vers les albums de cet artiste.</CardDescription>
+                        <CardDescription>Quick link back to albums by this artist.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {albumsWithStats.length === 0 ? (
-                            <div className="text-sm text-zinc-500 italic">Aucun album detecte pour cet artiste.</div>
+                            <div className="text-sm text-zinc-500 italic">No albums detected for this artist.</div>
                         ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                                 {albumsWithStats.map((album) => (
@@ -438,11 +438,11 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                     <CardHeader className="gap-3">
                         <div className="flex items-start justify-between gap-3 flex-wrap">
                             <div>
-                                <CardTitle className="flex items-center gap-2"><Music className="w-5 h-5 text-cyan-400" /> Titres</CardTitle>
-                                <CardDescription>Top titres lies a cet artiste.</CardDescription>
+                                <CardTitle className="flex items-center gap-2"><Music className="w-5 h-5 text-cyan-400" /> Tracks</CardTitle>
+                                <CardDescription>Top tracks related to this artist.</CardDescription>
                             </div>
                             <div className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5 bg-zinc-100/60 dark:bg-zinc-800/30">
-                                <span className="text-xs text-zinc-500">Par page</span>
+                                <span className="text-xs text-zinc-500">Per page</span>
                                 {[25, 50].map((size) => (
                                     <Link
                                         key={size}
@@ -457,7 +457,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                     </CardHeader>
                     <CardContent>
                         {trackRows.length === 0 ? (
-                            <div className="text-sm text-zinc-500 italic">Aucun titre disponible.</div>
+                            <div className="text-sm text-zinc-500 italic">No tracks available.</div>
                         ) : (
                             <div className="space-y-2">
                                 {paginatedTrackRows.map((track) => (
@@ -472,7 +472,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                                                         {track.albumTitle || "Album"}
                                                     </Link>
                                                 ) : (
-                                                    <span className="truncate">{track.albumTitle || "Album inconnu"}</span>
+                                                    <span className="truncate">{track.albumTitle || "Unknown album"}</span>
                                                 )}
                                                 {track.durationMs && (
                                                     <Badge variant="secondary" className="text-[10px]">{Math.max(1, Math.round(Number(track.durationMs) / 1000 / 60))} min</Badge>
@@ -481,8 +481,8 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                                         </div>
 
                                         <div className="text-xs text-zinc-500 shrink-0 text-right">
-                                            <div className="font-semibold text-muted-foreground">{track.plays} vues</div>
-                                            <div>{track.minutes} min lues</div>
+                                            <div className="font-semibold text-muted-foreground">{track.plays} plays</div>
+                                            <div>{track.minutes} min played</div>
                                         </div>
                                     </div>
                                 ))}
@@ -490,17 +490,17 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                                 {trackTotalPages > 1 && (
                                     <div className="pt-3 mt-3 border-t border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between gap-3 flex-wrap">
                                         <div className="text-xs text-zinc-500">
-                                            Page {tracksPage} / {trackTotalPages} • {trackTotalItems} titres
+                                            Page {tracksPage} / {trackTotalPages} • {trackTotalItems} tracks
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {tracksPage > 1 && (
                                                 <Link href={buildTracksUrl(tracksPage - 1)} className="px-3 py-1.5 text-xs rounded-md border border-zinc-300/50 dark:border-zinc-700/70 hover:bg-zinc-200/40 dark:hover:bg-zinc-800/50 transition-colors">
-                                                    Précédent
+                                                    Previous
                                                 </Link>
                                             )}
                                             {tracksPage < trackTotalPages && (
                                                 <Link href={buildTracksUrl(tracksPage + 1)} className="px-3 py-1.5 text-xs rounded-md border border-zinc-300/50 dark:border-zinc-700/70 hover:bg-zinc-200/40 dark:hover:bg-zinc-800/50 transition-colors">
-                                                    Suivant
+                                                    Next
                                                 </Link>
                                             )}
                                         </div>

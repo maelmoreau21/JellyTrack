@@ -30,17 +30,17 @@ export const authOptions: NextAuthOptions = {
         CredentialsProvider({
             name: "Jellyfin",
             credentials: {
-                username: { label: "Nom d'utilisateur", type: "text", placeholder: "Admin" },
-                password: { label: "Mot de passe Administrateur", type: "password", placeholder: "********" },
-                rememberMe: { label: "Se souvenir de moi", type: "checkbox" }
+                username: { label: "Username", type: "text", placeholder: "Admin" },
+                password: { label: "Admin Password", type: "password", placeholder: "********" },
+                rememberMe: { label: "Remember me", type: "checkbox" }
             },
             async authorize(credentials) {
                 if (!credentials?.username || !credentials?.password) return null;
                 const rememberMe = parseRememberMe(credentials.rememberMe);
 
                 // Read locale from cookie for error messages
-                let locale = 'fr';
-                try { const c = await cookies(); locale = c.get('locale')?.value || 'fr'; } catch {}
+                let locale = 'en';
+                try { const c = await cookies(); locale = c.get('locale')?.value || 'en'; } catch {}
                 const { apiTSync } = await import("@/lib/i18n-api");
 
                 // SECURITY: Rate-limit login attempts by IP

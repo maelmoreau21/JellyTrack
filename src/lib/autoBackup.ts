@@ -55,7 +55,7 @@ export async function performAutoBackup(): Promise<string> {
         // Write backup file
         fs.writeFileSync(filePath, JSON.stringify(backupContent, bigIntReplacer, 2), "utf-8");
         const fileSizeMb = (Buffer.byteLength(JSON.stringify(backupContent, bigIntReplacer)) / 1024 / 1024).toFixed(2);
-        console.log(`[Auto-Backup] Backup saved: ${fileName} (${fileSizeMb} Mo)`);
+        console.log(`[Auto-Backup] Backup saved: ${fileName} (${fileSizeMb} MB)`);
 
         // Rolling rotation: delete oldest files if we exceed MAX_BACKUPS
         type BackupFile = { name: string; time: number };
@@ -84,7 +84,7 @@ export async function performAutoBackup(): Promise<string> {
         await appendHealthEvent({
             source: "backup",
             kind: "success",
-            message: `Sauvegarde automatique créée: ${fileName}`,
+            message: `Automated backup created: ${fileName}`,
             details: { fileName },
         });
         return fileName;
@@ -94,7 +94,7 @@ export async function performAutoBackup(): Promise<string> {
         await appendHealthEvent({
             source: "backup",
             kind: "error",
-            message: "Échec de sauvegarde automatique.",
+            message: "Automated backup failed.",
             details: { error: msg || "Backup error" },
         });
         throw error;

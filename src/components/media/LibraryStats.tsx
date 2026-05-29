@@ -142,7 +142,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                     </CardHeader>
                     <CardContent className="relative z-10">
                         <div className="text-4xl font-black tracking-tight metric-glow-amber bg-clip-text">
-                            {timeLabel.replace('jours', 'j').replace('heures', 'h')}
+                            {timeLabel.replace('jours', 'j').replace('heures', 'h').replace('days', 'd').replace('hours', 'h').replace('day', 'd').replace('hour', 'h')}
                         </div>
                         <p className="text-xs text-muted-foreground mt-2 font-medium flex items-center gap-1.5 opacity-80">
                              <Info className="w-3.5 h-3.5" /> {t('statsTimeDesc')}
@@ -156,16 +156,16 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                 <div className="space-y-1">
                     <h3 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-slate-200 flex items-center gap-3">
                         <Database className="w-7 h-7 text-primary" />
-                        {t('libraryDetailsTitle') || 'Détails par Collection'}
+                        {t('libraryDetailsTitle') || 'Collection details'}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                        {libraries.length} {t('libraries') || 'collections'} au total
+                        {libraries.length} {t('libraries') || 'collections'} total
                     </p>
                 </div>
                 <div className="relative w-full sm:w-[280px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input 
-                        placeholder={t('searchLibrary') || 'Rechercher une collection...'}
+                        placeholder={t('searchLibrary') || 'Search a collection...'}
                         className="app-field pl-9 focus-visible:ring-primary/20 transition-all rounded-full h-10"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -179,7 +179,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                     <div className="app-surface-soft col-span-1 md:col-span-2 lg:col-span-3 py-16 text-center border border-dashed rounded-2xl border-border">
                         <Database className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-30" />
                         <h4 className="text-lg font-semibold text-foreground">{tc('noData')}</h4>
-                        <p className="text-sm text-muted-foreground mt-1">Aucune collection ne correspond à votre recherche.</p>
+                        <p className="text-sm text-muted-foreground mt-1">No collection matches your search.</p>
                     </div>
                 ) :
                 // Sort libraries by their display name (localized or humanized)
@@ -276,7 +276,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             <div className="app-surface-soft w-12 h-16 rounded-md flex items-center justify-center shrink-0">
                                                 <TrendingUp className="w-5 h-5 text-muted-foreground dark:text-zinc-700" />
                                             </div>
-                                            <div className="flex-1 text-xs text-muted-foreground font-medium">Aucune lecture enregistrée</div>
+                                            <div className="flex-1 text-xs text-muted-foreground font-medium">{t('noPlays') || 'No plays recorded'}</div>
                                         </div>
                                     )}
 
@@ -298,7 +298,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-1.5 text-[9px] font-bold text-emerald-500 uppercase tracking-widest mb-1">
-                                                    <Sparkles className="w-3 h-3" /> {t('lastAdded') || 'Nouveauté'}
+                                                    <Sparkles className="w-3 h-3" /> {t('lastAdded') || 'New release'}
                                                 </div>
                                                 <div className="text-sm font-semibold text-foreground truncate group-hover/item:text-primary transition-colors">{lib.lastAdded.title}</div>
                                                 <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
@@ -312,7 +312,7 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                                             <div className="app-surface-soft w-12 h-16 rounded-md flex items-center justify-center shrink-0">
                                                 <Sparkles className="w-5 h-5 text-muted-foreground dark:text-zinc-700" />
                                             </div>
-                                            <div className="flex-1 text-xs text-muted-foreground font-medium">Aucun contenu ajouté</div>
+                                            <div className="flex-1 text-xs text-muted-foreground font-medium">{t('noContentAdded') || 'No content added'}</div>
                                         </div>
                                     )}
                                 </div>

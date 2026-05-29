@@ -127,7 +127,7 @@ export async function getApiLocale(): Promise<string> {
  */
 export async function apiT(key: string, params?: Record<string, string | number>): Promise<string> {
   const locale = await getApiLocale();
-  let msg = messages[locale]?.[key] || messages["fr"][key] || key;
+  let msg = messages[locale]?.[key] || messages["en"][key] || key;
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       msg = msg.replace(`{${k}}`, String(v));
@@ -140,7 +140,7 @@ export async function apiT(key: string, params?: Record<string, string | number>
  * Synchronous version — pass locale explicitly (for middleware / authorize where cookies() is unavailable).
  */
 export function apiTSync(locale: string, key: string, params?: Record<string, string | number>): string {
-  let msg = messages[locale]?.[key] || messages["fr"][key] || key;
+  let msg = messages[locale]?.[key] || messages["en"][key] || key;
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       msg = msg.replace(`{${k}}`, String(v));

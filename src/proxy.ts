@@ -66,7 +66,7 @@ export default withAuth(
         // 2. Non-admin -> API admin paths blocked (403)
         const isAdminApi = ADMIN_API_PATHS.some((p) => matchesPath(pathname, p));
         if (isAdminApi) {
-            const locale = req.cookies.get("locale")?.value || "fr";
+            const locale = req.cookies.get("locale")?.value || "en";
             return NextResponse.json({ error: apiTSync(locale, "adminOnly") }, { status: 403 });
         }
 

@@ -187,15 +187,15 @@ export async function GET(req: NextRequest) {
         const buffer = await response.arrayBuffer();
         const headers = new Headers();
 
-        // On récupère le type de contenu depuis le serveur originel pour notre proxy (souvent image/jpeg ou image/webp)
+        // Retrieve content type from original server for our proxy (often image/jpeg or image/webp)
         headers.set('Content-Type', response.headers.get('Content-Type') || 'image/jpeg');
-        // Mise en cache navigateur longue durée pour soulager l'API
+        // Long-term browser caching to offload the API
         headers.set('Cache-Control', noStore ? 'no-store' : 'public, max-age=604800, immutable');
 
         return new NextResponse(buffer, { headers });
     } catch (e) {
-        console.error("Erreur proxy Image Jellyfin:", e);
-        // On renvoie un SVG de remplacement plutôt qu'une erreur 500 pour éviter des effets secondaires côté client
+        console.error("Jellyfin Image proxy error:", e);
+        // Return a replacement SVG instead of a 500 error to avoid client-side side-effects
         const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
         const encoder = new TextEncoder();
         const buffer = encoder.encode(placeholder);

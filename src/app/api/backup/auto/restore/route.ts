@@ -194,7 +194,7 @@ export async function POST(req: NextRequest) {
                         syncCronMinute: settings.syncCronMinute ?? 0,
                         backupCronHour: settings.backupCronHour ?? 3,
                         backupCronMinute: settings.backupCronMinute ?? 30,
-                        defaultLocale: settings.defaultLocale ?? "fr",
+                        defaultLocale: settings.defaultLocale ?? "en",
                         timeFormat: settings.timeFormat ?? "24h",
                     },
                     create: {
@@ -207,7 +207,7 @@ export async function POST(req: NextRequest) {
                         syncCronMinute: settings.syncCronMinute ?? 0,
                         backupCronHour: settings.backupCronHour ?? 3,
                         backupCronMinute: settings.backupCronMinute ?? 30,
-                        defaultLocale: settings.defaultLocale ?? "fr",
+                        defaultLocale: settings.defaultLocale ?? "en",
                         timeFormat: settings.timeFormat ?? "24h",
                     }
                 });

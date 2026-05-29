@@ -243,7 +243,7 @@ export default async function AnalysisPage({ searchParams }: { searchParams?: Pr
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('deepStatsOverview')}</CardTitle>
-                        <CardDescription>{t('deepStatsOverviewDesc') || 'Analyses avancées de votre collection multimédia.'}</CardDescription>
+                        <CardDescription>{t('deepStatsOverviewDesc') || 'Advanced analysis of your media collection.'}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div>
