@@ -128,4 +128,4 @@ npm outdated --json
 
 ## License
 
-Personal project for private use.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
