@@ -995,17 +995,17 @@ export default async function DashboardPage(props: {
             <div className="flex items-center gap-1.5">
               <PlayCircle className="h-3.5 w-3.5 text-blue-400" />
               <span className="text-sm font-semibold metric-glow-blue">{metrics.todayPlays}</span>
-              <span className="text-xs text-zinc-500">{t('readings')}</span>
+              <span className="text-xs text-muted-foreground">{t('readings')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 text-orange-400" />
               <span className="text-sm font-semibold metric-glow-amber">{metrics.todayHours}h</span>
-              <span className="text-xs text-zinc-500">{t('watched')}</span>
+              <span className="text-xs text-muted-foreground">{t('watched')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 text-emerald-400" />
               <span className="text-sm font-semibold metric-glow-emerald">{metrics.todayActiveUsers}</span>
-              <span className="text-xs text-zinc-500">{t('activeUsers')}</span>
+              <span className="text-xs text-muted-foreground">{t('activeUsers')}</span>
             </div>
           </div>
         </div>
@@ -1237,7 +1237,7 @@ export default async function DashboardPage(props: {
                     <div className="space-y-6 mt-4">
                       {metrics.topUsers.length === 0 && <span className="text-muted-foreground text-sm">{t('noActivity')}</span>}
                       {metrics.topUsers.map((u, i) => (
-                        <Link key={i} href={`/users/${u.jellyfinUserId}`} className="flex items-center gap-4 group hover:bg-zinc-200 dark:hover:bg-zinc-800/50 rounded-lg p-1 -m-1 transition-colors">
+                        <Link key={i} href={`/users/${u.jellyfinUserId}`} className="flex items-center gap-4 group hover:bg-muted/60 dark:hover:bg-zinc-800/50 rounded-lg p-1 -m-1 transition-colors">
                           <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">
                             #{i + 1}
                           </div>

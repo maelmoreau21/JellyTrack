@@ -74,10 +74,16 @@ export default getRequestConfig(async () => {
         // 1. User has explicitly chosen a language — respect it
         locale = cookieLocale;
     } else {
-        // 2. No cookie — detect the browser's preferred language via Accept-Language header
+        // 2. No cookie — check middleware-injected header first, then detect
+        //    the browser's preferred language via Accept-Language header.
         const headerStore = await headers();
-        const acceptLanguage = headerStore.get('accept-language');
-        locale = resolveLocaleFromAcceptLanguage(acceptLanguage);
+        const middlewareLocale = headerStore.get('x-detected-locale');
+        if (middlewareLocale && isSupportedLocale(middlewareLocale)) {
+            locale = middlewareLocale;
+        } else {
+            const acceptLanguage = headerStore.get('accept-language');
+            locale = resolveLocaleFromAcceptLanguage(acceptLanguage);
+        }
     }
 
     const localeMessages = (await import(`../../messages/${locale}.json`)).default;

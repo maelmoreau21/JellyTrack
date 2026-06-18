@@ -63,22 +63,22 @@
   --popover-foreground: #0F172A;
   --primary: #4F46E5;
   --primary-foreground: #EEF2FF;
-  --secondary: #DCE5F0;
+  --secondary: #D8E2EE;
   --secondary-foreground: #334155;
-  --muted: #EEF3F8;
-  --muted-foreground: #64748B;
+  --muted: #EAF0F6;
+  --muted-foreground: #556575;
   --accent: #10B981;
   --accent-foreground: #ECFDF5;
   --destructive: #D64545;
-  --border: rgba(15, 23, 42, 0.12);
+  --border: rgba(15, 23, 42, 0.13);
   --input: #EEF3F8;
   --ring: #6366F1;
   --surface-card: #F8FAFC;
-  --surface-soft: #EEF3F8;
+  --surface-soft: #F0F4F9;
   --surface-nested: #E6EEF7;
   --surface-raised: #FFFFFF;
-  --border-subtle: rgba(15, 23, 42, 0.10);
-  --border-strong: rgba(15, 23, 42, 0.14);
+  --border-subtle: rgba(15, 23, 42, 0.11);
+  --border-strong: rgba(15, 23, 42, 0.16);
   --chart-1: #0891B2;
   --chart-2: #7C3AED;
   --chart-3: #DB2777;
@@ -101,13 +101,13 @@
   --chart-tooltip-backdrop: none;
   --chart-label-color: #64748B;
   --chart-item-color: #0F172A;
-  --sidebar: #DCE5F0;
+  --sidebar: #D8E2EE;
   --sidebar-foreground: #0F172A;
   --sidebar-primary: #4F46E5;
   --sidebar-primary-foreground: #EEF2FF;
-  --sidebar-accent: #EEF3F8;
+  --sidebar-accent: #E8EFF7;
   --sidebar-accent-foreground: #0F172A;
-  --sidebar-border: rgba(15, 23, 42, 0.12);
+  --sidebar-border: rgba(15, 23, 42, 0.13);
   --sidebar-ring: #6366F1;
 }
 
@@ -192,9 +192,10 @@ html:not(.dark) {
     font-family: var(--font-sora), "Segoe UI", system-ui, sans-serif;
     background-attachment: fixed;
     background-image:
-      radial-gradient(1100px 680px at 0% -10%, rgba(79, 70, 229, 0.10), transparent 62%),
-      radial-gradient(900px 560px at 100% -12%, rgba(8, 145, 178, 0.08), transparent 60%),
-      linear-gradient(180deg, #E8EEF6 0%, #E3EAF3 56%, #DCE5F0 100%);
+      radial-gradient(1200px 700px at 0% -8%, rgba(79, 70, 229, 0.13), transparent 58%),
+      radial-gradient(1000px 600px at 100% -10%, rgba(8, 145, 178, 0.11), transparent 56%),
+      radial-gradient(600px 400px at 50% 60%, rgba(99, 102, 241, 0.05), transparent 70%),
+      linear-gradient(180deg, #E8EEF6 0%, #E3EAF3 40%, #DCE5F0 80%, #D4DEE9 100%);
   }
 
   html.dark body {
@@ -218,7 +219,7 @@ html:not(.dark) {
   [data-slot="card"] {
     border-color: var(--border);
     background-color: var(--surface-card);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 14px 32px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08), 0 20px 40px rgba(15, 23, 42, 0.04);
   }
 
   .dark [data-slot="card"] {
@@ -233,7 +234,7 @@ html:not(.dark) {
     border: 1px solid var(--border-subtle);
     background: var(--surface-card);
     color: var(--foreground);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 14px 32px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08), 0 20px 40px rgba(15, 23, 42, 0.04);
   }
 
   .dark .app-surface {
@@ -246,13 +247,13 @@ html:not(.dark) {
     border: 1px solid var(--border-subtle);
     background: var(--surface-soft);
     color: var(--foreground);
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.35);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 16px rgba(15, 23, 42, 0.06), inset 0 1px rgba(255, 255, 255, 0.55);
   }
 
   html:not(.dark) .soft-light-card {
     border-color: var(--border-subtle);
     background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(238, 243, 248, 0.92) 100%);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 16px 34px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 16px 34px rgba(15, 23, 42, 0.08);
   }
 
   .dark .app-surface-soft {
@@ -347,8 +348,8 @@ html:not(.dark) {
 
   .dashboard-page .dashboard-banner {
     border: 1px solid var(--border-subtle);
-    background: var(--surface-card);
-    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+    background: linear-gradient(135deg, var(--surface-card) 0%, rgba(240, 244, 249, 0.95) 100%);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 14px 34px rgba(15, 23, 42, 0.07);
   }
 
   .dark .dashboard-page .dashboard-banner {
@@ -360,6 +361,7 @@ html:not(.dark) {
   .dashboard-page .dashboard-tablist {
     border: 1px solid var(--border-subtle);
     background: var(--surface-soft);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   }
 
   .dark .dashboard-page .dashboard-tablist {
@@ -370,6 +372,7 @@ html:not(.dark) {
   .dashboard-page .dashboard-pill {
     border: 1px solid var(--border-subtle);
     background: var(--secondary);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.5);
   }
 
   .dark .dashboard-page .dashboard-pill {
@@ -378,31 +381,38 @@ html:not(.dark) {
   }
 
   .metric-glow-cyan {
-    color: #0891b2;
+    color: #0e7490;
+    font-weight: 700;
   }
 
   .metric-glow-blue {
-    color: #2563eb;
+    color: #1d4ed8;
+    font-weight: 700;
   }
 
   .metric-glow-emerald {
-    color: #059669;
+    color: #047857;
+    font-weight: 700;
   }
 
   .metric-glow-violet {
-    color: #7c3aed;
+    color: #6d28d9;
+    font-weight: 700;
   }
 
   .metric-glow-pink {
-    color: #db2777;
+    color: #be185d;
+    font-weight: 700;
   }
 
   .metric-glow-amber {
-    color: #d97706;
+    color: #b45309;
+    font-weight: 700;
   }
 
   .metric-glow-rose {
-    color: #e11d48;
+    color: #be123c;
+    font-weight: 700;
   }
 
   .dark .metric-glow-cyan {
@@ -442,8 +452,8 @@ html:not(.dark) {
 }
 
 ::selection {
-  background: rgba(20, 184, 166, 0.24);
-  color: #0f172a;
+  background: rgba(79, 70, 229, 0.18);
+  color: inherit;
 }
 
 .dark ::selection {
@@ -479,20 +489,29 @@ html:not(.dark) {
 /* Simple scrollbar */
 * {
   scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.28) transparent;
+}
+.dark * {
   scrollbar-color: rgba(100, 116, 139, 0.42) transparent;
 }
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.45);
+  background: rgba(100, 116, 139, 0.30);
   border-radius: 999px;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.45);
+}
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.50);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.62);
 }
 ::-webkit-scrollbar-corner {

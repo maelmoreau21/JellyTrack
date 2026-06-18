@@ -66,7 +66,7 @@ export default function LoginForm() {
                             id="username"
                             required
                             placeholder="Jellyfin User"
-                            className="app-field pl-10 text-foreground focus-visible:ring-cyan-400 placeholder:text-muted-foreground h-10"
+                            className="bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-white/10 text-foreground focus-visible:ring-indigo-500 placeholder:text-muted-foreground/60 h-10 focus:bg-white/60 dark:focus:bg-slate-900/60 transition-colors duration-200 pl-10"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                         />
@@ -82,14 +82,14 @@ export default function LoginForm() {
                             type="password"
                             required
                             placeholder=".........."
-                            className="app-field pl-10 text-foreground focus-visible:ring-cyan-400 placeholder:text-muted-foreground h-10"
+                            className="bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-white/10 text-foreground focus-visible:ring-indigo-500 placeholder:text-muted-foreground/60 h-10 focus:bg-white/60 dark:focus:bg-slate-900/60 transition-colors duration-200 pl-10"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <div className="app-surface-soft flex items-start gap-3 rounded-md border p-3">
+                <div className="bg-white/30 dark:bg-slate-900/30 border border-white/15 dark:border-white/5 flex items-start gap-3 rounded-md p-3">
                     <input
                         id="rememberMe"
                         type="checkbox"
@@ -110,7 +110,7 @@ export default function LoginForm() {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full flex items-center justify-center gap-2 h-10 rounded-md font-medium text-sm transition-all shadow-lg ${isLoading ? 'bg-indigo-600/50 text-indigo-200 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-500 hover:shadow-indigo-500/25'}`}
+                    className={`w-full flex items-center justify-center gap-2 h-10 rounded-md font-semibold text-sm transition-all shadow-lg ${isLoading ? 'bg-indigo-600/50 text-indigo-200 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white hover:from-indigo-500 hover:to-cyan-500 hover:shadow-indigo-500/20 hover:scale-[1.01] active:scale-[0.99] duration-150'}`}
                 >
                     {isLoading ? (
                         <>

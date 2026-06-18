@@ -2,7 +2,7 @@
 ARG BUILDPLATFORM
 
 # Base image for the build environment (runs on the host build architecture)
-FROM --platform=$BUILDPLATFORM node:24-alpine AS build-base
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/node:22-alpine AS build-base
 RUN apk add --no-cache libc6-compat openssl
 
 # 1. Install dependencies only when needed (on build platform)
@@ -56,7 +56,7 @@ RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-mus
     find /app/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
 
 # Base image for the target runner (runs on the target platform architecture, e.g. arm64 or amd64)
-FROM node:24-alpine AS run-base
+FROM mirror.gcr.io/library/node:22-alpine AS run-base
 RUN apk add --no-cache libc6-compat openssl
 
 # 3. Production image, copy all the files and run next
@@ -96,6 +96,6 @@ ENV HOSTNAME="0.0.0.0"
 
 # Copy the entrypoint script (runs as root initially, then drops to PUID/PGID)
 COPY docker-entrypoint.sh ./
-RUN chmod +x ./docker-entrypoint.sh
+RUN sed -i 's/\r$//' ./docker-entrypoint.sh && chmod +x ./docker-entrypoint.sh
 
 ENTRYPOINT ["./docker-entrypoint.sh"]

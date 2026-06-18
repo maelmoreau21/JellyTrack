@@ -119,12 +119,12 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                 </div>
 
                 {!authServerIsPrimary && authServerName && (
-                    <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
-                        <div className="flex items-center gap-2 font-semibold text-amber-300">
+                    <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200">
+                        <div className="flex items-center gap-2 font-semibold text-amber-700 dark:text-amber-300">
                             <AlertTriangle className="h-4 w-4" />
                             {t('backupServerActive')}
                         </div>
-                        <p className="mt-1 text-amber-100/90">
+                        <p className="mt-1 text-amber-700/90 dark:text-amber-100/90">
                             {t('backupServerDesc', { server: authServerName })}
                         </p>
                     </div>

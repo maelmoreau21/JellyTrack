@@ -61,9 +61,9 @@ run_prisma() {
 run_prisma_db_push() {
   if [ "$JELLYTRACK_PRISMA_ACCEPT_DATA_LOSS" = "true" ]; then
     echo "JELLYTRACK_PRISMA_ACCEPT_DATA_LOSS=true: allowing Prisma db push data-loss changes."
-    run_prisma db push --skip-generate --accept-data-loss
+    run_prisma db push --accept-data-loss
   else
-    run_prisma db push --skip-generate
+    run_prisma db push
   fi
 }
 
@@ -101,7 +101,7 @@ if [ -d "prisma/migrations" ] && [ -n "$(find prisma/migrations -mindepth 2 -max
   else
     status=$?
     cat "$migration_log"
-    if grep -q "P3005" "$migration_log"; then
+    if grep -q -E "P3005|does not exist" "$migration_log"; then
       rm -f "$migration_log"
       baseline_prisma_migrations
     else

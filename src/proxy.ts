@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { apiTSync } from "@/lib/i18n-api";
 import { getResolvedAuthSecret } from "@/lib/authSecret";
 import { isSessionTokenActive } from "@/lib/authSession";
+import { AVAILABLE_LOCALES, DEFAULT_LOCALE, isSupportedLocale } from "@/i18n/locales";
 
 function escapeRegExp(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -20,6 +21,40 @@ function matchesPath(pathname: string, target: string, allowSubPaths = true) {
     const suffix = allowSubPaths ? "(?:/|$)" : "$";
     const pattern = new RegExp(`(?:^|/)${escapedTarget}${suffix}`);
     return pattern.test(normalizedPath);
+}
+
+/**
+ * Parses the Accept-Language header and returns the best matching supported locale.
+ * Example: "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7" → "fr"
+ */
+function resolveLocaleFromHeader(acceptLanguage: string | null): string {
+    if (!acceptLanguage) return DEFAULT_LOCALE;
+
+    const langs = acceptLanguage
+        .split(',')
+        .map((entry) => {
+            const [tag, q] = entry.trim().split(';q=');
+            return { tag: tag.trim().toLowerCase(), q: q ? parseFloat(q) : 1.0 };
+        })
+        .filter((l) => !isNaN(l.q))
+        .sort((a, b) => b.q - a.q);
+
+    for (const { tag } of langs) {
+        // Exact match (e.g. "pt-br" → "pt-BR")
+        const exactMatch = AVAILABLE_LOCALES.find(
+            (l) => l.code.toLowerCase() === tag
+        );
+        if (exactMatch) return exactMatch.code;
+
+        // Base language match (e.g. "fr-fr" → "fr", "pt-br" → "pt-BR")
+        const base = tag.split('-')[0];
+        const baseMatch = AVAILABLE_LOCALES.find(
+            (l) => l.code.toLowerCase() === base || l.code.toLowerCase().startsWith(base + '-')
+        );
+        if (baseMatch) return baseMatch.code;
+    }
+
+    return DEFAULT_LOCALE;
 }
 
 // Admin-only routes for API and Pages
@@ -49,48 +84,98 @@ export default withAuth(
     function proxy(req) {
         const token = req.nextauth.token;
         const pathname = req.nextUrl.pathname;
-        const hasActiveSession = isSessionTokenActive(token);
 
-        if (!hasActiveSession) {
-            if (matchesPath(pathname, "/api")) {
-                return NextResponse.next();
+        // 1. Detect and propagate locale
+        const existingLocale = req.cookies.get('locale')?.value;
+        let detectedLocale = existingLocale;
+        let setCookie = false;
+        const requestHeaders = new Headers(req.headers);
+
+        if (!existingLocale || !isSupportedLocale(existingLocale)) {
+            const acceptLanguage = req.headers.get('accept-language');
+            detectedLocale = resolveLocaleFromHeader(acceptLanguage);
+            setCookie = true;
+        }
+
+        // Set the custom header to propagate the detected locale to downstream components
+        requestHeaders.set('x-detected-locale', detectedLocale || DEFAULT_LOCALE);
+
+        let responseToUse: NextResponse | null = null;
+
+        // 2. Authentication & Authorization routing
+        if (pathname === "/login" || pathname.startsWith("/login/")) {
+            // Bypass auth verification for login routes
+            responseToUse = NextResponse.next({
+                request: {
+                    headers: requestHeaders,
+                }
+            });
+        } else {
+            const hasActiveSession = isSessionTokenActive(token);
+
+            if (!hasActiveSession) {
+                if (matchesPath(pathname, "/api")) {
+                    responseToUse = NextResponse.next({
+                        request: {
+                            headers: requestHeaders,
+                        }
+                    });
+                } else {
+                    responseToUse = NextResponse.redirect(new URL("/login", req.url));
+                }
+            } else {
+                // User is authenticated
+                if (token?.isAdmin) {
+                    // Admins have full access
+                    responseToUse = NextResponse.next({
+                        request: {
+                            headers: requestHeaders,
+                        }
+                    });
+                } else {
+                    // Non-admin user restrictions
+                    const isAdminApi = ADMIN_API_PATHS.some((p) => matchesPath(pathname, p));
+                    if (isAdminApi) {
+                        const browserLang = requestHeaders.get('accept-language')?.split(",")[0]?.split(";")[0]?.trim().split("-")[0] || "en";
+                        const locale = detectedLocale || browserLang || "en";
+                        responseToUse = NextResponse.json({ error: apiTSync(locale, "adminOnly") }, { status: 403 });
+                    } else {
+                        const isAdminPage = ADMIN_PAGE_PATHS.some((p) => matchesPath(pathname, p));
+                        if (isAdminPage) {
+                            responseToUse = NextResponse.redirect(new URL("/", req.url));
+                        } else {
+                            const isRedirectList = REDIRECT_IF_NOT_ADMIN.some((p) => matchesPath(pathname, p, false));
+                            if (isRedirectList) {
+                                const jellyfinUserId = token?.jellyfinUserId as string;
+                                if (jellyfinUserId) {
+                                    responseToUse = NextResponse.redirect(new URL(`/users/${jellyfinUserId}`, req.url));
+                                } else {
+                                    responseToUse = NextResponse.redirect(new URL("/login", req.url));
+                                }
+                            } else {
+                                responseToUse = NextResponse.next({
+                                    request: {
+                                        headers: requestHeaders,
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
             }
-            return NextResponse.redirect(new URL("/login", req.url));
         }
 
-        // 1. Admin: full access
-        if (token?.isAdmin) {
-            return NextResponse.next();
+        // 3. Set the locale cookie on the response if we detected it on this request
+        if (setCookie && detectedLocale && responseToUse) {
+            responseToUse.cookies.set('locale', detectedLocale, {
+                path: '/',
+                maxAge: 365 * 24 * 60 * 60, // 1 year
+                sameSite: 'lax',
+                httpOnly: false,
+            });
         }
 
-        // 2. Non-admin -> API admin paths blocked (403)
-        const isAdminApi = ADMIN_API_PATHS.some((p) => matchesPath(pathname, p));
-        if (isAdminApi) {
-            const cookieLocale = req.cookies.get("locale")?.value;
-            const acceptLanguage = req.headers.get("accept-language") || "";
-            // Resolve locale: cookie first, then Accept-Language header base tag, then "en"
-            const browserLang = acceptLanguage.split(",")[0]?.split(";")[0]?.trim().split("-")[0] || "en";
-            const locale = cookieLocale || browserLang || "en";
-            return NextResponse.json({ error: apiTSync(locale, "adminOnly") }, { status: 403 });
-        }
-
-        // 3. Non-admin -> Admin-only pages redirected to Dashboard
-        const isAdminPage = ADMIN_PAGE_PATHS.some((p) => matchesPath(pathname, p));
-        if (isAdminPage) {
-            return NextResponse.redirect(new URL("/", req.url));
-        }
-
-        // 4. Non-admin -> List pages redirected to their own profile
-        const isRedirectList = REDIRECT_IF_NOT_ADMIN.some((p) => matchesPath(pathname, p, false));
-        if (isRedirectList) {
-            const jellyfinUserId = token?.jellyfinUserId as string;
-            if (jellyfinUserId) {
-                return NextResponse.redirect(new URL(`/users/${jellyfinUserId}`, req.url));
-            }
-            return NextResponse.redirect(new URL("/login", req.url));
-        }
-
-        return NextResponse.next();
+        return responseToUse;
     },
     {
         secret: getResolvedAuthSecret().value,
@@ -118,11 +203,11 @@ export const config = {
          * Match all request paths except for the ones starting with:
          * - api/auth (NextAuth endpoints)
          * - api/plugin/events (Internal plugin API)
-         * - login (Login page)
          * - favicon.ico (favicon)
+         * - logo.svg, icon.svg
          * - _next/static (static files)
          * - _next/image (image optimization files)
          */
-        "/((?!api/auth|api/plugin/events|login|favicon\\.ico|logo\\.svg|icon\\.svg|_next/static|_next/image).*)",
+        "/((?!api/auth|api/plugin/events|favicon\\.ico|logo\\.svg|icon\\.svg|_next/static|_next/image).*)",
     ],
 };

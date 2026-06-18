@@ -1,5 +1,6 @@
 services:
   JellyTrack:
+    build: .
     image: ghcr.io/maelmoreau21/jellytrack:latest
     container_name: JellyTrack_app
     env_file:
@@ -54,7 +55,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:18-alpine
+    image: mirror.gcr.io/library/postgres:17-alpine
     container_name: JellyTrack_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-JellyTrack}
@@ -72,7 +73,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
+    image: mirror.gcr.io/library/redis:7-alpine
     container_name: JellyTrack_redis
     command: redis-server --save 60 1 --loglevel warning
     volumes:

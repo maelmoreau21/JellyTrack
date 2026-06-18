@@ -10,14 +10,18 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage() {
     const t = await getTranslations('login');
     return (
-        <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 selection:bg-indigo-500/30">
-            <div className="absolute inset-0 z-0 opacity-10 dark:opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-400 dark:from-indigo-900 via-transparent to-transparent" />
+        <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 selection:bg-indigo-500/30 overflow-hidden relative">
+            {/* Background Aurora glowing blobs */}
+            <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full bg-indigo-500/10 dark:bg-indigo-500/15 blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-cyan-500/10 dark:bg-cyan-500/15 blur-[120px] pointer-events-none" />
 
-            <div className="z-10 flex flex-col items-center gap-4">
-                <Card className="w-full max-w-sm app-surface border-border backdrop-blur-xl shadow-2xl">
-                    <CardHeader className="space-y-3 pb-6 border-b border-border/70">
+            <div className="absolute inset-0 z-0 opacity-20 dark:opacity-30 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-300 dark:from-indigo-900 via-transparent to-transparent pointer-events-none" />
+
+            <div className="z-10 flex flex-col items-center gap-4 w-full max-w-sm">
+                <Card className="w-full border border-white/20 dark:border-white/10 bg-white/30 dark:bg-slate-900/40 backdrop-blur-xl shadow-2xl">
+                    <CardHeader className="space-y-3 pb-6 border-b border-white/10 dark:border-white/5">
                         <div className="flex flex-col items-center gap-3 text-center">
-                            <div className="app-surface-soft p-3 rounded-2xl border shadow-inner overflow-hidden transition-transform hover:scale-105 duration-300">
+                            <div className="bg-gradient-to-tr from-indigo-500/10 to-cyan-500/10 dark:from-indigo-500/20 dark:to-cyan-500/20 p-3 rounded-2xl border border-white/25 dark:border-white/15 shadow-lg transition-transform hover:scale-105 duration-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="18 23 64 69" className="w-14 h-14">
                                     <defs>
                                         <linearGradient id="jellyGradLogin" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -48,7 +52,7 @@ export default async function LoginPage() {
                 </Card>
 
                 <LoginLanguageSwitcher />
-                <div className="w-full max-w-sm">
+                <div className="w-full">
                     <ThemeToggle />
                 </div>
             </div>
