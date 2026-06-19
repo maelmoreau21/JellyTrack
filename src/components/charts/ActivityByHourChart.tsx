@@ -112,7 +112,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
                         formatter={(value: any) => [`${value ?? 0} ${t('sessions')}`, t('activity')]}
-                        animationDuration={0}
+                        animationDuration={200}
                     />
                     {/* Average reference line (only when meaningful) */}
                     {showAvg && (
@@ -127,8 +127,8 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                     <Bar
                         dataKey="count"
                         radius={[4, 4, 0, 0]}
-                        animationDuration={0}
-                        animationEasing="linear"
+                        animationDuration={1000}
+                        animationEasing="ease-out"
                     >
                         {data.map((entry, index) => {
                             const entryCount = Number(entry.count ?? 0);

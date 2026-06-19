@@ -37,8 +37,8 @@ const LIBRARY_COLORS: Record<string, string> = {
 };
 
 const customTheme: ThemeInput = {
-    light: ['#d7f1e3', '#9fddbe', '#63c794', '#2fad74', '#1d7f55'],
-    dark: ['#1e293b', '#155e75', '#0891b2', '#22d3ee', '#60a5fa'],
+    light: ['#e8edf5', '#b8c9e2', '#7a9fd6', '#4f6fd0', '#4338ca'],
+    dark: ['#1a2236', '#1e3a5f', '#1d5a8a', '#1e88c7', '#22d3ee'],
 };
 
 export function YearlyHeatmap({ data, availableYears, dataByType, libraryTypes }: YearlyHeatmapProps) {

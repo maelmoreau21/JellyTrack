@@ -58,14 +58,14 @@ export function DayOfWeekChart({ data }: DayOfWeekChartProps) {
                     itemStyle={chartItemStyle}
                     cursor={{ fill: 'rgba(16, 185, 129, 0.06)', radius: 4 }}
                     formatter={(value: unknown) => [String(value ?? 0), "Sessions"]}
-                    animationDuration={0}
+                    animationDuration={200}
                 />
                 <Bar
                     dataKey="count"
                     radius={[4, 4, 0, 0]}
                     minPointSize={2}
-                    animationDuration={0}
-                    animationEasing="linear"
+                    animationDuration={1000}
+                    animationEasing="ease-out"
                 >
                     {normalizedData.map((entry, index) => (
                         <Cell

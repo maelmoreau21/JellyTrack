@@ -80,7 +80,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
 
     const sidebarContent = (
         <>
-            <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border bg-sidebar px-5">
+            <div className="flex h-16 shrink-0 items-center border-b border-sidebar-border bg-sidebar/80 backdrop-blur-xl px-5">
                 <Link href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`} className="flex items-center gap-2 text-lg font-semibold tracking-tight text-sidebar-foreground transition-opacity hover:opacity-90">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent overflow-hidden shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="18 23 64 69" className="w-7 h-7">
@@ -137,9 +137,9 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={`group flex items-center rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                                    ? "border-sidebar-primary/40 bg-sidebar-primary/15 text-sidebar-primary"
-                                    : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                                className={`group flex items-center rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive
+                                    ? "border-sidebar-primary/40 bg-sidebar-primary/15 text-sidebar-primary shadow-sm"
+                                    : "text-sidebar-foreground/65 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground hover:translate-x-0.5"
                                     }`}
                             >
                                 <item.icon
@@ -154,7 +154,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                 </nav>
             </div>
 
-            <div className="border-t border-sidebar-border bg-sidebar p-4 space-y-3">
+            <div className="border-t border-sidebar-border bg-sidebar/80 backdrop-blur-xl p-4 space-y-3">
                 <LanguageSwitcher />
                 <ThemeToggle />
                 <LogoutButton className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
@@ -170,7 +170,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
     return (
         <>
             {/* Mobile header bar */}
-            <div className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center border-b border-sidebar-border bg-sidebar px-4 md:hidden">
+            <div className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center border-b border-sidebar-border bg-sidebar/90 backdrop-blur-xl px-4 md:hidden">
                 <button
                     onClick={() => setMobileOpen(true)}
                     className="p-1.5 text-sidebar-foreground/70 transition-colors hover:text-sidebar-foreground"
@@ -211,7 +211,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
             {/* Sidebar — desktop: always visible, mobile: slide-over */}
             <div
                 className={`
-                    fixed top-0 left-0 z-50 flex h-screen w-[86vw] max-w-72 flex-col border-r border-sidebar-border bg-sidebar shadow-xl md:w-64 md:shadow-none
+                    fixed top-0 left-0 z-50 flex h-screen w-[86vw] max-w-72 flex-col border-r border-sidebar-border bg-sidebar/70 backdrop-blur-xl shadow-xl md:w-64 md:shadow-none
                     transition-transform duration-200 ease-in-out
                     md:sticky md:translate-x-0
                     ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}

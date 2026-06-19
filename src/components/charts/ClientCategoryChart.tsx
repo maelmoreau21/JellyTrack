@@ -51,14 +51,14 @@ export function ClientCategoryChart({ data }: ClientCategoryChartProps) {
                     labelStyle={chartLabelStyle}
                     itemStyle={chartItemStyle}
                     cursor={{ fill: 'rgba(99, 102, 241, 0.06)' }}
-                    animationDuration={0}
+                    animationDuration={200}
                 />
                 <Bar
                     dataKey="count"
                     radius={[0, 4, 4, 0]}
                     barSize={24}
-                    animationDuration={0}
-                    animationEasing="linear"
+                    animationDuration={1000}
+                    animationEasing="ease-out"
                 >
                     {data.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.category] || "#71717a"} />

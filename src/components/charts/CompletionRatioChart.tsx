@@ -133,9 +133,9 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
                         dataKey="value"
                         nameKey="name"
                         strokeWidth={0}
-                        animationDuration={0}
+                        animationDuration={1000}
                         animationBegin={0}
-                        animationEasing="linear"
+                        animationEasing="ease-out"
                         activeShape={renderActiveShape as unknown as (props: PieSectorDataItem) => React.ReactElement | null}
                     >
                         {filteredData.map((entry, index) => (
@@ -155,7 +155,7 @@ export function CompletionRatioChart({ data }: CompletionRatioChartProps) {
                             const pct = total > 0 ? ((n / total) * 100).toFixed(0) : '0';
                             return [`${n} sessions (${pct}%)`, String(name ?? '')] as [string, string];
                         }}
-                        animationDuration={0}
+                        animationDuration={200}
                     />
                     <Legend
                         wrapperStyle={{ fontSize: "12px", color: chartLabelStyle.color, cursor: "pointer" }}

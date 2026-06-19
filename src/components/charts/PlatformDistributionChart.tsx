@@ -128,9 +128,9 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         paddingAngle={5}
                         dataKey="value"
                         stroke="none"
-                        animationDuration={0}
+                        animationDuration={1000}
                         animationBegin={0}
-                        animationEasing="linear"
+                        animationEasing="ease-out"
                         activeShape={renderActiveShape as any}
                         onMouseEnter={(d: { value?: number; name?: string }, index: number) => setActiveIndex(index)}
                         onMouseLeave={() => setActiveIndex(-1)}
@@ -153,7 +153,7 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
                         formatter={(value: any) => [`${value ?? 0} ${t('sessions')}`, t('activity')]}
-                        animationDuration={0}
+                        animationDuration={200}
                     />
                     <Legend
                         verticalAlign="bottom"

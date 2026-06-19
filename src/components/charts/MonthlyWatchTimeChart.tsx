@@ -134,13 +134,13 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
-                        animationDuration={0}
+                        animationDuration={200}
                     />
                     <Bar
                         dataKey="hours"
                         radius={[4, 4, 0, 0]}
-                        animationDuration={0}
-                        animationEasing="linear"
+                        animationDuration={1000}
+                        animationEasing="ease-out"
                         onClick={handleBarClick}
                     >
                         {chartData.map((entry, index) => (

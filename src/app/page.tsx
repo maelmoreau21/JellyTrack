@@ -1166,9 +1166,9 @@ export default async function DashboardPage(props: {
                 </Link>
               </div>,
 
-              /* Dataviz Row : Multi-Axis Volume & PieChart */
-              <div key="volumes" className="grid gap-4 md:grid-cols-2 lg:grid-cols-7 min-w-0">
-                <Card className="col-span-1 lg:col-span-5 app-surface-soft border-border backdrop-blur-sm">
+              /* Dataviz Row : Multi-Axis Volume & PieChart — Bento Grid hero */
+              <div key="volumes" className="grid gap-4 grid-cols-1 lg:grid-cols-4 min-w-0">
+                <Card className="col-span-1 lg:col-span-3 app-surface-soft border-border backdrop-blur-sm">
                   <CardHeader className="pb-1">
                     <CardTitle>{t('volumeHistory')}</CardTitle>
                     <CardDescription>{t('volumeHistoryDesc')}</CardDescription>
@@ -1184,7 +1184,7 @@ export default async function DashboardPage(props: {
                   </CardContent>
                 </Card>
 
-                <Card className="col-span-1 lg:col-span-2 app-surface-soft border-border backdrop-blur-sm">
+                <Card className="col-span-1 lg:col-span-1 app-surface-soft border-border backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle>{t('categoryBreakdown')}</CardTitle>
                     <CardDescription>{t('categoryBreakdownDesc')}</CardDescription>
@@ -1226,9 +1226,9 @@ export default async function DashboardPage(props: {
               </Suspense>,
 
               /* Dataviz Row : Plateformes + Top Users + Live */
-              <div key="platforms" className="grid gap-4 md:grid-cols-2 lg:grid-cols-8 min-w-0">
+              <div key="platforms" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 min-w-0">
 
-                <Card className="col-span-2 app-surface-soft border-border backdrop-blur-sm shadow-sm">
+                <Card className="col-span-1 app-surface-soft border-border backdrop-blur-sm shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex gap-2"><Award className="w-5 h-5 text-yellow-500" /> {t('loyalUsers')}</CardTitle>
                     <CardDescription>{t('loyalUsersDesc')}</CardDescription>
@@ -1253,7 +1253,7 @@ export default async function DashboardPage(props: {
                   </CardContent>
                 </Card>
 
-                <Card className="col-span-3 app-surface-soft border-border backdrop-blur-sm shadow-sm">
+                <Card className="col-span-1 app-surface-soft border-border backdrop-blur-sm shadow-sm">
                   <CardHeader>
                     <CardTitle>{t('clientEcosystem')}</CardTitle>
                     <CardDescription>{t('clientEcosystemDesc')}</CardDescription>
@@ -1299,8 +1299,8 @@ export default async function DashboardPage(props: {
               </div>,
 
               /* Monthly Watch Time + Completion Ratio + Client Categories */
-              <div key="new-stats" className="grid gap-4 md:grid-cols-3">
-                <CollapsibleCard storageKey="monthly" title={t('monthlyTime')} description={t('monthlyTimeDesc')} contentClassName="pl-0 pb-4">
+              <div key="new-stats" className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <CollapsibleCard storageKey="monthly" title={t('monthlyTime')} description={t('monthlyTimeDesc')} contentClassName="pl-0 pb-4" className="lg:col-span-2">
                   <div className="h-[320px] w-full overflow-hidden">
                     {metrics.monthlyWatchData.length > 0 ? (
                       <MonthlyWatchTimeChart data={metrics.monthlyWatchData} monthNames={MONTH_NAMES} />
