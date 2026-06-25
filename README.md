@@ -13,6 +13,23 @@
   <strong>Observability and analytics for Jellyfin: live sessions, enriched history, downloads, and fine playback telemetry.</strong>
 </p>
 
+## Preview
+
+### 📊 Main Dashboard
+![JellyTrack Dashboard](public/screenshots/dashboard.png)
+
+### 📈 Detailed Analytics
+![JellyTrack Analytics](public/screenshots/analytics.png)
+
+### 👥 Users & Activity
+![JellyTrack Users](public/screenshots/users.png)
+
+### 📜 Playback History & Telemetry
+![JellyTrack Logs](public/screenshots/logs.png)
+
+### ⚙️ Settings
+![JellyTrack Settings](public/screenshots/settings.png)
+
 ---
 
 > [!CAUTION]
