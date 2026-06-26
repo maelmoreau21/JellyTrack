@@ -138,6 +138,7 @@ export async function upsertServerRecord(identity: ServerIdentity): Promise<Serv
     where: { jellyfinServerId: safeServerId },
     update: {
       name: safeName,
+      url: safeUrl,
       isActive: true,
     },
     create: {

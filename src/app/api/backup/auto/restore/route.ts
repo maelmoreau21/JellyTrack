@@ -63,122 +63,115 @@ export async function POST(req: NextRequest) {
 
         // Restore using transaction
         await prisma.$transaction(async (tx) => {
-            // Clear existing data
-            await tx.systemHealthEvent.deleteMany();
-            await tx.systemHealthState.deleteMany();
+            // Clear existing data (volatile and references first)
+            await tx.activeStream.deleteMany();
+            await tx.telemetryEvent.deleteMany();
             await tx.playbackHistory.deleteMany();
             await tx.media.deleteMany();
             await tx.user.deleteMany();
             await tx.server.deleteMany();
+            await tx.systemHealthEvent.deleteMany();
+            await tx.systemHealthState.deleteMany();
 
             // Restore servers first (FK parent)
-            for (const s of normalizedServers) {
-                await tx.server.create({
-                    data: {
-                        id: s.id,
-                        jellyfinServerId: s.jellyfinServerId,
-                        name: s.name,
-                        url: s.url,
-                        isActive: s.isActive,
-                        createdAt: s.createdAt,
-                        updatedAt: s.updatedAt,
-                    }
-                });
+            if (normalizedServers.length > 0) {
+                await tx.server.createMany({ data: normalizedServers });
             }
 
             // Restore users
-            if (users?.length > 0) {
-                for (const u of users) {
-                    await tx.user.create({
-                        data: {
-                            id: u.id,
-                            serverId: u.serverId || defaultServerId,
-                            jellyfinUserId: u.jellyfinUserId,
-                            username: u.username,
-                            createdAt: new Date(u.createdAt),
-                        }
-                    });
-                }
+            if (users && users.length > 0) {
+                const usersToInsert = users.map((u: any) => ({
+                    id: u.id,
+                    serverId: u.serverId || defaultServerId,
+                    jellyfinUserId: u.jellyfinUserId,
+                    username: u.username,
+                    isActive: typeof u.isActive === "boolean" ? u.isActive : true,
+                    lastActive: u.lastActive ? new Date(String(u.lastActive)) : null,
+                    createdAt: u.createdAt ? new Date(String(u.createdAt)) : new Date(),
+                    updatedAt: u.updatedAt ? new Date(String(u.updatedAt)) : new Date(),
+                }));
+                await tx.user.createMany({ data: usersToInsert });
             }
 
             // Restore media
-            if (media?.length > 0) {
-                for (const m of media) {
-                    await tx.media.create({
-                        data: {
-                            id: m.id,
-                            serverId: m.serverId || defaultServerId,
-                            jellyfinMediaId: m.jellyfinMediaId,
-                            title: m.title,
-                            type: m.type,
-                            collectionType: m.collectionType || null,
-                            genres: m.genres || [],
-                            resolution: m.resolution || null,
-                            durationMs: m.durationMs != null ? BigInt(m.durationMs) : null,
-                            parentId: m.parentId || null,
-                            artist: m.artist || null,
-                            dateAdded: m.dateAdded ? new Date(m.dateAdded) : null,
-                            createdAt: new Date(m.createdAt),
-                        }
-                    });
-                }
+            if (media && media.length > 0) {
+                const mediaToInsert = media.map((m: any) => ({
+                    id: m.id,
+                    serverId: m.serverId || defaultServerId,
+                    jellyfinMediaId: m.jellyfinMediaId,
+                    title: m.title,
+                    type: m.type,
+                    collectionType: m.collectionType || null,
+                    libraryName: m.libraryName || null,
+                    genres: Array.isArray(m.genres) ? m.genres : [],
+                    resolution: m.resolution || null,
+                    durationMs: m.durationMs != null ? BigInt(String(m.durationMs)) : null,
+                    size: m.size != null ? BigInt(String(m.size)) : null,
+                    directors: Array.isArray(m.directors) ? m.directors : [],
+                    actors: Array.isArray(m.actors) ? m.actors : [],
+                    studios: Array.isArray(m.studios) ? m.studios : [],
+                    parentId: m.parentId || null,
+                    artist: m.artist || null,
+                    dateAdded: m.dateAdded ? new Date(String(m.dateAdded)) : null,
+                    createdAt: m.createdAt ? new Date(String(m.createdAt)) : new Date(),
+                    updatedAt: m.updatedAt ? new Date(String(m.updatedAt)) : new Date(),
+                }));
+                await tx.media.createMany({ data: mediaToInsert });
             }
 
             // Restore playback history
-            if (playbackHistory?.length > 0) {
-                for (const ph of playbackHistory) {
-                    await tx.playbackHistory.create({
-                        data: {
-                            id: ph.id,
-                            serverId: ph.serverId || defaultServerId,
-                            userId: ph.userId,
-                            mediaId: ph.mediaId,
-                            startedAt: new Date(ph.startedAt),
-                            endedAt: ph.endedAt ? new Date(ph.endedAt) : null,
-                            durationWatched: ph.durationWatched || 0,
-                            playMethod: ph.playMethod,
-                            eventSource: ph.eventSource || "playback",
-                            sourceEventId: ph.sourceEventId || null,
-                            clientName: ph.clientName,
-                            deviceName: ph.deviceName,
-                            ipAddress: ph.ipAddress,
-                            country: ph.country,
-                            city: ph.city,
-                            audioCodec: ph.audioCodec,
-                            audioLanguage: ph.audioLanguage,
-                            subtitleCodec: ph.subtitleCodec,
-                            subtitleLanguage: ph.subtitleLanguage,
-                            pauseCount: ph.pauseCount || 0,
-                            audioChanges: ph.audioChanges || 0,
-                            subtitleChanges: ph.subtitleChanges || 0,
-                            seekCount: ph.seekCount || 0,
-                            rewatchCount: ph.rewatchCount || 0,
-                            speedChangeCount: ph.speedChangeCount || 0,
-                            maxPlaybackRate: ph.maxPlaybackRate || null,
-                        }
-                    });
-                }
+            const playbackToInsert = Array.isArray(playbackHistory)
+                ? playbackHistory.map((ph: any) => ({
+                    id: ph.id,
+                    serverId: ph.serverId || defaultServerId,
+                    userId: ph.userId || null,
+                    mediaId: ph.mediaId,
+                    playMethod: ph.playMethod,
+                    eventSource: ph.eventSource || "playback",
+                    sourceEventId: ph.sourceEventId || null,
+                    clientName: ph.clientName || null,
+                    deviceName: ph.deviceName || null,
+                    ipAddress: ph.ipAddress || null,
+                    country: ph.country || null,
+                    city: ph.city || null,
+                    durationWatched: typeof ph.durationWatched === "number" ? ph.durationWatched : 0,
+                    startedAt: ph.startedAt ? new Date(String(ph.startedAt)) : new Date(),
+                    endedAt: ph.endedAt ? new Date(String(ph.endedAt)) : null,
+                    audioLanguage: ph.audioLanguage || null,
+                    audioCodec: ph.audioCodec || null,
+                    subtitleLanguage: ph.subtitleLanguage || null,
+                    subtitleCodec: ph.subtitleCodec || null,
+                    bitrate: typeof ph.bitrate === "number" ? ph.bitrate : null,
+                    pauseCount: typeof ph.pauseCount === "number" ? ph.pauseCount : 0,
+                    audioChanges: typeof ph.audioChanges === "number" ? ph.audioChanges : 0,
+                    subtitleChanges: typeof ph.subtitleChanges === "number" ? ph.subtitleChanges : 0,
+                    seekCount: typeof ph.seekCount === "number" ? ph.seekCount : 0,
+                    rewatchCount: typeof ph.rewatchCount === "number" ? ph.rewatchCount : 0,
+                    speedChangeCount: typeof ph.speedChangeCount === "number" ? ph.speedChangeCount : 0,
+                    maxPlaybackRate: typeof ph.maxPlaybackRate === "number" ? ph.maxPlaybackRate : null,
+                }))
+                : [];
+
+            if (playbackToInsert.length > 0) {
+                await tx.playbackHistory.createMany({ data: playbackToInsert });
             }
 
             // Restore telemetry events (if present in backup)
-            if (telemetryEvents?.length > 0) {
+            if (telemetryEvents && telemetryEvents.length > 0) {
                 const playbackServerMap = new Map<string, string>();
-                for (const ph of playbackHistory || []) {
-                    if (ph?.id) playbackServerMap.set(String(ph.id), String(ph.serverId || defaultServerId));
+                for (const ph of playbackToInsert) {
+                    if (ph.id) playbackServerMap.set(String(ph.id), String(ph.serverId || defaultServerId));
                 }
-                for (const ev of telemetryEvents) {
-                    await tx.telemetryEvent.create({
-                        data: {
-                            id: ev.id,
-                            serverId: ev.serverId || playbackServerMap.get(String(ev.playbackId)) || defaultServerId,
-                            playbackId: ev.playbackId,
-                            eventType: ev.eventType,
-                            positionMs: ev.positionMs != null ? BigInt(ev.positionMs) : BigInt(0),
-                            metadata: ev.metadata || null,
-                            createdAt: ev.createdAt ? new Date(ev.createdAt) : new Date(),
-                        }
-                    });
-                }
+                const telemetryToInsert = telemetryEvents.map((ev: any) => ({
+                    id: ev.id,
+                    serverId: ev.serverId || playbackServerMap.get(String(ev.playbackId)) || defaultServerId,
+                    playbackId: ev.playbackId,
+                    eventType: ev.eventType,
+                    positionMs: ev.positionMs != null ? BigInt(String(ev.positionMs)) : BigInt(0),
+                    metadata: ev.metadata || null,
+                    createdAt: ev.createdAt ? new Date(String(ev.createdAt)) : new Date(),
+                }));
+                await tx.telemetryEvent.createMany({ data: telemetryToInsert });
             }
 
             // Restore settings
@@ -196,6 +189,20 @@ export async function POST(req: NextRequest) {
                         backupCronMinute: settings.backupCronMinute ?? 30,
                         defaultLocale: settings.defaultLocale ?? "en",
                         timeFormat: settings.timeFormat ?? "24h",
+                        maxConcurrentTranscodes: settings.maxConcurrentTranscodes ?? 0,
+                        wrappedVisible: settings.wrappedVisible ?? true,
+                        wrappedPeriodEnabled: settings.wrappedPeriodEnabled ?? true,
+                        wrappedStartMonth: settings.wrappedStartMonth ?? 12,
+                        wrappedStartDay: settings.wrappedStartDay ?? 1,
+                        wrappedEndMonth: settings.wrappedEndMonth ?? 1,
+                        wrappedEndDay: settings.wrappedEndDay ?? 31,
+                        pluginKeyRotationDays: settings.pluginKeyRotationDays ?? 90,
+                        pluginAutoRotateEnabled: settings.pluginAutoRotateEnabled ?? false,
+                        pluginKeyRotationGraceHours: settings.pluginKeyRotationGraceHours ?? 24,
+                        pluginTelemetrySettings: settings.pluginTelemetrySettings ?? null,
+                        authRememberThirtyDaysEnabled: settings.authRememberThirtyDaysEnabled ?? true,
+                        authSessionsRevokedAt: settings.authSessionsRevokedAt ? new Date(String(settings.authSessionsRevokedAt)) : null,
+                        resolutionThresholds: settings.resolutionThresholds ?? null,
                     },
                     create: {
                         id: "global",
@@ -209,6 +216,20 @@ export async function POST(req: NextRequest) {
                         backupCronMinute: settings.backupCronMinute ?? 30,
                         defaultLocale: settings.defaultLocale ?? "en",
                         timeFormat: settings.timeFormat ?? "24h",
+                        maxConcurrentTranscodes: settings.maxConcurrentTranscodes ?? 0,
+                        wrappedVisible: settings.wrappedVisible ?? true,
+                        wrappedPeriodEnabled: settings.wrappedPeriodEnabled ?? true,
+                        wrappedStartMonth: settings.wrappedStartMonth ?? 12,
+                        wrappedStartDay: settings.wrappedStartDay ?? 1,
+                        wrappedEndMonth: settings.wrappedEndMonth ?? 1,
+                        wrappedEndDay: settings.wrappedEndDay ?? 31,
+                        pluginKeyRotationDays: settings.pluginKeyRotationDays ?? 90,
+                        pluginAutoRotateEnabled: settings.pluginAutoRotateEnabled ?? false,
+                        pluginKeyRotationGraceHours: settings.pluginKeyRotationGraceHours ?? 24,
+                        pluginTelemetrySettings: settings.pluginTelemetrySettings ?? null,
+                        authRememberThirtyDaysEnabled: settings.authRememberThirtyDaysEnabled ?? true,
+                        authSessionsRevokedAt: settings.authSessionsRevokedAt ? new Date(String(settings.authSessionsRevokedAt)) : null,
+                        resolutionThresholds: settings.resolutionThresholds ?? null,
                     }
                 });
             }

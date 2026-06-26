@@ -3,7 +3,7 @@ import { cookies, headers } from 'next/headers';
 import type { AbstractIntlMessages } from 'use-intl/core';
 import enMessages from '../../messages/en.json';
 import fallbackMessages from '../../messages/fallback.json';
-import { AVAILABLE_LOCALES, DEFAULT_LOCALE, isSupportedLocale } from './locales';
+import { DEFAULT_LOCALE, isSupportedLocale } from './locales';
 
 function mergeMessages(primary: unknown, fallback: unknown): unknown {
     if (primary === null || primary === undefined) return fallback;

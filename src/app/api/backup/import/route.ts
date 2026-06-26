@@ -130,46 +130,93 @@ export async function POST(req: NextRequest) {
             }
 
             if (users && users.length > 0) {
-                const usersToInsert = users.map((u: Record<string, unknown>) => ({
-                    ...u,
-                    serverId: (typeof u.serverId === "string" && u.serverId) ? u.serverId : defaultServerId,
+                const usersToInsert = users.map((u: any) => ({
+                    id: u.id,
+                    serverId: u.serverId || defaultServerId,
+                    jellyfinUserId: u.jellyfinUserId,
+                    username: u.username,
+                    isActive: typeof u.isActive === "boolean" ? u.isActive : true,
+                    lastActive: u.lastActive ? new Date(String(u.lastActive)) : null,
+                    createdAt: u.createdAt ? new Date(String(u.createdAt)) : new Date(),
+                    updatedAt: u.updatedAt ? new Date(String(u.updatedAt)) : new Date(),
                 }));
                 await tx.user.createMany({ data: usersToInsert });
             }
+
             if (media && media.length > 0) {
-                const mediaToInsert = media.map((m: Record<string, unknown>) => ({
-                    ...m,
-                    serverId: (typeof m.serverId === "string" && m.serverId) ? m.serverId : defaultServerId,
+                const mediaToInsert = media.map((m: any) => ({
+                    id: m.id,
+                    serverId: m.serverId || defaultServerId,
+                    jellyfinMediaId: m.jellyfinMediaId,
+                    title: m.title,
+                    type: m.type,
+                    collectionType: m.collectionType || null,
+                    libraryName: m.libraryName || null,
+                    genres: Array.isArray(m.genres) ? m.genres : [],
+                    resolution: m.resolution || null,
+                    durationMs: m.durationMs != null ? BigInt(String(m.durationMs)) : null,
+                    size: m.size != null ? BigInt(String(m.size)) : null,
+                    directors: Array.isArray(m.directors) ? m.directors : [],
+                    actors: Array.isArray(m.actors) ? m.actors : [],
+                    studios: Array.isArray(m.studios) ? m.studios : [],
+                    parentId: m.parentId || null,
+                    artist: m.artist || null,
+                    dateAdded: m.dateAdded ? new Date(String(m.dateAdded)) : null,
+                    createdAt: m.createdAt ? new Date(String(m.createdAt)) : new Date(),
+                    updatedAt: m.updatedAt ? new Date(String(m.updatedAt)) : new Date(),
                 }));
                 await tx.media.createMany({ data: mediaToInsert });
             }
 
-            const playbackToInsert: Record<string, unknown>[] = Array.isArray(playbackHistory)
-                ? playbackHistory.map((h: Record<string, unknown>) => ({
-                    ...h,
-                    serverId: (typeof h.serverId === "string" && h.serverId) ? h.serverId : defaultServerId,
+            const playbackToInsert = Array.isArray(playbackHistory)
+                ? playbackHistory.map((ph: any) => ({
+                    id: ph.id,
+                    serverId: ph.serverId || defaultServerId,
+                    userId: ph.userId || null,
+                    mediaId: ph.mediaId,
+                    playMethod: ph.playMethod,
+                    eventSource: ph.eventSource || "playback",
+                    sourceEventId: ph.sourceEventId || null,
+                    clientName: ph.clientName || null,
+                    deviceName: ph.deviceName || null,
+                    ipAddress: ph.ipAddress || null,
+                    country: ph.country || null,
+                    city: ph.city || null,
+                    durationWatched: typeof ph.durationWatched === "number" ? ph.durationWatched : 0,
+                    startedAt: ph.startedAt ? new Date(String(ph.startedAt)) : new Date(),
+                    endedAt: ph.endedAt ? new Date(String(ph.endedAt)) : null,
+                    audioLanguage: ph.audioLanguage || null,
+                    audioCodec: ph.audioCodec || null,
+                    subtitleLanguage: ph.subtitleLanguage || null,
+                    subtitleCodec: ph.subtitleCodec || null,
+                    bitrate: typeof ph.bitrate === "number" ? ph.bitrate : null,
+                    pauseCount: typeof ph.pauseCount === "number" ? ph.pauseCount : 0,
+                    audioChanges: typeof ph.audioChanges === "number" ? ph.audioChanges : 0,
+                    subtitleChanges: typeof ph.subtitleChanges === "number" ? ph.subtitleChanges : 0,
+                    seekCount: typeof ph.seekCount === "number" ? ph.seekCount : 0,
+                    rewatchCount: typeof ph.rewatchCount === "number" ? ph.rewatchCount : 0,
+                    speedChangeCount: typeof ph.speedChangeCount === "number" ? ph.speedChangeCount : 0,
+                    maxPlaybackRate: typeof ph.maxPlaybackRate === "number" ? ph.maxPlaybackRate : null,
                 }))
                 : [];
 
-            if (playbackHistory && playbackHistory.length > 0) {
-                await tx.playbackHistory.createMany({ data: playbackToInsert as any });
-            }
-
-            const playbackServerMap = new Map<string, string>();
-            for (const entry of playbackToInsert) {
-                const playbackId = typeof entry["id"] === "string" ? entry["id"] : null;
-                const playbackServerId = typeof entry["serverId"] === "string" ? entry["serverId"] : defaultServerId;
-                if (playbackId) {
-                    playbackServerMap.set(playbackId, playbackServerId);
-                }
+            if (playbackToInsert.length > 0) {
+                await tx.playbackHistory.createMany({ data: playbackToInsert });
             }
 
             if (telemetryEvents && telemetryEvents.length > 0) {
-                const telemetryToInsert = telemetryEvents.map((e: Record<string, unknown>) => ({
-                    ...e,
-                    serverId: (typeof e.serverId === "string" && e.serverId)
-                        ? e.serverId
-                        : playbackServerMap.get(String(e.playbackId || "")) || defaultServerId,
+                const playbackServerMap = new Map<string, string>();
+                for (const ph of playbackToInsert) {
+                    if (ph.id) playbackServerMap.set(String(ph.id), String(ph.serverId || defaultServerId));
+                }
+                const telemetryToInsert = telemetryEvents.map((ev: any) => ({
+                    id: ev.id,
+                    serverId: ev.serverId || playbackServerMap.get(String(ev.playbackId)) || defaultServerId,
+                    playbackId: ev.playbackId,
+                    eventType: ev.eventType,
+                    positionMs: ev.positionMs != null ? BigInt(String(ev.positionMs)) : BigInt(0),
+                    metadata: ev.metadata || null,
+                    createdAt: ev.createdAt ? new Date(String(ev.createdAt)) : new Date(),
                 }));
                 await tx.telemetryEvent.createMany({ data: telemetryToInsert });
             }
@@ -189,6 +236,20 @@ export async function POST(req: NextRequest) {
                         backupCronMinute: (cs['backupCronMinute'] as number) ?? 30,
                         defaultLocale: (cs['defaultLocale'] as string) ?? "en",
                         timeFormat: (cs['timeFormat'] as string) ?? "24h",
+                        maxConcurrentTranscodes: (cs['maxConcurrentTranscodes'] as number) ?? 0,
+                        wrappedVisible: (cs['wrappedVisible'] as boolean) ?? true,
+                        wrappedPeriodEnabled: (cs['wrappedPeriodEnabled'] as boolean) ?? true,
+                        wrappedStartMonth: (cs['wrappedStartMonth'] as number) ?? 12,
+                        wrappedStartDay: (cs['wrappedStartDay'] as number) ?? 1,
+                        wrappedEndMonth: (cs['wrappedEndMonth'] as number) ?? 1,
+                        wrappedEndDay: (cs['wrappedEndDay'] as number) ?? 31,
+                        pluginKeyRotationDays: (cs['pluginKeyRotationDays'] as number) ?? 90,
+                        pluginAutoRotateEnabled: (cs['pluginAutoRotateEnabled'] as boolean) ?? false,
+                        pluginKeyRotationGraceHours: (cs['pluginKeyRotationGraceHours'] as number) ?? 24,
+                        pluginTelemetrySettings: (cs['pluginTelemetrySettings'] as any) ?? null,
+                        authRememberThirtyDaysEnabled: (cs['authRememberThirtyDaysEnabled'] as boolean) ?? true,
+                        authSessionsRevokedAt: cs['authSessionsRevokedAt'] ? new Date(String(cs['authSessionsRevokedAt'])) : null,
+                        resolutionThresholds: (cs['resolutionThresholds'] as any) ?? null,
                     }
                 });
             }

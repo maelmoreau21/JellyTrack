@@ -53,8 +53,9 @@ export async function performAutoBackup(): Promise<string> {
         const bigIntReplacer = (_key: string, value: unknown) => typeof value === 'bigint' ? value.toString() : value;
 
         // Write backup file
-        fs.writeFileSync(filePath, JSON.stringify(backupContent, bigIntReplacer, 2), "utf-8");
-        const fileSizeMb = (Buffer.byteLength(JSON.stringify(backupContent, bigIntReplacer)) / 1024 / 1024).toFixed(2);
+        const backupJsonString = JSON.stringify(backupContent, bigIntReplacer, 2);
+        fs.writeFileSync(filePath, backupJsonString, "utf-8");
+        const fileSizeMb = (Buffer.byteLength(backupJsonString) / 1024 / 1024).toFixed(2);
         console.log(`[Auto-Backup] Backup saved: ${fileName} (${fileSizeMb} MB)`);
 
         // Rolling rotation: delete oldest files if we exceed MAX_BACKUPS
