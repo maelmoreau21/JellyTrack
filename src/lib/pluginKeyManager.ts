@@ -21,10 +21,6 @@ function normalizePluginKey(value: string | null | undefined): string | null {
     return normalized.length > 0 ? normalized : null;
 }
 
-function isHashFormat(value: string | null | undefined): boolean {
-    const normalized = normalizePluginKey(value);
-    return Boolean(normalized && normalized.startsWith(`${PLUGIN_KEY_HASH_VERSION}$`));
-}
 
 function getPluginKeyPepper(): string {
     const pepper = String(process.env.PLUGIN_KEY_PEPPER || "").trim();
@@ -196,53 +192,6 @@ function toSnapshot(settings: PluginKeySettingsSnapshot | null): PluginKeySnapsh
     };
 }
 
-async function migrateLegacyPlaintextPluginKeys(settings: PluginKeySettingsSnapshot | null): Promise<PluginKeySettingsSnapshot | null> {
-    if (!settings) return null;
-
-    const hasCurrentPlaintext = Boolean(settings.pluginApiKey) && !isHashFormat(settings.pluginApiKey);
-    const hasPreviousPlaintext = Boolean(settings.pluginPreviousApiKey) && !isHashFormat(settings.pluginPreviousApiKey);
-
-    if (!hasCurrentPlaintext && !hasPreviousPlaintext) {
-        return settings;
-    }
-
-    const updateData: Record<string, unknown> = {};
-
-    if (hasCurrentPlaintext && settings.pluginApiKey) {
-        updateData.pluginApiKey = await hashPluginApiKey(settings.pluginApiKey);
-    }
-
-    if (hasPreviousPlaintext && settings.pluginPreviousApiKey) {
-        updateData.pluginPreviousApiKey = await hashPluginApiKey(settings.pluginPreviousApiKey);
-    }
-
-    const updated = await prisma.globalSettings.update({
-        where: { id: "global" },
-        data: updateData,
-        select: {
-            pluginApiKey: true,
-            pluginPreviousApiKey: true,
-            pluginPreviousApiKeyExpiresAt: true,
-            pluginKeyCreatedAt: true,
-            pluginKeyExpiresAt: true,
-            pluginKeyRotationDays: true,
-            pluginAutoRotateEnabled: true,
-            pluginKeyRotationGraceHours: true,
-        },
-    });
-
-    return {
-        pluginApiKey: updated.pluginApiKey,
-        pluginPreviousApiKey: updated.pluginPreviousApiKey,
-        pluginPreviousApiKeyExpiresAt: updated.pluginPreviousApiKeyExpiresAt,
-        pluginKeyCreatedAt: updated.pluginKeyCreatedAt,
-        pluginKeyExpiresAt: updated.pluginKeyExpiresAt,
-        pluginKeyRotationDays: updated.pluginKeyRotationDays,
-        pluginAutoRotateEnabled: updated.pluginAutoRotateEnabled,
-        pluginKeyRotationGraceHours: updated.pluginKeyRotationGraceHours,
-    };
-}
-
 async function fetchSettings(): Promise<PluginKeySettingsSnapshot | null> {
     const settings = await prisma.globalSettings.findUnique({
         where: { id: "global" },
@@ -271,7 +220,7 @@ async function fetchSettings(): Promise<PluginKeySettingsSnapshot | null> {
         pluginKeyRotationGraceHours: settings.pluginKeyRotationGraceHours,
     };
 
-    return migrateLegacyPlaintextPluginKeys(mapped);
+    return mapped;
 }
 
 export async function rotatePluginApiKey(input: {

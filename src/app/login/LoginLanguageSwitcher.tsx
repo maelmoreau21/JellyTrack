@@ -4,6 +4,7 @@ import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useTransition, useId } from "react";
 import { ChevronDown } from "lucide-react";
+import Image from "next/image";
 import { AVAILABLE_LOCALES, DEFAULT_LOCALE, isSupportedLocale } from "@/i18n/locales";
 
 export function LoginLanguageSwitcher() {
@@ -69,13 +70,11 @@ export function LoginLanguageSwitcher() {
                 aria-haspopup="menu"
                 aria-controls={open ? menuId : undefined}
             >
-                <img
+                <Image
                     src={`https://flagcdn.com/w40/${current.iso}.png`}
                     alt={current.label}
                     width={20}
                     height={14}
-                    loading="lazy"
-                    decoding="async"
                     className="w-5 h-3.5 object-cover rounded-sm shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
                 />
                 <span className="font-medium text-foreground">{current.label}</span>
@@ -101,13 +100,11 @@ export function LoginLanguageSwitcher() {
                                     : "text-foreground/75 hover:bg-muted hover:text-foreground"
                             }`}
                         >
-                            <img
+                            <Image
                                 src={`https://flagcdn.com/w40/${loc.iso}.png`}
                                 alt={loc.label}
                                 width={20}
                                 height={14}
-                                loading="lazy"
-                                decoding="async"
                                 className="w-5 h-3.5 object-cover rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
                             />
                             <span className="flex-1 text-left">{loc.label}</span>

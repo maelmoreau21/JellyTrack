@@ -6,7 +6,6 @@ import { DrillDownPieChart } from "@/components/charts/DrillDownChart";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
-import { GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
 import { normalizeLanguageTag } from '@/lib/language';
 import { buildExcludedMediaClause } from "@/lib/mediaPolicy";
 
@@ -431,7 +430,7 @@ const getDeepInsights = unstable_cache(
 );
 
 import Link from 'next/link';
-import { User, Film as FilmIcon, Star } from 'lucide-react';
+import { User, Star } from 'lucide-react';
 
 export async function DeepInsights({
     type,

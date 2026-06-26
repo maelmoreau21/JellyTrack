@@ -10,7 +10,6 @@ import {
     ScrollText,
     Users,
     Settings,
-    PlayCircle,
     Eraser,
     UserCircle,
     Gift,

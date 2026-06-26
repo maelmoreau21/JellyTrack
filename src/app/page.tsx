@@ -51,7 +51,7 @@ import { CollapsibleCard } from "@/components/dashboard/CollapsibleCard";
 import { MediaFilter } from "@/components/dashboard/MediaFilter";
 import { PredictionsPanel } from "@/components/dashboard/PredictionsPanel";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
-import { buildLegacyStreamRedisKey, buildStreamRedisKey } from "@/lib/serverRegistry";
+import { buildStreamRedisKey } from "@/lib/serverRegistry";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
 import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
@@ -851,16 +851,7 @@ export default async function DashboardPage(props: {
         }
     });
 
-    // Backward compatibility: fallback to legacy key if scoped key is absent.
-    await Promise.all(activeStreamEntries.map(async (stream) => {
-      const mapKey = `${stream.serverId}:${stream.sessionId}`;
-      if (redisMap.has(mapKey)) return;
-      try {
-        const legacyPayload = await redis.get(buildLegacyStreamRedisKey(stream.sessionId));
-        if (!legacyPayload) return;
-        redisMap.set(mapKey, JSON.parse(legacyPayload));
-      } catch {}
-    }));
+
 
     const relatedPairs = new Set<string>();
     for (const entry of activeStreamEntries) {

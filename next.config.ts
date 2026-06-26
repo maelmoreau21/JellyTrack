@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
   env: {
     APP_VERSION: process.env.npm_package_version || '0.0.0',
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'flagcdn.com',
+      },
+    ],
+  },
   experimental: {
     serverActions: {
       // SECURITY: Reduced from 500mb to 50mb to mitigate DoS attacks

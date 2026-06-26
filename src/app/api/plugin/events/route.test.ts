@@ -123,7 +123,6 @@ vi.mock("@/lib/pluginTelemetrySettings", () => ({
     })),
 }));
 vi.mock("@/lib/serverRegistry", () => ({
-    buildLegacyStreamRedisKey: vi.fn((sessionId: string) => `stream:${sessionId}`),
     buildStreamRedisKey: vi.fn((serverId: string, sessionId: string) => `stream:${serverId}:${sessionId}`),
     extractServerIdentityFromPayload: vi.fn((payload: Record<string, unknown>) => ({
         jellyfinServerId: String(payload.serverId || "jellyfin-main"),

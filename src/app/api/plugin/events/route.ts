@@ -16,7 +16,6 @@ import { isValidDiscordWebhook, safeFetchWebhook } from "@/lib/webhookValidator"
 import { getClientIp, normalizeIp } from "@/lib/requestIp";
 import { getCachedPluginIngestSettings } from "@/lib/pluginTelemetrySettings";
 import {
-    buildLegacyStreamRedisKey,
     buildStreamRedisKey,
     extractServerIdentityFromPayload,
     upsertServerRecord,
@@ -1070,7 +1069,6 @@ async function mergeOpenPlaybacks(userId: string, mediaId: string) {
 async function cleanupActiveStreamForSession(serverId: string, activeStream: { id: string; sessionId: string } | null) {
     if (!activeStream?.sessionId) return;
     await redis.del(buildStreamRedisKey(serverId, activeStream.sessionId));
-    await redis.del(buildLegacyStreamRedisKey(activeStream.sessionId));
     await (prisma.activeStream as any).delete({ where: { id: activeStream.id } }).catch(() => undefined);
 }
 

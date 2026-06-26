@@ -164,7 +164,3 @@ export async function ensureMasterServer(): Promise<ServerRecord> {
 export function buildStreamRedisKey(serverId: string, sessionId: string): string {
   return `stream:${serverId}:${sessionId}`;
 }
-
-export function buildLegacyStreamRedisKey(sessionId: string): string {
-  return `stream:${sessionId}`;
-}

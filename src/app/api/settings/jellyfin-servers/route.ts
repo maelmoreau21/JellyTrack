@@ -10,6 +10,7 @@ import {
 } from "@/lib/jellyfinServers";
 import { getPluginKeySnapshot } from "@/lib/pluginKeyManager";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
+import { deriveScopedPluginApiKey } from "@/lib/pluginServerKey";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,11 @@ export async function GET() {
       const effectiveApiKey = resolveServerApiKey(server, primaryEnvApiKey);
       const connection = await probeConnection(server.url, effectiveApiKey);
 
+      let pluginApiKey: string | null = null;
+      if (pluginKeyReady && snapshot.currentKeyHash) {
+        pluginApiKey = deriveScopedPluginApiKey(snapshot.currentKeyHash, server.jellyfinServerId);
+      }
+
       return {
         id: server.id,
         jellyfinServerId: server.jellyfinServerId,
@@ -114,6 +120,7 @@ export async function GET() {
         allowAuthFallback: server.allowAuthFallback,
         hasPluginKey: pluginKeyReady,
         pluginKeyMasked: pluginKeyReady ? "stored-as-hash" : "",
+        pluginApiKey,
         connectionState: connection.state,
         connectionMessage: connection.message,
       };

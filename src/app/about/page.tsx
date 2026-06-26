@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { PlayCircle, Server, Database, Palette, BarChart3, Shield, Clock, GitBranch, Heart, ExternalLink } from "lucide-react";
 import { getTranslations } from 'next-intl/server';
+import Image from "next/image";
 
 const version = process.env.APP_VERSION || "1.0.0";
 
@@ -18,7 +19,7 @@ export default async function AboutPage() {
             {/* Header */}
             <div className="text-center space-y-4">
                 <div className="flex items-center justify-center gap-3">
-                    <img src="/logo.svg" alt="Logo" className="w-10 h-10 md:w-12 md:h-12" />
+                    <Image src="/logo.svg" alt="Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12" />
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">JellyTrack</h1>
                 </div>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">

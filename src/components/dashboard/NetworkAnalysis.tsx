@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { unstable_cache } from "next/cache";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { StandardAreaChart, StandardBarChart, StandardPieChart } from "@/components/charts/StandardMetricsCharts";
+import { StandardBarChart } from "@/components/charts/StandardMetricsCharts";
 import { TranscodeHourlyChart } from "@/components/charts/TranscodeHourlyChart";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
@@ -168,7 +168,7 @@ const getNetworkData = unstable_cache(
 
         // Client transcode ratio (top 8)
         const clientTranscodeData = Array.from(clientTranscodeMap.entries())
-            .filter(([_, v]) => v.total >= 2)
+            .filter(([, v]) => v.total >= 2)
             .map(([name, v]) => ({
                 name: name.length > 15 ? name.substring(0, 15) + "…" : name,
                 fullName: name,

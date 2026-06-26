@@ -223,7 +223,7 @@ export default function SettingsMediaPage() {
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [t]);
 
     const groupedByServer = useMemo(() => {
         const map = new Map<string, { id: string; name: string; url: string | null; libraries: LibraryScope[] }>();

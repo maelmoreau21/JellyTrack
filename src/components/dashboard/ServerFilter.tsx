@@ -64,6 +64,7 @@ export function ServerFilter({
     router,
     searchParamsString,
     selectedRaw,
+    selectedValid,
     selectedValidKey,
     servers.length,
     validIds,

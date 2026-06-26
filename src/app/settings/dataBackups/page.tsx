@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ export default function SettingsDataBackupsPage() {
     const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const fileRef = useRef<HTMLInputElement | null>(null);
 
-    const fetchBackups = async () => {
+    const fetchBackups = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch("/api/backup/auto");
@@ -31,11 +31,11 @@ export default function SettingsDataBackupsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchBackups();
-    }, []);
+    }, [fetchBackups]);
 
     const triggerBackup = async () => {
         setRunning(true);

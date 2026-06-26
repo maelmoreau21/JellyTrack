@@ -3,8 +3,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/authOptions";
 import { getLogHealthSnapshot } from "@/lib/logHealth";
-import { AlertTriangle, CheckCircle2, Clock3, HeartPulse, RadioTower, RefreshCw, ShieldAlert, Library, Activity, History } from "lucide-react";
-import { HealthEvent } from "@/lib/systemHealth";
+import { AlertTriangle, Clock3, HeartPulse, RadioTower, ShieldAlert, Library, Activity, History } from "lucide-react";
 import RecentClosuresClient from "./RecentClosuresClient";
 import { HealthAnomalyCharts } from "@/components/admin/HealthAnomalyCharts";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -21,31 +20,6 @@ interface OrphanPlayback {
 
 export const dynamic = "force-dynamic";
 
-function ProcessingTile({ Icon, title, statusClass, statusLabel, lines = [] }: { Icon?: any; title: string; statusClass?: string; statusLabel?: string; lines?: Array<{ label: string; value?: string | null } | null> }) {
-    return (
-        <div className="app-surface p-4 rounded-lg border">
-            <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3 min-w-0">
-                    {Icon && <Icon className="h-5 w-5 text-zinc-500 mt-0.5" />}
-                    <div className="min-w-0">
-                        <div className="text-sm font-semibold text-foreground truncate">{title}</div>
-                    </div>
-                </div>
-                <div className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusClass}`}>
-                    {statusLabel}
-                </div>
-            </div>
-            <div className="mt-3 space-y-2 text-sm text-muted-foreground">
-                {lines.filter(Boolean).map((line, idx) => (
-                    <div key={idx} className="flex items-center justify-between gap-2">
-                        <div className="text-xs text-muted-foreground">{(line as any).label}</div>
-                        <div className="text-sm font-medium text-foreground">{(line as any).value ?? "-"}</div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
 
 export default async function HealthPage() {
     const session = await getServerSession(authOptions);
@@ -75,13 +49,6 @@ export default async function HealthPage() {
         return normalized;
     }
 
-    function sectionStatusClass(status: string | null | undefined) {
-        const normalized = (status || "idle").toLowerCase();
-        if (normalized === "error") return "border-red-500/35 bg-red-500/10 text-red-600 dark:text-red-300";
-        if (normalized === "running") return "border-amber-500/35 bg-amber-500/10 text-amber-600 dark:text-amber-300";
-        if (normalized === "ok") return "border-emerald-500/35 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300";
-        return "border-zinc-500/25 bg-zinc-500/10 text-foreground/80 dark:text-slate-300";
-    }
 
     
 

@@ -1,6 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-const SCOPED_PLUGIN_KEY_PREFIX = "jts3";
 const SIGNED_SCOPED_PLUGIN_KEY_PREFIX = "jts4";
 const SCOPED_KEY_CONTEXT = "JellyTrack scoped plugin key v1";
 
@@ -52,12 +51,12 @@ export function parsePluginApiKeyCandidate(candidateToken: string | null | undef
     return { rawKey: null, jellyfinServerId: null, scoped: false, scopedToken: null };
   }
 
-  if (!token.startsWith(`${SCOPED_PLUGIN_KEY_PREFIX}.`) && !token.startsWith(`${SIGNED_SCOPED_PLUGIN_KEY_PREFIX}.`)) {
+  if (!token.startsWith(`${SIGNED_SCOPED_PLUGIN_KEY_PREFIX}.`)) {
     return { rawKey: token, jellyfinServerId: null, scoped: false, scopedToken: null };
   }
 
   const parts = token.split(".");
-  if (parts.length !== 3 || (parts[0] !== SCOPED_PLUGIN_KEY_PREFIX && parts[0] !== SIGNED_SCOPED_PLUGIN_KEY_PREFIX)) {
+  if (parts.length !== 3 || parts[0] !== SIGNED_SCOPED_PLUGIN_KEY_PREFIX) {
     return { rawKey: null, jellyfinServerId: null, scoped: false, scopedToken: null };
   }
 
@@ -65,20 +64,6 @@ export function parsePluginApiKeyCandidate(candidateToken: string | null | undef
 
   if (!serverId) {
     return { rawKey: null, jellyfinServerId: null, scoped: true, scopedToken: token };
-  }
-
-  if (parts[0] === SCOPED_PLUGIN_KEY_PREFIX) {
-    if (process.env.ALLOW_LEGACY_SCOPED_PLUGIN_KEYS !== "true") {
-      return { rawKey: null, jellyfinServerId: serverId, scoped: true, scopedToken: token };
-    }
-
-    const rawKey = normalizeValue(parts[2]);
-    return {
-      rawKey: rawKey || null,
-      jellyfinServerId: serverId,
-      scoped: true,
-      scopedToken: token,
-    };
   }
 
   return {

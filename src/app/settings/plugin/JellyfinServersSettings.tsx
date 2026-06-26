@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   AlertCircle,
@@ -30,6 +30,7 @@ type JellyfinServerRow = {
   allowAuthFallback: boolean;
   hasPluginKey: boolean;
   pluginKeyMasked: string;
+  pluginApiKey?: string | null;
   connectionState: "online" | "offline" | "no_api_key";
   connectionMessage: string;
 };
@@ -108,11 +109,7 @@ export function JellyfinServersSettings() {
   const [apiKey, setApiKey] = useState<string>('');
   const [allowAuthFallback, setAllowAuthFallback] = useState<boolean>(true);
 
-  useEffect(() => {
-    fetchInfo();
-  }, []);
-
-  const fetchInfo = async () => {
+  const fetchInfo = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/settings/jellyfin-servers', { cache: 'no-store' });
@@ -122,12 +119,22 @@ export function JellyfinServersSettings() {
         return;
       }
       const json = await res.json();
-      setServers(json.servers || []);
+      const serverList: JellyfinServerRow[] = json.servers || [];
+      setServers(serverList);
       setPluginKeyReady(Boolean(json.pluginKeyReady));
       setPluginLastSeen(json.pluginLastSeen || null);
       setPluginEndpointPath(json.pluginEndpointPath || '/api/plugin/events');
       setPluginConnected(Boolean(json.pluginConnected));
       setIsMultiMode(Boolean(json.isMultiMode));
+
+      // Populate pluginKeyByServerId with keys from server list
+      const keysMap: Record<string, string> = {};
+      for (const s of serverList) {
+        if (s.pluginApiKey) {
+          keysMap[s.id] = s.pluginApiKey;
+        }
+      }
+      setPluginKeyByServerId((prev) => ({ ...prev, ...keysMap }));
 
       const settingsRes = await fetch('/api/settings', { cache: 'no-store' });
       if (settingsRes.ok) {
@@ -141,10 +148,13 @@ export function JellyfinServersSettings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchInfo();
+  }, [fetchInfo]);
 
   const effectivePluginEndpoint = typeof window !== 'undefined' ? `${window.location.origin}${pluginEndpointPath}` : pluginEndpointPath;
-
   const getPluginStateForServer = (server: JellyfinServerRow): PluginConnectionState => {
     if (server.hasPluginKey && pluginConnected) return 'connected';
     if (server.hasPluginKey) return 'ready';
@@ -580,7 +590,7 @@ export function JellyfinServersSettings() {
                       </button>
                     </div>
                     <div className="xl:col-span-4 flex items-end">
-                      <button type="button" onClick={() => handleCopyPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id || (!pluginKeyByServerId[server.id] && !server.hasPluginKey)} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
+                      <button type="button" onClick={() => handleCopyPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
                         {pluginLoadingServerId === server.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
                         {copiedPluginKeyServerId === server.id ? t('keyCopied') : t('copyKey')}
                       </button>

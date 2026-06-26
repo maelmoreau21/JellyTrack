@@ -15,19 +15,12 @@ function normalizeUrl(value: string | null | undefined): string {
   return String(value || "").trim().replace(/\/+$/, "").toLowerCase();
 }
 
-function isLegacySingleServer(row: SelectableServerRow): boolean {
-  const serverId = String(row.jellyfinServerId || "").trim().toLowerCase();
-  const name = String(row.name || "").trim().toLowerCase();
 
-  if (serverId === "legacy-single-server") return true;
-  return name === "legacy single server" || name.startsWith("legacy single server");
-}
 
 function getPriority(row: SelectableServerRow): number {
   let score = 0;
   const serverId = String(row.jellyfinServerId || "").trim().toLowerCase();
 
-  if (isLegacySingleServer(row)) score += 100;
   if (serverId === "master") score -= 10;
   if (!serverId) score += 5;
 
@@ -52,13 +45,10 @@ export function buildSelectableServerOptions(rows: SelectableServerRow[]): Selec
   const activeRows = rows.filter((row) => row.isActive);
   const baseRows = activeRows.length > 0 ? activeRows : rows;
 
-  const withoutLegacy = baseRows.filter((row) => !isLegacySingleServer(row));
-  const candidates = withoutLegacy.length > 0 ? withoutLegacy : baseRows;
-
   const groupedByUrl = new Map<string, SelectableServerRow[]>();
   const withoutUrl: SelectableServerRow[] = [];
 
-  for (const row of candidates) {
+  for (const row of baseRows) {
     const urlKey = normalizeUrl(row.url);
     if (!urlKey) {
       withoutUrl.push(row);

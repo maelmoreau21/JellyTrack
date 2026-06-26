@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { normalizeBitrateToKbps } from "@/lib/bitrate";
 import { buildJellyfinApiKeyHeaders } from "@/lib/jellyfinServers";
 import { normalizeLanguageTag } from "@/lib/language";
-import { buildLegacyStreamRedisKey, buildStreamRedisKey } from "@/lib/serverRegistry";
+import { buildStreamRedisKey } from "@/lib/serverRegistry";
 
 import Link from "next/link";
 import { getServerSession } from "next-auth";
@@ -483,10 +483,8 @@ export default async function LogsPage({
             let audioStreamIndex: number | null = null;
             try {
                 const scopedPayload = await redis.get(buildStreamRedisKey(stream.serverId, stream.sessionId));
-                const legacyPayload = scopedPayload ? null : await redis.get(buildLegacyStreamRedisKey(stream.sessionId));
-                const payload = scopedPayload || legacyPayload;
-                if (payload) {
-                    const parsed = JSON.parse(payload) as Record<string, unknown>;
+                if (scopedPayload) {
+                    const parsed = JSON.parse(scopedPayload) as Record<string, unknown>;
                     audioStreamIndex = parseAudioStreamIndex(parsed.audioStreamIndex ?? parsed.AudioStreamIndex);
                 }
             } catch {

@@ -4,6 +4,7 @@ import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect, useTransition, useId } from 'react';
 import { ChevronDown, Globe } from 'lucide-react';
+import Image from 'next/image';
 import { AVAILABLE_LOCALES, DEFAULT_LOCALE, isSupportedLocale } from '@/i18n/locales';
 
 export function LanguageSwitcher() {
@@ -72,13 +73,11 @@ export function LanguageSwitcher() {
                 <div className="min-w-0 flex-1 text-left">
                     <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Language</div>
                     <div className="mt-0.5 flex items-center gap-2">
-                        <img 
+                        <Image 
                             src={`https://flagcdn.com/w40/${current.iso}.png`} 
                             alt={current.label}
                             width={20}
                             height={14}
-                            loading="lazy"
-                            decoding="async"
                             className="w-5 h-3.5 object-cover rounded-sm shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
                         />
                         <span className="truncate font-medium">{current.label}</span>
@@ -104,13 +103,11 @@ export function LanguageSwitcher() {
                             onClick={() => switchLocale(loc.code)}
                             className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all ${loc.code === selectedLocale ? 'border-primary/20 bg-primary/10 text-primary dark:text-cyan-200' : 'border-transparent text-foreground/80 dark:text-slate-300 hover:bg-muted'}`}
                         >
-                            <img 
+                            <Image 
                                 src={`https://flagcdn.com/w40/${loc.iso}.png`} 
                                 alt=""
                                 width={20}
                                 height={14}
-                                loading="lazy"
-                                decoding="async"
                                 className="w-5 h-3.5 object-cover rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
                             />
                             <span className="flex-1 text-left">{loc.label}</span>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import redis from "@/lib/redis";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { buildLegacyStreamRedisKey, buildStreamRedisKey } from "@/lib/serverRegistry";
+import { buildStreamRedisKey } from "@/lib/serverRegistry";
 
 export const dynamic = "force-dynamic";
 
@@ -66,18 +66,6 @@ export async function GET(req: Request) {
                     } catch {}
                 }
             });
-
-            // Backward compatibility: try legacy key if new key is missing.
-            await Promise.all(activeStreamEntries.map(async (stream) => {
-                const mapKey = `${stream.serverId}:${stream.sessionId}`;
-                if (redisMap.has(mapKey)) return;
-                try {
-                    const legacyPayload = await redis.get(buildLegacyStreamRedisKey(stream.sessionId));
-                    if (!legacyPayload) return;
-                    const parsed = JSON.parse(legacyPayload) as RedisStreamPayload;
-                    redisMap.set(mapKey, parsed);
-                } catch {}
-            }));
 
             const relatedPairs = new Set<string>();
             for (const entry of activeStreamEntries) {

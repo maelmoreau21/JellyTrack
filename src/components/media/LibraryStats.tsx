@@ -6,7 +6,7 @@ import Image from "next/image";
 import { getJellyfinImageUrl } from "@/lib/jellyfin";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { normalizeLibraryKey } from '@/lib/mediaPolicy';
 
 interface LibraryDetail {
@@ -188,7 +188,6 @@ export default function LibraryStats({ totalTB, movieCount, seriesCount, albumCo
                     const bn = getDisplayName(b);
                     return an.localeCompare(bn);
                 }).map((lib, idx) => {
-                    const normKey = normalizeLibraryKey(lib.collectionType || lib.name);
 
                     const displayName = getDisplayName(lib);
 
