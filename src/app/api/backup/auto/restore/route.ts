@@ -8,6 +8,7 @@ import fs from "node:fs";
 import { replaceSystemHealthState } from "@/lib/systemHealth";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { resolveAutoBackupFile } from "@/lib/backupDir";
+import { revalidateDashboardCache } from "@/lib/revalidate";
 
 export async function POST(req: NextRequest) {
     const auth = await requireAdminMutation(req);
@@ -239,6 +240,8 @@ export async function POST(req: NextRequest) {
         if (systemHealth) {
             await replaceSystemHealthState(systemHealth);
         }
+
+        revalidateDashboardCache();
 
         console.log(`[Auto-Backup Restore] Successfully restored from ${backupFile.fileName}`);
         return NextResponse.json({ success: true, message: await apiT('restoreSuccess', { fileName: backupFile.fileName }) });

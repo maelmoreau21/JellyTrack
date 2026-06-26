@@ -98,7 +98,7 @@ export async function GET(req: Request) {
                     || payload?.isTranscoding === true
                     || payload?.IsTranscoding === true;
                     
-                const streamBitrate = dbStream.bitrate ?? payload?.bitrate ?? payload?.Bitrate ?? (itemMedia.size && itemMedia.durationMs ? Math.round(Number(itemMedia.size) * 8 / (Number(itemMedia.durationMs) / 1000)) : null);
+                const streamBitrate = dbStream.bitrate ?? payload?.bitrate ?? payload?.Bitrate ?? (itemMedia.size && itemMedia.durationMs && Number(itemMedia.durationMs) > 0 ? Math.round(Number(itemMedia.size) * 8 / (Number(itemMedia.durationMs) / 1000)) : null);
                 if (streamBitrate) {
                     totalBandwidthMbps += streamBitrate / 1000000;
                 } else {

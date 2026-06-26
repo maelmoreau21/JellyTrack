@@ -7,6 +7,7 @@ import { AVAILABLE_LOCALES } from "@/i18n/locales";
 // No more library rules
 import { getSanitizedLibraryNames, getServerLibraryScopes } from "@/lib/libraryUtils";
 import { revalidatePath } from "next/cache";
+import { revalidateDashboardCache } from "@/lib/revalidate";
 import { normalizeSchedulerIntervals } from "@/lib/schedulerIntervals";
 import { isValidDiscordWebhook } from "@/lib/webhookValidator";
 import { invalidatePluginIngestSettingsCache, normalizePluginTelemetrySettings } from "@/lib/pluginTelemetrySettings";
@@ -313,12 +314,7 @@ export async function POST(req: NextRequest) {
         }
 
 
-        revalidatePath('/');
-        revalidatePath('/settings');
-        revalidatePath('/admin/cleanup');
-        revalidatePath('/admin/health');
-        revalidatePath('/admin/log-health');
-        revalidatePath('/admin/plugin-health');
+        revalidateDashboardCache();
         if (normalizedPluginTelemetrySettings !== undefined || sanitizedExcludedLibraries !== undefined) {
             invalidatePluginIngestSettingsCache();
         }

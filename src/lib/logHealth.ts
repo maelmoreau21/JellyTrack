@@ -76,7 +76,7 @@ export async function getLogHealthSnapshot() {
         current.setUTCDate(anomalyWindowStart.getUTCDate() + index);
         const key = current.toISOString().slice(0, 10);
         dailyMap.set(key, {
-            day: current.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
+            day: `${current.getUTCDate().toString().padStart(2, "0")}/${(current.getUTCMonth() + 1).toString().padStart(2, "0")}`,
             monitorErrors: 0,
             syncErrors: 0,
             backupErrors: 0,

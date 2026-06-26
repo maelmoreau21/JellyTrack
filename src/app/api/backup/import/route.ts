@@ -5,6 +5,7 @@ import { isAuthError } from "@/lib/auth";
 import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { replaceSystemHealthState } from "@/lib/systemHealth";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
+import { revalidateDashboardCache } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -261,6 +262,8 @@ export async function POST(req: NextRequest) {
         if (systemHealth) {
             await replaceSystemHealthState(systemHealth);
         }
+
+        revalidateDashboardCache();
 
         return NextResponse.json({ success: true }, { status: 200 });
 

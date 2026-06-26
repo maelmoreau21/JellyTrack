@@ -187,7 +187,7 @@ function toSnapshot(settings: PluginKeySettingsSnapshot | null): PluginKeySnapsh
         keyCreatedAt: settings?.pluginKeyCreatedAt ?? null,
         keyExpiresAt: settings?.pluginKeyExpiresAt ?? null,
         rotationDays,
-        autoRotateEnabled: false,
+        autoRotateEnabled: settings?.pluginAutoRotateEnabled ?? false,
         rotationGraceHours,
     };
 }
