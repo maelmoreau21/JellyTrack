@@ -10,6 +10,7 @@ export default function MediaLayout({ children }: { children: React.ReactNode })
 
     const tabs = [
         { href: '/media/all', key: 'allMedia' },
+        { href: '/media/popular', key: 'popularTab' },
         { href: '/media/analysis', key: 'deepAnalysisTitle' },
         { href: '/media/collections', key: 'libraries' },
     ];
@@ -28,7 +29,7 @@ export default function MediaLayout({ children }: { children: React.ReactNode })
                                         href={tab.href}
                                         className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors border ${active ? 'bg-primary/15 text-primary shadow-sm border-primary/30' : 'text-muted-foreground border-transparent hover:bg-muted hover:text-foreground hover:border-border'}`}
                                     >
-                                        {t(tab.key)}
+                                        {tab.key === 'popularTab' ? (t.has('popularTab') ? t('popularTab') : 'Top Contenus') : t(tab.key)}
                                     </Link>
                                 );
                             })}
