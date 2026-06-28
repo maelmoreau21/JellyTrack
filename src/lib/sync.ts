@@ -4,6 +4,7 @@ import { normalizeJellyfinId, compactJellyfinId } from "@/lib/jellyfinId";
 import { cleanupOrphanedSessions } from "@/lib/cleanup";
 import { GHOST_LIBRARY_NAMES } from "./libraryUtils";
 import { ensureMasterServer } from "@/lib/serverRegistry";
+import { resolutionFromDimensions, getResolutionWeight } from "@/lib/resolution";
 import {
     buildJellyfinApiKeyHeaders,
     getConfiguredJellyfinServers,
@@ -374,41 +375,14 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                             const heightCandidate = vs?.Height;
                             const widthNum = (typeof widthCandidate === 'number') ? widthCandidate : (typeof widthCandidate === 'string' && !Number.isNaN(Number(widthCandidate)) ? Number(widthCandidate) : null);
                             const heightNum = (typeof heightCandidate === 'number') ? heightCandidate : (typeof heightCandidate === 'string' && !Number.isNaN(Number(heightCandidate)) ? Number(heightCandidate) : null);
-                            try {
-                                const { resolutionFromDimensions } = await import('@/lib/resolution');
-                                resolution = resolutionFromDimensions(widthNum, heightNum, resolutionThresholds);
-                            } catch {
-                                if (heightNum !== null) {
-                                    const h = heightNum;
-                                    if (h >= 2160) resolution = "4K";
-                                    else if (h >= 1080) resolution = "1080p";
-                                    else if (h >= 720) resolution = "720p";
-                                    else if (h >= 480) resolution = "480p";
-                                    else resolution = "SD";
-                                } else if (widthNum !== null) {
-                                    const w = widthNum;
-                                    if (w >= 3800) resolution = "4K";
-                                    else if (w >= 1800) resolution = "1080p";
-                                    else if (w >= 1200) resolution = "720p";
-                                    else if (w >= 700) resolution = "480p";
-                                    else resolution = "SD";
-                                }
-                            }
+                            resolution = resolutionFromDimensions(widthNum, heightNum, resolutionThresholds);
                         }
 
                         if (resolution && item.SeriesId) {
                             const sid = normalizeJellyfinId(item.SeriesId);
                             if (sid) {
                                 const existing = seriesResolutionMap.get(sid);
-                                const getWeight = (r: string) => {
-                                    if (r === '4K') return 5;
-                                    if (r === '1440p') return 4;
-                                    if (r === '1080p') return 3;
-                                    if (r === '720p') return 2;
-                                    if (r === 'SD') return 1;
-                                    return 0;
-                                };
-                                if (!existing || getWeight(resolution) > getWeight(existing)) {
+                                if (!existing || getResolutionWeight(resolution) > getResolutionWeight(existing)) {
                                     seriesResolutionMap.set(sid, resolution);
                                 }
                             }
@@ -476,17 +450,8 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                                 // Decide whether to update the stored resolution: only overwrite when
                                 // the incoming resolution represents an equal or better quality.
                                 const incomingRes = (item.Type === 'Series' ? (seriesResolutionMap.get(item.Id) || resolution) : resolution) ?? null;
-                                const getWeight = (r: string | null | undefined) => {
-                                    if (!r) return 0;
-                                    if (r === '4K') return 5;
-                                    if (r === '1440p') return 4;
-                                    if (r === '1080p') return 3;
-                                    if (r === '720p') return 2;
-                                    if (r === 'SD' || r === '480p') return 1;
-                                    return 0;
-                                };
                                 const existingRes = primary?.resolution ?? null;
-                                const finalResolution = getWeight(incomingRes) > getWeight(existingRes) ? incomingRes : existingRes;
+                                const finalResolution = getResolutionWeight(incomingRes) > getResolutionWeight(existingRes) ? incomingRes : existingRes;
 
                                 primary = await tx.media.update({
                                     where: { id: primary.id },
