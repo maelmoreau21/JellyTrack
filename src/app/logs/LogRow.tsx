@@ -240,9 +240,10 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                           alt={log.media?.title || 'Unknown'}
                           fill
                           className="object-cover"
+                          fallbackType={isAudioMedia ? 'music' : 'movie'}
                         />
                       ) : (
-                        <FallbackImage src="" alt={'Unknown'} fill className="object-cover" />
+                        <FallbackImage src="" alt={'Unknown'} fill className="object-cover" fallbackType={isAudioMedia ? 'music' : 'movie'} />
                       )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">

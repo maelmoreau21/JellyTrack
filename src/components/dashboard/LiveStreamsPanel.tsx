@@ -74,6 +74,7 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                                 alt={stream.mediaTitle}
                                 fill
                                 className="object-cover"
+                                fallbackType={isAudio ? 'music' : 'movie'}
                             />
                         </div>
                     ) : (
@@ -145,6 +146,7 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                                 alt={stream.mediaTitle}
                                 fill
                                 className="object-cover"
+                                fallbackType={isAudio ? 'music' : 'movie'}
                             />
                         </div>
                     ) : (

@@ -61,7 +61,7 @@ export async function fetchJellyfinImage(itemId: string, type: string, serverId?
     return fetch(url, {
         method: "GET",
         headers: buildJellyfinApiKeyHeaders(connection.apiKey),
-        ...(noStore ? { cache: "no-store" as const } : { next: { revalidate: 86400 } }),
+        ...(noStore ? { cache: "no-store" as const } : { next: { revalidate: 2592000 } }),
     });
 }
 

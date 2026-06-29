@@ -340,6 +340,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                                         alt={artistName}
                                         fill
                                         className="object-cover"
+                                        fallbackType="person"
                                     />
                                 ) : (
                                     <div className="h-full w-full flex items-center justify-center text-zinc-500">
@@ -417,6 +418,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                                                 alt={album.title}
                                                 fill
                                                 className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                                fallbackType="music"
                                             />
                                         </div>
                                         <div>

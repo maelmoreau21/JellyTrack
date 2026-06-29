@@ -156,7 +156,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
             <div className="border-t border-sidebar-border bg-sidebar/80 backdrop-blur-xl p-4 space-y-3">
                 <LanguageSwitcher />
                 <ThemeToggle />
-                <LogoutButton className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
+                <LogoutButton />
                 <div className="text-center">
                     <Link href="/about" className="text-[11px] text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors">
                         JellyTrack v{process.env.APP_VERSION || '1.0.0'}

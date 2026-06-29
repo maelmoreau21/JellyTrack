@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTranslations } from "next-intl/server";
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
-import { Film, Tv, Award, Play, Clock, Library } from "lucide-react";
+import { Film, Tv, Award, Play, Clock, Library, Video, Users, Building } from "lucide-react";
 import Link from "next/link";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
@@ -106,7 +106,7 @@ export default async function PopularMediaPage({ searchParams: searchParamsPromi
     const seriesJellyfinIds = Array.from(new Set(seasons.map((s) => s.parentId).filter(Boolean))) as string[];
     const series = await prisma.media.findMany({
         where: { jellyfinMediaId: { in: seriesJellyfinIds }, type: "Series" },
-        select: { jellyfinMediaId: true, title: true },
+        select: { jellyfinMediaId: true, title: true, directors: true, actors: true, studios: true },
     });
     const seriesMap = new Map(series.map((s) => [s.jellyfinMediaId, s.title]));
 
@@ -163,6 +163,91 @@ export default async function PopularMediaPage({ searchParams: searchParamsPromi
             hours: parseFloat(((row._sum.durationWatched ?? 0) / 3600).toFixed(1)),
         };
     });
+
+    // 4. Fetch all Movie playbacks with their directors, actors, studios
+    const moviePlaybacks = await prisma.playbackHistory.findMany({
+        where: {
+            ...playbackWhere,
+            media: { type: "Movie" },
+        },
+        select: {
+            durationWatched: true,
+            media: {
+                select: {
+                    directors: true,
+                    actors: true,
+                    studios: true,
+                },
+            },
+        },
+    });
+
+    const seriesMetaMap = new Map(series.map((s) => [s.jellyfinMediaId, s]));
+
+    // Aggregators
+    const directorStats = new Map<string, { plays: number; duration: number }>();
+    const actorStats = new Map<string, { plays: number; duration: number }>();
+    const studioStats = new Map<string, { plays: number; duration: number }>();
+
+    const addStats = (list: string[], duration: number, statsMap: Map<string, { plays: number; duration: number }>) => {
+        list.forEach((name) => {
+            if (!name) return;
+            const existing = statsMap.get(name) || { plays: 0, duration: 0 };
+            existing.plays += 1;
+            existing.duration += duration;
+            statsMap.set(name, existing);
+        });
+    };
+
+    // Process movies
+    moviePlaybacks.forEach((pb) => {
+        if (!pb.media) return;
+        const duration = pb.durationWatched;
+        addStats(pb.media.directors, duration, directorStats);
+        addStats(pb.media.actors, duration, actorStats);
+        addStats(pb.media.studios, duration, studioStats);
+    });
+
+    // Process episodes
+    episodePlaybacks.forEach((ep) => {
+        const seasonId = ep.media?.parentId;
+        if (!seasonId) return;
+        const seriesId = seasonToSeriesMap.get(seasonId);
+        if (!seriesId) return;
+        const seriesMeta = seriesMetaMap.get(seriesId);
+        if (!seriesMeta) return;
+        const duration = ep.durationWatched;
+        addStats(seriesMeta.directors, duration, directorStats);
+        addStats(seriesMeta.actors, duration, actorStats);
+        addStats(seriesMeta.studios, duration, studioStats);
+    });
+
+    const topDirectors = Array.from(directorStats.entries())
+        .map(([name, stats]) => ({
+            name,
+            plays: stats.plays,
+            hours: parseFloat((stats.duration / 3600).toFixed(1)),
+        }))
+        .sort((a, b) => b.plays - a.plays)
+        .slice(0, 5);
+
+    const topActors = Array.from(actorStats.entries())
+        .map(([name, stats]) => ({
+            name,
+            plays: stats.plays,
+            hours: parseFloat((stats.duration / 3600).toFixed(1)),
+        }))
+        .sort((a, b) => b.plays - a.plays)
+        .slice(0, 5);
+
+    const topStudios = Array.from(studioStats.entries())
+        .map(([name, stats]) => ({
+            name,
+            plays: stats.plays,
+            hours: parseFloat((stats.duration / 3600).toFixed(1)),
+        }))
+        .sort((a, b) => b.plays - a.plays)
+        .slice(0, 5);
 
     return (
         <div className="p-6 max-w-[1400px] mx-auto space-y-6">
@@ -292,6 +377,138 @@ export default async function PopularMediaPage({ searchParams: searchParamsPromi
                                         </div>
                                     </div>
                                 </div>
+                            ))
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Top Directors Card */}
+                <Card className="app-surface">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <div className="space-y-1">
+                            <CardTitle className="flex items-center gap-2">
+                                <Video className="w-5 h-5 text-indigo-500" />
+                                Top Réalisateurs
+                            </CardTitle>
+                            <CardDescription>Les réalisateurs les plus visionnés.</CardDescription>
+                        </div>
+                        <Award className="w-5 h-5 text-yellow-500" />
+                    </CardHeader>
+                    <CardContent className="space-y-4 mt-4">
+                        {topDirectors.length === 0 ? (
+                            <p className="text-sm text-muted-foreground py-6 text-center">{tc("noData")}</p>
+                        ) : (
+                            topDirectors.map((director, index) => (
+                                <Link 
+                                    key={director.name} 
+                                    href={`/media/all?q=${encodeURIComponent(director.name)}`} 
+                                    className="flex items-center gap-3 p-2 rounded-lg app-surface-soft border border-border/40 hover:border-indigo-500/20 hover:bg-zinc-500/5 transition-all"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-sm shrink-0">
+                                        #{index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-foreground truncate">{director.name}</p>
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                                            <span className="flex items-center gap-1">
+                                                <Play className="w-3 h-3 fill-current" />
+                                                {director.plays} {director.plays > 1 ? "lectures" : "lecture"}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {director.hours}h
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Top Actors Card */}
+                <Card className="app-surface">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <div className="space-y-1">
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="w-5 h-5 text-purple-500" />
+                                Top Acteurs
+                            </CardTitle>
+                            <CardDescription>Les acteurs les plus visionnés.</CardDescription>
+                        </div>
+                        <Award className="w-5 h-5 text-yellow-500" />
+                    </CardHeader>
+                    <CardContent className="space-y-4 mt-4">
+                        {topActors.length === 0 ? (
+                            <p className="text-sm text-muted-foreground py-6 text-center">{tc("noData")}</p>
+                        ) : (
+                            topActors.map((actor, index) => (
+                                <Link 
+                                    key={actor.name} 
+                                    href={`/media/all?q=${encodeURIComponent(actor.name)}`} 
+                                    className="flex items-center gap-3 p-2 rounded-lg app-surface-soft border border-border/40 hover:border-purple-500/20 hover:bg-zinc-500/5 transition-all"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold text-sm shrink-0">
+                                        #{index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-foreground truncate">{actor.name}</p>
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                                            <span className="flex items-center gap-1">
+                                                <Play className="w-3 h-3 fill-current" />
+                                                {actor.plays} {actor.plays > 1 ? "lectures" : "lecture"}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {actor.hours}h
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Top Studios Card */}
+                <Card className="app-surface">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <div className="space-y-1">
+                            <CardTitle className="flex items-center gap-2">
+                                <Building className="w-5 h-5 text-pink-500" />
+                                Top Studios
+                            </CardTitle>
+                            <CardDescription>Les studios les plus populaires.</CardDescription>
+                        </div>
+                        <Award className="w-5 h-5 text-yellow-500" />
+                    </CardHeader>
+                    <CardContent className="space-y-4 mt-4">
+                        {topStudios.length === 0 ? (
+                            <p className="text-sm text-muted-foreground py-6 text-center">{tc("noData")}</p>
+                        ) : (
+                            topStudios.map((studio, index) => (
+                                <Link 
+                                    key={studio.name} 
+                                    href={`/media/all?q=${encodeURIComponent(studio.name)}`} 
+                                    className="flex items-center gap-3 p-2 rounded-lg app-surface-soft border border-border/40 hover:border-pink-500/20 hover:bg-zinc-500/5 transition-all"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-pink-500/10 text-pink-500 flex items-center justify-center font-bold text-sm shrink-0">
+                                        #{index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-foreground truncate">{studio.name}</p>
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                                            <span className="flex items-center gap-1">
+                                                <Play className="w-3 h-3 fill-current" />
+                                                {studio.plays} {studio.plays > 1 ? "lectures" : "lecture"}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {studio.hours}h
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Link>
                             ))
                         )}
                     </CardContent>

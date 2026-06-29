@@ -16,6 +16,7 @@ type JellyfinItemMeta = {
     seasonId: string | null;
     seriesId: string | null;
     albumId: string | null;
+    artistId: string | null;
 };
 
 function normalizeCandidateId(value: unknown): string | null {
@@ -26,12 +27,17 @@ function normalizeCandidateId(value: unknown): string | null {
 
 async function fetchJellyfinItemMeta(itemId: string, serverId?: string | null): Promise<JellyfinItemMeta | null> {
     const data = await fetchJellyfinJson<Record<string, unknown>>(
-        `/Items/${encodeURIComponent(itemId)}?Fields=ParentId,SeasonId,SeriesId,AlbumId,Type`,
+        `/Items/${encodeURIComponent(itemId)}?Fields=ParentId,SeasonId,SeriesId,AlbumId,Type,ArtistItems`,
         serverId
     );
     if (!data) return null;
 
     const id = normalizeCandidateId(data?.Id) || itemId;
+
+    let artistId: string | null = null;
+    if (Array.isArray(data?.ArtistItems) && data.ArtistItems.length > 0) {
+        artistId = normalizeCandidateId(data.ArtistItems[0]?.Id);
+    }
 
     return {
         id,
@@ -40,6 +46,7 @@ async function fetchJellyfinItemMeta(itemId: string, serverId?: string | null): 
         seasonId: normalizeCandidateId(data?.SeasonId),
         seriesId: normalizeCandidateId(data?.SeriesId),
         albumId: normalizeCandidateId(data?.AlbumId),
+        artistId,
     };
 }
 
@@ -140,7 +147,7 @@ export async function GET(req: NextRequest) {
         }
 
         // If still missing, walk known Jellyfin hierarchy IDs to match Jellyfin-like fallback behavior:
-        // Episode -> Season -> Series, Track -> Album, Season -> Series.
+        // Episode -> Season -> Series, Track -> Album -> Artist, Season -> Series.
         if (!response.ok) {
             const itemMeta = await fetchJellyfinItemMeta(itemId, serverId);
             const candidateIds: string[] = [];
@@ -157,6 +164,15 @@ export async function GET(req: NextRequest) {
             addCandidate(itemMeta?.seriesId);
             addCandidate(itemMeta?.albumId);
             addCandidate(itemMeta?.parentId);
+            addCandidate(itemMeta?.artistId); // Track or Album artist
+
+            // If we have an album ID, look up its artist ID as a deep fallback
+            if (itemMeta?.albumId) {
+                const albumMeta = await fetchJellyfinItemMeta(itemMeta.albumId, serverId);
+                if (albumMeta?.artistId) {
+                    addCandidate(albumMeta.artistId);
+                }
+            }
 
             // Series can legitimately miss a primary image. In that case,
             // use the first available season poster as visual fallback.
@@ -190,7 +206,7 @@ export async function GET(req: NextRequest) {
         // Retrieve content type from original server for our proxy (often image/jpeg or image/webp)
         headers.set('Content-Type', response.headers.get('Content-Type') || 'image/jpeg');
         // Long-term browser caching to offload the API
-        headers.set('Cache-Control', noStore ? 'no-store' : 'public, max-age=604800, immutable');
+        headers.set('Cache-Control', noStore ? 'no-store' : 'public, max-age=2592000, immutable');
 
         return new NextResponse(buffer, { headers });
     } catch (e) {

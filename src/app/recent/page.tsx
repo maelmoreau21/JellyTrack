@@ -166,6 +166,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                     alt={media.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50"
+                    fallbackType={['MusicAlbum', 'Audio'].includes(media.type) ? 'music' : 'movie'}
                   />
                   {/* NOUVEAU badge — animated glow */}
                   {isRecent && (

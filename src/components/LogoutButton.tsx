@@ -17,11 +17,17 @@ export function LogoutButton({ className = "" }: LogoutButtonProps) {
 
     return (
         <button
+            type="button"
             onClick={handleLogout}
-            className={`flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${className}`}
+            className={`group app-surface-soft flex items-center gap-3 w-full rounded-2xl border border-border px-3 py-3 text-sm text-zinc-700 dark:text-zinc-200 transition-all hover:border-red-500/30 hover:bg-red-500/5 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 ${className}`}
         >
-            <LogOut className="w-4 h-4" />
-            <span>{t('logout')}</span>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-500 ring-1 ring-red-500/20 group-hover:bg-red-500/20 transition-all">
+                <LogOut className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 flex-1 text-left">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground group-hover:text-red-500/80 transition-colors">Session</div>
+                <div className="mt-0.5 font-medium group-hover:text-red-500 transition-colors">{t('logout')}</div>
+            </div>
         </button>
     );
 }

@@ -843,6 +843,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                             alt={person.Name} 
                                             fill 
                                             className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                                            fallbackType="person"
                                         />
                                     </div>
                                     <div className="px-1">
@@ -901,6 +902,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                                     alt={child.title}
                                                                     fill
                                                                     className="object-cover"
+                                                                    fallbackType={child.type === 'Audio' ? 'music' : 'movie'}
                                                                 />
                                                             </div>
                                                             <span className="truncate max-w-xs">{child.title}</span>
