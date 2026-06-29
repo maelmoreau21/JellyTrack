@@ -78,8 +78,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Production dependencies: pruned node_modules (already stripped of devDependencies and non-linux Prisma engines)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+# Copy ONLY prisma and its runtime/engines to run migrations, avoiding copying raw heavy production dependencies
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+RUN mkdir -p /app/node_modules/.bin && ln -s ../prisma/build/index.js /app/node_modules/.bin/prisma && chown -R nextjs:nodejs /app/node_modules/.bin
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
@@ -97,5 +99,9 @@ ENV HOSTNAME="0.0.0.0"
 # Copy the entrypoint script (runs as root initially, then drops to PUID/PGID)
 COPY docker-entrypoint.sh ./
 RUN sed -i 's/\r$//' ./docker-entrypoint.sh && chmod +x ./docker-entrypoint.sh
+
+# Healthcheck to monitor app status (uses Alpine built-in wget)
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=10s \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
 ENTRYPOINT ["./docker-entrypoint.sh"]

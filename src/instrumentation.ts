@@ -1,4 +1,9 @@
 export async function register() {
+    if (process.env.NEXT_RUNTIME === 'nodejs') {
+        const { validateEnv } = await import('@/lib/envVal');
+        validateEnv();
+    }
+
     // Allow skipping background instrumentation for local/dev without DB
     if (process.env.SKIP_INSTRUMENTATION === '1' || process.env.SKIP_INSTRUMENTATION === 'true') {
         console.log("[Instrumentation] SKIP_INSTRUMENTATION set — skipping background tasks.");
