@@ -13,9 +13,9 @@ export async function GET() {
     try {
         // Test database connection — use $queryRaw when available (real Prisma client),
         // otherwise fall back to a simple findFirst (dev stub / mock).
-        const p = prisma as Record<string, unknown>;
+        const p = prisma as any;
         if (typeof p.$queryRaw === 'function') {
-            await (prisma as any).$queryRaw`SELECT 1`;
+            await p.$queryRaw`SELECT 1`;
         } else {
             // Fallback for prisma mock / stub
             await prisma.globalSettings.findFirst();
