@@ -18,6 +18,22 @@ function expectedOrigins(req: Request): Set<string> {
   addOriginFromUrl(origins, process.env.NEXTAUTH_URL);
   addOriginFromUrl(origins, process.env.AUTH_TRUSTED_ORIGIN);
 
+  // Read X-Forwarded-Host & X-Forwarded-Proto (standard reverse proxies)
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  if (forwardedHost) {
+    const forwardedProto = req.headers.get("x-forwarded-proto") || "http";
+    const proto = forwardedProto.split(",")[0].trim();
+    const host = forwardedHost.split(",")[0].trim();
+    addOriginFromUrl(origins, `${proto}://${host}`);
+  }
+
+  // Read Host & X-Forwarded-Proto / default HTTP protocol (direct IP / domain access)
+  const hostHeader = req.headers.get("host");
+  if (hostHeader) {
+    const proto = req.headers.get("x-forwarded-proto")?.split(",")[0].trim() || "http";
+    addOriginFromUrl(origins, `${proto}://${hostHeader}`);
+  }
+
   const extraOrigins = String(process.env.AUTH_TRUSTED_ORIGINS || "")
     .split(",")
     .map((origin) => origin.trim())
