@@ -269,7 +269,7 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
     const thresholdDefaults = useMemo<HeartbeatThresholds>(() => {
         if (!snapshot?.thresholdDefaults) return FALLBACK_THRESHOLDS;
         return normalizeThresholds(snapshot.thresholdDefaults, FALLBACK_THRESHOLDS);
-    }, [snapshot?.thresholdDefaults]);
+    }, [snapshot]);
 
     useEffect(() => {
         let persistedRaw: Partial<HeartbeatThresholds> | null = null;

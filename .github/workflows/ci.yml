@@ -52,6 +52,9 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install --no-audit --no-fund
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Run security audit
         run: npm audit --omit=dev --audit-level=critical
 

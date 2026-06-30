@@ -667,7 +667,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const headerFallbackId = media.parentId || albumId || undefined;
 
     // Build hierarchy subtitle breadcrumbs
-    const HierarchyLinks = () => {
+    const renderHierarchyLinks = () => {
         const links = [];
         if (media.type === 'Episode') {
             if (seriesId && seriesName) {
@@ -793,7 +793,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                 ) : (
                                     <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-slate-200">{media.title}</h1>
                                 )}
-                                <HierarchyLinks />
+                                {renderHierarchyLinks()}
                                 <div className="flex items-center gap-2 mt-4 flex-wrap">
                                     <Badge variant="outline" className="bg-white/50 dark:bg-white/5 backdrop-blur-sm">{media.type}</Badge>
                                     {media.resolution && <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">{normalizedMediaResolution}</Badge>}

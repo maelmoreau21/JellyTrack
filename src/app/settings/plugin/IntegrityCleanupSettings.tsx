@@ -34,16 +34,16 @@ export function IntegrityCleanupSettings() {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                    Vérification d'intégrité
+                    {"Vérification d'intégrité"}
                 </CardTitle>
                 <CardDescription>
-                    Détectez et fermez manuellement les sessions de lecture orphelines (bloquées à l'état actif en raison d'une coupure réseau ou d'un crash de l'application cliente).
+                    {"Détectez et fermez manuellement les sessions de lecture orphelines (bloquées à l'état actif en raison d'une coupure réseau ou d'un crash de l'application cliente)."}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="text-sm text-muted-foreground bg-muted/10 p-3 rounded-lg border border-border">
                     <p className="font-semibold text-foreground mb-1">Fonctionnement automatique :</p>
-                    JellyTrack exécute automatiquement cette vérification lors de chaque réception d'événement du plugin Jellyfin. Si un utilisateur cesse d'émettre des battements de cœur (heartbeat) pendant plus de 10 minutes, sa session est automatiquement clôturée. Cet outil vous permet de forcer le nettoyage immédiatement.
+                    {"JellyTrack exécute automatiquement cette vérification lors de chaque réception d'événement du plugin Jellyfin. Si un utilisateur cesse d'émettre des battements de cœur (heartbeat) pendant plus de 10 minutes, sa session est automatiquement clôturée. Cet outil vous permet de forcer le nettoyage immédiatement."}
                 </div>
 
                 {result && (

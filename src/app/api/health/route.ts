@@ -12,9 +12,9 @@ export async function GET() {
 
     try {
         // Test database connection
-        // @ts-ignore
+        // @ts-expect-error: $queryRaw is not typed on the test stub prisma instance
         if (typeof prisma.$queryRaw === 'function') {
-            // @ts-ignore
+            // @ts-expect-error: $queryRaw is not typed on the test stub prisma instance
             await prisma.$queryRaw`SELECT 1`;
         } else {
             // Fallback for prisma mock / stub

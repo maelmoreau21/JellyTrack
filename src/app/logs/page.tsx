@@ -456,6 +456,7 @@ export default async function LogsPage({
 
         const candidateIps = Array.from(new Set(logs.map(l => l.ipAddress).filter((v): v is string => !!v)));
         if (candidateIps.length > 0) {
+            // eslint-disable-next-line react-hooks/purity
             const hotIpSince = new Date(Date.now() - hotIpWindowMs);
             const hotIpRows = await prisma.playbackHistory.groupBy({
                 by: ["ipAddress"],

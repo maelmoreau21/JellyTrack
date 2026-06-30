@@ -211,7 +211,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
                 <Card className="app-surface">
                     <CardHeader>
                         <CardTitle>Fiche Technique</CardTitle>
-                        <CardDescription>Indicateurs de lecture et appareils préférés de l'utilisateur.</CardDescription>
+                        <CardDescription>{"Indicateurs de lecture et appareils préférés de l'utilisateur."}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 flex flex-col justify-center h-[300px]">
                         <div className="app-surface-soft p-4 rounded-lg border border-border">
