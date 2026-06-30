@@ -16,9 +16,7 @@ export function validateEnv() {
     const required = [
         { key: "NEXTAUTH_SECRET", placeholder: "CHANGE_ME" },
         { key: "JELLYFIN_API_KEY", placeholder: "CHANGE_ME" },
-        { key: "ADMIN_PASSWORD", placeholder: "CHANGE_ME" },
         { key: "JELLYFIN_WEBHOOK_SECRET", placeholder: "CHANGE_ME" },
-        { key: "PLUGIN_KEY_PEPPER", placeholder: "CHANGE_ME" },
     ];
 
     const invalidVars: string[] = [];

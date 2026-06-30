@@ -23,10 +23,7 @@ function normalizePluginKey(value: string | null | undefined): string | null {
 
 
 function getPluginKeyPepper(): string {
-    const pepper = String(process.env.PLUGIN_KEY_PEPPER || "").trim();
-    if (!pepper && process.env.NODE_ENV === "production") {
-        throw new Error("[PluginKey] PLUGIN_KEY_PEPPER is required in production.");
-    }
+    const pepper = String(process.env.PLUGIN_KEY_PEPPER || process.env.NEXTAUTH_SECRET || "").trim();
     return pepper;
 }
 

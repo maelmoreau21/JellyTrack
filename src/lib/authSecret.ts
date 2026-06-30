@@ -34,7 +34,6 @@ function normalizeSecret(value: string | undefined) {
 function buildDerivedSecret() {
     const entropyParts = [
         process.env.JELLYFIN_API_KEY,
-        process.env.ADMIN_PASSWORD,
         process.env.DATABASE_URL,
         process.env.JELLYFIN_URL,
         process.env.NEXTAUTH_URL,
