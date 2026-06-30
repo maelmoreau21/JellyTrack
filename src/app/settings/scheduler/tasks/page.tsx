@@ -77,7 +77,7 @@ export default function SchedulerTasksPage() {
                             <p className="text-xs text-muted-foreground mt-1 ml-6">{t('recentSyncDesc')}</p>
                             <div className="mt-2 ml-6 inline-flex items-center gap-1.5 rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[11px] text-sky-300">
                                 <Clock3 className="w-3 h-3" />
-                                Toutes les {intervals.recentSyncEveryHours}h
+                                {t('schedulerEveryHours', { hours: intervals.recentSyncEveryHours })}
                             </div>
                             {taskStatus.recentSync.msg && (
                                 <div className={`mt-2 ml-6 text-xs ${taskStatus.recentSync.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -88,7 +88,7 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('recentSync', '/api/sync', { mode: 'recent' })}
                             disabled={taskStatus.recentSync.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.recentSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-zinc-200 dark:border-zinc-800' : 'bg-sky-600 dark:bg-sky-500 text-white hover:bg-sky-500 dark:hover:bg-sky-400 border-white/20 dark:shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:shadow-md active:scale-95'}`}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.recentSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-sky-600 dark:bg-sky-500 text-white hover:bg-sky-500 dark:hover:bg-sky-400 border-white/20 dark:shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:shadow-md active:scale-95'}`}
                         >
                             <Play className={`w-3.5 h-3.5 ${taskStatus.recentSync.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.recentSync.loading ? tc('running') : tc('run')}
@@ -104,7 +104,7 @@ export default function SchedulerTasksPage() {
                             <p className="text-xs text-muted-foreground mt-1 ml-6">{t('fullSyncDesc') || t('autoNightlyAt')}</p>
                             <div className="mt-2 ml-6 inline-flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-2 py-0.5 text-[11px] text-violet-300">
                                 <Clock3 className="w-3 h-3" />
-                                Toutes les {intervals.fullSyncEveryHours}h
+                                {t('schedulerEveryHours', { hours: intervals.fullSyncEveryHours })}
                             </div>
                             {taskStatus.fullSync.msg && (
                                 <div className={`mt-2 ml-6 text-xs ${taskStatus.fullSync.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -115,7 +115,7 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('fullSync', '/api/sync', { mode: 'full' })}
                             disabled={taskStatus.fullSync.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.fullSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-zinc-200 dark:border-zinc-800' : 'bg-violet-600 dark:bg-violet-500 text-white hover:bg-violet-500 dark:hover:bg-violet-400 border-white/20 dark:shadow-[0_0_15px_rgba(139,92,246,0.15)] hover:shadow-md active:scale-95'}`}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.fullSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-violet-600 dark:bg-violet-500 text-white hover:bg-violet-500 dark:hover:bg-violet-400 border-white/20 dark:shadow-[0_0_15px_rgba(139,92,246,0.15)] hover:shadow-md active:scale-95'}`}
                         >
                             <Play className={`w-3.5 h-3.5 ${taskStatus.fullSync.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.fullSync.loading ? tc('running') : tc('run')}
@@ -131,7 +131,7 @@ export default function SchedulerTasksPage() {
                             <p className="text-xs text-muted-foreground mt-1 ml-6">{t('backupTaskDesc') || t('autoNightlyAt')}</p>
                             <div className="mt-2 ml-6 inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-300">
                                 <Clock3 className="w-3 h-3" />
-                                Toutes les {intervals.backupEveryHours}h
+                                {t('schedulerEveryHours', { hours: intervals.backupEveryHours })}
                             </div>
                             {taskStatus.backup.msg && (
                                 <div className={`mt-2 ml-6 text-xs ${taskStatus.backup.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -142,7 +142,7 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('backup', '/api/backup/auto/trigger')}
                             disabled={taskStatus.backup.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.backup.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-zinc-200 dark:border-zinc-800' : 'bg-amber-600 dark:bg-amber-500 text-white hover:bg-amber-500 dark:hover:bg-amber-400 border-white/20 dark:shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-md active:scale-95'}`}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.backup.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-amber-600 dark:bg-amber-500 text-white hover:bg-amber-500 dark:hover:bg-amber-400 border-white/20 dark:shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-md active:scale-95'}`}
                         >
                             <Play className={`w-3.5 h-3.5 ${taskStatus.backup.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.backup.loading ? tc('running') : tc('run')}

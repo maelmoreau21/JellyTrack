@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
-import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
+import type { ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 export interface MonthlyWatchData {
     month: string; // "2026_0" = year_monthIndex
@@ -67,7 +67,7 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
 
     const maxHours = Math.max(...chartData.map((d) => d.hours), 1);
 
-    const formatTooltip = (value?: ValueType, name?: NameType) => {
+    const formatTooltip = (value?: ValueType) => {
         const h = Number(value ?? 0);
         const hours = Math.floor(h);
         const mins = Math.round((h - hours) * 60);
@@ -96,7 +96,7 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                     disabled={!canGoBack}
                     className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
-                    <ChevronLeft className="w-4 h-4 text-zinc-300" />
+                    <ChevronLeft className="w-4 h-4 text-muted-foreground" />
                 </button>
                 <span className="text-sm font-semibold text-zinc-200 min-w-[4rem] text-center">
                     {selectedYear}
@@ -106,7 +106,7 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                     disabled={!canGoForward}
                     className="p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
-                    <ChevronRight className="w-4 h-4 text-zinc-300" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </button>
             </div>
 
@@ -134,13 +134,13 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
                         labelStyle={chartLabelStyle}
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
-                        animationDuration={0}
+                        animationDuration={200}
                     />
                     <Bar
                         dataKey="hours"
                         radius={[4, 4, 0, 0]}
-                        animationDuration={0}
-                        animationEasing="linear"
+                        animationDuration={1000}
+                        animationEasing="ease-out"
                         onClick={handleBarClick}
                     >
                         {chartData.map((entry, index) => (

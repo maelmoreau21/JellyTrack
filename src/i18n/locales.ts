@@ -13,7 +13,7 @@ export const AVAILABLE_LOCALES = [
 
 export type LocaleCode = typeof AVAILABLE_LOCALES[number]['code'];
 
-export const DEFAULT_LOCALE: LocaleCode = 'fr';
+export const DEFAULT_LOCALE: LocaleCode = 'en';
 
 export function isSupportedLocale(value: string | undefined | null): value is LocaleCode {
     if (!value) return false;

@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { AlertTriangle, CheckCircle2, Clock3, RadioTower, RefreshCw, ShieldAlert } from "lucide-react";
+import { Clock3, RadioTower, RefreshCw, ShieldAlert } from "lucide-react";
 
 function SourceIcon({ source }: { source?: string | null }) {
     const s = (source || "").toLowerCase();

@@ -7,16 +7,18 @@ import { normalizeLibraryKey } from '@/lib/mediaPolicy';
 import { normalizeResolution } from '@/lib/utils';
 import { ServerFilter } from '@/components/dashboard/ServerFilter';
 import { cookies } from 'next/headers';
-import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from '@/lib/serverScope';
+import { GLOBAL_SERVER_SCOPE_COOKIE } from '@/lib/serverScope';
+import { resolveSelectedServerIdsAsync } from '@/lib/serverScope.server';
 import { buildSelectableServerOptions } from '@/lib/selectableServers';
 
 export const dynamic = "force-dynamic";
 
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { redirect } from 'next/navigation';
 
 export default async function AnalysisPage({ searchParams }: { searchParams?: Promise<{ servers?: string }> }) {
     const auth = await requireAdmin();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
 
     const t = await getTranslations('media');
     const tc = await getTranslations('common');
@@ -80,8 +82,6 @@ export default async function AnalysisPage({ searchParams }: { searchParams?: Pr
 
     // Consider only video-like media for resolution counting
     const VIDEO_TYPES = new Set(['Movie', 'Series']);
-    const AUDIO_TYPES = new Set(['MusicAlbum', 'Track']);
-    const MAIN_TYPES = new Set(['Movie', 'Series', 'MusicAlbum']);
 
     medias.forEach((m: MediaLike) => {
         if (m.genres) m.genres.forEach((g: string) => genreCounts.set(g, (genreCounts.get(g) || 0) + 1));
@@ -167,19 +167,19 @@ export default async function AnalysisPage({ searchParams }: { searchParams?: Pr
                     <CardContent>
                         <div className="space-y-3">
                             <div className="app-surface-soft p-3 rounded-lg border">
-                                <div className="text-sm text-zinc-400">{t('totalMedia')}</div>
-                                <div className="text-2xl font-bold">{totalMedia}</div>
+                                <div className="text-sm text-muted-foreground">{t('totalMedia')}</div>
+                                <div className="text-2xl font-bold metric-glow-cyan">{totalMedia}</div>
                                 <div className="text-xs text-muted-foreground mt-1">{t('totalMediaDesc')}</div>
                             </div>
 
                             <div className="app-surface-soft p-3 rounded-lg border">
-                                <div className="text-sm text-zinc-400">{t('uniqueGenres')}</div>
-                                <div className="text-2xl font-bold">{uniqueGenres}</div>
+                                <div className="text-sm text-muted-foreground">{t('uniqueGenres')}</div>
+                                <div className="text-2xl font-bold metric-glow-violet">{uniqueGenres}</div>
                             </div>
 
                             <div className="app-surface-soft p-3 rounded-lg border">
-                                <div className="text-sm text-zinc-400">{t('avgDuration')}</div>
-                                <div className="text-2xl font-bold">{formatDuration(avgDurationMinutes)}</div>
+                                <div className="text-sm text-muted-foreground">{t('avgDuration')}</div>
+                                <div className="text-2xl font-bold metric-glow-emerald">{formatDuration(avgDurationMinutes)}</div>
                                 <div className="text-xs text-muted-foreground mt-1">{t('avgDurationDesc')}</div>
                             </div>
                         </div>
@@ -198,9 +198,9 @@ export default async function AnalysisPage({ searchParams }: { searchParams?: Pr
                             { label: "1080p FHD", val: res1080p, key: '1080p', color: "text-blue-400" },
                             { label: "720p HD", val: res720p, key: '720p', color: "text-emerald-400" },
                             { label: t('standardOther'), val: resSD, key: 'SD', color: "text-zinc-500" }
-                        ].map((q, idx) => (
+                        ].map((q) => (
                             <a key={q.key} href={buildAllMediaResolutionUrl(q.key)} className="block">
-                                <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border border-zinc-800/50 hover:shadow-md hover:scale-[1.01] transition-transform">
+                                <div className="app-surface-soft flex justify-between items-center p-3 rounded-lg border border-border hover:border-primary/35 hover:shadow-md hover:scale-[1.01] transition-transform">
                                     <span className={`font-semibold ${q.color} ${q.text || ""}`}>{q.label}</span>
                                     <span className="text-xl font-bold">{q.val}</span>
                                 </div>
@@ -241,7 +241,7 @@ export default async function AnalysisPage({ searchParams }: { searchParams?: Pr
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('deepStatsOverview')}</CardTitle>
-                        <CardDescription>{t('deepStatsOverviewDesc') || 'Analyses avancées de votre collection multimédia.'}</CardDescription>
+                        <CardDescription>{t('deepStatsOverviewDesc') || 'Advanced analysis of your media collection.'}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div>

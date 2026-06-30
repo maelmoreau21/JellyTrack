@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
-// No rules
 import { readSystemHealthState } from "@/lib/systemHealth";
+import { redactBackupData } from "@/lib/backupSecurity";
 
 export const dynamic = "force-dynamic";
 
@@ -18,22 +18,20 @@ export async function GET() {
         const playbackHistory = await prisma.playbackHistory.findMany();
         const telemetryEvents = await prisma.telemetryEvent.findMany();
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
-        const libraryRules = null;
         const systemHealth = await readSystemHealthState({ eventLimit: 200 });
 
         const backupContent = {
             version: "1.0",
             exportDate: new Date().toISOString(),
-            data: {
+            data: redactBackupData({
                 servers,
                 users,
                 media,
                 playbackHistory,
                 telemetryEvents,
                 settings,
-                libraryRules,
                 systemHealth,
-            }
+            })
         };
 
         // BigInt-safe JSON serializer (Prisma returns BigInt for durationMs, positionTicks, etc.)
@@ -45,6 +43,8 @@ export async function GET() {
             headers: {
                 "Content-Type": "application/json",
                 "Content-Disposition": `attachment; filename="JellyTrack-backup-${new Date().toISOString().split('T')[0]}.json"`,
+                "Cache-Control": "no-store, max-age=0",
+                "Pragma": "no-cache",
             }
         });
 

@@ -66,7 +66,6 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
     const router = useRouter();
     const t = useTranslations('charts');
     const td = useTranslations('dashboard');
-    const [activeIndex, setActiveIndex] = useState<number>(-1);
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
     if (!data || data.length === 0) {
@@ -78,7 +77,6 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
     }
 
     const filteredData = data.filter(d => !hidden.has(d.name));
-    const total = filteredData.reduce((sum, d) => sum + d.value, 0);
 
     const toggleLegend = (e: { value: string }) => {
         const name = e.value;
@@ -128,12 +126,10 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         paddingAngle={5}
                         dataKey="value"
                         stroke="none"
-                        animationDuration={0}
+                        animationDuration={1000}
                         animationBegin={0}
-                        animationEasing="linear"
+                        animationEasing="ease-out"
                         activeShape={renderActiveShape as any}
-                        onMouseEnter={(d: { value?: number; name?: string }, index: number) => setActiveIndex(index)}
-                        onMouseLeave={() => setActiveIndex(-1)}
                         onClick={handleSliceClick}
                     >
                         {filteredData.map((entry, index) => {
@@ -153,7 +149,7 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
                         formatter={(value: any) => [`${value ?? 0} ${t('sessions')}`, t('activity')]}
-                        animationDuration={0}
+                        animationDuration={200}
                     />
                     <Legend
                         verticalAlign="bottom"

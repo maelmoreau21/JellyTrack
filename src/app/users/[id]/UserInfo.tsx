@@ -2,7 +2,7 @@ import { Clock, Monitor, Smartphone, PlayCircle, Hash, Film, Calendar, Zap, Trop
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
 import { getTranslations, getLocale } from 'next-intl/server';
-import { getCompletionMetrics, isZapped } from "@/lib/mediaPolicy";
+import { getCumulativeCompletionEntries, isZapped } from "@/lib/mediaPolicy";
 // No more library rules
 
 export default async function UserInfo({ userId, userIds = [], userDbIds = [] }: { userId: string; userIds?: string[]; userDbIds?: string[] }) {
@@ -19,6 +19,9 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
         select: { username: true, jellyfinUserId: true, lastActive: true, playbackHistory: {
                 select: {
                     durationWatched: true,
+                    eventSource: true,
+                    userId: true,
+                    mediaId: true,
                     clientName: true,
                     deviceName: true,
                     startedAt: true,
@@ -55,18 +58,20 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
 
     type PlaybackSession = {
         durationWatched: number;
+        eventSource?: string | null;
         clientName?: string | null;
         deviceName?: string | null;
         startedAt: Date;
+        userId?: string | null;
+        mediaId?: string | null;
         media?: { genres?: string[]; type?: string; durationMs?: bigint | null; title?: string; jellyfinMediaId?: string } | null;
     };
 
-    mergedHistory.forEach((session: any) => {
-        const s = session as any;
-        if (isZapped(s)) return;
-        totalSeconds += s.durationWatched;
-        if (s.clientName) clientCounts.set(s.clientName, (clientCounts.get(s.clientName) || 0) + 1);
-        if (s.deviceName) deviceCounts.set(s.deviceName, (deviceCounts.get(s.deviceName) || 0) + 1);
+    mergedHistory.forEach((session: PlaybackSession) => {
+        if (isZapped(session)) return;
+        totalSeconds += session.durationWatched;
+        if (session.clientName) clientCounts.set(session.clientName, (clientCounts.get(session.clientName) || 0) + 1);
+        if (session.deviceName) deviceCounts.set(session.deviceName, (deviceCounts.get(session.deviceName) || 0) + 1);
 
         const date = new Date(session.startedAt);
         if (!firstWatched || date < firstWatched) firstWatched = date;
@@ -99,12 +104,11 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
             m.count += 1;
         }
 
-        // Completion rate
-        if (session.media?.durationMs) {
-            const completion = getCompletionMetrics(session.media, session.durationWatched);
-            totalCompletions += completion.percent;
-            completionCount++;
-        }
+    });
+
+    getCumulativeCompletionEntries(mergedHistory.filter((session: PlaybackSession) => !isZapped(session))).forEach(({ completion }) => {
+        totalCompletions += completion.percent;
+        completionCount++;
     });
 
     const sessionCount = mergedHistory.filter(s => !isZapped(s)).length;
@@ -186,7 +190,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
 
     return (
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('playTime')}</CardTitle>
                     <Clock className="h-4 w-4 text-orange-500" />
@@ -195,14 +199,14 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                     <div className="text-2xl font-bold">{totalHours}h</div>
                     <p className="text-xs text-muted-foreground">{t('cumulTotal')}</p>
                     {lastActive && (
-                        <div className="mt-2 text-[10px] text-zinc-500 pt-2 border-t border-zinc-200/50 dark:border-zinc-800/50">
+                        <div className="mt-2 text-[10px] text-zinc-500 pt-2 border-t border-border">
                             {tu('colLastActive')}: {new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastActive))}
                         </div>
                     )}
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('sessions')}</CardTitle>
                     <Hash className="h-4 w-4 text-emerald-500" />
@@ -213,7 +217,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('topGenres')}</CardTitle>
                     <PlayCircle className="h-4 w-4 text-pink-500" />
@@ -224,7 +228,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('completionRate')}</CardTitle>
                     <Percent className="h-4 w-4 text-cyan-500" />
@@ -235,7 +239,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('peakActivity')}</CardTitle>
                     <Zap className="h-4 w-4 text-yellow-500" />
@@ -246,7 +250,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('bestStreak')}</CardTitle>
                     <Calendar className="h-4 w-4 text-red-500" />
@@ -257,7 +261,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('uniqueContent')}</CardTitle>
                     <Layers className="h-4 w-4 text-teal-500" />
@@ -268,7 +272,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('favFormat')}</CardTitle>
                     <Film className="h-4 w-4 text-indigo-500" />
@@ -280,7 +284,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
             </Card>
 
             {topMedia && (
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm col-span-2">
+                <Card className="app-surface col-span-2">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">{t('mostWatched')}</CardTitle>
                         <Trophy className="h-4 w-4 text-amber-500" />
@@ -292,7 +296,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </Card>
             )}
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('favClient')}</CardTitle>
                     <Monitor className="h-4 w-4 text-blue-500" />
@@ -303,7 +307,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                 </CardContent>
             </Card>
 
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('favDevice')}</CardTitle>
                     <Smartphone className="h-4 w-4 text-purple-500" />

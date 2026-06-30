@@ -44,12 +44,11 @@ function getServerSortRank(server: Pick<JellyfinServerConnection, "isPrimary" | 
 
 export function buildJellyfinApiKeyHeaders(apiKey: string): HeadersInit {
   const token = String(apiKey || "").trim();
-  // Some Jellyfin versions reject API-key requests when Authorization-style
-  // headers are sent alongside token headers (400 "Error processing request").
-  // Keep API key requests token-only for maximum compatibility.
+  // Jellyfin 12+ requires Authorization header with MediaBrowser scheme.
+  // X-Emby-Token is disabled by default in 10.12+.
   return {
     Accept: "application/json",
-    "X-Emby-Token": token,
+    Authorization: `MediaBrowser Token="${token}"`,
   };
 }
 
@@ -104,6 +103,7 @@ export async function getConfiguredJellyfinServers(): Promise<JellyfinServerConn
   const masterUrl = normalizeUrl(masterIdentity.url);
   const list: JellyfinServerConnection[] = rows.map((row) => {
     const rowUrl = normalizeUrl(row.url);
+    const rowApiKey = normalizeApiKey(row.jellyfinApiKey);
     const isPrimary =
       row.id === ensuredMaster.id ||
       row.jellyfinServerId === masterIdentity.jellyfinServerId ||
@@ -113,8 +113,8 @@ export async function getConfiguredJellyfinServers(): Promise<JellyfinServerConn
       id: row.id,
       jellyfinServerId: row.jellyfinServerId,
       name: row.name,
-      url: rowUrl,
-      apiKey: normalizeApiKey(row.jellyfinApiKey),
+      url: isPrimary && !rowApiKey ? masterUrl : rowUrl,
+      apiKey: rowApiKey,
       allowAuthFallback: row.allowAuthFallback === true,
       isPrimary,
     };
@@ -193,7 +193,6 @@ export async function authenticateAgainstJellyfinDetailed(input: {
             "Content-Type": "application/json",
             Accept: "application/json",
             Authorization: JELLYTRACK_CLIENT_HEADER,
-            "X-Emby-Authorization": JELLYTRACK_CLIENT_HEADER,
           },
           body: JSON.stringify(payload),
           signal: controller.signal,
@@ -255,7 +254,6 @@ export async function fetchJellyfinSystemInfo(input: {
     const headers = buildJellyfinApiKeyHeaders(apiKey);
     const candidates = [
       `${baseUrl}/System/Info`,
-      `${baseUrl}/System/Info?api_key=${encodeURIComponent(apiKey)}`,
       `${baseUrl}/System/Info/Public`,
     ];
 

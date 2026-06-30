@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, TrendingUp, Zap, Clock, ArrowUpRight, Film } from "lucide-react";
+import { TrendingUp, Zap, Clock, ArrowUpRight, Film } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -120,7 +120,7 @@ export function PredictionsPanel() {
           </CardHeader>
           <CardContent>
             <div className="space-y-1.5">
-              {topPeaks.map((peak, i) => {
+              {topPeaks.map((peak) => {
                 const maxPrediction = topPeaks[0]?.predictedSessions || 1;
                 const barWidth = Math.round((peak.predictedSessions / maxPrediction) * 100);
                 const isHighConfidence = peak.confidence >= 70;
@@ -140,7 +140,7 @@ export function PredictionsPanel() {
                         }`}
                         style={{ width: `${barWidth}%` }}
                       />
-                      <span className="absolute right-2 top-0.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                      <span className="absolute right-2 top-0.5 text-[10px] font-medium text-zinc-600 dark:text-muted-foreground">
                         ~{peak.predictedSessions.toFixed(0)}
                       </span>
                     </div>

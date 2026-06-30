@@ -64,8 +64,8 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
             {selectedEntry && (
                 <div className="mb-2 flex items-center gap-3 px-3 py-2 rounded-lg bg-cyan-500/10 dark:bg-cyan-400/10 border border-cyan-500/20 text-xs animate-in fade-in slide-in-from-top-1 duration-200">
                     <span className="font-semibold text-cyan-600 dark:text-cyan-300">{selectedEntry.hour}</span>
-                    <span className="text-zinc-600 dark:text-zinc-300">{(selectedEntry.count ?? selectedEntry.value ?? 0)} {t('sessions')}</span>
-                    <span className="text-zinc-400">
+                    <span className="text-foreground/80 dark:text-slate-300">{(selectedEntry.count ?? selectedEntry.value ?? 0)} {t('sessions')}</span>
+                    <span className="text-muted-foreground">
                         ({( (selectedEntry.count ?? selectedEntry.value ?? 0) > avg ? '+' : '' )}{(selectedEntry.count ?? selectedEntry.value ?? 0) - avg} {t('vsAverage')})
                     </span>
                     <button 
@@ -75,7 +75,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         <ExternalLink className="w-3 h-3" />
                         <span>{t('viewLogs') || 'View logs'}</span>
                     </button>
-                    <button onClick={() => setSelectedHour(null)} className="ml-auto text-zinc-400 hover:text-zinc-200 text-lg leading-none">×</button>
+                    <button onClick={() => setSelectedHour(null)} className="ml-auto text-muted-foreground hover:text-zinc-200 text-lg leading-none">×</button>
                 </div>
             )}
 
@@ -112,7 +112,7 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                         itemStyle={chartItemStyle}
                         cursor={{ fill: 'rgba(56, 189, 248, 0.06)', radius: 4 }}
                         formatter={(value: any) => [`${value ?? 0} ${t('sessions')}`, t('activity')]}
-                        animationDuration={0}
+                        animationDuration={200}
                     />
                     {/* Average reference line (only when meaningful) */}
                     {showAvg && (
@@ -127,8 +127,8 @@ export function ActivityByHourChart({ data }: ActivityByHourChartProps) {
                     <Bar
                         dataKey="count"
                         radius={[4, 4, 0, 0]}
-                        animationDuration={0}
-                        animationEasing="linear"
+                        animationDuration={1000}
+                        animationEasing="ease-out"
                     >
                         {data.map((entry, index) => {
                             const entryCount = Number(entry.count ?? 0);

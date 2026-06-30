@@ -103,18 +103,18 @@ export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
         <div
             ref={overlayRef}
             style={pos ? { position: 'fixed', left: `${pos.left}px`, top: `${pos.top}px` } : { display: 'none' }}
-            className="z-[99999] border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-xl p-2 min-w-[220px] md:min-w-[180px] bg-white dark:bg-zinc-900"
+            className="z-[99999] border border-border rounded-lg shadow-xl p-2 min-w-[220px] md:min-w-[180px] app-surface"
         >
             {ALL_COLUMNS.map(col => (
                 <label
                     key={col}
-                    className="flex items-center gap-2 px-2 py-2 rounded hover:bg-zinc-100 dark:hover:bg-slate-700/45 cursor-pointer text-sm text-zinc-700 dark:text-zinc-200"
+                    className="flex items-center gap-2 px-2 py-2 rounded hover:bg-muted cursor-pointer text-sm text-foreground/80 hover:text-foreground"
                 >
                     <input
                         type="checkbox"
                         checked={visibleColumns.includes(col)}
                         onChange={() => toggleColumn(col)}
-                        className="rounded border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0"
+                        className="rounded border-border bg-muted text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0"
                     />
                     {columnLabels[col]}
                 </label>
@@ -126,7 +126,7 @@ export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
         <div className="relative" ref={ref}>
             <button
                 onClick={() => setOpen(!open)}
-                className="app-field flex items-center gap-2 px-3 py-2 h-10 md:h-9 text-sm rounded-md hover:bg-zinc-100 dark:hover:bg-slate-700/50 transition-colors"
+                className="app-field flex items-center gap-2 px-3 py-2 h-10 md:h-9 text-sm rounded-md hover:bg-muted transition-colors"
                 title={t('toggleColumns')}
             >
                 <Columns3 className="w-4 h-4" />

@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
 
     let firstSeenRows: Array<{ userId: string | null; country: string | null; _min: { startedAt: Date | null } }> = [];
     if (candidateUserIds.length > 0 && candidateCountries.length > 0) {
-        firstSeenRows = await prisma.playbackHistory.groupBy({
+        firstSeenRows = await (prisma.playbackHistory as any).groupBy({
             by: ["userId", "country"],
             where: {
                 userId: { in: candidateUserIds },

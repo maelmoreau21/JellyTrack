@@ -8,7 +8,9 @@
  * The user sees animated skeleton placeholders while charts load in the background.
  */
 
+import React from "react";
 import dynamic from "next/dynamic";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const ChartSkeleton = ({ height = 300 }: { height?: number }) => (
     <div
@@ -17,49 +19,72 @@ const ChartSkeleton = ({ height = 300 }: { height?: number }) => (
     />
 );
 
+function withErrorBoundary<P extends object>(
+    Component: React.ComponentType<P>,
+    name: string
+) {
+    return function WrappedComponent(props: P) {
+        return (
+            <ErrorBoundary name={name}>
+                <Component {...props} />
+            </ErrorBoundary>
+        );
+    };
+}
+
 // --- Dashboard Overview Charts ---
 
-export const LazyComposedTrendChart = dynamic(
+const RawComposedTrendChart = dynamic(
     () => import("@/components/charts/ComposedTrendChart").then((m) => ({ default: m.ComposedTrendChart })),
     { ssr: false, loading: () => <ChartSkeleton height={400} /> }
 );
+export const LazyComposedTrendChart = withErrorBoundary(RawComposedTrendChart, "Trend Chart");
 
-export const LazyCategoryPieChart = dynamic(
+const RawCategoryPieChart = dynamic(
     () => import("@/components/charts/CategoryPieChart").then((m) => ({ default: m.CategoryPieChart })),
     { ssr: false, loading: () => <ChartSkeleton height={300} /> }
 );
+export const LazyCategoryPieChart = withErrorBoundary(RawCategoryPieChart, "Category Distribution");
 
-export const LazyLibraryDailyPlaysChart = dynamic(
+const RawLibraryDailyPlaysChart = dynamic(
     () => import("@/components/charts/LibraryDailyPlaysChart").then((m) => ({ default: m.LibraryDailyPlaysChart })),
     { ssr: false, loading: () => <ChartSkeleton height={350} /> }
 );
+export const LazyLibraryDailyPlaysChart = withErrorBoundary(RawLibraryDailyPlaysChart, "Library Daily Plays");
 
-export const LazyActivityByHourChart = dynamic(
+const RawActivityByHourChart = dynamic(
     () => import("@/components/charts/ActivityByHourChart").then((m) => ({ default: m.ActivityByHourChart })),
     { ssr: false, loading: () => <ChartSkeleton height={250} /> }
 );
+export const LazyActivityByHourChart = withErrorBoundary(RawActivityByHourChart, "Hourly Activity");
 
-export const LazyDayOfWeekChart = dynamic(
+const RawDayOfWeekChart = dynamic(
     () => import("@/components/charts/DayOfWeekChart").then((m) => ({ default: m.DayOfWeekChart })),
     { ssr: false, loading: () => <ChartSkeleton height={250} /> }
 );
+export const LazyDayOfWeekChart = withErrorBoundary(RawDayOfWeekChart, "Day of Week Activity");
 
-export const LazyMonthlyWatchTimeChart = dynamic(
+const RawMonthlyWatchTimeChart = dynamic(
     () => import("@/components/charts/MonthlyWatchTimeChart").then((m) => ({ default: m.MonthlyWatchTimeChart })),
     { ssr: false, loading: () => <ChartSkeleton height={300} /> }
 );
+export const LazyMonthlyWatchTimeChart = withErrorBoundary(RawMonthlyWatchTimeChart, "Monthly Watch Time");
 
-export const LazyCompletionRatioChart = dynamic(
+const RawCompletionRatioChart = dynamic(
     () => import("@/components/charts/CompletionRatioChart").then((m) => ({ default: m.CompletionRatioChart })),
     { ssr: false, loading: () => <ChartSkeleton height={280} /> }
 );
+export const LazyCompletionRatioChart = withErrorBoundary(RawCompletionRatioChart, "Completion Ratio");
 
-export const LazyClientCategoryChart = dynamic(
+const RawClientCategoryChart = dynamic(
     () => import("@/components/charts/ClientCategoryChart").then((m) => ({ default: m.ClientCategoryChart })),
     { ssr: false, loading: () => <ChartSkeleton height={280} /> }
 );
+export const LazyClientCategoryChart = withErrorBoundary(RawClientCategoryChart, "Client Category");
 
-export const LazyPlatformDistributionChart = dynamic(
+const RawPlatformDistributionChart = dynamic(
     () => import("@/components/charts/PlatformDistributionChart").then((m) => ({ default: m.PlatformDistributionChart })),
     { ssr: false, loading: () => <ChartSkeleton height={300} /> }
 );
+export const LazyPlatformDistributionChart = withErrorBoundary(RawPlatformDistributionChart, "Platform Distribution");
+

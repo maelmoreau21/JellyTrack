@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchJellyfinImage } from "@/lib/jellyfin";
+import prisma from "@/lib/prisma";
+import { fetchJellyfinImage, fetchJellyfinJson } from "@/lib/jellyfinImageServer";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
@@ -15,6 +16,7 @@ type JellyfinItemMeta = {
     seasonId: string | null;
     seriesId: string | null;
     albumId: string | null;
+    artistId: string | null;
 };
 
 function normalizeCandidateId(value: unknown): string | null {
@@ -23,64 +25,70 @@ function normalizeCandidateId(value: unknown): string | null {
     return UUID_PATTERN.test(id) ? id : null;
 }
 
-async function fetchJellyfinItemMeta(itemId: string): Promise<JellyfinItemMeta | null> {
-    const baseUrl = process.env.JELLYFIN_URL;
-    const apiKey = process.env.JELLYFIN_API_KEY;
-    if (!baseUrl || !apiKey) return null;
+async function fetchJellyfinItemMeta(itemId: string, serverId?: string | null): Promise<JellyfinItemMeta | null> {
+    const data = await fetchJellyfinJson<Record<string, unknown>>(
+        `/Items/${encodeURIComponent(itemId)}?Fields=ParentId,SeasonId,SeriesId,AlbumId,Type,ArtistItems`,
+        serverId
+    );
+    if (!data) return null;
 
-    try {
-        const url = `${baseUrl}/Items/${encodeURIComponent(itemId)}?Fields=ParentId,SeasonId,SeriesId,AlbumId,Type`;
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "X-Emby-Token": apiKey,
-            },
-            next: { revalidate: 3600 },
-        });
+    const id = normalizeCandidateId(data?.Id) || itemId;
 
-        if (!response.ok) return null;
-
-        const data = await response.json();
-        const id = normalizeCandidateId(data?.Id) || itemId;
-
-        return {
-            id,
-            type: typeof data?.Type === "string" ? data.Type : null,
-            parentId: normalizeCandidateId(data?.ParentId),
-            seasonId: normalizeCandidateId(data?.SeasonId),
-            seriesId: normalizeCandidateId(data?.SeriesId),
-            albumId: normalizeCandidateId(data?.AlbumId),
-        };
-    } catch {
-        return null;
+    let artistId: string | null = null;
+    if (Array.isArray(data?.ArtistItems) && data.ArtistItems.length > 0) {
+        artistId = normalizeCandidateId(data.ArtistItems[0]?.Id);
     }
+
+    return {
+        id,
+        type: typeof data?.Type === "string" ? data.Type : null,
+        parentId: normalizeCandidateId(data?.ParentId),
+        seasonId: normalizeCandidateId(data?.SeasonId),
+        seriesId: normalizeCandidateId(data?.SeriesId),
+        albumId: normalizeCandidateId(data?.AlbumId),
+        artistId,
+    };
 }
 
-async function fetchSeriesSeasonCandidateIds(seriesId: string): Promise<string[]> {
-    const baseUrl = process.env.JELLYFIN_URL;
-    const apiKey = process.env.JELLYFIN_API_KEY;
-    if (!baseUrl || !apiKey) return [];
+async function fetchSeriesSeasonCandidateIds(seriesId: string, serverId?: string | null): Promise<string[]> {
+    const data = await fetchJellyfinJson<{ Items?: Array<Record<string, unknown>> }>(
+        `/Items?ParentId=${encodeURIComponent(seriesId)}&IncludeItemTypes=Season&Recursive=false&SortBy=SortName&SortOrder=Ascending&Limit=10`,
+        serverId
+    );
+    const items = Array.isArray(data?.Items) ? data.Items : [];
+    return items
+        .map((item) => normalizeCandidateId(item?.Id))
+        .filter((id): id is string => Boolean(id));
+}
 
-    try {
-        const url = `${baseUrl}/Items?ParentId=${encodeURIComponent(seriesId)}&IncludeItemTypes=Season&Recursive=false&SortBy=SortName&SortOrder=Ascending&Limit=10`;
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                "X-Emby-Token": apiKey,
-            },
-            next: { revalidate: 3600 },
+async function fetchDatabaseCandidateIds(itemId: string, serverId?: string | null): Promise<string[]> {
+    const where = serverId
+        ? { serverId, jellyfinMediaId: itemId }
+        : { jellyfinMediaId: itemId };
+
+    const item = await prisma.media.findFirst({
+        where,
+        select: { serverId: true, parentId: true },
+    });
+
+    const candidates: string[] = [];
+    const addCandidate = (value: string | null | undefined) => {
+        const id = normalizeCandidateId(value);
+        if (!id || candidates.includes(id)) return;
+        candidates.push(id);
+    };
+
+    addCandidate(item?.parentId);
+
+    if (item?.parentId) {
+        const parent = await prisma.media.findFirst({
+            where: { serverId: item.serverId, jellyfinMediaId: item.parentId },
+            select: { parentId: true },
         });
-
-        if (!response.ok) return [];
-
-        const data = await response.json();
-        const items = Array.isArray(data?.Items) ? data.Items : [];
-        return items
-            .map((item) => normalizeCandidateId(item?.Id))
-            .filter((id): id is string => Boolean(id));
-    } catch {
-        return [];
+        addCandidate(parent?.parentId);
     }
+
+    return candidates;
 }
 
 export async function GET(req: NextRequest) {
@@ -94,6 +102,8 @@ export async function GET(req: NextRequest) {
     const itemId = searchParams.get("itemId");
     const type = searchParams.get("type") || "Primary";
     const fallbackId = searchParams.get("fallbackId");
+    const serverId = searchParams.get("serverId");
+    const noStore = searchParams.has("v") || searchParams.has("cacheBust");
 
     if (!itemId) {
         return new NextResponse("Item ID is required", { status: 400 });
@@ -111,9 +121,12 @@ export async function GET(req: NextRequest) {
     if (fallbackId && !UUID_PATTERN.test(fallbackId)) {
         return new NextResponse("Invalid fallback ID format", { status: 400 });
     }
+    if (serverId && !UUID_PATTERN.test(serverId)) {
+        return new NextResponse("Invalid server ID format", { status: 400 });
+    }
 
     try {
-        let response = await fetchJellyfinImage(itemId, type);
+        let response = await fetchJellyfinImage(itemId, type, serverId, noStore);
         const attemptedIds = new Set<string>([itemId]);
 
         const tryCandidate = async (candidate: string | null | undefined): Promise<boolean> => {
@@ -121,7 +134,7 @@ export async function GET(req: NextRequest) {
             if (!candidateId || attemptedIds.has(candidateId)) return false;
 
             attemptedIds.add(candidateId);
-            const candidateResponse = await fetchJellyfinImage(candidateId, type);
+            const candidateResponse = await fetchJellyfinImage(candidateId, type, serverId, noStore);
             if (!candidateResponse.ok) return false;
 
             response = candidateResponse;
@@ -134,9 +147,9 @@ export async function GET(req: NextRequest) {
         }
 
         // If still missing, walk known Jellyfin hierarchy IDs to match Jellyfin-like fallback behavior:
-        // Episode -> Season -> Series, Track -> Album, Season -> Series.
+        // Episode -> Season -> Series, Track -> Album -> Artist, Season -> Series.
         if (!response.ok) {
-            const itemMeta = await fetchJellyfinItemMeta(itemId);
+            const itemMeta = await fetchJellyfinItemMeta(itemId, serverId);
             const candidateIds: string[] = [];
             const addCandidate = (value: string | null | undefined) => {
                 const id = normalizeCandidateId(value);
@@ -144,15 +157,27 @@ export async function GET(req: NextRequest) {
                 candidateIds.push(id);
             };
 
+            for (const candidateId of await fetchDatabaseCandidateIds(itemId, serverId)) {
+                addCandidate(candidateId);
+            }
             addCandidate(itemMeta?.seasonId);
             addCandidate(itemMeta?.seriesId);
             addCandidate(itemMeta?.albumId);
             addCandidate(itemMeta?.parentId);
+            addCandidate(itemMeta?.artistId); // Track or Album artist
+
+            // If we have an album ID, look up its artist ID as a deep fallback
+            if (itemMeta?.albumId) {
+                const albumMeta = await fetchJellyfinItemMeta(itemMeta.albumId, serverId);
+                if (albumMeta?.artistId) {
+                    addCandidate(albumMeta.artistId);
+                }
+            }
 
             // Series can legitimately miss a primary image. In that case,
             // use the first available season poster as visual fallback.
             if ((itemMeta?.type || "").toLowerCase() === "series") {
-                const seasonCandidates = await fetchSeriesSeasonCandidateIds(itemId);
+                const seasonCandidates = await fetchSeriesSeasonCandidateIds(itemId, serverId);
                 for (const seasonId of seasonCandidates) {
                     addCandidate(seasonId);
                 }
@@ -178,15 +203,15 @@ export async function GET(req: NextRequest) {
         const buffer = await response.arrayBuffer();
         const headers = new Headers();
 
-        // On récupère le type de contenu depuis le serveur originel pour notre proxy (souvent image/jpeg ou image/webp)
+        // Retrieve content type from original server for our proxy (often image/jpeg or image/webp)
         headers.set('Content-Type', response.headers.get('Content-Type') || 'image/jpeg');
-        // Mise en cache navigateur longue durée pour soulager l'API
-        headers.set('Cache-Control', 'public, max-age=604800, immutable');
+        // Long-term browser caching to offload the API
+        headers.set('Cache-Control', noStore ? 'no-store' : 'public, max-age=2592000, immutable');
 
         return new NextResponse(buffer, { headers });
     } catch (e) {
-        console.error("Erreur proxy Image Jellyfin:", e);
-        // On renvoie un SVG de remplacement plutôt qu'une erreur 500 pour éviter des effets secondaires côté client
+        console.error("Jellyfin Image proxy error:", e);
+        // Return a replacement SVG instead of a 500 error to avoid client-side side-effects
         const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
         const encoder = new TextEncoder();
         const buffer = encoder.encode(placeholder);

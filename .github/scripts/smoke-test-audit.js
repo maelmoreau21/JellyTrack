@@ -64,7 +64,7 @@ function runBackupRestoreSimulation() {
         id: "global",
         monitorIntervalActive: 1000,
         monitorIntervalIdle: 5000,
-        defaultLocale: "fr",
+        defaultLocale: "en",
         timeFormat: "24h",
       },
     },

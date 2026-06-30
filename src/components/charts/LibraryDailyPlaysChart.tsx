@@ -35,18 +35,23 @@ export function LibraryDailyPlaysChart({ data }: { data: LibraryPlaysData[] }) {
     const t = useTranslations('charts');
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
-    const formatTooltipValue = (value: number | string, name: string) => {
-        return [t('playsCount', { count: value }), name];
+    const formatTooltipValue = (value: unknown, name: unknown) => {
+        const countValue = typeof value === "number" || typeof value === "string" || value instanceof Date
+            ? value
+            : String(value ?? "");
+        return [t('playsCount', { count: countValue }), String(name ?? "")];
     };
 
     // Auto-hide libraries that have 0 plays across entire dataset
     const hasData = new Map<string, boolean>();
     for (const series of LIBRARY_SERIES_KEYS) {
-        hasData.set(series.key, data.some((d: LibraryPlaysData) => Number((d as Record<string, unknown>)[series.key] || 0) > 0));
+        hasData.set(series.key, data.some((d: LibraryPlaysData) => Number((d as unknown as Record<string, unknown>)[series.key] || 0) > 0));
     }
 
-    const toggleLegend = (e: { dataKey?: string } | undefined) => {
-        const dataKey = e?.dataKey !== undefined ? String(e.dataKey) : undefined;
+    const toggleLegend = (payload: unknown) => {
+        const dataKey = payload && typeof payload === "object" && "dataKey" in payload
+            ? String((payload as { dataKey?: unknown }).dataKey ?? "")
+            : "";
         if (!dataKey) return;
         setHidden(prev => {
             const next = new Set(prev);

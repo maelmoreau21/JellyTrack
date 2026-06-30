@@ -1,86 +1,85 @@
 ---
-description: "Instructions et memoire pour agents IA - JellyTrack v1.5.1"
+description: "Instructions and memory for AI agents - JellyTrack"
 paths:
   - "."
   - "src/**/*.ts"
+  - "src/**/*.tsx"
 ---
 
-# JellyTrack - Instructions & Memoire Agents IA (v1.5.1)
+# JellyTrack - Instructions For AI Agents
 
-IMPORTANT - lire integralement ce document avant toute modification.
+Read this document before changing the project.
 
-- IMPORTANT - LE PLUGIN JELLYFIN EST OBLIGATOIRE : JellyTrack ne fonctionne pas sans son plugin compagnon.
-- Le mode d'installation RECOMMANDÉ et CANONIQUE est Docker (`docker-compose.yml`).
-- Ne pas halluciner la structure de donnees: verifier systematiquement `prisma/schema.prisma`.
-- Ne pas halluciner les cles i18n: verifier `messages/*.json`.
-- Ne pas inventer de contrat plugin: verifier `src/app/api/plugin/events/route.ts`.
-- Ne pas faire de `commit`, `push`, creation de branche ou `merge` sans demande explicite utilisateur.
-- Le fichier `.env` est public et versionne comme exemple: placeholders uniquement (`CHANGE_ME_*`), jamais de secrets reels.
+- The Jellyfin companion plugin is required. JellyTrack does not collect useful data without it.
+- Docker Compose is the canonical install mode.
+- Do not hallucinate the schema: verify `prisma/schema.prisma`.
+- Do not hallucinate i18n keys: verify `messages/*.json`.
+- Do not invent plugin contracts: verify `src/app/api/plugin/events/route.ts`.
+- Do not commit, push, create branches, or merge without an explicit user request.
+- `.env.example` contains placeholders only. Never add real secrets.
 
-## 1. Stack Technique Canonique
+## Canonical Stack
 
-- Framework: Next.js 16 App Router (`src/app/`)
-- Langage: TypeScript strict
-- Auth web: next-auth avec proxy Next (`src/proxy.ts`)
-- ORM/DB: Prisma + PostgreSQL
-- Cache/temps reel: Redis (ioredis)
-- UI: Tailwind + composants `src/components/ui/*`
-- Graphiques: Recharts
-- i18n: next-intl + fichiers `messages/*.json`
+- Framework: Next.js 16 App Router in `src/app/`
+- Runtime: Node 24 in Docker
+- Language: TypeScript strict
+- Web auth: next-auth with Next proxy in `src/proxy.ts` (authenticating directly against Jellyfin; no local `ADMIN_PASSWORD` is used)
+- ORM/DB: Prisma 7 + PostgreSQL
+- Prisma CLI config: `prisma.config.ts`
+- Prisma runtime adapter: `@prisma/adapter-pg`
+- Cache/live state: Redis through ioredis
+- UI: Tailwind + `src/components/ui/*`
+- Charts: Recharts
+- i18n: next-intl + `messages/*.json`
 
-## 2. Architecture Securite v1.5.1 (reference)
+## Plugin Event Rules
 
-### 2.1 Plugin API Key - Hash-at-Rest
-Source: `src/lib/pluginKeyManager.ts` + `src/app/api/plugin/events/route.ts`
-- La cle plugin est stockee sous forme de hash scrypt versionne (`s1$...`).
-- Toute modification des settings plugin via l'UI (`JellyfinServersSettings.tsx`) se concentre sur la **generation** de nouvelles cles. L'UI ne permet plus de coller manuellement une cle brute pour eviter les erreurs humaines et renforcer la securite.
+Source of truth: `src/app/api/plugin/events/route.ts`.
 
-### 2.2 Audit & Logs
-Source: `src/lib/adminAudit.ts` + `src/app/logs/page.tsx`
-- **Audit de Connexion** : Chaque connexion reussie est enregistree via `writeAdminAuditLog` dans `authOptions.ts`.
-- **Filtrage des Logs** : Les logs de type `monitor_ping` (heartbeats) sont désormais filtres au niveau de la requete Prisma dans `logs/page.tsx` pour ne pas polluer l'interface. Ils restent stockes en DB mais sont invisibles dans l'onglet "Système" par defaut.
+- Canonical download event: `MediaDownloaded`.
+- Accepted download aliases: `ItemDownloaded`, `DownloadCompleted`.
+- Downloads create closed `PlaybackHistory` rows with `eventSource = "download"`, `playMethod = "Download"`, full `durationWatched`, and a `TelemetryEvent` with `eventType = "download"`.
+- `PlaybackHistory.sourceEventId` deduplicates plugin retries per server through `@@unique([serverId, sourceEventId])`.
+- Downloads always count as complete views, including music and short media, unless an excluded library filter rejects them.
+- Plugin events must respect excluded libraries and reject malformed required user/media payloads.
 
-### 2.3 Branding & Logo (v1.5.1)
-- Le logo officiel est `public/logo.svg`.
-- **Optimisation** : Le logo a été optimisé en version "borderless" (sans marges inutiles) pour une visibilité maximale en tant que favicon et icône d'application.
-- Pour une fiabilite maximale (eviter les problemes de chargement de fichiers statiques sur la page de login), le code SVG est **inclus directement (inlined)** dans `src/app/login/page.tsx` et `src/components/Sidebar.tsx`.
-- **Note** : Le logo doit être présent et visible sur toutes les interfaces principales pour renforcer l'identité visuelle.
+## Completion Semantics
 
-## 3. Arborescence de Travail (vue utile)
+- Completion is cumulative by user + media across all playback history.
+- A movie started on one day and finished later must become `completed`, not permanently `abandoned`.
+- Date filters still scope period views and duration, but abandonment/partial/completed classification may use later reference history.
+- Use `getCumulativeCompletionEntries` in `src/lib/mediaPolicy.ts` when classifying completion.
 
-- `src/app/*`: pages/routes App Router
-- `src/app/api/*`: APIs serveur
-- `src/proxy.ts`: politique d'acces globale
-- `src/lib/*`: logique metier (auth, sync, plugin key, SSRF/webhook, server registry)
-- `src/components/ui/*`: primitives UI a reutiliser en priorite
-- `src/components/dashboard/*`: blocs dashboard
-- `src/components/charts/*`: wrappers recharts
-- `prisma/schema.prisma`: source de verite du modele
-- `messages/*.json`: traductions multi-locales
+## Telemetry Semantics
 
-## 4. Prisma - Resume Canonique (v1.5.1)
+- Seeks must expose ranges as `fromMs -> toMs`, not only event time.
+- Replays are backward seek ranges and should be aggregated as watched-again passages.
+- Audio/subtitle language periods are derived from initial playback metadata plus language change events until the next change or session end.
+- Logs, media profile pages, stream telemetry APIs, exports, and backups should preserve download source, source event id, seek ranges, and language metadata.
 
-Modeles cles:
-- `Server`: `id`, `jellyfinServerId`, `name`, `url`, `jellyfinApiKey`, `isActive`.
-- `User`: `serverId`, `jellyfinUserId`, `username`, `lastActive`.
-- `Media`: `serverId`, `jellyfinMediaId`, `type`, `collectionType`, `libraryName`.
-- `PlaybackHistory`: `serverId`, `userId`, `mediaId`, `playMethod`, `startedAt`, `endedAt`.
-- `AdminAuditLog`: Historique des actions sensibles (connexions, modifications settings).
-- `SystemHealthEvent`: Evenements de sante (sync, plugin connection). *Note: `monitor_ping` est le type dominant ici.*
+## Prisma Summary
 
-## 5. I18n - Politique Obligatoire
+Key models:
+- `Server`: Jellyfin server identity and connection settings.
+- `User`: Jellyfin user identity, scoped by server.
+- `Media`: Jellyfin item metadata, scoped by server.
+- `PlaybackHistory`: playback/download rows, event source, source event id, telemetry counters.
+- `TelemetryEvent`: pause/resume/seek/replay/audio/subtitle/speed/download events.
+- `GlobalSettings`: app/plugin settings.
+- `AdminAuditLog`, `SystemHealthState`, `SystemHealthEvent`: admin/security/health tracking.
 
-- Toute chaine UI doit venir de `messages/*.json`.
-- **Modification Recente** : La cle `sortDateDesc` dans `logs` a ete renomee en "Trier" pour optimiser l'espace UI dans le selecteur de tri.
+After schema changes:
+1. Add a migration in `prisma/migrations`.
+2. Run `npx prisma generate`.
+3. Update backup import/export paths if new persisted fields matter.
 
-## 6. Regles Qualite Zero Dette Technique
+## Quality Gate
 
-Avant finalisation:
-1. Verifier les impacts schema si code data modifie.
-2. Verifier les traductions sur toutes locales.
-3. Executer `npm run build`.
-4. Verifier que le logo inlined est présent et correspond à la version optimisée (v1.5.1).
+Before finalization when code changed:
+1. Run `npm run test`.
+2. Run `npm run check:i18n`.
+3. Run `npm run lint`.
+4. Run `npm run build`.
+5. Run `npm outdated --json` and expect `{}` when dependencies were updated.
 
----
-Ce document est la reference agents IA pour JellyTrack v1.5.1.
-Toute evolution structurelle doit mettre a jour ce fichier.
+Any structural behavior change should update this file and `README.md`.

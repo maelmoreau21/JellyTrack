@@ -8,6 +8,7 @@ declare module "next-auth" {
             jellyfinUserId: string;
             authServerName?: string;
             authServerUrl?: string;
+            authServerJellyfinServerId?: string;
             authServerIsPrimary?: boolean;
         };
     }
@@ -16,7 +17,9 @@ declare module "next-auth" {
         jellyfinUserId: string;
         authServerName?: string;
         authServerUrl?: string;
+        authServerJellyfinServerId?: string;
         authServerIsPrimary?: boolean;
+        rememberMe?: boolean;
     }
 }
 
@@ -26,6 +29,12 @@ declare module "next-auth/jwt" {
         jellyfinUserId?: string;
         authServerName?: string;
         authServerUrl?: string;
+        authServerJellyfinServerId?: string;
         authServerIsPrimary?: boolean;
+        rememberMe?: boolean;
+        rememberSessionLimitedTo30Days?: boolean;
+        sessionExpiresAt?: number;
+        sessionIssuedAt?: number;
+        sessionExpired?: boolean;
     }
 }

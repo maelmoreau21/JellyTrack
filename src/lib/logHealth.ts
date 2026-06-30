@@ -1,15 +1,14 @@
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
-// No rules
 import { readSystemHealthState } from "@/lib/systemHealth";
-import { buildLegacyStreamRedisKey, buildStreamRedisKey } from "@/lib/serverRegistry";
+import { buildStreamRedisKey } from "@/lib/serverRegistry";
 
 export async function getLogHealthSnapshot() {
     const anomalyWindowStart = new Date();
     anomalyWindowStart.setUTCHours(0, 0, 0, 0);
     anomalyWindowStart.setUTCDate(anomalyWindowStart.getUTCDate() - 13);
 
-    const [settings, activeStreams, openPlaybackHistory, healthState, discoveredLibraries, anomalyEvents] = await Promise.all([
+    const [settings, activeStreams, openPlaybackHistory, healthState, anomalyEvents] = await Promise.all([
         prisma.globalSettings.findUnique({ where: { id: "global" } }),
         prisma.activeStream.findMany({
             select: {
@@ -38,11 +37,6 @@ export async function getLogHealthSnapshot() {
             }
         }),
         readSystemHealthState({ eventLimit: 120 }),
-        prisma.media.findMany({
-            where: { libraryName: { not: null } },
-            select: { libraryName: true },
-            distinct: ['libraryName'],
-        }),
         prisma.systemHealthEvent.findMany({
             where: {
                 stateId: "global",
@@ -58,9 +52,6 @@ export async function getLogHealthSnapshot() {
         }),
     ]);
 
-    // No rules
-    const discoveredNames = discoveredLibraries.map(l => l.libraryName as string);
-
     const activePairSet = new Set(activeStreams.map((stream) => `${stream.userId}:${stream.mediaId}`));
     const openPlaybackOrphans = openPlaybackHistory.filter((entry) => !activePairSet.has(`${entry.userId}:${entry.mediaId}`));
 
@@ -73,13 +64,11 @@ export async function getLogHealthSnapshot() {
 
     const redisKeySet = new Set(redisKeys);
     const expectedRedisKeys = new Set(activeStreams.map((stream) => buildStreamRedisKey(stream.serverId, stream.sessionId)));
-    const expectedLegacyKeys = new Set(activeStreams.map((stream) => buildLegacyStreamRedisKey(stream.sessionId)));
     const dbStreamsWithoutRedis = activeStreams.filter((stream) => {
         const scopedKey = buildStreamRedisKey(stream.serverId, stream.sessionId);
-        const legacyKey = buildLegacyStreamRedisKey(stream.sessionId);
-        return !redisKeySet.has(scopedKey) && !redisKeySet.has(legacyKey);
+        return !redisKeySet.has(scopedKey);
     });
-    const redisOrphanKeys = redisKeys.filter((key) => !expectedRedisKeys.has(key) && !expectedLegacyKeys.has(key));
+    const redisOrphanKeys = redisKeys.filter((key) => !expectedRedisKeys.has(key));
 
     const dailyMap = new Map<string, { day: string; monitorErrors: number; syncErrors: number; backupErrors: number; cleanupOps: number; syncSuccesses: number }>();
     for (let index = 0; index < 14; index++) {
@@ -87,7 +76,7 @@ export async function getLogHealthSnapshot() {
         current.setUTCDate(anomalyWindowStart.getUTCDate() + index);
         const key = current.toISOString().slice(0, 10);
         dailyMap.set(key, {
-            day: current.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }),
+            day: `${current.getUTCDate().toString().padStart(2, "0")}/${(current.getUTCMonth() + 1).toString().padStart(2, "0")}`,
             monitorErrors: 0,
             syncErrors: 0,
             backupErrors: 0,

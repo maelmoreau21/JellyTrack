@@ -41,22 +41,47 @@ function GlowDot({ cx, cy, fill }: GlowDotProps) {
     return (
         <g>
             <circle cx={cx} cy={cy} r={8} fill={fill} fillOpacity={0.2} />
-            <circle cx={cx} cy={cy} r={5} fill={fill} stroke="#0c0c14" strokeWidth={2} />
+            <circle cx={cx} cy={cy} r={5} fill={fill} stroke="var(--background)" strokeWidth={2} />
         </g>
     );
+}
+
+function formatCompactHours(rawValue: unknown): string {
+    const value = Number(rawValue);
+    if (!Number.isFinite(value)) return String(rawValue ?? "");
+    if (value === 0) return "0h";
+
+    const absValue = Math.abs(value);
+    const sign = value < 0 ? "-" : "";
+    if (absValue < 1 / 60) {
+        return `${sign}${Math.max(1, Math.round(absValue * 3600))}s`;
+    }
+    if (absValue < 1) {
+        return `${sign}${Math.round(absValue * 60)}m`;
+    }
+    if (absValue < 10) {
+        return `${sign}${absValue.toFixed(1).replace(/\.0$/, "")}h`;
+    }
+    return `${sign}${Math.round(absValue)}h`;
 }
 
 export function ComposedTrendChart({ data, series }: { data: TrendData[], series?: ChartSeries[] }) {
     const t = useTranslations('charts');
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
-    const formatTooltipValue = (value: number | string, name: string) => {
-        if (name === t('server')) return [t('maxActiveStreams', { count: value }), name];
-        return [`${Number(value).toFixed(1)}h`, name];
+    const formatTooltipValue = (value: unknown, name: unknown) => {
+        const label = String(name ?? "");
+        const countValue = typeof value === "number" || typeof value === "string" || value instanceof Date
+            ? value
+            : String(value ?? "");
+        if (label === t('server')) return [t('maxActiveStreams', { count: countValue }), label];
+        return [formatCompactHours(value), label];
     };
 
-    const toggleLegend = (e: { dataKey?: string } | undefined) => {
-        const dataKey = e?.dataKey !== undefined ? String(e.dataKey) : undefined;
+    const toggleLegend = (payload: unknown) => {
+        const dataKey = payload && typeof payload === "object" && "dataKey" in payload
+            ? String((payload as { dataKey?: unknown }).dataKey ?? "")
+            : "";
         if (!dataKey) return;
         setHidden(prev => {
             const next = new Set(prev);
@@ -88,7 +113,7 @@ export function ComposedTrendChart({ data, series }: { data: TrendData[], series
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => `${val}h`}
+                    tickFormatter={formatCompactHours}
                 />
                 <YAxis
                     yAxisId="right"

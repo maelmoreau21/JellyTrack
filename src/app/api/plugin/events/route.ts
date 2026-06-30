@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createHash } from "node:crypto";
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { getGeoLocation } from "@/lib/geoip";
@@ -10,48 +9,51 @@ import { normalizeResolution, clampDuration } from '@/lib/utils';
 import { markMonitorPoll, appendHealthEvent } from "@/lib/systemHealth";
 import { consumePluginEventRateLimit } from "@/lib/pluginEventRateLimit";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
-import { comparePluginApiKey, getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
-import { parsePluginApiKeyCandidate } from "@/lib/pluginServerKey";
+import { isValidDiscordWebhook, safeFetchWebhook } from "@/lib/webhookValidator";
+import { getClientIp } from "@/lib/requestIp";
+import { getCachedPluginIngestSettings } from "@/lib/pluginTelemetrySettings";
 import {
-    buildLegacyStreamRedisKey,
     buildStreamRedisKey,
     extractServerIdentityFromPayload,
     upsertServerRecord,
 } from "@/lib/serverRegistry";
-// Lightweight local types for incoming Jellyfin payloads
-type JellyfinPerson = { type?: string; Type?: string; name?: string; Name?: string };
-type Studio = { name?: string; Name?: string };
 
-const CORS_HEADERS = {
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Api-Key",
-};
-
-const ALLOWED_PLUGIN_EVENTS = new Set([
-    "Heartbeat",
-    "PlaybackStart",
-    "PlaybackProgress",
-    "PlaybackStop",
-    "LibraryChanged",
-]);
-const CURRENT_PLUGIN_EVENT_SCHEMA_VERSION = 2;
-const MIN_SUPPORTED_PLUGIN_EVENT_SCHEMA_VERSION = CURRENT_PLUGIN_EVENT_SCHEMA_VERSION;
-const parsedMaxPluginEventBytes = Number(process.env.PLUGIN_EVENT_MAX_BYTES);
-const MAX_PLUGIN_EVENT_BYTES = Number.isFinite(parsedMaxPluginEventBytes)
-    ? parsedMaxPluginEventBytes
-    : 1024 * 1024;
-
-class PayloadTooLargeError extends Error {
-    constructor() {
-        super("payload_too_large");
-        this.name = "PayloadTooLargeError";
-    }
-}
-
-// When a new start event arrives but a session for the same user+media was
-// closed recently (within this window), prefer reopening that session
-// instead of creating a new row. This prevents short-lived race duplicates.
-const MERGE_WINDOW_MS = Number(process.env.MERGE_WINDOW_MS) || 60 * 60 * 1000; // 1 hour default
+// Helpers & Types from pluginEventHelpers
+import {
+    CORS_HEADERS,
+    ALLOWED_PLUGIN_EVENTS,
+    MAX_PLUGIN_EVENT_BYTES,
+    MERGE_WINDOW_MS,
+    PayloadTooLargeError,
+    corsJson,
+    verifyPluginAuth,
+    extractBearerToken,
+    getPluginEventRateLimitIdentifier,
+    computeProgressPercent,
+    normalizePluginEventName,
+    shouldPreferWallClockForFeishinAudio,
+    parseObservedAtMs,
+    parsePlaybackRate,
+    readPlaybackRate,
+    formatPlaybackRate,
+    buildJumpMetadata,
+    inferJumpFromMetadata,
+    estimatePlaybackRate,
+    resolvePluginSchemaVersion,
+    parseFiniteNumber,
+    cleanIp,
+    upsertCanonicalUser,
+    upsertCanonicalMedia,
+    buildMediaSubtitle,
+    handleMediaDownloadedEvent,
+    acquirePlaybackLock,
+    mergeOpenPlaybacks,
+    finalizePlaybackSession,
+    readRequestBodyWithLimit,
+    CURRENT_PLUGIN_EVENT_SCHEMA_VERSION,
+    MIN_SUPPORTED_PLUGIN_EVENT_SCHEMA_VERSION,
+} from "@/lib/pluginEventHelpers";
+import type { JellyfinPerson, Studio } from "@/lib/pluginEventHelpers";
 
 // Handle CORS preflight
 export async function OPTIONS() {
@@ -68,601 +70,13 @@ export async function GET() {
     });
 }
 
-// ────────────────────────────────────────────────────
-// Plugin Authentication — API key from GlobalSettings
-// ────────────────────────────────────────────────────
-interface PluginAuthResult {
-    authorized: boolean;
-    usedPreviousKey: boolean;
-    autoRotated: boolean;
-    scopeServerId: string | null;
-}
 
-async function verifyPluginAuth(req: Request): Promise<PluginAuthResult> {
-    const { snapshot, autoRotated } = await getPluginKeySnapshot({
-        rotateIfExpired: true,
-        context: {
-            actorUsername: "system:plugin-ingest",
-            ipAddress: getClientIp(req),
-        },
-    });
-
-    const currentKeyHash = snapshot.currentKeyHash?.trim() || null;
-    const previousKeyHash = snapshot.previousKeyHash?.trim() || null;
-
-    const bearerParsed = parsePluginApiKeyCandidate(extractBearerToken(req.headers.get("authorization")));
-    const headerParsed = parsePluginApiKeyCandidate(req.headers.get("x-api-key"));
-
-    if (await comparePluginApiKey(bearerParsed.rawKey, currentKeyHash)) {
-        return {
-            authorized: true,
-            usedPreviousKey: false,
-            autoRotated,
-            scopeServerId: bearerParsed.jellyfinServerId,
-        };
-    }
-
-    if (await comparePluginApiKey(headerParsed.rawKey, currentKeyHash)) {
-        return {
-            authorized: true,
-            usedPreviousKey: false,
-            autoRotated,
-            scopeServerId: headerParsed.jellyfinServerId,
-        };
-    }
-
-    if (!isPreviousPluginKeyValid(snapshot) || !previousKeyHash) {
-        return { authorized: false, usedPreviousKey: false, autoRotated, scopeServerId: null };
-    }
-
-    if (await comparePluginApiKey(bearerParsed.rawKey, previousKeyHash)) {
-        return {
-            authorized: true,
-            usedPreviousKey: true,
-            autoRotated,
-            scopeServerId: bearerParsed.jellyfinServerId,
-        };
-    }
-
-    if (await comparePluginApiKey(headerParsed.rawKey, previousKeyHash)) {
-        return {
-            authorized: true,
-            usedPreviousKey: true,
-            autoRotated,
-            scopeServerId: headerParsed.jellyfinServerId,
-        };
-    }
-
-    return { authorized: false, usedPreviousKey: false, autoRotated, scopeServerId: null };
-}
-
-function extractBearerToken(headerValue: string | null): string | null {
-    if (!headerValue) return null;
-    const match = headerValue.match(/^Bearer\s+(.+)$/i);
-    if (!match) return null;
-    const token = match[1].trim();
-    return token.length > 0 ? token : null;
-}
-
-function getClientIp(req: Request): string {
-    const forwardedFor = req.headers.get("x-forwarded-for");
-    if (forwardedFor) {
-        const first = forwardedFor.split(",")[0]?.trim();
-        if (first) return cleanIp(first);
-    }
-
-    return cleanIp(req.headers.get("x-real-ip") || "unknown");
-}
-
-function getPluginEventRateLimitIdentifier(req: Request): string {
-    const token = extractBearerToken(req.headers.get("authorization")) || req.headers.get("x-api-key") || "no-key";
-    const tokenHash = createHash("sha256").update(token).digest("hex").slice(0, 16);
-    const ip = getClientIp(req);
-    return `${ip}:${tokenHash}`;
-}
-
-function cleanIp(ip: string | null | undefined): string {
-    if (!ip) return "Unknown";
-    let cleaned = ip.trim();
-    if (cleaned.includes("::ffff:")) cleaned = cleaned.split("::ffff:")[1];
-    else if (cleaned.includes(":") && !cleaned.includes("::")) cleaned = cleaned.split(":")[0];
-    return cleaned;
-}
-
-function computeProgressPercent(positionTicks: number, runTimeTicks: number | null): number {
-    if (!runTimeTicks || runTimeTicks <= 0) return 0;
-    return Math.min(100, Math.max(0, Math.round((positionTicks / runTimeTicks) * 100)));
-}
-
-const AUDIO_WALL_CLOCK_TYPES = new Set(["audio", "track", "audiobook"]);
-
-function isFeishinClient(clientName: unknown): boolean {
-    return typeof clientName === "string" && clientName.toLowerCase().includes("feishin");
-}
-
-function isAudioWallClockCandidate(mediaType: unknown): boolean {
-    return typeof mediaType === "string" && AUDIO_WALL_CLOCK_TYPES.has(mediaType.trim().toLowerCase());
-}
-
-function shouldPreferWallClockForFeishinAudio(input: {
-    mediaType: unknown;
-    clientName: unknown;
-    wallDeltaS: number;
-    tickDeltaS: number | null;
-    isPaused?: boolean;
-}): boolean {
-    if (input.isPaused) return false;
-    if (!isAudioWallClockCandidate(input.mediaType) || !isFeishinClient(input.clientName)) return false;
-    if (!Number.isFinite(input.wallDeltaS) || input.wallDeltaS <= 0) return false;
-
-    if (input.tickDeltaS === null || !Number.isFinite(input.tickDeltaS)) return true;
-    if (input.tickDeltaS <= 0) return true;
-
-    const wall = Math.max(1, input.wallDeltaS);
-    return input.tickDeltaS <= Math.max(3, wall * 0.35);
-}
-
-function shouldPromoteDurationToWallClock(input: {
-    mediaType: unknown;
-    clientName: unknown;
-    wallClockS: number;
-    computedDurationS: number;
-}): boolean {
-    if (!isAudioWallClockCandidate(input.mediaType) || !isFeishinClient(input.clientName)) return false;
-    if (!Number.isFinite(input.wallClockS) || input.wallClockS <= 0) return false;
-    if (input.computedDurationS <= 0) return true;
-    if (input.wallClockS < 20) return false;
-    return input.computedDurationS <= input.wallClockS * 0.5;
-}
-
-interface PluginSchemaVersionResult {
-    version: number;
-    raw: unknown;
-    explicit: boolean;
-    valid: boolean;
-}
-
-function parsePositiveInteger(raw: unknown): number | null {
-    if (typeof raw === "number" && Number.isInteger(raw) && raw > 0) {
-        return raw;
-    }
-
-    if (typeof raw === "string") {
-        const value = raw.trim();
-        if (/^\d+$/.test(value)) {
-            const parsed = Number(value);
-            if (Number.isInteger(parsed) && parsed > 0) {
-                return parsed;
-            }
-        }
-    }
-
-    return null;
-}
-
-function parseFiniteNumber(raw: unknown): number | null {
-    if (typeof raw === "number" && Number.isFinite(raw)) {
-        return raw;
-    }
-
-    if (typeof raw === "string") {
-        const value = Number(raw.trim());
-        if (Number.isFinite(value)) {
-            return value;
-        }
-    }
-
-    return null;
-}
-
-function resolvePluginSchemaVersion(payload: Record<string, any>): PluginSchemaVersionResult {
-    const raw =
-        payload.eventSchemaVersion ??
-        payload.EventSchemaVersion ??
-        payload.schemaVersion ??
-        payload.SchemaVersion;
-
-    if (raw === undefined || raw === null) {
-        return { version: -1, raw: null, explicit: false, valid: false };
-    }
-
-    const parsed = parsePositiveInteger(raw);
-    if (parsed === null) {
-        return { version: -1, raw, explicit: true, valid: false };
-    }
-
-    return { version: parsed, raw, explicit: true, valid: true };
-}
-
-function isPrismaUniqueConstraintError(error: unknown): boolean {
-    return Boolean(
-        error &&
-        typeof error === "object" &&
-        "code" in error &&
-        (error as { code?: unknown }).code === "P2002"
-    );
-}
-
-async function upsertCanonicalUser(serverId: string, rawJellyfinUserId: unknown, rawUsername: unknown, bumpLastActive: boolean = false) {
-    const jellyfinUserId = normalizeJellyfinId(rawJellyfinUserId);
-    if (!jellyfinUserId) return null;
- 
-    const compactId = compactJellyfinId(jellyfinUserId);
-    const candidates = Array.from(new Set([jellyfinUserId, compactId]));
-    const username = typeof rawUsername === "string" && rawUsername.trim() && rawUsername !== "Unknown"
-        ? rawUsername.trim()
-        : null;
- 
-    return prisma.$transaction(async (tx) => {
-        const matches = await tx.user.findMany({
-            where: { serverId, jellyfinUserId: { in: candidates } },
-            orderBy: { createdAt: "asc" },
-        });
- 
-        let primary = matches.find((u) => u.jellyfinUserId === jellyfinUserId) || matches[0] || null;
- 
-        if (!primary) {
-            try {
-                primary = await tx.user.create({
-                    data: {
-                        serverId,
-                        jellyfinUserId,
-                        username: username || jellyfinUserId,
-                        lastActive: bumpLastActive ? new Date() : undefined,
-                    },
-                });
-            } catch (error) {
-                if (!isPrismaUniqueConstraintError(error)) {
-                    throw error;
-                }
-
-                primary = await tx.user.findFirst({
-                    where: { serverId, jellyfinUserId: { in: candidates } },
-                    orderBy: { createdAt: "asc" },
-                });
-                if (!primary) {
-                    throw error;
-                }
-
-                const fallbackUpdates: { jellyfinUserId?: string; username?: string; lastActive?: Date } = {};
-                if (primary.jellyfinUserId !== jellyfinUserId) fallbackUpdates.jellyfinUserId = jellyfinUserId;
-                if (username && username !== primary.username) fallbackUpdates.username = username;
-                if (bumpLastActive) fallbackUpdates.lastActive = new Date();
-
-                if (Object.keys(fallbackUpdates).length > 0) {
-                    primary = await tx.user.update({ where: { id: primary.id }, data: fallbackUpdates });
-                }
-            }
-        } else {
-            const updates: { jellyfinUserId?: string; username?: string; lastActive?: Date } = {};
-            if (primary.jellyfinUserId !== jellyfinUserId) updates.jellyfinUserId = jellyfinUserId;
-            if (username && username !== primary.username) updates.username = username;
-            if (bumpLastActive) updates.lastActive = new Date();
-            
-            if (Object.keys(updates).length > 0) {
-                primary = await tx.user.update({ where: { id: primary.id }, data: updates });
-            }
-        }
- 
-        const duplicates = matches.filter((u) => u.id !== primary!.id);
-        for (const duplicate of duplicates) {
-            await tx.playbackHistory.updateMany({ where: { userId: duplicate.id }, data: { userId: primary!.id } });
-            await tx.activeStream.updateMany({ where: { userId: duplicate.id }, data: { userId: primary!.id } });
-            await tx.user.delete({ where: { id: duplicate.id } });
-            console.warn("[Plugin] User merged after ID normalization", {
-                kept: primary!.jellyfinUserId,
-                removed: duplicate.jellyfinUserId,
-            });
-        }
- 
-        return primary;
-    });
-}
-
-async function upsertCanonicalMedia(input: {
-    serverId: string;
-    rawJellyfinMediaId: unknown;
-    title: string;
-    type: string;
-    collectionType?: string | null;
-    genres?: string[];
-    resolution?: string | null;
-    durationMs?: bigint | null;
-    parentId?: string | null;
-    artist?: string | null;
-    libraryName?: string | null;
-    directors?: string[];
-    actors?: string[];
-    studios?: string[];
-}) {
-    const jellyfinMediaId = normalizeJellyfinId(input.rawJellyfinMediaId);
-    if (!jellyfinMediaId) return null;
-
-    const compactId = compactJellyfinId(jellyfinMediaId);
-    const candidates = Array.from(new Set([jellyfinMediaId, compactId]));
-
-    return prisma.$transaction(async (tx) => {
-        const matches = await tx.media.findMany({
-            where: { serverId: input.serverId, jellyfinMediaId: { in: candidates } },
-            orderBy: { createdAt: "asc" },
-        });
-
-        let primary = matches.find((m) => m.jellyfinMediaId === jellyfinMediaId) || matches[0] || null;
-
-        if (!primary) {
-            try {
-                primary = await tx.media.create({
-                    data: {
-                        serverId: input.serverId,
-                        jellyfinMediaId,
-                        title: input.title,
-                        type: input.type,
-                        collectionType: input.collectionType ?? null,
-                        genres: input.genres || [],
-                        resolution: input.resolution ?? null,
-                        durationMs: input.durationMs ?? null,
-                        parentId: input.parentId ?? null,
-                        artist: input.artist ?? null,
-                        libraryName: input.libraryName ?? null,
-                        directors: input.directors || [],
-                        actors: input.actors || [],
-                        studios: input.studios || [],
-                    },
-                });
-            } catch (error) {
-                if (!isPrismaUniqueConstraintError(error)) {
-                    throw error;
-                }
-
-                primary = await tx.media.findFirst({
-                    where: { serverId: input.serverId, jellyfinMediaId: { in: candidates } },
-                    orderBy: { createdAt: "asc" },
-                });
-                if (!primary) {
-                    throw error;
-                }
-
-                primary = await tx.media.update({
-                    where: { id: primary.id },
-                    data: {
-                        jellyfinMediaId,
-                        title: input.title,
-                        type: input.type,
-                        collectionType: input.collectionType ?? undefined,
-                        genres: input.genres ?? undefined,
-                        resolution: input.resolution ?? undefined,
-                        durationMs: input.durationMs ?? undefined,
-                        parentId: input.parentId ?? undefined,
-                        artist: input.artist ?? undefined,
-                        libraryName: input.libraryName ?? undefined,
-                        directors: input.directors ?? undefined,
-                        actors: input.actors ?? undefined,
-                        studios: input.studios ?? undefined,
-                    },
-                });
-            }
-        } else {
-            primary = await tx.media.update({
-                where: { id: primary.id },
-                data: {
-                    jellyfinMediaId,
-                    title: input.title,
-                    type: input.type,
-                    collectionType: input.collectionType ?? undefined,
-                    genres: input.genres ?? undefined,
-                    resolution: input.resolution ?? undefined,
-                    durationMs: input.durationMs ?? undefined,
-                    parentId: input.parentId ?? undefined,
-                    artist: input.artist ?? undefined,
-                    libraryName: input.libraryName ?? undefined,
-                    directors: input.directors ?? undefined,
-                    actors: input.actors ?? undefined,
-                    studios: input.studios ?? undefined,
-                },
-            });
-        }
-
-        const duplicates = matches.filter((m) => m.id !== primary!.id);
-        for (const duplicate of duplicates) {
-            await tx.playbackHistory.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primary!.id } });
-            await tx.activeStream.updateMany({ where: { mediaId: duplicate.id }, data: { mediaId: primary!.id } });
-            await tx.media.delete({ where: { id: duplicate.id } });
-            console.warn("[Plugin] Media merged after ID normalization", {
-                kept: primary!.jellyfinMediaId,
-                removed: duplicate.jellyfinMediaId,
-            });
-        }
-
-        return primary;
-    });
-}
-
-async function buildMediaSubtitle(input: {
-    serverId: string;
-    type: string;
-    seriesName?: string | null;
-    seasonName?: string | null;
-    albumArtist?: string | null;
-    albumName?: string | null;
-    artist?: string | null;
-    parentItemId?: string | null;
-}) {
-    if (input.seriesName) {
-        return `${input.seriesName}${input.seasonName ? ` — ${input.seasonName}` : ""}`;
-    }
-
-    const directArtist = input.albumArtist || input.artist || null;
-    if (input.albumName || directArtist) {
-        if (directArtist && input.albumName) return `${directArtist} — ${input.albumName}`;
-        return directArtist || input.albumName;
-    }
-
-    if (!input.parentItemId) return null;
-
-    const parentCandidates = Array.from(new Set([input.parentItemId, compactJellyfinId(input.parentItemId)]));
-
-    const parent = await prisma.media.findFirst({
-        where: { serverId: input.serverId, jellyfinMediaId: { in: parentCandidates } },
-        select: { title: true, parentId: true, artist: true },
-    });
-
-    if (!parent) return null;
-
-    if (input.type === "Audio" || input.type === "Track") {
-        const artist = directArtist || parent.artist;
-        if (artist) return `${artist} — ${parent.title}`;
-        return parent.title;
-    }
-
-    if (input.type === "Episode" && parent.parentId) {
-        const grandparentCandidates = Array.from(new Set([parent.parentId, compactJellyfinId(parent.parentId)]));
-        const grandparent = await prisma.media.findFirst({
-            where: { serverId: input.serverId, jellyfinMediaId: { in: grandparentCandidates } },
-            select: { title: true },
-        });
-        if (grandparent?.title) return `${grandparent.title} — ${parent.title}`;
-    }
-
-    return parent.title;
-}
-
-// Acquire a short Redis-based lock for a user+media pair to avoid concurrent
-// creation of duplicate PlaybackHistory rows when multiple plugin events
-// arrive in parallel (PlaybackStart vs PlaybackProgress bootstrap).
-async function acquirePlaybackLock(userId: string, mediaId: string, retries = 10, delayMs = 50, ttlSec = 5) {
-    const key = `lock:playback:${userId}:${mediaId}`;
-    for (let i = 0; i < retries; i++) {
-        try {
-            const v = await redis.incr(key);
-            if (v === 1) {
-                await redis.expire(key, ttlSec);
-                return { acquired: true, key };
-            }
-        } catch (err) {
-            // Redis may be unavailable; fail open (don't block main flow).
-            return { acquired: false, key };
-        }
-        // backoff a little to let the other process finish
-        await new Promise((r) => setTimeout(r, delayMs));
-    }
-    return { acquired: false, key };
-}
-
-// Merge multiple concurrently-open PlaybackHistory rows for the same user+media.
-// This is a safety net for rare race conditions where parallel event processing
-// creates more than one open session. We migrate telemetry, merge Redis keys
-// and delete duplicate rows, keeping the earliest started session as primary.
-async function mergeOpenPlaybacks(userId: string, mediaId: string) {
-    const opens = await prisma.playbackHistory.findMany({
-        where: { userId, mediaId, endedAt: null },
-        orderBy: { startedAt: "asc" },
-        select: { id: true, startedAt: true },
-    });
-    if (opens.length <= 1) return;
-
-    const primaryId = opens[0].id;
-    const duplicateIds = opens.slice(1).map((o) => o.id);
-
-    try {
-        await prisma.$transaction(async (tx) => {
-            for (const dupId of duplicateIds) {
-                await tx.telemetryEvent.updateMany({ where: { playbackId: dupId }, data: { playbackId: primaryId } });
-                await tx.playbackHistory.delete({ where: { id: dupId } });
-            }
-        });
-    } catch (err) {
-        console.error("[Plugin] mergeOpenPlaybacks prisma transaction failed:", err);
-        return;
-    }
-
-    // Merge ephemeral Redis keys (durations, last tick/time, start_pos, audio/sub/pause)
-    for (const dupId of duplicateIds) {
-        try {
-            // dur: sum durations
-            const dupDur = await redis.get(`dur:${dupId}`);
-            if (dupDur) {
-                const primDur = await redis.get(`dur:${primaryId}`) || "0";
-                const newDur = Math.max(parseFloat(primDur), parseFloat(dupDur)).toString();
-                await redis.setex(`dur:${primaryId}`, 86400, newDur);
-            }
-
-            // last_time: keep the most recent
-            const dupLastTime = await redis.get(`last_time:${dupId}`);
-            const primLastTime = await redis.get(`last_time:${primaryId}`);
-            if (dupLastTime && (!primLastTime || Number(dupLastTime) > Number(primLastTime))) {
-                await redis.setex(`last_time:${primaryId}`, 86400, dupLastTime);
-            }
-
-            // last_tick: keep the most recent
-            const dupLastTick = await redis.get(`last_tick:${dupId}`);
-            const primLastTick = await redis.get(`last_tick:${primaryId}`);
-            if (dupLastTick && (!primLastTick || Number(dupLastTick) > Number(primLastTick))) {
-                await redis.setex(`last_tick:${primaryId}`, 86400, dupLastTick);
-            }
-
-            // start_pos: prefer primary, else copy dup
-            const dupStart = await redis.get(`start_pos:${dupId}`);
-            const primStart = await redis.get(`start_pos:${primaryId}`);
-            if (dupStart && !primStart) await redis.setex(`start_pos:${primaryId}`, 86400, dupStart);
-
-            // audio/sub/pause keys: prefer existing primary, else copy
-            for (const k of ["audio", "sub", "pause"]) {
-                const dupVal = await redis.get(`${k}:${dupId}`);
-                const primVal = await redis.get(`${k}:${primaryId}`);
-                if (dupVal && !primVal) await redis.setex(`${k}:${primaryId}`, 3600, dupVal);
-            }
-
-            // cleanup dup keys
-            await redis.del(`dur:${dupId}`, `last_time:${dupId}`, `last_tick:${dupId}`, `start_pos:${dupId}`, `audio:${dupId}`, `sub:${dupId}`, `pause:${dupId}`);
-        } catch (err) {
-            console.error("[Plugin] mergeOpenPlaybacks redis merge failed:", err);
-        }
-    }
-}
-
-function corsJson(body: unknown, init?: { status?: number }) {
-    return NextResponse.json(body, { ...init, headers: CORS_HEADERS });
-}
-
-async function readRequestBodyWithLimit(req: Request, maxBytes: number): Promise<string> {
-    const reader = req.body?.getReader();
-    if (!reader) return "";
-
-    const decoder = new TextDecoder();
-    let totalBytes = 0;
-    let raw = "";
-
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            if (!value) continue;
-
-            totalBytes += value.byteLength;
-            if (totalBytes > maxBytes) {
-                try {
-                    await reader.cancel();
-                } catch {
-                    // Ignore cancellation errors while enforcing payload cap.
-                }
-                throw new PayloadTooLargeError();
-            }
-
-            raw += decoder.decode(value, { stream: true });
-        }
-
-        raw += decoder.decode();
-        return raw;
-    } finally {
-        reader.releaseLock();
-    }
-}
 
 // ────────────────────────────────────────────────────
 // POST /api/plugin/events — Receive events from the Jellyfin Plugin
 // ────────────────────────────────────────────────────
 export async function POST(req: Request) {
-    const requesterIp = getClientIp(req);
+    const requesterIp = getClientIp(req, "unknown") || "unknown";
     const contentType = (req.headers.get("content-type") || "").toLowerCase();
     if (!contentType.includes("application/json")) {
         await writeAdminAuditLog({
@@ -810,15 +224,16 @@ export async function POST(req: Request) {
 
     try {
         const eventRaw = payload.event || payload.Event;
-        const event = typeof eventRaw === "string" ? eventRaw.trim() : "";
+        const rawEvent = typeof eventRaw === "string" ? eventRaw.trim() : "";
+        const event = normalizePluginEventName(rawEvent);
         const schemaVersionResult = resolvePluginSchemaVersion(payload);
 
-        if (!event) {
+        if (!rawEvent) {
             return corsJson({ error: "Missing 'event' field." }, { status: 400 });
         }
 
         if (!ALLOWED_PLUGIN_EVENTS.has(event)) {
-            return corsJson({ error: `Unknown event: ${event}` }, { status: 400 });
+            return corsJson({ error: `Unknown event: ${rawEvent}` }, { status: 400 });
         }
 
         if (!schemaVersionResult.valid) {
@@ -919,16 +334,23 @@ export async function POST(req: Request) {
 
         console.log(`[Plugin] Event received: ${event}`);
 
+        // ────── MediaDownloaded ──────
+        if (event === "MediaDownloaded") {
+            return handleMediaDownloadedEvent(payload, sourceServer);
+        }
+
         // ────── Heartbeat ──────
         if (event === "Heartbeat") {
             const metrics = payload.pluginMetrics || payload.PluginMetrics || {};
             const queueDepthRaw = parseFiniteNumber(metrics.queueDepth ?? metrics.QueueDepth);
             const retriesRaw = parseFiniteNumber(metrics.retries ?? metrics.Retries ?? metrics.retryCount ?? metrics.RetryCount);
             const lastHttpCodeRaw = parseFiniteNumber(metrics.lastHttpCode ?? metrics.LastHttpCode ?? metrics.lastHttpStatusCode ?? metrics.LastHttpStatusCode);
+            const coalescedRaw = parseFiniteNumber(metrics.coalescedProgressEvents ?? metrics.CoalescedProgressEvents);
 
             const queueDepth = queueDepthRaw !== null ? Math.max(0, Math.floor(queueDepthRaw)) : null;
             const retries = retriesRaw !== null ? Math.max(0, Math.floor(retriesRaw)) : null;
             const lastHttpCode = lastHttpCodeRaw !== null ? Math.max(0, Math.floor(lastHttpCodeRaw)) : null;
+            const coalescedProgressEvents = coalescedRaw !== null ? Math.max(0, Math.floor(coalescedRaw)) : null;
 
             await prisma.globalSettings.upsert({
                 where: { id: "global" },
@@ -969,9 +391,12 @@ export async function POST(req: Request) {
                 details: {
                     sessions: sessionCount,
                     version: payload.pluginVersion || "unknown",
+                    jellyfinVersion: payload.jellyfinVersion || payload.JellyfinVersion || "unknown",
+                    eventSchemaVersion,
                     queueDepth,
                     retries,
                     lastHttpCode,
+                    coalescedProgressEvents,
                 }
             });
 
@@ -1062,6 +487,7 @@ export async function POST(req: Request) {
 
             // GeoIP
             const geoData = getGeoLocation(ipAddress);
+            let activePlaybackHistoryId: string | null = null;
 
             if (dbUser && dbMedia) {
                 const lock = await acquirePlaybackLock(dbUser.id, dbMedia.id);
@@ -1145,6 +571,7 @@ export async function POST(req: Request) {
 
                         // Initialize Redis tracking keys for accurate cumulative duration
                         if (historyId) {
+                            activePlaybackHistoryId = historyId;
                             await Promise.all([
                                 redis.setex(`last_time:${historyId}`, 86400, now.toString()),
                                 redis.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
@@ -1200,6 +627,7 @@ export async function POST(req: Request) {
                         }
                         
                         if (historyId) {
+                            activePlaybackHistoryId = historyId;
                             await Promise.all([
                                 redis.setex(`last_time:${historyId}`, 86400, now.toString()),
                                 redis.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
@@ -1219,6 +647,7 @@ export async function POST(req: Request) {
             if (sessionId && dbUser && dbMedia) {
                 const runTimeTicks = media.durationMs ? Number(media.durationMs) * 10_000 : null;
                 const playbackPositionTicks = Number(session.positionTicks || 0);
+                const playbackRate = readPlaybackRate(payload, session);
                 const progressPercent = computeProgressPercent(playbackPositionTicks, runTimeTicks);
                 const mediaSubtitle = await buildMediaSubtitle({
                     serverId: sourceServer.id,
@@ -1230,12 +659,13 @@ export async function POST(req: Request) {
                     artist: media.artist || media.Artist || null,
                     parentItemId,
                 });
-                await prisma.activeStream.upsert({
+                await (prisma.activeStream as any).upsert({
                     where: { sessionId_serverId: { sessionId, serverId: sourceServer.id } },
                     update: {
                         serverId: sourceServer.id,
                         userId: dbUser.id,
                         mediaId: dbMedia.id,
+                        playbackId: activePlaybackHistoryId,
                         playMethod,
                         clientName,
                         deviceName,
@@ -1249,6 +679,7 @@ export async function POST(req: Request) {
                         audioLanguage: (session.audioLanguage || session.AudioLanguage || "").split(' ')[0] || null,
                         subtitleLanguage: (session.subtitleLanguage || session.SubtitleLanguage || "").split(' ')[0] || null,
                         subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                        playbackRate,
                         positionTicks: session.positionTicks != null ? BigInt(session.positionTicks) : null,
                     },
                     create: {
@@ -1256,6 +687,7 @@ export async function POST(req: Request) {
                         sessionId,
                         userId: dbUser.id,
                         mediaId: dbMedia.id,
+                        playbackId: activePlaybackHistoryId,
                         playMethod,
                         clientName,
                         deviceName,
@@ -1269,6 +701,7 @@ export async function POST(req: Request) {
                         audioLanguage: (session.audioLanguage || session.AudioLanguage || "").split(' ')[0] || null,
                         subtitleLanguage: (session.subtitleLanguage || session.SubtitleLanguage || "").split(' ')[0] || null,
                         subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                        playbackRate,
                         positionTicks: session.positionTicks != null ? BigInt(session.positionTicks) : null,
                     },
                 });
@@ -1321,6 +754,8 @@ export async function POST(req: Request) {
                     SubtitleLanguage: session.subtitleLanguage || session.SubtitleLanguage || null,
                     subtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
                     SubtitleCodec: session.subtitleCodec || session.SubtitleCodec || null,
+                    playbackRate,
+                    PlaybackRate: playbackRate,
                     subtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
                     SubtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
                 });
@@ -1330,44 +765,53 @@ export async function POST(req: Request) {
             // Discord notification
             try {
                 if (settings?.discordAlertsEnabled && settings?.discordWebhookUrl) {
-                    const condition = settings.discordAlertCondition || "ALL";
-                    let shouldSend = true;
-                    if (condition === "TRANSCODE_ONLY") {
-                        shouldSend = playMethod === "Transcode";
-                    } else if (condition === "NEW_IP_ONLY") {
-                        if (dbUser) {
-                            const pastCount = await prisma.playbackHistory.count({
-                                where: { serverId: sourceServer.id, userId: dbUser.id, ipAddress },
-                            });
-                            shouldSend = pastCount === 0;
+                    // SECURITY: Validate webhook URL to prevent SSRF attacks
+                    if (!isValidDiscordWebhook(settings.discordWebhookUrl)) {
+                        console.warn("[Plugin] Invalid Discord webhook URL: rejecting");
+                    } else {
+                        const condition = settings.discordAlertCondition || "ALL";
+                        let shouldSend = true;
+                        if (condition === "TRANSCODE_ONLY") {
+                            shouldSend = playMethod === "Transcode";
+                        } else if (condition === "NEW_IP_ONLY") {
+                            if (dbUser) {
+                                const pastCount = await prisma.playbackHistory.count({
+                                    where: { serverId: sourceServer.id, userId: dbUser.id, ipAddress },
+                                });
+                                shouldSend = pastCount === 0;
+                            }
                         }
-                    }
-                    if (shouldSend) {
-                        const appUrl = process.env.NEXTAUTH_URL || null;
-                        const posterUrl = appUrl
-                            ? `${appUrl}/api/jellyfin/image?itemId=${jellyfinMediaId}&type=Primary`
-                            : null;
-                        const embed: Record<string, unknown> = {
-                            title: `\uD83C\uDFAC Now Playing: ${title}`,
-                            color: 10181046,
-                            fields: [
-                                { name: "\uD83D\uDC64 User", value: username, inline: true },
-                                { name: "\uD83D\uDCF1 Device", value: `${clientName} (${deviceName})`, inline: true },
-                                { name: "\uD83C\uDF0D Location", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Unknown", inline: true },
-                            ],
-                            timestamp: new Date().toISOString(),
-                        };
-                        if (posterUrl) {
-                            embed.thumbnail = { url: posterUrl };
-                        }
+                        if (shouldSend) {
+                            const appUrl = process.env.NEXTAUTH_URL || null;
+                            const posterUrl = appUrl
+                                ? `${appUrl}/api/jellyfin/image?itemId=${jellyfinMediaId}&type=Primary`
+                                : null;
+                            const embed: Record<string, unknown> = {
+                                title: `🎬 Now Playing: ${title}`,
+                                color: 10181046,
+                                fields: [
+                                    { name: "👤 User", value: username, inline: true },
+                                    { name: "📱 Device", value: `${clientName} (${deviceName})`, inline: true },
+                                    { name: "🌍 Location", value: geoData.country !== "Unknown" ? `${geoData.city}, ${geoData.country}` : "Unknown", inline: true },
+                                ],
+                                timestamp: new Date().toISOString(),
+                            };
+                            if (posterUrl) {
+                                embed.thumbnail = { url: posterUrl };
+                            }
 
-                        await fetch(settings.discordWebhookUrl, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                embeds: [embed],
-                            }),
-                        });
+                            try {
+                                await safeFetchWebhook(settings.discordWebhookUrl, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                        embeds: [embed],
+                                    }),
+                                }, isValidDiscordWebhook);
+                            } catch (fetchErr) {
+                                console.error("[Plugin] Discord webhook fetch failed:", fetchErr instanceof Error ? fetchErr.message : String(fetchErr));
+                            }
+                        }
                     }
                 }
             } catch (err) {
@@ -1384,22 +828,31 @@ export async function POST(req: Request) {
                     if (transcodeCount > settings.maxConcurrentTranscodes) {
                         console.warn(`[Alert] Critical transcode threshold exceeded: ${transcodeCount}/${settings.maxConcurrentTranscodes}`);
                         if (settings.discordAlertsEnabled && settings.discordWebhookUrl) {
-                            await fetch(settings.discordWebhookUrl, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                    embeds: [{
-                                        title: `\u26A0\uFE0F Capacity Alert: Critical Transcode Usage`,
-                                        color: 16711680, // Red
-                                        description: `The number of simultaneous transcodes has reached a critical level.`,
-                                        fields: [
-                                            { name: "Current Transcodes", value: `${transcodeCount}`, inline: true },
-                                            { name: "Configured Threshold", value: `${settings.maxConcurrentTranscodes}`, inline: true },
-                                        ],
-                                        timestamp: new Date().toISOString(),
-                                    }],
-                                }),
-                            });
+                            // SECURITY: Validate webhook URL to prevent SSRF attacks
+                            if (!isValidDiscordWebhook(settings.discordWebhookUrl)) {
+                                console.warn("[Alert] Invalid Discord webhook URL: rejecting");
+                            } else {
+                                try {
+                                    await safeFetchWebhook(settings.discordWebhookUrl, {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            embeds: [{
+                                                title: `⚠️ Capacity Alert: Critical Transcode Usage`,
+                                                color: 16711680, // Red
+                                                description: `The number of simultaneous transcodes has reached a critical level.`,
+                                                fields: [
+                                                    { name: "Current Transcodes", value: `${transcodeCount}`, inline: true },
+                                                    { name: "Configured Threshold", value: `${settings.maxConcurrentTranscodes}`, inline: true },
+                                                ],
+                                                timestamp: new Date().toISOString(),
+                                            }],
+                                        }),
+                                    }, isValidDiscordWebhook);
+                                } catch (fetchErr) {
+                                    console.error("[Alert] Discord webhook fetch failed:", fetchErr instanceof Error ? fetchErr.message : String(fetchErr));
+                                }
+                            }
                         }
                     }
                 }
@@ -1431,125 +884,220 @@ export async function POST(req: Request) {
             }
 
             const userCandidates = jellyfinUserId ? Array.from(new Set([jellyfinUserId, compactJellyfinId(jellyfinUserId)])) : [];
-            const mediaCandidates = jellyfinMediaId ? Array.from(new Set([jellyfinMediaId, compactJellyfinId(jellyfinMediaId)])) : [];
-            const user = userCandidates.length > 0
-                ? await prisma.user.findFirst({ where: { serverId: sourceServer.id, jellyfinUserId: { in: userCandidates } }, orderBy: { createdAt: "asc" } })
-                : null;
-            const media = mediaCandidates.length > 0
-                ? await prisma.media.findFirst({ where: { serverId: sourceServer.id, jellyfinMediaId: { in: mediaCandidates } }, orderBy: { createdAt: "asc" } })
-                : null;
-
-            if (user && media) {
-                // Also update lastActive on stop
-                await prisma.user.update({ where: { id: user.id }, data: { lastActive: new Date() } });
-
-                const lastPlayback = await prisma.playbackHistory.findFirst({
-                    where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: null },
-                    orderBy: { startedAt: "desc" },
+            if (userCandidates.length > 0) {
+                const user = await prisma.user.findFirst({
+                    where: { serverId: sourceServer.id, jellyfinUserId: { in: userCandidates } },
+                    orderBy: { createdAt: "asc" },
+                    select: { id: true },
                 });
-
-                if (lastPlayback) {
-                    const endedAt = new Date();
-                    const wallClockS = Math.floor((endedAt.getTime() - lastPlayback.startedAt.getTime()) / 1000);
-                    
-                    // Fallback to ActiveStream position if payload position is 0
-                    let effectiveTicks = positionTicks;
-                    if (effectiveTicks <= 0 && sessionId) {
-                        const active = await prisma.activeStream.findUnique({ where: { sessionId_serverId: { sessionId, serverId: sourceServer.id } }, select: { positionTicks: true } });
-                        if (active?.positionTicks) effectiveTicks = Number(active.positionTicks);
-                    }
-
-                    const durKey = `dur:${lastPlayback.id}`;
-                    const cumulativeDurRaw = await redis.get(durKey);
-                    let curDur = cumulativeDurRaw !== null ? parseFloat(cumulativeDurRaw) : 0;
-                    
-                    // Final segment accumulation before closing
-                    const lastTimeRaw = await redis.get(`last_time:${lastPlayback.id}`);
-                    const lastTickRaw = await redis.get(`last_tick:${lastPlayback.id}`);
-                    if (lastTimeRaw && lastTickRaw) {
-                        const prevTime = parseInt(lastTimeRaw, 10);
-                        const prevTick = parseInt(lastTickRaw, 10);
-                        const wallDeltaS = (endedAt.getTime() - prevTime) / 1000;
-                        const tickDeltaS = (effectiveTicks - prevTick) / 10_000_000;
-
-                        if (wallDeltaS > 0 && wallDeltaS <= 300) {
-                            if (shouldPreferWallClockForFeishinAudio({
-                                mediaType: media.type,
-                                clientName: lastPlayback.clientName,
-                                wallDeltaS,
-                                tickDeltaS,
-                            })) {
-                                curDur += wallDeltaS;
-                            } else if (tickDeltaS > 0 && tickDeltaS <= 300) {
-                                curDur += tickDeltaS;
-                            } else {
-                                curDur += wallDeltaS;
-                            }
-                        }
-                    }
-
-                    let durationS = Math.round(curDur);
-                    
-                    if (durationS <= 0 && cumulativeDurRaw === null) {
-                        // Total fallback: wall clock if everything else failed
-                        durationS = wallClockS;
-                    }
-
-                    if (shouldPromoteDurationToWallClock({
-                        mediaType: media.type,
-                        clientName: lastPlayback.clientName,
-                        wallClockS,
-                        computedDurationS: durationS,
-                    })) {
-                        durationS = wallClockS;
-                    }
-
-                    durationS = clampDuration(durationS, media.durationMs);
-
-                    await prisma.playbackHistory.update({
-                        where: { id: lastPlayback.id },
-                        data: { endedAt, durationWatched: durationS },
-                    });
-
-                    // Telemetry stop event
-                    const stopPositionMs = positionTicks > 0 ? BigInt(Math.floor(positionTicks / 10_000)) : BigInt(0);
-                    if (stopPositionMs > 0) {
-                        await prisma.telemetryEvent.create({
-                            data: { serverId: sourceServer.id, playbackId: lastPlayback.id, eventType: "stop", positionMs: stopPositionMs },
-                        });
-                    }
-
-                    // Clean Redis telemetry keys
-                    await redis.del(`pause:${lastPlayback.id}`);
-                    await redis.del(`audio:${lastPlayback.id}`);
-                    await redis.del(`sub:${lastPlayback.id}`);
-                    await redis.del(`dur:${lastPlayback.id}`);
-                    await redis.del(`last_time:${lastPlayback.id}`);
-                    await redis.del(`last_tick:${lastPlayback.id}`);
-                    await redis.del(`start_pos:${lastPlayback.id}`);
-
-                    console.log(`[Plugin] PlaybackStop: Session ${lastPlayback.id} closed, duration=${durationS}s`);
-                }
-
-                // Cleanup ActiveStream + Redis
-                if (sessionId) {
-                    const activeStream = await prisma.activeStream.findUnique({ where: { sessionId_serverId: { sessionId, serverId: sourceServer.id } } });
-                    if (activeStream) {
-                        await redis.del(buildStreamRedisKey(sourceServer.id, sessionId));
-                        await redis.del(buildLegacyStreamRedisKey(sessionId));
-                        await prisma.activeStream.delete({ where: { id: activeStream.id } });
-                    }
-                } else {
-                    const activeStream = await prisma.activeStream.findFirst({ where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id } });
-                    if (activeStream) {
-                        await redis.del(buildStreamRedisKey(sourceServer.id, activeStream.sessionId));
-                        await redis.del(buildLegacyStreamRedisKey(activeStream.sessionId));
-                        await prisma.activeStream.delete({ where: { id: activeStream.id } });
-                    }
+                if (user) {
+                    await prisma.user.update({ where: { id: user.id }, data: { lastActive: new Date() } });
                 }
             }
 
+            const result = await finalizePlaybackSession({
+                sourceServerId: sourceServer.id,
+                sessionId,
+                jellyfinUserId,
+                jellyfinMediaId,
+                positionTicks: Number(positionTicks),
+                reason: "stop",
+            });
+
+            if (result.closed) {
+                console.log(`[Plugin] PlaybackStop: Session ${result.playbackId} closed, duration=${result.durationS}s`);
+            }
+
             return corsJson({ success: true, message: "PlaybackStop processed." });
+        }
+
+        // ────── PlaybackStateChanged ──────
+        if (event === "PlaybackStateChanged") {
+            const userPayload = payload.user || payload.User || {};
+            const mediaPayload = payload.media || payload.Media || {};
+            const sessionPayload = payload.session || payload.Session || {};
+            const sessionId = payload.sessionId || payload.SessionId || sessionPayload.sessionId || sessionPayload.SessionId;
+            const changeTypeRaw = payload.changeType || payload.ChangeType || payload.stateChangeType || payload.StateChangeType;
+            const changeType = typeof changeTypeRaw === "string" ? changeTypeRaw.trim().toLowerCase() : "";
+            const positionTicks = Number(payload.positionTicks ?? payload.PositionTicks ?? sessionPayload.positionTicks ?? sessionPayload.PositionTicks ?? 0);
+            const positionMs = positionTicks > 0 ? BigInt(Math.floor(positionTicks / 10_000)) : BigInt(0);
+            const positionMsNumber = Number(positionMs);
+            const explicitPlaybackRate = readPlaybackRate(payload, sessionPayload);
+            const jellyfinUserId = normalizeJellyfinId(userPayload.jellyfinUserId || userPayload.JellyfinUserId || userPayload.id || payload.userId);
+            const jellyfinMediaId = normalizeJellyfinId(mediaPayload.jellyfinMediaId || mediaPayload.JellyfinMediaId || mediaPayload.id || payload.mediaId);
+
+            if (!sessionId) {
+                return corsJson({ error: "Missing sessionId." }, { status: 400 });
+            }
+
+            const activeStream = await (prisma.activeStream as any).findUnique({
+                where: { sessionId_serverId: { sessionId, serverId: sourceServer.id } },
+                select: {
+                    id: true,
+                    sessionId: true,
+                    userId: true,
+                    mediaId: true,
+                    playbackId: true,
+                },
+            });
+
+            let playbackId = activeStream?.playbackId || null;
+            if (!playbackId && jellyfinUserId && jellyfinMediaId) {
+                const userCandidates = Array.from(new Set([jellyfinUserId, compactJellyfinId(jellyfinUserId)]));
+                const mediaCandidates = Array.from(new Set([jellyfinMediaId, compactJellyfinId(jellyfinMediaId)]));
+                const [user, media] = await Promise.all([
+                    prisma.user.findFirst({ where: { serverId: sourceServer.id, jellyfinUserId: { in: userCandidates } }, orderBy: { createdAt: "asc" }, select: { id: true } }),
+                    prisma.media.findFirst({ where: { serverId: sourceServer.id, jellyfinMediaId: { in: mediaCandidates } }, orderBy: { createdAt: "asc" }, select: { id: true } }),
+                ]);
+                if (user && media) {
+                    const playback = await prisma.playbackHistory.findFirst({
+                        where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: null },
+                        orderBy: { startedAt: "desc" },
+                        select: { id: true },
+                    });
+                    playbackId = playback?.id || null;
+                }
+            }
+
+            const validTypes = new Set(["pause", "resume", "seek", "audio_change", "subtitle_change", "speed_change"]);
+            if (!validTypes.has(changeType)) {
+                return corsJson({ error: `Unsupported state change: ${changeType || "unknown"}` }, { status: 400 });
+            }
+
+            if (playbackId) {
+                const rawMetadata = payload.metadata || payload.Metadata || {};
+                const metadataRecord = rawMetadata && typeof rawMetadata === "object" && !Array.isArray(rawMetadata)
+                    ? rawMetadata as Record<string, unknown>
+                    : {};
+                const jumpDetails = changeType === "seek"
+                    ? inferJumpFromMetadata(metadataRecord, positionMsNumber)
+                    : null;
+                const storedEventType = jumpDetails?.direction === "backward" ? "replay" : changeType;
+                const updateData: Record<string, unknown> = {};
+                if (changeType === "pause") updateData.pauseCount = { increment: 1 };
+                if (changeType === "audio_change") updateData.audioChanges = { increment: 1 };
+                if (changeType === "subtitle_change") updateData.subtitleChanges = { increment: 1 };
+                if (changeType === "seek") updateData.seekCount = { increment: 1 };
+                if (storedEventType === "replay") updateData.rewatchCount = { increment: 1 };
+                if (changeType === "speed_change") {
+                    updateData.speedChangeCount = { increment: 1 };
+                    const rate = parsePlaybackRate(metadataRecord.toRate ?? metadataRecord.rate ?? explicitPlaybackRate);
+                    if (rate !== null) updateData.maxPlaybackRate = rate;
+                }
+                if (Object.keys(updateData).length > 0) {
+                    await prisma.playbackHistory.update({ where: { id: playbackId }, data: updateData });
+                }
+
+                const metadata = jumpDetails
+                    ? buildJumpMetadata({
+                        fromMs: jumpDetails.fromMs,
+                        toMs: jumpDetails.toMs,
+                        deltaMs: jumpDetails.deltaMs,
+                        source: typeof metadataRecord.source === "string" ? metadataRecord.source : "state_change",
+                        existing: metadataRecord,
+                    })
+                    : {
+                        ...metadataRecord,
+                        ...(explicitPlaybackRate !== null && changeType === "speed_change"
+                            ? {
+                                toRate: explicitPlaybackRate,
+                                toRateLabel: formatPlaybackRate(explicitPlaybackRate),
+                                source: "jellyfin",
+                                confidence: 1,
+                            }
+                            : {}),
+                    };
+                await prisma.telemetryEvent.create({
+                    data: {
+                        serverId: sourceServer.id,
+                        playbackId,
+                        eventType: storedEventType,
+                        positionMs,
+                        metadata: Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null,
+                    },
+                });
+
+                if (jumpDetails) {
+                    await redis.setex(`jump:${playbackId}`, 30, JSON.stringify({
+                        fromMs: jumpDetails.fromMs,
+                        toMs: jumpDetails.toMs,
+                        at: Date.now(),
+                    }));
+                }
+            }
+
+            const redisKey = buildStreamRedisKey(sourceServer.id, sessionId);
+            const cachedStream = await redis.get(redisKey);
+            if (cachedStream) {
+                try {
+                    const parsed = JSON.parse(cachedStream) as Record<string, unknown>;
+                    if (changeType === "pause" || changeType === "resume") {
+                        const isPaused = changeType === "pause";
+                        parsed.isPaused = isPaused;
+                        parsed.IsPaused = isPaused;
+                    }
+                    if (changeType === "audio_change") {
+                        const audioStreamIndex = payload.audioStreamIndex ?? payload.AudioStreamIndex;
+                        parsed.audioStreamIndex = audioStreamIndex ?? parsed.audioStreamIndex ?? null;
+                        parsed.AudioStreamIndex = audioStreamIndex ?? parsed.AudioStreamIndex ?? null;
+                        parsed.audioLanguage = sessionPayload.audioLanguage || sessionPayload.AudioLanguage || parsed.audioLanguage || null;
+                        parsed.AudioLanguage = sessionPayload.audioLanguage || sessionPayload.AudioLanguage || parsed.AudioLanguage || null;
+                        parsed.audioCodec = sessionPayload.audioCodec || sessionPayload.AudioCodec || parsed.audioCodec || null;
+                        parsed.AudioCodec = sessionPayload.audioCodec || sessionPayload.AudioCodec || parsed.AudioCodec || null;
+                    }
+                    if (changeType === "subtitle_change") {
+                        const subtitleStreamIndex = payload.subtitleStreamIndex ?? payload.SubtitleStreamIndex;
+                        parsed.subtitleStreamIndex = subtitleStreamIndex ?? parsed.subtitleStreamIndex ?? null;
+                        parsed.SubtitleStreamIndex = subtitleStreamIndex ?? parsed.SubtitleStreamIndex ?? null;
+                        parsed.subtitleLanguage = sessionPayload.subtitleLanguage || sessionPayload.SubtitleLanguage || parsed.subtitleLanguage || null;
+                        parsed.SubtitleLanguage = sessionPayload.subtitleLanguage || sessionPayload.SubtitleLanguage || parsed.SubtitleLanguage || null;
+                        parsed.subtitleCodec = sessionPayload.subtitleCodec || sessionPayload.SubtitleCodec || parsed.subtitleCodec || null;
+                        parsed.SubtitleCodec = sessionPayload.subtitleCodec || sessionPayload.SubtitleCodec || parsed.SubtitleCodec || null;
+                    }
+                    if (explicitPlaybackRate !== null) {
+                        parsed.playbackRate = explicitPlaybackRate;
+                        parsed.PlaybackRate = explicitPlaybackRate;
+                    }
+                    if (positionTicks > 0) {
+                        parsed.positionTicks = positionTicks;
+                        parsed.playbackPositionTicks = positionTicks;
+                        parsed.PlaybackPositionTicks = positionTicks;
+                    }
+                    await redis.setex(redisKey, 60, JSON.stringify(parsed));
+                } catch {
+                    // Ignore malformed legacy live-stream cache entries.
+                }
+            }
+
+            return corsJson({ success: true, message: "PlaybackStateChanged processed." });
+        }
+
+        // ────── SessionEnded ──────
+        if (event === "SessionEnded") {
+            const userPayload = payload.user || payload.User || {};
+            const sessionPayload = payload.session || payload.Session || {};
+            const sessionId = payload.sessionId || payload.SessionId || sessionPayload.sessionId || sessionPayload.SessionId;
+            const jellyfinUserId = normalizeJellyfinId(userPayload.jellyfinUserId || userPayload.JellyfinUserId || userPayload.id || payload.userId);
+            const positionTicks = Number(sessionPayload.positionTicks ?? sessionPayload.PositionTicks ?? payload.positionTicks ?? payload.PositionTicks ?? 0);
+
+            if (!sessionId) {
+                return corsJson({ error: "Missing sessionId." }, { status: 400 });
+            }
+
+            const result = await finalizePlaybackSession({
+                sourceServerId: sourceServer.id,
+                sessionId,
+                jellyfinUserId,
+                positionTicks,
+                reason: "session_end",
+                metadata: {
+                    source: "session_ended",
+                    clientName: sessionPayload.clientName || sessionPayload.ClientName || null,
+                    deviceName: sessionPayload.deviceName || sessionPayload.DeviceName || null,
+                },
+            });
+
+            return corsJson({ success: true, message: "SessionEnded processed.", result });
         }
 
         // ────── PlaybackProgress ──────
@@ -1585,6 +1133,7 @@ export async function POST(req: Request) {
             const subtitleCodec = sessionPayload.subtitleCodec || sessionPayload.SubtitleCodec || null;
             const transcodeFps = sessionPayload.transcodeFps ?? sessionPayload.TranscodeFps ?? null;
             const bitrate = sessionPayload.bitrate ?? sessionPayload.Bitrate ?? null;
+            const explicitPlaybackRate = readPlaybackRate(payload, sessionPayload);
             const seriesName = mediaPayload.seriesName || mediaPayload.SeriesName || null;
             const seasonName = mediaPayload.seasonName || mediaPayload.SeasonName || null;
             const albumArtist = mediaPayload.albumArtist || mediaPayload.AlbumArtist || null;
@@ -1607,9 +1156,12 @@ export async function POST(req: Request) {
                 select: { title: true, type: true, collectionType: true, durationMs: true, artist: true, libraryName: true, parentId: true },
             });
             const existingStream = sessionId
-                ? await prisma.activeStream.findUnique({
+                ? await (prisma.activeStream as any).findUnique({
                     where: { sessionId_serverId: { sessionId, serverId: sourceServer.id } },
                     select: {
+                        playbackId: true,
+                        userId: true,
+                        mediaId: true,
                         clientName: true,
                         deviceName: true,
                         playMethod: true,
@@ -1621,6 +1173,21 @@ export async function POST(req: Request) {
                         subtitleCodec: true,
                         transcodeFps: true,
                         bitrate: true,
+                        playbackRate: true,
+                        user: { select: { id: true, username: true, jellyfinUserId: true } },
+                        media: {
+                            select: {
+                                id: true,
+                                title: true,
+                                type: true,
+                                collectionType: true,
+                                durationMs: true,
+                                artist: true,
+                                libraryName: true,
+                                parentId: true,
+                                size: true,
+                            },
+                        },
                     },
                 })
                 : null;
@@ -1642,12 +1209,10 @@ export async function POST(req: Request) {
             const resolvedSubtitleCodec = subtitleCodec || existingStream?.subtitleCodec || null;
             const resolvedTranscodeFps = transcodeFps ?? existingStream?.transcodeFps ?? null;
             const resolvedBitrate = bitrate ?? existingStream?.bitrate ?? null;
+            const resolvedPlaybackRate = explicitPlaybackRate ?? parsePlaybackRate(existingStream?.playbackRate);
 
-            const settings = await prisma.globalSettings.findUnique({
-                where: { id: "global" },
-                select: { excludedLibraries: true },
-            });
-            if (isLibraryExcluded({ serverId: sourceServer.id, libraryName: resolvedLibraryName, collectionType: resolvedCollectionType, type: resolvedType }, settings?.excludedLibraries || [])) {
+            const ingestSettings = await getCachedPluginIngestSettings();
+            if (isLibraryExcluded({ serverId: sourceServer.id, libraryName: resolvedLibraryName, collectionType: resolvedCollectionType, type: resolvedType }, ingestSettings.excludedLibraries)) {
                 console.log("[Plugin] PlaybackProgress ignored due excluded library", {
                     serverId: sourceServer.id,
                     jellyfinUserId,
@@ -1660,20 +1225,36 @@ export async function POST(req: Request) {
                 return corsJson({ success: true, ignored: true, message: "Library excluded." });
             }
 
-            const user = await upsertCanonicalUser(sourceServer.id, jellyfinUserId, username, true);
-            const media = await upsertCanonicalMedia({
-                serverId: sourceServer.id,
-                rawJellyfinMediaId: jellyfinMediaId,
-                title: resolvedTitle,
-                type: resolvedType,
-                collectionType: resolvedCollectionType,
-                genres: mediaPayload.genres || mediaPayload.Genres || [],
-                resolution: (mediaPayload.resolution || mediaPayload.Resolution) ? normalizeResolution(mediaPayload.resolution || mediaPayload.Resolution) : null,
-                durationMs: Number.isFinite(mediaDurationMs) && mediaDurationMs > 0 ? BigInt(mediaDurationMs) : null,
-                parentId: parentItemId || existingMedia?.parentId || null,
-                artist: mediaPayload.artist || mediaPayload.Artist || albumArtist || existingMedia?.artist || null,
-                libraryName: resolvedLibraryName,
-            });
+            let user: any = null;
+            let media: any = null;
+            let activePlayback: any = null;
+
+            if (existingStream?.playbackId && existingStream.user && existingStream.media) {
+                user = existingStream.user;
+                media = existingStream.media;
+                activePlayback = await prisma.playbackHistory.findUnique({
+                    where: { id: existingStream.playbackId },
+                    include: { media: true },
+                });
+                if (user?.id) {
+                    await prisma.user.update({ where: { id: user.id }, data: { lastActive: new Date() } });
+                }
+            } else {
+                user = await upsertCanonicalUser(sourceServer.id, jellyfinUserId, username, true);
+                media = await upsertCanonicalMedia({
+                    serverId: sourceServer.id,
+                    rawJellyfinMediaId: jellyfinMediaId,
+                    title: resolvedTitle,
+                    type: resolvedType,
+                    collectionType: resolvedCollectionType,
+                    genres: mediaPayload.genres || mediaPayload.Genres || [],
+                    resolution: (mediaPayload.resolution || mediaPayload.Resolution) ? normalizeResolution(mediaPayload.resolution || mediaPayload.Resolution) : null,
+                    durationMs: Number.isFinite(mediaDurationMs) && mediaDurationMs > 0 ? BigInt(mediaDurationMs) : null,
+                    parentId: parentItemId || existingMedia?.parentId || null,
+                    artist: mediaPayload.artist || mediaPayload.Artist || albumArtist || existingMedia?.artist || null,
+                    libraryName: resolvedLibraryName,
+                });
+            }
 
             // Record monitor activity for Log Health
             await markMonitorPoll({ active: true, sessionCount: 1, consecutiveErrors: 0 });
@@ -1688,13 +1269,14 @@ export async function POST(req: Request) {
 
             const geoData = getGeoLocation(resolvedIpAddress);
 
-            const lastPlayback = await prisma.playbackHistory.findFirst({
-                where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: null },
-                orderBy: { startedAt: "desc" },
-            });
+            if (!activePlayback || activePlayback.endedAt) {
+                activePlayback = await prisma.playbackHistory.findFirst({
+                    where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: null },
+                    orderBy: { startedAt: "desc" },
+                });
+            }
 
-            let activePlayback = lastPlayback;
-            if (!lastPlayback) {
+            if (!activePlayback) {
                 const lock = await acquirePlaybackLock(user.id, media.id);
                 try {
                     if (lock.acquired) {
@@ -1707,7 +1289,7 @@ export async function POST(req: Request) {
                             activePlayback = recheck;
                         } else {
                             // Try to reopen recent closed session before creating a new one
-                            const mergeWindow = new Date(Date.now() - MERGE_WINDOW_MS);
+                            const mergeWindow = new Date(Date.now() - ingestSettings.telemetry.mergeWindowSeconds * 1000);
                             const recentClosed = await prisma.playbackHistory.findFirst({
                                 where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: { not: null, gte: mergeWindow } },
                                 orderBy: { endedAt: "desc" },
@@ -1766,7 +1348,7 @@ export async function POST(req: Request) {
                             }
                         }
                         if (!activePlayback) {
-                            const mergeWindow = new Date(Date.now() - MERGE_WINDOW_MS);
+                            const mergeWindow = new Date(Date.now() - ingestSettings.telemetry.mergeWindowSeconds * 1000);
                             const recentClosed = await prisma.playbackHistory.findFirst({
                                 where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: { not: null, gte: mergeWindow } },
                                 orderBy: { endedAt: "desc" },
@@ -1835,7 +1417,8 @@ export async function POST(req: Request) {
             let curDur = parseFloat(prevDurRaw || "0");
             const prevTime = prevTimeRaw ? parseInt(prevTimeRaw, 10) : null;
             const prevTick = prevTickRaw ? parseInt(prevTickRaw, 10) : null;
-            const now = Date.now();
+            const observedAtMs = parseObservedAtMs(payload);
+            const now = observedAtMs ?? Date.now();
 
             if (!isPaused && prevTime !== null && prevTick !== null) {
                 const wallDeltaS = (now - prevTime) / 1000;
@@ -1878,21 +1461,116 @@ export async function POST(req: Request) {
             const currentPositionMs = Number(positionMs);
             const wallDeltaMs = prevTime !== null ? Math.max(0, now - prevTime) : null;
             const seekDeltaMs = prevPositionMs !== null ? currentPositionMs - prevPositionMs : 0;
-            const seekThresholdMs = 20_000;
+            const seekThresholdMs = ingestSettings.telemetry.seekThresholdSeconds * 1000;
             const expectedAdvanceBudgetMs = wallDeltaMs !== null ? Math.max(15_000, wallDeltaMs + 12_000) : 45_000;
             const appearsSeek = prevPositionMs !== null
                 && Number.isFinite(currentPositionMs)
                 && Math.abs(seekDeltaMs) >= seekThresholdMs
                 && Math.abs(seekDeltaMs) > expectedAdvanceBudgetMs;
             if (appearsSeek && positionMs > 0 && (!hasPausedState || !isPaused)) {
-                const metadata = {
+                const metadata = buildJumpMetadata({
                     fromMs: prevPositionMs,
                     toMs: currentPositionMs,
                     deltaMs: seekDeltaMs,
-                    direction: seekDeltaMs >= 0 ? "forward" : "backward",
                     source: "progress_delta",
-                };
-                telemetryEvents.push({ eventType: "seek", positionMs, metadata: JSON.stringify(metadata) });
+                });
+                const previousJumpRaw = await redis.get(`jump:${activePlayback.id}`);
+                let duplicateJump = false;
+                if (previousJumpRaw) {
+                    try {
+                        const previousJump = JSON.parse(previousJumpRaw) as Record<string, unknown>;
+                        const previousFromMs = parseFiniteNumber(previousJump.fromMs);
+                        const previousToMs = parseFiniteNumber(previousJump.toMs);
+                        if (previousFromMs !== null && previousToMs !== null) {
+                            duplicateJump = Math.abs(previousFromMs - prevPositionMs) <= 1_500
+                                && Math.abs(previousToMs - currentPositionMs) <= 1_500;
+                        }
+                    } catch {
+                        duplicateJump = false;
+                    }
+                }
+
+                if (!duplicateJump) {
+                    updates.seekCount = { increment: 1 };
+                    if (seekDeltaMs < 0) {
+                        updates.rewatchCount = { increment: 1 };
+                    }
+                    telemetryEvents.push({
+                        eventType: seekDeltaMs < 0 ? "replay" : "seek",
+                        positionMs,
+                        metadata: JSON.stringify(metadata),
+                    });
+                    await redis.setex(`jump:${activePlayback.id}`, 30, JSON.stringify({
+                        fromMs: prevPositionMs,
+                        toMs: currentPositionMs,
+                        at: now,
+                    }));
+                }
+            }
+
+            const rateObservation = estimatePlaybackRate({
+                explicitRate: explicitPlaybackRate,
+                isPaused,
+                appearsSeek,
+                prevTime,
+                prevTick,
+                now,
+                positionTicks,
+            });
+            if (rateObservation && positionMs > 0) {
+                const currentMaxRate = parsePlaybackRate((activePlayback as Record<string, unknown>).maxPlaybackRate);
+                if (currentMaxRate === null || rateObservation.bucket > currentMaxRate) {
+                    updates.maxPlaybackRate = rateObservation.bucket;
+                }
+
+                const rateKey = `rate:${activePlayback.id}`;
+                const previousRateRaw = await redis.get(rateKey);
+                let previousRate: { bucket?: number; rate?: number; at?: number } | null = null;
+                if (previousRateRaw) {
+                    try {
+                        previousRate = JSON.parse(previousRateRaw) as { bucket?: number; rate?: number; at?: number };
+                    } catch {
+                        previousRate = null;
+                    }
+                }
+
+                const previousBucket = parsePlaybackRate(previousRate?.bucket);
+                const previousRateValue = parsePlaybackRate(previousRate?.rate);
+                const previousAt = typeof previousRate?.at === "number" && Number.isFinite(previousRate.at)
+                    ? previousRate.at
+                    : null;
+                const bucketChanged = previousBucket === null || Math.abs(previousBucket - rateObservation.bucket) > 0.001;
+                const outsideCooldown = previousAt === null || now - previousAt >= 15_000;
+
+                if (bucketChanged && outsideCooldown) {
+                    if (previousBucket !== null) {
+                        updates.speedChangeCount = { increment: 1 };
+                    }
+                    telemetryEvents.push({
+                        eventType: "speed_change",
+                        positionMs,
+                        metadata: JSON.stringify({
+                            fromRate: previousRateValue,
+                            fromRateLabel: formatPlaybackRate(previousRateValue),
+                            toRate: rateObservation.bucket,
+                            toRateRaw: Number(rateObservation.rate.toFixed(3)),
+                            toRateLabel: formatPlaybackRate(rateObservation.bucket),
+                            source: rateObservation.source,
+                            confidence: rateObservation.confidence,
+                            wallDeltaMs: rateObservation.wallDeltaMs ?? null,
+                            positionDeltaMs: rateObservation.positionDeltaMs ?? null,
+                            initial: previousBucket === null,
+                        }),
+                    });
+                }
+
+                await redis.setex(rateKey, 86400, JSON.stringify({
+                    rate: rateObservation.rate,
+                    bucket: rateObservation.bucket,
+                    source: rateObservation.source,
+                    confidence: rateObservation.confidence,
+                    at: now,
+                }));
             }
 
             // Pause tracking
@@ -1996,12 +1674,13 @@ export async function POST(req: Request) {
 
             // Update ActiveStream position + Redis
             if (sessionId) {
-                await prisma.activeStream.upsert({
+                await (prisma.activeStream as any).upsert({
                     where: { sessionId_serverId: { sessionId, serverId: sourceServer.id } },
                     update: {
                         serverId: sourceServer.id,
                         userId: user.id,
                         mediaId: media.id,
+                        playbackId: activePlayback.id,
                         playMethod: resolvedPlayMethod,
                         clientName: resolvedClientName,
                         deviceName: resolvedDeviceName,
@@ -2015,6 +1694,7 @@ export async function POST(req: Request) {
                         audioLanguage: resolvedAudioLanguage,
                         subtitleLanguage: resolvedSubtitleLanguage,
                         subtitleCodec: resolvedSubtitleCodec,
+                        playbackRate: resolvedPlaybackRate,
                         positionTicks: positionTicks > 0 ? BigInt(positionTicks) : null,
                     },
                     create: {
@@ -2022,6 +1702,7 @@ export async function POST(req: Request) {
                         sessionId,
                         userId: user.id,
                         mediaId: media.id,
+                        playbackId: activePlayback.id,
                         playMethod: resolvedPlayMethod,
                         clientName: resolvedClientName,
                         deviceName: resolvedDeviceName,
@@ -2035,6 +1716,7 @@ export async function POST(req: Request) {
                         audioLanguage: resolvedAudioLanguage,
                         subtitleLanguage: resolvedSubtitleLanguage,
                         subtitleCodec: resolvedSubtitleCodec,
+                        playbackRate: resolvedPlaybackRate,
                         positionTicks: positionTicks > 0 ? BigInt(positionTicks) : null,
                     },
                 });
@@ -2110,6 +1792,8 @@ export async function POST(req: Request) {
                     SubtitleLanguage: resolvedSubtitleLanguage,
                     subtitleCodec: resolvedSubtitleCodec,
                     SubtitleCodec: resolvedSubtitleCodec,
+                    playbackRate: resolvedPlaybackRate,
+                    PlaybackRate: resolvedPlaybackRate,
                     subtitleStreamIndex: subtitleStreamIndex ?? parsed?.subtitleStreamIndex ?? parsed?.SubtitleStreamIndex ?? null,
                     SubtitleStreamIndex: subtitleStreamIndex ?? parsed?.SubtitleStreamIndex ?? parsed?.subtitleStreamIndex ?? null,
                 };

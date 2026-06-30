@@ -88,7 +88,7 @@ export function AttendanceHeatmap({ data }: AttendanceHeatmapProps) {
                                             </TooltipTrigger>
                                             <TooltipContent side="top" className="text-[10px] py-1 px-2">
                                                 <div className="font-bold">{dayNames[dayIdx]} — {hourIdx}h</div>
-                                                <div className="text-zinc-400">{val} {t('sessions')}</div>
+                                                <div className="text-muted-foreground">{val} {t('sessions')}</div>
                                                 {val > 0 && <div className="text-[9px] text-indigo-400 mt-1 font-medium italic">{t('clickToViewDetail')}</div>}
                                             </TooltipContent>
                                         </Tooltip>

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { unstable_cache } from "next/cache";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { StandardAreaChart, StandardBarChart, StandardPieChart } from "@/components/charts/StandardMetricsCharts";
+import { StandardBarChart } from "@/components/charts/StandardMetricsCharts";
 import { TranscodeHourlyChart } from "@/components/charts/TranscodeHourlyChart";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
@@ -168,7 +168,7 @@ const getNetworkData = unstable_cache(
 
         // Client transcode ratio (top 8)
         const clientTranscodeData = Array.from(clientTranscodeMap.entries())
-            .filter(([_, v]) => v.total >= 2)
+            .filter(([, v]) => v.total >= 2)
             .map(([name, v]) => ({
                 name: name.length > 15 ? name.substring(0, 15) + "…" : name,
                 fullName: name,
@@ -223,39 +223,39 @@ export async function NetworkAnalysis({
         <div className="space-y-6">
             {/* Stats row */}
             <div className="grid gap-4 md:grid-cols-4">
-                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border backdrop-blur-sm">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">{t('totalSessions')}</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">{t('totalSessions')}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{data.stats.totalSessions}</div>
+                        <div className="text-2xl font-bold metric-glow-cyan">{data.stats.totalSessions}</div>
                         <p className="text-xs text-emerald-500 font-medium mt-1">{data.stats.directPlaySessions} DirectPlay</p>
                     </CardContent>
                 </Card>
-                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border backdrop-blur-sm">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">{t('transcodeRate')}</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">{t('transcodeRate')}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-amber-500">{data.stats.transcodePercent}%</div>
+                        <div className="text-2xl font-bold metric-glow-amber">{data.stats.transcodePercent}%</div>
                         <p className="text-xs text-muted-foreground mt-1">{data.stats.transcodeSessions} {t('transcodedSessions')}</p>
                     </CardContent>
                 </Card>
-                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border backdrop-blur-sm">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">DirectStream</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">DirectStream</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-blue-500">{data.stats.directStreamSessions}</div>
+                        <div className="text-2xl font-bold metric-glow-blue">{data.stats.directStreamSessions}</div>
                         <p className="text-xs text-muted-foreground mt-1">{t('remuxed')}</p>
                     </CardContent>
                 </Card>
-                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border backdrop-blur-sm">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">{t('transcodeDuration')}</CardTitle>
+                        <CardTitle className="text-sm font-medium text-muted-foreground">{t('transcodeDuration')}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-500">{Math.round(data.stats.totalTranscodeDuration / 3600)}h</div>
+                        <div className="text-2xl font-bold metric-glow-rose">{Math.round(data.stats.totalTranscodeDuration / 3600)}h</div>
                         <p className="text-xs text-muted-foreground mt-1">{t('transcodeDurationDesc')}</p>
                     </CardContent>
                 </Card>
@@ -263,7 +263,7 @@ export async function NetworkAnalysis({
 
             {/* Charts Row */}
             <div className="grid gap-4 md:grid-cols-2">
-                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle>{t('directVsTranscodeByHour')}</CardTitle>
                         <CardDescription>{t('directVsTranscodeByHourDesc')}</CardDescription>
@@ -273,7 +273,7 @@ export async function NetworkAnalysis({
                     </CardContent>
                 </Card>
 
-                <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle>{t('transcodeByClient')}</CardTitle>
                         <CardDescription>{t('transcodeByClientDesc')}</CardDescription>
@@ -282,7 +282,7 @@ export async function NetworkAnalysis({
                         <StandardBarChart
                             data={data.clientTranscodeData}
                             dataKey="transcodePercent"
-                            fill="#f97316"
+                            fill="var(--chart-soft-6)"
                             name="% Transcoded"
                             horizontal
                             xAxisKey="name"
@@ -292,7 +292,7 @@ export async function NetworkAnalysis({
             </div>
 
             {/* Coupable Table */}
-            <Card className="soft-light-card dark:bg-zinc-900/50 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface-soft border-border backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         {t('mostTranscoded')}
@@ -317,7 +317,7 @@ export async function NetworkAnalysis({
                                 </TableHeader>
                                 <TableBody>
                                     {data.coupableTable.map((row, i) => (
-                                        <TableRow key={i} className="even:bg-zinc-100/50 dark:even:bg-zinc-900/30 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 border-zinc-200/50 dark:border-zinc-800/50">
+                                        <TableRow key={i} className="even:bg-zinc-100/50 dark:even:bg-slate-900/35 hover:bg-zinc-100 dark:hover:bg-slate-800/55 border-zinc-200/50 dark:border-white/10">
                                             <TableCell className="font-medium" title={row.fullTitle}>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-zinc-500 text-xs w-4">{i + 1}.</span>
@@ -328,12 +328,12 @@ export async function NetworkAnalysis({
                                                 <Badge variant="outline" className={`text-xs ${
                                                     row.resolution === "4K" ? 'border-amber-500/30 text-amber-400' :
                                                     row.resolution === "1080p" ? 'border-blue-500/30 text-blue-400' :
-                                                    'border-zinc-600 text-zinc-400'
+                                                    'border-zinc-600 text-muted-foreground'
                                                 }`}>
                                                     {row.resolution}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-center font-semibold text-amber-500">{row.count}</TableCell>
+                                            <TableCell className="text-center font-semibold metric-glow-amber">{row.count}</TableCell>
                                             <TableCell className="text-center text-sm">{row.durationMin} min</TableCell>
                                             <TableCell>
                                                 <div className="flex flex-wrap gap-1">
@@ -343,7 +343,7 @@ export async function NetworkAnalysis({
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <span className="text-sm font-medium text-zinc-300" title={row.topClient}>{row.topClient}</span>
+                                                <span className="text-sm font-medium text-zinc-700 dark:text-slate-300" title={row.topClient}>{row.topClient}</span>
                                             </TableCell>
                                         </TableRow>
                                     ))}

@@ -10,101 +10,139 @@
 </p>
 
 <p align="center">
-  <strong>Observabilité et analytics pour Jellyfin : sessions en direct, historique enrichi et métriques de lecture.</strong>
+  <strong>Observability and analytics for Jellyfin: live sessions, enriched history, downloads, and fine playback telemetry.</strong>
 </p>
+
+## Preview
+
+### 📊 Main Dashboard
+![JellyTrack Dashboard](public/screenshots/dashboard.png)
+
+### 📈 Detailed Analytics
+![JellyTrack Analytics](public/screenshots/analytics.png)
+
+### 👥 Users & Activity
+![JellyTrack Users](public/screenshots/users.png)
+
+### 📜 Playback History & Telemetry
+![JellyTrack Logs](public/screenshots/logs.png)
+
+### ⚙️ Settings
+![JellyTrack Settings](public/screenshots/settings.png)
 
 ---
 
 > [!CAUTION]
-> ### 🚨 LE PLUGIN JELLYFIN EST OBLIGATOIRE
-> JellyTrack **ne peut pas** collecter de données sans son plugin compagnon installé sur votre serveur Jellyfin.
-> 
-> [👉 Cliquez ici pour configurer le plugin](https://github.com/maelmoreau21/JellyTrack.Plugin)
+> JellyTrack requires the companion Jellyfin plugin. Without it, JellyTrack cannot collect playback, download, seek, language, or telemetry events.
+>
+> Plugin repository: [Jellyfin.Plugin.JellyTrack](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
 
----
+## What JellyTrack Tracks
 
-## 🚀 Installation (Méthode Recommandée : Docker)
+- Live sessions: user, device, client, direct play/transcode, bitrate, IP and GeoIP.
+- Playback history: completed, partial, and abandoned media using cumulative user + media history.
+- Downloads: a downloaded media item is counted as one complete view and full watched duration.
+- Fine telemetry: pause/resume, seek ranges, replay ranges, playback speed changes, audio language changes, and subtitle language changes.
+- Behavior insights: skipped passages are shown as `from -> to` ranges, and language periods are derived from initial language plus later changes.
 
-L'utilisation de **Docker Compose** est le moyen le plus simple et recommandé pour déployer JellyTrack.
+## Docker Installation
 
-### 1. Déploiement
+The canonical install mode is Docker Compose.
 
-Créez un fichier `docker-compose.yml` :
-
-```yaml
-services:
-  jellytrack:
-    image: ghcr.io/maelmoreau21/jellytrack:latest
-    container_name: jellytrack
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://jellytrack:CHANGE_ME_DB_PASS@db:5432/jellytrack
-      - REDIS_URL=redis://redis:6379
-      - JELLYFIN_URL=http://your-jellyfin-ip:8096
-      - ADMIN_PASSWORD=CHANGE_ME_ADMIN_PASS
-      - NEXTAUTH_SECRET=CHANGE_ME_AUTH_SECRET
-      - NEXTAUTH_URL=http://localhost:3000
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-
-  db:
-    image: postgres:15-alpine
-    container_name: jellytrack-db
-    environment:
-      - POSTGRES_USER=jellytrack
-      - POSTGRES_PASSWORD=CHANGE_ME_DB_PASS
-      - POSTGRES_DB=jellytrack
-    volumes:
-      - jellytrack-db-data:/var/lib/postgresql/data
-    restart: unless-stopped
-
-  redis:
-    image: redis:alpine
-    container_name: jellytrack-redis
-    restart: unless-stopped
-
-volumes:
-  jellytrack-db-data:
-```
-
-### 2. Lancement
+1. Copy the example environment:
 
 ```bash
+cp .env.example .env
+```
+
+2. Edit `.env` and replace every `CHANGE_ME_*` value.
+
+3. Start or update JellyTrack:
+
+```bash
+docker compose pull
 docker compose up -d
 ```
 
-### 3. Accès
+To test local code before publishing an image:
 
-Rendez-vous sur `http://localhost:3000` et connectez-vous avec votre `ADMIN_PASSWORD`.
+```bash
+docker build -t ghcr.io/maelmoreau21/jellytrack:latest .
+docker compose up -d
+```
 
----
+JellyTrack runs on `http://localhost:3000` by default.
 
-## 🌟 Fonctionnalités
+## Runtime Notes
 
-- **Dashboard Live** : Visualisez qui regarde quoi en temps réel (Direct Play vs Transcode, débit, etc.).
-- **Historique Enrichi** : Détails techniques complets (codecs, sous-titres, langues).
-- **Statistiques & Tendances** : Tops utilisateurs, médias les plus vus, graphiques d'activité.
-- **Journaux Système & Audit** : Suivi de la santé de la synchronisation.
-- **Sécurité** : Authentification via Jellyfin, hachage des clés API, support multi-serveur.
+- Docker uses Node 24.
+- Prisma 7 stores its CLI datasource URL in `prisma.config.ts`.
+- Runtime database access uses `@prisma/adapter-pg` with `DATABASE_URL`.
+- `npx prisma generate` must be run after schema changes.
+- Migrations live in `prisma/migrations`.
 
----
+## Jellyfin Plugin Configuration
 
-## 🔌 Configuration du Plugin
+1. In Jellyfin, open Dashboard > Plugins > Repositories.
+2. Add this repository URL:
 
-Une fois le serveur installé, vous devez configurer le plugin sur votre instance Jellyfin pour commencer à recevoir des données.
+```text
+https://raw.githubusercontent.com/maelmoreau21/Jellyfin.Plugin.JellyTrack/main/manifest.json
+```
 
-**Dépôt du Plugin :** [JellyTrack.Plugin](https://github.com/maelmoreau21/JellyTrack.Plugin)
+3. Install the JellyTrack plugin.
+4. In JellyTrack, open Settings > Jellyfin Connection, generate a plugin key, then copy the plugin endpoint and key into Jellyfin.
 
-1. Dans Jellyfin : **Tableau de bord** > **Plugins** > **Dépôts**.
-2. URL du dépôt : `https://raw.githubusercontent.com/maelmoreau21/JellyTrack.Plugin/main/manifest.json`
-3. Installez le plugin **JellyTrack** depuis le catalogue.
+For Jellyfin 10.12 / 12 beta and later, configure `JELLYFIN_API_KEY` in `.env`; JellyTrack uses the `Authorization: MediaBrowser Token="..."` header.
 
----
+## Plugin Event Contract
 
-## 📄 Licence
+The plugin posts JSON to:
 
-Projet personnel — usage privé.
-Built with Next.js, Prisma, Redis & beaucoup de ☕
+```text
+POST /api/plugin/events
+```
+
+The canonical download event is:
+
+```json
+{
+  "event": "MediaDownloaded",
+  "eventId": "stable-plugin-event-id",
+  "observedAt": "2026-05-28T18:00:00.000Z",
+  "user": { "id": "jellyfin-user-id", "username": "Mael" },
+  "media": {
+    "id": "jellyfin-item-id",
+    "title": "Movie title",
+    "type": "Movie",
+    "durationMs": 7200000,
+    "libraryName": "Films"
+  }
+}
+```
+
+Accepted download aliases are `ItemDownloaded` and `DownloadCompleted`. JellyTrack stores downloads with `PlaybackHistory.eventSource = "download"`, `playMethod = "Download"`, full `durationWatched`, and a `TelemetryEvent` of type `download`. `sourceEventId` deduplicates plugin retries per server.
+
+## Completion And Abandon Rules
+
+JellyTrack classifies completion cumulatively by user + media. If someone starts a movie today and finishes it tomorrow, or several days later, the media becomes completed and should not remain abandoned. Period filters still limit views and duration for the selected period, but abandonment considers later resume history.
+
+Downloads always count as complete views, including audio and short media, unless the media belongs to an excluded library.
+
+## Development
+
+```bash
+npm install
+npx prisma generate
+npm run test
+npm run check:i18n
+npm run lint
+npm run build
+npm outdated --json
+```
+
+`npm outdated --json` is expected to return `{}` after dependency updates.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

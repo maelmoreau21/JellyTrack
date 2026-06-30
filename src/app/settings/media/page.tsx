@@ -223,7 +223,7 @@ export default function SettingsMediaPage() {
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [t]);
 
     const groupedByServer = useMemo(() => {
         const map = new Map<string, { id: string; name: string; url: string | null; libraries: LibraryScope[] }>();
@@ -351,7 +351,7 @@ export default function SettingsMediaPage() {
 
     return (
         <div className="p-4 md:p-8 max-w-[1200px] mx-auto space-y-4">
-            <Card className="app-surface border-zinc-200/50 dark:border-zinc-800/50 shadow-sm text-zinc-900 dark:text-zinc-100">
+            <Card className="app-surface border-border shadow-sm text-zinc-900 dark:text-zinc-100">
                 <CardHeader>
                     <CardTitle className="text-2xl flex items-center gap-2">
                         <Film className="w-6 h-6 text-cyan-500" />
@@ -383,23 +383,23 @@ export default function SettingsMediaPage() {
                             <EyeOff className="w-5 h-5 text-orange-500" />
                             {t("excludedLibrariesTitle")}
                         </h3>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        <p className="text-sm text-muted-foreground">
                             {t("excludedLibrariesDesc")}
                         </p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                        <p className="text-xs text-muted-foreground">
                             {t("serverScopeHint")}
                         </p>
 
                         {serverDiagnostics.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{t("serverStatusTitle")}</p>
+                                <p className="text-xs font-semibold text-foreground/80 dark:text-slate-300">{t("serverStatusTitle")}</p>
                                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                                     {serverDiagnostics.map((server) => {
                                         const libraryCount = libraryCountByServerId.get(server.id) || 0;
                                         return (
                                             <div
                                                 key={server.id}
-                                                className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/70 dark:bg-zinc-900/40 p-3 space-y-2"
+                                                className="rounded-lg border border-border app-surface-soft p-3 space-y-2"
                                             >
                                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                                     <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
@@ -421,10 +421,10 @@ export default function SettingsMediaPage() {
                                                                 : t("serverOffline")}
                                                     </span>
                                                 </div>
-                                                <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-mono break-all">
+                                                <div className="text-[11px] text-muted-foreground font-mono break-all">
                                                     {server.url || t("serverMissingUrl")}
                                                 </div>
-                                                <div className="text-xs text-zinc-600 dark:text-zinc-300">
+                                                <div className="text-xs text-foreground/80 dark:text-slate-300">
                                                     {libraryCount > 0
                                                         ? t("serverLibrariesDetected", { count: libraryCount })
                                                         : t("serverNoLibrariesDetected")}
@@ -433,7 +433,7 @@ export default function SettingsMediaPage() {
                                                         : ` • ${t("serverSecondaryLabel")}`}
                                                 </div>
                                                 {server.connectionMessage && (
-                                                    <div className="text-[11px] text-zinc-500 dark:text-zinc-400">{server.connectionMessage}</div>
+                                                    <div className="text-[11px] text-muted-foreground">{server.connectionMessage}</div>
                                                 )}
                                             </div>
                                         );
@@ -443,16 +443,16 @@ export default function SettingsMediaPage() {
                         )}
 
                         {groupedByServer.length === 0 ? (
-                            <p className="text-sm text-zinc-400 italic">
+                            <p className="text-sm text-muted-foreground italic">
                                 {t("noLibrariesFound")} {t("noLibrariesFoundHint")}
                             </p>
                         ) : (
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                 {groupedByServer.map((serverGroup) => (
-                                    <div key={serverGroup.id} className="rounded-xl border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/60 dark:bg-zinc-900/40 p-4 space-y-3">
+                                    <div key={serverGroup.id} className="rounded-xl border border-border app-surface-soft p-4 space-y-3">
                                         <div className="space-y-1">
                                             <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{serverGroup.name}</div>
-                                            <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono break-all">{serverGroup.url || serverGroup.id}</div>
+                                            <div className="text-xs text-muted-foreground font-mono break-all">{serverGroup.url || serverGroup.id}</div>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -466,7 +466,7 @@ export default function SettingsMediaPage() {
                                                         onClick={() => toggleLibraryScope(scope.key)}
                                                         className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg border text-left transition-all ${
                                                             isExcluded
-                                                                ? "border-red-500/30 bg-red-500/5 text-zinc-400"
+                                                                ? "border-red-500/30 bg-red-500/5 text-muted-foreground"
                                                                 : "border-emerald-500/30 bg-emerald-500/5 text-zinc-900 dark:text-zinc-100"
                                                         }`}
                                                     >
@@ -492,7 +492,7 @@ export default function SettingsMediaPage() {
 
                                 {legacyGlobalExclusions.length > 0 && (
                                     <div className="space-y-2">
-                                        <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{t("legacyGlobalExclusionsTitle")}</div>
+                                        <div className="text-xs font-semibold text-foreground/80 dark:text-slate-300">{t("legacyGlobalExclusionsTitle")}</div>
                                         <div className="flex flex-wrap gap-2">
                                             {legacyGlobalExclusions.map((value) => (
                                                 <button
@@ -511,7 +511,7 @@ export default function SettingsMediaPage() {
 
                                 {orphanScopedExclusions.length > 0 && (
                                     <div className="space-y-2">
-                                        <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{t("legacyOrphanExclusionsTitle")}</div>
+                                        <div className="text-xs font-semibold text-foreground/80 dark:text-slate-300">{t("legacyOrphanExclusionsTitle")}</div>
                                         <div className="flex flex-wrap gap-2">
                                             {orphanScopedExclusions.map((value) => (
                                                 <button
@@ -533,13 +533,13 @@ export default function SettingsMediaPage() {
 
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold">{t("libraryBadgesDisplayTitle")}</h3>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        <p className="text-sm text-muted-foreground">
                             {t("libraryBadgesDisplayDesc")}
                         </p>
-                        <div className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 flex items-center justify-between gap-4">
+                        <div className="rounded-lg border border-border app-surface-soft p-4 flex items-center justify-between gap-4">
                             <div>
                                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{t("libraryBadgesToggleTitle")}</p>
-                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{t("libraryBadgesToggleDesc")}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{t("libraryBadgesToggleDesc")}</p>
                             </div>
                             <Switch
                                 checked={showLibraryMediaBadges}
@@ -550,18 +550,18 @@ export default function SettingsMediaPage() {
 
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold">{t("libraryRules")}</h3>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("libraryRulesDesc")}</p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("completionRulesHint")}</p>
+                        <p className="text-sm text-muted-foreground">{t("libraryRulesDesc")}</p>
+                        <p className="text-xs text-muted-foreground">{t("completionRulesHint")}</p>
                         <div className="space-y-3">
                             {completionRuleRows.map((entry) => (
                                 <div
                                     key={entry.scope}
-                                    className="rounded-lg border border-zinc-200/70 dark:border-zinc-800/70 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3"
+                                    className="rounded-lg border border-border app-surface-soft p-4 space-y-3"
                                 >
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{entry.label}</p>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs text-zinc-500 dark:text-zinc-400">{tc("active")}</span>
+                                            <span className="text-xs text-muted-foreground">{tc("active")}</span>
                                             <Switch
                                                 checked={entry.rule.completionEnabled}
                                                 onCheckedChange={(checked) => updateCompletionRule(entry.scope, { completionEnabled: Boolean(checked) })}
@@ -571,7 +571,7 @@ export default function SettingsMediaPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                         <div className="space-y-1.5">
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("abandoned")}</p>
+                                            <p className="text-xs text-muted-foreground">{t("abandoned")}</p>
                                             <Input
                                                 type="number"
                                                 min={0}
@@ -582,7 +582,7 @@ export default function SettingsMediaPage() {
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("partial")}</p>
+                                            <p className="text-xs text-muted-foreground">{t("partial")}</p>
                                             <Input
                                                 type="number"
                                                 min={0}
@@ -593,7 +593,7 @@ export default function SettingsMediaPage() {
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("completed")}</p>
+                                            <p className="text-xs text-muted-foreground">{t("completed")}</p>
                                             <Input
                                                 type="number"
                                                 min={1}
@@ -611,7 +611,7 @@ export default function SettingsMediaPage() {
 
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold">{t("resolutionThresholds")}</h3>
-                        <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("resolutionThresholdsDesc")}</p>
+                        <p className="text-sm text-muted-foreground">{t("resolutionThresholdsDesc")}</p>
                         <ResolutionThresholds 
                             value={resolutionThresholds} 
                             onChange={setResolutionThresholds} 
@@ -619,7 +619,7 @@ export default function SettingsMediaPage() {
                     </div>
                 </CardContent>
 
-                <CardFooter className="bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-200/50 dark:border-zinc-800/50 rounded-b-xl px-6 py-4 text-foreground">
+                <CardFooter className="app-surface-soft border-t border-border rounded-b-xl px-6 py-4 text-foreground">
                     <div className="flex gap-3 w-full sm:w-auto ml-auto">
                         <Button variant="outline" onClick={() => window.location.reload()} className="w-full sm:w-auto">{t("cancel")}</Button>
                         <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto shadow-sm">{saving ? t("saving") : t("saveSettings")}</Button>

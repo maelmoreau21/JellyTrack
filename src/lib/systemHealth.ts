@@ -1,6 +1,5 @@
 import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
-import { readStateFile } from "@/lib/appStateStorage";
 
 type SectionStatus = "idle" | "running" | "ok" | "error";
 
@@ -45,7 +44,6 @@ export interface SystemHealthState {
     events: HealthEvent[];
 }
 
-const STATE_FILE = "JellyTrack-system-health.json";
 const MAX_EVENTS = 60;
 
 const defaultState = (): SystemHealthState => ({
@@ -80,7 +78,6 @@ const defaultState = (): SystemHealthState => ({
     events: [],
 });
 
-let legacyMigrationPromise: Promise<void> | null = null;
 
 function mergeStateSection<T extends Record<string, unknown>>(defaults: T, input: unknown): T {
     if (!input || typeof input !== "object" || Array.isArray(input)) {
@@ -106,63 +103,6 @@ async function ensureSystemHealthRow() {
     });
 }
 
-async function migrateLegacySystemHealthIfNeeded() {
-    if (!legacyMigrationPromise) {
-        legacyMigrationPromise = (async () => {
-            const row = await prisma.systemHealthState.findUnique({ where: { id: "global" } });
-            const hasDbData = Boolean(row) || Boolean(await prisma.systemHealthEvent.findFirst({ where: { stateId: "global" }, select: { id: true } }));
-            if (hasDbData) {
-                return;
-            }
-
-            const legacyState = readStateFile<SystemHealthState>(STATE_FILE, defaultState());
-            const hasLegacyData = legacyState.events.length > 0
-                || legacyState.monitor.lastPollAt
-                || legacyState.sync.lastStartedAt
-                || legacyState.backup.lastStartedAt;
-
-            if (!hasLegacyData) {
-                return;
-            }
-
-            await prisma.$transaction(async (tx) => {
-                await tx.systemHealthState.upsert({
-                    where: { id: "global" },
-                    update: {
-                        monitor: mergeStateSection(defaultState().monitor, legacyState.monitor) as Prisma.InputJsonValue,
-                        sync: mergeStateSection(defaultState().sync, legacyState.sync) as Prisma.InputJsonValue,
-                        backup: mergeStateSection(defaultState().backup, legacyState.backup) as Prisma.InputJsonValue,
-                    },
-                    create: {
-                        id: "global",
-                        monitor: mergeStateSection(defaultState().monitor, legacyState.monitor) as Prisma.InputJsonValue,
-                        sync: mergeStateSection(defaultState().sync, legacyState.sync) as Prisma.InputJsonValue,
-                        backup: mergeStateSection(defaultState().backup, legacyState.backup) as Prisma.InputJsonValue,
-                    },
-                });
-
-                if (legacyState.events.length > 0) {
-                    await tx.systemHealthEvent.createMany({
-                        data: legacyState.events.slice(0, MAX_EVENTS).map((event) => ({
-                            id: event.id,
-                            stateId: "global",
-                            source: event.source,
-                            kind: event.kind,
-                            message: event.message,
-                            details: (event.details ?? Prisma.JsonNull) as any,
-                            createdAt: new Date(event.createdAt),
-                        })),
-                    });
-                }
-            });
-        })().catch((error) => {
-            legacyMigrationPromise = null;
-            throw error;
-        });
-    }
-
-    await legacyMigrationPromise;
-}
 
 function normalizeSystemHealth(row: { monitor: Prisma.JsonValue; sync: Prisma.JsonValue; backup: Prisma.JsonValue }, events: Array<any>): SystemHealthState {
     const defaults = defaultState();
@@ -183,8 +123,6 @@ function normalizeSystemHealth(row: { monitor: Prisma.JsonValue; sync: Prisma.Js
 }
 
 export async function readSystemHealthState(options?: { eventLimit?: number }) {
-    await migrateLegacySystemHealthIfNeeded();
-
     const eventLimit = options?.eventLimit ?? MAX_EVENTS;
     const [row, events] = await Promise.all([
         ensureSystemHealthRow(),
@@ -280,7 +218,6 @@ async function updateSystemHealthSections(update: (state: SystemHealthState) => 
 let lastMonitorPersistAt = 0;
 
 export async function appendHealthEvent(event: Omit<HealthEvent, "id" | "createdAt">) {
-    await migrateLegacySystemHealthIfNeeded();
     await ensureSystemHealthRow();
 
     await prisma.systemHealthEvent.create({

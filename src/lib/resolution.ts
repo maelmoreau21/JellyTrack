@@ -59,4 +59,21 @@ export function resolutionFromDimensions(width?: number | null, height?: number 
   return 'Unknown';
 }
 
+/**
+ * Numeric weight for comparing resolutions.
+ * Higher = better quality. Used by sync to keep the best resolution.
+ */
+export function getResolutionWeight(resolution: string | null | undefined): number {
+  if (!resolution) return 0;
+  switch (resolution) {
+    case '4K': return 5;
+    case '1440p': return 4;
+    case '1080p': return 3;
+    case '720p': return 2;
+    case '480p':
+    case 'SD': return 1;
+    default: return 0;
+  }
+}
+
 export default resolutionFromDimensions;

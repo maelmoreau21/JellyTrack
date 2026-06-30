@@ -47,6 +47,7 @@
   "redisOrphanDesc": "Redis keys referencing streams without a corresponding ActiveStream.",
   "running": "Running",
   "settings": {
+    "authSecurity": "Security",
     "backupError": "Error creating backup.",
     "deleteError": "Error deleting backup.",
     "restoreError": "Error restoring backup.",
@@ -69,6 +70,22 @@
     "actions": "Actions",
     "confirmDeleteBackup": "Delete this backup?",
     "confirmRestoreBackup": "Restoring will replace your current database. Continue?"
+  },
+  "securitySettings": {
+    "authSessionsTitle": "Web sessions",
+    "authSessionsDesc": "Control remembered login duration and force a global sign-out.",
+    "authSessionsRememberThirtyDays": "Stay signed in for 30 days",
+    "authSessionsRememberThirtyDaysOn": "When the login checkbox is checked, the session expires after 30 days on this device.",
+    "authSessionsRememberThirtyDaysOff": "When the login checkbox is checked, the session stays active until manual sign-out.",
+    "authSessionsPolicySaved": "Session policy saved.",
+    "authSessionsSavePolicy": "Save policy",
+    "authSessionsRevokeTitle": "Sign everyone out",
+    "authSessionsRevokeDesc": "Invalidates every existing web session, including this administrator session.",
+    "authSessionsLastRevoked": "Last global sign-out: {date}",
+    "authSessionsRevokeButton": "Sign everyone out",
+    "authSessionsRevoking": "Signing out...",
+    "authSessionsRevokeConfirm": "Sign out every user now? You will also need to sign in again.",
+    "saving": "Saving..."
   },
   "system": {
     "colMessage": "Message",
@@ -145,5 +162,57 @@
     "uniqueGenres": "Unique Genres",
     "videoQuality": "Overall Video Quality",
     "videoQualityDesc": "Distribution by certified resolution."
+  },
+  "mediaProfile": {
+    "behaviorTitle": "Detailed behavior",
+    "behaviorDesc": "Skipped or replayed passages, playback speed and language switches detected from useful telemetry events.",
+    "skippedRewatchedTitle": "Skipped / replayed passages",
+    "noBehaviorSignals": "No detailed signal yet.",
+    "rangeSessions": "{count} sessions",
+    "skippedPassages": "Skipped passages",
+    "replayedPassages": "Rewatched passages",
+    "speedDistribution": "Playback speed",
+    "sourceEstimated": "(estimated)",
+    "maxSpeed": "Max speed",
+    "audioSubtitleSwitches": "Audio / subtitle switches",
+    "speedChanges": "Speed changes",
+    "colJumps": "Jumps",
+    "colReplays": "Replays",
+    "colMaxSpeed": "Max speed",
+    "posterRotate": "Change poster",
+    "posterRotateSuccess": "Poster changed.",
+    "posterRotateMissing": "No Poster Rotator pool found, or the pool is empty.",
+    "posterRotateError": "Unable to change poster.",
+    "timeline_seek": "Skipped passage",
+    "timeline_replay": "Replayed passage",
+    "timeline_speed_change": "Speed change",
+    "timeline": {
+      "label": {
+        "seek": "Skipped passage",
+        "replay": "Replayed passage",
+        "speed_change": "Speed",
+        "download": "Download"
+      }
+    },
+    "timeline_download": "Download",
+    "languageSegments": "Language periods"
+  },
+  "logs": {
+    "timeline": {
+      "label": {
+        "replay": "Replay",
+        "speed_change": "Speed change",
+        "download": "Download"
+      },
+      "legend": {
+        "replay": "Replay",
+        "speed": "Speed"
+      },
+      "action": {
+        "jump": "Open",
+        "copy": "Copy",
+        "close": "Close"
+      }
+    }
   }
 }

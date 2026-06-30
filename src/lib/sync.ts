@@ -4,6 +4,7 @@ import { normalizeJellyfinId, compactJellyfinId } from "@/lib/jellyfinId";
 import { cleanupOrphanedSessions } from "@/lib/cleanup";
 import { GHOST_LIBRARY_NAMES } from "./libraryUtils";
 import { ensureMasterServer } from "@/lib/serverRegistry";
+import { resolutionFromDimensions, getResolutionWeight } from "@/lib/resolution";
 import {
     buildJellyfinApiKeyHeaders,
     getConfiguredJellyfinServers,
@@ -11,13 +12,13 @@ import {
 } from "@/lib/jellyfinServers";
 
 /**
- * Fonction maîtresse de synchronisation de la librairie Jellyfin.
- * Interroge l'API Jellyfin pour récupérer les Utilisateurs et les Médias (Films, Séries, Épisodes),
- * et effectue un Upsert massif dans la base PostgreSQL via Prisma.
+ * Main synchronization function for the Jellyfin library.
+ * Queries the Jellyfin API to fetch Users and Media (Movies, Series, Episodes),
+ * and performs a massive Upsert in the PostgreSQL database via Prisma.
  */
 export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
-    const mode = options?.recentOnly ? 'récente (7 derniers jours)' : 'complète';
-    console.log(`[Sync] Démarrage de la synchronisation ${mode} de la librairie Jellyfin...`);
+    const mode = options?.recentOnly ? 'recent (last 7 days)' : 'full';
+    console.log(`[Sync] Starting ${mode} synchronization of the Jellyfin library...`);
     await markSyncStarted(options?.recentOnly ? 'recent' : 'full');
 
     const configuredServers = await getConfiguredJellyfinServers();
@@ -65,10 +66,10 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 const isAbort = err.name === 'AbortError';
                 const errorMsg = isAbort ? `Timeout (${timeout}ms)` : (err.message || "Unknown Network Error");
                 
-                console.warn(`[Sync Warning] Tentative ${i + 1}/${maxRetries} échouée pour ${url.split('?')[0]}: ${errorMsg}`);
+                console.warn(`[Sync Warning] Attempt ${i + 1}/${maxRetries} failed for ${url.split('?')[0]}: ${errorMsg}`);
                 
                 if (i === maxRetries - 1) {
-                    console.error(`[Sync Error] Échec final après ${maxRetries} tentatives. URL: ${url}. Erreur:`, e);
+                    console.error(`[Sync Error] Final failure after ${maxRetries} attempts. URL: ${url}. Error:`, e);
                     throw e;
                 }
                 await new Promise(r => setTimeout(r, 2000 * (i + 1)));
@@ -161,7 +162,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             const currentServerId = target.server.id;
             const currentServerName = target.server.name;
 
-            console.log(`[Sync] Début synchronisation serveur: ${currentServerName} (${target.server.jellyfinServerId})`);
+            console.log(`[Sync] Starting server synchronization: ${currentServerName} (${target.server.jellyfinServerId})`);
 
             try {
                 // 1. Sync Users
@@ -184,10 +185,13 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 for (const user of users) {
                     const jellyfinUserId = normalizeJellyfinId(user.Id);
                     if (!jellyfinUserId) continue;
+                    const username = typeof user.Name === "string" && user.Name.trim()
+                        ? user.Name.trim()
+                        : jellyfinUserId;
                     await prisma.user.upsert({
                         where: { jellyfinUserId_serverId: { jellyfinUserId, serverId: currentServerId } },
-                        update: { username: user.Name },
-                        create: { serverId: currentServerId, jellyfinUserId, username: user.Name },
+                        update: { username },
+                        create: { serverId: currentServerId, jellyfinUserId, username },
                     });
                     usersCount++;
                 }
@@ -342,7 +346,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                         }
 
                         if (!libraryName && collectionType) {
-                            const knownName = Array.from(libraryCollectionMap.entries()).find(([_, type]) => type === collectionType)?.[0];
+                            const knownName = Array.from(libraryCollectionMap.entries()).find(([, type]) => type === collectionType)?.[0];
                             if (knownName && libraryNameMap.has(knownName)) {
                                 libraryName = libraryNameMap.get(knownName)!;
                             } else {
@@ -371,41 +375,14 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                             const heightCandidate = vs?.Height;
                             const widthNum = (typeof widthCandidate === 'number') ? widthCandidate : (typeof widthCandidate === 'string' && !Number.isNaN(Number(widthCandidate)) ? Number(widthCandidate) : null);
                             const heightNum = (typeof heightCandidate === 'number') ? heightCandidate : (typeof heightCandidate === 'string' && !Number.isNaN(Number(heightCandidate)) ? Number(heightCandidate) : null);
-                            try {
-                                const { resolutionFromDimensions } = await import('@/lib/resolution');
-                                resolution = resolutionFromDimensions(widthNum, heightNum, resolutionThresholds);
-                            } catch {
-                                if (heightNum !== null) {
-                                    const h = heightNum;
-                                    if (h >= 2160) resolution = "4K";
-                                    else if (h >= 1080) resolution = "1080p";
-                                    else if (h >= 720) resolution = "720p";
-                                    else if (h >= 480) resolution = "480p";
-                                    else resolution = "SD";
-                                } else if (widthNum !== null) {
-                                    const w = widthNum;
-                                    if (w >= 3800) resolution = "4K";
-                                    else if (w >= 1800) resolution = "1080p";
-                                    else if (w >= 1200) resolution = "720p";
-                                    else if (w >= 700) resolution = "480p";
-                                    else resolution = "SD";
-                                }
-                            }
+                            resolution = resolutionFromDimensions(widthNum, heightNum, resolutionThresholds);
                         }
 
                         if (resolution && item.SeriesId) {
                             const sid = normalizeJellyfinId(item.SeriesId);
                             if (sid) {
                                 const existing = seriesResolutionMap.get(sid);
-                                const getWeight = (r: string) => {
-                                    if (r === '4K') return 5;
-                                    if (r === '1440p') return 4;
-                                    if (r === '1080p') return 3;
-                                    if (r === '720p') return 2;
-                                    if (r === 'SD') return 1;
-                                    return 0;
-                                };
-                                if (!existing || getWeight(resolution) > getWeight(existing)) {
+                                if (!existing || getResolutionWeight(resolution) > getResolutionWeight(existing)) {
                                     seriesResolutionMap.set(sid, resolution);
                                 }
                             }
@@ -473,17 +450,8 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                                 // Decide whether to update the stored resolution: only overwrite when
                                 // the incoming resolution represents an equal or better quality.
                                 const incomingRes = (item.Type === 'Series' ? (seriesResolutionMap.get(item.Id) || resolution) : resolution) ?? null;
-                                const getWeight = (r: string | null | undefined) => {
-                                    if (!r) return 0;
-                                    if (r === '4K') return 5;
-                                    if (r === '1440p') return 4;
-                                    if (r === '1080p') return 3;
-                                    if (r === '720p') return 2;
-                                    if (r === 'SD' || r === '480p') return 1;
-                                    return 0;
-                                };
                                 const existingRes = primary?.resolution ?? null;
-                                const finalResolution = getWeight(incomingRes) > getWeight(existingRes) ? incomingRes : existingRes;
+                                const finalResolution = getResolutionWeight(incomingRes) > getResolutionWeight(existingRes) ? incomingRes : existingRes;
 
                                 primary = await tx.media.update({
                                     where: { id: primary.id },
@@ -558,7 +526,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 totalUsersCount += usersCount;
                 totalMediaCount += mediaCount;
 
-                console.log(`[Sync] Serveur ${currentServerName} terminé: users=${usersCount}, media=${mediaCount}`);
+                console.log(`[Sync] Server ${currentServerName} finished: users=${usersCount}, media=${mediaCount}`);
             } catch (serverError: unknown) {
                 let normalizedError = 'Unknown error';
                 if (serverError instanceof Error) normalizedError = serverError.message;
@@ -572,7 +540,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     name: currentServerName,
                     error: normalizedError,
                 });
-                console.error(`[Sync] Échec serveur ${currentServerName}:`, normalizedError);
+                console.error(`[Sync] Server ${currentServerName} failed:`, normalizedError);
             }
         }
 
@@ -586,7 +554,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             await appendHealthEvent({
                 source: 'sync',
                 kind: 'sync_partial',
-                message: `Synchronisation partielle: ${failedServers.length} serveur(s) en échec.`,
+                message: `Partial synchronization: ${failedServers.length} server(s) failed.`,
                 details: { count: failedServers.length, failedServers }
             });
         }
@@ -595,7 +563,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             await appendHealthEvent({
                 source: 'sync',
                 kind: 'sync_success',
-                message: `Synchronisation réussie : ${totalMediaCount} médias traités.`,
+                message: `Successful synchronization: ${totalMediaCount} media processed.`,
                 details: { count: 1, mediaProcessed: totalMediaCount, usersProcessed: totalUsersCount }
             });
         }

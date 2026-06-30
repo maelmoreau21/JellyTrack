@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { apiT } from "@/lib/i18n-api";
 import { AVAILABLE_LOCALES } from "@/i18n/locales";
 // No more library rules
 import { getSanitizedLibraryNames, getServerLibraryScopes } from "@/lib/libraryUtils";
-import { revalidatePath } from "next/cache";
+import { revalidateDashboardCache } from "@/lib/revalidate";
 import { normalizeSchedulerIntervals } from "@/lib/schedulerIntervals";
+import { isValidDiscordWebhook } from "@/lib/webhookValidator";
+import { invalidatePluginIngestSettingsCache, normalizePluginTelemetrySettings } from "@/lib/pluginTelemetrySettings";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +25,7 @@ async function fetchJellyfinLibraryNames() {
         const response = await fetch(`${jellyfinUrl}/Library/VirtualFolders`, {
             method: "GET",
             headers: {
-                "X-Emby-Token": jellyfinApiKey,
+                Authorization: `MediaBrowser Token="${jellyfinApiKey}"`,
             },
             cache: "no-store",
         });
@@ -101,6 +104,7 @@ export async function GET() {
         return NextResponse.json({
             ...settings,
             schedulerIntervals,
+            pluginTelemetrySettings: normalizePluginTelemetrySettings((settings as any)?.pluginTelemetrySettings),
             availableLibraries: mergedAvailableLibraries,
             availableLibraryScopes,
             libraryScanSource: jellyfinScanNames.source,
@@ -114,7 +118,7 @@ export async function GET() {
 
 // Endpoint to update global settings (admin only)
 export async function POST(req: NextRequest) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     try {
@@ -138,20 +142,21 @@ export async function POST(req: NextRequest) {
             wrappedEndDay,
             resolutionThresholds,
             schedulerIntervals,
+            pluginTelemetrySettings,
         } = body;
 
         // Input validation — Discord webhook URL must be a valid Discord URL or null
         if (discordWebhookUrl !== undefined && discordWebhookUrl !== null && discordWebhookUrl !== "") {
-            try {
-                const parsed = new URL(discordWebhookUrl);
-                if (!parsed.hostname.endsWith("discord.com") && !parsed.hostname.endsWith("discordapp.com")) {
+            if (!isValidDiscordWebhook(discordWebhookUrl)) {
+                try {
+                    const parsed = new URL(discordWebhookUrl);
+                    if (parsed.protocol !== "https:") {
+                        return NextResponse.json({ error: await apiT('discordUrlHttps') }, { status: 400 });
+                    }
                     return NextResponse.json({ error: await apiT('discordUrlDomain') }, { status: 400 });
+                } catch {
+                    return NextResponse.json({ error: await apiT('discordUrlInvalid') }, { status: 400 });
                 }
-                if (parsed.protocol !== "https:") {
-                    return NextResponse.json({ error: await apiT('discordUrlHttps') }, { status: 400 });
-                }
-            } catch {
-                return NextResponse.json({ error: await apiT('discordUrlInvalid') }, { status: 400 });
             }
         }
 
@@ -190,6 +195,9 @@ export async function POST(req: NextRequest) {
         if (excludedLibraries !== undefined && !Array.isArray(excludedLibraries)) {
             return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
         }
+        const normalizedPluginTelemetrySettings = pluginTelemetrySettings !== undefined
+            ? normalizePluginTelemetrySettings(pluginTelemetrySettings)
+            : undefined;
 
         const sanitizedExcludedLibraries = excludedLibraries !== undefined
             ? Array.from(
@@ -250,6 +258,7 @@ export async function POST(req: NextRequest) {
                 wrappedEndMonth: wrappedEndMonth !== undefined ? Number(wrappedEndMonth) : undefined,
                 wrappedEndDay: wrappedEndDay !== undefined ? Number(wrappedEndDay) : undefined,
                 resolutionThresholds: mergedResolutionThresholds !== undefined ? mergedResolutionThresholds : undefined,
+                pluginTelemetrySettings: normalizedPluginTelemetrySettings !== undefined ? normalizedPluginTelemetrySettings : undefined,
             },
             create: {
                 id: "global",
@@ -262,7 +271,7 @@ export async function POST(req: NextRequest) {
                 syncCronMinute: syncCronMinute !== undefined ? Number(syncCronMinute) : 0,
                 backupCronHour: backupCronHour !== undefined ? Number(backupCronHour) : 3,
                 backupCronMinute: backupCronMinute !== undefined ? Number(backupCronMinute) : 30,
-                defaultLocale: defaultLocale || "fr",
+                defaultLocale: defaultLocale || "en",
                 wrappedVisible: wrappedVisible !== undefined ? Boolean(wrappedVisible) : true,
                 wrappedPeriodEnabled: wrappedPeriodEnabled !== undefined ? Boolean(wrappedPeriodEnabled) : true,
                 wrappedStartMonth: wrappedStartMonth !== undefined ? Number(wrappedStartMonth) : 12,
@@ -270,6 +279,7 @@ export async function POST(req: NextRequest) {
                 wrappedEndMonth: wrappedEndMonth !== undefined ? Number(wrappedEndMonth) : 1,
                 wrappedEndDay: wrappedEndDay !== undefined ? Number(wrappedEndDay) : 31,
                 resolutionThresholds: mergedResolutionThresholds !== undefined ? mergedResolutionThresholds : (resolutionThresholds || null),
+                pluginTelemetrySettings: normalizedPluginTelemetrySettings !== undefined ? normalizedPluginTelemetrySettings : undefined,
             }
         });
 
@@ -303,12 +313,10 @@ export async function POST(req: NextRequest) {
         }
 
 
-        revalidatePath('/');
-        revalidatePath('/settings');
-        revalidatePath('/admin/cleanup');
-        revalidatePath('/admin/health');
-        revalidatePath('/admin/log-health');
-        revalidatePath('/admin/plugin-health');
+        revalidateDashboardCache();
+        if (normalizedPluginTelemetrySettings !== undefined || sanitizedExcludedLibraries !== undefined) {
+            invalidatePluginIngestSettingsCache();
+        }
 
         return NextResponse.json(updated, { status: 200 });
     } catch (error) {

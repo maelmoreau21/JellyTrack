@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { signOut } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
-import { AlertCircle, KeyRound, RefreshCw, ShieldCheck, ShieldAlert, Copy } from "lucide-react";
+import { AlertCircle, Clock3, LogOut, RefreshCw, ShieldCheck, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,9 +43,6 @@ type SecurityOverview = {
         expiresInDays: number | null;
         expired: boolean;
         expiringSoon: boolean;
-        autoRotateEnabled: boolean;
-        rotationDays: number;
-        rotationGraceHours: number;
         previousKeyActive: boolean;
         previousKeyGraceUntil: string | null;
     };
@@ -92,6 +90,11 @@ type SmartSecurityThresholds = {
     newCountryGraceMinutes: number;
 };
 
+type AuthSessionPolicy = {
+    rememberSessionsExpireAfterDays: boolean;
+    sessionsRevokedAt: string | null;
+};
+
 type AuditResponse = {
     page: number;
     pageSize: number;
@@ -127,15 +130,13 @@ export default function PluginSecurityPage() {
     const [auditPage, setAuditPage] = useState(1);
     const [auditSmartFilter, setAuditSmartFilter] = useState<"all" | "new_country_success" | "ip_50_attempts">("all");
     const [loading, setLoading] = useState(false);
-    const [savingPolicy, setSavingPolicy] = useState(false);
     const [savingSmartThresholds, setSavingSmartThresholds] = useState(false);
-    const [rotating, setRotating] = useState(false);
+    const [savingAuthPolicy, setSavingAuthPolicy] = useState(false);
+    const [revokingSessions, setRevokingSessions] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-    const [freshApiKey, setFreshApiKey] = useState<string | null>(null);
+    const [authSessionPolicy, setAuthSessionPolicy] = useState<AuthSessionPolicy | null>(null);
+    const [rememberSessionsExpireAfterDays, setRememberSessionsExpireAfterDays] = useState(true);
 
-    const [autoRotateEnabled, setAutoRotateEnabled] = useState(false);
-    const [rotationDays, setRotationDays] = useState(90);
-    const [rotationGraceHours, setRotationGraceHours] = useState(24);
     const [smartThresholds, setSmartThresholds] = useState<SmartSecurityThresholds>({
         ipAttemptThreshold: 50,
         ipWindowMinutes: 24 * 60,
@@ -149,9 +150,6 @@ export default function PluginSecurityPage() {
         }
         const data = (await res.json()) as SecurityOverview;
         setOverview(data);
-        setAutoRotateEnabled(data.key.autoRotateEnabled);
-        setRotationDays(data.key.rotationDays);
-        setRotationGraceHours(data.key.rotationGraceHours);
     }, []);
 
     const loadAudit = useCallback(async (page: number, smartFilter: "all" | "new_country_success" | "ip_50_attempts") => {
@@ -182,74 +180,33 @@ export default function PluginSecurityPage() {
         }
     }, []);
 
+    const loadAuthSessionPolicy = useCallback(async () => {
+        const res = await fetch('/api/admin/auth/session-policy', { cache: 'no-store' });
+        if (!res.ok) {
+            throw new Error('Failed to load auth session policy');
+        }
+
+        const data = (await res.json()) as AuthSessionPolicy;
+        setAuthSessionPolicy(data);
+        setRememberSessionsExpireAfterDays(data.rememberSessionsExpireAfterDays !== false);
+    }, []);
+
     const refreshAll = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         setMessage(null);
         try {
-            await Promise.all([loadOverview(), loadAudit(auditPage, auditSmartFilter), loadSmartThresholds()]);
+            await Promise.all([loadOverview(), loadAudit(auditPage, auditSmartFilter), loadSmartThresholds(), loadAuthSessionPolicy()]);
         } catch {
-            setMessage({ type: "error", text: "Impossible de charger le centre securite." });
+            setMessage({ type: "error", text: ts('securityLoadError') });
         } finally {
             setLoading(false);
         }
-    }, [auditPage, auditSmartFilter, loadAudit, loadOverview, loadSmartThresholds]);
+    }, [auditPage, auditSmartFilter, loadAudit, loadOverview, loadSmartThresholds, loadAuthSessionPolicy, ts]);
 
     useEffect(() => {
         refreshAll();
     }, [refreshAll]);
-
-    const savePolicy = async () => {
-        setSavingPolicy(true);
-        setMessage(null);
-        try {
-            const res = await fetch("/api/plugin/api-key", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    autoRotateEnabled,
-                    rotationDays,
-                    rotationGraceHours,
-                }),
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                throw new Error((data as { error?: string }).error || "Policy update failed");
-            }
-
-            setMessage({ type: "success", text: "Politique de rotation sauvegardee." });
-            await refreshAll();
-        } catch (error) {
-            const text = error instanceof Error ? error.message : "Erreur inconnue";
-            setMessage({ type: "error", text });
-        } finally {
-            setSavingPolicy(false);
-        }
-    };
-
-    const rotateNow = async () => {
-        const ok = window.confirm("Generer une nouvelle cle plugin maintenant ?");
-        if (!ok) return;
-
-        setRotating(true);
-        setMessage(null);
-        try {
-            const res = await fetch("/api/plugin/api-key", { method: "POST" });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                throw new Error((data as { error?: string }).error || "Rotation failed");
-            }
-
-            const typed = data as { apiKey?: string };
-            setFreshApiKey(typed.apiKey || null);
-            setMessage({ type: "success", text: "Nouvelle cle generee. L ancienne reste valide pendant la grace period." });
-            await refreshAll();
-        } catch (error) {
-            const text = error instanceof Error ? error.message : "Erreur inconnue";
-            setMessage({ type: "error", text });
-        } finally {
-            setRotating(false);
-        }
-    };
 
     const saveSmartThresholdSettings = async () => {
         setSavingSmartThresholds(true);
@@ -279,29 +236,73 @@ export default function PluginSecurityPage() {
             setMessage({ type: 'success', text: ts('smartThresholdsSaved') });
             await refreshAll();
         } catch (error) {
-            const text = error instanceof Error ? error.message : 'Erreur inconnue';
+            const text = error instanceof Error ? error.message : ts('unknownError');
             setMessage({ type: 'error', text });
         } finally {
             setSavingSmartThresholds(false);
         }
     };
 
-    const copyFreshApiKey = async () => {
-        if (!freshApiKey) return;
+    const saveAuthSessionPolicy = async () => {
+        setSavingAuthPolicy(true);
+        setMessage(null);
+
         try {
-            await navigator.clipboard.writeText(freshApiKey);
-            setMessage({ type: "success", text: "Cle copiee dans le presse-papiers." });
-        } catch {
-            setMessage({ type: "error", text: "Impossible de copier la cle." });
+            const res = await fetch('/api/admin/auth/session-policy', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rememberSessionsExpireAfterDays }),
+            });
+
+            const data = await res.json().catch(() => ({})) as AuthSessionPolicy & { error?: string };
+            if (!res.ok) {
+                throw new Error(data.error || 'Session policy update failed');
+            }
+
+            setAuthSessionPolicy(data);
+            setRememberSessionsExpireAfterDays(data.rememberSessionsExpireAfterDays !== false);
+            setMessage({ type: 'success', text: ts('authSessionsPolicySaved') });
+        } catch (error) {
+            const text = error instanceof Error ? error.message : ts('unknownError');
+            setMessage({ type: 'error', text });
+        } finally {
+            setSavingAuthPolicy(false);
+        }
+    };
+
+    const revokeAllSessions = async () => {
+        const ok = window.confirm(ts('authSessionsRevokeConfirm'));
+        if (!ok) return;
+
+        setRevokingSessions(true);
+        setMessage(null);
+
+        try {
+            const res = await fetch('/api/admin/auth/session-policy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'revoke_all' }),
+            });
+            const data = await res.json().catch(() => ({})) as { error?: string };
+            if (!res.ok) {
+                throw new Error(data.error || 'Session revocation failed');
+            }
+
+            await signOut({ redirect: false });
+            window.location.href = '/login';
+        } catch (error) {
+            const text = error instanceof Error ? error.message : ts('unknownError');
+            setMessage({ type: 'error', text });
+            setRevokingSessions(false);
         }
     };
 
     const healthBadge = useMemo(() => {
         if (!overview?.plugin.connected) {
-            return <Badge className="app-chip border-red-500/35 text-red-600 dark:text-red-300">Offline</Badge>;
+            return <Badge className="app-chip border-red-500/35 text-red-600 dark:text-red-300">{ts('offline')}</Badge>;
         }
-        return <Badge className="app-chip-success">Online</Badge>;
-    }, [overview?.plugin.connected]);
+        return <Badge className="app-chip-success">{ts('online')}</Badge>;
+    }, [overview?.plugin.connected, ts]);
 
     return (
         <div className="space-y-6">
@@ -309,19 +310,19 @@ export default function PluginSecurityPage() {
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                         <ShieldCheck className="w-6 h-6" />
-                        Security Center
+                        {ts('securityCenterTitle')}
                     </h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                        Rotation des cles plugin, indicateurs de securite et journal d audit.
+                        {ts('securityCenterDesc')}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button asChild variant="outline">
-                        <Link href="/settings/plugin">Retour plugin</Link>
+                        <Link href="/settings/plugin">{ts('backToPlugin')}</Link>
                     </Button>
                     <Button onClick={refreshAll} disabled={loading}>
                         <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                        Rafraichir
+                        {ts('refresh')}
                     </Button>
                 </div>
             </div>
@@ -333,27 +334,81 @@ export default function PluginSecurityPage() {
                 </div>
             )}
 
+            <Card className="app-surface border-border">
+                <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                        <Clock3 className="w-4 h-4" />
+                        {ts('authSessionsTitle')}
+                    </CardTitle>
+                    <CardDescription>{ts('authSessionsDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex flex-col gap-4 rounded-lg border border-border/70 bg-background/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="space-y-1">
+                            <Label htmlFor="remember-30-days" className="text-sm font-medium">
+                                {ts('authSessionsRememberThirtyDays')}
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                {rememberSessionsExpireAfterDays
+                                    ? ts('authSessionsRememberThirtyDaysOn')
+                                    : ts('authSessionsRememberThirtyDaysOff')}
+                            </p>
+                        </div>
+                        <Switch
+                            id="remember-30-days"
+                            checked={rememberSessionsExpireAfterDays}
+                            onCheckedChange={(checked) => setRememberSessionsExpireAfterDays(Boolean(checked))}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-3 rounded-lg border border-red-500/25 bg-red-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="space-y-1">
+                            <div className="text-sm font-medium text-red-700 dark:text-red-300">{ts('authSessionsRevokeTitle')}</div>
+                            <p className="text-xs text-red-700/80 dark:text-red-200/80">
+                                {ts('authSessionsRevokeDesc')}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                {ts('authSessionsLastRevoked', {
+                                    date: authSessionPolicy?.sessionsRevokedAt
+                                        ? formatDateTime(authSessionPolicy.sessionsRevokedAt, locale)
+                                        : '-',
+                                })}
+                            </p>
+                        </div>
+                        <Button variant="destructive" onClick={revokeAllSessions} disabled={revokingSessions}>
+                            <LogOut className="w-4 h-4" />
+                            {revokingSessions ? ts('authSessionsRevoking') : ts('authSessionsRevokeButton')}
+                        </Button>
+                    </div>
+                </CardContent>
+                <CardContent className="pt-0">
+                    <Button variant="outline" onClick={saveAuthSessionPolicy} disabled={savingAuthPolicy}>
+                        {savingAuthPolicy ? ts('saving') : ts('authSessionsSavePolicy')}
+                    </Button>
+                </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <Card className="app-surface border-border">
                     <CardHeader>
-                        <CardTitle className="text-base">Etat plugin</CardTitle>
-                        <CardDescription>Connectivite et heartbeat</CardDescription>
+                        <CardTitle className="text-base">{ts('pluginStateTitle')}</CardTitle>
+                        <CardDescription>{ts('pluginStateDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
                         <div className="flex items-center justify-between">
-                            <span>Statut</span>
+                            <span>{ts('statusLabel')}</span>
                             {healthBadge}
                         </div>
                         <div className="flex items-center justify-between gap-3">
-                            <span>Serveur</span>
+                            <span>{ts('serverLabel')}</span>
                             <span className="font-medium truncate">{overview?.plugin.serverName || "-"}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
-                            <span>Version</span>
+                            <span>{ts('versionLabel')}</span>
                             <span className="font-medium truncate">{overview?.plugin.version || "-"}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
-                            <span>Dernier ping</span>
+                            <span>{ts('lastPingLabel')}</span>
                             <span className="font-medium">{formatDateTime(overview?.plugin.lastSeen || null, locale)}</span>
                         </div>
                     </CardContent>
@@ -361,30 +416,30 @@ export default function PluginSecurityPage() {
 
                 <Card className="app-surface border-border">
                     <CardHeader>
-                        <CardTitle className="text-base">Etat cle API</CardTitle>
-                        <CardDescription>Cycle de vie et fenetre de transition</CardDescription>
+                        <CardTitle className="text-base">{ts('apiKeyStateTitle')}</CardTitle>
+                        <CardDescription>{ts('apiKeyStateDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
                         <div className="flex items-center justify-between">
-                            <span>Cle active</span>
-                            <Badge variant={overview?.key.hasApiKey ? "default" : "destructive"}>{overview?.key.hasApiKey ? "Oui" : "Non"}</Badge>
+                            <span>{ts('activeKeyLabel')}</span>
+                            <Badge variant={overview?.key.hasApiKey ? "default" : "destructive"}>{overview?.key.hasApiKey ? ts('yes') : ts('no')}</Badge>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span>Expire dans</span>
-                            <span className="font-medium">{overview?.key.expiresInDays ?? "-"} jours</span>
+                            <span>{ts('expiresInLabel')}</span>
+                            <span className="font-medium">{overview?.key.expiresInDays == null ? "-" : ts('daysCount', { days: overview.key.expiresInDays })}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span>Etat expiration</span>
+                            <span>{ts('expirationStateLabel')}</span>
                             <Badge variant={overview?.key.expired ? "destructive" : (overview?.key.expiringSoon ? "secondary" : "outline")}>
-                                {overview?.key.expired ? "Expiree" : (overview?.key.expiringSoon ? "Bientot" : "OK")}
+                                {overview?.key.expired ? ts('expired') : (overview?.key.expiringSoon ? ts('soon') : "OK")}
                             </Badge>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span>Ancienne cle active</span>
-                            <span className="font-medium">{overview?.key.previousKeyActive ? "Oui" : "Non"}</span>
+                            <span>{ts('previousKeyActiveLabel')}</span>
+                            <span className="font-medium">{overview?.key.previousKeyActive ? ts('yes') : ts('no')}</span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
-                            <span>Grace jusqu a</span>
+                            <span>{ts('graceUntilLabel')}</span>
                             <span className="font-medium">{formatDateTime(overview?.key.previousKeyGraceUntil || null, locale)}</span>
                         </div>
                     </CardContent>
@@ -392,68 +447,18 @@ export default function PluginSecurityPage() {
 
                 <Card className="app-surface border-border">
                     <CardHeader>
-                        <CardTitle className="text-base">Alertes recentes</CardTitle>
-                        <CardDescription>Fenetre 24h / 30j</CardDescription>
+                        <CardTitle className="text-base">{ts('recentAlertsTitle')}</CardTitle>
+                        <CardDescription>{ts('recentAlertsDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between"><span>Audit 24h</span><span className="font-semibold">{overview?.metrics.totalAudit24h ?? 0}</span></div>
-                        <div className="flex items-center justify-between"><span>Unauthorized 24h</span><span className="font-semibold">{overview?.metrics.unauthorized24h ?? 0}</span></div>
-                        <div className="flex items-center justify-between"><span>Rate limited 24h</span><span className="font-semibold">{overview?.metrics.rateLimited24h ?? 0}</span></div>
-                        <div className="flex items-center justify-between"><span>Old key usage 24h</span><span className="font-semibold">{overview?.metrics.previousKeyUsed24h ?? 0}</span></div>
-                        <div className="flex items-center justify-between"><span>Rotations 30j</span><span className="font-semibold">{overview?.metrics.keyActions30d ?? 0}</span></div>
+                        <div className="flex items-center justify-between"><span>{ts('audit24h')}</span><span className="font-semibold">{overview?.metrics.totalAudit24h ?? 0}</span></div>
+                        <div className="flex items-center justify-between"><span>{ts('unauthorized24h')}</span><span className="font-semibold">{overview?.metrics.unauthorized24h ?? 0}</span></div>
+                        <div className="flex items-center justify-between"><span>{ts('rateLimited24h')}</span><span className="font-semibold">{overview?.metrics.rateLimited24h ?? 0}</span></div>
+                        <div className="flex items-center justify-between"><span>{ts('oldKeyUsage24h')}</span><span className="font-semibold">{overview?.metrics.previousKeyUsed24h ?? 0}</span></div>
+                        <div className="flex items-center justify-between"><span>{ts('keyActions30d')}</span><span className="font-semibold">{overview?.metrics.keyActions30d ?? 0}</span></div>
                     </CardContent>
                 </Card>
             </div>
-
-            <Card className="app-surface border-border">
-                <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2"><KeyRound className="w-4 h-4" /> Politique de rotation</CardTitle>
-                    <CardDescription>
-                        Activez la rotation automatique et reglez les intervalles.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="auto-rotate">Rotation auto</Label>
-                        <div className="h-10 flex items-center">
-                            <Switch id="auto-rotate" checked={autoRotateEnabled} onCheckedChange={setAutoRotateEnabled} />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="rotation-days">Rotation (jours)</Label>
-                        <Input
-                            id="rotation-days"
-                            type="number"
-                            min={7}
-                            max={365}
-                            value={rotationDays}
-                            onChange={(e) => setRotationDays(Number(e.target.value))}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="rotation-grace-hours">Grace (heures)</Label>
-                        <Input
-                            id="rotation-grace-hours"
-                            type="number"
-                            min={1}
-                            max={168}
-                            value={rotationGraceHours}
-                            onChange={(e) => setRotationGraceHours(Number(e.target.value))}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Actions</Label>
-                        <div className="h-10 flex items-center gap-2">
-                            <Button variant="outline" onClick={savePolicy} disabled={savingPolicy}>
-                                {savingPolicy ? "Sauvegarde..." : "Sauvegarder"}
-                            </Button>
-                            <Button onClick={rotateNow} disabled={rotating}>
-                                {rotating ? "Rotation..." : "Rotation maintenant"}
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
 
             <Card className="app-surface border-border">
                 <CardHeader>
@@ -516,46 +521,23 @@ export default function PluginSecurityPage() {
                 </CardContent>
             </Card>
 
-            {freshApiKey && (
-                <Card className="app-surface border-border">
-                    <CardHeader>
-                        <CardTitle className="text-base">Nouvelle cle (affichage unique)</CardTitle>
-                        <CardDescription>
-                            Copiez cette cle maintenant. Elle ne sera plus visible ensuite.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <Input readOnly value={freshApiKey} className="font-mono" />
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={copyFreshApiKey}>
-                                <Copy className="w-4 h-4" />
-                                Copier
-                            </Button>
-                            <Button variant="ghost" onClick={() => setFreshApiKey(null)}>
-                                Masquer
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
             <Card className="app-surface border-border">
                 <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
                         <ShieldAlert className="w-4 h-4" />
-                        Evenements securite recents
+                        {ts('recentSecurityEventsTitle')}
                     </CardTitle>
-                    <CardDescription>Top 10 des evenements sensibles detectes par l ingestion plugin.</CardDescription>
+                    <CardDescription>{ts('recentSecurityEventsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Action</TableHead>
-                                <TableHead>Acteur</TableHead>
+                                <TableHead>{ts('dateColumn')}</TableHead>
+                                <TableHead>{ts('actionColumn')}</TableHead>
+                                <TableHead>{ts('actorColumn')}</TableHead>
                                 <TableHead>IP</TableHead>
-                                <TableHead>Details</TableHead>
+                                <TableHead>{ts('detailsColumn')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -571,7 +553,7 @@ export default function PluginSecurityPage() {
                             {(!overview || overview.recentSecurityEvents.length === 0) && (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
-                                        Aucun evenement recent.
+                                        {ts('noRecentEvents')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -582,9 +564,9 @@ export default function PluginSecurityPage() {
 
             <Card className="app-surface border-border">
                 <CardHeader>
-                    <CardTitle className="text-base">Journal d audit complet</CardTitle>
+                    <CardTitle className="text-base">{ts('fullAuditTitle')}</CardTitle>
                     <CardDescription>
-                        Historique des actions admin et controles plugin.
+                        {ts('fullAuditDesc')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -607,22 +589,22 @@ export default function PluginSecurityPage() {
                     {audit?.anomalies && (audit.anomalies.hotIp24h.length > 0 || audit.anomalies.newCountrySuccess24h.count > 0) && (
                         <div className="grid gap-3 md:grid-cols-2">
                             <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3">
-                                <div className="text-xs text-red-300">IP en rafale (24h)</div>
+                                <div className="text-xs text-red-300">{ts('ipBurst24h')}</div>
                                 <div className="mt-1 text-lg font-semibold text-red-200">{audit.anomalies.hotIp24h.length}</div>
                                 <div className="mt-1 space-y-1">
                                     {audit.anomalies.hotIp24h.slice(0, 3).map((item) => (
                                         <div key={item.ipAddress} className="text-xs text-red-100/90">
-                                            {item.ipAddress}: {item.attempts} tentatives
+                                            {item.ipAddress}: {ts('attemptCount', { count: item.attempts })}
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
                             <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
-                                <div className="text-xs text-amber-300">Connexions depuis nouveau pays (24h)</div>
+                                <div className="text-xs text-amber-300">{ts('newCountryConnections24h')}</div>
                                 <div className="mt-1 text-lg font-semibold text-amber-200">{audit.anomalies.newCountrySuccess24h.count}</div>
                                 <div className="mt-1 text-xs text-amber-100/90">
-                                    {(audit.anomalies.newCountrySuccess24h.countries || []).slice(0, 5).join(", ") || "Aucun pays detecte"}
+                                    {(audit.anomalies.newCountrySuccess24h.countries || []).slice(0, 5).join(", ") || ts('noCountryDetected')}
                                 </div>
                             </div>
                         </div>
@@ -631,10 +613,10 @@ export default function PluginSecurityPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Action</TableHead>
-                                <TableHead>Acteur</TableHead>
-                                <TableHead>Cible</TableHead>
+                                <TableHead>{ts('dateColumn')}</TableHead>
+                                <TableHead>{ts('actionColumn')}</TableHead>
+                                <TableHead>{ts('actorColumn')}</TableHead>
+                                <TableHead>{ts('targetColumn')}</TableHead>
                                 <TableHead>IP</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -647,12 +629,12 @@ export default function PluginSecurityPage() {
                                             <span>{row.action}</span>
                                             {(row.anomalyFlags || []).includes("new_country_success") && (
                                                 <Badge variant="outline" className="border-amber-500/50 text-amber-300 bg-amber-500/10">
-                                                    Nouveau pays
+                                                    {ts('newCountryBadge')}
                                                 </Badge>
                                             )}
                                             {(row.anomalyFlags || []).includes("ip_50_attempts") && (
                                                 <Badge variant="destructive">
-                                                    IP rafale
+                                                    {ts('ipBurstBadge')}
                                                 </Badge>
                                             )}
                                         </div>
@@ -662,7 +644,7 @@ export default function PluginSecurityPage() {
                                     <TableCell>
                                         <div>{row.ipAddress || "-"}</div>
                                         {(row.anomalyFlags || []).includes("ip_50_attempts") && (row.ipAttemptCount24h || 0) > 0 && (
-                                            <div className="text-[11px] text-red-400">{row.ipAttemptCount24h} tentatives / 24h</div>
+                                            <div className="text-[11px] text-red-400">{ts('attempts24h', { count: row.ipAttemptCount24h ?? 0 })}</div>
                                         )}
                                     </TableCell>
                                 </TableRow>
@@ -670,7 +652,7 @@ export default function PluginSecurityPage() {
                             {(!audit || audit.rows.length === 0) && (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
-                                        Aucun log d audit.
+                                        {ts('noAuditLogs')}
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -679,7 +661,11 @@ export default function PluginSecurityPage() {
 
                     <div className="flex items-center justify-between">
                         <p className="text-sm text-muted-foreground">
-                            Page {audit?.page || 1} / {audit?.totalPages || 1} ({audit?.total || 0} lignes)
+                            {ts('pageStatus', {
+                                page: audit?.page || 1,
+                                totalPages: audit?.totalPages || 1,
+                                total: audit?.total || 0,
+                            })}
                         </p>
                         <div className="flex gap-2">
                             <Button
@@ -687,14 +673,14 @@ export default function PluginSecurityPage() {
                                 onClick={() => setAuditPage((prev) => Math.max(1, prev - 1))}
                                 disabled={!audit || audit.page <= 1 || loading}
                             >
-                                Precedent
+                                {ts('previousPage')}
                             </Button>
                             <Button
                                 variant="outline"
                                 onClick={() => setAuditPage((prev) => Math.min(audit?.totalPages || prev, prev + 1))}
                                 disabled={!audit || audit.page >= audit.totalPages || loading}
                             >
-                                Suivant
+                                {ts('nextPage')}
                             </Button>
                         </div>
                     </div>

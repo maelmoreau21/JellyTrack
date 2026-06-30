@@ -18,6 +18,7 @@ export default function LoginForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -30,6 +31,7 @@ export default function LoginForm() {
                 redirect: false,
                 username,
                 password,
+                rememberMe: rememberMe ? "true" : "false",
                 callbackUrl
             });
 
@@ -57,14 +59,14 @@ export default function LoginForm() {
                 )}
 
                 <div className="space-y-2">
-                    <Label htmlFor="username" className="text-zinc-600 dark:text-zinc-300 font-medium">{t('username')}</Label>
+                    <Label htmlFor="username" className="text-foreground/80 dark:text-slate-300 font-medium">{t('username')}</Label>
                     <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-zinc-400 dark:text-zinc-500" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             id="username"
                             required
                             placeholder="Jellyfin User"
-                            className="pl-10 bg-zinc-100/80 dark:bg-black/50 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white focus-visible:ring-indigo-500 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 h-10"
+                            className="bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-white/10 text-foreground focus-visible:ring-indigo-500 placeholder:text-muted-foreground/60 h-10 focus:bg-white/60 dark:focus:bg-slate-900/60 transition-colors duration-200 pl-10"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                         />
@@ -72,18 +74,34 @@ export default function LoginForm() {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="password" className="text-zinc-600 dark:text-zinc-300 font-medium">{t('password')}</Label>
+                    <Label htmlFor="password" className="text-foreground/80 dark:text-slate-300 font-medium">{t('password')}</Label>
                     <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-400 dark:text-zinc-500" />
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                             id="password"
                             type="password"
                             required
                             placeholder=".........."
-                            className="pl-10 bg-zinc-100/80 dark:bg-black/50 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white focus-visible:ring-indigo-500 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 h-10"
+                            className="bg-white/40 dark:bg-slate-900/40 border border-white/20 dark:border-white/10 text-foreground focus-visible:ring-indigo-500 placeholder:text-muted-foreground/60 h-10 focus:bg-white/60 dark:focus:bg-slate-900/60 transition-colors duration-200 pl-10"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+                    </div>
+                </div>
+
+                <div className="bg-white/30 dark:bg-slate-900/30 border border-white/15 dark:border-white/5 flex items-start gap-3 rounded-md p-3">
+                    <input
+                        id="rememberMe"
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-border accent-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    />
+                    <div className="space-y-1">
+                        <Label htmlFor="rememberMe" className="cursor-pointer text-sm font-medium text-foreground">
+                            {t('rememberMe')}
+                        </Label>
+                        <p className="text-xs leading-5 text-muted-foreground">{t('rememberMeHint')}</p>
                     </div>
                 </div>
             </CardContent>
@@ -92,7 +110,7 @@ export default function LoginForm() {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full flex items-center justify-center gap-2 h-10 rounded-md font-medium text-sm transition-all shadow-lg ${isLoading ? 'bg-indigo-600/50 text-indigo-200 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-500 hover:shadow-indigo-500/25'}`}
+                    className={`w-full flex items-center justify-center gap-2 h-10 rounded-md font-semibold text-sm transition-all shadow-lg ${isLoading ? 'bg-indigo-600/50 text-indigo-200 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white hover:from-indigo-500 hover:to-cyan-500 hover:shadow-indigo-500/20 hover:scale-[1.01] active:scale-[0.99] duration-150'}`}
                 >
                     {isLoading ? (
                         <>

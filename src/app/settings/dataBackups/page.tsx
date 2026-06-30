@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,22 +20,23 @@ export default function SettingsDataBackupsPage() {
     const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const fileRef = useRef<HTMLInputElement | null>(null);
 
-    const fetchBackups = async () => {
+    const fetchBackups = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         try {
             const res = await fetch("/api/backup/auto");
             const data = await res.json().catch(() => ({}));
             setBackups(data?.backups || []);
-        } catch (e: any) {
+        } catch {
             setMsg({ type: "error", text: t("fileReadError") || "Error reading backups." });
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchBackups();
-    }, []);
+    }, [fetchBackups]);
 
     const triggerBackup = async () => {
         setRunning(true);
@@ -123,7 +124,7 @@ export default function SettingsDataBackupsPage() {
 
     return (
         <div className="p-4 md:p-8 max-w-[1200px] mx-auto space-y-6">
-            <Card className="app-surface border-zinc-200/50 dark:border-zinc-800/50">
+            <Card className="app-surface border-border">
                 <CardHeader>
                     <CardTitle className="text-2xl flex items-center gap-2">
                         <Database className="w-6 h-6 text-cyan-500" />
@@ -189,7 +190,7 @@ export default function SettingsDataBackupsPage() {
                     </div>
 
                     <div className="app-surface-soft rounded-lg border overflow-hidden">
-                        <div className="px-4 py-3 border-b border-zinc-200/50 dark:border-zinc-800/50">
+                        <div className="px-4 py-3 border-b border-border">
                             <h3 className="font-semibold">{t("backupHistory")}</h3>
                             <p className="text-xs text-muted-foreground mt-1">{t("backupHistoryDesc")}</p>
                         </div>
@@ -204,9 +205,9 @@ export default function SettingsDataBackupsPage() {
                             </TableHeader>
                             <TableBody>
                                 {loading ? (
-                                    <TableRow><TableCell colSpan={4} className="text-center py-8 text-zinc-400">{tCommon("loading")}</TableCell></TableRow>
+                                    <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">{tCommon("loading")}</TableCell></TableRow>
                                 ) : backups.length === 0 ? (
-                                    <TableRow><TableCell colSpan={4} className="text-center py-8 text-zinc-400">{t("noAutoBackups")}</TableCell></TableRow>
+                                    <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">{t("noAutoBackups")}</TableCell></TableRow>
                                 ) : (
                                     backups.map((b) => (
                                         <TableRow key={b.name}>

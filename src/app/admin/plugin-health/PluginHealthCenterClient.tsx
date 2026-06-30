@@ -26,6 +26,8 @@ type HealthSnapshot = {
         lastSeen: string | null;
         version: string | null;
         serverName: string | null;
+        jellyfinVersion: string | null;
+        schemaVersion: number | null;
         hasApiKey: boolean;
         endpoint: string;
     };
@@ -66,7 +68,18 @@ type HealthSnapshot = {
         queueDepth: number | null;
         retries: number | null;
         lastHttpCode: number | null;
+        coalescedProgressEvents: number | null;
         note: string;
+    };
+    telemetrySettings: {
+        precisionProfile: string;
+        playingIntervalSeconds: number;
+        pausedIntervalSeconds: number;
+        staleSessionTimeoutSeconds: number;
+        mergeWindowSeconds: number;
+        seekThresholdSeconds: number;
+        retryQueueSize: number;
+        retryFlushBatchSize: number;
     };
     recentFailures: Array<{
         id: string;
@@ -160,6 +173,7 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
     const [thresholds, setThresholds] = useState<HeartbeatThresholds>(FALLBACK_THRESHOLDS);
 
     const loadSnapshot = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         setNotice(null);
         try {
@@ -256,7 +270,7 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
     const thresholdDefaults = useMemo<HeartbeatThresholds>(() => {
         if (!snapshot?.thresholdDefaults) return FALLBACK_THRESHOLDS;
         return normalizeThresholds(snapshot.thresholdDefaults, FALLBACK_THRESHOLDS);
-    }, [snapshot?.thresholdDefaults]);
+    }, [snapshot]);
 
     useEffect(() => {
         let persistedRaw: Partial<HeartbeatThresholds> | null = null;
@@ -272,7 +286,9 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
             }
         }
 
-        setThresholds(normalizeThresholds(persistedRaw ?? thresholdDefaults, thresholdDefaults));
+        Promise.resolve().then(() => {
+            setThresholds(normalizeThresholds(persistedRaw ?? thresholdDefaults, thresholdDefaults));
+        });
     }, [thresholdDefaults]);
 
     useEffect(() => {
@@ -303,12 +319,12 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
             return <Badge className="bg-red-500/15 text-red-400 border-red-500/30">{t("stateCritical")}</Badge>;
         }
         if (severity === "warning") {
-            return <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30">{t("stateWarning")}</Badge>;
+            return <Badge className="bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-400/40">{t("stateWarning")}</Badge>;
         }
         if (severity === "ok") {
             return <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30">{t("stateOk")}</Badge>;
         }
-        return <Badge className="bg-zinc-500/15 text-zinc-300 border-zinc-500/30">{t("stateUnknown")}</Badge>;
+        return <Badge className="bg-zinc-500/15 text-muted-foreground border-zinc-500/30">{t("stateUnknown")}</Badge>;
     }, [t]);
 
     const heartbeatSeries = snapshot?.heartbeat.intervalSeries24h || [];
@@ -392,6 +408,14 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
                             <div className="flex items-center justify-between gap-3">
                                 <span>{t("server")}</span>
                                 <span className="font-medium truncate">{snapshot?.plugin.serverName || "-"}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 text-muted-foreground">
+                                <span>Jellyfin</span>
+                                <span className="font-medium">{snapshot?.plugin.jellyfinVersion || "-"}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 text-muted-foreground">
+                                <span>{t("schemaVersion")}</span>
+                                <span className="font-medium">{snapshot?.plugin.schemaVersion ?? "-"}</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -497,7 +521,7 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
                                         />
                                         <YAxis unit="s" allowDecimals={false} />
                                         <Tooltip
-                                            formatter={(value: number | string, name: string) => {
+                                            formatter={(value: unknown, name: unknown) => {
                                                 const numeric = typeof value === "number" ? value : Number(value);
                                                 const pretty = Number.isFinite(numeric) ? `${Math.round(numeric * 100) / 100}s` : "-";
                                                 return [pretty, name === "intervalSec" ? t("intervalSeries") : t("jitterSeries")];
@@ -643,6 +667,18 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
                             <div className="flex items-center justify-between">
                                 <span>{t("lastHttpCode")}</span>
                                 <span className="font-medium">{snapshot?.pluginReportedMetrics.lastHttpCode ?? "-"}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>{t("progressCoalesces")}</span>
+                                <span className="font-medium">{snapshot?.pluginReportedMetrics.coalescedProgressEvents ?? "-"}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span>{t("precisionProfile")}</span>
+                                <span className="font-medium">{snapshot?.telemetrySettings?.precisionProfile || "-"}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-muted-foreground">
+                                <span>{t("playbackIntervals")}</span>
+                                <span>{snapshot?.telemetrySettings ? `${snapshot.telemetrySettings.playingIntervalSeconds}s / ${snapshot.telemetrySettings.pausedIntervalSeconds}s` : "-"}</span>
                             </div>
                             <p className="text-xs text-muted-foreground pt-2 border-t border-border/60">
                                 {pluginMetricsNote}

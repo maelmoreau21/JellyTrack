@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   AlertCircle,
@@ -12,11 +12,12 @@ import {
   Plug,
   Plus,
   RefreshCw,
-  Server,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 type JellyfinServerRow = {
   id: string;
@@ -29,11 +30,42 @@ type JellyfinServerRow = {
   allowAuthFallback: boolean;
   hasPluginKey: boolean;
   pluginKeyMasked: string;
+  pluginApiKey?: string | null;
   connectionState: "online" | "offline" | "no_api_key";
   connectionMessage: string;
 };
 
 type PluginConnectionState = "connected" | "ready" | "missing";
+type PluginTelemetrySettings = {
+  precisionProfile: "very_precise" | "balanced" | "minimal";
+  playingIntervalSeconds: number;
+  pausedIntervalSeconds: number;
+  staleSessionTimeoutSeconds: number;
+  mergeWindowSeconds: number;
+  seekThresholdSeconds: number;
+  trackPauseResume: boolean;
+  trackSeek: boolean;
+  trackAudioSubtitleChanges: boolean;
+  trackSessionEnded: boolean;
+  retryQueueSize: number;
+  retryFlushBatchSize: number;
+};
+type NumericTelemetryKey = "playingIntervalSeconds" | "pausedIntervalSeconds" | "staleSessionTimeoutSeconds" | "mergeWindowSeconds" | "seekThresholdSeconds" | "retryQueueSize" | "retryFlushBatchSize";
+
+const DEFAULT_TELEMETRY_SETTINGS: PluginTelemetrySettings = {
+  precisionProfile: "very_precise",
+  playingIntervalSeconds: 5,
+  pausedIntervalSeconds: 30,
+  staleSessionTimeoutSeconds: 90,
+  mergeWindowSeconds: 300,
+  seekThresholdSeconds: 20,
+  trackPauseResume: true,
+  trackSeek: true,
+  trackAudioSubtitleChanges: true,
+  trackSessionEnded: true,
+  retryQueueSize: 500,
+  retryFlushBatchSize: 50,
+};
 
 async function copyText(text: string): Promise<void> {
   try {
@@ -65,9 +97,10 @@ export function JellyfinServersSettings() {
   const [copiedPluginKeyServerId, setCopiedPluginKeyServerId] = useState<string | null>(null);
   const [pluginKeyVisible, setPluginKeyVisible] = useState<Record<string, boolean>>({});
   const [pluginKeyByServerId, setPluginKeyByServerId] = useState<Record<string, string>>({});
-  const [globalPluginApiKey, setGlobalPluginApiKey] = useState<string>('');
   const [globalPluginKeyLoading, setGlobalPluginKeyLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [telemetrySettings, setTelemetrySettings] = useState<PluginTelemetrySettings>(DEFAULT_TELEMETRY_SETTINGS);
+  const [telemetrySaving, setTelemetrySaving] = useState<boolean>(false);
 
   const [isMultiMode, setIsMultiMode] = useState<boolean>(false);
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
@@ -76,11 +109,8 @@ export function JellyfinServersSettings() {
   const [apiKey, setApiKey] = useState<string>('');
   const [allowAuthFallback, setAllowAuthFallback] = useState<boolean>(true);
 
-  useEffect(() => {
-    fetchInfo();
-  }, []);
-
-  const fetchInfo = async () => {
+  const fetchInfo = useCallback(async () => {
+    await Promise.resolve();
     setLoading(true);
     try {
       const res = await fetch('/api/settings/jellyfin-servers', { cache: 'no-store' });
@@ -90,22 +120,42 @@ export function JellyfinServersSettings() {
         return;
       }
       const json = await res.json();
-      setServers(json.servers || []);
+      const serverList: JellyfinServerRow[] = json.servers || [];
+      setServers(serverList);
       setPluginKeyReady(Boolean(json.pluginKeyReady));
       setPluginLastSeen(json.pluginLastSeen || null);
       setPluginEndpointPath(json.pluginEndpointPath || '/api/plugin/events');
       setPluginConnected(Boolean(json.pluginConnected));
       setIsMultiMode(Boolean(json.isMultiMode));
-    } catch (e) {
+
+      // Populate pluginKeyByServerId with keys from server list
+      const keysMap: Record<string, string> = {};
+      for (const s of serverList) {
+        if (s.pluginApiKey) {
+          keysMap[s.id] = s.pluginApiKey;
+        }
+      }
+      setPluginKeyByServerId((prev) => ({ ...prev, ...keysMap }));
+
+      const settingsRes = await fetch('/api/settings', { cache: 'no-store' });
+      if (settingsRes.ok) {
+        const settingsJson = await settingsRes.json().catch(() => ({}));
+        if (settingsJson.pluginTelemetrySettings) {
+          setTelemetrySettings({ ...DEFAULT_TELEMETRY_SETTINGS, ...settingsJson.pluginTelemetrySettings });
+        }
+      }
+    } catch {
       setMessage({ type: 'error', text: t('networkErrorFetchServers') });
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchInfo();
+  }, [fetchInfo]);
 
   const effectivePluginEndpoint = typeof window !== 'undefined' ? `${window.location.origin}${pluginEndpointPath}` : pluginEndpointPath;
-  const hasGlobalPluginApiKey = Boolean((globalPluginApiKey || '').trim());
-
   const getPluginStateForServer = (server: JellyfinServerRow): PluginConnectionState => {
     if (server.hasPluginKey && pluginConnected) return 'connected';
     if (server.hasPluginKey) return 'ready';
@@ -113,17 +163,21 @@ export function JellyfinServersSettings() {
   };
 
   const handleGenerateGlobalPluginKey = async () => {
+    if (pluginKeyReady) {
+      const ok = window.confirm(t('globalPluginKeyRegenerateConfirm'));
+      if (!ok) return;
+    }
+
     setGlobalPluginKeyLoading(true);
     try {
       const res = await fetch('/api/plugin/api-key', { method: 'POST' });
-      if (!res.ok) throw new Error('Erreur');
+      if (!res.ok) throw new Error(t('globalPluginKeyError'));
       const json = await res.json().catch(() => ({}));
       const nextGlobalKey = typeof json.apiKey === 'string' ? json.apiKey : '';
       if (!nextGlobalKey) throw new Error('missing-key');
-      setGlobalPluginApiKey(nextGlobalKey);
       setMessage({ type: 'success', text: t('globalPluginKeySuccess') });
       await fetchInfo();
-    } catch (e) {
+    } catch {
       setMessage({ type: 'error', text: t('globalPluginKeyError') });
     } finally {
       setGlobalPluginKeyLoading(false);
@@ -138,7 +192,7 @@ export function JellyfinServersSettings() {
       const res = await fetch('/api/settings/jellyfin-servers/plugin-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, jellyfinServerId, globalApiKey: globalPluginApiKey }),
+        body: JSON.stringify({ id, jellyfinServerId }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -147,7 +201,7 @@ export function JellyfinServersSettings() {
       }
       const json = await res.json();
       return json.pluginApiKey as string | null;
-    } catch (e) {
+    } catch {
       setMessage({ type: 'error', text: t('networkErrorDeriveKey') });
       return null;
     } finally {
@@ -195,6 +249,59 @@ export function JellyfinServersSettings() {
     setPluginKeyVisible((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const applyTelemetryPreset = (profile: PluginTelemetrySettings["precisionProfile"]) => {
+    if (profile === "minimal") {
+      setTelemetrySettings({
+        ...DEFAULT_TELEMETRY_SETTINGS,
+        precisionProfile: "minimal",
+        playingIntervalSeconds: 30,
+        pausedIntervalSeconds: 120,
+        staleSessionTimeoutSeconds: 300,
+        retryQueueSize: 250,
+        retryFlushBatchSize: 25,
+      });
+      return;
+    }
+
+    if (profile === "balanced") {
+      setTelemetrySettings({
+        ...DEFAULT_TELEMETRY_SETTINGS,
+        precisionProfile: "balanced",
+        playingIntervalSeconds: 15,
+        pausedIntervalSeconds: 60,
+        staleSessionTimeoutSeconds: 180,
+      });
+      return;
+    }
+
+    setTelemetrySettings(DEFAULT_TELEMETRY_SETTINGS);
+  };
+
+  const updateTelemetryNumber = (key: NumericTelemetryKey, value: string) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return;
+    setTelemetrySettings((prev) => ({ ...prev, [key]: Math.max(0, Math.round(parsed)) }));
+  };
+
+  const handleSaveTelemetry = async () => {
+    setTelemetrySaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pluginTelemetrySettings: telemetrySettings }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(typeof body.error === 'string' ? body.error : t('telemetrySaveError'));
+      setMessage({ type: 'success', text: t('telemetrySaved') });
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error && error.message ? error.message : t('telemetrySaveError') });
+    } finally {
+      setTelemetrySaving(false);
+    }
+  };
+
   const handleAddServer = async () => {
     setSaving(true);
     try {
@@ -216,7 +323,7 @@ export function JellyfinServersSettings() {
       setShowAddForm(false);
       setMessage({ type: 'success', text: t('serverAddedSuccess') });
       await fetchInfo();
-    } catch (e) {
+    } catch {
       setMessage({ type: 'error', text: t('networkErrorAddServer') });
     } finally {
       setSaving(false);
@@ -264,28 +371,131 @@ export function JellyfinServersSettings() {
           </div>
         )}
 
-        {!pluginKeyReady && (
-          <div className="p-3 rounded-md flex flex-col gap-3 text-sm border bg-red-500/10 text-red-300 border-red-500/30 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className={`p-3 rounded-md flex flex-col gap-3 text-sm border sm:flex-row sm:items-center sm:justify-between ${
+            pluginKeyReady
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/30'
+              : 'bg-red-50 text-red-800 border-red-300 dark:bg-red-500/10 dark:text-red-200 dark:border-red-500/30'
+          }`}
+        >
             <div className="flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5" />
               <div>
-                <p className="font-semibold text-red-200">{t('globalPluginKeyMissing')}</p>
-                <p className="text-red-200/90">{t('globalPluginKeyMissingDesc')}</p>
+                <p className={`font-semibold ${pluginKeyReady ? 'text-emerald-900 dark:text-emerald-100' : 'text-red-900 dark:text-red-200'}`}>
+                  {pluginKeyReady ? t('globalPluginKeyActive') : t('globalPluginKeyMissing')}
+                </p>
+                <p className={pluginKeyReady ? 'text-emerald-800 dark:text-emerald-100/90' : 'text-red-800 dark:text-red-200/90'}>
+                  {pluginKeyReady
+                    ? t('globalPluginKeyActiveDesc')
+                    : t('globalPluginKeyMissingDesc')}
+                </p>
               </div>
             </div>
             <button
               type="button"
               onClick={handleGenerateGlobalPluginKey}
               disabled={globalPluginKeyLoading}
-              className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-red-400/30 bg-red-500/20 hover:bg-red-500/30 text-red-100 text-xs font-medium disabled:opacity-60"
+              className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border text-xs font-medium disabled:opacity-60 ${
+                pluginKeyReady
+                  ? 'border-emerald-500/35 bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:border-emerald-400/30 dark:bg-emerald-500/20 dark:hover:bg-emerald-500/30 dark:text-emerald-50'
+                  : 'border-red-500/35 bg-red-100 text-red-900 hover:bg-red-200 dark:border-red-400/30 dark:bg-red-500/20 dark:hover:bg-red-500/30 dark:text-red-100'
+              }`}
             >
               {globalPluginKeyLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              {t('generateGlobalPluginKey')}
+              {pluginKeyReady ? t('regenerateGlobalPluginKey') : t('generateGlobalPluginKey')}
             </button>
           </div>
-        )}
 
+        <div className="rounded-lg border border-border p-4 space-y-4 bg-muted/10">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-1">
+              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <SlidersHorizontal className="w-4 h-4 text-primary" />
+                {t('pluginTelemetryTitle')}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t('pluginTelemetryDesc')}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {([
+                ["very_precise", "telemetryPresetVeryPrecise"],
+                ["balanced", "telemetryPresetBalanced"],
+                ["minimal", "telemetryPresetMinimal"],
+              ] as const).map(([profile, label]) => (
+                <button
+                  key={profile}
+                  type="button"
+                  onClick={() => applyTelemetryPreset(profile)}
+                  className={`rounded-md border px-3 py-1.5 text-xs font-medium ${
+                    telemetrySettings.precisionProfile === profile
+                      ? 'border-primary/40 bg-primary/15 text-primary'
+                      : 'border-border hover:bg-muted'
+                  }`}
+                >
+                  {t(label)}
+                </button>
+              ))}
+            </div>
+          </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t('telemetryPlayingInterval')}</Label>
+              <Input type="number" min={1} value={telemetrySettings.playingIntervalSeconds} onChange={(e) => updateTelemetryNumber('playingIntervalSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t('telemetryPausedInterval')}</Label>
+              <Input type="number" min={5} value={telemetrySettings.pausedIntervalSeconds} onChange={(e) => updateTelemetryNumber('pausedIntervalSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t('telemetryStaleSession')}</Label>
+              <Input type="number" min={30} value={telemetrySettings.staleSessionTimeoutSeconds} onChange={(e) => updateTelemetryNumber('staleSessionTimeoutSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t('telemetryMergeWindow')}</Label>
+              <Input type="number" min={0} value={telemetrySettings.mergeWindowSeconds} onChange={(e) => updateTelemetryNumber('mergeWindowSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t('telemetrySeekThreshold')}</Label>
+              <Input type="number" min={5} value={telemetrySettings.seekThresholdSeconds} onChange={(e) => updateTelemetryNumber('seekThresholdSeconds', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t('telemetryRetryQueueSize')}</Label>
+              <Input type="number" min={10} value={telemetrySettings.retryQueueSize} onChange={(e) => updateTelemetryNumber('retryQueueSize', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t('telemetryRetryFlushBatchSize')}</Label>
+              <Input type="number" min={1} value={telemetrySettings.retryFlushBatchSize} onChange={(e) => updateTelemetryNumber('retryFlushBatchSize', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            {([
+              ["trackPauseResume", "telemetryTrackPauseResume"],
+              ["trackSeek", "telemetryTrackSeek"],
+              ["trackAudioSubtitleChanges", "telemetryTrackAudioSubtitleChanges"],
+              ["trackSessionEnded", "telemetryTrackSessionEnded"],
+            ] as const).map(([key, label]) => (
+              <div key={key} className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
+                <span className="text-xs font-medium">{t(label)}</span>
+                <Switch checked={Boolean(telemetrySettings[key])} onCheckedChange={(checked) => setTelemetrySettings((prev) => ({ ...prev, [key]: Boolean(checked) }))} />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleSaveTelemetry}
+              disabled={telemetrySaving}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-60"
+            >
+              {telemetrySaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              {t('telemetrySave')}
+            </button>
+          </div>
+        </div>
 
         <div className="space-y-3">
           {loading ? (
@@ -300,7 +510,7 @@ export function JellyfinServersSettings() {
                     <p className="text-sm font-semibold text-foreground">{server.name}</p>
                     <div className="flex flex-wrap items-center gap-2 text-[11px]">
                       <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 ${
-                        server.isPrimary ? 'bg-primary/15 text-primary border-primary/30' : 'bg-zinc-500/10 text-zinc-300 border-zinc-500/30'
+                        server.isPrimary ? 'bg-primary/15 text-primary border-primary/30' : 'bg-zinc-500/10 text-muted-foreground border-zinc-500/30'
                       }`}>
                         <span className={`h-2 w-2 rounded-full ${server.isPrimary ? 'bg-primary' : 'bg-zinc-400'}`} />
                         {server.isPrimary ? t('primaryServerLabel') : t('secondaryServerLabel')}
@@ -310,7 +520,7 @@ export function JellyfinServersSettings() {
                         server.connectionState === 'online'
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
                           : server.connectionState === 'no_api_key'
-                          ? 'bg-zinc-500/10 text-zinc-300 border-zinc-500/30'
+                          ? 'bg-zinc-500/10 text-muted-foreground border-zinc-500/30'
                           : 'bg-red-500/10 text-red-400 border-red-500/30'
                       }`}>
                         <span className={`h-2 w-2 rounded-full ${
@@ -376,12 +586,12 @@ export function JellyfinServersSettings() {
                     <div className="xl:col-span-8 relative">
                       <Label className="text-xs">{t('serverPluginKeyLabel')}</Label>
                       <Input readOnly type={pluginKeyVisible[server.id] ? 'text' : 'password'} value={pluginKeyVisible[server.id] ? pluginKeyByServerId[server.id] || '' : server.pluginKeyMasked || ''} className="font-mono text-xs pr-10" placeholder={pluginKeyReady ? t('clickToShow') : t('generateGlobalFirst')} />
-                      <button type="button" onClick={() => handleTogglePluginKeyVisibility(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="absolute right-2 top-[30px] text-zinc-500 hover:text-zinc-300 disabled:opacity-40">
+                      <button type="button" onClick={() => handleTogglePluginKeyVisibility(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="absolute right-2 top-[30px] text-zinc-500 hover:text-foreground disabled:opacity-40">
                         {pluginKeyVisible[server.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                     <div className="xl:col-span-4 flex items-end">
-                      <button type="button" onClick={() => handleCopyPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id || (!pluginKeyByServerId[server.id] && !server.hasPluginKey)} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
+                      <button type="button" onClick={() => handleCopyPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
                         {pluginLoadingServerId === server.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
                         {copiedPluginKeyServerId === server.id ? t('keyCopied') : t('copyKey')}
                       </button>

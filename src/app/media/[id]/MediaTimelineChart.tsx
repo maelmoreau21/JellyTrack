@@ -5,47 +5,54 @@ import { useTranslations } from "next-intl";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-// --- Types ---
-export type EventType = "pause" | "stop" | "audio_change" | "subtitle_change";
+export type EventType = "pause" | "stop" | "download" | "audio_change" | "subtitle_change" | "seek" | "replay" | "speed_change";
 
 export interface TimelineEvent {
     eventType: EventType;
-    positionMs: number;   // ms position within the media
-    count: number;        // aggregated count at this bucket
+    positionMs: number;
+    count: number;
 }
 
 export interface SessionTimeline {
     id: string;
     username: string;
     jellyfinUserId: string;
-    durationWatched: number; // seconds
+    durationWatched: number;
     startedAt: string;
     events: { eventType: EventType; positionMs: number; metadata?: unknown | string }[];
 }
 
 export interface MediaTimelineChartProps {
     events: TimelineEvent[];
-    durationMs: number;   // total media duration in ms
-    buckets?: number;     // number of segments (default 50)
-    sessions?: SessionTimeline[]; // per-user session data for detail view
+    durationMs: number;
+    buckets?: number;
+    sessions?: SessionTimeline[];
 }
 
-// --- Constants ---
 const EVENT_COLORS: Record<EventType, string> = {
-    stop:            "#ef4444", // red
-    pause:           "#eab308", // yellow
-    audio_change:    "#a855f7", // purple
-    subtitle_change: "#06b6d4", // cyan
+    stop: "#ef4444",
+    pause: "#eab308",
+    seek: "#f97316",
+    replay: "#22c55e",
+    speed_change: "#3b82f6",
+    download: "#8b5cf6",
+    audio_change: "#a855f7",
+    subtitle_change: "#06b6d4",
 };
 
-const EVENT_ICONS: Record<EventType, string> = {
-    stop:            "⏹",
-    pause:           "⏸",
-    audio_change:    "🔊",
-    subtitle_change: "💬",
+const EVENT_TOKENS: Record<EventType, string> = {
+    stop: "Stop",
+    pause: "Pause",
+    seek: "Skip",
+    replay: "Replay",
+    speed_change: "x",
+    download: "D",
+    audio_change: "A",
+    subtitle_change: "Sub",
 };
 
-// --- Helpers ---
+const EVENT_TYPES: EventType[] = ["stop", "download", "pause", "seek", "replay", "speed_change", "audio_change", "subtitle_change"];
+
 function formatMs(ms: number): string {
     const totalSec = Math.floor(ms / 1000);
     const h = Math.floor(totalSec / 3600);
@@ -55,27 +62,95 @@ function formatMs(ms: number): string {
     return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-// --- Component ---
+function parsePositionMs(value: unknown): number | null {
+    const parsed = typeof value === "number"
+        ? value
+        : typeof value === "string"
+            ? Number(value)
+            : NaN;
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function parseEventMetadata(metadata: unknown): Record<string, unknown> | null {
+    if (!metadata) return null;
+    try {
+        const parsed = typeof metadata === "string" ? JSON.parse(metadata) : metadata;
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed as Record<string, unknown>
+            : null;
+    } catch {
+        return null;
+    }
+}
+
+function formatRate(raw: unknown): string | null {
+    const value = typeof raw === "number"
+        ? raw
+        : typeof raw === "string"
+            ? Number(raw.replace(/^x/i, ""))
+            : NaN;
+    if (!Number.isFinite(value)) return null;
+    return `x${value.toFixed(2).replace(/\.?0+$/, "")}`;
+}
+
+function formatEventDetail(eventType: EventType, metadata: unknown): string {
+    const md = parseEventMetadata(metadata);
+    if (!md) return "";
+
+    if (eventType === "seek" || eventType === "replay") {
+        const fromMs = parsePositionMs(md.fromMs);
+        const toMs = parsePositionMs(md.toMs);
+        const from = typeof md.fromLabel === "string" ? md.fromLabel : fromMs !== null ? formatMs(fromMs) : null;
+        const to = typeof md.toLabel === "string" ? md.toLabel : toMs !== null ? formatMs(toMs) : null;
+        if (from !== null && to !== null) return `${from} -> ${to}`;
+    }
+
+    if (eventType === "speed_change") {
+        const from = typeof md.fromRateLabel === "string" ? md.fromRateLabel : formatRate(md.fromRate);
+        const to = typeof md.toRateLabel === "string" ? md.toRateLabel : formatRate(md.toRate);
+        return from && to ? `${from} -> ${to}` : to || "";
+    }
+
+    if (md.from && md.to) {
+        const fmt = (side: unknown) => {
+            if (!side) return "-";
+            if (typeof side === "object" && side !== null) {
+                const s = side as Record<string, unknown>;
+                const label = typeof s.language === "string"
+                    ? s.language
+                    : s.index !== undefined
+                        ? `#${String(s.index)}`
+                        : String(side);
+                const codec = typeof s.codec === "string" ? ` (${s.codec})` : "";
+                return `${label}${codec}`;
+            }
+            return String(side);
+        };
+        return `${fmt(md.from)} -> ${fmt(md.to)}`;
+    }
+
+    return "";
+}
+
 export default function MediaTimelineChart({ events, durationMs, buckets = 50, sessions = [] }: MediaTimelineChartProps) {
     const t = useTranslations("mediaProfile");
     const [hovered, setHovered] = useState<number | null>(null);
-    const [activeTypes, setActiveTypes] = useState<Set<EventType>>(new Set(["stop", "pause", "audio_change", "subtitle_change"]));
+    const [activeTypes, setActiveTypes] = useState<Set<EventType>>(new Set(EVENT_TYPES));
     const [selectedUser, setSelectedUser] = useState<string>("all");
 
-    // Aggregate events into buckets
     const { bucketData, maxCount } = useMemo(() => {
         if (durationMs <= 0 || events.length === 0) {
             return { bucketData: [], maxCount: 0 };
         }
 
         const bucketSize = durationMs / buckets;
-        const data: { startMs: number; endMs: number; events: Record<string, number> }[] = [];
+        const data: { startMs: number; endMs: number; events: Record<EventType, number> }[] = [];
 
         for (let i = 0; i < buckets; i++) {
             data.push({
                 startMs: i * bucketSize,
                 endMs: (i + 1) * bucketSize,
-                events: { stop: 0, pause: 0, audio_change: 0, subtitle_change: 0 },
+                events: { stop: 0, download: 0, pause: 0, seek: 0, replay: 0, speed_change: 0, audio_change: 0, subtitle_change: 0 },
             });
         }
 
@@ -83,7 +158,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
             if (!activeTypes.has(ev.eventType)) continue;
             const idx = Math.min(Math.floor(ev.positionMs / bucketSize), buckets - 1);
             if (idx >= 0 && idx < buckets) {
-                data[idx].events[ev.eventType] = (data[idx].events[ev.eventType] || 0) + ev.count;
+                data[idx].events[ev.eventType] += ev.count;
             }
         }
 
@@ -105,7 +180,6 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
         });
     };
 
-    // Unique users from sessions
     const uniqueUsers = useMemo(() => {
         const map = new Map<string, string>();
         sessions.forEach(s => {
@@ -114,7 +188,6 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
         return Array.from(map.entries());
     }, [sessions]);
 
-    // Filtered sessions for detail view
     const filteredSessions = useMemo(() => {
         if (selectedUser === "all") return sessions.filter(s => s.events && s.events.length > 0);
         return sessions.filter(s => s.jellyfinUserId === selectedUser && s.events && s.events.length > 0);
@@ -127,37 +200,30 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
     return (
         <TooltipProvider delayDuration={100}>
             <div className="space-y-3">
-                {/* Legend / Filters */}
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap gap-3 text-xs">
-                        {Object.entries(EVENT_COLORS).map(([type, color]) => {
-                            const et = type as EventType;
-                            return (
-                                <button
-                                    key={type}
-                                    onClick={() => toggleType(et)}
-                                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
-                                        activeTypes.has(et)
-                                            ? "border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800"
-                                            : "border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 opacity-40"
-                                    }`}
-                                >
-                                    <span
-                                        className="w-2.5 h-2.5 rounded-full"
-                                        style={{ backgroundColor: color }}
-                                    />
-                                    <span className="text-zinc-700 dark:text-zinc-300">
-                                        {EVENT_ICONS[et]} {t(`timeline.label.${et}`)}
-                                    </span>
-                                </button>
-                            );
-                        })}
+                        {EVENT_TYPES.map((et) => (
+                            <button
+                                key={et}
+                                onClick={() => toggleType(et)}
+                                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all ${
+                                    activeTypes.has(et)
+                                        ? "border-primary/30 bg-primary/15 text-primary"
+                                        : "border-border bg-muted/40 opacity-55"
+                                }`}
+                            >
+                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: EVENT_COLORS[et] }} />
+                                <span className="text-foreground/80">
+                                    {EVENT_TOKENS[et]} {t(`timeline.label.${et}`)}
+                                </span>
+                            </button>
+                        ))}
                     </div>
                     {uniqueUsers.length > 1 && (
                         <select
                             value={selectedUser}
                             onChange={(e) => setSelectedUser(e.target.value)}
-                            className="text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md px-2 py-1.5 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                            className="app-field text-xs rounded-md px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40"
                         >
                             <option value="all">{t("allUsers")}</option>
                             {uniqueUsers.map(([uid, name]) => (
@@ -167,25 +233,17 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                     )}
                 </div>
 
-                {/* Timeline chart */}
                 <div className="relative w-full">
-                    {/* Progress bar background */}
-                    <div className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full mb-1" />
+                    <div className="w-full h-2 bg-[var(--surface-nested)] rounded-full mb-1" />
 
-                    {/* Stacked bar chart */}
                     <div className="flex w-full gap-px" style={{ height: "120px" }}>
                         {bucketData.map((bucket, i) => {
                             const total = Object.values(bucket.events).reduce((a, b) => a + b, 0);
                             const heightPct = maxCount > 0 ? (total / maxCount) * 100 : 0;
                             const isHovered = hovered === i;
-
-                            // Stack segments within the bar
-                            const segments: { type: EventType; count: number; color: string }[] = [];
-                            for (const type of ["stop", "pause", "audio_change", "subtitle_change"] as EventType[]) {
-                                if (bucket.events[type] > 0 && activeTypes.has(type)) {
-                                    segments.push({ type, count: bucket.events[type], color: EVENT_COLORS[type] });
-                                }
-                            }
+                            const segments = EVENT_TYPES
+                                .filter(type => bucket.events[type] > 0 && activeTypes.has(type))
+                                .map(type => ({ type, count: bucket.events[type], color: EVENT_COLORS[type] }));
 
                             return (
                                 <Tooltip key={i}>
@@ -217,14 +275,14 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                         </div>
                                     </TooltipTrigger>
                                     {total > 0 && (
-                                        <TooltipContent className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 text-xs space-y-1">
-                                            <p className="font-semibold text-zinc-300">
-                                                {formatMs(bucket.startMs)} – {formatMs(bucket.endMs)}
+                                        <TooltipContent className="app-surface text-xs space-y-1">
+                                            <p className="font-semibold text-muted-foreground">
+                                                {formatMs(bucket.startMs)} - {formatMs(bucket.endMs)}
                                             </p>
                                             {segments.map(seg => (
                                                 <div key={seg.type} className="flex items-center gap-1.5">
                                                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: seg.color }} />
-                                                    <span>{EVENT_ICONS[seg.type]} {t(`timeline_${seg.type}`)}: {seg.count}</span>
+                                                    <span>{EVENT_TOKENS[seg.type]} {t(`timeline_${seg.type}`)}: {seg.count}</span>
                                                 </div>
                                             ))}
                                         </TooltipContent>
@@ -234,8 +292,7 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                         })}
                     </div>
 
-                    {/* Time axis labels */}
-                    <div className="flex justify-between text-[10px] text-zinc-500 mt-1 px-0.5">
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1 px-0.5">
                         <span>0:00</span>
                         <span>{formatMs(durationMs * 0.25)}</span>
                         <span>{formatMs(durationMs * 0.5)}</span>
@@ -244,10 +301,9 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                     </div>
                 </div>
 
-                {/* Per-session detail timelines */}
                 {sessions.length > 0 && filteredSessions.length > 0 && (
-                    <div className="space-y-1.5 mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800/50">
-                        <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">
+                    <div className="space-y-1.5 mt-3 pt-3 border-t border-border/50">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                             {t("sessionDetail")} ({filteredSessions.length})
                         </h4>
                         <div className="max-h-[220px] overflow-y-auto space-y-1 pr-1 scrollbar-thin">
@@ -255,48 +311,27 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                 <div key={session.id} className="flex items-center gap-2 group">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <span className="text-[10px] text-zinc-500 w-20 shrink-0 truncate cursor-default">
+                                            <span className="text-[10px] text-muted-foreground w-20 shrink-0 truncate cursor-default">
                                                 {session.username}
                                             </span>
                                         </TooltipTrigger>
-                                        <TooltipContent className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 text-xs">
+                                        <TooltipContent className="app-surface text-xs">
                                             <p>{session.username}</p>
-                                            <p className="text-zinc-400">{new Date(session.startedAt).toLocaleDateString(undefined, { day: "2-digit", month: "2-digit", year: "numeric" })}</p>
-                                            <p className="text-zinc-400">{Math.round(session.durationWatched / 60)} min • {session.events.length} {t("eventsCount")}</p>
+                                            <p className="text-muted-foreground">{new Date(session.startedAt).toLocaleDateString(undefined, { day: "2-digit", month: "2-digit", year: "numeric" })}</p>
+                                            <p className="text-muted-foreground">{Math.round(session.durationWatched / 60)} min - {t("eventsCount", { count: session.events.length })}</p>
                                         </TooltipContent>
                                     </Tooltip>
-                                    <div className="relative flex-1 h-5 bg-zinc-800/30 rounded border border-zinc-200 dark:border-zinc-800/50 group-hover:border-zinc-700/50 transition-colors">
-                                        {/* Watched progress overlay */}
+                                    <div className="relative flex-1 h-5 bg-[var(--surface-nested)] rounded border border-border/50 group-hover:border-primary/30 transition-colors">
                                         <div
-                                            className="absolute inset-y-0 left-0 bg-zinc-700/20 rounded-l"
+                                            className="absolute inset-y-0 left-0 bg-primary/10 rounded-l"
                                             style={{ width: `${Math.min((session.durationWatched * 1000 / durationMs) * 100, 100)}%` }}
                                         />
-                                        {/* Event markers */}
                                         {session.events
                                             .filter(e => activeTypes.has(e.eventType))
                                             .map((evt, ei) => {
                                                 const pct = Math.min((evt.positionMs / durationMs) * 100, 100);
                                                 const color = EVENT_COLORS[evt.eventType] || EVENT_COLORS.stop;
-                                                let detail = '';
-                                                try {
-                                                    const mdRaw = typeof evt.metadata === 'string' ? JSON.parse(evt.metadata) : evt.metadata;
-                                                    const md = mdRaw as Record<string, unknown> | undefined;
-                                                    if (md && md.from && md.to) {
-                                                        const fmt = (side: unknown) => {
-                                                            if (!side) return '—';
-                                                            if (typeof side === 'object' && side !== null) {
-                                                                const s = side as Record<string, unknown>;
-                                                                const label = typeof s.language === 'string' ? s.language : (s.index !== undefined ? `#${String(s.index)}` : String(side));
-                                                                const codec = typeof s.codec === 'string' ? ` (${s.codec})` : '';
-                                                                return `${label}${codec}`;
-                                                            }
-                                                            return String(side);
-                                                        };
-                                                        detail = `${fmt(md.from)} → ${fmt(md.to)}`;
-                                                    } else if (md && md.from !== undefined && md.to !== undefined) {
-                                                        detail = `${String(md.from)} → ${String(md.to)}`;
-                                                    }
-                                                } catch {}
+                                                const detail = formatEventDetail(evt.eventType, evt.metadata);
                                                 return (
                                                     <Tooltip key={ei}>
                                                         <TooltipTrigger asChild>
@@ -305,14 +340,14 @@ export default function MediaTimelineChart({ events, durationMs, buckets = 50, s
                                                                 style={{ left: `${pct}%`, backgroundColor: color, opacity: 0.85 }}
                                                             />
                                                         </TooltipTrigger>
-                                                        <TooltipContent className="bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 text-xs">
-                                                            {EVENT_ICONS[evt.eventType]} {t(`timeline_${evt.eventType}`)}{detail ? ` — ${detail}` : ''} @ {formatMs(evt.positionMs)}
+                                                        <TooltipContent className="app-surface text-xs">
+                                                            {EVENT_TOKENS[evt.eventType]} {t(`timeline_${evt.eventType}`)}{detail ? ` - ${detail}` : ""} @ {formatMs(evt.positionMs)}
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 );
                                             })}
                                     </div>
-                                    <span className="text-[10px] text-zinc-600 w-10 text-right shrink-0">
+                                    <span className="text-[10px] text-muted-foreground w-10 text-right shrink-0">
                                         {Math.round(session.durationWatched / 60)}m
                                     </span>
                                 </div>

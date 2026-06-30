@@ -52,49 +52,8 @@ export function resolveSelectedServerIds(input: {
   return {
     selectedServerIds,
     selectedServerIdsParam: serializeServerScope(selectedServerIds),
-    source: hasQueryParam ? "query" : (selectedServerIds.length > 0 ? "cookie" : "none"),
+    source: hasQueryParam ? "query" : selectedServerIds.length > 0 ? "cookie" : "none",
   };
-}
-
-// Async-aware resolver: when multi-server is disabled, fall back to the master server
-// by ensuring it exists in the DB and returning its `id` (DB PK) so server-side
-// pages correctly scope queries in `single` mode. Uses dynamic import to avoid
-// including server-only modules in client bundles.
-export async function resolveSelectedServerIdsAsync(input: {
-  multiServerEnabled: boolean;
-  selectableServerIds: string[];
-  requestedServersParam?: string | null;
-  cookieServersParam?: string | null;
-}): Promise<{
-  selectedServerIds: string[];
-  selectedServerIdsParam: string;
-  source: "query" | "cookie" | "none";
-}> {
-  // Use the synchronous resolver first.
-  const base = resolveSelectedServerIds(input as any);
-
-  // If we're in multi-server mode, or a selection was explicit, return base result.
-  if (input.multiServerEnabled || base.selectedServerIds.length > 0) {
-    return base;
-  }
-
-  // Single-server mode: resolve the master server record and return its DB id.
-  try {
-    const mod = await import("@/lib/serverRegistry");
-    if (typeof mod.ensureMasterServer === "function") {
-      const master = await mod.ensureMasterServer();
-      const id = master?.id ? String(master.id) : "";
-      if (id) {
-        const serialized = serializeServerScope([id]);
-        return { selectedServerIds: [id], selectedServerIdsParam: serialized, source: "none" };
-      }
-    }
-  } catch (e) {
-    // Fallback to base if anything goes wrong (keep previous behavior)
-    // Do not throw here — best-effort only.
-  }
-
-  return base;
 }
 
 export function readPersistedServerScope(): string[] {

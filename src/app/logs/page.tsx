@@ -1,27 +1,32 @@
-import { Users, ChevronLeft, ChevronRight, ShieldAlert, AlertTriangle, Terminal, PlayCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldAlert, AlertTriangle, Terminal, PlayCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogFilters } from "./LogFilters";
 import LogSearchBar from "./LogSearchBar";
 import { ColumnToggle } from "./ColumnToggle";
-import { FiltersCollapse } from "./FiltersCollapse";
 import { SavedFilters } from "@/components/SavedFilters";
 import LogsListClient from "./LogsListClient";
 import SystemLogsListClient, { SystemLogEntry } from "./SystemLogsListClient";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import prisma from "@/lib/prisma";
+import redis from "@/lib/redis";
 import { getTranslations, getLocale } from 'next-intl/server';
-import type { SafeLog, SafeMedia, SafeTelemetryEvent } from '@/types/logs';
+import type { SafeLog, SafeMedia } from '@/types/logs';
 import type { Prisma } from '@prisma/client';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import { readSmartSecurityThresholdsFromResolutionSettings } from "@/lib/securitySmartThresholds";
 import { cn } from "@/lib/utils";
+import { normalizeBitrateToKbps } from "@/lib/bitrate";
+import { buildJellyfinApiKeyHeaders } from "@/lib/jellyfinServers";
+import { normalizeLanguageTag } from "@/lib/language";
+import { buildStreamRedisKey } from "@/lib/serverRegistry";
 
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from "@/lib/serverScope";
+import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
+import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
 
 export const dynamic = "force-dynamic";
@@ -40,44 +45,162 @@ function parseVisibleColumns(colsParam: string | undefined): Column[] {
     return parsed.length >= 2 ? parsed : DEFAULT_VISIBLE;
 }
 
-// ... helper functions (fetchJellyfinSubtitleMeta, detectWatchParties) remain the same ...
+type JellyfinMetaRequest = {
+    itemId: string;
+    serverId?: string | null;
+};
 
-async function fetchJellyfinSubtitleMeta(itemIds: string[]): Promise<Map<string, JellyfinSubtitleMeta>> {
-    const uniqueIds = Array.from(new Set(itemIds.filter(Boolean)));
-    const metaMap = new Map<string, JellyfinSubtitleMeta>();
-    if (uniqueIds.length === 0) return metaMap;
+type ActiveStreamLogMeta = {
+    bitrate: number | null;
+    audioCodec: string;
+    audioStreamIndex: number | null;
+};
 
-    const jellyfinUrl = process.env.JELLYFIN_URL;
-    const jellyfinApiKey = process.env.JELLYFIN_API_KEY;
-    if (!jellyfinUrl || !jellyfinApiKey) return metaMap;
+function getMetaKey(serverId: string | null | undefined, itemId: string | null | undefined): string {
+    return `${serverId || "default"}:${itemId || ""}`;
+}
 
-    try {
-        const ids = uniqueIds.map(encodeURIComponent).join(',');
-        const url = `${jellyfinUrl}/Items?Ids=${ids}&Fields=ParentId,SeriesName,SeasonName,Album,AlbumArtist,AlbumArtists,Artists`;
-        const res = await fetch(url, {
-            headers: { "X-Emby-Token": jellyfinApiKey },
-            next: { revalidate: 300 },
+function normalizeComparableCodec(value: string | null | undefined): string | null {
+    const normalized = String(value || "").trim().toLowerCase();
+    return normalized || null;
+}
+
+function parseAudioStreamIndex(value: unknown): number | null {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+}
+
+function getStringField(record: Record<string, unknown>, keys: string[]): string | null {
+    for (const key of keys) {
+        const value = record[key];
+        if (typeof value === "string" && value.trim()) return value;
+    }
+    return null;
+}
+
+function parseJellyfinAudioStreams(item: Record<string, unknown>): JellyfinAudioStreamMeta[] {
+    const streams = Array.isArray(item?.MediaStreams) ? item.MediaStreams : [];
+    return streams
+        .filter((stream): stream is Record<string, unknown> =>
+            Boolean(stream) &&
+            typeof stream === "object" &&
+            String((stream as Record<string, unknown>).Type || (stream as Record<string, unknown>).type || "").toLowerCase() === "audio"
+        )
+        .map((stream) => ({
+            index: parseAudioStreamIndex(stream.Index ?? stream.index),
+            codec: getStringField(stream, ["Codec", "codec"]),
+            language: getStringField(stream, ["Language", "DisplayLanguage", "language"]),
+            bitRateKbps: normalizeBitrateToKbps(stream.BitRate ?? stream.Bitrate ?? stream.bitRate ?? stream.bitrate),
+        }));
+}
+
+async function resolveJellyfinMetadataConnection(serverId: string | null) {
+    const envBaseUrl = String(process.env.JELLYFIN_URL || "").trim().replace(/\/+$/, "");
+    const envApiKey = String(process.env.JELLYFIN_API_KEY || "").trim();
+
+    if (serverId) {
+        const server = await prisma.server.findUnique({
+            where: { id: serverId },
+            select: { url: true, jellyfinApiKey: true },
         });
-        if (!res.ok) return metaMap;
 
-        const data = await res.json();
-        const items = Array.isArray(data?.Items) ? data.Items : [];
-        for (const item of items) {
-            const id = typeof item?.Id === 'string' ? item.Id : null;
-            if (!id) continue;
-            metaMap.set(id, {
-                parentId: item?.ParentId || null,
-                seriesName: item?.SeriesName || null,
-                seasonName: item?.SeasonName || null,
-                albumName: item?.Album || null,
-                albumArtist: item?.AlbumArtist || item?.AlbumArtists?.[0]?.Name || item?.AlbumArtists?.[0] || null,
-                artist: item?.Artists?.[0] || null,
-            });
+        if (server) {
+            const baseUrl = String(server.url || "").trim().replace(/\/+$/, "") || envBaseUrl;
+            const apiKey = String(server.jellyfinApiKey || "").trim() || envApiKey;
+            if (baseUrl && apiKey) return { baseUrl, apiKey };
         }
-    } catch {
+    }
+
+    if (!envBaseUrl || !envApiKey) return null;
+    return { baseUrl: envBaseUrl, apiKey: envApiKey };
+}
+
+async function fetchJellyfinSubtitleMeta(requests: JellyfinMetaRequest[]): Promise<Map<string, JellyfinSubtitleMeta>> {
+    const metaMap = new Map<string, JellyfinSubtitleMeta>();
+    const grouped = new Map<string, { serverId: string | null; itemIds: Set<string> }>();
+
+    for (const request of requests) {
+        if (!request.itemId) continue;
+        const key = request.serverId || "default";
+        if (!grouped.has(key)) grouped.set(key, { serverId: request.serverId || null, itemIds: new Set<string>() });
+        grouped.get(key)!.itemIds.add(request.itemId);
+    }
+
+    for (const group of grouped.values()) {
+        const uniqueIds = Array.from(group.itemIds);
+        if (uniqueIds.length === 0) continue;
+
+        const connection = await resolveJellyfinMetadataConnection(group.serverId);
+        if (!connection) continue;
+
+        try {
+            const ids = uniqueIds.map(encodeURIComponent).join(',');
+            const url = `${connection.baseUrl}/Items?Ids=${ids}&Fields=ParentId,SeriesName,SeasonName,Album,AlbumArtist,AlbumArtists,Artists,MediaStreams`;
+            const res = await fetch(url, {
+                headers: buildJellyfinApiKeyHeaders(connection.apiKey),
+                next: { revalidate: 300 },
+            });
+            if (!res.ok) continue;
+
+            const data = await res.json();
+            const items = Array.isArray(data?.Items) ? data.Items : [];
+            for (const item of items) {
+                const id = typeof item?.Id === 'string' ? item.Id : null;
+                if (!id) continue;
+                metaMap.set(getMetaKey(group.serverId, id), {
+                    parentId: item?.ParentId || null,
+                    seriesName: item?.SeriesName || null,
+                    seasonName: item?.SeasonName || null,
+                    albumName: item?.Album || null,
+                    albumArtist: item?.AlbumArtist || item?.AlbumArtists?.[0]?.Name || item?.AlbumArtists?.[0] || null,
+                    artist: item?.Artists?.[0] || null,
+                    audioStreams: parseJellyfinAudioStreams(item),
+                });
+            }
+        } catch {
+        }
     }
 
     return metaMap;
+}
+
+function resolveAudioBitrateKbps(log: SafeLog, metadata: JellyfinSubtitleMeta | null, active: ActiveStreamLogMeta | null): number | null {
+    const audioStreams = (metadata?.audioStreams || []).filter((stream) => stream.bitRateKbps !== null);
+    if (audioStreams.length > 0) {
+        if (active?.audioStreamIndex !== null && active?.audioStreamIndex !== undefined) {
+            const byIndex = audioStreams.find((stream) => stream.index !== null && stream.index === active.audioStreamIndex);
+            if (byIndex?.bitRateKbps) return byIndex.bitRateKbps;
+        }
+
+        const logLanguage = normalizeLanguageTag(log.audioLanguage);
+        const logCodec = normalizeComparableCodec(log.audioCodec || active?.audioCodec || null);
+        const byLanguageAndCodec = audioStreams.find((stream) => {
+            const streamLanguage = normalizeLanguageTag(stream.language);
+            const streamCodec = normalizeComparableCodec(stream.codec);
+            return logLanguage && logCodec && streamLanguage === logLanguage && streamCodec === logCodec;
+        });
+        if (byLanguageAndCodec?.bitRateKbps) return byLanguageAndCodec.bitRateKbps;
+
+        const byLanguage = audioStreams.find((stream) => {
+            const streamLanguage = normalizeLanguageTag(stream.language);
+            return logLanguage && streamLanguage === logLanguage;
+        });
+        if (byLanguage?.bitRateKbps) return byLanguage.bitRateKbps;
+
+        const byCodec = audioStreams.find((stream) => {
+            const streamCodec = normalizeComparableCodec(stream.codec);
+            return logCodec && streamCodec === logCodec;
+        });
+        if (byCodec?.bitRateKbps) return byCodec.bitRateKbps;
+
+        if (audioStreams.length === 1) return audioStreams[0].bitRateKbps;
+    }
+
+    return normalizeBitrateToKbps(log.bitrate ?? active?.bitrate ?? null);
 }
 
 function toValidTimestamp(value: unknown): number | null {
@@ -86,36 +209,6 @@ function toValidTimestamp(value: unknown): number | null {
     return Number.isFinite(ts) ? ts : null;
 }
 
-function detectWatchParties(logs: SafeLog[]): Map<string, string> {
-    const WINDOW_MS = 5 * 60 * 1000;
-    const byMedia = new Map<string, Array<{ log: SafeLog; startedAtMs: number }>>();
-    logs.forEach(log => {
-        const mId = log.mediaId;
-        const startedAtMs = toValidTimestamp(log.startedAt);
-        if (!startedAtMs || !mId) return;
-        if (!byMedia.has(mId)) byMedia.set(mId, []);
-        byMedia.get(mId)!.push({ log, startedAtMs });
-    });
-    const partyMap = new Map<string, string>();
-    let partyCounter = 0;
-    byMedia.forEach((mediaLogs) => {
-        const sorted = [...mediaLogs].sort((a, b) => a.startedAtMs - b.startedAtMs);
-        let clusterStart = 0;
-        for (let i = 1; i <= sorted.length; i++) {
-            if (i === sorted.length || sorted[i].startedAtMs - sorted[i - 1].startedAtMs > WINDOW_MS) {
-                const cluster = sorted.slice(clusterStart, i);
-                const uniqueUsers = new Set(cluster.map((item) => item.log.userId));
-                if (uniqueUsers.size >= 2) {
-                    partyCounter++;
-                    const pid = `party-${partyCounter}`;
-                    cluster.forEach((item) => partyMap.set(item.log.id, pid));
-                }
-                clusterStart = i;
-            }
-        }
-    });
-    return partyMap;
-}
 
 type JellyfinSubtitleMeta = {
     parentId: string | null;
@@ -124,6 +217,14 @@ type JellyfinSubtitleMeta = {
     albumName: string | null;
     albumArtist: string | null;
     artist: string | null;
+    audioStreams: JellyfinAudioStreamMeta[];
+};
+
+type JellyfinAudioStreamMeta = {
+    index: number | null;
+    codec: string | null;
+    language: string | null;
+    bitRateKbps: number | null;
 };
 
 export default async function LogsPage({
@@ -285,7 +386,7 @@ export default async function LogsPage({
                 user: { select: { id: true, username: true, jellyfinUserId: true } },
                 media: { select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true, resolution: true, durationMs: true } },
                 telemetryEvents: {
-                    select: { eventType: true, positionMs: true, createdAt: true },
+                    select: { eventType: true, positionMs: true, createdAt: true, metadata: true },
                     orderBy: { createdAt: 'desc' },
                     take: MAX_TELEMETRY_EVENTS_PER_LOG,
                 },
@@ -325,6 +426,7 @@ export default async function LogsPage({
 
         const candidateIps = Array.from(new Set(logs.map(l => l.ipAddress).filter((v): v is string => !!v)));
         if (candidateIps.length > 0) {
+            // eslint-disable-next-line react-hooks/purity
             const hotIpSince = new Date(Date.now() - hotIpWindowMs);
             const hotIpRows = await prisma.playbackHistory.groupBy({
                 by: ["ipAddress"],
@@ -344,22 +446,57 @@ export default async function LogsPage({
         }
         topHotIps = Array.from(hotIpCountByIp.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([ip, count]) => ({ ipAddress: ip, attempts: count }));
 
-        const activeStreams = await prisma.activeStream.findMany({ select: { userId: true, mediaId: true, bitrate: true } });
-        const activeStreamMap = new Map(activeStreams.map(e => [`${e.userId}:${e.mediaId}`, e.bitrate ?? null]));
+        const activeStreams = await prisma.activeStream.findMany({
+            select: { serverId: true, sessionId: true, userId: true, mediaId: true, bitrate: true, audioCodec: true },
+        });
+        const activeStreamMap = new Map<string, ActiveStreamLogMeta>();
+        await Promise.all(activeStreams.map(async (stream) => {
+            let audioStreamIndex: number | null = null;
+            try {
+                const scopedPayload = await redis.get(buildStreamRedisKey(stream.serverId, stream.sessionId));
+                if (scopedPayload) {
+                    const parsed = JSON.parse(scopedPayload) as Record<string, unknown>;
+                    audioStreamIndex = parseAudioStreamIndex(parsed.audioStreamIndex ?? parsed.AudioStreamIndex);
+                }
+            } catch {
+            }
+
+            activeStreamMap.set(`${stream.userId}:${stream.mediaId}`, {
+                bitrate: stream.bitrate ?? null,
+                audioCodec: stream.audioCodec ?? "",
+                audioStreamIndex,
+            });
+        }));
         const activePairSet = new Set(activeStreams.map(e => `${e.userId}:${e.mediaId}`));
 
         safeLogs = logs.map(log => ({
             ...log,
+            serverId: log.serverId,
             startedAt: log.startedAt.toISOString(),
             endedAt: log.endedAt?.toISOString() || null,
-            media: log.media ? { ...log.media, durationMs: log.media.durationMs ? String(log.media.durationMs) : null } : null,
+            media: log.media ? { ...log.media, serverId: log.serverId, durationMs: log.media.durationMs ? String(log.media.durationMs) : null } : null,
             telemetryEvents: log.telemetryEvents.map(e => ({ ...e, positionMs: String(e.positionMs), createdAt: e.createdAt.toISOString() })),
             isActuallyActive: !log.endedAt && activePairSet.has(`${log.userId}:${log.mediaId}`),
-            bitrate: activeStreamMap.get(`${log.userId}:${log.mediaId}`) ?? null,
+            bitrate: normalizeBitrateToKbps(log.bitrate),
             anomalyFlags: Array.from(anomalyFlagsByLogId.get(log.id) || []),
         }));
 
-        jellyfinMetaMap = await fetchJellyfinSubtitleMeta(safeLogs.map(l => l.media?.jellyfinMediaId).filter((id): id is string => !!id));
+        const metaRequests: JellyfinMetaRequest[] = safeLogs.flatMap((log) =>
+            log.media?.jellyfinMediaId
+                ? [{ itemId: log.media.jellyfinMediaId, serverId: log.serverId }]
+                : []
+        );
+        jellyfinMetaMap = await fetchJellyfinSubtitleMeta(metaRequests);
+
+        safeLogs = safeLogs.map((log) => {
+            const metadata = log.media?.jellyfinMediaId ? jellyfinMetaMap.get(getMetaKey(log.serverId, log.media.jellyfinMediaId)) || null : null;
+            const active = activeStreamMap.get(`${log.userId}:${log.mediaId}`) || null;
+            return {
+                ...log,
+                fallbackImageParentId: log.media?.parentId || metadata?.parentId || null,
+                bitrate: resolveAudioBitrateKbps(log, metadata, active),
+            };
+        });
     } else {
         // --- System Logs Logic (Audit & Health) ---
         const whereAudit: Prisma.AdminAuditLogWhereInput = {};
@@ -404,8 +541,8 @@ export default async function LogsPage({
                 id: l.id, 
                 type: 'audit' as const, 
                 action: l.action, 
-                actorUsername: l.actorUsername, 
-                ipAddress: l.ipAddress, 
+                actorUsername: l.actorUsername ?? undefined,
+                ipAddress: l.ipAddress ?? undefined,
                 createdAt: l.createdAt.toISOString(), 
                 details: l.details 
             })),
@@ -427,21 +564,27 @@ export default async function LogsPage({
     const safePage = Math.min(currentPage, totalPages);
 
     // Metadata Helpers for Application tab
-    const parentIds = new Set<string>();
+    const parentTargets = new Map<string, { serverId: string | null; jellyfinMediaId: string }>();
     safeLogs.forEach(log => {
-        const metadata = log.media?.jellyfinMediaId ? jellyfinMetaMap.get(log.media.jellyfinMediaId) : null;
-        if (log.media?.parentId || metadata?.parentId) parentIds.add(log.media?.parentId || metadata!.parentId!);
+        const metadata = log.media?.jellyfinMediaId ? jellyfinMetaMap.get(getMetaKey(log.serverId, log.media.jellyfinMediaId)) : null;
+        const parentId = log.media?.parentId || metadata?.parentId || null;
+        if (parentId) parentTargets.set(getMetaKey(log.serverId, parentId), { serverId: log.serverId || null, jellyfinMediaId: parentId });
     });
-    const [parentMedia, grandparentMediaRows] = await Promise.all([
-        parentIds.size > 0 ? prisma.media.findMany({ where: { jellyfinMediaId: { in: Array.from(parentIds) } }, select: { jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true } }) : [],
-        parentIds.size > 0 ? prisma.media.findMany({ where: { parentId: { in: Array.from(parentIds) } }, select: { parentId: true, jellyfinMediaId: true, title: true, type: true } }) : [],
-    ]);
-    const parentMap = new Map(parentMedia.map(pm => [pm.jellyfinMediaId, pm]));
+    const parentMedia = parentTargets.size > 0 ? await prisma.media.findMany({
+        where: {
+            OR: Array.from(parentTargets.values()).map((target) => ({
+                ...(target.serverId ? { serverId: target.serverId } : {}),
+                jellyfinMediaId: target.jellyfinMediaId,
+            })),
+        },
+        select: { serverId: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true },
+    }) : [];
+    const parentMap = new Map(parentMedia.map(pm => [getMetaKey(pm.serverId, pm.jellyfinMediaId), pm]));
     
-    function getMediaSubtitle(media: SafeMedia | null): string | null {
+    function getMediaSubtitle(media: SafeMedia | null, serverId: string | null | undefined): string | null {
         if (!media) return null;
-        const metadata = media.jellyfinMediaId ? jellyfinMetaMap.get(media.jellyfinMediaId) : null;
-        if (media.type === 'Episode') return metadata?.seriesName || parentMap.get(media.parentId || '')?.title || null;
+        const metadata = media.jellyfinMediaId ? jellyfinMetaMap.get(getMetaKey(serverId, media.jellyfinMediaId)) : null;
+        if (media.type === 'Episode') return metadata?.seriesName || parentMap.get(getMetaKey(serverId, media.parentId))?.title || null;
         if (media.type === 'Audio' || media.type === 'Track') return metadata?.albumArtist || metadata?.artist || media.artist || null;
         return null;
     }
@@ -462,14 +605,14 @@ export default async function LogsPage({
                     </div>
 
                     {/* Tab Switcher moved to header */}
-                    <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg shadow-inner">
+                    <div className="app-surface-soft flex items-center p-1 rounded-lg shadow-inner">
                         <Link
                             href={buildPageUrl(1, 'application')}
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
                                 activeTab === 'application'
-                                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                                    ? "bg-primary/15 text-primary shadow-sm border border-primary/25"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                         >
                             <PlayCircle className="w-4 h-4" />
@@ -480,8 +623,8 @@ export default async function LogsPage({
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all",
                                 activeTab === 'system'
-                                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                                    ? "bg-primary/15 text-primary shadow-sm border border-primary/25"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                         >
                             <Terminal className="w-4 h-4" />
@@ -501,11 +644,11 @@ export default async function LogsPage({
                             </CardHeader>
                             <CardContent>
                                 <div className="grid gap-2 md:grid-cols-2">
-                                    <div className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 p-3">
+                                    <div className="rounded-md border border-border p-3">
                                         <div className="text-xs text-muted-foreground">{tl('smartNewCountryLabel')}</div>
                                         <div className="mt-1 text-lg font-semibold text-amber-400">{newCountryAlerts}</div>
                                     </div>
-                                    <div className="rounded-md border border-zinc-200/70 dark:border-zinc-800/70 p-3">
+                                    <div className="rounded-md border border-border p-3">
                                         <div className="text-xs text-muted-foreground">{tl('smartIpBurstLabel')}</div>
                                         <div className="mt-1 flex items-center gap-2">
                                             <AlertTriangle className="w-4 h-4 text-red-400" />
@@ -517,7 +660,7 @@ export default async function LogsPage({
                         </Card>
                     )}
 
-                    <Card className="border-0 shadow-sm bg-white dark:bg-zinc-900 ring-1 ring-zinc-200 dark:ring-zinc-800">
+                    <Card className="app-surface shadow-sm ring-1 ring-border/70">
                         <CardContent className="space-y-4 pt-6">
                             <div className="flex items-start gap-2 flex-wrap">
                                 <div className="flex-1 w-full relative z-10">
@@ -532,7 +675,7 @@ export default async function LogsPage({
                             </div>
 
                             {activeTab === 'application' && (
-                                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
+                                <div className="pt-2 border-t border-border/70 space-y-4">
                                     <ServerFilter servers={selectableServerOptions} enabled={multiServerEnabled} showOutsideDashboard />
                                     <LogFilters 
                                         initialQuery={query} initialSort={sort} initialHideZapped={hideZapped} initialType={typeFilter}
@@ -548,7 +691,7 @@ export default async function LogsPage({
                     <div className="app-surface-soft border rounded-md overflow-x-auto w-full mt-6">
                         {activeTab === 'application' ? (
                             <LogsListClient 
-                                serverLogs={safeLogs.map(log => ({ ...log, mediaSubtitle: getMediaSubtitle(log.media) }))} 
+                                serverLogs={safeLogs.map(log => ({ ...log, mediaSubtitle: getMediaSubtitle(log.media ?? null, log.serverId) }))}
                                 visibleColumns={visibleColumns as string[]} 
                             />
                         ) : (
@@ -558,9 +701,9 @@ export default async function LogsPage({
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-zinc-200/50 dark:border-zinc-700/50 flex-wrap">
+                        <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-border/70 flex-wrap">
                             {safePage > 1 && (
-                                <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
+                                <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-muted">
                                     <ChevronLeft className="w-4 h-4" /> {tc('previous')}
                                 </Link>
                             )}
@@ -581,7 +724,7 @@ export default async function LogsPage({
                                                 href={buildPageUrl(item as number)}
                                                 className={`px-2.5 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition-colors ${item === safePage
                                                         ? "bg-primary text-primary-foreground"
-                                                        : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-slate-700/50 hover:text-zinc-900 dark:hover:text-zinc-100"
+                                                        : "text-foreground/75 hover:bg-muted hover:text-foreground"
                                                     }`}
                                             >
                                                 {item}
@@ -590,7 +733,7 @@ export default async function LogsPage({
                                     )}
                             </div>
                             {safePage < totalPages && (
-                                <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-zinc-100 dark:hover:bg-slate-700/50">
+                                <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-muted">
                                     {tc('next')} <ChevronRight className="w-4 h-4" />
                                 </Link>
                             )}

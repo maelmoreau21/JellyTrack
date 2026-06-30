@@ -53,7 +53,7 @@ export default async function UserActivity({ userId, userIds = [], userDbIds = [
     }));
 
     return (
-        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm mt-6">
+        <Card className="app-surface mt-6">
             <CardHeader className="pb-2">
                 <CardTitle>{t('activity30d')}</CardTitle>
                 <CardDescription className="whitespace-normal">{t('activity30dDesc')}</CardDescription>

@@ -35,21 +35,30 @@ export function ClientCategoryChart({ data }: ClientCategoryChartProps) {
             <BarChart data={data} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGridColor} />
                 <XAxis type="number" stroke={chartAxisColor} fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
-                <YAxis type="category" dataKey="category" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} width={70} />
+                <YAxis
+                    type="category"
+                    dataKey="category"
+                    stroke="var(--foreground)"
+                    tick={{ fill: "var(--foreground)", fontWeight: 600 }}
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    width={70}
+                />
                 <Tooltip
                     contentStyle={chartTooltipStyle}
-                    formatter={(value: number | string | null | undefined) => [`${value ?? 0} sessions`, "Sessions"]}
+                    formatter={(value: unknown) => [`${value ?? 0} sessions`, "Sessions"]}
                     labelStyle={chartLabelStyle}
                     itemStyle={chartItemStyle}
                     cursor={{ fill: 'rgba(99, 102, 241, 0.06)' }}
-                    animationDuration={0}
+                    animationDuration={200}
                 />
                 <Bar
                     dataKey="count"
                     radius={[0, 4, 4, 0]}
                     barSize={24}
-                    animationDuration={0}
-                    animationEasing="linear"
+                    animationDuration={1000}
+                    animationEasing="ease-out"
                 >
                     {data.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.category] || "#71717a"} />

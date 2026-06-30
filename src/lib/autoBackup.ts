@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
-// No rules
 import { appendHealthEvent, markBackupFinished, markBackupStarted, readSystemHealthState } from "@/lib/systemHealth";
 import { getBackupDirectory } from "@/lib/backupDir";
+import { redactBackupData } from "@/lib/backupSecurity";
 
 const MAX_BACKUPS = 5;
 
@@ -26,23 +26,21 @@ export async function performAutoBackup(): Promise<string> {
         const playbackHistory = await prisma.playbackHistory.findMany();
         const telemetryEvents = await prisma.telemetryEvent.findMany();
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
-        // No rules
         const systemHealth = await readSystemHealthState();
 
         const backupContent = {
             version: "1.0",
             exportDate: new Date().toISOString(),
             type: "auto-backup",
-            data: {
+            data: redactBackupData({
                 servers,
                 users,
                 media,
                 playbackHistory,
                 telemetryEvents,
                 settings,
-                // No rules
                 systemHealth,
-            }
+            })
         };
 
         // Generate filename with date
@@ -55,9 +53,10 @@ export async function performAutoBackup(): Promise<string> {
         const bigIntReplacer = (_key: string, value: unknown) => typeof value === 'bigint' ? value.toString() : value;
 
         // Write backup file
-        fs.writeFileSync(filePath, JSON.stringify(backupContent, bigIntReplacer, 2), "utf-8");
-        const fileSizeMb = (Buffer.byteLength(JSON.stringify(backupContent, bigIntReplacer)) / 1024 / 1024).toFixed(2);
-        console.log(`[Auto-Backup] Backup saved: ${fileName} (${fileSizeMb} Mo)`);
+        const backupJsonString = JSON.stringify(backupContent, bigIntReplacer, 2);
+        fs.writeFileSync(filePath, backupJsonString, "utf-8");
+        const fileSizeMb = (Buffer.byteLength(backupJsonString) / 1024 / 1024).toFixed(2);
+        console.log(`[Auto-Backup] Backup saved: ${fileName} (${fileSizeMb} MB)`);
 
         // Rolling rotation: delete oldest files if we exceed MAX_BACKUPS
         type BackupFile = { name: string; time: number };
@@ -86,7 +85,7 @@ export async function performAutoBackup(): Promise<string> {
         await appendHealthEvent({
             source: "backup",
             kind: "success",
-            message: `Sauvegarde automatique créée: ${fileName}`,
+            message: `Automated backup created: ${fileName}`,
             details: { fileName },
         });
         return fileName;
@@ -96,7 +95,7 @@ export async function performAutoBackup(): Promise<string> {
         await appendHealthEvent({
             source: "backup",
             kind: "error",
-            message: "Échec de sauvegarde automatique.",
+            message: "Automated backup failed.",
             details: { error: msg || "Backup error" },
         });
         throw error;

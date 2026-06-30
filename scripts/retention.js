@@ -5,8 +5,13 @@
  * Usage: `RETENTION_DAYS=90 node scripts/retention.js`
  */
 const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+  }),
+});
 const retentionDays = parseInt(process.env.RETENTION_DAYS || '90', 10);
 const cutoff = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
 

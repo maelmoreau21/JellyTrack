@@ -104,7 +104,7 @@ export function StandardPieChart({ data, nameKey, dataKey, onClick }: { data: Re
                 />
                 <Legend
                     wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
-                    formatter={(value: string) => <span className="text-zinc-300">{value}</span>}
+                    formatter={(value: string) => <span style={{ color: "var(--chart-item-color)" }}>{value}</span>}
                 />
             </PieChart>
         </ResponsiveContainer>

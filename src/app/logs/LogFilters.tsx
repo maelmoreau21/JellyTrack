@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ArrowUpDown, ChevronDown, Download, Filter, Film, Tv, Music, BookOpen, Server } from "lucide-react";
+import { Search, ArrowUpDown, Download, Filter, Film, Tv, Music, BookOpen, Server } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
@@ -122,7 +122,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                                 }}
                                 className="w-4 h-4 rounded accent-primary cursor-pointer text-indigo-600 focus:ring-indigo-500"
                             />
-                            <label htmlFor="hideZapped" className="text-sm cursor-pointer whitespace-nowrap font-medium text-zinc-600 dark:text-zinc-300">
+                            <label htmlFor="hideZapped" className="text-sm cursor-pointer whitespace-nowrap font-medium text-foreground/80 dark:text-slate-300">
                                 {t('hideZapped')}
                             </label>
                         </div>
@@ -131,7 +131,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                             type="button" 
                             variant="ghost"
                             size="sm"
-                            className="h-10 md:h-9 px-3 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            className="h-10 md:h-9 px-3 hover:bg-muted"
                             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
                         >
                             <Filter className={`w-4 h-4 mr-2 ${isAdvancedOpen ? 'text-primary' : ''}`} />
@@ -151,7 +151,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                                     router.push(`/logs?${params.toString()}`);
                                 }}
                             >
-                                <SelectTrigger className="h-full w-full md:w-[200px] bg-zinc-100 dark:bg-slate-700/50 border-0 font-semibold text-zinc-700 dark:text-zinc-200">
+                                <SelectTrigger className="h-full w-full md:w-[200px] font-semibold text-foreground">
                                     <div className="flex items-center gap-2">
                                         <ArrowUpDown className="w-4 h-4" />
                                         <SelectValue placeholder={t('sortBy')} />
@@ -183,13 +183,13 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
             </div>
 
             {isAdvancedOpen && (
-                <div className="col-span-1 md:col-span-4 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-col gap-4 mt-1 transition-all">
+                <div className="col-span-1 md:col-span-4 p-4 rounded-xl app-surface-soft border border-border flex flex-col gap-4 mt-1 transition-all">
                     
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Media Type Segmented Control */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{t?.('typeFilter') || 'Type de média'}</label>
-                            <div className="flex flex-wrap items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-fit">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t?.('typeFilter') || 'Media type'}</label>
+                            <div className="app-surface-nested flex flex-wrap items-center p-1 rounded-lg w-fit">
                                 {[
                                     { value: "", icon: null, labelKey: "all" },
                                     { value: "Movie", icon: Film, labelKey: "moviesFilter" },
@@ -211,8 +211,8 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                                             }}
                                             className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
                                                 isActive
-                                                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                                                    ? "bg-primary/15 text-primary shadow-sm border border-primary/25"
+                                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                             }`}
                                         >
                                             {Icon && <Icon className="w-3.5 h-3.5" />}
@@ -225,15 +225,15 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
 
                         {multiServerEnabled && serverOptions.length > 1 && (
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{tch('server')}</label>
-                                <div className="flex flex-wrap items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg w-fit">
+                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{tch('server')}</label>
+                                <div className="app-surface-nested flex flex-wrap items-center p-1 rounded-lg w-fit">
                                     <button
                                         type="button"
                                         onClick={() => setSelectedServers([])}
                                         className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
                                             allServersSelected
-                                                ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                                                ? "bg-primary/15 text-primary shadow-sm border border-primary/25"
+                                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                         }`}
                                     >
                                         {tc('all')}
@@ -258,8 +258,8 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                                                 }}
                                                 className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
                                                     isActive
-                                                        ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 shadow-sm"
-                                                        : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                                                        ? "bg-primary/15 text-primary shadow-sm border border-primary/25"
+                                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                                 }`}
                                             >
                                                 <Server className="w-3.5 h-3.5" />
@@ -274,25 +274,25 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="space-y-1.5 flex flex-col">
-                            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('clientFilter') || 'Client / App'}</label>
-                            <Input name="client" type="text" placeholder="ex: Jellyfin Web, Android" defaultValue={initialClient} className="h-9 bg-white dark:bg-zinc-950/50" />
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('clientFilter') || 'Client / App'}</label>
+                            <Input name="client" type="text" placeholder="ex: Jellyfin Web, Android" defaultValue={initialClient} className="app-field h-9" />
                         </div>
                         <div className="space-y-1.5 flex flex-col">
-                            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('audioFilter') || 'Audio (Code/Langue)'}</label>
-                            <Input name="audio" type="text" placeholder="ex: aac, fre, eng" defaultValue={initialAudio} className="h-9 bg-white dark:bg-zinc-950/50" />
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('audioFilter') || 'Audio (Code/Language)'}</label>
+                            <Input name="audio" type="text" placeholder="ex: aac, fre, eng" defaultValue={initialAudio} className="app-field h-9" />
                         </div>
                         <div className="space-y-1.5 flex flex-col">
-                            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('subtitleFilter') || 'Sous-titres (Code/Langue)'}</label>
-                            <Input name="subtitle" type="text" placeholder="ex: subrip, eng, fre" defaultValue={initialSubtitle} className="h-9 bg-white dark:bg-zinc-950/50" />
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('subtitleFilter') || 'Subtitles (Code/Language)'}</label>
+                            <Input name="subtitle" type="text" placeholder="ex: subrip, eng, fre" defaultValue={initialSubtitle} className="app-field h-9" />
                         </div>
                         <div className="space-y-1.5 grid grid-cols-2 gap-2">
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('dateFrom') || 'Date (Depuis)'}</label>
-                                <Input name="dateFrom" type="date" defaultValue={initialDateFrom} className="h-9 bg-white dark:bg-zinc-950/50" />
+                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('dateFrom') || 'Date (From)'}</label>
+                                <Input name="dateFrom" type="date" defaultValue={initialDateFrom} className="app-field h-9" />
                             </div>
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{t?.('dateTo') || 'Date (Jusqu\'au)'}</label>
-                                <Input name="dateTo" type="date" defaultValue={initialDateTo} className="h-9 bg-white dark:bg-zinc-950/50" />
+                                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t?.('dateTo') || 'Date (To)'}</label>
+                                <Input name="dateTo" type="date" defaultValue={initialDateTo} className="app-field h-9" />
                             </div>
                         </div>
                     </div>

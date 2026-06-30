@@ -125,7 +125,7 @@ function getTypeIcon(type: string) {
         case "MusicAlbum": return <Music className="w-3.5 h-3.5 text-yellow-400" />;
         case "Episode": return <Tv className="w-3.5 h-3.5 text-emerald-400" />;
         case "Audio": return <Music className="w-3.5 h-3.5 text-orange-400" />;
-        default: return <BookOpen className="w-3.5 h-3.5 text-zinc-400" />;
+        default: return <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />;
     }
 }
 
@@ -408,7 +408,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
             ? theme === "red"
                 ? "bg-red-500/20 border-red-500/40 text-red-300 shadow-sm shadow-red-500/10"
                 : "bg-orange-500/20 border-orange-500/40 text-orange-300 shadow-sm shadow-orange-500/10"
-            : "border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
+            : "border-border text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-900/50"
     );
 
     const applyStaleMovieSuggestion = () => {
@@ -536,7 +536,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                     </DialogHeader>
 
                     <div className="space-y-3">
-                        <div className="max-h-52 overflow-y-auto rounded-md border border-zinc-200/70 dark:border-zinc-800/70">
+                        <div className="max-h-52 overflow-y-auto rounded-md border border-border">
                             {recommendedStaleMovies.length === 0 ? (
                                 <div className="px-3 py-2 text-sm text-muted-foreground">{t('deleteDialogNoItems')}</div>
                             ) : (
@@ -605,7 +605,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
             <div className="mt-4 rounded-xl border border-zinc-200/60 dark:border-zinc-800/60 bg-background/40 backdrop-blur-sm p-3 sm:p-4">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             value={searchValue}
                             onChange={(event) => setSearchValue(event.target.value)}
@@ -642,7 +642,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
             </div>
 
             <TabsContent value="ghosts" className="mt-6">
-                <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle className="text-red-400">{t('ghostMedia')}</CardTitle>
                         <CardDescription>
@@ -673,10 +673,10 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                         )}
                     </CardHeader>
                     <CardContent>
-                        <div className="rounded-md border border-zinc-200 dark:border-zinc-800">
+                        <div className="rounded-md border border-border">
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="border-zinc-200 dark:border-zinc-800 hover:bg-transparent">
+                                    <TableRow className="border-border hover:bg-transparent">
                                         <TableHead>{t('colTitle')}</TableHead>
                                         <TableHead className="w-[100px]">{t('colType')}</TableHead>
                                         <TableHead className="w-[150px]">{t('colAdded')}</TableHead>
@@ -691,7 +691,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                         </TableRow>
                                     )}
                                     {ghostPageData.pageItems.map((media) => (
-                                        <TableRow key={media.id} className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30 transition-colors">
+                                        <TableRow key={media.id} className="border-border hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30 transition-colors">
                                             <TableCell className="font-medium text-foreground">{media.title}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 w-fit">
@@ -720,7 +720,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
             </TabsContent>
 
             <TabsContent value="abandoned" className="mt-6">
-                <Card className="app-surface-soft border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+                <Card className="app-surface-soft border-border backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle className="text-orange-400">{t('abandonedMedia')}</CardTitle>
                         <CardDescription>
@@ -752,10 +752,10 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="rounded-md border border-zinc-200 dark:border-zinc-800">
+                        <div className="rounded-md border border-border">
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800/50">
+                                    <TableRow className="border-border hover:bg-zinc-200 dark:hover:bg-zinc-800/50">
                                         <TableHead>{t('colTitle')}</TableHead>
                                         <TableHead className="w-[100px]">{t('colType')}</TableHead>
                                         <TableHead className="w-[180px]">{t('colMaxCompletion')}</TableHead>
@@ -771,7 +771,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                         </TableRow>
                                     )}
                                     {abandonedPageData.pageItems.map((media) => (
-                                        <TableRow key={media.id} className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800/20">
+                                        <TableRow key={media.id} className="border-border hover:bg-zinc-200 dark:hover:bg-zinc-800/20">
                                             <TableCell className="font-medium text-foreground max-w-[300px] truncate" title={media.title}>{media.title}</TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 w-fit">

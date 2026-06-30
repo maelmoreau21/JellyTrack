@@ -5,12 +5,13 @@ import { FallbackImage } from "@/components/FallbackImage";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Clock, Eye, Timer, ArrowLeft, ChevronRight, Pause, Languages, Headphones, Tv, Music, Disc3, Play, Film, ListMusic, Activity } from "lucide-react";
+import { Clock, Eye, Timer, ArrowLeft, ChevronRight, Pause, Languages, Headphones, Tv, Music, Disc3, Play, Film, ListMusic, Activity, FastForward, RotateCcw, Gauge } from "lucide-react";
 import Link from "next/link";
 import MediaDropoffChart from "./MediaDropoffChart";
 import TelemetryChart from "./TelemetryChart";
 import MediaTimelineChart from "./MediaTimelineChart";
 import type { TimelineEvent, SessionTimeline } from "./MediaTimelineChart";
+import PosterRotatorPoster from "./PosterRotatorPoster";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 import { isZapped } from "@/lib/statsUtils";
@@ -29,9 +30,14 @@ type PlaybackHistory = {
     id: string;
     user?: { username?: string; jellyfinUserId?: string } | null;
     durationWatched: number;
+    eventSource?: string | null;
     pauseCount?: number;
     audioChanges?: number;
     subtitleChanges?: number;
+    seekCount?: number;
+    rewatchCount?: number;
+    speedChangeCount?: number;
+    maxPlaybackRate?: number | null;
     startedAt: Date;
     playMethod?: string;
     audioLanguage?: string | null;
@@ -64,6 +70,19 @@ function parseFinitePositive(value: unknown): number | null {
     return null;
 }
 
+function parseFiniteNonNegative(value: unknown): number | null {
+    if (typeof value === "number") {
+        return Number.isFinite(value) && value >= 0 ? value : null;
+    }
+
+    if (typeof value === "string") {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+    }
+
+    return null;
+}
+
 function ticksToMs(value: number | null): number | null {
     if (!value || value <= 0) return null;
     return value / 10_000;
@@ -73,6 +92,53 @@ function clampPercent(value: number): number {
     return Math.max(0, Math.min(100, value));
 }
 
+function formatPositionMs(ms: number): string {
+    const totalSec = Math.floor(Math.max(0, ms) / 1000);
+    const hours = Math.floor(totalSec / 3600);
+    const minutes = Math.floor((totalSec % 3600) / 60);
+    const seconds = totalSec % 60;
+    if (hours > 0) return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function parseTelemetryMetadata(value: unknown): Record<string, unknown> | null {
+    if (!value) return null;
+    try {
+        const parsed = typeof value === "string" ? JSON.parse(value) : value;
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed as Record<string, unknown>
+            : null;
+    } catch {
+        return null;
+    }
+}
+
+function formatRate(value: unknown): string | null {
+    const numericValue = typeof value === "number"
+        ? value
+        : typeof value === "string"
+            ? Number(value.replace(/^x/i, ""))
+            : NaN;
+    if (!Number.isFinite(numericValue)) return null;
+    return `x${numericValue.toFixed(2).replace(/\.?0+$/, "")}`;
+}
+
+function formatChangeSide(side: unknown): string {
+    if (!side) return "-";
+    if (typeof side === "string" || typeof side === "number") return String(side);
+    if (typeof side === "object") {
+        const record = side as Record<string, unknown>;
+        const label = typeof record.language === "string"
+            ? record.language
+            : record.index !== undefined
+                ? `#${String(record.index)}`
+                : "-";
+        const codec = typeof record.codec === "string" ? ` (${record.codec})` : "";
+        return `${label}${codec}`;
+    }
+    return String(side);
+}
+
 export const dynamic = "force-dynamic";
 
 interface MediaProfilePageProps {
@@ -80,12 +146,13 @@ interface MediaProfilePageProps {
 }
 
 import { requireAuth, isAuthError } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function MediaProfilePage({ params }: MediaProfilePageProps) {
     const { id } = await params;
 
     const auth = await requireAuth();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
     const isAdmin = auth.isAdmin;
     const sessionUserId = auth.jellyfinUserId;
     const sessionLinkedUserIds = auth.linkedJellyfinUserIds.length > 0
@@ -137,7 +204,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 `${jellyfinUrl}/Items/${encodeURIComponent(id)}?Fields=Overview,CommunityRating,ProductionYear,SeriesId,SeriesName,SeasonId,SeasonName,AlbumId,Album,AlbumArtist,AlbumArtists,IntroStartPositionMs,IntroStartPositionTicks,IntroEndPositionMs,IntroEndPositionTicks,CreditsPositionMs,CreditsStartPositionMs,CreditsPositionTicks,CreditsStartPositionTicks,People,ImageTags`,
                 {
                     headers: {
-                        "X-Emby-Token": jellyfinApiKey,
+                        Authorization: `MediaBrowser Token="${jellyfinApiKey}"`,
                     },
                     next: { revalidate: 86400 },
                 }
@@ -317,6 +384,13 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const totalPauses = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.pauseCount || 0), 0);
     const totalAudioChanges = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.audioChanges || 0), 0);
     const totalSubChanges = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.subtitleChanges || 0), 0);
+    const totalSeekCount = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.seekCount || 0), 0);
+    const totalRewatchCount = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.rewatchCount || 0), 0);
+    const totalSpeedChanges = effectiveHistory.reduce((acc: number, h: PlaybackHistory) => acc + (h.speedChangeCount || 0), 0);
+    const maxPlaybackRate = effectiveHistory.reduce((acc: number | null, h: PlaybackHistory) => {
+        if (!h.maxPlaybackRate || !Number.isFinite(h.maxPlaybackRate)) return acc;
+        return acc === null ? h.maxPlaybackRate : Math.max(acc, h.maxPlaybackRate);
+    }, null);
 
     // Drop-off buckets
     const mediaDurationSeconds = media.durationMs ? Number(media.durationMs) / 1000 : null;
@@ -378,11 +452,13 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const playbackIds = effectiveHistory.map((h: PlaybackHistory) => h.id);
     let timelineEvents: TimelineEvent[] = [];
     let sessionTimelines: SessionTimeline[] = [];
+    let rawTelemetryEvents: Array<{ eventType: string; positionMs: bigint; playbackId: string; metadata: string | null }> = [];
     if (playbackIds.length > 0 && mediaDurationSeconds && mediaDurationSeconds > 0) {
         const rawEvents = await prisma.telemetryEvent.findMany({
             where: { playbackId: { in: playbackIds } },
             select: { eventType: true, positionMs: true, playbackId: true, metadata: true },
         });
+        rawTelemetryEvents = rawEvents;
         // Aggregate by eventType + position bucket (each bucket = 1% of duration)
         const durationMs = mediaDurationSeconds * 1000;
         const bucketCount = 50;
@@ -423,6 +499,132 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
             }));
     }
     const hasTimelineEvents = timelineEvents.length > 0;
+    const playbackUserMap = new Map(effectiveHistory.map((h: PlaybackHistory) => [h.id, h.user?.username || tc('deletedUser')]));
+    const jumpSignalMap = new Map<string, { eventType: "seek" | "replay"; label: string; count: number; playbacks: Set<string> }>();
+    const speedSignalMap = new Map<string, { label: string; count: number; estimated: number }>();
+    const languageSwitchMap = new Map<string, { label: string; count: number; kind: "audio" | "subtitle" }>();
+    const languageSegmentMap = new Map<string, { label: string; range: string; count: number; sessions: Set<string>; kind: "audio" | "subtitle" }>();
+
+    for (const event of rawTelemetryEvents) {
+        const eventType = event.eventType;
+        const metadata = parseTelemetryMetadata(event.metadata);
+
+        if ((eventType === "seek" || eventType === "replay") && metadata) {
+            const fromMs = parseFiniteNonNegative(metadata.fromMs) ?? Number(event.positionMs);
+            const toMs = parseFiniteNonNegative(metadata.toMs) ?? Number(event.positionMs);
+            const fromLabel = typeof metadata.fromLabel === "string" ? metadata.fromLabel : formatPositionMs(fromMs);
+            const toLabel = typeof metadata.toLabel === "string" ? metadata.toLabel : formatPositionMs(toMs);
+            const label = `${fromLabel} -> ${toLabel}`;
+            const key = `${eventType}:${label}`;
+            const entry = jumpSignalMap.get(key) || { eventType: eventType as "seek" | "replay", label, count: 0, playbacks: new Set<string>() };
+            entry.count += 1;
+            entry.playbacks.add(event.playbackId);
+            jumpSignalMap.set(key, entry);
+        }
+
+        if (eventType === "speed_change" && metadata) {
+            const label = typeof metadata.toRateLabel === "string" ? metadata.toRateLabel : formatRate(metadata.toRate);
+            if (label) {
+                const entry = speedSignalMap.get(label) || { label, count: 0, estimated: 0 };
+                entry.count += 1;
+                if (metadata.source === "estimated") entry.estimated += 1;
+                speedSignalMap.set(label, entry);
+            }
+        }
+
+        if ((eventType === "audio_change" || eventType === "subtitle_change") && metadata) {
+            const label = `${formatChangeSide(metadata.from)} -> ${formatChangeSide(metadata.to)}`;
+            const key = `${eventType}:${label}`;
+            const entry = languageSwitchMap.get(key) || {
+                label,
+                count: 0,
+                kind: eventType === "audio_change" ? "audio" : "subtitle",
+            };
+            entry.count += 1;
+            languageSwitchMap.set(key, entry);
+        }
+    }
+
+    const eventsByPlaybackForSegments = new Map<string, typeof rawTelemetryEvents>();
+    rawTelemetryEvents.forEach((event) => {
+        const list = eventsByPlaybackForSegments.get(event.playbackId) || [];
+        list.push(event);
+        eventsByPlaybackForSegments.set(event.playbackId, list);
+    });
+
+    const addLanguageSegments = (
+        playback: PlaybackHistory,
+        kind: "audio" | "subtitle",
+        initialLabel: string | null,
+        eventsForPlayback: typeof rawTelemetryEvents,
+    ) => {
+        const changeType = kind === "audio" ? "audio_change" : "subtitle_change";
+        const changes = eventsForPlayback
+            .filter((event) => event.eventType === changeType)
+            .map((event) => ({ ...event, positionNumber: Number(event.positionMs), metadata: parseTelemetryMetadata(event.metadata) }))
+            .filter((event) => Number.isFinite(event.positionNumber) && event.positionNumber >= 0)
+            .sort((left, right) => left.positionNumber - right.positionNumber);
+
+        let currentLabel = initialLabel || null;
+        if (!currentLabel && changes[0]?.metadata?.from) {
+            currentLabel = formatChangeSide(changes[0].metadata.from);
+        }
+        if (!currentLabel || currentLabel === "-") return;
+
+        let startMs = 0;
+        const sessionEndMs = Math.max(
+            playback.durationWatched * 1000,
+            ...changes.map((change) => change.positionNumber),
+            1,
+        );
+
+        const pushSegment = (endMs: number) => {
+            if (!currentLabel || endMs <= startMs) return;
+            const range = `${formatPositionMs(startMs)} -> ${formatPositionMs(endMs)}`;
+            const key = `${kind}:${currentLabel}:${range}`;
+            const entry = languageSegmentMap.get(key) || {
+                label: currentLabel,
+                range,
+                count: 0,
+                sessions: new Set<string>(),
+                kind,
+            };
+            entry.count += 1;
+            entry.sessions.add(playback.id);
+            languageSegmentMap.set(key, entry);
+        };
+
+        for (const change of changes) {
+            pushSegment(change.positionNumber);
+            currentLabel = formatChangeSide(change.metadata?.to);
+            startMs = change.positionNumber;
+        }
+        pushSegment(sessionEndMs);
+    };
+
+    effectiveHistory.forEach((history: PlaybackHistory) => {
+        const eventsForPlayback = eventsByPlaybackForSegments.get(history.id) || [];
+        const audioInitial = history.audioLanguage
+            ? `${history.audioLanguage}${history.audioCodec ? ` (${history.audioCodec})` : ""}`
+            : null;
+        const subtitleInitial = history.subtitleLanguage
+            ? `${history.subtitleLanguage}${history.subtitleCodec ? ` (${history.subtitleCodec})` : ""}`
+            : null;
+        addLanguageSegments(history, "audio", audioInitial, eventsForPlayback);
+        addLanguageSegments(history, "subtitle", subtitleInitial, eventsForPlayback);
+    });
+
+    const jumpSignals = Array.from(jumpSignalMap.values())
+        .map((entry) => ({ ...entry, sessions: entry.playbacks.size, users: Array.from(entry.playbacks).map((id) => playbackUserMap.get(id)).filter(Boolean) }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+    const speedSignals = Array.from(speedSignalMap.values()).sort((a, b) => b.count - a.count).slice(0, 6);
+    const languageSwitchSignals = Array.from(languageSwitchMap.values()).sort((a, b) => b.count - a.count).slice(0, 6);
+    const languageSegments = Array.from(languageSegmentMap.values())
+        .map((entry) => ({ ...entry, sessionsCount: entry.sessions.size }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+    const hasBehaviorSignals = jumpSignals.length > 0 || speedSignals.length > 0 || languageSwitchSignals.length > 0 || languageSegments.length > 0;
 
     // Unique users who watched this
     const userMap = new Map<string, { username: string; jellyfinUserId: string; sessions: number; totalSeconds: number }>();
@@ -465,14 +667,14 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const headerFallbackId = media.parentId || albumId || undefined;
 
     // Build hierarchy subtitle breadcrumbs
-    const HierarchyLinks = () => {
+    const renderHierarchyLinks = () => {
         const links = [];
         if (media.type === 'Episode') {
             if (seriesId && seriesName) {
                 links.push(<Link key="series" href={`/media/${seriesId}`} className="hover:text-primary transition-colors">{seriesName}</Link>);
             }
             if (seasonId && seasonName) {
-                if (links.length > 0) links.push(<span key="sep1" className="text-zinc-400 mx-1">-</span>);
+                if (links.length > 0) links.push(<span key="sep1" className="text-muted-foreground mx-1">-</span>);
                 links.push(<Link key="season" href={`/media/${seasonId}`} className="hover:text-primary transition-colors">{seasonName}</Link>);
             }
         } else if (media.type === 'Season') {
@@ -484,7 +686,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 links.push(<Link key="artist" href={artistHref} className="hover:text-primary transition-colors">{resolvedAlbumArtist}</Link>);
             }
             if (albumId && albumName) {
-                if (links.length > 0) links.push(<span key="sep1" className="text-zinc-400 mx-1">-</span>);
+                if (links.length > 0) links.push(<span key="sep1" className="text-muted-foreground mx-1">-</span>);
                 links.push(<Link key="album" href={`/media/${albumId}`} className="hover:text-primary transition-colors">{albumName}</Link>);
             }
         } else if (media.type === 'MusicAlbum') {
@@ -495,7 +697,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         
         if (links.length === 0) return null;
         return (
-            <div className="text-xl font-medium text-zinc-500 dark:text-zinc-400 mt-1 flex items-center flex-wrap">
+            <div className="text-xl font-medium text-muted-foreground mt-1 flex items-center flex-wrap">
                 {links}
             </div>
         );
@@ -505,27 +707,27 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         <div className="flex-col md:flex">
             <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
                 {/* Breadcrumb */}
-                <nav className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400 flex-wrap">
+                <nav className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
                     <Link href="/media" className="flex items-center gap-1 hover:text-zinc-900 dark:hover:text-white transition-colors">
                         <ArrowLeft className="w-4 h-4" /> {t('library')}
                     </Link>
                     {seriesId && seriesName && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${seriesId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seriesName}</Link></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><Link href={`/media/${seriesId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seriesName}</Link></>
                     )}
                     {seasonId && seasonName && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${seasonId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seasonName}</Link></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><Link href={`/media/${seasonId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{seasonName}</Link></>
                     )}
                     {artistHref && resolvedAlbumArtist && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={artistHref} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{resolvedAlbumArtist}</Link></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><Link href={artistHref} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{resolvedAlbumArtist}</Link></>
                     )}
                     {!artistHref && resolvedAlbumArtist && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><span className="text-zinc-600 dark:text-zinc-300">{resolvedAlbumArtist}</span></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><span className="text-foreground/80 dark:text-slate-300">{resolvedAlbumArtist}</span></>
                     )}
                     {albumId && albumName && (
-                        <><ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" /><Link href={`/media/${albumId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{albumName}</Link></>
+                        <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><Link href={`/media/${albumId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{albumName}</Link></>
                     )}
-                    <ChevronRight className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600" />
-                    <span className="text-zinc-900 dark:text-white font-medium truncate max-w-xs">{media.title}</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" />
+                    <span className="text-zinc-900 dark:text-slate-200 font-medium truncate max-w-xs">{media.title}</span>
                 </nav>
 
                 {/* Quick navigation for Episodes / Audio tracks */}
@@ -555,7 +757,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 )}
 
                 {/* Header with Backdrop */}
-                <div className="relative group overflow-hidden rounded-2xl border border-zinc-200/50 dark:border-white/5 shadow-2xl bg-zinc-100 dark:bg-zinc-950">
+                <div className="relative group overflow-hidden rounded-2xl border border-zinc-200/50 dark:border-white/5 shadow-2xl bg-zinc-100 dark:bg-slate-900">
                     {hasBackdrop && (
                         <div className="absolute inset-0 z-0">
                             <FallbackImage 
@@ -569,9 +771,14 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     )}
                     
                     <div className="relative z-10 flex flex-col md:flex-row gap-8 p-6 md:p-10">
-                        <div className={`relative ${media.type === 'Episode' ? 'w-full md:w-80 aspect-video' : ['MusicAlbum', 'Audio'].includes(media.type) ? 'w-48 aspect-square' : 'w-48 aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-xl overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-2xl shrink-0`}>
-                            <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId)} alt={media.title} fill className="object-cover" />
-                        </div>
+                        <PosterRotatorPoster
+                            mediaId={media.jellyfinMediaId}
+                            serverId={media.serverId}
+                            title={media.title}
+                            src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId)}
+                            canRotate={isAdmin}
+                            className={`relative ${media.type === 'Episode' ? 'w-full md:w-80 aspect-video' : ['MusicAlbum', 'Audio'].includes(media.type) ? 'w-48 aspect-square' : 'w-48 aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-xl overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-2xl shrink-0`}
+                        />
                         <div className="flex-1 space-y-4 py-2">
                             <div>
                                 {hasLogo ? (
@@ -584,23 +791,23 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                         />
                                     </div>
                                 ) : (
-                                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-white">{media.title}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-slate-200">{media.title}</h1>
                                 )}
-                                <HierarchyLinks />
+                                {renderHierarchyLinks()}
                                 <div className="flex items-center gap-2 mt-4 flex-wrap">
                                     <Badge variant="outline" className="bg-white/50 dark:bg-white/5 backdrop-blur-sm">{media.type}</Badge>
                                     {media.resolution && <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">{normalizedMediaResolution}</Badge>}
-                                    {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-zinc-600 dark:text-zinc-300 backdrop-blur-sm">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
-                                    {productionYear && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-zinc-600 dark:text-zinc-300 backdrop-blur-sm">{productionYear}</Badge>}
+                                    {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-foreground/80 dark:text-slate-300 backdrop-blur-sm">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
+                                    {productionYear && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-foreground/80 dark:text-slate-300 backdrop-blur-sm">{productionYear}</Badge>}
                                     {communityRating && <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 backdrop-blur-sm">★ {communityRating.toFixed(1)}</Badge>}
                                 </div>
                                 {genres.length > 0 && (
                                     <div className="flex items-center gap-1.5 mt-4 flex-wrap">
-                                        {genres.map((g: string) => (<span key={g} className="text-[10px] uppercase tracking-wider font-bold bg-zinc-200/50 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 px-2.5 py-1 rounded-md backdrop-blur-sm">{g}</span>))}
+                                        {genres.map((g: string) => (<span key={g} className="text-[10px] uppercase tracking-wider font-bold bg-zinc-200/50 dark:bg-white/5 text-muted-foreground px-2.5 py-1 rounded-md backdrop-blur-sm">{g}</span>))}
                                     </div>
                                 )}
                                 {isMusic && (resolvedAlbumArtist || albumName) && (
-                                    <div className="flex items-center gap-4 mt-4 flex-wrap text-sm font-medium text-zinc-600 dark:text-zinc-300">
+                                    <div className="flex items-center gap-4 mt-4 flex-wrap text-sm font-medium text-foreground/80 dark:text-slate-300">
                                         {resolvedAlbumArtist && (
                                             artistHref ? (
                                                 <Link href={artistHref} className="inline-flex items-center gap-2 hover:text-primary transition-colors bg-white/50 dark:bg-white/5 px-3 py-1.5 rounded-lg backdrop-blur-sm">
@@ -614,7 +821,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                     </div>
                                 )}
                             </div>
-                            {overview && <p className="text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-3xl line-clamp-4">{overview}</p>}
+                            {overview && <p className="text-sm md:text-base text-zinc-600 dark:text-muted-foreground leading-relaxed max-w-3xl line-clamp-4">{overview}</p>}
                         </div>
                     </div>
                 </div>
@@ -636,10 +843,11 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                             alt={person.Name} 
                                             fill 
                                             className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                                            fallbackType="person"
                                         />
                                     </div>
                                     <div className="px-1">
-                                        <p className="text-xs font-bold text-zinc-900 dark:text-white truncate" title={person.Name}>{person.Name}</p>
+                                        <p className="text-xs font-bold text-zinc-900 dark:text-slate-200 truncate" title={person.Name}>{person.Name}</p>
                                         <p className="text-[10px] text-zinc-500 truncate" title={person.Role}>{person.Role || person.Type}</p>
                                     </div>
                                 </div>
@@ -653,7 +861,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                     {/* Children: Seasons / Episodes / Tracks */}
                     {children.length > 0 && (
-                        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 col-span-full mb-2">
+                        <Card className="app-surface col-span-full mb-2">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     {media.type === 'Series' ? <><Film className="w-5 h-5 text-indigo-400" /> {t('seasons', { count: children.length })}</> :
@@ -667,10 +875,10 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="border rounded-md overflow-x-auto border-zinc-200 dark:border-zinc-800/50">
+                                <div className="border rounded-md overflow-x-auto border-border/50">
                                     <Table className="min-w-[700px]">
                                         <TableHeader>
-                                            <TableRow className="border-zinc-200 dark:border-zinc-800">
+                                            <TableRow className="border-border">
                                                 <TableHead className="w-12">#</TableHead>
                                                 <TableHead>{t('colTitle')}</TableHead>
                                                 <TableHead className="text-center">{t('colType')}</TableHead>
@@ -681,7 +889,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                         </TableHeader>
                                         <TableBody>
                                             {children.map((child, idx) => (
-                                                <TableRow key={child.jellyfinMediaId} className="border-zinc-200 dark:border-zinc-800/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
+                                                <TableRow key={child.jellyfinMediaId} className="border-border/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
                                                     <TableCell className="text-zinc-500 text-sm">{idx + 1}</TableCell>
                                                     <TableCell>
                                                         <Link
@@ -694,6 +902,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                                     alt={child.title}
                                                                     fill
                                                                     className="object-cover"
+                                                                    fallbackType={child.type === 'Audio' ? 'music' : 'movie'}
                                                                 />
                                                             </div>
                                                             <span className="truncate max-w-xs">{child.title}</span>
@@ -726,20 +935,20 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             </CardContent>
                         </Card>
                     )}
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('totalTime')}</CardTitle><Clock className="h-4 w-4 text-orange-500" /></CardHeader>
                         <CardContent><div className="text-2xl font-bold">{totalHours}h</div><p className="text-xs text-muted-foreground mt-1">{t('cumulated')}</p></CardContent>
                     </Card>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('viewsTitle')}</CardTitle><Eye className="h-4 w-4 text-blue-500" /></CardHeader>
                         <CardContent><div className="text-2xl font-bold">{totalViews}</div><p className="text-xs text-muted-foreground mt-1">{t('uniqueSessions')}</p></CardContent>
                     </Card>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('avgDuration')}</CardTitle><Timer className="h-4 w-4 text-emerald-500" /></CardHeader>
                         <CardContent><div className="text-2xl font-bold">{avgMinutes} min</div><p className="text-xs text-muted-foreground mt-1">{t('perSession')}</p></CardContent>
                     </Card>
                     {isMusic && (
-                        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                        <Card className="app-surface">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('pauses')}</CardTitle><Pause className="h-4 w-4 text-yellow-500" /></CardHeader>
                             <CardContent><div className="text-2xl font-bold">{totalPauses}</div><p className="text-xs text-muted-foreground mt-1">{t('total')}</p></CardContent>
                         </Card>
@@ -748,16 +957,19 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Telemetry Visual Summary (films/series only) */}
                 {!isMusic && (
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader><CardTitle className="flex items-center gap-2"><Activity className="w-4 h-4" /> {t('telemetrySummary')}</CardTitle><CardDescription>{t('telemetryDesc')}</CardDescription></CardHeader>
                         <CardContent>
                             <div className="grid gap-4 md:grid-cols-3">
                                 {[
                                     { label: t('pausesLabel'), value: totalPauses, color: 'bg-yellow-500', icon: <Pause className="h-4 w-4 text-yellow-500" /> },
+                                    { label: t('skippedPassages'), value: totalSeekCount, color: 'bg-orange-500', icon: <FastForward className="h-4 w-4 text-orange-500" /> },
+                                    { label: t('replayedPassages'), value: totalRewatchCount, color: 'bg-green-500', icon: <RotateCcw className="h-4 w-4 text-green-500" /> },
+                                    { label: t('speedChanges'), value: totalSpeedChanges, color: 'bg-blue-500', icon: <Gauge className="h-4 w-4 text-blue-500" /> },
                                     { label: t('audioChanges'), value: totalAudioChanges, color: 'bg-purple-500', icon: <Headphones className="h-4 w-4 text-purple-500" /> },
                                     { label: t('subtitleChanges'), value: totalSubChanges, color: 'bg-cyan-500', icon: <Languages className="h-4 w-4 text-cyan-500" /> },
                                 ].map((metric) => {
-                                    const maxVal = Math.max(totalPauses, totalAudioChanges, totalSubChanges, 1);
+                                    const maxVal = Math.max(totalPauses, totalSeekCount, totalRewatchCount, totalSpeedChanges, totalAudioChanges, totalSubChanges, 1);
                                     const pct = Math.round((metric.value / maxVal) * 100);
                                     return (
                                         <div key={metric.label} className="space-y-2">
@@ -776,9 +988,82 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     </Card>
                 )}
 
+                {hasBehaviorSignals && (
+                    <Card className="app-surface">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Activity className="w-4 h-4" /> {t('behaviorTitle')}</CardTitle>
+                            <CardDescription>{t('behaviorDesc')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-5 lg:grid-cols-3">
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold flex items-center gap-2"><FastForward className="w-4 h-4 text-orange-500" /> {t('skippedRewatchedTitle')}</h3>
+                                    {jumpSignals.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
+                                    ) : jumpSignals.map((entry) => (
+                                        <div key={`${entry.eventType}:${entry.label}`} className="rounded-md border border-border p-3">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="font-mono text-xs">{entry.label}</span>
+                                                <Badge variant="outline">{entry.count}</Badge>
+                                            </div>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                {entry.eventType === 'replay' ? t('replayedPassages') : t('skippedPassages')} - {t('rangeSessions', { count: entry.sessions })}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold flex items-center gap-2"><Gauge className="w-4 h-4 text-blue-500" /> {t('speedDistribution')}</h3>
+                                    {speedSignals.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
+                                    ) : speedSignals.map((entry) => (
+                                        <div key={entry.label} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                                            <span className="font-mono text-sm font-semibold">{entry.label}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {entry.count} {entry.estimated > 0 ? t('sourceEstimated') : ''}
+                                            </span>
+                                        </div>
+                                    ))}
+                                    {maxPlaybackRate && (
+                                        <p className="text-xs text-muted-foreground">{t('maxSpeed')}: {formatRate(maxPlaybackRate)}</p>
+                                    )}
+                                </div>
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold flex items-center gap-2"><RotateCcw className="w-4 h-4 text-cyan-500" /> {t('audioSubtitleSwitches')}</h3>
+                                    {languageSwitchSignals.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
+                                    ) : languageSwitchSignals.map((entry) => (
+                                        <div key={`${entry.kind}:${entry.label}`} className="rounded-md border border-border px-3 py-2">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="text-xs">{entry.label}</span>
+                                                <Badge variant="outline">{entry.count}</Badge>
+                                            </div>
+                                            <p className="mt-1 text-[11px] text-muted-foreground">{entry.kind === 'audio' ? t('audioChanges') : t('subtitleChanges')}</p>
+                                        </div>
+                                    ))}
+                                    {languageSegments.length > 0 && (
+                                        <div className="pt-2 space-y-2 border-t border-border/60">
+                                            <p className="text-xs font-medium text-muted-foreground">{t('languageSegments')}</p>
+                                            {languageSegments.map((entry) => (
+                                                <div key={`${entry.kind}:${entry.label}:${entry.range}`} className="rounded-md border border-border px-3 py-2">
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <span className="text-xs font-medium">{entry.label}</span>
+                                                        <Badge variant="outline">{entry.sessionsCount}</Badge>
+                                                    </div>
+                                                    <p className="mt-1 font-mono text-[11px] text-muted-foreground">{entry.range}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
                 {/* Users + Language Distribution */}
                 <div className={`grid gap-4 ${isMusic ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader><CardTitle>{t('viewers', { count: userList.length })}</CardTitle><CardDescription>{t('viewersDesc')}</CardDescription></CardHeader>
                         <CardContent>
                             <div className="space-y-3 max-h-[300px] overflow-y-auto">
@@ -786,7 +1071,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                     userList.map((u) => (
                                         <div key={u.jellyfinUserId} className="flex items-center justify-between">
                                             <Link href={`/users/${u.jellyfinUserId}`} className="text-sm font-medium text-primary hover:underline truncate max-w-[120px]">{u.username}</Link>
-                                            <div className="flex items-center gap-3 text-xs text-zinc-400">
+                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                                 <span>{u.sessions} session{u.sessions > 1 ? 's' : ''}</span>
                                                 <span className="font-medium">{(u.totalSeconds / 3600).toFixed(1)}h</span>
                                             </div>
@@ -796,7 +1081,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             </div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader><CardTitle className="flex items-center gap-2"><Headphones className="w-4 h-4" /> {t('audioLanguages')}</CardTitle></CardHeader>
                         <CardContent>
                             <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -806,7 +1091,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                             <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-2 py-1 rounded">{lang}</span>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-24 h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.round((count / totalViews) * 100)}%` }} /></div>
-                                                <span className="text-xs text-zinc-400 w-8 text-right">{count}</span>
+                                                <span className="text-xs text-muted-foreground w-8 text-right">{count}</span>
                                             </div>
                                         </div>
                                     ))
@@ -815,7 +1100,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                         </CardContent>
                     </Card>
                     {!isMusic && (
-                        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                        <Card className="app-surface">
                             <CardHeader><CardTitle className="flex items-center gap-2"><Languages className="w-4 h-4" /> {t('subtitlesTitle')}</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -825,7 +1110,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                 <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-2 py-1 rounded">{lang}</span>
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-24 h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-cyan-500 rounded-full" style={{ width: `${Math.round((count / totalViews) * 100)}%` }} /></div>
-                                                    <span className="text-xs text-zinc-400 w-8 text-right">{count}</span>
+                                                    <span className="text-xs text-muted-foreground w-8 text-right">{count}</span>
                                                 </div>
                                             </div>
                                         ))
@@ -838,7 +1123,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Drop-off Chart */}
                 {mediaDurationSeconds && mediaDurationSeconds > 0 && (
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader><CardTitle>{t('completionDist')}</CardTitle><CardDescription>{t('completionDistDesc')}</CardDescription></CardHeader>
                         <CardContent><div className="h-[350px] w-full"><MediaDropoffChart data={dropoffBuckets} markers={dropoffMarkers} /></div></CardContent>
                     </Card>
@@ -846,7 +1131,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Positional Telemetry Timeline */}
                 {hasTimelineEvents && mediaDurationSeconds && (
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2"><Activity className="w-4 h-4" /> {t('timelineTitle')}</CardTitle>
                             <CardDescription>{t('timelineDesc')}</CardDescription>
@@ -859,7 +1144,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
 
                 {/* Telemetry Timeline Chart */}
                 {hasTelemetry && (
-                    <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                    <Card className="app-surface">
                         <CardHeader>
                             <CardTitle>{t('telemetryTimeline')}</CardTitle>
                             <CardDescription>{isMusic ? t('telemetryTimelineMusicDesc') : t('telemetryTimelineVideoDesc')}</CardDescription>
@@ -869,31 +1154,34 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 )}
 
                 {/* Detailed History */}
-                <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50">
+                <Card className="app-surface">
                     <CardHeader><CardTitle>{t('detailedHistory')}</CardTitle><CardDescription>{t('sessionsTotal', { count: totalViews })}</CardDescription></CardHeader>
                     <CardContent>
-                        <div className="border rounded-md overflow-x-auto border-zinc-200 dark:border-zinc-800/50">
-                            <Table className="min-w-[680px] md:min-w-[900px]">
+                        <div className="border rounded-md overflow-x-auto border-border/50">
+                            <Table className="min-w-[860px] md:min-w-[1080px]">
                                 <TableHeader>
-                                    <TableRow className="border-zinc-200 dark:border-zinc-800">
-                                        <TableHead>{t('colUser')}</TableHead><TableHead>{t('colDate')}</TableHead><TableHead className="hidden md:table-cell">{t('colMethod')}</TableHead><TableHead>{t('colAudio')}</TableHead>{!isMusic && <TableHead className="hidden lg:table-cell">{t('colSubtitles')}</TableHead>}<TableHead className="text-center hidden md:table-cell">{t('colPauses')}</TableHead><TableHead className="text-right">{t('colDuration')}</TableHead>
+                                    <TableRow className="border-border">
+                                        <TableHead>{t('colUser')}</TableHead><TableHead>{t('colDate')}</TableHead><TableHead className="hidden md:table-cell">{t('colMethod')}</TableHead><TableHead>{t('colAudio')}</TableHead>{!isMusic && <TableHead className="hidden lg:table-cell">{t('colSubtitles')}</TableHead>}<TableHead className="text-center hidden md:table-cell">{t('colPauses')}</TableHead><TableHead className="text-center hidden lg:table-cell">{t('colJumps')}</TableHead><TableHead className="text-center hidden xl:table-cell">{t('colReplays')}</TableHead><TableHead className="text-center hidden xl:table-cell">{t('colMaxSpeed')}</TableHead><TableHead className="text-right">{t('colDuration')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {effectiveHistory.length === 0 ? (
-                                        <TableRow><TableCell colSpan={isMusic ? 5 : 6} className="text-center h-24 text-muted-foreground">{t('noSession')}</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={isMusic ? 9 : 10} className="text-center h-24 text-muted-foreground">{t('noSession')}</TableCell></TableRow>
                                     ) : effectiveHistory.slice(0, 200).map((h) => {
                                         const isTranscode = h.playMethod?.toLowerCase().includes("transcode");
                                         return (
-                                            <TableRow key={h.id} className="border-zinc-200 dark:border-zinc-800/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
+                                            <TableRow key={h.id} className="border-border/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
                                                 <TableCell className="font-medium text-primary">
                                                     {h.user ? <Link href={`/users/${h.user.jellyfinUserId}`} className="hover:underline">{h.user.username || tc('deletedUser')}</Link> : <span className="text-zinc-500">{tc('deletedUser')}</span>}
                                                 </TableCell>
-                                                <TableCell className="text-sm text-zinc-400 whitespace-nowrap">{new Date(h.startedAt).toLocaleString(locale, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</TableCell>
+                                                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{new Date(h.startedAt).toLocaleString(locale, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</TableCell>
                                                 <TableCell className="hidden md:table-cell"><Badge variant={isTranscode ? "destructive" : "default"} className={isTranscode ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-500"}>{h.playMethod || "DirectPlay"}</Badge></TableCell>
                                                 <TableCell className="text-sm">{h.audioLanguage ? <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{h.audioLanguage}{h.audioCodec ? ` (${h.audioCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>
                                                 {!isMusic && <TableCell className="text-sm hidden lg:table-cell">{h.subtitleLanguage ? <span className="font-mono text-xs bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{h.subtitleLanguage}{h.subtitleCodec ? ` (${h.subtitleCodec})` : ""}</span> : <span className="text-zinc-500 text-xs">—</span>}</TableCell>}
                                                 <TableCell className="text-center hidden md:table-cell">{(h.pauseCount || 0) > 0 ? <span className="text-yellow-400 font-medium">{h.pauseCount}</span> : <span className="text-zinc-500">0</span>}</TableCell>
+                                                <TableCell className="text-center hidden lg:table-cell">{(h.seekCount || 0) > 0 ? <span className="text-orange-400 font-medium">{h.seekCount}</span> : <span className="text-zinc-500">0</span>}</TableCell>
+                                                <TableCell className="text-center hidden xl:table-cell">{(h.rewatchCount || 0) > 0 ? <span className="text-green-400 font-medium">{h.rewatchCount}</span> : <span className="text-zinc-500">0</span>}</TableCell>
+                                                <TableCell className="text-center hidden xl:table-cell">{h.maxPlaybackRate ? <span className="font-mono text-xs">{formatRate(h.maxPlaybackRate)}</span> : <span className="text-zinc-500 text-xs">-</span>}</TableCell>
                                                 <TableCell className="text-right whitespace-nowrap font-medium">{h.durationWatched > 0 ? `${Math.floor(h.durationWatched / 60)} min` : <span className="text-zinc-500 text-xs">0 min</span>}</TableCell>
                                             </TableRow>
                                         );

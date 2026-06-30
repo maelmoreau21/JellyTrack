@@ -45,7 +45,7 @@ export default function MediaSearchModal({ open, onClose, query }: { open: boole
           <div className="flex items-center justify-between gap-3 pr-8">
             <DialogTitle className="truncate">{query}</DialogTitle>
             <div className="flex items-center gap-2 shrink-0">
-              <Link href={`/media/all?q=${encodeURIComponent(query || '')}`} className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
+              <Link href={`/media/all?q=${encodeURIComponent(query || '')}`} className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-foreground">
                 {t('viewAll')}
               </Link>
               <Button type="button" onClick={onClose} variant="outline">
@@ -73,7 +73,7 @@ export default function MediaSearchModal({ open, onClose, query }: { open: boole
                     <Link href={`/media/${m.jellyfinMediaId}`} className="block p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/60">
                       <div className="flex items-center justify-between gap-3">
                         <div className="text-sm font-medium truncate">{m.title}</div>
-                        <div className="text-xs text-zinc-400 shrink-0">{m.type}</div>
+                        <div className="text-xs text-muted-foreground shrink-0">{m.type}</div>
                       </div>
                     </Link>
                   </li>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import redis from "@/lib/redis";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { buildLegacyStreamRedisKey, buildStreamRedisKey } from "@/lib/serverRegistry";
+import { buildStreamRedisKey } from "@/lib/serverRegistry";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +45,8 @@ export async function GET(req: Request) {
             AudioStreamIndex?: number;
             subtitleStreamIndex?: number;
             SubtitleStreamIndex?: number;
+            bitrate?: number;
+            Bitrate?: number;
         }
 
         let liveStreams: any[] = []; // Final return array can stay any[] or be refined
@@ -64,18 +66,6 @@ export async function GET(req: Request) {
                     } catch {}
                 }
             });
-
-            // Backward compatibility: try legacy key if new key is missing.
-            await Promise.all(activeStreamEntries.map(async (stream) => {
-                const mapKey = `${stream.serverId}:${stream.sessionId}`;
-                if (redisMap.has(mapKey)) return;
-                try {
-                    const legacyPayload = await redis.get(buildLegacyStreamRedisKey(stream.sessionId));
-                    if (!legacyPayload) return;
-                    const parsed = JSON.parse(legacyPayload) as RedisStreamPayload;
-                    redisMap.set(mapKey, parsed);
-                } catch {}
-            }));
 
             const relatedPairs = new Set<string>();
             for (const entry of activeStreamEntries) {
@@ -102,19 +92,19 @@ export async function GET(req: Request) {
 
             liveStreams = activeStreamEntries.map((dbStream) => {
                 const payload = redisMap.get(`${dbStream.serverId}:${dbStream.sessionId}`) || {};
+                const itemMedia = dbStream.media;
                 
                 const isTranscoding = dbStream.playMethod === "Transcode" 
                     || payload?.isTranscoding === true
                     || payload?.IsTranscoding === true;
                     
-                const streamBitrate = dbStream.bitrate ?? payload?.bitrate ?? (itemMedia.size && itemMedia.durationMs ? Math.round(Number(itemMedia.size) * 8 / (Number(itemMedia.durationMs) / 1000)) : null);
+                const streamBitrate = dbStream.bitrate ?? payload?.bitrate ?? payload?.Bitrate ?? (itemMedia.size && itemMedia.durationMs && Number(itemMedia.durationMs) > 0 ? Math.round(Number(itemMedia.size) * 8 / (Number(itemMedia.durationMs) / 1000)) : null);
                 if (streamBitrate) {
                     totalBandwidthMbps += streamBitrate / 1000000;
                 } else {
                     totalBandwidthMbps += isTranscoding ? 12 : 6;
                 }
 
-                const itemMedia = dbStream.media;
                 const parentMedia = itemMedia.parentId ? mediaHierarchyMap.get(`${dbStream.serverId}:${itemMedia.parentId}`) : null;
                 const grandparentMedia = parentMedia?.parentId ? mediaHierarchyMap.get(`${dbStream.serverId}:${parentMedia.parentId}`) : null;
 
@@ -174,6 +164,6 @@ export async function GET(req: Request) {
         });
     } catch (e: unknown) {
         console.error("[Live Streams API] Error:", e);
-        return NextResponse.json({ streams: [], count: 0, totalBandwidthMbps: 0 });
+        return NextResponse.json({ error: "Unable to load live streams." }, { status: 500 });
     }
 }

@@ -4,14 +4,15 @@ import { useTranslations } from "next-intl";
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { useRouter } from "next/navigation";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
+import { chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
 
 const COLORS: Record<string, string> = {
-    "DirectPlay": "#10b981", // Emerald 500
-    "Transcode": "#f97316", // Orange 500
-    "DirectStream": "#3b82f6", // Blue 500
+    "DirectPlay": "var(--chart-soft-4)",
+    "Transcode": "var(--chart-soft-6)",
+    "DirectStream": "var(--chart-soft-5)",
 };
 
-const DEFAULT_COLOR = "#71717a"; // Zinc 500
+const DEFAULT_COLOR = "var(--chart-label-color)";
 
 export function StreamProportionsChart({ data }: { data: { name: string, value: number }[] }) {
     const t = useTranslations('charts');
@@ -54,9 +55,9 @@ export function StreamProportionsChart({ data }: { data: { name: string, value: 
                     ))}
                 </Pie>
                 <Tooltip
-                    contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' }}
-                    labelStyle={{ color: '#a1a1aa' }}
-                    itemStyle={{ color: '#e4e4e7' }}
+                    contentStyle={chartTooltipStyle}
+                    labelStyle={chartLabelStyle}
+                    itemStyle={chartItemStyle}
                     formatter={(value: any, name: any) => [`${value ?? 0} ${t('sessions')}`, name ?? t('total')] as [string, string]}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />

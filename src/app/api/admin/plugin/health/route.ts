@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
+import { normalizePluginTelemetrySettings } from "@/lib/pluginTelemetrySettings";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +76,7 @@ function parseFiniteNumber(raw: unknown): number | null {
     return null;
 }
 
-async function buildPluginHealthSnapshot(req: Request) {
+async function buildPluginHealthSnapshot() {
     const now = Date.now();
     const nowDate = new Date(now);
     const dayAgo = new Date(now - 24 * 60 * 60 * 1000);
@@ -94,6 +96,7 @@ async function buildPluginHealthSnapshot(req: Request) {
                 pluginVersion: true,
                 pluginServerName: true,
                 pluginApiKey: true,
+                pluginTelemetrySettings: true,
             },
         }),
         prisma.systemHealthEvent.findMany({
@@ -195,11 +198,27 @@ async function buildPluginHealthSnapshot(req: Request) {
         heartbeatDetails?.lastHttpStatusCode ??
         heartbeatDetails?.LastHttpStatusCode
     );
+    const coalescedProgressEvents = parseFiniteNumber(
+        heartbeatDetails?.coalescedProgressEvents ??
+        heartbeatDetails?.CoalescedProgressEvents
+    );
+    const pluginSchemaVersion = parseFiniteNumber(
+        heartbeatDetails?.eventSchemaVersion ??
+        heartbeatDetails?.EventSchemaVersion
+    );
+    const jellyfinVersion = typeof heartbeatDetails?.jellyfinVersion === "string"
+        ? heartbeatDetails.jellyfinVersion
+        : typeof heartbeatDetails?.JellyfinVersion === "string"
+            ? heartbeatDetails.JellyfinVersion
+            : null;
 
     const normalizedQueueDepth = queueDepth !== null ? Math.max(0, Math.floor(queueDepth)) : null;
     const normalizedRetries = retries !== null ? Math.max(0, Math.floor(retries)) : null;
     const normalizedLastHttpCode = lastHttpCode !== null ? Math.max(0, Math.floor(lastHttpCode)) : null;
-    const hasPluginMetrics = normalizedQueueDepth !== null || normalizedRetries !== null || normalizedLastHttpCode !== null;
+    const normalizedCoalescedProgressEvents = coalescedProgressEvents !== null ? Math.max(0, Math.floor(coalescedProgressEvents)) : null;
+    const normalizedPluginSchemaVersion = pluginSchemaVersion !== null ? Math.max(0, Math.floor(pluginSchemaVersion)) : null;
+    const hasPluginMetrics = normalizedQueueDepth !== null || normalizedRetries !== null || normalizedLastHttpCode !== null || normalizedCoalescedProgressEvents !== null;
+    const telemetrySettings = normalizePluginTelemetrySettings((settings as any)?.pluginTelemetrySettings);
 
     const successEstimate24h = heartbeatEvents.length + playbackStarts24h + playbackStops24h;
     const totalEstimate24h = successEstimate24h + failureCount24h;
@@ -217,6 +236,8 @@ async function buildPluginHealthSnapshot(req: Request) {
             lastSeen: settings?.pluginLastSeen || null,
             version: settings?.pluginVersion || null,
             serverName: settings?.pluginServerName || null,
+            jellyfinVersion,
+            schemaVersion: normalizedPluginSchemaVersion,
             hasApiKey: Boolean(settings?.pluginApiKey),
             endpoint: "/api/plugin/events",
         },
@@ -250,10 +271,12 @@ async function buildPluginHealthSnapshot(req: Request) {
             queueDepth: normalizedQueueDepth,
             retries: normalizedRetries,
             lastHttpCode: normalizedLastHttpCode,
+            coalescedProgressEvents: normalizedCoalescedProgressEvents,
             note: hasPluginMetrics
                 ? "Live plugin telemetry from latest heartbeat."
                 : "Current plugin payload version does not include queue depth/retry/http diagnostics.",
         },
+        telemetrySettings,
         recentFailures: recentAuditFailures.map((event: any) => ({
             id: String(event.id),
             action: String(event.action),
@@ -268,7 +291,7 @@ export async function GET(req: Request) {
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
 
-    const payload = await buildPluginHealthSnapshot(req);
+    const payload = await buildPluginHealthSnapshot();
     const url = new URL(req.url);
     const shouldExport = url.searchParams.get("export") === "1";
 
@@ -288,7 +311,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     const ipAddress = getRequestIp(req);
@@ -338,7 +361,7 @@ export async function POST(req: Request) {
         const identity = getMasterServerIdentityFromEnv();
         const syntheticHeartbeat = {
             event: "Heartbeat",
-            eventSchemaVersion: 2,
+            eventSchemaVersion: 3,
             pluginVersion: "manual-probe",
             serverName: identity.name,
             serverId: identity.jellyfinServerId,

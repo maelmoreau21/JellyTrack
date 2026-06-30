@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const messagesDir = path.join(__dirname, '..', 'messages');
-const canonicalFile = 'fr.json';
+const canonicalFile = 'en.json';
 const namespace = 'media';
 
 function readJson(p) {

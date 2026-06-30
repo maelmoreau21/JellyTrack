@@ -39,8 +39,8 @@ export function categorizeClient(clientName: string): string {
 }
 
 /**
- * Normalise une valeur de résolution en une étiquette standardisée.
- * Exemples retournés: '4K', '1080p', '720p', 'SD', 'Unknown' ou la valeur d'origine trimée.
+ * Normalize a resolution value to a standardized label.
+ * Returns: '4K', '1080p', '1440p', '720p', 'SD', 'Unknown' or the trimmed original value.
  */
 export function normalizeResolution(raw?: string | null): string {
     if (!raw) return "Unknown";

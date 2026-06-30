@@ -9,7 +9,7 @@ export function MediaFilter() {
   const router = useRouter();
   const pathname = usePathname();
   const tc = useTranslations('common');
-  const td = useTranslations('dashboard');
+
 
   const excludedParam = searchParams.get('excludeTypes');
   const excludedTypes = excludedParam ? excludedParam.split(',') : [];
@@ -64,7 +64,7 @@ export function MediaFilter() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-3 app-surface-soft p-1.5 rounded-xl border border-border/40 backdrop-blur-md transition-all hover:bg-black/5 dark:hover:bg-white/5 group">
+      <div className="flex items-center gap-3 app-surface-soft p-1.5 rounded-xl border border-border/40 backdrop-blur-md transition-all hover:bg-slate-900/5 dark:hover:bg-white/5 group">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-0.5 px-1">
           {categories.map((cat) => {
             // An item is active if it's NOT in the excluded list, or if 'all' is selected
@@ -79,7 +79,7 @@ export function MediaFilter() {
                   flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap border
                   ${isActive 
                     ? 'app-surface text-primary border-border shadow-sm' 
-                    : 'bg-transparent text-muted-foreground border-transparent hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground'
+                    : 'bg-transparent text-muted-foreground border-transparent hover:bg-slate-900/5 dark:hover:bg-white/5 hover:text-foreground'
                   }
                 `}
               >

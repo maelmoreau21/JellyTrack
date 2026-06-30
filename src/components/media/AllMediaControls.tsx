@@ -18,10 +18,10 @@ export default function AllMediaControls() {
   const excludedTypes = excludedParam ? excludedParam.split(',') : [];
 
   const categories = [
-    { id: 'all', label: tc('all') || 'Tout', icon: Filter },
-    { id: 'Movie', label: tc('movies') || 'Films', icon: Film },
-    { id: 'Series', label: tc('series') || 'Séries', icon: Tv },
-    { id: 'MusicAlbum', label: tc('music') || 'Musique', icon: Music },
+    { id: 'all', label: tc('all') || 'All', icon: Filter },
+    { id: 'Movie', label: tc('movies') || 'Movies', icon: Film },
+    { id: 'Series', label: tc('series') || 'Series', icon: Tv },
+    { id: 'MusicAlbum', label: tc('music') || 'Music', icon: Music },
   ];
 
   const allSelected = excludedTypes.length === 0;
@@ -80,7 +80,7 @@ export default function AllMediaControls() {
   return (
     <div className="mb-6">
       <div className="flex flex-col md:flex-row items-center gap-3">
-        <div className="flex items-center gap-1.5 bg-zinc-100/50 dark:bg-zinc-900/40 p-1.5 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 backdrop-blur-sm transition-all hover:bg-zinc-100/80 dark:hover:bg-zinc-900/60 overflow-x-auto scrollbar-hide w-full md:w-auto">
+        <div className="app-surface-soft flex items-center gap-1.5 p-1.5 rounded-xl border backdrop-blur-sm transition-all overflow-x-auto scrollbar-hide w-full md:w-auto">
           {categories.map(cat => {
             const isActive = cat.id === 'all' ? allSelected : !excludedTypes.includes(cat.id);
             const Icon = cat.icon as any;
@@ -88,7 +88,7 @@ export default function AllMediaControls() {
               <button 
                 key={cat.id} 
                 onClick={() => toggleType(cat.id)} 
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap border ${isActive ? 'bg-card dark:bg-zinc-800 text-primary border-border dark:border-zinc-700 shadow-sm' : 'bg-transparent text-zinc-500 border-transparent hover:bg-zinc-200/30 dark:hover:bg-zinc-800/30 hover:text-zinc-600 dark:hover:text-zinc-400'}`}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-300 whitespace-nowrap border ${isActive ? 'bg-card dark:bg-[var(--surface-nested)] text-primary border-border shadow-sm' : 'bg-transparent text-muted-foreground border-transparent hover:bg-muted hover:text-foreground'}`}
               >
                 <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-zinc-500 opacity-60'}`} />
                 <span className="hidden sm:inline">{cat.label}</span>
@@ -101,12 +101,12 @@ export default function AllMediaControls() {
           <Input 
             value={query} 
             onChange={(e) => setQuery(e.target.value)} 
-            placeholder={tc('searchPlaceholder') || 'Rechercher...'} 
-            className="w-full pl-9 pr-10 bg-zinc-100/50 dark:bg-zinc-900/40 border-zinc-200/50 dark:border-zinc-800/50 focus-visible:ring-1 focus-visible:ring-primary/50 text-base md:text-sm shadow-sm"
+            placeholder={tc('searchPlaceholder') || 'Search...'} 
+            className="app-field w-full pl-9 pr-10 focus-visible:ring-1 focus-visible:ring-primary/50 text-base md:text-sm shadow-sm"
           />
           <SearchIcon className="absolute left-3 top-2.5 w-4 h-4 text-zinc-500" />
           {query && (
-            <button type="button" onClick={clearQuery} className="absolute right-2 top-2 w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-zinc-600 transition-colors bg-zinc-200/50 dark:bg-zinc-800/50 hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 rounded-full">
+            <button type="button" onClick={clearQuery} className="app-surface-soft absolute right-2 top-2 w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded-full">
               <X className="w-3.5 h-3.5" />
             </button>
           )}

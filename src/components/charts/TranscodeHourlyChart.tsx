@@ -11,6 +11,7 @@ import {
     Legend,
 } from 'recharts';
 import ResponsiveContainer from "./ResponsiveContainerGuard";
+import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
 
 interface HourlyMethodData {
     time: string;
@@ -22,8 +23,8 @@ interface HourlyMethodData {
 export function TranscodeHourlyChart({ data }: { data: HourlyMethodData[] }) {
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
-    const toggleLegend = (e: { dataKey?: string }) => {
-        const dataKey = e.dataKey ?? "";
+    const toggleLegend = (e: { dataKey?: unknown }) => {
+        const dataKey = String(e.dataKey ?? "");
         setHidden(prev => {
             const next = new Set(prev);
             if (next.has(dataKey)) next.delete(dataKey);
@@ -42,14 +43,14 @@ export function TranscodeHourlyChart({ data }: { data: HourlyMethodData[] }) {
     return (
         <ResponsiveContainer width="100%" height={300} minHeight={300}>
             <AreaChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
-                <XAxis dataKey="time" stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGridColor} />
+                <XAxis dataKey="time" stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke={chartAxisColor} fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip
-                    contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', color: '#f4f4f5' }}
-                    labelStyle={{ color: '#a1a1aa' }}
-                    itemStyle={{ color: '#e4e4e7' }}
-                    formatter={(value: number | string | null | undefined, name?: string) => [`${value ?? 0} sessions`, name ?? ''] as [string, string]}
+                    contentStyle={chartTooltipStyle}
+                    labelStyle={chartLabelStyle}
+                    itemStyle={chartItemStyle}
+                    formatter={(value: unknown, name?: unknown) => [`${value ?? 0} sessions`, String(name ?? '')] as [string, string]}
                 />
                 <Legend onClick={onLegendClick} wrapperStyle={{ fontSize: '12px', paddingTop: '10px', cursor: 'pointer' }} />
                 <Area
@@ -57,8 +58,8 @@ export function TranscodeHourlyChart({ data }: { data: HourlyMethodData[] }) {
                     type="monotone"
                     dataKey="DirectPlay"
                     stackId="1"
-                    stroke="#22c55e"
-                    fill="#22c55e"
+                    stroke="var(--chart-soft-4)"
+                    fill="var(--chart-soft-4)"
                     fillOpacity={0.6}
                     name="DirectPlay"
                 />
@@ -67,8 +68,8 @@ export function TranscodeHourlyChart({ data }: { data: HourlyMethodData[] }) {
                     type="monotone"
                     dataKey="DirectStream"
                     stackId="1"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
+                    stroke="var(--chart-soft-5)"
+                    fill="var(--chart-soft-5)"
                     fillOpacity={0.6}
                     name="DirectStream"
                 />
@@ -77,8 +78,8 @@ export function TranscodeHourlyChart({ data }: { data: HourlyMethodData[] }) {
                     type="monotone"
                     dataKey="Transcode"
                     stackId="1"
-                    stroke="#f97316"
-                    fill="#f97316"
+                    stroke="var(--chart-soft-6)"
+                    fill="var(--chart-soft-6)"
                     fillOpacity={0.6}
                     name="Transcode"
                 />

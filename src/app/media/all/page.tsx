@@ -11,7 +11,8 @@ import { ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { buildExcludedMediaClause } from '@/lib/mediaPolicy';
 import { ServerFilter } from '@/components/dashboard/ServerFilter';
 import { cookies } from 'next/headers';
-import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from '@/lib/serverScope';
+import { GLOBAL_SERVER_SCOPE_COOKIE } from '@/lib/serverScope';
+import { resolveSelectedServerIdsAsync } from '@/lib/serverScope.server';
 import { buildSelectableServerOptions } from '@/lib/selectableServers';
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export const dynamic = "force-dynamic";
 const ITEMS_PER_PAGE = 50;
 
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 type AllMediaSearchParams = {
     excludeTypes?: string;
@@ -41,7 +43,7 @@ function shouldShowLibraryMediaBadges(resolutionThresholds: unknown): boolean {
 
 export default async function AllMediaPage({ searchParams: searchParamsPromise }: { searchParams?: Promise<AllMediaSearchParams> }) {
     const auth = await requireAdmin();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
 
     const searchParams = (await searchParamsPromise) || {};
     const t = await getTranslations('media');
@@ -368,7 +370,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
 
     return (
         <div className="p-6 max-w-[1400px] mx-auto">
-            <h1 className="text-2xl font-bold mb-4">{t('allMedia') || 'Tous les médias'}</h1>
+            <h1 className="text-2xl font-bold mb-4">{t('allMedia') || 'All media'}</h1>
             <div className="mb-4">
                 <ServerFilter
                     servers={selectableServerOptions}
@@ -381,10 +383,10 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                 {displayMedia.map((media) => (
                     <Link href={`/media/${media.jellyfinMediaId}`} key={media.id} className="group flex flex-col space-y-2">
                         <div className={`app-surface-soft relative ${media.type === 'MusicAlbum' ? 'aspect-square' : 'aspect-[2/3]'} rounded-md overflow-hidden ring-1 ring-zinc-200/50 dark:ring-white/10 shadow-lg`}>
-                            <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.parentId || undefined)} alt={media.title} fill className="object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50" />
+                            <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.parentId || undefined)} alt={media.title} fill className="object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50" fallbackType={media.type === 'MusicAlbum' ? 'music' : 'movie'} />
                             {showLibraryMediaBadges && (media.normalizedResolution && !['MusicAlbum', 'Season', 'Series'].includes(media.type)) && (
                                 <div className="absolute top-2 right-2 z-10">
-                                    <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
+                                    <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-muted-foreground border-zinc-700'}`}>
                                         {media.normalizedResolution === '4K' ? '4K UHD' : media.normalizedResolution}
                                     </Badge>
                                 </div>
@@ -397,7 +399,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                             {showLibraryMediaBadges && media.type === 'Series' && (
                                 <div className="absolute top-2 right-2 z-10">
                                     {media.normalizedResolution && media.normalizedResolution !== 'Unknown' ? (
-                                        <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-zinc-300 border-zinc-700'}`}>
+                                        <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-muted-foreground border-zinc-700'}`}>
                                             {media.normalizedResolution === '4K' ? '4K UHD' : media.normalizedResolution}
                                         </Badge>
                                     ) : media.plays > 0 ? (
@@ -424,7 +426,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                     {safePage > 1 && (
                         <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-zinc-800"><ChevronLeft className="w-4 h-4" /> {tc('previous')}</Link>
                     )}
-                    <div className="flex items-center gap-2"><span className="text-sm font-medium text-zinc-400">{tc('page')} {safePage} / {totalPages}</span></div>
+                    <div className="flex items-center gap-2"><span className="text-sm font-medium text-muted-foreground">{tc('page')} {safePage} / {totalPages}</span></div>
                     {safePage < totalPages && (
                         <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium hover:bg-zinc-800">{tc('next')} <ChevronRight className="w-4 h-4" /></Link>
                     )}

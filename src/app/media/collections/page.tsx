@@ -2,13 +2,15 @@ import prisma from "@/lib/prisma";
 import { getTranslations } from 'next-intl/server';
 import LibraryStats from '@/components/media/LibraryStats';
 import { formatSize } from '@/lib/size';
-import { buildExcludedMediaClause, inferLibraryKey, normalizeLibraryKey } from '@/lib/mediaPolicy';
+import { buildExcludedMediaClause, normalizeLibraryKey } from '@/lib/mediaPolicy';
 import { getSanitizedLibraryNames, GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
-import { isZapped, ZAPPING_CONDITION } from '@/lib/statsUtils';
+import { ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from "@/lib/serverScope";
+import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
+import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
 
 export const dynamic = "force-dynamic";
@@ -68,7 +70,7 @@ type LibraryStatsEntry = {
 
 export default async function CollectionsPage({ searchParams }: { searchParams?: Promise<CollectionsSearchParams> }) {
     const auth = await requireAdmin();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
 
     const resolvedSearchParams = (searchParams ? await searchParams : {}) as CollectionsSearchParams;
 
@@ -163,7 +165,6 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
 
     let totalSizeBytes = BigInt(0);
     let totalDurationMs = BigInt(0);
-    let totalWatchedSeconds = 0; // aggregated from playback history
     let movieCount = 0;
     let seriesCount = 0;
     let albumCount = 0;
@@ -369,7 +370,6 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
         
         for (const p of playbackAgg) {
             const seconds = p._sum?.durationWatched ?? 0;
-            totalWatchedSeconds += seconds;
             const key = mediaToLibKey.get(p.mediaId) || tc('other');
             
             if (!libraryStatsMap.has(key)) {

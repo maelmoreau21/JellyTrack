@@ -1,12 +1,14 @@
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import { getTranslations } from 'next-intl/server';
 import { cookies } from "next/headers";
-import { GLOBAL_SERVER_SCOPE_COOKIE, resolveSelectedServerIdsAsync } from "@/lib/serverScope";
+import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
+import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
 import { Activity, ArrowUpRight, Gauge, Server, Zap } from "lucide-react";
 
@@ -57,7 +59,7 @@ export default async function ServerComparePage({
     searchParams?: Promise<CompareSearchParams>;
 }) {
     const auth = await requireAdmin();
-    if (isAuthError(auth)) return auth;
+    if (isAuthError(auth)) redirect("/login");
     const t = await getTranslations('dashboard');
 
     const params = (await searchParams) || {};

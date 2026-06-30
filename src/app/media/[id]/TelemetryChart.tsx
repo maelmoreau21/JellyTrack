@@ -2,6 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts";
 import ResponsiveContainer from "../../../components/charts/ResponsiveContainerGuard";
+import { chartGridColor, chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
 
 interface TelemetryData {
     date: string;
@@ -16,20 +17,20 @@ export default function TelemetryChart({ data }: { data: TelemetryData[] }) {
     return (
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="date" tick={{ fill: '#a1a1aa', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#a1a1aa', fontSize: 12 }} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGridColor} />
+                <XAxis dataKey="date" tick={{ fill: 'var(--chart-axis-color)', fontSize: 11 }} />
+                <YAxis tick={{ fill: 'var(--chart-axis-color)', fontSize: 12 }} allowDecimals={false} />
                 <Tooltip
-                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', color: '#f4f4f5' }}
-                    labelStyle={{ color: '#e4e4e7' }}
-                    itemStyle={{ color: '#e4e4e7' }}
+                    contentStyle={chartTooltipStyle}
+                    labelStyle={chartLabelStyle}
+                    itemStyle={chartItemStyle}
                 />
                 <Legend
-                    wrapperStyle={{ fontSize: '12px', color: '#a1a1aa' }}
+                    wrapperStyle={{ fontSize: '12px', color: 'var(--chart-label-color)' }}
                 />
-                <Bar dataKey="pauses" name="Pauses" fill="#eab308" radius={[2, 2, 0, 0]} stackId="a" />
-                <Bar dataKey="audioChanges" name="Changements Audio" fill="#a855f7" radius={[0, 0, 0, 0]} stackId="a" />
-                <Bar dataKey="subtitleChanges" name="Changements Sous-titres" fill="#06b6d4" radius={[4, 4, 0, 0]} stackId="a" />
+                <Bar dataKey="pauses" name="Pauses" fill="var(--chart-soft-6)" radius={[2, 2, 0, 0]} stackId="a" />
+                <Bar dataKey="audioChanges" name="Changements Audio" fill="var(--chart-soft-2)" radius={[0, 0, 0, 0]} stackId="a" />
+                <Bar dataKey="subtitleChanges" name="Changements Sous-titres" fill="var(--chart-soft-1)" radius={[4, 4, 0, 0]} stackId="a" />
             </BarChart>
         </ResponsiveContainer>
     );

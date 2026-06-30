@@ -1,12 +1,13 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { PlayCircle, Server, Database, Palette, BarChart3, Shield, Clock, Github, Heart, ExternalLink } from "lucide-react";
+import { PlayCircle, Server, Database, Palette, BarChart3, Shield, Clock, GitBranch, Heart, ExternalLink } from "lucide-react";
 import { getTranslations } from 'next-intl/server';
+import Image from "next/image";
 
 const version = process.env.APP_VERSION || "1.0.0";
 
 const techStackIcons = [Server, Palette, Database, BarChart3, Shield, Clock];
 const techStackNames = ["Next.js", "React", "Prisma", "Recharts", "NextAuth.js", "Node-Cron"];
-const techStackVersions = ["16", "19", "5", "3", "4", "4"];
+const techStackVersions = ["16", "19", "7", "3", "4", "4"];
 const techStackKeys = ["techNextjs", "techReact", "techPrisma", "techRecharts", "techNextAuth", "techCron"] as const;
 
 export default async function AboutPage() {
@@ -18,7 +19,7 @@ export default async function AboutPage() {
             {/* Header */}
             <div className="text-center space-y-4">
                 <div className="flex items-center justify-center gap-3">
-                    <img src="/logo.svg" alt="Logo" className="w-10 h-10 md:w-12 md:h-12" />
+                    <Image src="/logo.svg" alt="Logo" width={48} height={48} className="w-10 h-10 md:w-12 md:h-12" />
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight">JellyTrack</h1>
                 </div>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -30,7 +31,7 @@ export default async function AboutPage() {
             </div>
 
             {/* Features */}
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Heart className="w-5 h-5 text-rose-400" />
@@ -40,7 +41,7 @@ export default async function AboutPage() {
                 <CardContent>
                     <ul className="grid gap-2 md:grid-cols-2">
                         {featuresList.map((feature: string, i: number) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+                            <li key={i} className="flex items-start gap-2 text-sm text-foreground/80 dark:text-slate-300">
                                 <span className="text-primary mt-0.5 shrink-0">•</span>
                                 {feature}
                             </li>
@@ -50,7 +51,7 @@ export default async function AboutPage() {
             </Card>
 
             {/* Tech Stack */}
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Server className="w-5 h-5 text-sky-400" />
@@ -62,7 +63,7 @@ export default async function AboutPage() {
                         {techStackNames.map((name, i) => {
                             const Icon = techStackIcons[i];
                             return (
-                                <div key={name} className="flex items-start gap-3 p-3 rounded-lg bg-zinc-100/50 dark:bg-black/20 border border-zinc-200/50 dark:border-zinc-800/50">
+                                <div key={name} className="flex items-start gap-3 p-3 rounded-lg bg-zinc-100/50 dark:bg-slate-900/60 border border-zinc-200/50 dark:border-white/10">
                                     <Icon className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                                     <div>
                                         <div className="flex items-baseline gap-1.5">
@@ -79,10 +80,10 @@ export default async function AboutPage() {
             </Card>
 
             {/* Links & Credits */}
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm">
+            <Card className="app-surface backdrop-blur-sm">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Github className="w-5 h-5" />
+                        <GitBranch className="w-5 h-5" />
                         {t('linksCredits')}
                     </CardTitle>
                 </CardHeader>
@@ -92,9 +93,9 @@ export default async function AboutPage() {
                             href="https://github.com/maelmoreau21/JellyTrack"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300 hover:text-primary transition-colors"
+                            className="flex items-center gap-2 text-sm text-foreground/80 dark:text-slate-300 hover:text-primary transition-colors"
                         >
-                            <Github className="w-4 h-4" />
+                            <GitBranch className="w-4 h-4" />
                             {t('githubSource')}
                             <ExternalLink className="w-3 h-3 text-zinc-500" />
                         </a>
@@ -102,14 +103,14 @@ export default async function AboutPage() {
                             href="https://jellyfin.org"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300 hover:text-primary transition-colors"
+                            className="flex items-center gap-2 text-sm text-foreground/80 dark:text-slate-300 hover:text-primary transition-colors"
                         >
                             <PlayCircle className="w-4 h-4" />
                             {t('jellyfinLink')}
                             <ExternalLink className="w-3 h-3 text-zinc-500" />
                         </a>
                     </div>
-                    <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800/50">
+                    <div className="pt-4 border-t border-border/50">
                         <p className="text-xs text-zinc-500 text-center">
                             {t('openSourceNote')}
                         </p>

@@ -36,9 +36,10 @@ interface LiveStream {
     posterItemId?: string | null;
 }
 
-function getImageUrl(itemId: string, type: string = 'Primary', fallbackId?: string) {
+function getImageUrl(itemId: string, type: string = 'Primary', fallbackId?: string, serverId?: string | null) {
     let url = `/api/jellyfin/image?itemId=${itemId}&type=${type}`;
     if (fallbackId) url += `&fallbackId=${fallbackId}`;
+    if (serverId) url += `&serverId=${serverId}`;
     return url;
 }
 
@@ -63,16 +64,17 @@ function StreamCard({ stream }: { stream: LiveStream }) {
     }
 
     return (
-        <div className="flex items-center gap-4 p-3 border rounded-lg border-border/50 app-surface-soft hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <div className="flex items-center gap-4 p-3 border rounded-lg border-border/50 app-surface-soft hover:bg-slate-900/5 dark:hover:bg-white/5 transition-colors">
             {mediaHref ? (
-                <Link href={mediaHref} className="-m-1 flex min-w-0 flex-1 items-center gap-4 rounded-md p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5">
+                <Link href={mediaHref} className="-m-1 flex min-w-0 flex-1 items-center gap-4 rounded-md p-1 transition-colors hover:bg-slate-900/5 dark:hover:bg-white/5">
                     {posterId ? (
                         <div className={`relative ${widthClass} ${aspectClass} bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10`}>
                             <FallbackImage
-                                src={getImageUrl(posterId, 'Primary', stream.parentItemId || undefined)}
+                                src={getImageUrl(posterId, 'Primary', stream.parentItemId || undefined, stream.serverId)}
                                 alt={stream.mediaTitle}
                                 fill
                                 className="object-cover"
+                                fallbackType={isAudio ? 'music' : 'movie'}
                             />
                         </div>
                     ) : (
@@ -140,10 +142,11 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                     {posterId ? (
                         <div className={`relative ${widthClass} ${aspectClass} bg-muted rounded shrink-0 overflow-hidden ring-1 ring-white/10`}>
                             <FallbackImage
-                                src={getImageUrl(posterId, 'Primary', stream.parentItemId || undefined)}
+                                src={getImageUrl(posterId, 'Primary', stream.parentItemId || undefined, stream.serverId)}
                                 alt={stream.mediaTitle}
                                 fill
                                 className="object-cover"
+                                fallbackType={isAudio ? 'music' : 'movie'}
                             />
                         </div>
                     ) : (
@@ -235,7 +238,6 @@ const GANTT_COLORS = [
 
 function StreamTimeline({ stream, colorIndex }: { stream: LiveStream; colorIndex: number }) {
     const t = useTranslations('liveStreams');
-    const tc = useTranslations('common');
     const color = GANTT_COLORS[colorIndex % GANTT_COLORS.length];
     return (
         <div className="group flex items-center gap-3 py-1.5">
@@ -304,8 +306,10 @@ export function LiveStreamsPanel({
             const res = await fetch(`/api/streams${query ? `?${query}` : ""}`, { cache: "no-store" });
             if (res.ok) {
                 const data = await res.json();
-                setStreams(data.streams || []);
-                setBandwidth(data.totalBandwidthMbps || 0);
+                if (Array.isArray(data.streams)) {
+                    setStreams(data.streams);
+                    setBandwidth(data.totalBandwidthMbps || 0);
+                }
             }
         } catch {
             // silently ignore network errors
@@ -330,9 +334,11 @@ export function LiveStreamsPanel({
         };
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
+        const firstFetchTimeout = setTimeout(fetchStreams, 0);
         startPolling();
 
         return () => {
+            clearTimeout(firstFetchTimeout);
             clearInterval(interval);
             document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
@@ -353,7 +359,7 @@ export function LiveStreamsPanel({
                     {streams.length >= 3 && (
                         <button
                                 onClick={() => setForceCards(!forceCards)}
-                                className="p-1.5 rounded-md border border-border/50 app-surface-soft hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                                className="p-1.5 rounded-md border border-border/50 app-surface-soft hover:bg-slate-900/5 dark:hover:bg-white/5 transition-colors"
                                 title={forceCards ? t('timelineView') : t('cardsView')}
                             >
                             {forceCards ? <Rows3 className="w-4 h-4 text-muted-foreground" /> : <LayoutList className="w-4 h-4 text-muted-foreground" />}

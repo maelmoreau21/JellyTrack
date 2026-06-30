@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Server {
@@ -87,6 +87,8 @@ model PlaybackHistory {
   
   // Streaming Info
   playMethod      String    // e.g., "DirectPlay", "Transcode", "DirectStream"
+  eventSource     String    @default("playback") // "playback" or "download"
+  sourceEventId   String?   // Idempotency key from plugin-originated non-playback events
   clientName      String?   // e.g., "Jellyfin Web", "Android TV"
   deviceName      String?   // e.g., "Chrome", "Nvidia Shield"
   
@@ -111,11 +113,16 @@ model PlaybackHistory {
   pauseCount       Int       @default(0) // Number of times playback was paused
   audioChanges     Int       @default(0) // Number of audio track switches
   subtitleChanges  Int       @default(0) // Number of subtitle track switches
+  seekCount         Int       @default(0) // Number of forward/backward manual jumps
+  rewatchCount      Int       @default(0) // Number of backward jumps / replayed passages
+  speedChangeCount  Int       @default(0) // Number of playback speed bucket changes
+  maxPlaybackRate   Float?    // Highest observed or estimated playback rate
   
   server          Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
   user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   media           Media     @relation(fields: [mediaId], references: [id], onDelete: Cascade)
   telemetryEvents TelemetryEvent[]
+  activeStreams    ActiveStream[]
 
   @@index([serverId])
   @@index([userId])
@@ -128,6 +135,8 @@ model PlaybackHistory {
   @@index([serverId, mediaId, startedAt])
   @@index([clientName])
   @@index([playMethod])
+  @@index([eventSource])
+  @@unique([serverId, sourceEventId])
   @@index([endedAt])
   @@index([serverId, endedAt])
   @@index([ipAddress, startedAt])
@@ -159,6 +168,7 @@ model ActiveStream {
   sessionId       String   // Jellyfin Session ID
   userId          String
   mediaId         String
+  playbackId      String?
   
   // Streaming Info
   playMethod      String   // "DirectPlay", "Transcode"
@@ -178,6 +188,7 @@ model ActiveStream {
   audioLanguage    String?
   subtitleLanguage String?
   subtitleCodec    String?
+  playbackRate     Float?
   
   // Tick updates
   positionTicks   BigInt?   // Position actuelle de lecture
@@ -187,9 +198,11 @@ model ActiveStream {
   server          Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   media           Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  playback        PlaybackHistory? @relation(fields: [playbackId], references: [id], onDelete: SetNull)
 
   @@unique([sessionId, serverId])
   @@index([serverId])
+  @@index([playbackId])
   @@index([lastPingAt])
   @@index([serverId, lastPingAt])
 }
@@ -205,7 +218,7 @@ model GlobalSettings {
   syncCronMinute        Int      @default(0)     // Minute (0-59) for daily full sync
   backupCronHour        Int      @default(3)     // Hour (0-23) for daily auto-backup
   backupCronMinute      Int      @default(30)    // Minute (0-59) for daily auto-backup
-  defaultLocale         String   @default("fr")  // Default language for new users (fr, en)
+  defaultLocale         String   @default("en")  // Default language for new users (fr, en)
   timeFormat            String   @default("24h") // Time display format: "12h" or "24h"
   wrappedVisible        Boolean  @default(true)  // Whether the Wrapped feature is visible to users
   wrappedPeriodEnabled  Boolean  @default(true)
@@ -225,6 +238,9 @@ model GlobalSettings {
   pluginLastSeen        DateTime? // Last heartbeat from the plugin
   pluginVersion         String?  // Plugin version reported via heartbeat
   pluginServerName      String?  // Jellyfin server name reported via heartbeat
+  pluginTelemetrySettings Json?   // Plugin telemetry precision/profile settings
+  authRememberThirtyDaysEnabled Boolean @default(true) // Remembered web sessions expire after 30 days when enabled
+  authSessionsRevokedAt DateTime? // Invalidate web sessions issued before this timestamp
   resolutionThresholds  Json?    // Configurable boundaries for resolution detection (minWidth, minHeight, etc.)
   updatedAt             DateTime @updatedAt
 }

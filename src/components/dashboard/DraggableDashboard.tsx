@@ -29,7 +29,7 @@ export function DraggableDashboard({ blocks }: DraggableDashboardProps) {
                 } catch { }
             }
             // Initial / Fallback: Sequential order
-            setOrder(blocks.map((_, i) => i));
+            setOrder(Array.from({ length: blocks.length }, (_, i) => i));
         }, 0);
         return () => clearTimeout(t);
     }, [blocks.length]);

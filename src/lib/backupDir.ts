@@ -1,34 +1,12 @@
-type FsLike = {
-    constants: { W_OK: number };
-    existsSync: (path: string) => boolean;
-    mkdirSync: (path: string, options?: { recursive?: boolean }) => void;
-    accessSync: (path: string, mode?: number) => void;
-    writeFileSync: (path: string, data: string, encoding: string) => void;
-    unlinkSync: (path: string) => void;
-};
-
-type PathLike = {
-    join: (...parts: string[]) => string;
-    resolve: (...paths: string[]) => string;
-};
-
-type OsLike = {
-    tmpdir: () => string;
-};
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 const FALLBACK_TMP_DIR = "jellytrack-backups";
+const AUTO_BACKUP_FILE_PATTERN = /^JellyTrack-auto-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/;
 let cachedBackupDirectory: string | null = null;
 
-function loadModule<T>(moduleName: string): T {
-    try {
-        const req = eval("require");
-        return req(moduleName) as T;
-    } catch {
-        throw new Error(`Unable to load ${moduleName} module dynamically`);
-    }
-}
-
-function isWritableDirectory(fs: FsLike, path: PathLike, directory: string) {
+function isWritableDirectory(directory: string) {
     try {
         if (!fs.existsSync(directory)) {
             fs.mkdirSync(directory, { recursive: true });
@@ -50,25 +28,21 @@ export function getBackupDirectory() {
         return cachedBackupDirectory;
     }
 
-    const fs = loadModule<FsLike>("fs");
-    const path = loadModule<PathLike>("path");
-    const os = loadModule<OsLike>("os");
-
     const configured = String(process.env.BACKUP_DIR || "").trim();
     const candidates = [
         configured,
         "./backups",
-        path.join(process.cwd(), "backups"),
+        path.join(/*turbopackIgnore: true*/ process.cwd(), "backups"),
         path.join(os.tmpdir(), FALLBACK_TMP_DIR),
     ].filter(Boolean);
 
-    const uniqueCandidates = Array.from(new Set(candidates.map((candidate) => path.resolve(candidate))));
+    const uniqueCandidates = Array.from(new Set(candidates.map((candidate) => path.resolve(/*turbopackIgnore: true*/ candidate))));
 
     for (const candidate of uniqueCandidates) {
-        if (isWritableDirectory(fs, path, candidate)) {
+        if (isWritableDirectory(candidate)) {
             cachedBackupDirectory = candidate;
 
-            if (configured && path.resolve(configured) !== candidate) {
+            if (configured && path.resolve(/*turbopackIgnore: true*/ configured) !== candidate) {
                 console.warn(`[Backup] BACKUP_DIR is not writable (${configured}). Falling back to ${candidate}.`);
             }
 
@@ -77,4 +51,16 @@ export function getBackupDirectory() {
     }
 
     throw new Error(`No writable backup directory found. Tried: ${uniqueCandidates.join(", ")}`);
+}
+
+export function resolveAutoBackupFile(fileName: unknown): { fileName: string; filePath: string } | null {
+    const safeName = typeof fileName === "string" ? fileName.trim() : "";
+    if (!AUTO_BACKUP_FILE_PATTERN.test(safeName)) return null;
+    if (path.basename(safeName) !== safeName) return null;
+
+    const backupDir = path.resolve(/*turbopackIgnore: true*/ getBackupDirectory());
+    const filePath = path.resolve(/*turbopackIgnore: true*/ backupDir, safeName);
+    if (path.dirname(filePath) !== backupDir) return null;
+
+    return { fileName: safeName, filePath };
 }

@@ -36,7 +36,7 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
 
     if (userDbIdsToUse.length === 0) {
         return (
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm mt-6">
+            <Card className="app-surface mt-6">
                 <CardHeader>
                     <CardTitle>{t('playbackHistory')}</CardTitle>
                     <CardDescription>{t('noHistory')}</CardDescription>
@@ -55,7 +55,7 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
 
     if (totalCount === 0) {
         return (
-            <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm mt-6">
+            <Card className="app-surface mt-6">
                 <CardHeader>
                     <CardTitle>{t('playbackHistory')}</CardTitle>
                     <CardDescription>{t('noHistory')}</CardDescription>
@@ -189,7 +189,7 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
     };
 
     return (
-        <Card className="bg-white/70 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800/50 backdrop-blur-sm mt-6">
+        <Card className="app-surface mt-6">
             <CardHeader>
                 <CardTitle>{t('playbackHistory')}</CardTitle>
                 <CardDescription>
@@ -203,7 +203,7 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800/50">
+                    <div className="flex items-center justify-center gap-2 mt-4 pt-3 border-t border-border/50">
                         {safePage > 1 && (
                             <Link href={buildPageUrl(safePage - 1)} className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800">
                                 <ChevronLeft className="w-4 h-4" />
@@ -227,7 +227,7 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
                                             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                                                 item === safePage
                                                     ? "bg-primary text-primary-foreground"
-                                                    : "text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:text-zinc-100"
+                                                    : "text-muted-foreground hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-800 dark:text-zinc-100"
                                             }`}
                                         >
                                             {item}
