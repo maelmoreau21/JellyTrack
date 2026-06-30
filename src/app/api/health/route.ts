@@ -11,11 +11,11 @@ export async function GET() {
     const errors: Record<string, string> = {};
 
     try {
-        // Test database connection
-        // @ts-expect-error: $queryRaw is not typed on the test stub prisma instance
-        if (typeof prisma.$queryRaw === 'function') {
-            // @ts-expect-error: $queryRaw is not typed on the test stub prisma instance
-            await prisma.$queryRaw`SELECT 1`;
+        // Test database connection — use $queryRaw when available (real Prisma client),
+        // otherwise fall back to a simple findFirst (dev stub / mock).
+        const p = prisma as Record<string, unknown>;
+        if (typeof p.$queryRaw === 'function') {
+            await (prisma as any).$queryRaw`SELECT 1`;
         } else {
             // Fallback for prisma mock / stub
             await prisma.globalSettings.findFirst();
