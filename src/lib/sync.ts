@@ -346,7 +346,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                         }
 
                         if (!libraryName && collectionType) {
-                            const knownName = Array.from(libraryCollectionMap.entries()).find(([_, type]) => type === collectionType)?.[0];
+                            const knownName = Array.from(libraryCollectionMap.entries()).find(([, type]) => type === collectionType)?.[0];
                             if (knownName && libraryNameMap.has(knownName)) {
                                 libraryName = libraryNameMap.get(knownName)!;
                             } else {

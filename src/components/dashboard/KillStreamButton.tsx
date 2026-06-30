@@ -29,7 +29,7 @@ export function KillStreamButton({ sessionId, mediaTitle }: { sessionId: string;
             } else {
                 setStatus("success");
             }
-        } catch (_e) {
+        } catch {
             setStatus("error");
         } finally {
             setIsLoading(false);

@@ -9,7 +9,7 @@ export function MediaFilter() {
   const router = useRouter();
   const pathname = usePathname();
   const tc = useTranslations('common');
-  const td = useTranslations('dashboard');
+
 
   const excludedParam = searchParams.get('excludeTypes');
   const excludedTypes = excludedParam ? excludedParam.split(',') : [];

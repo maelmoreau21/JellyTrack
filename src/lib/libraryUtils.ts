@@ -95,9 +95,7 @@ export async function getSanitizedLibraryNames() {
   return Array.from(normalizedToOriginal.values()).sort((a, b) => a.localeCompare(b));
 }
 
-function normalizeLibraryNameIdentity(value: string): string {
-  return value.trim().toLowerCase().replace(/\s+/g, ' ');
-}
+
 
 async function fetchServerVirtualFolderNames(baseUrl: string, apiKey: string): Promise<string[]> {
   const normalizedUrl = String(baseUrl || '').trim().replace(/\/+$/, '');

@@ -5,20 +5,13 @@ import redis from "@/lib/redis";
 import { getGeoLocation } from "@/lib/geoip";
 import { inferLibraryKey, isLibraryExcluded } from "@/lib/mediaPolicy";
 import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
-import { cleanupOrphanedSessions } from "@/lib/cleanup";
 import { normalizeResolution, clampDuration } from "@/lib/utils";
-import { markMonitorPoll, appendHealthEvent } from "@/lib/systemHealth";
-import { consumePluginEventRateLimit } from "@/lib/pluginEventRateLimit";
-import { writeAdminAuditLog } from "@/lib/adminAudit";
 import { comparePluginApiKey, getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
 import { parsePluginApiKeyCandidate, verifyScopedPluginApiKey } from "@/lib/pluginServerKey";
-import { isValidDiscordWebhook, safeFetchWebhook } from "@/lib/webhookValidator";
 import { getClientIp, normalizeIp } from "@/lib/requestIp";
 import { getCachedPluginIngestSettings } from "@/lib/pluginTelemetrySettings";
 import {
     buildStreamRedisKey,
-    extractServerIdentityFromPayload,
-    upsertServerRecord,
 } from "@/lib/serverRegistry";
 
 // Lightweight local types for incoming Jellyfin payloads
@@ -972,7 +965,7 @@ export async function acquirePlaybackLock(userId: string, mediaId: string, retri
                 await redis.expire(key, ttlSec);
                 return { acquired: true, key };
             }
-        } catch (err) {
+        } catch {
             // Redis may be unavailable; fail open (don't block main flow).
             return { acquired: false, key };
         }

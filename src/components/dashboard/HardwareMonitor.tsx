@@ -22,7 +22,7 @@ export function HardwareMonitor() {
                 if (res.ok) {
                     setStats(await res.json());
                 }
-            } catch (_e) {
+            } catch {
                 // Background error on edge devices, ignore gracefully
             }
         };

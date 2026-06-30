@@ -18,7 +18,7 @@ import type { CompletionData } from "@/components/charts/CompletionRatioChart";
 import type { ClientCategoryData } from "@/components/charts/ClientCategoryChart";
 import type { HeatmapData } from "@/components/charts/YearlyHeatmap";
 
-import type { DashboardHistory, DashboardMetrics, TrendEntry, TopUserAgg } from "@/types/dashboard";
+import type { DashboardHistory, TrendEntry, TopUserAgg } from "@/types/dashboard";
 
 // --- Dashboard Aggregation Cache ---
 export const getDashboardMetrics = unstable_cache(
@@ -340,7 +340,7 @@ export const getDashboardMetrics = unstable_cache(
           });
           dayCounts = dayCounts.map((c, idx) => (c > 0 ? c : fallbackCounts[idx]));
         }
-      } catch (e) {
+      } catch {
         // ignore fallback errors and keep original counts
       }
     }

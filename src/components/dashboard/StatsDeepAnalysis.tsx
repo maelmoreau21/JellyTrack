@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { User, Video, Building2, TrendingUp, ChevronRight } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+
 import MediaSearchModal from '@/components/MediaSearchModal';
 import { useSearchParams } from "next/navigation";
 
