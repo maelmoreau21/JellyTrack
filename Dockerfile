@@ -78,10 +78,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy ONLY prisma and its runtime/engines to run migrations, avoiding copying raw heavy production dependencies
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-RUN mkdir -p /app/node_modules/.bin && ln -s ../prisma/build/index.js /app/node_modules/.bin/prisma && chown -R nextjs:nodejs /app/node_modules/.bin
+# Copy all production node_modules from builder (includes Prisma CLI and its config dependencies)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
