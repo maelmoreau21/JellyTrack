@@ -76,7 +76,7 @@ function parseFiniteNumber(raw: unknown): number | null {
     return null;
 }
 
-async function buildPluginHealthSnapshot(req: Request) {
+async function buildPluginHealthSnapshot() {
     const now = Date.now();
     const nowDate = new Date(now);
     const dayAgo = new Date(now - 24 * 60 * 60 * 1000);
@@ -291,7 +291,7 @@ export async function GET(req: Request) {
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
 
-    const payload = await buildPluginHealthSnapshot(req);
+    const payload = await buildPluginHealthSnapshot();
     const url = new URL(req.url);
     const shouldExport = url.searchParams.get("export") === "1";
 

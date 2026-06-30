@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 import { chartAxisColor, chartGridColor, chartItemStyle, chartLabelStyle, chartTooltipStyle } from "@/lib/chartTheme";
-import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
+import type { ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 export interface MonthlyWatchData {
     month: string; // "2026_0" = year_monthIndex
@@ -67,7 +67,7 @@ export function MonthlyWatchTimeChart({ data, monthNames }: MonthlyWatchTimeChar
 
     const maxHours = Math.max(...chartData.map((d) => d.hours), 1);
 
-    const formatTooltip = (value?: ValueType, name?: NameType) => {
+    const formatTooltip = (value?: ValueType) => {
         const h = Number(value ?? 0);
         const hours = Math.floor(h);
         const mins = Math.round((h - hours) * 60);

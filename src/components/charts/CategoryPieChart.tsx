@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import ResponsiveContainer from "./ResponsiveContainerGuard";
 import { chartItemStyle, chartLabelStyle, chartPalette, chartTooltipStyle } from '@/lib/chartTheme';
-import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import type { ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
 interface CategoryData {
     name: string;
@@ -19,7 +19,7 @@ export function CategoryPieChart({ data }: { data: CategoryData[] }) {
     const t = useTranslations('charts');
     const router = useRouter();
 
-    const formatTooltipValue = (value?: ValueType, name?: NameType) => {
+    const formatTooltipValue = (value?: ValueType) => {
         const n = Number(value ?? 0);
         return [`${n.toFixed(1)}h`, t('playbackVolume')] as [string, string];
     };

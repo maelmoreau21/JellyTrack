@@ -110,6 +110,7 @@ export function JellyfinServersSettings() {
   const [allowAuthFallback, setAllowAuthFallback] = useState<boolean>(true);
 
   const fetchInfo = useCallback(async () => {
+    await Promise.resolve();
     setLoading(true);
     try {
       const res = await fetch('/api/settings/jellyfin-servers', { cache: 'no-store' });

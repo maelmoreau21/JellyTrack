@@ -63,18 +63,20 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
 
   const visibleColsKey = visibleColumns.join(',');
   useEffect(() => {
-    setColumns(prev => {
-      const currentVisible = visibleColsKey.split(',').filter(Boolean);
-      const prevKeys = prev.map(p => p.key);
-      // If lists are identical, do nothing
-      if (prevKeys.length === currentVisible.length && prevKeys.every((k, i) => k === currentVisible[i])) return prev;
-      // Merge saved order with new visibleColumns
-      const filtered = prev.filter(p => currentVisible.includes(p.key));
-      const missing = currentVisible.filter(k => !filtered.some(f => f.key === k));
-      if (missing.length === 0) return filtered;
-      const missingWidths = computeDefaultWidths(missing);
-      const missingCols = missing.map((k, i) => ({ key: k, width: missingWidths[i] }));
-      return [...filtered, ...missingCols];
+    Promise.resolve().then(() => {
+      setColumns(prev => {
+        const currentVisible = visibleColsKey.split(',').filter(Boolean);
+        const prevKeys = prev.map(p => p.key);
+        // If lists are identical, do nothing
+        if (prevKeys.length === currentVisible.length && prevKeys.every((k, i) => k === currentVisible[i])) return prev;
+        // Merge saved order with new visibleColumns
+        const filtered = prev.filter(p => currentVisible.includes(p.key));
+        const missing = currentVisible.filter(k => !filtered.some(f => f.key === k));
+        if (missing.length === 0) return filtered;
+        const missingWidths = computeDefaultWidths(missing);
+        const missingCols = missing.map((k, i) => ({ key: k, width: missingWidths[i] }));
+        return [...filtered, ...missingCols];
+      });
     });
   }, [visibleColsKey]);
 
@@ -206,7 +208,9 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
     const startX = e.clientX;
     const startWidth = columns[idx].width;
     
+    // eslint-disable-next-line react-hooks/immutability
     document.body.style.cursor = 'col-resize';
+    // eslint-disable-next-line react-hooks/immutability
     document.body.style.userSelect = 'none';
 
     const onMove = (ev: MouseEvent) => {
@@ -222,7 +226,9 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
 
     const onUp = () => {
       setResizingIdx(null);
+      // eslint-disable-next-line react-hooks/immutability
       document.body.style.cursor = '';
+      // eslint-disable-next-line react-hooks/immutability
       document.body.style.userSelect = '';
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);

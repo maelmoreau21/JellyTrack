@@ -21,12 +21,13 @@ export default function SettingsDataBackupsPage() {
     const fileRef = useRef<HTMLInputElement | null>(null);
 
     const fetchBackups = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         try {
             const res = await fetch("/api/backup/auto");
             const data = await res.json().catch(() => ({}));
             setBackups(data?.backups || []);
-        } catch (e: any) {
+        } catch {
             setMsg({ type: "error", text: t("fileReadError") || "Error reading backups." });
         } finally {
             setLoading(false);

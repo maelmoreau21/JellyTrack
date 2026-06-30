@@ -9,7 +9,6 @@ import { normalizeResolution, clampDuration } from '@/lib/utils';
 import { markMonitorPoll, appendHealthEvent } from "@/lib/systemHealth";
 import { consumePluginEventRateLimit } from "@/lib/pluginEventRateLimit";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
-import { parsePluginApiKeyCandidate, verifyScopedPluginApiKey } from "@/lib/pluginServerKey";
 import { isValidDiscordWebhook, safeFetchWebhook } from "@/lib/webhookValidator";
 import { getClientIp } from "@/lib/requestIp";
 import { getCachedPluginIngestSettings } from "@/lib/pluginTelemetrySettings";
@@ -33,7 +32,6 @@ import {
     computeProgressPercent,
     normalizePluginEventName,
     shouldPreferWallClockForFeishinAudio,
-    shouldPromoteDurationToWallClock,
     parseObservedAtMs,
     parsePlaybackRate,
     readPlaybackRate,

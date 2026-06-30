@@ -19,8 +19,6 @@ export default async function PopularMediaPage({ searchParams: searchParamsPromi
     if (isAuthError(auth)) redirect("/login");
 
     const searchParams = (await searchParamsPromise) || {};
-    const t = await getTranslations("media");
-    const td = await getTranslations("dashboard");
     const tc = await getTranslations("common");
 
     const serverRows = await prisma.server.findMany({

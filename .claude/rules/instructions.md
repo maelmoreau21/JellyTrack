@@ -23,7 +23,7 @@ Read this document before changing the project.
 - Framework: Next.js 16 App Router in `src/app/`
 - Runtime: Node 24 in Docker
 - Language: TypeScript strict
-- Web auth: next-auth with Next proxy in `src/proxy.ts`
+- Web auth: next-auth with Next proxy in `src/proxy.ts` (authenticating directly against Jellyfin; no local `ADMIN_PASSWORD` is used)
 - ORM/DB: Prisma 7 + PostgreSQL
 - Prisma CLI config: `prisma.config.ts`
 - Prisma runtime adapter: `@prisma/adapter-pg`

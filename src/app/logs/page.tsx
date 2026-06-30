@@ -209,36 +209,6 @@ function toValidTimestamp(value: unknown): number | null {
     return Number.isFinite(ts) ? ts : null;
 }
 
-function detectWatchParties(logs: SafeLog[]): Map<string, string> {
-    const WINDOW_MS = 5 * 60 * 1000;
-    const byMedia = new Map<string, Array<{ log: SafeLog; startedAtMs: number }>>();
-    logs.forEach(log => {
-        const mId = log.mediaId;
-        const startedAtMs = toValidTimestamp(log.startedAt);
-        if (!startedAtMs || !mId) return;
-        if (!byMedia.has(mId)) byMedia.set(mId, []);
-        byMedia.get(mId)!.push({ log, startedAtMs });
-    });
-    const partyMap = new Map<string, string>();
-    let partyCounter = 0;
-    byMedia.forEach((mediaLogs) => {
-        const sorted = [...mediaLogs].sort((a, b) => a.startedAtMs - b.startedAtMs);
-        let clusterStart = 0;
-        for (let i = 1; i <= sorted.length; i++) {
-            if (i === sorted.length || sorted[i].startedAtMs - sorted[i - 1].startedAtMs > WINDOW_MS) {
-                const cluster = sorted.slice(clusterStart, i);
-                const uniqueUsers = new Set(cluster.map((item) => item.log.userId));
-                if (uniqueUsers.size >= 2) {
-                    partyCounter++;
-                    const pid = `party-${partyCounter}`;
-                    cluster.forEach((item) => partyMap.set(item.log.id, pid));
-                }
-                clusterStart = i;
-            }
-        }
-    });
-    return partyMap;
-}
 
 type JellyfinSubtitleMeta = {
     parentId: string | null;

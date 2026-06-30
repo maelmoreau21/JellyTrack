@@ -6,8 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ShieldCheck, Loader2, Play } from "lucide-react";
 
 export function IntegrityCleanupSettings() {
-    const t = useTranslations("settings");
-    const tc = useTranslations("common");
     const [running, setRunning] = useState(false);
     const [result, setResult] = useState<{ success: boolean; message?: string; error?: string } | null>(null);
 
@@ -22,7 +20,7 @@ export function IntegrityCleanupSettings() {
             } else {
                 setResult({ success: false, error: data.error || "Failed to trigger integrity check." });
             }
-        } catch (error) {
+        } catch {
             setResult({ success: false, error: "Network error while connecting to JellyTrack." });
         } finally {
             setRunning(false);

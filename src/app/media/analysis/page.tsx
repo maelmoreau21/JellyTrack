@@ -82,8 +82,6 @@ export default async function AnalysisPage({ searchParams }: { searchParams?: Pr
 
     // Consider only video-like media for resolution counting
     const VIDEO_TYPES = new Set(['Movie', 'Series']);
-    const AUDIO_TYPES = new Set(['MusicAlbum', 'Track']);
-    const MAIN_TYPES = new Set(['Movie', 'Series', 'MusicAlbum']);
 
     medias.forEach((m: MediaLike) => {
         if (m.genres) m.genres.forEach((g: string) => genreCounts.set(g, (genreCounts.get(g) || 0) + 1));

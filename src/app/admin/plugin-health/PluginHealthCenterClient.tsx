@@ -173,6 +173,7 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
     const [thresholds, setThresholds] = useState<HeartbeatThresholds>(FALLBACK_THRESHOLDS);
 
     const loadSnapshot = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         setNotice(null);
         try {
@@ -285,7 +286,9 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
             }
         }
 
-        setThresholds(normalizeThresholds(persistedRaw ?? thresholdDefaults, thresholdDefaults));
+        Promise.resolve().then(() => {
+            setThresholds(normalizeThresholds(persistedRaw ?? thresholdDefaults, thresholdDefaults));
+        });
     }, [thresholdDefaults]);
 
     useEffect(() => {

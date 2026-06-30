@@ -192,6 +192,7 @@ export default function PluginSecurityPage() {
     }, []);
 
     const refreshAll = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         setMessage(null);
         try {

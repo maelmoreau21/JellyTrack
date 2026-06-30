@@ -6,7 +6,6 @@ import { apiT } from "@/lib/i18n-api";
 import { AVAILABLE_LOCALES } from "@/i18n/locales";
 // No more library rules
 import { getSanitizedLibraryNames, getServerLibraryScopes } from "@/lib/libraryUtils";
-import { revalidatePath } from "next/cache";
 import { revalidateDashboardCache } from "@/lib/revalidate";
 import { normalizeSchedulerIntervals } from "@/lib/schedulerIntervals";
 import { isValidDiscordWebhook } from "@/lib/webhookValidator";

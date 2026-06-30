@@ -66,7 +66,6 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
     const router = useRouter();
     const t = useTranslations('charts');
     const td = useTranslations('dashboard');
-    const [activeIndex, setActiveIndex] = useState<number>(-1);
     const [hidden, setHidden] = useState<Set<string>>(new Set());
 
     if (!data || data.length === 0) {
@@ -78,7 +77,6 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
     }
 
     const filteredData = data.filter(d => !hidden.has(d.name));
-    const total = filteredData.reduce((sum, d) => sum + d.value, 0);
 
     const toggleLegend = (e: { value: string }) => {
         const name = e.value;
@@ -132,8 +130,6 @@ export function PlatformDistributionChart({ data }: PlatformDistributionChartPro
                         animationBegin={0}
                         animationEasing="ease-out"
                         activeShape={renderActiveShape as any}
-                        onMouseEnter={(d: { value?: number; name?: string }, index: number) => setActiveIndex(index)}
-                        onMouseLeave={() => setActiveIndex(-1)}
                         onClick={handleSliceClick}
                     >
                         {filteredData.map((entry, index) => {

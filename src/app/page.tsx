@@ -1,7 +1,6 @@
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Activity, MonitorPlay, Clock, TrendingUp, TrendingDown, Award, Film, Tv, Music, BookOpen, CalendarDays, PlayCircle, Users, LayoutDashboard, RadioTower, ShieldCheck } from "lucide-react";
+import { Activity, MonitorPlay, Clock, TrendingUp, TrendingDown, Award, Film, Tv, Music, BookOpen, CalendarDays, PlayCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Suspense } from "react";
@@ -41,7 +40,6 @@ import { CollapsibleCard } from "@/components/dashboard/CollapsibleCard";
 import { MediaFilter } from "@/components/dashboard/MediaFilter";
 import { PredictionsPanel } from "@/components/dashboard/PredictionsPanel";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
-import { buildStreamRedisKey } from "@/lib/serverRegistry";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
 import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
@@ -49,7 +47,7 @@ import { buildSelectableServerOptions } from "@/lib/selectableServers";
 // Extracted data-fetching and domain types
 import { getDashboardMetrics, getHeatmapData } from "@/lib/dashboardMetrics";
 import { getLiveStreams } from "@/lib/liveStreams";
-import type { DashboardMetrics, LiveStream, ActiveStreamRow } from "@/types/dashboard";
+import type { DashboardMetrics } from "@/types/dashboard";
 
 export const dynamic = "force-dynamic";
 
