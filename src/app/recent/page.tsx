@@ -162,7 +162,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
               <Link key={media.id} href={`/media/${media.jellyfinMediaId}`} className="group flex flex-col space-y-2 relative">
                 <div className={`app-surface-soft relative w-full ${media.type === 'Episode' ? 'aspect-video' : ['MusicAlbum', 'Audio'].includes(media.type) ? 'aspect-square' : 'aspect-[2/3]'} rounded-lg overflow-hidden ring-1 ring-white/10 shadow-lg`}>
                   <FallbackImage
-                    src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.parentId || undefined)}
+                    src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.type === 'MusicAlbum' ? undefined : (media.parentId || undefined))}
                     alt={media.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50"

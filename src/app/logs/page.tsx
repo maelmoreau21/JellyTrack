@@ -493,7 +493,7 @@ export default async function LogsPage({
             const active = activeStreamMap.get(`${log.userId}:${log.mediaId}`) || null;
             return {
                 ...log,
-                fallbackImageParentId: log.media?.parentId || metadata?.parentId || null,
+                fallbackImageParentId: log.media?.type === 'MusicAlbum' ? null : (log.media?.parentId || metadata?.parentId || null),
                 bitrate: resolveAudioBitrateKbps(log, metadata, active),
             };
         });

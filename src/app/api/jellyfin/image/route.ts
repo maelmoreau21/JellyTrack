@@ -68,8 +68,12 @@ async function fetchDatabaseCandidateIds(itemId: string, serverId?: string | nul
 
     const item = await prisma.media.findFirst({
         where,
-        select: { serverId: true, parentId: true },
+        select: { serverId: true, parentId: true, type: true },
     });
+
+    if (!item || item.type === "MusicAlbum") {
+        return [];
+    }
 
     const candidates: string[] = [];
     const addCandidate = (value: string | null | undefined) => {
@@ -78,9 +82,9 @@ async function fetchDatabaseCandidateIds(itemId: string, serverId?: string | nul
         candidates.push(id);
     };
 
-    addCandidate(item?.parentId);
+    addCandidate(item.parentId);
 
-    if (item?.parentId) {
+    if (item.parentId) {
         const parent = await prisma.media.findFirst({
             where: { serverId: item.serverId, jellyfinMediaId: item.parentId },
             select: { parentId: true },
@@ -163,8 +167,12 @@ export async function GET(req: NextRequest) {
             addCandidate(itemMeta?.seasonId);
             addCandidate(itemMeta?.seriesId);
             addCandidate(itemMeta?.albumId);
-            addCandidate(itemMeta?.parentId);
-            addCandidate(itemMeta?.artistId); // Track or Album artist
+
+            const isAlbum = itemMeta?.type?.toLowerCase() === "musicalbum";
+            if (!isAlbum) {
+                addCandidate(itemMeta?.parentId);
+                addCandidate(itemMeta?.artistId); // Track or Album artist
+            }
 
             // If we have an album ID, look up its artist ID as a deep fallback
             if (itemMeta?.albumId) {

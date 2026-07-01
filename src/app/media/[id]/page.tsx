@@ -664,7 +664,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const artistHref = resolvedAlbumArtist
         ? `/media/artist/${encodeURIComponent(resolvedAlbumArtist)}`
         : (albumArtistId ? `/media/${albumArtistId}` : null);
-    const headerFallbackId = media.parentId || albumId || undefined;
+    const headerFallbackId = media.type === 'MusicAlbum' ? undefined : (media.parentId || albumId || undefined);
 
     // Build hierarchy subtitle breadcrumbs
     const renderHierarchyLinks = () => {

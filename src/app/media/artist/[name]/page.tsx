@@ -414,7 +414,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
                                     <Link key={buildAlbumKey(album.serverId, album.jellyfinMediaId)} href={`/media/${album.jellyfinMediaId}`} className="group flex flex-col gap-2">
                                         <div className="relative aspect-square rounded-md overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 bg-zinc-200 dark:bg-zinc-900">
                                             <FallbackImage
-                                                src={getJellyfinImageUrl(album.jellyfinMediaId, "Primary", album.parentId || undefined)}
+                                                src={getJellyfinImageUrl(album.jellyfinMediaId, "Primary", undefined)}
                                                 alt={album.title}
                                                 fill
                                                 className="object-cover transition-transform duration-300 group-hover:scale-105"
