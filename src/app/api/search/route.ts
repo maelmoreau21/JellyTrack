@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
   const media = await prisma.media.findMany({
     where: {
       type: { in: ["Movie", "Series", "MusicAlbum"] }, // Only parent-level items
+      libraryName: { not: null },
       AND: [
         {
           OR: [

@@ -114,6 +114,6 @@ RUN sed -i 's/\r$//' ./docker-entrypoint.sh && chmod +x ./docker-entrypoint.sh
 
 # Healthcheck to monitor app status (uses Alpine built-in wget)
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=10s \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:$(cat /tmp/jellytrack-port 2>/dev/null || echo 3000)/api/health || exit 1
 
 ENTRYPOINT ["./docker-entrypoint.sh"]

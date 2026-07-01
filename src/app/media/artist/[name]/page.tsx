@@ -112,6 +112,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
             where: {
                 type: "MusicAlbum",
                 artist: { equals: artistName, mode: "insensitive" },
+                libraryName: { not: null },
             },
             orderBy: { title: "asc" },
             select: {
@@ -128,6 +129,7 @@ export default async function ArtistProfilePage({ params, searchParams: searchPa
             where: {
                 type: { in: ["Audio", "Track"] },
                 artist: { equals: artistName, mode: "insensitive" },
+                libraryName: { not: null },
             },
             orderBy: { title: "asc" },
             select: {

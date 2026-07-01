@@ -116,6 +116,9 @@ else
   echo "Prisma schema pushed successfully (fallback mode)."
 fi
 
+# Store the runtime port for the healthcheck script
+echo "${PORT:-3000}" > /tmp/jellytrack-port
+
 # Launch app as the configured user.
 echo "Launching Next.js Standalone server..."
 exec su-exec "$PUID:$PGID" node server.js

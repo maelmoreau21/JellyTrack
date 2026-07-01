@@ -104,7 +104,7 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
     const selectedServerScope = selectedServerIds.length > 0 ? { in: selectedServerIds } : undefined;
 
     const excludedClause = buildExcludedMediaClause(excludedLibraries);
-    const mediaWhere: Record<string, unknown> = {};
+    const mediaWhere: Record<string, any> = { libraryName: { not: null } };
     if (selectedServerScope) mediaWhere.serverId = selectedServerScope;
     if (excludedClause) mediaWhere.AND = [excludedClause];
 
