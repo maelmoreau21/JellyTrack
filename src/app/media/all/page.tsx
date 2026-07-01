@@ -85,10 +85,14 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
     interface MediaWhere {
         type: { in: string[] };
         serverId?: { in: string[] };
+        libraryName?: { not: null };
         AND?: any[]; // Prisma's AND is tricky to type perfectly without importing generated types, leaving as is for now or using unknown[]
     }
 
-    const mediaWhere: MediaWhere = { type: { in: displayTypes.length > 0 ? displayTypes : baseTypes } };
+    const mediaWhere: MediaWhere = { 
+        type: { in: displayTypes.length > 0 ? displayTypes : baseTypes },
+        libraryName: { not: null }
+    };
     if (selectedServerScope) mediaWhere.serverId = selectedServerScope;
     const excludedClause = buildExcludedMediaClause(excludedLibraries);
     if (excludedClause) mediaWhere.AND = [excludedClause];

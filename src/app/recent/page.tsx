@@ -83,7 +83,10 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
     : ["Movie", "Series", "MusicAlbum"];
 
   const mediaWhere = (() => {
-    const clauses: Record<string, unknown>[] = [{ type: { in: displayTypes } } as Record<string, unknown>];
+    const clauses: Record<string, unknown>[] = [
+      { type: { in: displayTypes } },
+      { libraryName: { not: null } }
+    ] as Record<string, unknown>[];
     if (selectedServerScope) clauses.push({ serverId: selectedServerScope } as Record<string, unknown>);
     const excluded = buildExcludedMediaClause(excludedLibraries);
     if (excluded) clauses.push(excluded as Record<string, unknown>);

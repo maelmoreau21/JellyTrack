@@ -315,11 +315,14 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 const seriesLatestDateMap = new Map<string, Date>();
                 const albumLatestDateMap = new Map<string, Date>();
 
+                const processedMediaIds = new Set<string>();
+
                 let mediaCount = 0;
                 for (const item of items) {
                     try {
                         const jellyfinMediaId = normalizeJellyfinId(item.Id);
                         if (!jellyfinMediaId) continue;
+                        processedMediaIds.add(jellyfinMediaId);
 
                         let libraryName: string | null = null;
                         let collectionType: string | null = item.CollectionType || null;
@@ -520,6 +523,69 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                             where: { serverId: currentServerId, jellyfinMediaId: aid, type: 'MusicAlbum' },
                             data: { dateAdded: latestDate }
                         }).catch(e => console.error(`[Sync] Failed to update album dateAdded for ${aid}:`, e));
+                    }
+                }
+
+                if (!options?.recentOnly) {
+                    console.log(`[Sync] Cleaning up stale media for server ${currentServerName}...`);
+                    try {
+                        const allDbMedia = await prisma.media.findMany({
+                            where: { serverId: currentServerId },
+                            select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true },
+                        });
+
+                        const staleMedia = allDbMedia.filter(m => !processedMediaIds.has(m.jellyfinMediaId));
+                        console.log(`[Sync] Found ${staleMedia.length} potentially stale media items in DB.`);
+
+                        const activeMediaList = allDbMedia.filter(m => processedMediaIds.has(m.jellyfinMediaId));
+                        const activeMap = new Map<string, typeof activeMediaList[0]>();
+                        activeMediaList.forEach(m => {
+                            const artistKey = m.artist ? m.artist.toLowerCase() : (m.parentId || "");
+                            const key = `${m.type.toLowerCase()}:${m.title.toLowerCase()}:${artistKey}`;
+                            activeMap.set(key, m);
+                        });
+
+                        for (const stale of staleMedia) {
+                            const artistKey = stale.artist ? stale.artist.toLowerCase() : (stale.parentId || "");
+                            const key = `${stale.type.toLowerCase()}:${stale.title.toLowerCase()}:${artistKey}`;
+                            const activeMatch = activeMap.get(key);
+
+                            if (activeMatch) {
+                                await prisma.$transaction(async (tx) => {
+                                    await tx.playbackHistory.updateMany({
+                                        where: { mediaId: stale.id },
+                                        data: { mediaId: activeMatch.id },
+                                    });
+                                    await tx.activeStream.updateMany({
+                                        where: { mediaId: stale.id },
+                                        data: { mediaId: activeMatch.id },
+                                    });
+                                    await tx.media.delete({
+                                        where: { id: stale.id },
+                                    });
+                                });
+                                console.log(`[Sync] Merged renamed media: "${stale.title}" (${stale.jellyfinMediaId} -> ${activeMatch.jellyfinMediaId})`);
+                            } else {
+                                const historyCount = await prisma.playbackHistory.count({
+                                    where: { mediaId: stale.id },
+                                });
+
+                                if (historyCount === 0) {
+                                    await prisma.media.delete({
+                                        where: { id: stale.id },
+                                    });
+                                    console.log(`[Sync] Deleted unused stale media: "${stale.title}" (${stale.jellyfinMediaId})`);
+                                } else {
+                                    await prisma.media.update({
+                                        where: { id: stale.id },
+                                        data: { libraryName: null },
+                                    });
+                                    console.log(`[Sync] Orphaned stale media (kept for history): "${stale.title}" (${stale.jellyfinMediaId})`);
+                                }
+                            }
+                        }
+                    } catch (cleanupError) {
+                        console.error(`[Sync] Error during stale media cleanup on ${currentServerName}:`, cleanupError);
                     }
                 }
 

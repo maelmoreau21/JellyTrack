@@ -18,6 +18,7 @@ RUN apk add --no-cache python3 build-base git ca-certificates && \
 
 # 2. Rebuild the source code only when needed (on build platform)
 FROM build-base AS builder
+RUN apk add --no-cache binutils
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
@@ -54,6 +55,19 @@ RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-mus
     # Keep only Alpine-compatible Prisma schema/migration engines for runtime setup
     find /app/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
+
+# Strip debug symbols from Prisma engine binaries to reduce binary size significantly
+RUN find /app/node_modules -name "libquery_engine-linux-musl.so.node" -exec strip {} \; 2>/dev/null || true && \
+    find /app/node_modules -name "schema-engine-linux-musl" -exec strip {} \; 2>/dev/null || true
+
+# Clean up unnecessary files inside node_modules (source maps, typings, readmes, tests) to save space
+RUN find /app/node_modules -type f -name "*.map" -delete 2>/dev/null || true && \
+    find /app/node_modules -type f -name "*.ts" -delete 2>/dev/null || true && \
+    find /app/node_modules -type f -name "*.tsx" -delete 2>/dev/null || true && \
+    find /app/node_modules -type f -name "*.md" -delete 2>/dev/null || true && \
+    find /app/node_modules -type d -name "test" -exec rm -rf {} \; 2>/dev/null || true && \
+    find /app/node_modules -type d -name "tests" -exec rm -rf {} \; 2>/dev/null || true && \
+    find /app/node_modules -type d -name "__tests__" -exec rm -rf {} \; 2>/dev/null || true
 
 # Base image for the target runner (runs on the target platform architecture, e.g. arm64 or amd64)
 FROM mirror.gcr.io/library/node:22-alpine AS run-base
