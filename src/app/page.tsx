@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Activity, MonitorPlay, Clock, TrendingUp, TrendingDown, Award, Film, Tv, Music, BookOpen, CalendarDays, PlayCircle, Users } from "lucide-react";
 import Link from "next/link";
@@ -189,9 +190,13 @@ export default async function DashboardPage(props: {
           </div>
         </div>
 
-        <SystemHealthWidgets initialSnapshot={healthSnapshot} />
+        <ErrorBoundary name="System Health">
+          <SystemHealthWidgets initialSnapshot={healthSnapshot} />
+        </ErrorBoundary>
 
-        <HardwareMonitor />
+        <ErrorBoundary name="Hardware Monitor">
+          <HardwareMonitor />
+        </ErrorBoundary>
 
         {/* Today Stats Banner */}
         <div className="dashboard-banner flex flex-wrap items-center gap-2 rounded-xl px-3 py-3 md:gap-3 md:px-4">
@@ -475,11 +480,13 @@ export default async function DashboardPage(props: {
                   </CardContent>
                 </Card>
 
-                <LiveStreamsPanel
-                  initialStreams={liveStreams}
-                  initialBandwidth={totalBandwidthMbps}
-                  selectedServerIds={selectedServerIds}
-                />
+                <ErrorBoundary name="Live Streams">
+                  <LiveStreamsPanel
+                    initialStreams={liveStreams}
+                    initialBandwidth={totalBandwidthMbps}
+                    selectedServerIds={selectedServerIds}
+                  />
+                </ErrorBoundary>
               </div>,
 
               /* Third Row Analytics - Hourly + Day of Week */
@@ -546,36 +553,44 @@ export default async function DashboardPage(props: {
             ]} />
 
             {/* AI Predictions */}
-            <PredictionsPanel />
+            <ErrorBoundary name="AI Predictions">
+              <PredictionsPanel />
+            </ErrorBoundary>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
             <Suspense fallback={<Skeleton className="h-[400px] w-full bg-zinc-200/50 dark:bg-zinc-900/50 rounded-xl" />}>
-              <DeepInsights
-                type={type}
-                timeRange={timeRange}
-                excludedLibraries={excludedLibraries}
-                selectedServerIds={selectedServerIds}
-              />
+              <ErrorBoundary name="Deep Insights">
+                <DeepInsights
+                  type={type}
+                  timeRange={timeRange}
+                  excludedLibraries={excludedLibraries}
+                  selectedServerIds={selectedServerIds}
+                />
+              </ErrorBoundary>
             </Suspense>
             <Suspense fallback={<Skeleton className="h-[400px] w-full bg-zinc-200/50 dark:bg-zinc-900/50 rounded-xl" />}>
-              <GranularAnalysis
-                type={type}
-                timeRange={timeRange}
-                excludedLibraries={excludedLibraries}
-                selectedServerIds={selectedServerIds}
-              />
+              <ErrorBoundary name="Granular Analysis">
+                <GranularAnalysis
+                  type={type}
+                  timeRange={timeRange}
+                  excludedLibraries={excludedLibraries}
+                  selectedServerIds={selectedServerIds}
+                />
+              </ErrorBoundary>
             </Suspense>
           </TabsContent>
 
           <TabsContent value="network" className="space-y-6">
             <Suspense fallback={<Skeleton className="h-[400px] w-full bg-zinc-200/50 dark:bg-zinc-900/50 rounded-xl" />}>
-              <NetworkAnalysis
-                type={type}
-                timeRange={timeRange}
-                excludedLibraries={excludedLibraries}
-                selectedServerIds={selectedServerIds}
-              />
+              <ErrorBoundary name="Network Analysis">
+                <NetworkAnalysis
+                  type={type}
+                  timeRange={timeRange}
+                  excludedLibraries={excludedLibraries}
+                  selectedServerIds={selectedServerIds}
+                />
+              </ErrorBoundary>
             </Suspense>
           </TabsContent>
         </Tabs>

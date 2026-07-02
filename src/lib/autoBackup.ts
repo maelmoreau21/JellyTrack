@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { appendHealthEvent, markBackupFinished, markBackupStarted, readSystemHealthState } from "@/lib/systemHealth";
 import { getBackupDirectory } from "@/lib/backupDir";
 import { redactBackupData } from "@/lib/backupSecurity";
+import { logger } from "@/lib/logger";
 
 const MAX_BACKUPS = 5;
 
@@ -10,14 +11,14 @@ const MAX_BACKUPS = 5;
  * Implements rolling rotation: keeps only the 5 most recent backups.
  */
 export async function performAutoBackup(): Promise<string> {
-    console.log("[Auto-Backup] Starting automated backup...");
+    logger.info("[Auto-Backup] Starting automated backup...");
     await markBackupStarted();
 
     try {
         const fs = await import("fs");
         const path = await import("path");
         const backupDir = getBackupDirectory();
-        console.log(`[Auto-Backup] Using backup directory: ${backupDir}`);
+        logger.info({ backupDir }, `[Auto-Backup] Using backup directory`);
 
         // Fetch all data
         const servers = await prisma.server.findMany();
@@ -56,7 +57,7 @@ export async function performAutoBackup(): Promise<string> {
         const backupJsonString = JSON.stringify(backupContent, bigIntReplacer, 2);
         fs.writeFileSync(filePath, backupJsonString, "utf-8");
         const fileSizeMb = (Buffer.byteLength(backupJsonString) / 1024 / 1024).toFixed(2);
-        console.log(`[Auto-Backup] Backup saved: ${fileName} (${fileSizeMb} MB)`);
+        logger.info({ fileName, fileSizeMb }, `[Auto-Backup] Backup saved`);
 
         // Rolling rotation: delete oldest files if we exceed MAX_BACKUPS
         type BackupFile = { name: string; time: number };
@@ -73,14 +74,14 @@ export async function performAutoBackup(): Promise<string> {
             for (const old of toDelete) {
                 try {
                     fs.unlinkSync(path.join(backupDir, old.name));
-                    console.log(`[Auto-Backup] Rotation: deleted old backup ${old.name}`);
+                    logger.info({ backupName: old.name }, `[Auto-Backup] Rotation: deleted old backup`);
                 } catch (err) {
-                    console.warn(`[Auto-Backup] Failed to delete ${old.name}:`, err);
+                    logger.warn({ backupName: old.name, err }, `[Auto-Backup] Failed to delete backup`);
                 }
             }
         }
 
-        console.log(`[Auto-Backup] Complete. ${backupFiles.length > MAX_BACKUPS ? MAX_BACKUPS : backupFiles.length} backups retained.`);
+        logger.info({ retainedCount: backupFiles.length > MAX_BACKUPS ? MAX_BACKUPS : backupFiles.length }, `[Auto-Backup] Complete`);
         await markBackupFinished({ success: true, fileName });
         await appendHealthEvent({
             source: "backup",
@@ -101,3 +102,4 @@ export async function performAutoBackup(): Promise<string> {
         throw error;
     }
 }
+

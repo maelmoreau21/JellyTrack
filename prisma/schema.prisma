@@ -41,6 +41,7 @@ model User {
 
   @@unique([jellyfinUserId, serverId])
   @@index([serverId])
+  @@index([lastActive])
 }
 
 model Media {
@@ -160,6 +161,8 @@ model TelemetryEvent {
   @@index([eventType])
   @@index([serverId, eventType])
   @@index([playbackId, eventType])
+  @@index([createdAt])
+  @@index([playbackId, createdAt])
 }
 
 model ActiveStream {

@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 export function recordMetric(name: string, value: number, tags?: Record<string, string>) {
   try {
     const endpoint = process.env.METRICS_ENDPOINT;
@@ -22,26 +24,27 @@ export function recordMetric(name: string, value: number, tags?: Record<string, 
         // Ensure this doesn't hang the request
         signal: AbortSignal.timeout(2000)
       }).then(res => {
-        if (!res.ok) console.warn(`[Obs] Remote push returned ${res.status}`);
-      }).catch(err => console.error('[Obs] Push failed', err.message));
+        if (!res.ok) logger.warn({ status: res.status }, `[Obs] Remote push returned non-ok status`);
+      }).catch(err => logger.error({ err: err.message }, '[Obs] Push failed'));
     }
     
     // Always log locally for debugging unless suppressed
     if (process.env.DEBUG_METRICS === 'true') {
-      console.log(`[Metric] ${name}=${value}`, tags ?? {});
+      logger.debug({ name, value, tags }, `[Metric] logged`);
     }
   } catch (e) {
     // non-fatal
-    console.warn('[Observability] recordMetric failure', e);
+    logger.warn({ err: e }, '[Observability] recordMetric failure');
   }
 }
 
 export function logEvent(level: 'info' | 'warn' | 'error', message: string, details?: unknown) {
   if (level === 'error') {
-    console.error(`[Obs] ${message}`, details ?? '');
+    logger.error({ details }, message);
   } else if (level === 'warn') {
-    console.warn(`[Obs] ${message}`, details ?? '');
+    logger.warn({ details }, message);
   } else {
-    console.log(`[Obs] ${message}`, details ?? '');
+    logger.info({ details }, message);
   }
 }
+

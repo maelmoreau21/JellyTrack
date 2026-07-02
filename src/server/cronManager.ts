@@ -1,4 +1,5 @@
 import type { ScheduledTask } from 'node-cron';
+import { logger } from '@/lib/logger';
 
 let recentSyncTask: ScheduledTask | null = null;
 let fullSyncTask: ScheduledTask | null = null;
@@ -62,40 +63,40 @@ export async function initCronJobs(schedule: CronSchedule) {
         schedule.backupCronMinute
     );
 
-    console.log(`[CronManager] Scheduling recent sync: ${recentSyncCronExpr} (every ${schedule.recentSyncEveryHours}h)`);
-    console.log(`[CronManager] Scheduling full sync: ${fullSyncCronExpr} (every ${schedule.fullSyncEveryHours}h)`);
-    console.log(`[CronManager] Scheduling backup: ${backupCronExpr} (${String(schedule.backupCronHour).padStart(2, '0')}:${String(schedule.backupCronMinute).padStart(2, '0')})`);
+    logger.info({ recentSyncCronExpr, recentSyncEveryHours: schedule.recentSyncEveryHours }, `[CronManager] Scheduling recent sync`);
+    logger.info({ fullSyncCronExpr, fullSyncEveryHours: schedule.fullSyncEveryHours }, `[CronManager] Scheduling full sync`);
+    logger.info({ backupCronExpr, backupCronHour: schedule.backupCronHour, backupCronMinute: schedule.backupCronMinute }, `[CronManager] Scheduling backup`);
 
     recentSyncTask = cron.schedule(recentSyncCronExpr, async () => {
-        console.log(`[Cron] Automatic trigger of recent synchronization (every ${schedule.recentSyncEveryHours}h)`);
+        logger.info({ recentSyncEveryHours: schedule.recentSyncEveryHours }, `[Cron] Automatic trigger of recent synchronization`);
         try {
             const result = await syncJellyfinLibrary({ recentOnly: true });
             if (!result?.success) {
-                console.warn(`[Cron] Recent synchronization failed: ${result?.error || "unknown error"}`);
+                logger.warn({ err: result?.error }, `[Cron] Recent synchronization failed`);
             }
         } catch (error) {
-            console.error("[Cron] Unhandled error during recent synchronization:", error);
+            logger.error({ err: error }, "[Cron] Unhandled error during recent synchronization");
         }
     });
 
     fullSyncTask = cron.schedule(fullSyncCronExpr, async () => {
-        console.log(`[Cron] Automatic trigger of full synchronization (every ${schedule.fullSyncEveryHours}h)`);
+        logger.info({ fullSyncEveryHours: schedule.fullSyncEveryHours }, `[Cron] Automatic trigger of full synchronization`);
         try {
             const result = await syncJellyfinLibrary({ recentOnly: false });
             if (!result?.success) {
-                console.warn(`[Cron] Full synchronization failed: ${result?.error || "unknown error"}`);
+                logger.warn({ err: result?.error }, `[Cron] Full synchronization failed`);
             }
         } catch (error) {
-            console.error("[Cron] Unhandled error during full synchronization:", error);
+            logger.error({ err: error }, "[Cron] Unhandled error during full synchronization");
         }
     });
 
     backupTask = cron.schedule(backupCronExpr, async () => {
-        console.log(`[Cron] Triggering automated backup (every ${schedule.backupEveryHours}h)`);
+        logger.info({ backupEveryHours: schedule.backupEveryHours }, `[Cron] Triggering automated backup`);
         try {
             await performAutoBackup();
         } catch (err) {
-            console.error("[Cron] Auto-backup failed:", err);
+            logger.error({ err }, "[Cron] Auto-backup failed");
         }
     });
 }
@@ -106,6 +107,7 @@ export async function rescheduleCronJobs(schedule: CronSchedule) {
     if (fullSyncTask) { fullSyncTask.stop(); fullSyncTask = null; }
     if (backupTask) { backupTask.stop(); backupTask = null; }
 
-    console.log("[CronManager] Rescheduling cron jobs...");
+    logger.info("[CronManager] Rescheduling cron jobs...");
     await initCronJobs(schedule);
 }
+
