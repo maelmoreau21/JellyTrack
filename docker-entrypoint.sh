@@ -39,23 +39,38 @@ fi
 PUID=${PUID:-1001}
 PGID=${PGID:-1001}
 
-echo "Configuring user: UID=$PUID, GID=$PGID"
-
-# Update the nextjs group GID and user UID on the fly
-if [ "$(id -g nextjs)" != "$PGID" ]; then
-    groupmod -o -g "$PGID" nodejs 2>/dev/null || true
-fi
-if [ "$(id -u nextjs)" != "$PUID" ]; then
-    usermod -o -u "$PUID" nextjs 2>/dev/null || true
+IS_ROOT=false
+if [ "$(id -u)" = "0" ]; then
+  IS_ROOT=true
 fi
 
-# Fix ownership of runtime-writable directories only.
-chown -R "$PUID:$PGID" /data/backups 2>/dev/null || true
-mkdir -p /app/.next/cache 2>/dev/null || true
-chown -R "$PUID:$PGID" /app/.next 2>/dev/null || true
+if [ "$IS_ROOT" = "true" ]; then
+  echo "Running as root. Configuring user: UID=$PUID, GID=$PGID"
+
+  # Update the nextjs group GID and user UID on the fly
+  if [ "$(id -g nextjs)" != "$PGID" ]; then
+      groupmod -o -g "$PGID" nodejs 2>/dev/null || true
+  fi
+  if [ "$(id -u nextjs)" != "$PUID" ]; then
+      usermod -o -u "$PUID" nextjs 2>/dev/null || true
+  fi
+
+  # Fix ownership of runtime-writable directories only.
+  chown -R "$PUID:$PGID" /data/backups 2>/dev/null || true
+  mkdir -p /app/.next/cache 2>/dev/null || true
+  chown -R "$PUID:$PGID" /app/.next 2>/dev/null || true
+else
+  echo "Running as non-root user ($(id -un)). Skipping UID/GID and chown configuration."
+  # Try to create cache directory if it doesn't exist
+  mkdir -p /app/.next/cache 2>/dev/null || true
+fi
 
 run_prisma() {
-  su-exec "$PUID:$PGID" npx prisma "$@"
+  if [ "$IS_ROOT" = "true" ]; then
+    su-exec "$PUID:$PGID" npx prisma "$@"
+  else
+    npx prisma "$@"
+  fi
 }
 
 run_prisma_db_push() {
@@ -121,4 +136,8 @@ echo "${PORT:-3000}" > /tmp/jellytrack-port
 
 # Launch app as the configured user.
 echo "Launching Next.js Standalone server..."
-exec su-exec "$PUID:$PGID" node server.js
+if [ "$IS_ROOT" = "true" ]; then
+  exec su-exec "$PUID:$PGID" node server.js
+else
+  exec node server.js
+fi

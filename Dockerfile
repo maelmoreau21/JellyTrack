@@ -2,7 +2,7 @@
 ARG BUILDPLATFORM
 
 # Base image for the build environment (runs on the host build architecture)
-FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/node:22-alpine AS build-base
+FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/node:26-alpine AS build-base
 RUN apk add --no-cache libc6-compat openssl
 
 # 1. Install dependencies only when needed (on build platform)
@@ -70,7 +70,7 @@ RUN find /app/node_modules -type f -name "*.map" -delete 2>/dev/null || true && 
     find /app/node_modules -type d -name "__tests__" -exec rm -rf {} \; 2>/dev/null || true
 
 # Base image for the target runner (runs on the target platform architecture, e.g. arm64 or amd64)
-FROM mirror.gcr.io/library/node:22-alpine AS run-base
+FROM mirror.gcr.io/library/node:26-alpine AS run-base
 RUN apk add --no-cache libc6-compat openssl
 
 # 3. Production image, copy all the files and run next
@@ -81,22 +81,21 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Default user/group (overridden at runtime via PUID/PGID)
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs && \
-    mkdir -p /data/backups
+# Ensure runtime directories exist and are owned by the default node user (UID/GID 1000)
+RUN mkdir -p /data/backups /app/.next/cache && \
+    chown -R node:node /data/backups /app
 
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=node:node /app/public ./public
 
 # Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
 # Copy all production node_modules from builder (includes Prisma CLI and its config dependencies)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
-COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/package.json ./package.json
+COPY --from=builder --chown=node:node /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder --chown=node:node /app/prisma ./prisma
 
 # OCI labels — links the GHCR package to the GitHub repo
 LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTrack"
@@ -110,10 +109,13 @@ ENV HOSTNAME="0.0.0.0"
 
 # Copy the entrypoint script (runs as root initially, then drops to PUID/PGID)
 COPY docker-entrypoint.sh ./
-RUN sed -i 's/\r$//' ./docker-entrypoint.sh && chmod +x ./docker-entrypoint.sh
+RUN sed -i 's/\r$//' ./docker-entrypoint.sh && chmod +x ./docker-entrypoint.sh && chown node:node ./docker-entrypoint.sh
 
 # Healthcheck to monitor app status (uses Alpine built-in wget)
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=10s \
   CMD wget --no-verbose --tries=1 --spider http://localhost:$(cat /tmp/jellytrack-port 2>/dev/null || echo 3000)/api/health || exit 1
+
+# Enforce running the container as the non-root 'node' user
+USER node
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
