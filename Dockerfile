@@ -98,6 +98,7 @@ COPY --from=builder --chown=node:node /app/node_modules/prisma ./node_modules/pr
 COPY --from=builder --chown=node:node /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=node:node /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=node:node /app/node_modules/dotenv ./node_modules/dotenv
+COPY --from=builder --chown=node:node /app/node_modules/.bin ./node_modules/.bin
 
 # OCI labels
 LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTrack"
