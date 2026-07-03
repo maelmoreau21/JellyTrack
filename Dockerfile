@@ -23,6 +23,10 @@ ENV DATABASE_URL=${DATABASE_URL}
 # Generate Prisma Client
 RUN npx prisma generate
 
+# Install an isolated Prisma CLI and its dependencies in a separate directory
+WORKDIR /app/prisma-cli
+RUN npm init -y && npm install prisma@7.8.0 dotenv@17.4.2 --no-audit --progress=false
+
 
 # ── STAGE 2: Build Next.js application & clean up assets ──
 FROM --platform=$BUILDPLATFORM node:26-alpine AS builder
@@ -30,10 +34,11 @@ RUN apk add --no-cache libc6-compat binutils openssl
 
 WORKDIR /app
 
-# Copy node_modules from deps
+# Copy main node_modules and isolated prisma-cli from deps
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/prisma ./prisma
+COPY --from=deps /app/prisma-cli ./prisma-cli
 
 # Copy source code
 COPY . .
@@ -47,17 +52,29 @@ ENV DATABASE_URL=${DATABASE_URL}
 RUN NEXTAUTH_SECRET=build-placeholder npm run build
 
 # ── Clean up Prisma engines: keep only linux-musl (Alpine), remove all others ──
+# We clean BOTH main node_modules (to optimize standalone copy) and prisma-cli node_modules (to optimize runtime copy)
 RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/@prisma/engines -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/@prisma/engines -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/prisma -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    find /app/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
+    find /app/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    # Clean prisma-cli node_modules
+    find /app/prisma-cli/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules/@prisma/engines -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules/@prisma/engines -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules/prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules/prisma -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
 
 # Strip debug symbols from Prisma engine binaries to reduce binary size significantly
 RUN find /app/node_modules -name "libquery_engine-linux-musl.so.node" -exec strip {} \; 2>/dev/null || true && \
-    find /app/node_modules -name "schema-engine-linux-musl" -exec strip {} \; 2>/dev/null || true
+    find /app/node_modules -name "schema-engine-linux-musl" -exec strip {} \; 2>/dev/null || true && \
+    # Strip prisma-cli engines
+    find /app/prisma-cli/node_modules -name "libquery_engine-linux-musl.so.node" -exec strip {} \; 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -name "schema-engine-linux-musl" -exec strip {} \; 2>/dev/null || true
 
 # Clean up unnecessary files inside node_modules (source maps, typings, readmes, tests) to save space
 RUN find /app/node_modules -type f -name "*.map" -delete 2>/dev/null || true && \
@@ -66,7 +83,15 @@ RUN find /app/node_modules -type f -name "*.map" -delete 2>/dev/null || true && 
     find /app/node_modules -type f -name "*.md" -delete 2>/dev/null || true && \
     find /app/node_modules -type d -name "test" -exec rm -rf {} \; 2>/dev/null || true && \
     find /app/node_modules -type d -name "tests" -exec rm -rf {} \; 2>/dev/null || true && \
-    find /app/node_modules -type d -name "__tests__" -exec rm -rf {} \; 2>/dev/null || true
+    find /app/node_modules -type d -name "__tests__" -exec rm -rf {} \; 2>/dev/null || true && \
+    # Clean prisma-cli files
+    find /app/prisma-cli/node_modules -type f -name "*.map" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -type f -name "*.ts" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -type f -name "*.tsx" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -type f -name "*.md" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -type d -name "test" -exec rm -rf {} \; 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -type d -name "tests" -exec rm -rf {} \; 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -type d -name "__tests__" -exec rm -rf {} \; 2>/dev/null || true
 
 
 # ── STAGE 3: Final lightweight runner image ──
@@ -93,12 +118,8 @@ COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/prisma ./prisma
 COPY --from=builder --chown=node:node /app/prisma.config.ts ./prisma.config.ts
 
-# Copy Prisma CLI and minimum dependencies required for runtime migrations
-COPY --from=builder --chown=node:node /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=node:node /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=node:node /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=node:node /app/node_modules/dotenv ./node_modules/dotenv
-COPY --from=builder --chown=node:node /app/node_modules/.bin ./node_modules/.bin
+# Copy Prisma CLI and its full dependency tree into node_modules
+COPY --from=builder --chown=node:node /app/prisma-cli/node_modules ./node_modules
 
 # OCI labels
 LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTrack"
