@@ -88,3 +88,65 @@ const RawPlatformDistributionChart = dynamic(
 );
 export const LazyPlatformDistributionChart = withErrorBoundary(RawPlatformDistributionChart, "Platform Distribution");
 
+
+// --- User Profile / Deep Insights / Granular Analysis Charts ---
+
+const RawUserActivityChart = dynamic(
+    () => import("@/components/charts/UserActivityChart").then((m) => ({ default: m.UserActivityChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+);
+export const LazyUserActivityChart = withErrorBoundary(RawUserActivityChart, "User Activity");
+
+const RawTranscodeHourlyChart = dynamic(
+    () => import("@/components/charts/TranscodeHourlyChart").then((m) => ({ default: m.TranscodeHourlyChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+);
+export const LazyTranscodeHourlyChart = withErrorBoundary(RawTranscodeHourlyChart, "Transcode Hourly");
+
+const RawStreamProportionsChart = dynamic(
+    () => import("@/components/charts/StreamProportionsChart").then((m) => ({ default: m.StreamProportionsChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={280} /> }
+);
+export const LazyStreamProportionsChart = withErrorBoundary(RawStreamProportionsChart, "Stream Proportions");
+
+const RawStandardBarChart = dynamic(
+    () => import("@/components/charts/StandardMetricsCharts").then((m) => ({ default: m.StandardBarChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+);
+export const LazyStandardBarChart = withErrorBoundary(RawStandardBarChart, "Standard Bar Chart");
+
+const RawStandardAreaChart = dynamic(
+    () => import("@/components/charts/StandardMetricsCharts").then((m) => ({ default: m.StandardAreaChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+);
+export const LazyStandardAreaChart = withErrorBoundary(RawStandardAreaChart, "Standard Area Chart");
+
+const RawStandardPieChart = dynamic(
+    () => import("@/components/charts/StandardMetricsCharts").then((m) => ({ default: m.StandardPieChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+);
+export const LazyStandardPieChart = withErrorBoundary(RawStandardPieChart, "Standard Pie Chart");
+
+const RawStackedBarChart = dynamic(
+    () => import("@/components/charts/StackedMetricsCharts").then((m) => ({ default: m.StackedBarChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+);
+export const LazyStackedBarChart = withErrorBoundary(RawStackedBarChart, "Stacked Bar Chart");
+
+const RawGenreDistributionChart = dynamic(
+    () => import("@/components/charts/GenreDistributionChart").then((m) => ({ default: m.GenreDistributionChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+);
+export const LazyGenreDistributionChart = withErrorBoundary(RawGenreDistributionChart, "Genre Distribution");
+
+const RawVolumeAreaChart = dynamic(
+    () => import("@/components/charts/VolumeAreaChart").then((m) => ({ default: m.VolumeAreaChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+);
+export const LazyVolumeAreaChart = withErrorBoundary(RawVolumeAreaChart, "Volume Area Chart");
+
+const RawDrillDownPieChart = dynamic(
+    () => import("@/components/charts/DrillDownChart").then((m) => ({ default: m.DrillDownPieChart })),
+    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
+);
+export const LazyDrillDownPieChart = withErrorBoundary(RawDrillDownPieChart, "Drill Down Pie Chart");

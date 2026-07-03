@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAuthError } from "@/lib/auth";
 import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { apiT } from "@/lib/i18n-api";
+import { z } from "zod";
+
+const killStreamPostSchema = z.object({
+    sessionId: z.string().min(1),
+});
 
 export async function POST(req: NextRequest) {
     // Only administrators can kill streams
@@ -9,10 +14,13 @@ export async function POST(req: NextRequest) {
     if (isAuthError(auth)) return auth;
 
     try {
-        const { sessionId } = await req.json();
-        if (!sessionId) {
+        const body = await req.json().catch(() => ({}));
+        const parseResult = killStreamPostSchema.safeParse(body);
+        if (!parseResult.success) {
             return NextResponse.json({ error: "Session ID required" }, { status: 400 });
         }
+
+        const { sessionId } = parseResult.data;
 
         const baseUrl = process.env.JELLYFIN_URL;
         const apiKey = process.env.JELLYFIN_API_KEY;

@@ -1,9 +1,10 @@
 import prisma from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DayOfWeekChart, DayOfWeekData } from "@/components/charts/DayOfWeekChart";
-import { CompletionRatioChart, CompletionData } from "@/components/charts/CompletionRatioChart";
-import { ActivityByHourChart, ActivityHourData } from "@/components/charts/ActivityByHourChart";
-import { GenreDistributionChart, GenreData } from "@/components/charts/GenreDistributionChart";
+import { LazyDayOfWeekChart, LazyCompletionRatioChart, LazyActivityByHourChart, LazyGenreDistributionChart } from "@/components/charts/LazyCharts";
+import type { DayOfWeekData } from "@/components/charts/DayOfWeekChart";
+import type { CompletionData } from "@/components/charts/CompletionRatioChart";
+import type { ActivityHourData } from "@/components/charts/ActivityByHourChart";
+import type { GenreData } from "@/components/charts/GenreDistributionChart";
 import { getTranslations } from 'next-intl/server';
 import { getCumulativeCompletionEntries } from "@/lib/mediaPolicy";
 import { normalizeBitrateToKbps } from "@/lib/bitrate";
@@ -154,7 +155,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
                     <CardContent>
                         <div className="h-[280px] w-full">
                             {hasDayData ? (
-                                <DayOfWeekChart data={dayData} />
+                                <LazyDayOfWeekChart data={dayData} />
                             ) : (
                                 <div className="h-full flex items-center justify-center text-sm text-zinc-500">{tc('noData')}</div>
                             )}
@@ -170,7 +171,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
                     <CardContent>
                         <div className="h-[260px] w-full">
                             {completionData.length > 0 ? (
-                                <CompletionRatioChart data={completionData} />
+                                <LazyCompletionRatioChart data={completionData} />
                             ) : (
                                 <div className="h-full flex items-center justify-center text-sm text-zinc-500">{td('noDurationData')}</div>
                             )}
@@ -185,7 +186,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
                     </CardHeader>
                     <CardContent>
                         <div className="h-[280px] w-full">
-                            <ActivityByHourChart data={hourData} />
+                            <LazyActivityByHourChart data={hourData} />
                         </div>
                     </CardContent>
                 </Card>
@@ -200,7 +201,7 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
                     <CardContent>
                         <div className="h-[300px] w-full">
                             {topGenres.length > 0 ? (
-                                <GenreDistributionChart data={topGenres} />
+                                <LazyGenreDistributionChart data={topGenres} />
                             ) : (
                                 <div className="h-full flex items-center justify-center text-sm text-zinc-500">{tc('noData')}</div>
                             )}

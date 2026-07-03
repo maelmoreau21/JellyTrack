@@ -4,17 +4,25 @@ import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { apiT } from "@/lib/i18n-api";
 import fs from "node:fs";
 import { resolveAutoBackupFile } from "@/lib/backupDir";
+import { z } from "zod";
+
+const deleteBackupSchema = z.object({
+    fileName: z.string().min(1),
+});
 
 export async function POST(req: NextRequest) {
     const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     try {
-        const { fileName } = await req.json();
+        const body = await req.json().catch(() => ({}));
+        const parseResult = deleteBackupSchema.safeParse(body);
 
-        if (!fileName || typeof fileName !== "string") {
+        if (!parseResult.success) {
             return NextResponse.json({ error: await apiT('fileNameMissing') }, { status: 400 });
         }
+
+        const { fileName } = parseResult.data;
 
         const backupFile = resolveAutoBackupFile(fileName);
         if (!backupFile) {

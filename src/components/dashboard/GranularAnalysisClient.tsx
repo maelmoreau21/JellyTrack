@@ -1,8 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StandardAreaChart, StandardBarChart, StandardPieChart } from "@/components/charts/StandardMetricsCharts";
-import { StackedBarChart } from "@/components/charts/StackedMetricsCharts";
+import { LazyStandardAreaChart, LazyStandardBarChart, LazyStandardPieChart, LazyStackedBarChart } from "@/components/charts/LazyCharts";
 import { AttendanceHeatmap } from "@/components/charts/AttendanceHeatmap";
 import { useRouter } from "next/navigation";
 
@@ -82,7 +81,7 @@ export function GranularAnalysisClient({
                         <CardDescription>{t.playsPerDayDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardBarChart 
+                        <LazyStandardBarChart 
                             data={data.dailyData} 
                             dataKey="totalPlays" 
                             fill="var(--chart-soft-5)" 
@@ -98,7 +97,7 @@ export function GranularAnalysisClient({
                         <CardDescription>{t.durationPerDayDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardAreaChart 
+                        <LazyStandardAreaChart 
                             data={data.dailyData} 
                             dataKey="totalDuration" 
                             stroke="var(--chart-soft-6)" 
@@ -116,7 +115,7 @@ export function GranularAnalysisClient({
                         <CardDescription>{t.playsByLibDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StackedBarChart 
+                        <LazyStackedBarChart 
                             data={normalizedDailyData} 
                             keys={normalizedKeys} 
                             suffix="_plays" 
@@ -132,7 +131,7 @@ export function GranularAnalysisClient({
                         <CardDescription>{t.durationByLibDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StackedBarChart 
+                        <LazyStackedBarChart 
                             data={normalizedDailyData} 
                             keys={normalizedKeys} 
                             suffix="_duration" 
@@ -150,7 +149,7 @@ export function GranularAnalysisClient({
                         <CardDescription>{t.playsHourlyAvgDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardBarChart data={data.hourlyData} xAxisKey="time" dataKey="plays" fill="var(--primary)" name={t.playsHourlyAvg} />
+                        <LazyStandardBarChart data={data.hourlyData} xAxisKey="time" dataKey="plays" fill="var(--primary)" name={t.playsHourlyAvg} />
                     </CardContent>
                 </Card>
 
@@ -160,7 +159,7 @@ export function GranularAnalysisClient({
                         <CardDescription>{t.durationHourlyAvgDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardAreaChart data={data.hourlyData} dataKey="duration" stroke="var(--primary)" name={t.durationHourlyAvg} />
+                        <LazyStandardAreaChart data={data.hourlyData} dataKey="duration" stroke="var(--primary)" name={t.durationHourlyAvg} />
                     </CardContent>
                 </Card>
             </div>
@@ -182,7 +181,7 @@ export function GranularAnalysisClient({
                         <CardDescription>{t.avgCompletionByLibDesc}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <StandardBarChart 
+                        <LazyStandardBarChart 
                             data={normalizedDropOffData} 
                             horizontal 
                             xAxisKey="time" 
@@ -202,7 +201,7 @@ export function GranularAnalysisClient({
                         <CardDescription>{t.abandonSegmentsDesc}</CardDescription>
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
-                        <StandardPieChart 
+                        <LazyStandardPieChart 
                             data={localizedDropSegments} 
                             nameKey="name" 
                             dataKey="value" 
@@ -257,7 +256,7 @@ export function GranularAnalysisClient({
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {data.audioData && data.audioData.length > 0 ? (
-                            <StandardPieChart 
+                            <LazyStandardPieChart 
                                 data={data.audioData} 
                                 nameKey="name" 
                                 dataKey="value" 
@@ -276,7 +275,7 @@ export function GranularAnalysisClient({
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {localizedSubtitleData && localizedSubtitleData.length > 0 ? (
-                            <StandardPieChart 
+                            <LazyStandardPieChart 
                                 data={localizedSubtitleData} 
                                 nameKey="name" 
                                 dataKey="value" 

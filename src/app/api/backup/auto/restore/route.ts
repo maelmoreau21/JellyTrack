@@ -9,17 +9,25 @@ import { replaceSystemHealthState } from "@/lib/systemHealth";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { resolveAutoBackupFile } from "@/lib/backupDir";
 import { revalidateDashboardCache } from "@/lib/revalidate";
+import { z } from "zod";
+
+const restoreBackupSchema = z.object({
+    fileName: z.string().min(1),
+});
 
 export async function POST(req: NextRequest) {
     const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
     try {
-        const { fileName } = await req.json();
+        const body = await req.json().catch(() => ({}));
+        const parseResult = restoreBackupSchema.safeParse(body);
 
-        if (!fileName || typeof fileName !== "string") {
+        if (!parseResult.success) {
             return NextResponse.json({ error: await apiT('fileNameInvalid') }, { status: 400 });
         }
+
+        const { fileName } = parseResult.data;
 
         const backupFile = resolveAutoBackupFile(fileName);
         if (!backupFile) {

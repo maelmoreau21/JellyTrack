@@ -1,8 +1,7 @@
 import prisma from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { unstable_cache } from "next/cache";
-import { StreamProportionsChart } from "@/components/charts/StreamProportionsChart";
-import { DrillDownPieChart } from "@/components/charts/DrillDownChart";
+import { LazyStreamProportionsChart, LazyDrillDownPieChart } from "@/components/charts/LazyCharts";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
@@ -596,7 +595,7 @@ export async function DeepInsights({
                         <CardDescription>{t('streamMethodsDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex justify-center">
-                        <StreamProportionsChart data={data.streamMethodsChartData} />
+                        <LazyStreamProportionsChart data={data.streamMethodsChartData} />
                     </CardContent>
                 </Card>
             </div>
@@ -610,7 +609,7 @@ export async function DeepInsights({
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {localizedResolutionChartData.length > 0 ? (
-                            <DrillDownPieChart data={localizedResolutionChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="resolution" payloadKey="rawName" />
+                            <LazyDrillDownPieChart data={localizedResolutionChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="resolution" payloadKey="rawName" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noResolutionData')}</p>
                         )}
@@ -624,7 +623,7 @@ export async function DeepInsights({
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {localizedDeviceChartData.length > 0 ? (
-                            <DrillDownPieChart data={localizedDeviceChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="client" payloadKey="rawName" />
+                            <LazyDrillDownPieChart data={localizedDeviceChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="client" payloadKey="rawName" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noDeviceData')}</p>
                         )}
@@ -640,7 +639,7 @@ export async function DeepInsights({
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {localizedAudioChartData.length > 0 ? (
-                            <DrillDownPieChart data={localizedAudioChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="audio" payloadKey="rawName" />
+                            <LazyDrillDownPieChart data={localizedAudioChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="audio" payloadKey="rawName" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noAudioData')}</p>
                         )}
@@ -654,7 +653,7 @@ export async function DeepInsights({
                     </CardHeader>
                     <CardContent className="h-[300px] flex items-center justify-center">
                         {localizedSubtitleChartData.length > 0 ? (
-                            <DrillDownPieChart data={localizedSubtitleChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="subtitle" payloadKey="rawName" />
+                            <LazyDrillDownPieChart data={localizedSubtitleChartData} nameKey="name" dataKey="value" baseUrl="/logs" paramName="subtitle" payloadKey="rawName" />
                         ) : (
                             <p className="text-xs text-muted-foreground">{t('noSubtitleData')}</p>
                         )}

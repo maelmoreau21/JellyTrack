@@ -1,10 +1,32 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+import { Pool } from 'pg'
 
 const prismaClientSingleton = () => {
-  const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
+  const connectionString = process.env.DATABASE_URL;
+  let maxConnections = 10; // Default pg pool size
+
+  if (connectionString) {
+    try {
+      const url = new URL(connectionString);
+      const limit = url.searchParams.get('connection_limit');
+      if (limit) {
+        const parsedLimit = parseInt(limit, 10);
+        if (!isNaN(parsedLimit) && parsedLimit > 0) {
+          maxConnections = parsedLimit;
+        }
+      }
+    } catch (e) {
+      console.warn('[prisma] Failed to parse connection_limit from DATABASE_URL:', e);
+    }
+  }
+
+  const pool = new Pool({
+    connectionString,
+    max: maxConnections,
   });
+
+  const adapter = new PrismaPg(pool);
 
   return new PrismaClient({
     adapter,

@@ -11,10 +11,29 @@ import {
 import { getPluginKeySnapshot } from "@/lib/pluginKeyManager";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { deriveScopedPluginApiKey } from "@/lib/pluginServerKey";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
 type ConnectionState = "online" | "offline" | "no_api_key";
+
+const serverPostSchema = z.object({
+  url: z.string(),
+  apiKey: z.string(),
+  name: z.string().optional(),
+  allowAuthFallback: z.any().optional(),
+});
+
+const serverPatchSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  allowAuthFallback: z.any().optional(),
+  isActive: z.any().optional(),
+});
+
+const serverDeleteSchema = z.object({
+  id: z.string(),
+});
 
 async function probeConnection(url: string, apiKey: string | null): Promise<{ state: ConnectionState; message: string }> {
   const normalizedUrl = normalizeUrl(url);
@@ -147,10 +166,15 @@ export async function POST(req: NextRequest) {
   if (isAuthError(auth)) return auth;
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-  const url = normalizeUrl(body.url);
-  const apiKey = normalizeSecret(body.apiKey);
-  const displayName = String(body.name || "").trim();
-  const allowAuthFallback = asBoolean(body.allowAuthFallback, true);
+  const parseResult = serverPostSchema.safeParse(body);
+  if (!parseResult.success) {
+    return NextResponse.json({ error: "Invalid payload structure." }, { status: 400 });
+  }
+
+  const url = normalizeUrl(parseResult.data.url);
+  const apiKey = normalizeSecret(parseResult.data.apiKey);
+  const displayName = String(parseResult.data.name || "").trim();
+  const allowAuthFallback = asBoolean(parseResult.data.allowAuthFallback, true);
 
   if (!url) {
     return NextResponse.json({ error: "Jellyfin server URL required." }, { status: 400 });
@@ -212,7 +236,12 @@ export async function PATCH(req: NextRequest) {
   if (isAuthError(auth)) return auth;
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-  const id = String(body.id || "").trim();
+  const parseResult = serverPatchSchema.safeParse(body);
+  if (!parseResult.success) {
+    return NextResponse.json({ error: "Invalid payload structure." }, { status: 400 });
+  }
+
+  const id = String(parseResult.data.id || "").trim();
   if (!id) {
     return NextResponse.json({ error: "Server not found." }, { status: 400 });
   }
@@ -225,21 +254,21 @@ export async function PATCH(req: NextRequest) {
   }
 
   const nextName =
-    body.name === undefined
+    parseResult.data.name === undefined
       ? existing.name
-      : String(body.name || "").trim();
+      : String(parseResult.data.name || "").trim();
 
   if (!nextName) {
     return NextResponse.json({ error: "Server name required." }, { status: 400 });
   }
 
   const nextAllowFallback =
-    body.allowAuthFallback === undefined
+    parseResult.data.allowAuthFallback === undefined
       ? existing.allowAuthFallback
-      : asBoolean(body.allowAuthFallback, existing.allowAuthFallback);
+      : asBoolean(parseResult.data.allowAuthFallback, existing.allowAuthFallback);
 
   const nextIsActive =
-    body.isActive === undefined ? existing.isActive : asBoolean(body.isActive, existing.isActive);
+    parseResult.data.isActive === undefined ? existing.isActive : asBoolean(parseResult.data.isActive, existing.isActive);
 
   const updated = await prismaAny.server.update({
     where: { id },
@@ -267,7 +296,12 @@ export async function DELETE(req: NextRequest) {
   if (isAuthError(auth)) return auth;
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-  const id = String(body.id || "").trim();
+  const parseResult = serverDeleteSchema.safeParse(body);
+  if (!parseResult.success) {
+    return NextResponse.json({ error: "Invalid payload structure." }, { status: 400 });
+  }
+
+  const id = String(parseResult.data.id || "").trim();
   if (!id) {
     return NextResponse.json({ error: "Server not found." }, { status: 400 });
   }

@@ -9,8 +9,13 @@ import {
   normalizeSmartSecurityThresholds,
   readSmartSecurityThresholdsFromResolutionSettings,
 } from "@/lib/securitySmartThresholds";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+
+const smartSettingsPatchSchema = z.object({
+  thresholds: z.unknown(),
+});
 
 export async function GET() {
   const auth = await requireAdmin();
@@ -30,18 +35,13 @@ export async function PATCH(req: NextRequest) {
   const auth = await requireAdminMutation(req);
   if (isAuthError(auth)) return auth;
 
-  let payload: Record<string, unknown>;
-  try {
-    const parsed = await req.json();
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
-    }
-    payload = parsed as Record<string, unknown>;
-  } catch {
+  const parsed = await req.json().catch(() => ({}));
+  const parseResult = smartSettingsPatchSchema.safeParse(parsed);
+  if (!parseResult.success) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
 
-  const incoming = payload.thresholds;
+  const incoming = parseResult.data.thresholds;
   const thresholds = normalizeSmartSecurityThresholds(incoming);
 
   const existing = await prisma.globalSettings.findUnique({

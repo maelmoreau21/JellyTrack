@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserActivityChart, ActivityData } from "@/components/charts/UserActivityChart";
+import { LazyUserActivityChart } from "@/components/charts/LazyCharts";
+import type { ActivityData } from "@/components/charts/UserActivityChart";
 import prisma from "@/lib/prisma";
 import { getTranslations } from 'next-intl/server';
 
@@ -60,7 +61,7 @@ export default async function UserActivity({ userId, userIds = [], userDbIds = [
             </CardHeader>
             <CardContent>
                 <div className="h-[250px] w-full">
-                    <UserActivityChart data={activityData} />
+                    <LazyUserActivityChart data={activityData} />
                 </div>
             </CardContent>
         </Card>

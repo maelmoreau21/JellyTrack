@@ -4,8 +4,17 @@ import { requireAdmin, isAuthError } from "@/lib/auth";
 import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { getAuthSessionPolicy } from "@/lib/authPolicy";
 import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+
+const sessionPolicyPatchSchema = z.object({
+    rememberSessionsExpireAfterDays: z.boolean(),
+});
+
+const sessionPolicyPostSchema = z.object({
+    action: z.literal("revoke_all"),
+});
 
 export async function GET() {
     const auth = await requireAdmin();
@@ -22,22 +31,20 @@ export async function PATCH(req: NextRequest) {
     const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
-    const body = (await req.json().catch(() => ({}))) as {
-        rememberSessionsExpireAfterDays?: unknown;
-    };
-
-    if (typeof body.rememberSessionsExpireAfterDays !== "boolean") {
+    const body = await req.json().catch(() => ({}));
+    const parseResult = sessionPolicyPatchSchema.safeParse(body);
+    if (!parseResult.success) {
         return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
     }
 
     const updated = await prisma.globalSettings.upsert({
         where: { id: "global" },
         update: {
-            authRememberThirtyDaysEnabled: body.rememberSessionsExpireAfterDays,
+            authRememberThirtyDaysEnabled: parseResult.data.rememberSessionsExpireAfterDays,
         },
         create: {
             id: "global",
-            authRememberThirtyDaysEnabled: body.rememberSessionsExpireAfterDays,
+            authRememberThirtyDaysEnabled: parseResult.data.rememberSessionsExpireAfterDays,
         },
         select: {
             authRememberThirtyDaysEnabled: true,
@@ -65,8 +72,9 @@ export async function POST(req: NextRequest) {
     const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) return auth;
 
-    const body = (await req.json().catch(() => ({}))) as { action?: unknown };
-    if (body.action !== "revoke_all") {
+    const body = await req.json().catch(() => ({}));
+    const parseResult = sessionPolicyPostSchema.safeParse(body);
+    if (!parseResult.success) {
         return NextResponse.json({ error: "Invalid action." }, { status: 400 });
     }
 

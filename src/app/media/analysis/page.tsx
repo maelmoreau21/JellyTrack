@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { getTranslations } from 'next-intl/server';
 import StatsDeepAnalysis from '@/components/dashboard/StatsDeepAnalysis';
-import { GenreDistributionChart } from '@/components/charts/GenreDistributionChart';
+import { LazyGenreDistributionChart } from '@/components/charts/LazyCharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { normalizeLibraryKey } from '@/lib/mediaPolicy';
 import { normalizeResolution } from '@/lib/utils';
@@ -234,7 +234,7 @@ export default async function AnalysisPage({ searchParams }: { searchParams?: Pr
                         <CardDescription>{t('genreDiversityDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="h-[340px]"><GenreDistributionChart data={topGenres} /></div>
+                        <div className="h-[340px]"><LazyGenreDistributionChart data={topGenres} /></div>
                     </CardContent>
                 </Card>
 

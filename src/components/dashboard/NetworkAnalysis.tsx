@@ -3,8 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { unstable_cache } from "next/cache";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { StandardBarChart } from "@/components/charts/StandardMetricsCharts";
-import { TranscodeHourlyChart } from "@/components/charts/TranscodeHourlyChart";
+import { LazyStandardBarChart, LazyTranscodeHourlyChart } from "@/components/charts/LazyCharts";
 import { getTranslations } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 import { buildExcludedMediaClause } from "@/lib/mediaPolicy";
@@ -269,7 +268,7 @@ export async function NetworkAnalysis({
                         <CardDescription>{t('directVsTranscodeByHourDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <TranscodeHourlyChart data={data.hourlyData} />
+                        <LazyTranscodeHourlyChart data={data.hourlyData} />
                     </CardContent>
                 </Card>
 
@@ -279,7 +278,7 @@ export async function NetworkAnalysis({
                         <CardDescription>{t('transcodeByClientDesc')}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <StandardBarChart
+                        <LazyStandardBarChart
                             data={data.clientTranscodeData}
                             dataKey="transcodePercent"
                             fill="var(--chart-soft-6)"

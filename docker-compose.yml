@@ -44,6 +44,10 @@ services:
       BACKUP_DIR: ${BACKUP_DIR:-/data/backups}
     volumes:
       - JellyTrack_backups:/data/backups
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache:uid=1000,gid=1000
     depends_on:
       postgres:
         condition: service_healthy

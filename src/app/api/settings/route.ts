@@ -10,8 +10,31 @@ import { revalidateDashboardCache } from "@/lib/revalidate";
 import { normalizeSchedulerIntervals } from "@/lib/schedulerIntervals";
 import { isValidDiscordWebhook } from "@/lib/webhookValidator";
 import { invalidatePluginIngestSettingsCache, normalizePluginTelemetrySettings } from "@/lib/pluginTelemetrySettings";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
+
+const settingsPostSchema = z.object({
+    discordWebhookUrl: z.string().nullable().optional().or(z.literal("")),
+    discordAlertCondition: z.string().optional(),
+    discordAlertsEnabled: z.boolean().optional(),
+    maxConcurrentTranscodes: z.union([z.number(), z.string()]).optional(),
+    excludedLibraries: z.array(z.unknown()).optional(),
+    syncCronHour: z.union([z.number(), z.string()]).optional(),
+    syncCronMinute: z.union([z.number(), z.string()]).optional(),
+    backupCronHour: z.union([z.number(), z.string()]).optional(),
+    backupCronMinute: z.union([z.number(), z.string()]).optional(),
+    defaultLocale: z.string().optional(),
+    wrappedVisible: z.boolean().optional(),
+    wrappedPeriodEnabled: z.boolean().optional(),
+    wrappedStartMonth: z.union([z.number(), z.string()]).optional(),
+    wrappedStartDay: z.union([z.number(), z.string()]).optional(),
+    wrappedEndMonth: z.union([z.number(), z.string()]).optional(),
+    wrappedEndDay: z.union([z.number(), z.string()]).optional(),
+    resolutionThresholds: z.unknown().optional(),
+    schedulerIntervals: z.unknown().optional(),
+    pluginTelemetrySettings: z.unknown().optional(),
+});
 
 async function fetchJellyfinLibraryNames() {
     const jellyfinUrl = process.env.JELLYFIN_URL;
@@ -122,7 +145,12 @@ export async function POST(req: NextRequest) {
     if (isAuthError(auth)) return auth;
 
     try {
-        const body = await req.json();
+        const body = await req.json().catch(() => ({}));
+        const parseResult = settingsPostSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json({ error: "Invalid payload structure." }, { status: 400 });
+        }
+
         const {
             discordWebhookUrl,
             discordAlertCondition,
@@ -143,7 +171,7 @@ export async function POST(req: NextRequest) {
             resolutionThresholds,
             schedulerIntervals,
             pluginTelemetrySettings,
-        } = body;
+        } = parseResult.data;
 
         // Input validation — Discord webhook URL must be a valid Discord URL or null
         if (discordWebhookUrl !== undefined && discordWebhookUrl !== null && discordWebhookUrl !== "") {
@@ -188,7 +216,7 @@ export async function POST(req: NextRequest) {
             const val = Number(maxConcurrentTranscodes);
             if (isNaN(val) || val < 0) return NextResponse.json({ error: await apiT('maxConcurrentTranscodesRange') }, { status: 400 });
         }
-        const validLocales = AVAILABLE_LOCALES.map((locale) => locale.code);
+        const validLocales = AVAILABLE_LOCALES.map((locale) => locale.code) as string[];
         if (defaultLocale !== undefined && !validLocales.includes(defaultLocale)) {
             return NextResponse.json({ error: await apiT('localeInvalid') }, { status: 400 });
         }
