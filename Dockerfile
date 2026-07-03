@@ -1,58 +1,54 @@
-# Declare BUILDPLATFORM argument
-ARG BUILDPLATFORM
+# ── STAGE 1: Install dependencies & generate Prisma client ──
+FROM node:26-alpine AS deps
+RUN apk add --no-cache libc6-compat openssl python3 build-base git ca-certificates
 
-# Base image for the build environment (runs on the host build architecture)
-FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/node:26-alpine AS build-base
-RUN apk add --no-cache libc6-compat openssl
-
-# 1. Install dependencies only when needed (on build platform)
-FROM build-base AS deps
 WORKDIR /app
-# Copy lockfile explicitly to ensure it's present in the build context
+
+# Copy lockfile and package configuration
 COPY package.json package-lock.json ./
-# Install build tools and git (some deps fetch via git), then install packages
-RUN apk add --no-cache python3 build-base git ca-certificates && \
-    npm --version && \
-    npm install -g npm@10 || true && \
-    npm ci --no-audit --progress=false || npm install --no-audit --progress=false
 
-# 2. Rebuild the source code only when needed (on build platform)
-FROM build-base AS builder
-RUN apk add --no-cache binutils
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Install all dependencies (including devDependencies for building)
+RUN npm ci --no-audit --progress=false
 
-# Provide dummy variables so Prisma/Next.js build steps do not connect to a real DB.
+# Copy Prisma schema to generate the client
+COPY prisma ./prisma
+
+# Provide dummy variable so Prisma generate doesn't check for real DB connection
 ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 ENV DATABASE_URL=${DATABASE_URL}
 
-# Copy Prisma config and schema first to cache the generate step
-COPY prisma.config.ts ./prisma.config.ts
-COPY prisma ./prisma
+# Generate Prisma Client
 RUN npx prisma generate
 
-# Copy source code only after dependencies and prisma are ready
+
+# ── STAGE 2: Build Next.js application & clean up assets ──
+FROM node:26-alpine AS builder
+RUN apk add --no-cache libc6-compat binutils openssl
+
+WORKDIR /app
+
+# Copy node_modules from deps
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/prisma ./prisma
+
+# Copy source code
 COPY . .
 
-# Environment variables for build time
+# Build variables
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+ENV DATABASE_URL=${DATABASE_URL}
 
-# Build Next.js project
+# Build Next.js standalone package
 RUN NEXTAUTH_SECRET=build-placeholder npm run build
 
-# Prune devDependencies to keep only production dependencies (including prisma CLI)
-RUN npm prune --omit=dev
-
 # ── Clean up Prisma engines: keep only linux-musl (Alpine), remove all others ──
-# This saves ~50-60MB by removing Windows, macOS, Debian, etc. engine binaries
-# Note: Since we are building multi-arch, both amd64 and arm64 engine binaries contain 'linux-musl'
-# and will be kept.
 RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/@prisma/engines -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/@prisma/engines -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules/prisma -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    # Keep only Alpine-compatible Prisma schema/migration engines for runtime setup
     find /app/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
 
@@ -69,13 +65,11 @@ RUN find /app/node_modules -type f -name "*.map" -delete 2>/dev/null || true && 
     find /app/node_modules -type d -name "tests" -exec rm -rf {} \; 2>/dev/null || true && \
     find /app/node_modules -type d -name "__tests__" -exec rm -rf {} \; 2>/dev/null || true
 
-# Base image for the target runner (runs on the target platform architecture, e.g. arm64 or amd64)
-FROM mirror.gcr.io/library/node:26-alpine AS run-base
-RUN apk add --no-cache libc6-compat openssl
 
-# 3. Production image, copy all the files and run next
-FROM run-base AS runner
-RUN apk add --no-cache su-exec shadow
+# ── STAGE 3: Final lightweight runner image ──
+FROM node:26-alpine AS runner
+RUN apk add --no-cache libc6-compat openssl su-exec shadow
+
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -85,37 +79,38 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN mkdir -p /data/backups /app/.next/cache && \
     chown -R node:node /data/backups /app
 
+# Copy public folder and static assets from builder
 COPY --from=builder --chown=node:node /app/public ./public
-
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-# Copy all production node_modules from builder (includes Prisma CLI and its config dependencies)
-COPY --from=builder --chown=node:node /app/node_modules ./node_modules
-COPY --from=builder --chown=node:node /app/package.json ./package.json
-COPY --from=builder --chown=node:node /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder --chown=node:node /app/prisma ./prisma
+# Copy Next.js standalone server
+COPY --from=builder --chown=node:node /app/.next/standalone ./
 
-# OCI labels — links the GHCR package to the GitHub repo
+# Copy Prisma schema and config
+COPY --from=builder --chown=node:node /app/prisma ./prisma
+COPY --from=builder --chown=node:node /app/prisma.config.ts ./prisma.config.ts
+
+# Copy Prisma CLI and minimum dependencies required for runtime migrations
+COPY --from=builder --chown=node:node /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder --chown=node:node /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=node:node /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=node:node /app/node_modules/dotenv ./node_modules/dotenv
+
+# OCI labels
 LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTrack"
 LABEL org.opencontainers.image.description="JellyTrack — Dashboard analytique pour Jellyfin"
 LABEL org.opencontainers.image.licenses="MIT"
 
-# Expose port and configure entrypoint
+# Expose port and configure environment
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Copy the entrypoint script (runs as root initially, then drops to PUID/PGID)
+# Copy the entrypoint script
 COPY docker-entrypoint.sh ./
 RUN sed -i 's/\r$//' ./docker-entrypoint.sh && chmod +x ./docker-entrypoint.sh && chown node:node ./docker-entrypoint.sh
 
-# Healthcheck to monitor app status (uses Alpine built-in wget)
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=10s \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:$(cat /tmp/jellytrack-port 2>/dev/null || echo 3000)/api/health || exit 1
-
-# Enforce running the container as the non-root 'node' user
+# Run as non-root user 'node'
 USER node
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
