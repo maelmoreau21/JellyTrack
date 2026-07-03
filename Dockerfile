@@ -1,5 +1,8 @@
+# Declare BUILDPLATFORM argument
+ARG BUILDPLATFORM
+
 # ── STAGE 1: Install dependencies & generate Prisma client ──
-FROM node:26-alpine AS deps
+FROM --platform=$BUILDPLATFORM node:26-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl python3 build-base git ca-certificates
 
 WORKDIR /app
@@ -22,7 +25,7 @@ RUN npx prisma generate
 
 
 # ── STAGE 2: Build Next.js application & clean up assets ──
-FROM node:26-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:26-alpine AS builder
 RUN apk add --no-cache libc6-compat binutils openssl
 
 WORKDIR /app
