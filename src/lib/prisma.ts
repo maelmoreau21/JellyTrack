@@ -2,8 +2,32 @@ import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 
+/**
+ * Build a safe DATABASE_URL from individual DB_* environment variables,
+ * encoding user and password with encodeURIComponent to handle special
+ * characters (e.g. &, @, #) that would otherwise corrupt the URI.
+ */
+function buildSafeConnectionString(): string | undefined {
+  const dbUser = process.env.DB_USER ?? process.env.POSTGRES_USER;
+  const dbPassword = process.env.DB_PASSWORD ?? process.env.POSTGRES_PASSWORD;
+  const dbHost = process.env.DB_HOST ?? process.env.POSTGRES_IP ?? 'localhost';
+  const dbPort = process.env.DB_PORT ?? process.env.POSTGRES_PORT ?? '5432';
+  const dbName = process.env.DB_NAME ?? process.env.POSTGRES_DB ?? 'JellyTrack';
+
+  // Only rebuild if at least user or password are explicitly provided
+  if (!dbUser && !dbPassword) return undefined;
+
+  const safeUser = encodeURIComponent(dbUser || 'JellyTrack');
+  const safePassword = encodeURIComponent(dbPassword || '');
+
+  return `postgresql://${safeUser}:${safePassword}@${dbHost}:${dbPort}/${dbName}?schema=public&connection_limit=5`;
+}
+
 const prismaClientSingleton = () => {
-  const connectionString = process.env.DATABASE_URL;
+  // Prefer a safely-built connection string from individual env vars,
+  // falling back to the raw DATABASE_URL (which should already be encoded
+  // if built by docker-entrypoint.sh).
+  const connectionString = buildSafeConnectionString() || process.env.DATABASE_URL;
   let maxConnections = 10; // Default pg pool size
 
   if (connectionString) {

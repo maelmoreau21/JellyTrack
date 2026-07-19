@@ -19,6 +19,21 @@ else
   esac
 fi
 
+
+# Percent-encode a string for safe inclusion in a URI (POSIX-compatible).
+urlencode() {
+  local string="$1" i c
+  local encoded=""
+  for i in $(seq 0 $((${#string} - 1))); do
+    c=$(printf '%s' "$string" | cut -c$((i+1)))
+    case "$c" in
+      [a-zA-Z0-9._~-]) encoded="${encoded}${c}" ;;
+      *) encoded="${encoded}$(printf '%%%02X' "'$c")" ;;
+    esac
+  done
+  printf '%s' "$encoded"
+}
+
 if [ "$rebuild_db" = true ]; then
   DB_USER=${DB_USER:-${POSTGRES_USER:-JellyTrack}}
   if [ -z "${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}" ] && [ "${NODE_ENV:-}" = "production" ]; then
@@ -29,7 +44,12 @@ if [ "$rebuild_db" = true ]; then
   DB_HOST=${DB_HOST:-${POSTGRES_IP:-postgres}}
   DB_PORT=${DB_PORT:-${POSTGRES_PORT:-5432}}
   DB_NAME=${DB_NAME:-${POSTGRES_DB:-JellyTrack}}
-  export DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public&connection_limit=5"
+
+  # Encode user and password to safely handle special characters in URIs
+  SAFE_USER=$(urlencode "$DB_USER")
+  SAFE_PASSWORD=$(urlencode "$DB_PASSWORD")
+
+  export DATABASE_URL="postgresql://${SAFE_USER}:${SAFE_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?schema=public&connection_limit=5"
   echo "Database: ${DB_HOST}:${DB_PORT}/${DB_NAME}"
 else
   echo "Database: using provided DATABASE_URL"
