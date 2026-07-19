@@ -82,15 +82,22 @@ services:
     restart: unless-stopped
 
   redis:
-    image: mirror.gcr.io/library/redis:7-alpine
+    image: ${REDIS_IMAGE:-valkey/valkey:8-alpine}
     container_name: JellyTrack_redis
-    command: redis-server --save 60 1 --loglevel warning
+    command: >
+      sh -c "
+      if command -v valkey-server >/dev/null 2>&1; then
+        exec valkey-server --save 60 1 --loglevel warning
+      else
+        exec redis-server --save 60 1 --loglevel warning
+      fi
+      "
     volumes:
       - JellyTrack_redisdata:/data
     networks:
       - JellyTrack_net
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "valkey-cli ping || redis-cli ping"]
       interval: 10s
       timeout: 5s
       retries: 5
