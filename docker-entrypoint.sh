@@ -20,18 +20,9 @@ else
 fi
 
 
-# Percent-encode a string for safe inclusion in a URI (POSIX-compatible).
+# Percent-encode a string for safe inclusion in a URI using Node.js.
 urlencode() {
-  local string="$1" i c
-  local encoded=""
-  for i in $(seq 0 $((${#string} - 1))); do
-    c=$(printf '%s' "$string" | cut -c$((i+1)))
-    case "$c" in
-      [a-zA-Z0-9._~-]) encoded="${encoded}${c}" ;;
-      *) encoded="${encoded}$(printf '%%%02X' "'$c")" ;;
-    esac
-  done
-  printf '%s' "$encoded"
+  node -e 'console.log(encodeURIComponent(process.argv[1]))' "$1"
 }
 
 if [ "$rebuild_db" = true ]; then
