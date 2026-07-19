@@ -114,12 +114,12 @@ export default async function HealthPage() {
                             <CardHeader className="pb-2">
                                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                     <AlertTriangle className="h-4 w-4 text-red-500" />
-                                    {t("dbWithoutRedis")}
+                                    {t("dbWithoutValkey")}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-xl font-semibold">{snapshot.counts.dbStreamsWithoutRedis}</div>
-                                <p className="mt-1.5 text-xs text-muted-foreground">{t("dbWithoutRedisDesc")}</p>
+                                <div className="text-xl font-semibold">{snapshot.counts.dbStreamsWithoutValkey}</div>
+                                <p className="mt-1.5 text-xs text-muted-foreground">{t("dbWithoutValkeyDesc")}</p>
                             </CardContent>
                         </Card>
 
@@ -127,12 +127,12 @@ export default async function HealthPage() {
                             <CardHeader className="pb-2">
                                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                     <Activity className="h-4 w-4 text-emerald-500" />
-                                    {t("redisOrphan")}
+                                    {t("valkeyOrphan")}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-xl font-semibold">{snapshot.counts.redisOrphans}</div>
-                                <p className="mt-1.5 text-xs text-muted-foreground">{t("redisOrphanDesc")}</p>
+                                <div className="text-xl font-semibold">{snapshot.counts.valkeyOrphans}</div>
+                                <p className="mt-1.5 text-xs text-muted-foreground">{t("valkeyOrphanDesc")}</p>
                             </CardContent>
                         </Card>
                     </div>

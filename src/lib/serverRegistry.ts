@@ -162,6 +162,6 @@ export async function ensureMasterServer(): Promise<ServerRecord> {
   return upsertServerRecord(getMasterServerIdentityFromEnv());
 }
 
-export function buildStreamRedisKey(serverId: string, sessionId: string): string {
+export function buildStreamValkeyKey(serverId: string, sessionId: string): string {
   return `stream:${serverId}:${sessionId}`;
 }

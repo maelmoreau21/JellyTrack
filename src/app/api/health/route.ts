@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
+import valkey from "@/lib/valkey";
 import { getConfiguredJellyfinServers, fetchJellyfinSystemInfo, resolveServerApiKey } from "@/lib/jellyfinServers";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 
@@ -26,7 +26,7 @@ function sanitizeError(msg: string, secrets: Set<string>): string {
 
 export async function GET() {
     let dbStatus = "up";
-    let redisStatus = "up";
+    let valkeyStatus = "up";
     let jellyfinStatus = "up";
     let status = "up";
     const errors: Record<string, string> = {};
@@ -67,12 +67,12 @@ export async function GET() {
     }
 
     try {
-        // Test Redis connection
-        await redis.get("health_ping");
+        // Test Valkey connection
+        await valkey.get("health_ping");
     } catch (e: unknown) {
-        redisStatus = "down";
+        valkeyStatus = "down";
         status = "down";
-        errors.redis = e instanceof Error ? e.message : String(e);
+        errors.valkey = e instanceof Error ? e.message : String(e);
     }
 
     // Only attempt to check Jellyfin if DB is working (needed to fetch servers)
@@ -166,7 +166,7 @@ export async function GET() {
             uptime,
             services: {
                 database: dbStatus,
-                redis: redisStatus,
+                valkey: valkeyStatus,
                 jellyfin: jellyfinStatus,
             },
             jellyfinServers: Object.keys(jellyfinServersStatus).length > 0 ? jellyfinServersStatus : undefined,

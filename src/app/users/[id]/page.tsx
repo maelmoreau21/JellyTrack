@@ -11,8 +11,8 @@ import { authOptions } from "@/lib/authOptions";
 import { getTranslations } from 'next-intl/server';
 import { ensureMasterServer } from "@/lib/serverRegistry";
 import { resolveLinkedAccounts } from "@/lib/auth";
-import redis from "@/lib/redis";
-import { buildStreamRedisKey } from "@/lib/serverRegistry";
+import valkey from "@/lib/valkey";
+import { buildStreamValkeyKey } from "@/lib/serverRegistry";
 
 export const dynamic = "force-dynamic";
 
@@ -99,10 +99,10 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
     let isPaused = false;
     if (currentActiveStream) {
         try {
-            const redisKey = buildStreamRedisKey(currentActiveStream.serverId, currentActiveStream.sessionId);
-            const redisPayload = await redis.get(redisKey);
-            if (redisPayload) {
-                const parsed = JSON.parse(redisPayload);
+            const valkeyKey = buildStreamValkeyKey(currentActiveStream.serverId, currentActiveStream.sessionId);
+            const valkeyPayload = await valkey.get(valkeyKey);
+            if (valkeyPayload) {
+                const parsed = JSON.parse(valkeyPayload);
                 isPaused = parsed.isPaused || parsed.IsPaused || false;
                 const totalMs = currentActiveStream.media?.durationMs ? Number(currentActiveStream.media.durationMs) : 0;
                 const positionTicks = parsed.positionTicks || parsed.PositionTicks || Number(currentActiveStream.positionTicks) || 0;

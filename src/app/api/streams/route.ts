@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import redis from "@/lib/redis";
+import valkey from "@/lib/valkey";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { buildStreamRedisKey } from "@/lib/serverRegistry";
+import { buildStreamValkeyKey } from "@/lib/serverRegistry";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
             }
         });
 
-        interface RedisStreamPayload {
+        interface ValkeyStreamPayload {
             isTranscoding?: boolean;
             IsTranscoding?: boolean;
             mediaSubtitle?: string;
@@ -53,16 +53,16 @@ export async function GET(req: Request) {
         let totalBandwidthMbps = 0;
 
         if (activeStreamEntries.length > 0) {
-            const redisKeys = activeStreamEntries.map(s => buildStreamRedisKey(s.serverId, s.sessionId));
-            const redisPayloads = await Promise.all(redisKeys.map(k => redis.get(k)));
-            const redisMap = new Map<string, RedisStreamPayload>();
+            const valkeyKeys = activeStreamEntries.map(s => buildStreamValkeyKey(s.serverId, s.sessionId));
+            const valkeyPayloads = await Promise.all(valkeyKeys.map(k => valkey.get(k)));
+            const valkeyMap = new Map<string, ValkeyStreamPayload>();
             
-            redisPayloads.forEach((p, idx) => {
+            valkeyPayloads.forEach((p, idx) => {
                 if (p) {
                     try {
-                        const parsed = JSON.parse(p) as RedisStreamPayload;
+                        const parsed = JSON.parse(p) as ValkeyStreamPayload;
                         const stream = activeStreamEntries[idx];
-                        redisMap.set(`${stream.serverId}:${stream.sessionId}`, parsed);
+                        valkeyMap.set(`${stream.serverId}:${stream.sessionId}`, parsed);
                     } catch {}
                 }
             });
@@ -91,7 +91,7 @@ export async function GET(req: Request) {
             const mediaHierarchyMap = new Map(relatedMedia.map((m) => [`${m.serverId}:${m.jellyfinMediaId}`, m]));
 
             liveStreams = activeStreamEntries.map((dbStream) => {
-                const payload = redisMap.get(`${dbStream.serverId}:${dbStream.sessionId}`) || {};
+                const payload = valkeyMap.get(`${dbStream.serverId}:${dbStream.sessionId}`) || {};
                 const itemMedia = dbStream.media;
                 
                 const isTranscoding = dbStream.playMethod === "Transcode" 
@@ -167,3 +167,4 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: "Unable to load live streams." }, { status: 500 });
     }
 }
+

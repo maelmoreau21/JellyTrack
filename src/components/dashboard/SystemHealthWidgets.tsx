@@ -18,8 +18,8 @@ type Snapshot = {
     counts: {
         activeStreams: number;
         openPlaybackOrphans: number;
-        dbStreamsWithoutRedis: number;
-        redisOrphans: number;
+        dbStreamsWithoutValkey: number;
+        valkeyOrphans: number;
     };
 };
 
@@ -103,8 +103,8 @@ export function SystemHealthWidgets({ initialSnapshot }: { initialSnapshot: Snap
                         <div className="mt-2 text-3xl font-bold">{snapshot.counts.openPlaybackOrphans}</div>
                     </div>
                     <div className="app-surface-soft rounded-lg border border-border p-4">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground"><AlertTriangle className="h-4 w-4 text-rose-500" /> {t('dbWithoutRedis')}</div>
-                        <div className="mt-2 text-3xl font-bold">{snapshot.counts.dbStreamsWithoutRedis}</div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground"><AlertTriangle className="h-4 w-4 text-rose-500" /> {t('dbWithoutValkey')}</div>
+                        <div className="mt-2 text-3xl font-bold">{snapshot.counts.dbStreamsWithoutValkey}</div>
                     </div>
                     <div className="app-surface-soft rounded-lg border border-border p-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground"><HeartPulse className="h-4 w-4 text-primary" /> {t('excludedLibraries')}</div>

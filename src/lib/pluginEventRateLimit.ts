@@ -1,8 +1,8 @@
-import redis from "@/lib/redis";
+import valkey from "@/lib/valkey";
 
 const parsedWindow = Number(process.env.PLUGIN_EVENT_RATE_LIMIT_WINDOW_SECONDS);
 const parsedMaxEvents = Number(process.env.PLUGIN_EVENT_RATE_LIMIT_MAX);
-const hasRedisUrl = Boolean(process.env.REDIS_URL?.trim());
+const hasValkeyUrl = Boolean((process.env.VALKEY_URL || process.env.REDIS_URL)?.trim());
 
 const WINDOW_SECONDS = Number.isFinite(parsedWindow) && parsedWindow > 0 ? parsedWindow : 60;
 const MAX_EVENTS = Number.isFinite(parsedMaxEvents) && parsedMaxEvents > 0 ? parsedMaxEvents : 1200;
@@ -47,20 +47,20 @@ function consumeInMemory(identifier: string): { allowed: boolean; remaining: num
 }
 
 export async function consumePluginEventRateLimit(identifier: string): Promise<{ allowed: boolean; remaining: number; retryAfterSeconds?: number }> {
-    if (!hasRedisUrl) {
+    if (!hasValkeyUrl) {
         return consumeInMemory(identifier);
     }
 
     const key = getPluginEventsKey(identifier);
 
     try {
-        const count = await redis.incr(key);
+        const count = await valkey.incr(key);
         if (count === 1) {
-            await redis.expire(key, WINDOW_SECONDS);
+            await valkey.expire(key, WINDOW_SECONDS);
         }
 
         if (count > MAX_EVENTS) {
-            const ttl = await redis.ttl(key);
+            const ttl = await valkey.ttl(key);
             return {
                 allowed: false,
                 remaining: 0,
@@ -73,7 +73,7 @@ export async function consumePluginEventRateLimit(identifier: string): Promise<{
             remaining: Math.max(0, MAX_EVENTS - count),
         };
     } catch (error) {
-        console.error("[PluginRateLimit] Redis error, using in-memory fallback:", error);
+        console.error("[PluginRateLimit] Valkey error, using in-memory fallback:", error);
         return consumeInMemory(identifier);
     }
 }

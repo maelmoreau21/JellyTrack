@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
+import valkey from "@/lib/valkey";
 import { getGeoLocation } from "@/lib/geoip";
 import { inferLibraryKey, isLibraryExcluded } from "@/lib/mediaPolicy";
 import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
@@ -11,7 +11,7 @@ import { parsePluginApiKeyCandidate, verifyScopedPluginApiKey } from "@/lib/plug
 import { getClientIp, normalizeIp } from "@/lib/requestIp";
 import { getCachedPluginIngestSettings } from "@/lib/pluginTelemetrySettings";
 import {
-    buildStreamRedisKey,
+    buildStreamValkeyKey,
 } from "@/lib/serverRegistry";
 
 // Lightweight local types for incoming Jellyfin payloads
@@ -953,20 +953,20 @@ export async function handleMediaDownloadedEvent(payload: Record<string, any>, s
     }
 }
 
-// Acquire a short Redis-based lock for a user+media pair to avoid concurrent
+// Acquire a short Valkey-based lock for a user+media pair to avoid concurrent
 // creation of duplicate PlaybackHistory rows when multiple plugin events
 // arrive in parallel (PlaybackStart vs PlaybackProgress bootstrap).
 export async function acquirePlaybackLock(userId: string, mediaId: string, retries = 10, delayMs = 50, ttlSec = 5) {
     const key = `lock:playback:${userId}:${mediaId}`;
     for (let i = 0; i < retries; i++) {
         try {
-            const v = await redis.incr(key);
+            const v = await valkey.incr(key);
             if (v === 1) {
-                await redis.expire(key, ttlSec);
+                await valkey.expire(key, ttlSec);
                 return { acquired: true, key };
             }
         } catch {
-            // Redis may be unavailable; fail open (don't block main flow).
+            // Valkey may be unavailable; fail open (don't block main flow).
             return { acquired: false, key };
         }
         // backoff a little to let the other process finish
@@ -977,7 +977,7 @@ export async function acquirePlaybackLock(userId: string, mediaId: string, retri
 
 // Merge multiple concurrently-open PlaybackHistory rows for the same user+media.
 // This is a safety net for rare race conditions where parallel event processing
-// creates more than one open session. We migrate telemetry, merge Redis keys
+// creates more than one open session. We migrate telemetry, merge Valkey keys
 // and delete duplicate rows, keeping the earliest started session as primary.
 export async function mergeOpenPlaybacks(userId: string, mediaId: string) {
     const opens = await prisma.playbackHistory.findMany({
@@ -1002,59 +1002,59 @@ export async function mergeOpenPlaybacks(userId: string, mediaId: string) {
         return;
     }
 
-    // Merge ephemeral Redis keys (durations, last tick/time, start_pos, audio/sub/pause)
+    // Merge ephemeral Valkey keys (durations, last tick/time, start_pos, audio/sub/pause)
     for (const dupId of duplicateIds) {
         try {
             // dur: sum durations
-            const dupDur = await redis.get(`dur:${dupId}`);
+            const dupDur = await valkey.get(`dur:${dupId}`);
             if (dupDur) {
-                const primDur = await redis.get(`dur:${primaryId}`) || "0";
+                const primDur = await valkey.get(`dur:${primaryId}`) || "0";
                 const newDur = Math.max(parseFloat(primDur), parseFloat(dupDur)).toString();
-                await redis.setex(`dur:${primaryId}`, 86400, newDur);
+                await valkey.setex(`dur:${primaryId}`, 86400, newDur);
             }
 
             // last_time: keep the most recent
-            const dupLastTime = await redis.get(`last_time:${dupId}`);
-            const primLastTime = await redis.get(`last_time:${primaryId}`);
+            const dupLastTime = await valkey.get(`last_time:${dupId}`);
+            const primLastTime = await valkey.get(`last_time:${primaryId}`);
             if (dupLastTime && (!primLastTime || Number(dupLastTime) > Number(primLastTime))) {
-                await redis.setex(`last_time:${primaryId}`, 86400, dupLastTime);
+                await valkey.setex(`last_time:${primaryId}`, 86400, dupLastTime);
             }
 
             // last_tick: keep the most recent
-            const dupLastTick = await redis.get(`last_tick:${dupId}`);
-            const primLastTick = await redis.get(`last_tick:${primaryId}`);
+            const dupLastTick = await valkey.get(`last_tick:${dupId}`);
+            const primLastTick = await valkey.get(`last_tick:${primaryId}`);
             if (dupLastTick && (!primLastTick || Number(dupLastTick) > Number(primLastTick))) {
-                await redis.setex(`last_tick:${primaryId}`, 86400, dupLastTick);
+                await valkey.setex(`last_tick:${primaryId}`, 86400, dupLastTick);
             }
 
             // start_pos: prefer primary, else copy dup
-            const dupStart = await redis.get(`start_pos:${dupId}`);
-            const primStart = await redis.get(`start_pos:${primaryId}`);
-            if (dupStart && !primStart) await redis.setex(`start_pos:${primaryId}`, 86400, dupStart);
+            const dupStart = await valkey.get(`start_pos:${dupId}`);
+            const primStart = await valkey.get(`start_pos:${primaryId}`);
+            if (dupStart && !primStart) await valkey.setex(`start_pos:${primaryId}`, 86400, dupStart);
 
             // audio/sub/pause keys: prefer existing primary, else copy
             for (const k of ["audio", "sub", "pause"]) {
-                const dupVal = await redis.get(`${k}:${dupId}`);
-                const primVal = await redis.get(`${k}:${primaryId}`);
-                if (dupVal && !primVal) await redis.setex(`${k}:${primaryId}`, 3600, dupVal);
+                const dupVal = await valkey.get(`${k}:${dupId}`);
+                const primVal = await valkey.get(`${k}:${primaryId}`);
+                if (dupVal && !primVal) await valkey.setex(`${k}:${primaryId}`, 3600, dupVal);
             }
 
             // cleanup dup keys
-            await redis.del(`dur:${dupId}`, `last_time:${dupId}`, `last_tick:${dupId}`, `start_pos:${dupId}`, `audio:${dupId}`, `sub:${dupId}`, `pause:${dupId}`);
+            await valkey.del(`dur:${dupId}`, `last_time:${dupId}`, `last_tick:${dupId}`, `start_pos:${dupId}`, `audio:${dupId}`, `sub:${dupId}`, `pause:${dupId}`);
         } catch (err) {
-            console.error("[Plugin] mergeOpenPlaybacks redis merge failed:", err);
+            console.error("[Plugin] mergeOpenPlaybacks valkey merge failed:", err);
         }
     }
 }
 
 export async function cleanupActiveStreamForSession(serverId: string, activeStream: { id: string; sessionId: string } | null) {
     if (!activeStream?.sessionId) return;
-    await redis.del(buildStreamRedisKey(serverId, activeStream.sessionId));
+    await valkey.del(buildStreamValkeyKey(serverId, activeStream.sessionId));
     await (prisma.activeStream as any).delete({ where: { id: activeStream.id } }).catch(() => undefined);
 }
 
-export async function cleanupPlaybackRedisKeys(playbackId: string) {
-    await redis.del(
+export async function cleanupPlaybackValkeyKeys(playbackId: string) {
+    await valkey.del(
         `pause:${playbackId}`,
         `audio:${playbackId}`,
         `sub:${playbackId}`,
@@ -1142,7 +1142,7 @@ export async function finalizePlaybackSession(input: {
 
     if (playback.endedAt) {
         await cleanupActiveStreamForSession(input.sourceServerId, activeStream);
-        await cleanupPlaybackRedisKeys(playback.id);
+        await cleanupPlaybackValkeyKeys(playback.id);
         return { closed: false, reason: "already_closed", playbackId: playback.id };
     }
 
@@ -1154,11 +1154,11 @@ export async function finalizePlaybackSession(input: {
     }
 
     const durKey = `dur:${playback.id}`;
-    const cumulativeDurRaw = await redis.get(durKey);
+    const cumulativeDurRaw = await valkey.get(durKey);
     let curDur = cumulativeDurRaw !== null ? parseFloat(cumulativeDurRaw) : 0;
 
-    const lastTimeRaw = await redis.get(`last_time:${playback.id}`);
-    const lastTickRaw = await redis.get(`last_tick:${playback.id}`);
+    const lastTimeRaw = await valkey.get(`last_time:${playback.id}`);
+    const lastTickRaw = await valkey.get(`last_tick:${playback.id}`);
     if (lastTimeRaw && lastTickRaw) {
         const prevTime = parseInt(lastTimeRaw, 10);
         const prevTick = parseInt(lastTickRaw, 10);
@@ -1214,7 +1214,7 @@ export async function finalizePlaybackSession(input: {
         },
     });
 
-    await cleanupPlaybackRedisKeys(playback.id);
+    await cleanupPlaybackValkeyKeys(playback.id);
     await cleanupActiveStreamForSession(input.sourceServerId, activeStream);
 
     return { closed: true, playbackId: playback.id, durationS };

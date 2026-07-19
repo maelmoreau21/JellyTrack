@@ -8,7 +8,7 @@ import LogsListClient from "./LogsListClient";
 import SystemLogsListClient, { SystemLogEntry } from "./SystemLogsListClient";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
+import valkey from "@/lib/valkey";
 import { getTranslations, getLocale } from 'next-intl/server';
 import type { SafeLog, SafeMedia } from '@/types/logs';
 import type { Prisma } from '@prisma/client';
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { normalizeBitrateToKbps } from "@/lib/bitrate";
 import { buildJellyfinApiKeyHeaders } from "@/lib/jellyfinServers";
 import { normalizeLanguageTag } from "@/lib/language";
-import { buildStreamRedisKey } from "@/lib/serverRegistry";
+import { buildStreamValkeyKey } from "@/lib/serverRegistry";
 
 import Link from "next/link";
 import { getServerSession } from "next-auth";
@@ -453,7 +453,7 @@ export default async function LogsPage({
         await Promise.all(activeStreams.map(async (stream) => {
             let audioStreamIndex: number | null = null;
             try {
-                const scopedPayload = await redis.get(buildStreamRedisKey(stream.serverId, stream.sessionId));
+                const scopedPayload = await valkey.get(buildStreamValkeyKey(stream.serverId, stream.sessionId));
                 if (scopedPayload) {
                     const parsed = JSON.parse(scopedPayload) as Record<string, unknown>;
                     audioStreamIndex = parseAudioStreamIndex(parsed.audioStreamIndex ?? parsed.AudioStreamIndex);

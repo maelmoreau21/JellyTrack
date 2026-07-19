@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
+import valkey from "@/lib/valkey";
 import { readSystemHealthState } from "@/lib/systemHealth";
-import { buildStreamRedisKey } from "@/lib/serverRegistry";
+import { buildStreamValkeyKey } from "@/lib/serverRegistry";
 
 export async function getLogHealthSnapshot() {
     const anomalyWindowStart = new Date();
@@ -55,20 +55,20 @@ export async function getLogHealthSnapshot() {
     const activePairSet = new Set(activeStreams.map((stream) => `${stream.userId}:${stream.mediaId}`));
     const openPlaybackOrphans = openPlaybackHistory.filter((entry) => !activePairSet.has(`${entry.userId}:${entry.mediaId}`));
 
-    let redisKeys: string[] = [];
+    let valkeyKeys: string[] = [];
     try {
-        redisKeys = await redis.keys("stream:*");
+        valkeyKeys = await valkey.keys("stream:*");
     } catch {
-        redisKeys = [];
+        valkeyKeys = [];
     }
 
-    const redisKeySet = new Set(redisKeys);
-    const expectedRedisKeys = new Set(activeStreams.map((stream) => buildStreamRedisKey(stream.serverId, stream.sessionId)));
-    const dbStreamsWithoutRedis = activeStreams.filter((stream) => {
-        const scopedKey = buildStreamRedisKey(stream.serverId, stream.sessionId);
-        return !redisKeySet.has(scopedKey);
+    const valkeyKeySet = new Set(valkeyKeys);
+    const expectedValkeyKeys = new Set(activeStreams.map((stream) => buildStreamValkeyKey(stream.serverId, stream.sessionId)));
+    const dbStreamsWithoutValkey = activeStreams.filter((stream) => {
+        const scopedKey = buildStreamValkeyKey(stream.serverId, stream.sessionId);
+        return !valkeyKeySet.has(scopedKey);
     });
-    const redisOrphanKeys = redisKeys.filter((key) => !expectedRedisKeys.has(key));
+    const valkeyOrphanKeys = valkeyKeys.filter((key) => !expectedValkeyKeys.has(key));
 
     const dailyMap = new Map<string, { day: string; monitorErrors: number; syncErrors: number; backupErrors: number; cleanupOps: number; syncSuccesses: number }>();
     for (let index = 0; index < 14; index++) {
@@ -143,8 +143,8 @@ export async function getLogHealthSnapshot() {
         counts: {
             activeStreams: activeStreams.length,
             openPlaybackOrphans: openPlaybackOrphans.length,
-            dbStreamsWithoutRedis: dbStreamsWithoutRedis.length,
-            redisOrphans: redisOrphanKeys.length,
+            dbStreamsWithoutValkey: dbStreamsWithoutValkey.length,
+            valkeyOrphans: valkeyOrphanKeys.length,
         },
         orphanPlaybacks: openPlaybackOrphans.slice(0, 20).map((entry) => ({
             id: entry.id,
@@ -154,7 +154,7 @@ export async function getLogHealthSnapshot() {
             mediaTitle: entry.media?.title || "Média inconnu",
             library: entry.media?.collectionType || entry.media?.type || "?",
         })),
-        dbStreamsWithoutRedis: dbStreamsWithoutRedis.slice(0, 20).map((entry) => ({
+        dbStreamsWithoutValkey: dbStreamsWithoutValkey.slice(0, 20).map((entry) => ({
             id: entry.id,
             sessionId: entry.sessionId,
             lastPingAt: entry.lastPingAt.toISOString(),
@@ -162,7 +162,7 @@ export async function getLogHealthSnapshot() {
             mediaTitle: entry.media?.title || "Média inconnu",
             library: entry.media?.collectionType || entry.media?.type || "?",
         })),
-        redisOrphanKeys: redisOrphanKeys.slice(0, 20),
+        valkeyOrphanKeys: valkeyOrphanKeys.slice(0, 20),
         recentEvents: healthState.events.slice(0, 20),
         anomalyTimeline: Array.from(dailyMap.values()),
         anomalyBreakdown: Array.from(sourceImpact.entries()).map(([source, value]) => ({ source, value })),

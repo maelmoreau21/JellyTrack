@@ -1,11 +1,11 @@
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
-import { buildStreamRedisKey } from "@/lib/serverRegistry";
+import valkey from "@/lib/valkey";
+import { buildStreamValkeyKey } from "@/lib/serverRegistry";
 import type { LiveStream, ActiveStreamRow } from "@/types/dashboard";
 
 /**
  * Hydrates live streaming information from both the Prisma ActiveStream database
- * and real-time state stored in Redis.
+ * and real-time state stored in Valkey.
  */
 export async function getLiveStreams(selectedServerIds: string[]): Promise<{
   liveStreams: LiveStream[];
@@ -37,24 +37,24 @@ export async function getLiveStreams(selectedServerIds: string[]): Promise<{
   let totalBandwidthMbps = 0;
 
   if (activeStreamsCount > 0) {
-    // Fetch real-time specifics from Redis if they exist
-    const redisKeys = activeStreamEntries.map((s) => buildStreamRedisKey(s.serverId, s.sessionId));
-    const redisPayloads = await Promise.all(redisKeys.map((k) => redis.get(k)));
-    const redisMap = new Map<string, Record<string, unknown>>();
+    // Fetch real-time specifics from Valkey if they exist
+    const valkeyKeys = activeStreamEntries.map((s) => buildStreamValkeyKey(s.serverId, s.sessionId));
+    const valkeyPayloads = await Promise.all(valkeyKeys.map((k) => valkey.get(k)));
+    const valkeyMap = new Map<string, Record<string, unknown>>();
 
-    redisPayloads.forEach((p, idx) => {
+    valkeyPayloads.forEach((p, idx) => {
       if (p) {
         try {
           const parsed = JSON.parse(p);
           const stream = activeStreamEntries[idx];
-          redisMap.set(`${stream.serverId}:${stream.sessionId}`, parsed);
+          valkeyMap.set(`${stream.serverId}:${stream.sessionId}`, parsed);
         } catch {}
       }
     });
 
     const relatedPairs = new Set<string>();
     for (const entry of activeStreamEntries) {
-      // We also need parent and grandparent for hierarchical display if not in Redis
+      // We also need parent and grandparent for hierarchical display if not in Valkey
       if (entry.media?.parentId) {
         relatedPairs.add(JSON.stringify([entry.serverId, entry.media.parentId]));
       }
@@ -87,7 +87,7 @@ export async function getLiveStreams(selectedServerIds: string[]): Promise<{
     const mediaHierarchyMap = new Map(relatedMedia.map((m) => [`${m.serverId}:${m.jellyfinMediaId}`, m]));
 
     liveStreams = activeStreamEntries.map((dbStream) => {
-      const payload = (redisMap.get(`${dbStream.serverId}:${dbStream.sessionId}`) || {}) as Record<string, unknown>;
+      const payload = (valkeyMap.get(`${dbStream.serverId}:${dbStream.sessionId}`) || {}) as Record<string, unknown>;
 
       const isTranscoding =
         dbStream.playMethod === "Transcode" ||

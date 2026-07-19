@@ -13,8 +13,8 @@
   "common": {
     "directStream": "Direct stream"
   },
-  "dbWithoutRedis": "DB without Redis",
-  "dbWithoutRedisDesc": "ActiveStream records are present in the database but missing from the Redis cache.",
+  "dbWithoutValkey": "DB without Valkey",
+  "dbWithoutValkeyDesc": "ActiveStream records are present in the database but missing from the Valkey cache.",
   "excludedLibrariesDesc": "Libraries completely ignored for logs and analytics.",
   "excludedLibrariesTitle": "Excluded libraries",
   "granular": {
@@ -43,8 +43,8 @@
   "playbackHistoryNote": "PlaybackHistory open without an associated ActiveStream.",
   "recentClosuresDesc": "Summary of cleanups performed by monitor, sync and backups.",
   "recentClosuresTitle": "Recent auto-closures",
-  "redisOrphan": "Redis orphan keys",
-  "redisOrphanDesc": "Redis keys referencing streams without a corresponding ActiveStream.",
+  "valkeyOrphan": "Valkey orphan keys",
+  "valkeyOrphanDesc": "Valkey keys referencing streams without a corresponding ActiveStream.",
   "running": "Running",
   "settings": {
     "authSecurity": "Security",

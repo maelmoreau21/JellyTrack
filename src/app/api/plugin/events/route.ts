@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import redis from "@/lib/redis";
+import valkey from "@/lib/valkey";
 import { getGeoLocation } from "@/lib/geoip";
 import { inferLibraryKey, isLibraryExcluded } from "@/lib/mediaPolicy";
 import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
@@ -13,7 +13,7 @@ import { isValidDiscordWebhook, safeFetchWebhook } from "@/lib/webhookValidator"
 import { getClientIp } from "@/lib/requestIp";
 import { getCachedPluginIngestSettings } from "@/lib/pluginTelemetrySettings";
 import {
-    buildStreamRedisKey,
+    buildStreamValkeyKey,
     extractServerIdentityFromPayload,
     upsertServerRecord,
 } from "@/lib/serverRegistry";
@@ -569,13 +569,13 @@ export async function POST(req: Request) {
                             historyId = existingOpen.id;
                         }
 
-                        // Initialize Redis tracking keys for accurate cumulative duration
+                        // Initialize valkey tracking keys for accurate cumulative duration
                         if (historyId) {
                             activePlaybackHistoryId = historyId;
                             await Promise.all([
-                                redis.setex(`last_time:${historyId}`, 86400, now.toString()),
-                                redis.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
-                                redis.setex(`start_pos:${historyId}`, 86400, positionTicks.toString()),
+                                valkey.setex(`last_time:${historyId}`, 86400, now.toString()),
+                                valkey.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
+                                valkey.setex(`start_pos:${historyId}`, 86400, positionTicks.toString()),
                             ]);
                         }
                     } else {
@@ -629,15 +629,15 @@ export async function POST(req: Request) {
                         if (historyId) {
                             activePlaybackHistoryId = historyId;
                             await Promise.all([
-                                redis.setex(`last_time:${historyId}`, 86400, now.toString()),
-                                redis.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
-                                redis.setex(`start_pos:${historyId}`, 86400, positionTicks.toString()),
+                                valkey.setex(`last_time:${historyId}`, 86400, now.toString()),
+                                valkey.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
+                                valkey.setex(`start_pos:${historyId}`, 86400, positionTicks.toString()),
                             ]);
                         }
                     }
                 } finally {
                     try {
-                        if (lock.acquired) await redis.del(lock.key);
+                        if (lock.acquired) await valkey.del(lock.key);
                     } catch {}
                 }
             }
@@ -706,8 +706,8 @@ export async function POST(req: Request) {
                     },
                 });
 
-                // Redis live stream data
-                const redisPayload = JSON.stringify({
+                // valkey live stream data
+                const valkeyPayload = JSON.stringify({
                     sessionId,
                     SessionId: sessionId,
                     serverId: sourceServer.id,
@@ -759,7 +759,7 @@ export async function POST(req: Request) {
                     subtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
                     SubtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
                 });
-                await redis.setex(buildStreamRedisKey(sourceServer.id, sessionId), 60, redisPayload);
+                await valkey.setex(buildStreamValkeyKey(sourceServer.id, sessionId), 60, valkeyPayload);
             }
 
             // Discord notification
@@ -1018,7 +1018,7 @@ export async function POST(req: Request) {
                 });
 
                 if (jumpDetails) {
-                    await redis.setex(`jump:${playbackId}`, 30, JSON.stringify({
+                    await valkey.setex(`jump:${playbackId}`, 30, JSON.stringify({
                         fromMs: jumpDetails.fromMs,
                         toMs: jumpDetails.toMs,
                         at: Date.now(),
@@ -1026,8 +1026,8 @@ export async function POST(req: Request) {
                 }
             }
 
-            const redisKey = buildStreamRedisKey(sourceServer.id, sessionId);
-            const cachedStream = await redis.get(redisKey);
+            const valkeyKey = buildStreamValkeyKey(sourceServer.id, sessionId);
+            const cachedStream = await valkey.get(valkeyKey);
             if (cachedStream) {
                 try {
                     const parsed = JSON.parse(cachedStream) as Record<string, unknown>;
@@ -1063,7 +1063,7 @@ export async function POST(req: Request) {
                         parsed.playbackPositionTicks = positionTicks;
                         parsed.PlaybackPositionTicks = positionTicks;
                     }
-                    await redis.setex(redisKey, 60, JSON.stringify(parsed));
+                    await valkey.setex(valkeyKey, 60, JSON.stringify(parsed));
                 } catch {
                     // Ignore malformed legacy live-stream cache entries.
                 }
@@ -1388,7 +1388,7 @@ export async function POST(req: Request) {
                     }
                 } finally {
                     try {
-                        if (lock.acquired) await redis.del(lock.key);
+                        if (lock.acquired) await valkey.del(lock.key);
                     } catch {}
                 }
             }
@@ -1400,9 +1400,9 @@ export async function POST(req: Request) {
 
             // Ensure we have a start position recorded (for fallback)
             const startPosKey = `start_pos:${activePlayback.id}`;
-            const existingStart = await redis.get(startPosKey);
+            const existingStart = await valkey.get(startPosKey);
             if (!existingStart && positionTicks >= 0) {
-                await redis.setex(startPosKey, 86400, positionTicks.toString());
+                await valkey.setex(startPosKey, 86400, positionTicks.toString());
             }
 
             // --- ACCUMULATE ACCURATE DURATION ---
@@ -1410,9 +1410,9 @@ export async function POST(req: Request) {
             const lastTimeKey = `last_time:${activePlayback.id}`;
             const lastTickKey = `last_tick:${activePlayback.id}`;
 
-            const prevDurRaw = await redis.get(durKey);
-            const prevTimeRaw = await redis.get(lastTimeKey);
-            const prevTickRaw = await redis.get(lastTickKey);
+            const prevDurRaw = await valkey.get(durKey);
+            const prevTimeRaw = await valkey.get(lastTimeKey);
+            const prevTickRaw = await valkey.get(lastTickKey);
 
             let curDur = parseFloat(prevDurRaw || "0");
             const prevTime = prevTimeRaw ? parseInt(prevTimeRaw, 10) : null;
@@ -1444,9 +1444,9 @@ export async function POST(req: Request) {
             }
 
             await Promise.all([
-                redis.setex(durKey, 86400, curDur.toString()),
-                redis.setex(lastTimeKey, 86400, now.toString()),
-                redis.setex(lastTickKey, 86400, positionTicks.toString())
+                valkey.setex(durKey, 86400, curDur.toString()),
+                valkey.setex(lastTimeKey, 86400, now.toString()),
+                valkey.setex(lastTickKey, 86400, positionTicks.toString())
             ]);
 
             const durationWatched = clampDuration(Math.round(curDur), media.durationMs);
@@ -1474,7 +1474,7 @@ export async function POST(req: Request) {
                     deltaMs: seekDeltaMs,
                     source: "progress_delta",
                 });
-                const previousJumpRaw = await redis.get(`jump:${activePlayback.id}`);
+                const previousJumpRaw = await valkey.get(`jump:${activePlayback.id}`);
                 let duplicateJump = false;
                 if (previousJumpRaw) {
                     try {
@@ -1500,7 +1500,7 @@ export async function POST(req: Request) {
                         positionMs,
                         metadata: JSON.stringify(metadata),
                     });
-                    await redis.setex(`jump:${activePlayback.id}`, 30, JSON.stringify({
+                    await valkey.setex(`jump:${activePlayback.id}`, 30, JSON.stringify({
                         fromMs: prevPositionMs,
                         toMs: currentPositionMs,
                         at: now,
@@ -1524,7 +1524,7 @@ export async function POST(req: Request) {
                 }
 
                 const rateKey = `rate:${activePlayback.id}`;
-                const previousRateRaw = await redis.get(rateKey);
+                const previousRateRaw = await valkey.get(rateKey);
                 let previousRate: { bucket?: number; rate?: number; at?: number } | null = null;
                 if (previousRateRaw) {
                     try {
@@ -1564,7 +1564,7 @@ export async function POST(req: Request) {
                     });
                 }
 
-                await redis.setex(rateKey, 86400, JSON.stringify({
+                await valkey.setex(rateKey, 86400, JSON.stringify({
                     rate: rateObservation.rate,
                     bucket: rateObservation.bucket,
                     source: rateObservation.source,
@@ -1575,21 +1575,21 @@ export async function POST(req: Request) {
 
             // Pause tracking
             const pauseKey = `pause:${activePlayback.id}`;
-            const prevPauseState = await redis.get(pauseKey);
+            const prevPauseState = await valkey.get(pauseKey);
             if (hasPausedState) {
                 if (isPaused && prevPauseState !== "paused") {
                     updates.pauseCount = { increment: 1 };
-                    await redis.setex(pauseKey, 3600, "paused");
+                    await valkey.setex(pauseKey, 3600, "paused");
                     if (positionMs > 0) telemetryEvents.push({ eventType: "pause", positionMs });
                 } else if (!isPaused && prevPauseState === "paused") {
-                    await redis.setex(pauseKey, 3600, "playing");
+                    await valkey.setex(pauseKey, 3600, "playing");
                 }
             }
 
             // Audio change tracking (store readable labels with the index)
             if (audioStreamIndex !== undefined && audioStreamIndex !== null) {
                 const audioKey = `audio:${activePlayback.id}`;
-                const prevRaw = await redis.get(audioKey);
+                const prevRaw = await valkey.get(audioKey);
                 let prevObj: unknown = null;
                 let prevIndex: unknown = null;
                 if (prevRaw !== null) {
@@ -1622,13 +1622,13 @@ export async function POST(req: Request) {
                 }
 
                 const toObj = { index: audioStreamIndex, language: resolvedAudioLanguage ?? null, codec: resolvedAudioCodec ?? null };
-                await redis.setex(audioKey, 3600, JSON.stringify(toObj));
+                await valkey.setex(audioKey, 3600, JSON.stringify(toObj));
             }
 
             // Subtitle change tracking (store readable labels with the index)
             if (subtitleStreamIndex !== undefined && subtitleStreamIndex !== null) {
                 const subKey = `sub:${activePlayback.id}`;
-                const prevRaw = await redis.get(subKey);
+                const prevRaw = await valkey.get(subKey);
                 let prevObj: unknown = null;
                 let prevIndex: unknown = null;
                 if (prevRaw !== null) {
@@ -1660,7 +1660,7 @@ export async function POST(req: Request) {
                 }
 
                 const toObj = { index: subtitleStreamIndex, language: resolvedSubtitleLanguage ?? null, codec: resolvedSubtitleCodec ?? null };
-                await redis.setex(subKey, 3600, JSON.stringify(toObj));
+                await valkey.setex(subKey, 3600, JSON.stringify(toObj));
             }
 
             if (Object.keys(updates).length > 0) {
@@ -1672,7 +1672,7 @@ export async function POST(req: Request) {
                 });
             }
 
-            // Update ActiveStream position + Redis
+            // Update ActiveStream position + valkey
             if (sessionId) {
                 await (prisma.activeStream as any).upsert({
                     where: { sessionId_serverId: { sessionId, serverId: sourceServer.id } },
@@ -1722,8 +1722,8 @@ export async function POST(req: Request) {
                 });
 
                 const progressPercent = computeProgressPercent(positionTicks, runTimeTicks > 0 ? runTimeTicks : null);
-                const redisKey = buildStreamRedisKey(sourceServer.id, sessionId);
-                const cachedStream = await redis.get(redisKey);
+                const valkeyKey = buildStreamValkeyKey(sourceServer.id, sessionId);
+                const cachedStream = await valkey.get(valkeyKey);
                 let parsed: Record<string, unknown> = {};
                 if (cachedStream) {
                     try {
@@ -1744,7 +1744,7 @@ export async function POST(req: Request) {
                     parentItemId: parentItemId || media.parentId,
                 });
 
-                const redisPayload = {
+                const valkeyPayload = {
                     ...parsed,
                     sessionId,
                     SessionId: sessionId,
@@ -1798,7 +1798,7 @@ export async function POST(req: Request) {
                     SubtitleStreamIndex: subtitleStreamIndex ?? parsed?.SubtitleStreamIndex ?? parsed?.subtitleStreamIndex ?? null,
                 };
 
-                await redis.setex(redisKey, 60, JSON.stringify(redisPayload));
+                await valkey.setex(valkeyKey, 60, JSON.stringify(valkeyPayload));
             }
 
             return corsJson({ success: true, message: "PlaybackProgress processed." });
@@ -1839,3 +1839,5 @@ export async function POST(req: Request) {
         return corsJson({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPredictions } from "@/lib/predictions";
-import redis from "@/lib/redis";
+import valkey from "@/lib/valkey";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 
 const CACHE_KEY = "jellytrack:predictions";
@@ -12,7 +12,7 @@ export async function GET() {
 
   try {
     // Try cache first
-    const cached = await redis.get(CACHE_KEY).catch(() => null);
+    const cached = await valkey.get(CACHE_KEY).catch(() => null);
     if (cached) {
       try {
         return NextResponse.json(JSON.parse(cached));
@@ -22,7 +22,7 @@ export async function GET() {
     const data = await getPredictions();
     
     // Cache result
-    await redis.setex(CACHE_KEY, CACHE_TTL, JSON.stringify(data)).catch(() => {});
+    await valkey.setex(CACHE_KEY, CACHE_TTL, JSON.stringify(data)).catch(() => {});
 
     return NextResponse.json(data);
   } catch (err) {

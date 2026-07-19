@@ -1,7 +1,7 @@
-import redis from "@/lib/redis";
+import valkey from "@/lib/valkey";
 
 /**
- * Simple Redis-based rate limiter for login attempts.
+ * Simple Valkey-based rate limiter for login attempts.
  * Blocks an IP after MAX_ATTEMPTS failed logins within WINDOW_SECONDS.
  * 
  * Usage in NextAuth authorize():
@@ -12,7 +12,7 @@ import redis from "@/lib/redis";
 const MAX_ATTEMPTS = 5;           // Max failed attempts per window
 const WINDOW_SECONDS = 15 * 60;   // 15-minute sliding window
 const BLOCK_SECONDS = 15 * 60;    // Block duration after max attempts
-const hasRedisUrl = Boolean(process.env.REDIS_URL?.trim());
+const hasValkeyUrl = Boolean((process.env.VALKEY_URL || process.env.REDIS_URL)?.trim());
 
 type InMemoryLoginState = {
     attempts: number;
@@ -84,61 +84,61 @@ function resetInMemoryRate(ip: string): void {
 }
 
 export async function checkLoginRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number; retryAfterSeconds?: number }> {
-    if (!hasRedisUrl) {
+    if (!hasValkeyUrl) {
         return checkInMemoryRate(ip);
     }
 
     const key = getKey(ip);
 
     try {
-        const current = await redis.get(key);
+        const current = await valkey.get(key);
         const attempts = current ? parseInt(current, 10) : 0;
 
         if (attempts >= MAX_ATTEMPTS) {
-            const ttl = await redis.ttl(key);
+            const ttl = await valkey.ttl(key);
             return { allowed: false, remaining: 0, retryAfterSeconds: ttl > 0 ? ttl : BLOCK_SECONDS };
         }
 
         return { allowed: true, remaining: MAX_ATTEMPTS - attempts };
     } catch (error) {
-        console.error("[RateLimit] Redis error, using in-memory fallback:", error);
+        console.error("[RateLimit] Valkey error, using in-memory fallback:", error);
         return checkInMemoryRate(ip);
     }
 }
 
 export async function recordFailedLogin(ip: string): Promise<void> {
-    if (!hasRedisUrl) {
+    if (!hasValkeyUrl) {
         recordInMemoryFailure(ip);
         return;
     }
 
     const key = getKey(ip);
     try {
-        const count = await redis.incr(key);
+        const count = await valkey.incr(key);
         if (count === 1) {
             // First attempt — set the expiry window
-            await redis.expire(key, WINDOW_SECONDS);
+            await valkey.expire(key, WINDOW_SECONDS);
         }
         // If the user hit the limit, extend the block
         if (count >= MAX_ATTEMPTS) {
-            await redis.expire(key, BLOCK_SECONDS);
+            await valkey.expire(key, BLOCK_SECONDS);
         }
     } catch (error) {
-        console.error("[RateLimit] Failed to record attempt in Redis, using in-memory fallback:", error);
+        console.error("[RateLimit] Failed to record attempt in Valkey, using in-memory fallback:", error);
         recordInMemoryFailure(ip);
     }
 }
 
 export async function resetLoginRateLimit(ip: string): Promise<void> {
-    if (!hasRedisUrl) {
+    if (!hasValkeyUrl) {
         resetInMemoryRate(ip);
         return;
     }
 
     try {
-        await redis.del(getKey(ip));
+        await valkey.del(getKey(ip));
     } catch (error) {
-        console.error("[RateLimit] Failed to reset in Redis, using in-memory fallback:", error);
+        console.error("[RateLimit] Failed to reset in Valkey, using in-memory fallback:", error);
         resetInMemoryRate(ip);
     }
 }

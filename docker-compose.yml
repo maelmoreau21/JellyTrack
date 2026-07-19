@@ -21,7 +21,7 @@ services:
       DB_NAME: ${DB_NAME:-}
 
       # Core app
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      VALKEY_URL: ${VALKEY_URL:-${REDIS_URL:-redis://valkey:6379}}
       JELLYTRACK_MODE: ${JELLYTRACK_MODE:-single}
       PORT: ${PORT:-3000}
       APP_VERSION: ${APP_VERSION:-dev}
@@ -51,7 +51,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
+      valkey:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:$$(cat /tmp/jellytrack-port 2>/dev/null || echo 3000)/api/health || exit 1"]
@@ -81,9 +81,9 @@ services:
       retries: 5
     restart: unless-stopped
 
-  redis:
-    image: ${REDIS_IMAGE:-valkey/valkey:8-alpine}
-    container_name: JellyTrack_redis
+  valkey:
+    image: ${VALKEY_IMAGE:-${REDIS_IMAGE:-valkey/valkey:8-alpine}}
+    container_name: JellyTrack_valkey
     command: >
       sh -c "
       if command -v valkey-server >/dev/null 2>&1; then
@@ -93,7 +93,7 @@ services:
       fi
       "
     volumes:
-      - JellyTrack_redisdata:/data
+      - JellyTrack_valkeydata:/data
     networks:
       - JellyTrack_net
     healthcheck:
@@ -109,5 +109,5 @@ networks:
 
 volumes:
   JellyTrack_pgdata:
-  JellyTrack_redisdata:
+  JellyTrack_valkeydata:
   JellyTrack_backups:

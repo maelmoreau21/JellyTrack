@@ -42,7 +42,7 @@ const mocks = vi.hoisted(() => {
         },
     };
 
-    const redis = {
+    const valkey = {
         get: vi.fn(),
         setex: vi.fn(),
         del: vi.fn(),
@@ -52,7 +52,7 @@ const mocks = vi.hoisted(() => {
 
     return {
         prisma,
-        redis,
+        valkey,
         sourceServer: {
             id: "server-db-1",
             jellyfinServerId: "jellyfin-main",
@@ -63,7 +63,7 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/prisma", () => ({ default: mocks.prisma }));
-vi.mock("@/lib/redis", () => ({ default: mocks.redis }));
+vi.mock("@/lib/valkey", () => ({ default: mocks.valkey }));
 vi.mock("@/lib/geoip", () => ({ getGeoLocation: vi.fn(() => ({ country: null, city: null })) }));
 vi.mock("@/lib/mediaPolicy", () => ({
     inferLibraryKey: vi.fn(() => "movies"),
@@ -123,7 +123,7 @@ vi.mock("@/lib/pluginTelemetrySettings", () => ({
     })),
 }));
 vi.mock("@/lib/serverRegistry", () => ({
-    buildStreamRedisKey: vi.fn((serverId: string, sessionId: string) => `stream:${serverId}:${sessionId}`),
+    buildStreamValkeyKey: vi.fn((serverId: string, sessionId: string) => `stream:${serverId}:${sessionId}`),
     extractServerIdentityFromPayload: vi.fn((payload: Record<string, unknown>) => ({
         jellyfinServerId: String(payload.serverId || "jellyfin-main"),
         name: "Jellyfin Main",
@@ -198,7 +198,7 @@ const activePlayback = {
 describe("/api/plugin/events schema v3 ingestion", () => {
     beforeEach(() => {
         resetMockTree(mocks.prisma);
-        resetMockTree(mocks.redis);
+        resetMockTree(mocks.valkey);
 
         mocks.prisma.globalSettings.upsert.mockResolvedValue({});
         mocks.prisma.$transaction.mockImplementation(async (callback: any) => callback(mocks.prisma));
@@ -218,9 +218,9 @@ describe("/api/plugin/events schema v3 ingestion", () => {
         mocks.prisma.activeStream.delete.mockResolvedValue({});
         mocks.prisma.activeStream.upsert.mockResolvedValue({});
         mocks.prisma.user.update.mockResolvedValue(streamUser);
-        mocks.redis.get.mockResolvedValue(null);
-        mocks.redis.setex.mockResolvedValue("OK");
-        mocks.redis.del.mockResolvedValue(1);
+        mocks.valkey.get.mockResolvedValue(null);
+        mocks.valkey.setex.mockResolvedValue("OK");
+        mocks.valkey.del.mockResolvedValue(1);
     });
 
     it("records a downloaded movie as a completed download view", async () => {
@@ -520,7 +520,7 @@ describe("/api/plugin/events schema v3 ingestion", () => {
             media: streamMedia,
         });
         mocks.prisma.playbackHistory.findUnique.mockResolvedValue({ ...activePlayback, maxPlaybackRate: null });
-        mocks.redis.get.mockImplementation(async (key: string) => {
+        mocks.valkey.get.mockImplementation(async (key: string) => {
             if (key === "dur:playback-1") return "30";
             if (key === "last_time:playback-1") return String(now - 5_000);
             if (key === "last_tick:playback-1") return String(500_000_000);
@@ -583,7 +583,7 @@ describe("/api/plugin/events schema v3 ingestion", () => {
             media: streamMedia,
         });
         mocks.prisma.playbackHistory.findUnique.mockResolvedValue({ ...activePlayback, maxPlaybackRate: null });
-        mocks.redis.get.mockImplementation(async (key: string) => {
+        mocks.valkey.get.mockImplementation(async (key: string) => {
             if (key === "dur:playback-1") return "30";
             if (key === "last_time:playback-1") return String(now - 10_000);
             if (key === "last_tick:playback-1") return String(100_000_000);
@@ -628,3 +628,4 @@ describe("/api/plugin/events schema v3 ingestion", () => {
         }));
     });
 });
+

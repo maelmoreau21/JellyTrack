@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
             findFirst: vi.fn(),
         },
     },
-    redis: {
+    valkey: {
         get: vi.fn(),
     },
     requireAdmin: vi.fn(),
@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/prisma", () => ({ default: mocks.prisma }));
-vi.mock("@/lib/redis", () => ({ default: mocks.redis }));
+vi.mock("@/lib/valkey", () => ({ default: mocks.valkey }));
 vi.mock("@/lib/auth", () => ({
     requireAdmin: mocks.requireAdmin,
     isAuthError: (res: any) => res instanceof NextResponse,
@@ -39,7 +39,7 @@ describe("/api/health", () => {
         process.env = { ...originalEnv };
         // Default happy path mocks
         mocks.prisma.$queryRaw = vi.fn().mockResolvedValue([{ 1: 1 }]);
-        mocks.redis.get.mockResolvedValue("pong");
+        mocks.valkey.get.mockResolvedValue("pong");
         mocks.getConfiguredJellyfinServers.mockResolvedValue([]);
     });
 
@@ -54,7 +54,7 @@ describe("/api/health", () => {
         expect(body).toEqual({ status: "up" });
     });
 
-    it("returns public minimal response with 503 status code when database or redis is down", async () => {
+    it("returns public minimal response with 503 status code when database or valkey is down", async () => {
         // Return an auth error
         mocks.requireAdmin.mockResolvedValue(NextResponse.json({ error: "Forbidden" }, { status: 403 }));
         // Mock database failure
@@ -82,7 +82,7 @@ describe("/api/health", () => {
         expect(body.status).toBe("up");
         expect(body.services).toEqual({
             database: "up",
-            redis: "up",
+            valkey: "up",
             jellyfin: "up",
         });
         expect(body.jellyfinServers).toEqual({
@@ -104,17 +104,17 @@ describe("/api/health", () => {
         expect(body.errors.database).not.toContain("user123");
     });
 
-    it("redacts credentials from redis errors for admin", async () => {
+    it("redacts credentials from valkey errors for admin", async () => {
         mocks.requireAdmin.mockResolvedValue({ isAdmin: true });
-        process.env.REDIS_URL = "redis://:secret_redis_key_777@redis.host:6379";
-        mocks.redis.get.mockRejectedValue(new Error("Failed connection to redis://:secret_redis_key_777@redis.host:6379"));
+        process.env.valkey_URL = "valkey://:secret_valkey_key_777@valkey.host:6379";
+        mocks.valkey.get.mockRejectedValue(new Error("Failed connection to valkey://:secret_valkey_key_777@valkey.host:6379"));
 
         const response = await GET();
         const body = await response.json();
 
         expect(response.status).toBe(503);
-        expect(body.errors.redis).toContain("[REDACTED]");
-        expect(body.errors.redis).not.toContain("secret_redis_key_777");
+        expect(body.errors.valkey).toContain("[REDACTED]");
+        expect(body.errors.valkey).not.toContain("secret_valkey_key_777");
     });
 
     it("redacts API keys and URLs from jellyfin errors for admin", async () => {
@@ -133,3 +133,4 @@ describe("/api/health", () => {
         expect(body.errors.jellyfin).not.toContain("secret_api_key_555");
     });
 });
+
