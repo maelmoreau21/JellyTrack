@@ -5,8 +5,7 @@ import { PlayCircle, LayoutList, Rows3, Headphones, Languages, MapPin } from "lu
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FallbackImage } from "@/components/FallbackImage";
 import { KillStreamButton } from "@/components/dashboard/KillStreamButton";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { formatMediaSubtitle } from "@/lib/mediaSubtitle";
 
 interface LiveStream {
     serverId: string;
@@ -53,15 +52,14 @@ function StreamCard({ stream }: { stream: LiveStream }) {
     const posterId = stream.posterItemId || stream.itemId;
     const mediaHref = stream.itemId ? `/media/${stream.itemId}` : null;
 
-    let detail: string | null = null;
-    if (stream.mediaSubtitle) detail = stream.mediaSubtitle;
-    else if (isAudio) {
-        const a = stream.albumArtist ? `${stream.albumArtist}` : '';
-        const b = stream.albumName ? `${stream.albumName}` : '';
-        detail = [a, b].filter(Boolean).join(' — ') || null;
-    } else if (stream.seriesName || stream.seasonName) {
-        detail = `${stream.seriesName || ''}${stream.seasonName ? ` — ${stream.seasonName}` : ''}`.trim() || null;
-    }
+    const detail = formatMediaSubtitle({
+        type: stream.mediaType,
+        seriesName: stream.seriesName,
+        seasonName: stream.seasonName,
+        albumName: stream.albumName,
+        albumArtist: stream.albumArtist,
+        parentTitle: stream.mediaSubtitle || null,
+    });
 
     return (
         <div className="flex items-center gap-4 p-3 border rounded-lg border-border/50 app-surface-soft hover:bg-slate-900/5 dark:hover:bg-white/5 transition-colors">

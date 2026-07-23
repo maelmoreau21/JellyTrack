@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ArrowUpDown, Download, Filter, Film, Tv, Music, BookOpen, Server } from "lucide-react";
+import { Search, ArrowUpDown, Download, Filter, Film, Tv, Music, BookOpen, Server, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
@@ -137,6 +137,24 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                             <Filter className={`w-4 h-4 mr-2 ${isAdvancedOpen ? 'text-primary' : ''}`} />
                             <span className="text-sm font-semibold">{tc('filters')}</span>
                         </Button>
+
+                        {Boolean(initialQuery || initialType || initialClient || initialAudio || initialSubtitle || initialDateFrom || initialDateTo || !initialHideZapped || (initialSort && initialSort !== 'date_desc')) && (
+                            <Button 
+                                type="button" 
+                                variant="ghost"
+                                size="sm"
+                                className="h-10 md:h-9 px-2.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                onClick={() => {
+                                    setMediaTypes([]);
+                                    setSelectedServers([]);
+                                    router.push(window.location.pathname);
+                                }}
+                                title="Réinitialiser tous les filtres"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                                <span className="text-xs font-semibold">Réinitialiser</span>
+                            </Button>
+                        )}
                     </div>
 
 

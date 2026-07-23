@@ -474,6 +474,24 @@ export default async function LogsPage({
         }));
         const activePairSet = new Set(activeStreams.map(e => `${e.userId}:${e.mediaId}`));
 
+        const reconnectionLogIds = new Set<string>();
+        for (let i = 0; i < logs.length; i++) {
+            const l1 = logs[i];
+            const t1 = l1.startedAt.getTime();
+            for (let j = 0; j < logs.length; j++) {
+                if (i === j) continue;
+                const l2 = logs[j];
+                if (l1.userId === l2.userId && l1.mediaId === l2.mediaId) {
+                    const t2End = l2.endedAt ? l2.endedAt.getTime() : l2.startedAt.getTime();
+                    const diff = Math.abs(t1 - t2End);
+                    if (diff >= 0 && diff <= 30000) {
+                        reconnectionLogIds.add(l1.id);
+                        break;
+                    }
+                }
+            }
+        }
+
         safeLogs = logs.map(log => ({
             ...log,
             serverId: log.serverId,
@@ -484,6 +502,7 @@ export default async function LogsPage({
             isActuallyActive: !log.endedAt && activePairSet.has(`${log.userId}:${log.mediaId}`),
             bitrate: normalizeBitrateToKbps(log.bitrate),
             anomalyFlags: Array.from(anomalyFlagsByLogId.get(log.id) || []),
+            isReconnection: reconnectionLogIds.has(log.id),
         }));
 
         const metaRequests: JellyfinMetaRequest[] = safeLogs.flatMap((log) =>

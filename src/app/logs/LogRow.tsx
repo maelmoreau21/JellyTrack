@@ -5,7 +5,7 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, RefreshCw } from "lucide-react";
 import { FallbackImage } from "@/components/FallbackImage";
 import { useTranslations } from 'next-intl';
 import { normalizeResolution } from '@/lib/utils';
@@ -331,9 +331,17 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
             case 'status':
               return (
                 <TableCell key="status" className={cn("hidden md:table-cell border-r border-border")}>
-                  <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
-                    {log.playMethod || 'DirectPlay'}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
+                      {log.playMethod || 'DirectPlay'}
+                    </Badge>
+                    {log.isReconnection && (
+                      <Badge className="bg-sky-500/15 text-sky-400 border border-sky-500/30 text-[10px] px-1.5 py-0.5 flex items-center gap-1 cursor-help" title="Reconnexion réseau détectée (< 30s après déconnexion)">
+                        <RefreshCw className="w-3 h-3 text-sky-400" />
+                        Reconnexion
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
               );
 

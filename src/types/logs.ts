@@ -60,4 +60,5 @@ export type SafeLog = {
   bitrate?: number | null;
   anomalyFlags?: string[];
   ipBurstCount?: number | null;
+  isReconnection?: boolean;
 };

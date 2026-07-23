@@ -48,6 +48,12 @@ export async function GET(request: Request) {
     const conditions: Prisma.PlaybackHistoryWhereInput[] = [];
     if (hideZapped) conditions.push(ZAPPING_CONDITION);
 
+    const userIdParam = searchParams.get("userId") || searchParams.get("user") || "";
+    if (userIdParam) {
+        const userIds = userIdParam.split(',').map(s => s.trim()).filter(Boolean);
+        if (userIds.length > 0) conditions.push({ userId: { in: userIds } });
+    }
+
     if (query) {
         conditions.push({
             OR: [

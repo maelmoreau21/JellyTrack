@@ -12,6 +12,7 @@ import { authOptions } from "@/lib/authOptions";
 import { redirect } from "next/navigation";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { buildExcludedMediaClause } from '@/lib/mediaPolicy';
+import { formatMediaSubtitle } from "@/lib/mediaSubtitle";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import { cookies } from "next/headers";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
@@ -104,17 +105,42 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
     skip: (page - 1) * ITEMS_PER_PAGE,
     select: {
       id: true,
+      serverId: true,
       jellyfinMediaId: true,
       title: true,
       type: true,
       genres: true,
       resolution: true,
       parentId: true,
+      artist: true,
       dateAdded: true,
       createdAt: true,
       _count: { select: { playbackHistory: true } },
     },
   });
+
+  const parentPairs = new Set<string>();
+  recentMedia.forEach((m) => {
+    if (m.parentId && m.serverId) {
+      parentPairs.add(JSON.stringify([m.serverId, m.parentId]));
+    }
+  });
+  const parentTargets = Array.from(parentPairs).map((pair) => {
+    const parsed = JSON.parse(pair) as [string, string];
+    return { serverId: parsed[0], jellyfinMediaId: parsed[1] };
+  });
+  const parentMedia = parentTargets.length > 0
+    ? await prisma.media.findMany({
+        where: {
+          OR: parentTargets.map((target) => ({
+            serverId: target.serverId,
+            jellyfinMediaId: target.jellyfinMediaId,
+          })),
+        },
+        select: { serverId: true, jellyfinMediaId: true, title: true, type: true, artist: true },
+      })
+    : [];
+  const parentMap = new Map(parentMedia.map(pm => [`${pm.serverId}:${pm.jellyfinMediaId}`, pm]));
 
   const buildUrl = (params: Record<string, string | undefined>) => {
     const sp = new URLSearchParams();
@@ -160,6 +186,12 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
             const dateAdded = new Date(media.dateAdded || media.createdAt);
             const isRecent = isNew(dateAdded);
             const plays = media._count.playbackHistory;
+            const parent = media.parentId ? parentMap.get(`${media.serverId}:${media.parentId}`) : null;
+            const subtitle = formatMediaSubtitle({
+              type: media.type,
+              parentTitle: parent?.title || null,
+              artist: media.artist || parent?.artist || null,
+            }, locale);
 
             return (
               <Link key={media.id} href={`/media/${media.jellyfinMediaId}`} className="group flex flex-col space-y-2 relative">
@@ -189,6 +221,9 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                   {/* Hover overlay with metadata */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
                     <h3 className="text-sm font-bold text-white truncate">{media.title}</h3>
+                    {subtitle && (
+                      <p className="text-[11px] text-zinc-300 truncate">{subtitle}</p>
+                    )}
                     <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-1">
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -217,6 +252,9 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
                 {/* Title below poster (visible when not hovering) */}
                 <div className="px-0.5">
                   <h3 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{media.title}</h3>
+                  {subtitle && (
+                    <p className="text-[11px] font-medium text-muted-foreground truncate">{subtitle}</p>
+                  )}
                   <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
                     <Clock className="w-3 h-3" />
                     {dateAdded.toLocaleDateString(locale, { day: "numeric", month: "short" })}

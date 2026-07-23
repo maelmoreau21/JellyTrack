@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import LogsListClient from "@/app/logs/LogsListClient";
 import LogSearchBar from "@/app/logs/LogSearchBar";
 import { LogFilters } from "@/app/logs/LogFilters";
@@ -243,6 +243,24 @@ export default async function UserRecentMedia({
         }, locale);
     }
 
+    const reconnectionSet = new Set<string>();
+    for (let i = 0; i < sessions.length; i++) {
+        const s1 = sessions[i];
+        const t1 = s1.startedAt.getTime();
+        for (let j = 0; j < sessions.length; j++) {
+            if (i === j) continue;
+            const s2 = sessions[j];
+            if (s1.userId === s2.userId && s1.mediaId === s2.mediaId) {
+                const t2End = s2.endedAt ? s2.endedAt.getTime() : s1.startedAt.getTime();
+                const diff = Math.abs(t1 - t2End);
+                if (diff >= 0 && diff <= 30000) {
+                    reconnectionSet.add(s1.id);
+                    break;
+                }
+            }
+        }
+    }
+
     const safeLogs: SafeLog[] = sessions.map((log) => {
         const subtitle = getMediaSubtitle(log.media);
 
@@ -265,6 +283,7 @@ export default async function UserRecentMedia({
                 } as SafeTelemetryEvent;
             }) : [],
             isActuallyActive: !log.endedAt && activePairSet.has(`${log.userId}:${log.mediaId}`),
+            isReconnection: reconnectionSet.has(log.id),
         };
     });
 
@@ -288,6 +307,19 @@ export default async function UserRecentMedia({
         return `/users/${userId}${qs ? `?${qs}` : ""}`;
     };
 
+    const exportParams = new URLSearchParams();
+    exportParams.set("userId", userDbIdsToUse.join(","));
+    if (query) exportParams.set("query", query);
+    if (typeFilter) exportParams.set("type", typeFilter);
+    if (clientParams) exportParams.set("client", clientParams);
+    if (audioParams) exportParams.set("audio", audioParams);
+    if (subtitleParams) exportParams.set("subtitle", subtitleParams);
+    if (dateFromParam) exportParams.set("dateFrom", dateFromParam);
+    if (dateToParam) exportParams.set("dateTo", dateToParam);
+    if (resolutionParam) exportParams.set("resolution", resolutionParam);
+    if (playMethodParam) exportParams.set("playMethod", playMethodParam);
+    if (!hideZapped) exportParams.set("hideZapped", "false");
+
     return (
         <Card className="app-surface mt-6">
             <CardHeader className="space-y-1">
@@ -306,6 +338,14 @@ export default async function UserRecentMedia({
                         <div className="flex items-center gap-2">
                             <SavedFilters />
                             <ColumnToggle visibleColumns={visibleColumns as string[]} />
+                            <a
+                                href={`/api/logs/export?${exportParams.toString()}`}
+                                className="flex items-center justify-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium px-3 py-1.5 rounded-md hover:bg-emerald-500/20 transition-colors text-xs whitespace-nowrap border border-emerald-500/20"
+                                title="Exporter l'historique filtré de cet utilisateur en CSV"
+                            >
+                                <Download className="w-3.5 h-3.5" />
+                                <span>Exporter CSV</span>
+                            </a>
                         </div>
                     </div>
 
