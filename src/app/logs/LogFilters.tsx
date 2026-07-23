@@ -24,13 +24,13 @@ interface LogFiltersProps {
     initialSubtitle: string;
     initialDateFrom: string;
     initialDateTo: string;
-    initialServers: string;
-    serverOptions: Array<{ id: string; name: string }>;
-    multiServerEnabled: boolean;
+    initialServers?: string;
+    serverOptions?: Array<{ id: string; name: string }>;
+    multiServerEnabled?: boolean;
     hideSearch?: boolean;
 }
 
-export function LogFilters({ initialQuery, initialSort, initialHideZapped, initialType, initialClient, initialAudio, initialSubtitle, initialDateFrom, initialDateTo, initialServers, serverOptions, multiServerEnabled, hideSearch = false }: LogFiltersProps) {
+export function LogFilters({ initialQuery, initialSort, initialHideZapped, initialType, initialClient, initialAudio, initialSubtitle, initialDateFrom, initialDateTo, initialServers = "", serverOptions = [], multiServerEnabled = false, hideSearch = false }: LogFiltersProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const t = useTranslations('logs');

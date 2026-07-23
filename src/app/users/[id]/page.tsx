@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { Suspense } from "react";
 import UserInfo from "./UserInfo";
 import UserActivity from "./UserActivity";
@@ -13,6 +14,8 @@ import { ensureMasterServer } from "@/lib/serverRegistry";
 import { resolveLinkedAccounts } from "@/lib/auth";
 import valkey from "@/lib/valkey";
 import { buildStreamValkeyKey } from "@/lib/serverRegistry";
+import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
+import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 
 export const dynamic = "force-dynamic";
 

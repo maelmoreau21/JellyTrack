@@ -15,6 +15,7 @@ type TelemetryEvent = {
 
 type SessionType = {
   durationWatched?: number | string | null;
+  mediaSubtitle?: string | null;
   media?: { jellyfinMediaId?: string | null; title?: string | null; durationMs?: string | number | null } | null;
   user?: { username?: string | null } | null;
   clientName?: string | null;

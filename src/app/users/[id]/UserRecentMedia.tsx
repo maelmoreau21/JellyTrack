@@ -335,7 +335,7 @@ export default async function UserRecentMedia({
                         </div>
                         <div className="flex items-center gap-2">
                             <SavedFilters />
-                            <ColumnToggle visibleColumns={visibleColumns as string[]} />
+                            <ColumnToggle visibleColumns={visibleColumns as any} />
                             <div className="flex items-center gap-1">
                                 <a
                                     href={`/api/logs/export?${exportParams.toString()}`}
