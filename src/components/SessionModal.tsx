@@ -272,7 +272,10 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
         <div className="flex items-start gap-4">
           <div className="flex-1">
             <h3 className="text-xl font-bold text-foreground">{session.media?.title || t("unknownMedia")}</h3>
-            <div className="text-sm text-muted-foreground font-medium">{session.user?.username} - {session.clientName || t("unknown")}</div>
+            {session.mediaSubtitle && (
+              <div className="text-xs text-primary font-semibold mt-0.5">{session.mediaSubtitle}</div>
+            )}
+            <div className="text-sm text-muted-foreground font-medium mt-0.5">{session.user?.username} - {session.clientName || t("unknown")}</div>
             <div className="mt-3 space-y-2">
               <div className="flex items-center gap-3 flex-wrap">
                 <Badge variant="secondary" className="app-surface-soft border-border/50 text-foreground">{t("timeline.legend.pause")}: {eventCounts.pause || (session.pauseCount ?? 0)}</Badge>

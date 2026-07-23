@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type MediaResult = { jellyfinMediaId: string; title: string; type: string; parentId: string | null };
+type MediaResult = { jellyfinMediaId: string; title: string; type: string; parentId: string | null; subtitle?: string | null };
 
 export default function MediaSearchModal({ open, onClose, query }: { open: boolean; onClose: () => void; query: string | null }) {
   const t = useTranslations('search');
@@ -70,10 +70,15 @@ export default function MediaSearchModal({ open, onClose, query }: { open: boole
               <ul className="space-y-2">
                 {results.map((m) => (
                   <li key={m.jellyfinMediaId}>
-                    <Link href={`/media/${m.jellyfinMediaId}`} className="block p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/60">
+                    <Link href={`/media/${m.jellyfinMediaId}`} className="block p-2.5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors">
                       <div className="flex items-center justify-between gap-3">
-                        <div className="text-sm font-medium truncate">{m.title}</div>
-                        <div className="text-xs text-muted-foreground shrink-0">{m.type}</div>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{m.title}</div>
+                          {m.subtitle && (
+                            <div className="text-xs text-muted-foreground truncate">{m.subtitle}</div>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground shrink-0 font-medium px-2 py-0.5 rounded bg-muted">{m.type}</div>
                       </div>
                     </Link>
                   </li>

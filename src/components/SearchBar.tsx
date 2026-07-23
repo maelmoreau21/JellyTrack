@@ -5,7 +5,8 @@ import { Search, Film, Tv, Music, User, X } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-type MediaResult = { jellyfinMediaId: string; title: string; type: string; parentId: string | null };
+type MediaResult = { jellyfinMediaId: string; title: string; type: string; parentId: string | null; subtitle?: string | null };
+
 type UserResult = { jellyfinUserId: string; username: string };
 
 function getTypeIcon(type: string) {
@@ -115,7 +116,12 @@ export function SearchBar() {
                   className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors"
                 >
                   {getTypeIcon(m.type)}
-                  <span className="text-sm text-foreground truncate">{m.title}</span>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-sm font-medium text-foreground truncate">{m.title}</span>
+                    {m.subtitle && (
+                      <span className="text-[11px] text-muted-foreground truncate">{m.subtitle}</span>
+                    )}
+                  </div>
                 </Link>
               ))}
             </div>
