@@ -192,7 +192,6 @@ export default function PluginSecurityPage() {
     }, []);
 
     const refreshAll = useCallback(async () => {
-        await Promise.resolve();
         setLoading(true);
         setMessage(null);
         try {
@@ -205,7 +204,10 @@ export default function PluginSecurityPage() {
     }, [auditPage, auditSmartFilter, loadAudit, loadOverview, loadSmartThresholds, loadAuthSessionPolicy, ts]);
 
     useEffect(() => {
-        refreshAll();
+        const timer = setTimeout(() => {
+            void refreshAll();
+        }, 0);
+        return () => clearTimeout(timer);
     }, [refreshAll]);
 
     const saveSmartThresholdSettings = async () => {

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { PlayCircle, LayoutList, Rows3, Headphones, Languages, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FallbackImage } from "@/components/FallbackImage";
