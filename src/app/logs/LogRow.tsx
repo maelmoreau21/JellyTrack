@@ -328,12 +328,14 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                 </TableCell>
               );
 
-            case 'status':
+            case 'status': {
+              const isAudioOnlyTranscode = isTranscode && (isAudioMedia || !log.videoCodec || log.videoCodec === 'copy' || log.videoCodec === 'direct');
+              const hasPause = Boolean(log.pauseCount && log.pauseCount > 0);
               return (
                 <TableCell key="status" className={cn("hidden md:table-cell border-r border-border")}>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
-                      {log.playMethod || 'DirectPlay'}
+                    <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? (isAudioOnlyTranscode ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20') : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
+                      {isTranscode ? (isAudioOnlyTranscode ? 'Audio Transcodé' : (log.playMethod || 'Transcode')) : (log.playMethod || 'DirectPlay')}
                     </Badge>
                     {log.isReconnection && (
                       <Badge className="bg-sky-500/15 text-sky-400 border border-sky-500/30 text-[10px] px-1.5 py-0.5 flex items-center gap-1 cursor-help" title="Reconnexion réseau détectée (< 30s après déconnexion)">
@@ -341,9 +343,15 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                         Reconnexion
                       </Badge>
                     )}
+                    {hasPause && log.pauseCount && log.pauseCount >= 2 && (
+                      <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] px-1.5 py-0.5" title={`${log.pauseCount} pauses pendant la lecture`}>
+                        ⏸ Pauses ({log.pauseCount})
+                      </Badge>
+                    )}
                   </div>
                 </TableCell>
               );
+            }
 
             case 'codecs':
               return (

@@ -208,16 +208,28 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                     </div>
                 </div>
             )}
-            <div className="ml-auto font-medium text-xs shrink-0">
-                <span
-                    className={`px-2 py-1 rounded-full ${stream.playMethod === "Transcode"
-                        ? "bg-orange-500/10 text-orange-500"
-                        : "bg-emerald-500/10 text-emerald-500"
+            <div className="ml-auto font-medium text-xs shrink-0 flex flex-col items-end gap-1">
+                <div className="flex items-center gap-1.5">
+                    <span
+                        className={`px-2 py-1 rounded-full ${
+                            stream.playMethod === "Transcode"
+                                ? isAudio
+                                    ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                                    : "bg-orange-500/10 text-orange-500"
+                                : "bg-emerald-500/10 text-emerald-500"
                         }`}
-                >
-                    {stream.playMethod === "Transcode" ? tc('transcode') : tc('directPlay')}
-                </span>
-                <KillStreamButton sessionId={stream.sessionId} mediaTitle={stream.mediaTitle} />
+                        title={stream.playMethod === "Transcode" ? (isAudio ? "Transcodage audio uniquement" : "Transcodage complet") : "Lecture directe"}
+                    >
+                        {stream.playMethod === "Transcode" ? (isAudio ? "Audio Transcodé" : tc('transcode')) : tc('directPlay')}
+                    </span>
+                    <KillStreamButton sessionId={stream.sessionId} mediaTitle={stream.mediaTitle} />
+                </div>
+
+                {stream.isPaused && (
+                    <span className="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-1 font-medium animate-pulse" title="Session actuellement en pause">
+                        ⏸ Pause prolongée
+                    </span>
+                )}
             </div>
         </div>
     );

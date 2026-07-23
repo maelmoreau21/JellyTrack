@@ -89,6 +89,20 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
     });
     const linkedUserDbIds = linkedUsers.map((u) => u.id);
 
+    const serverRows = await prisma.server.findMany({ select: { id: true, isActive: true } });
+    const activeServerRows = serverRows.filter((server) => server.isActive);
+    const selectableServerRows = activeServerRows.length > 0 ? activeServerRows : serverRows;
+    const jellytrackMode = (process.env.JELLYTRACK_MODE || "single").toLowerCase();
+    const multiServerEnabled = jellytrackMode === "multi" && selectableServerRows.length > 1;
+    const cookieStore = await cookies();
+    const persistedScopeCookie = cookieStore.get(GLOBAL_SERVER_SCOPE_COOKIE)?.value ?? null;
+    const { selectedServerIds } = await resolveSelectedServerIdsAsync({
+        multiServerEnabled,
+        selectableServerIds: selectableServerRows.map((s) => s.id),
+        requestedServersParam: resolvedSearchParams.cols, // or generic servers param
+        cookieServersParam: persistedScopeCookie,
+    });
+
     // Fetch active stream for this user (or linked users)
     const currentActiveStream = await prisma.activeStream.findFirst({
         where: { userId: { in: linkedUserDbIds } },
@@ -208,7 +222,7 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
                 </Suspense>
 
                 <Suspense fallback={<Skeleton className="w-full h-[320px] rounded-xl bg-zinc-900/50 mt-6" />}>
-                    <UserStatsCharts userId={jellyfinUserId} userIds={linkedUserIds} userDbIds={linkedUserDbIds} />
+                    <UserStatsCharts userId={jellyfinUserId} userIds={linkedUserIds} userDbIds={linkedUserDbIds} selectedServerIds={selectedServerIds} />
                 </Suspense>
 
                 <Suspense fallback={<Skeleton className="w-full h-[500px] rounded-xl bg-zinc-900/50 mt-6" />}>

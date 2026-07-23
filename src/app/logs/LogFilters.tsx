@@ -188,10 +188,16 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                             {tc('search')}
                         </button>
                         
-                        <a href={`/api/logs/export?${exportQuery}`} className="flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium px-4 py-2 rounded-md hover:bg-emerald-500/20 transition-colors h-10 md:h-9 whitespace-nowrap">
-                            <Download className="w-4 h-4" />
-                            <span className="md:hidden lg:inline">{tc('export')}</span>
-                        </a>
+                        <div className="flex items-center gap-1">
+                            <a href={`/api/logs/export?${exportQuery}`} className="flex items-center justify-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium px-3 py-2 rounded-l-md hover:bg-emerald-500/20 transition-colors h-10 md:h-9 text-xs whitespace-nowrap border border-emerald-500/20" title="Exporter en CSV">
+                                <Download className="w-3.5 h-3.5" />
+                                <span>CSV</span>
+                            </a>
+                            <a href={`/api/logs/export?${exportQuery}&format=json`} className="flex items-center justify-center gap-1.5 bg-sky-500/10 text-sky-600 dark:text-sky-400 font-medium px-3 py-2 rounded-r-md hover:bg-sky-500/20 transition-colors h-10 md:h-9 text-xs whitespace-nowrap border border-sky-500/20 border-l-0" title="Exporter en JSON structuré">
+                                <Download className="w-3.5 h-3.5" />
+                                <span>JSON</span>
+                            </a>
+                        </div>
 
                         <button type="submit" className="hidden md:block lg:hidden bg-primary text-primary-foreground font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors h-10 md:h-9">
                             {tc('search')}

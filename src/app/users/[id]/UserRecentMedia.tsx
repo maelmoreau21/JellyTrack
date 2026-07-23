@@ -338,14 +338,24 @@ export default async function UserRecentMedia({
                         <div className="flex items-center gap-2">
                             <SavedFilters />
                             <ColumnToggle visibleColumns={visibleColumns as string[]} />
-                            <a
-                                href={`/api/logs/export?${exportParams.toString()}`}
-                                className="flex items-center justify-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium px-3 py-1.5 rounded-md hover:bg-emerald-500/20 transition-colors text-xs whitespace-nowrap border border-emerald-500/20"
-                                title="Exporter l'historique filtré de cet utilisateur en CSV"
-                            >
-                                <Download className="w-3.5 h-3.5" />
-                                <span>Exporter CSV</span>
-                            </a>
+                            <div className="flex items-center gap-1">
+                                <a
+                                    href={`/api/logs/export?${exportParams.toString()}`}
+                                    className="flex items-center justify-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium px-2.5 py-1.5 rounded-l-md hover:bg-emerald-500/20 transition-colors text-xs whitespace-nowrap border border-emerald-500/20"
+                                    title="Exporter l'historique de cet utilisateur en CSV"
+                                >
+                                    <Download className="w-3.5 h-3.5" />
+                                    <span>CSV</span>
+                                </a>
+                                <a
+                                    href={`/api/logs/export?${exportParams.toString()}&format=json`}
+                                    className="flex items-center justify-center gap-1.5 bg-sky-500/10 text-sky-600 dark:text-sky-400 font-medium px-2.5 py-1.5 rounded-r-md hover:bg-sky-500/20 transition-colors text-xs whitespace-nowrap border border-sky-500/20 border-l-0"
+                                    title="Exporter l'historique de cet utilisateur en JSON"
+                                >
+                                    <Download className="w-3.5 h-3.5" />
+                                    <span>JSON</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
 

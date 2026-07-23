@@ -110,6 +110,41 @@ export async function GET(request: Request) {
     const activeStreams = await prisma.activeStream.findMany({ select: { userId: true, mediaId: true, bitrate: true, audioCodec: true } });
     const activeMap = new Map(activeStreams.map((a) => [`${a.userId}:${a.mediaId}`, { bitrate: a.bitrate ?? null, audioCodec: a.audioCodec ?? '' }] as [string, { bitrate: number | null; audioCodec: string }]));
 
+    const formatParam = searchParams.get("format") || "csv";
+    if (formatParam === "json") {
+        const jsonExport = logs.map((log) => {
+            const key = `${log.userId}:${log.mediaId}`;
+            const active = activeMap.get(key) ?? null;
+            const bitrateVal = normalizeBitrateToKbps(log.bitrate ?? active?.bitrate ?? null);
+            return {
+                id: log.id,
+                startedAt: log.startedAt.toISOString(),
+                user: log.user?.username || 'Unknown',
+                mediaTitle: log.media?.title || 'Unknown',
+                mediaType: log.media?.type || 'Unknown',
+                clientName: log.clientName || '',
+                deviceName: log.deviceName || '',
+                ipAddress: log.ipAddress || '',
+                country: log.country || '',
+                playMethod: log.playMethod || 'DirectPlay',
+                eventSource: log.eventSource || 'playback',
+                durationWatchedSeconds: log.durationWatched,
+                resolution: log.media?.resolution || '',
+                audioBitrateKbps: bitrateVal ?? null,
+                audioCodec: log.audioCodec || active?.audioCodec || null,
+                audioLanguage: log.audioLanguage || null,
+                subtitleCodec: log.subtitleCodec || null,
+            };
+        });
+
+        return new NextResponse(JSON.stringify(jsonExport, null, 2), {
+            headers: {
+                "Content-Type": "application/json; charset=utf-8",
+                "Content-Disposition": `attachment; filename="jellytrack_logs_export.json"`
+            }
+        });
+    }
+
     let csvContent = buildCsvRow([
         "Id",
         "Date",

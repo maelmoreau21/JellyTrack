@@ -9,7 +9,17 @@ import { getTranslations } from 'next-intl/server';
 import { getCumulativeCompletionEntries } from "@/lib/mediaPolicy";
 import { normalizeBitrateToKbps } from "@/lib/bitrate";
 
-export default async function UserStatsCharts({ userId, userIds = [], userDbIds = [] }: { userId: string; userIds?: string[]; userDbIds?: string[] }) {
+export default async function UserStatsCharts({
+    userId,
+    userIds = [],
+    userDbIds = [],
+    selectedServerIds = []
+}: {
+    userId: string;
+    userIds?: string[];
+    userDbIds?: string[];
+    selectedServerIds?: string[];
+}) {
     const t = await getTranslations('userProfile');
     const td = await getTranslations('dashboard');
     const tc = await getTranslations('common');
@@ -27,8 +37,15 @@ export default async function UserStatsCharts({ userId, userIds = [], userDbIds 
 
     if (userIdsToUse.length === 0) return null;
 
+    const whereClause: { userId: { in: string[] }; serverId?: { in: string[] } } = {
+        userId: { in: userIdsToUse }
+    };
+    if (selectedServerIds.length > 0) {
+        whereClause.serverId = { in: selectedServerIds };
+    }
+
     const histories = await prisma.playbackHistory.findMany({
-        where: { userId: { in: userIdsToUse } },
+        where: whereClause,
         select: {
             startedAt: true,
             durationWatched: true,
