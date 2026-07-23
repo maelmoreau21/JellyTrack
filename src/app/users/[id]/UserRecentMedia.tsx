@@ -186,53 +186,51 @@ export default async function UserRecentMedia({
     const activePairSet = new Set(activePairs.map((entry) => `${entry.userId}:${entry.mediaId}`));
 
     // Build parent chain for enriched media titles
-    const parentPairs = new Set<string>();
+    const parentTargetsMap = new Map<string, { serverId: string | null; jellyfinMediaId: string }>();
     sessions.forEach((s) => {
-        if (s.media?.parentId && s.media?.serverId) {
-            parentPairs.add(JSON.stringify([s.media.serverId, s.media.parentId]));
+        if (s.media?.parentId) {
+            const key = `${s.media.serverId || ''}:${s.media.parentId}`;
+            parentTargetsMap.set(key, { serverId: s.media.serverId || null, jellyfinMediaId: s.media.parentId });
         }
     });
-    const parentTargets = Array.from(parentPairs).map((pair) => {
-        const parsed = JSON.parse(pair) as [string, string];
-        return { serverId: parsed[0], jellyfinMediaId: parsed[1] };
-    });
-    const parentMedia = parentTargets.length > 0
+    const parentMedia = parentTargetsMap.size > 0
         ? await prisma.media.findMany({
             where: {
-                OR: parentTargets.map((target) => ({
-                    serverId: target.serverId,
+                OR: Array.from(parentTargetsMap.values()).map((target) => ({
+                    ...(target.serverId ? { serverId: target.serverId } : {}),
                     jellyfinMediaId: target.jellyfinMediaId,
                 })),
             },
             select: { serverId: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true },
         })
         : [];
-    const grandparentPairs = new Set<string>();
+
+    const grandparentTargetsMap = new Map<string, { serverId: string | null; jellyfinMediaId: string }>();
     parentMedia.forEach((pm) => {
-        if (pm.parentId) grandparentPairs.add(JSON.stringify([pm.serverId, pm.parentId]));
+        if (pm.parentId) {
+            const key = `${pm.serverId || ''}:${pm.parentId}`;
+            grandparentTargetsMap.set(key, { serverId: pm.serverId || null, jellyfinMediaId: pm.parentId });
+        }
     });
-    const grandparentTargets = Array.from(grandparentPairs).map((pair) => {
-        const parsed = JSON.parse(pair) as [string, string];
-        return { serverId: parsed[0], jellyfinMediaId: parsed[1] };
-    });
-    const grandparentMedia = grandparentTargets.length > 0
+    const grandparentMedia = grandparentTargetsMap.size > 0
         ? await prisma.media.findMany({
             where: {
-                OR: grandparentTargets.map((target) => ({
-                    serverId: target.serverId,
+                OR: Array.from(grandparentTargetsMap.values()).map((target) => ({
+                    ...(target.serverId ? { serverId: target.serverId } : {}),
                     jellyfinMediaId: target.jellyfinMediaId,
                 })),
             },
             select: { serverId: true, jellyfinMediaId: true, title: true, type: true, artist: true },
         })
         : [];
-    const parentMap = new Map(parentMedia.map(pm => [`${pm.serverId}:${pm.jellyfinMediaId}`, pm]));
-    const grandparentMap = new Map(grandparentMedia.map(gp => [`${gp.serverId}:${gp.jellyfinMediaId}`, gp]));
+
+    const parentMap = new Map(parentMedia.map(pm => [`${pm.serverId || ''}:${pm.jellyfinMediaId}`, pm]));
+    const grandparentMap = new Map(grandparentMedia.map(gp => [`${gp.serverId || ''}:${gp.jellyfinMediaId}`, gp]));
 
     function getMediaSubtitle(media?: MediaCompact | null): string | null {
         if (!media) return null;
-        const parent = media.parentId ? parentMap.get(`${media.serverId}:${media.parentId}`) : null;
-        const gp = parent?.parentId ? grandparentMap.get(`${media.serverId}:${parent.parentId}`) : null;
+        const parent = media.parentId ? parentMap.get(`${media.serverId || ''}:${media.parentId}`) : null;
+        const gp = parent?.parentId ? grandparentMap.get(`${media.serverId || ''}:${parent.parentId}`) : null;
 
         return formatMediaSubtitle({
             type: media.type,

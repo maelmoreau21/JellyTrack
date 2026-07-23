@@ -46,32 +46,30 @@ export async function GET(req: NextRequest) {
     orderBy: { title: "asc" },
   });
 
-  // Fetch parents for episodes and audio tracks
-  const parentPairs = new Set<string>();
+  // Safe parent lookup handling null/undefined serverId
+  const parentTargetsMap = new Map<string, { serverId: string | null; jellyfinMediaId: string }>();
   rawMedia.forEach((m) => {
-    if (m.parentId && m.serverId) {
-      parentPairs.add(JSON.stringify([m.serverId, m.parentId]));
+    if (m.parentId) {
+      const key = `${m.serverId || ''}:${m.parentId}`;
+      parentTargetsMap.set(key, { serverId: m.serverId || null, jellyfinMediaId: m.parentId });
     }
   });
-  const parentTargets = Array.from(parentPairs).map((pair) => {
-    const parsed = JSON.parse(pair) as [string, string];
-    return { serverId: parsed[0], jellyfinMediaId: parsed[1] };
-  });
-  const parentMedia = parentTargets.length > 0
+
+  const parentMedia = parentTargetsMap.size > 0
     ? await prisma.media.findMany({
         where: {
-          OR: parentTargets.map((target) => ({
-            serverId: target.serverId,
+          OR: Array.from(parentTargetsMap.values()).map((target) => ({
+            ...(target.serverId ? { serverId: target.serverId } : {}),
             jellyfinMediaId: target.jellyfinMediaId,
           })),
         },
         select: { serverId: true, jellyfinMediaId: true, title: true, type: true, artist: true },
       })
     : [];
-  const parentMap = new Map(parentMedia.map(pm => [`${pm.serverId}:${pm.jellyfinMediaId}`, pm]));
+  const parentMap = new Map(parentMedia.map(pm => [`${pm.serverId || ''}:${pm.jellyfinMediaId}`, pm]));
 
   const media = rawMedia.map((m) => {
-    const parent = m.parentId ? parentMap.get(`${m.serverId}:${m.parentId}`) : null;
+    const parent = m.parentId ? parentMap.get(`${m.serverId || ''}:${m.parentId}`) : null;
     const subtitle = formatMediaSubtitle({
       type: m.type,
       parentTitle: parent?.title || null,
