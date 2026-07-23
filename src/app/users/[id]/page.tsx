@@ -22,13 +22,26 @@ interface UserPageProps {
     }>;
     searchParams: Promise<{
         historyPage?: string;
+        page?: string;
+        query?: string;
+        sort?: string;
+        type?: string;
+        client?: string;
+        audio?: string;
+        subtitle?: string;
+        dateFrom?: string;
+        dateTo?: string;
+        resolution?: string;
+        playMethod?: string;
+        hideZapped?: string;
+        cols?: string;
     }>;
 }
 
 export default async function UserDetailPage({ params, searchParams }: UserPageProps) {
     const { id: jellyfinUserId } = await params;
-    const { historyPage } = await searchParams;
-    const currentHistoryPage = Math.max(1, parseInt(historyPage || "1", 10) || 1);
+    const resolvedSearchParams = await searchParams;
+    const currentHistoryPage = Math.max(1, parseInt(resolvedSearchParams.page || resolvedSearchParams.historyPage || "1", 10) || 1);
 
     // RBAC: Non-admin users can only view their own profile
     const session = await getServerSession(authOptions);
@@ -199,7 +212,7 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
                 </Suspense>
 
                 <Suspense fallback={<Skeleton className="w-full h-[500px] rounded-xl bg-zinc-900/50 mt-6" />}>
-                    <UserRecentMedia userId={jellyfinUserId} userIds={linkedUserIds} userDbIds={linkedUserDbIds} page={currentHistoryPage} />
+                    <UserRecentMedia userId={jellyfinUserId} userIds={linkedUserIds} userDbIds={linkedUserDbIds} page={currentHistoryPage} filterParams={resolvedSearchParams} />
                 </Suspense>
             </div>
         </div>

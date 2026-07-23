@@ -122,11 +122,28 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
   const t = useTranslations("logs");
   if (!open) return null;
 
+  const mediaDurationCandidate = Number(session.media?.durationMs || 0);
+  const mediaDurationMs = Number.isFinite(mediaDurationCandidate) && mediaDurationCandidate > 0
+    ? mediaDurationCandidate
+    : 0;
+
+  const watchedDurationMs = Math.max(Number(session.durationWatched || 0) * 1000, 0);
+
   const normalizedEvents: NormalizedEvent[] = (session.telemetryEvents || [])
     .map((ev) => {
       const eventType = String(ev.eventType || "").trim();
       const numericPosition = Number(ev.positionMs || 0);
-      const positionMs = Number.isFinite(numericPosition) ? Math.max(0, numericPosition) : 0;
+      let positionMs = Number.isFinite(numericPosition) ? Math.max(0, numericPosition) : 0;
+
+      // Fix tick vs millisecond mismatches (e.g., positionMs stored in ticks)
+      if (mediaDurationMs > 0 && positionMs > mediaDurationMs) {
+        if (Math.floor(positionMs / 10000) <= mediaDurationMs) {
+          positionMs = Math.floor(positionMs / 10000);
+        } else {
+          positionMs = Math.min(positionMs, mediaDurationMs);
+        }
+      }
+
       return {
         eventType,
         positionMs,
@@ -136,12 +153,6 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
     })
     .sort((a, b) => a.positionMs - b.positionMs);
 
-  const mediaDurationCandidate = Number(session.media?.durationMs || 0);
-  const mediaDurationMs = Number.isFinite(mediaDurationCandidate) && mediaDurationCandidate > 0
-    ? mediaDurationCandidate
-    : 0;
-
-  const watchedDurationMs = Math.max(Number(session.durationWatched || 0) * 1000, 0);
   const maxEventPositionMs = normalizedEvents.length > 0
     ? Math.max(...normalizedEvents.map((ev) => ev.positionMs))
     : 0;
@@ -164,7 +175,8 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
 
   const groupedEvents: GroupedEvent[] = Array.from(groupedMap.entries())
     .map(([bucket, events]) => {
-      const avg = Math.floor(events.reduce((sum, ev) => sum + ev.positionMs, 0) / Math.max(events.length, 1));
+      const rawAvg = Math.floor(events.reduce((sum, ev) => sum + ev.positionMs, 0) / Math.max(events.length, 1));
+      const avg = totalDurationMs > 0 ? Math.min(rawAvg, totalDurationMs) : rawAvg;
       const priority = ["pause", "audio_change", "subtitle_change", "seek", "replay", "speed_change", "stop"];
       let repType = events[0]?.eventType || "default";
       for (const type of priority) {
@@ -335,7 +347,7 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
                           <div className="text-muted-foreground text-[11px] font-medium">{createdAtLabel}</div>
                         ) : null}
                         <div className="mt-1 text-[11px] text-foreground/80">
-                          {formatTime(group.pos)} - {Math.round((group.pos / totalDurationMs) * 100)}%{detail ? ` - ${detail}` : ""}
+                          {formatTime(group.pos)} - {totalDurationMs > 0 ? Math.min(100, Math.max(0, Math.round((group.pos / totalDurationMs) * 100))) : 0}%{detail ? ` - ${detail}` : ""}
                         </div>
                         <div className="mt-3 flex gap-2">
                           <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => jumpTo(group.pos)}>{t("timeline.action.jump")}</Button>

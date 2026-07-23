@@ -1,11 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import prisma from "@/lib/prisma";
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { ZAPPING_CONDITION } from "@/lib/statsUtils";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import LogsListClient from "@/app/logs/LogsListClient";
+import LogSearchBar from "@/app/logs/LogSearchBar";
+import { LogFilters } from "@/app/logs/LogFilters";
+import { ColumnToggle } from "@/app/logs/ColumnToggle";
+import { SavedFilters } from "@/components/SavedFilters";
+import { formatMediaSubtitle } from "@/lib/mediaSubtitle";
 import type { SafeLog, SafeTelemetryEvent } from '@/types/logs';
+import type { Prisma } from '@prisma/client';
 
 const ITEMS_PER_PAGE = 50;
 const MAX_TELEMETRY_EVENTS_PER_SESSION = 200;
@@ -20,8 +26,62 @@ type MediaCompact = {
     durationMs?: bigint | null;
 };
 
-export default async function UserRecentMedia({ userId, userIds = [], userDbIds = [], page = 1 }: { userId: string; userIds?: string[]; userDbIds?: string[]; page?: number }) {
+interface UserRecentMediaProps {
+    userId: string;
+    userIds?: string[];
+    userDbIds?: string[];
+    page?: number;
+    filterParams?: {
+        query?: string;
+        sort?: string;
+        type?: string;
+        client?: string;
+        audio?: string;
+        subtitle?: string;
+        dateFrom?: string;
+        dateTo?: string;
+        resolution?: string;
+        playMethod?: string;
+        hideZapped?: string;
+        cols?: string;
+        page?: string;
+    };
+}
+
+const ALL_COLUMNS = ['date', 'startedAt', 'endedAt', 'user', 'media', 'client', 'ip', 'country', 'status', 'resolution', 'audioBitrate', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'] as const;
+type Column = typeof ALL_COLUMNS[number];
+const DEFAULT_VISIBLE: Column[] = ['date', 'media', 'client', 'resolution', 'audioBitrate', 'status', 'duration'];
+
+function parseVisibleColumns(colsParam: string | undefined): Column[] {
+    if (!colsParam) return DEFAULT_VISIBLE;
+    const parsed = colsParam.split(',').filter(c => ALL_COLUMNS.includes(c as Column)) as Column[];
+    return parsed.length >= 2 ? parsed : DEFAULT_VISIBLE;
+}
+
+export default async function UserRecentMedia({
+    userId,
+    userIds = [],
+    userDbIds = [],
+    page = 1,
+    filterParams = {}
+}: UserRecentMediaProps) {
     const t = await getTranslations('userProfile');
+    const locale = await getLocale();
+
+    const query = filterParams.query?.toLowerCase() || "";
+    const sort = filterParams.sort || "date_desc";
+    const hideZapped = filterParams.hideZapped !== 'false';
+    const typeFilter = filterParams.type || "";
+    const typeFilters = (typeof typeFilter === 'string' && typeFilter) ? typeFilter.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const visibleColumns = parseVisibleColumns(filterParams.cols);
+
+    const clientParams = filterParams.client?.trim() || "";
+    const audioParams = filterParams.audio?.trim() || "";
+    const subtitleParams = filterParams.subtitle?.trim() || "";
+    const dateFromParam = filterParams.dateFrom || "";
+    const dateToParam = filterParams.dateTo || "";
+    const resolutionParam = filterParams.resolution || "";
+    const playMethodParam = filterParams.playMethod || "";
 
     const targetJellyfinIds = Array.from(new Set([userId, ...userIds].filter(Boolean)));
     const resolvedUserDbIds = Array.from(new Set(userDbIds.filter(Boolean)));
@@ -45,15 +105,49 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
         );
     }
 
-    // Count total sessions for pagination
-    const totalCount = await prisma.playbackHistory.count({
-        where: { 
-            userId: { in: userDbIdsToUse },
-            ...ZAPPING_CONDITION
-        },
-    });
+    // Build filtering condition
+    const whereClause: Prisma.PlaybackHistoryWhereInput = {
+        userId: { in: userDbIdsToUse }
+    };
+    const conditions: Prisma.PlaybackHistoryWhereInput[] = [];
 
-    if (totalCount === 0) {
+    if (hideZapped) conditions.push(ZAPPING_CONDITION);
+    if (query) {
+        conditions.push({
+            OR: [
+                { media: { title: { contains: query, mode: "insensitive" } } },
+                { ipAddress: { contains: query, mode: "insensitive" } },
+                { clientName: { contains: query, mode: "insensitive" } },
+            ]
+        });
+    }
+    if (typeFilters.length > 0) conditions.push({ media: { type: { in: typeFilters } } });
+    if (clientParams) conditions.push({ clientName: { contains: clientParams, mode: "insensitive" } });
+    if (audioParams) conditions.push({ OR: [{ audioCodec: { contains: audioParams, mode: "insensitive" } }, { audioLanguage: { contains: audioParams, mode: "insensitive" } }] });
+    if (subtitleParams) conditions.push({ OR: [{ subtitleCodec: { contains: subtitleParams, mode: "insensitive" } }, { subtitleLanguage: { contains: subtitleParams, mode: "insensitive" } }] });
+    if (resolutionParam) conditions.push({ media: { resolution: { contains: resolutionParam, mode: "insensitive" } } });
+    if (playMethodParam) conditions.push({ playMethod: { equals: playMethodParam, mode: 'insensitive' } });
+    if (dateFromParam || dateToParam) {
+        const dateFilter: Prisma.DateTimeFilter = {};
+        if (dateFromParam) dateFilter.gte = new Date(dateFromParam);
+        if (dateToParam) {
+            const td = new Date(dateToParam);
+            td.setHours(23, 59, 59, 999);
+            dateFilter.lte = td;
+        }
+        conditions.push({ startedAt: dateFilter });
+    }
+    if (conditions.length > 0) whereClause.AND = conditions;
+
+    let orderBy: Record<string, "asc" | "desc"> = { startedAt: "desc" };
+    if (sort === "date_asc") orderBy = { startedAt: "asc" };
+    else if (sort === "duration_desc") orderBy = { durationWatched: "desc" };
+    else if (sort === "duration_asc") orderBy = { durationWatched: "asc" };
+
+    // Count total sessions for pagination
+    const totalCount = await prisma.playbackHistory.count({ where: whereClause });
+
+    if (totalCount === 0 && !query && typeFilters.length === 0 && !clientParams && !dateFromParam && !dateToParam) {
         return (
             <Card className="app-surface mt-6">
                 <CardHeader>
@@ -64,15 +158,13 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
         );
     }
 
+    const currentPage = Math.max(1, parseInt(filterParams.page || String(page), 10) || 1);
     const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
-    const safePage = Math.min(Math.max(1, page), totalPages);
+    const safePage = Math.min(currentPage, totalPages);
 
     // Fetch paginated sessions
     const sessions = await prisma.playbackHistory.findMany({
-        where: { 
-            userId: { in: userDbIdsToUse },
-            ...ZAPPING_CONDITION
-        },
+        where: whereClause,
         include: {
             user: { select: { id: true, username: true, jellyfinUserId: true } },
             media: { select: { id: true, serverId: true, jellyfinMediaId: true, title: true, type: true, parentId: true, artist: true, resolution: true } },
@@ -82,7 +174,7 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
                 take: MAX_TELEMETRY_EVENTS_PER_SESSION,
             },
         },
-        orderBy: { startedAt: "desc" },
+        orderBy,
         skip: (safePage - 1) * ITEMS_PER_PAGE,
         take: ITEMS_PER_PAGE,
     });
@@ -138,21 +230,17 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
     const grandparentMap = new Map(grandparentMedia.map(gp => [`${gp.serverId}:${gp.jellyfinMediaId}`, gp]));
 
     function getMediaSubtitle(media?: MediaCompact | null): string | null {
-        if (!media?.parentId) return null;
-        const parent = parentMap.get(`${media.serverId}:${media.parentId}`);
-        if (!parent) return null;
-        if (media.type === 'Episode') {
-            const gp = parent.parentId ? grandparentMap.get(`${media.serverId}:${parent.parentId}`) : null;
-            if (gp) return `${gp.title} — ${parent.title}`;
-            return parent.title;
-        }
-        if (media.type === 'Season') return parent.title;
-        if (media.type === 'Audio') {
-            const artistName = media.artist || parent.artist || null;
-            if (artistName) return `${artistName} — ${parent.title}`;
-            return parent.title;
-        }
-        return parent.title;
+        if (!media) return null;
+        const parent = media.parentId ? parentMap.get(`${media.serverId}:${media.parentId}`) : null;
+        const gp = parent?.parentId ? grandparentMap.get(`${media.serverId}:${parent.parentId}`) : null;
+
+        return formatMediaSubtitle({
+            type: media.type,
+            parentTitle: parent?.title || null,
+            grandparentTitle: gp?.title || null,
+            artist: media.artist || parent?.artist || null,
+            parentArtist: parent?.artist || null,
+        }, locale);
     }
 
     const safeLogs: SafeLog[] = sessions.map((log) => {
@@ -183,22 +271,55 @@ export default async function UserRecentMedia({ userId, userIds = [], userDbIds 
     // Build pagination URL
     const buildPageUrl = (p: number) => {
         const params = new URLSearchParams();
-        if (p > 1) params.set("historyPage", String(p));
+        if (query) params.set("query", query);
+        if (sort !== "date_desc") params.set("sort", sort);
+        if (typeFilter) params.set("type", typeFilter);
+        if (filterParams.cols) params.set("cols", filterParams.cols);
+        if (filterParams.hideZapped === 'false') params.set("hideZapped", "false");
+        if (clientParams) params.set("client", clientParams);
+        if (audioParams) params.set("audio", audioParams);
+        if (subtitleParams) params.set("subtitle", subtitleParams);
+        if (dateFromParam) params.set("dateFrom", dateFromParam);
+        if (dateToParam) params.set("dateTo", dateToParam);
+        if (resolutionParam) params.set("resolution", resolutionParam);
+        if (playMethodParam) params.set("playMethod", playMethodParam);
+        if (p > 1) params.set("page", String(p));
         const qs = params.toString();
         return `/users/${userId}${qs ? `?${qs}` : ""}`;
     };
 
     return (
         <Card className="app-surface mt-6">
-            <CardHeader>
+            <CardHeader className="space-y-1">
                 <CardTitle>{t('playbackHistory')}</CardTitle>
                 <CardDescription>
                     {t('aggregatedDesc')} — {totalCount} session{totalCount > 1 ? 's' : ''}
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+                {/* Search & Filters */}
+                <div className="space-y-4 pb-2">
+                    <div className="flex items-start gap-2 flex-wrap">
+                        <div className="flex-1 w-full relative z-10">
+                            <LogSearchBar initialQuery={query} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <SavedFilters />
+                            <ColumnToggle visibleColumns={visibleColumns as string[]} />
+                        </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-border/70">
+                        <LogFilters 
+                            initialQuery={query} initialSort={sort} initialHideZapped={hideZapped} initialType={typeFilter}
+                            initialClient={clientParams} initialAudio={audioParams} initialSubtitle={subtitleParams}
+                            initialDateFrom={dateFromParam} initialDateTo={dateToParam} hideSearch={true}
+                        />
+                    </div>
+                </div>
+
                 <div className="rounded-md border overflow-x-auto w-full">
-                    <LogsListClient serverLogs={safeLogs} visibleColumns={['date', 'media', 'client', 'country', 'status', 'duration']} />
+                    <LogsListClient serverLogs={safeLogs} visibleColumns={visibleColumns as string[]} />
                 </div>
 
                 {/* Pagination */}

@@ -1203,7 +1203,11 @@ export async function finalizePlaybackSession(input: {
     });
 
     const eventType = input.reason === "session_end" ? "session_end" : "stop";
-    const stopPositionMs = effectiveTicks > 0 ? BigInt(Math.floor(effectiveTicks / 10_000)) : BigInt(0);
+    let rawStopPos = effectiveTicks > 0 ? Math.floor(effectiveTicks / 10_000) : 0;
+    if (playback.media?.durationMs && BigInt(rawStopPos) > playback.media.durationMs) {
+        rawStopPos = Number(playback.media.durationMs);
+    }
+    const stopPositionMs = BigInt(Math.max(0, rawStopPos));
     await prisma.telemetryEvent.create({
         data: {
             serverId: input.sourceServerId,

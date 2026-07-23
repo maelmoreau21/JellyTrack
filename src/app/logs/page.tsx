@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { normalizeBitrateToKbps } from "@/lib/bitrate";
 import { buildJellyfinApiKeyHeaders } from "@/lib/jellyfinServers";
 import { normalizeLanguageTag } from "@/lib/language";
+import { formatMediaSubtitle } from "@/lib/mediaSubtitle";
 import { buildStreamValkeyKey } from "@/lib/serverRegistry";
 
 import Link from "next/link";
@@ -139,7 +140,7 @@ async function fetchJellyfinSubtitleMeta(requests: JellyfinMetaRequest[]): Promi
 
         try {
             const ids = uniqueIds.map(encodeURIComponent).join(',');
-            const url = `${connection.baseUrl}/Items?Ids=${ids}&Fields=ParentId,SeriesName,SeasonName,Album,AlbumArtist,AlbumArtists,Artists,MediaStreams`;
+            const url = `${connection.baseUrl}/Items?Ids=${ids}&Fields=ParentId,SeriesName,SeasonName,IndexNumber,ParentIndexNumber,Album,AlbumArtist,AlbumArtists,Artists,MediaStreams`;
             const res = await fetch(url, {
                 headers: buildJellyfinApiKeyHeaders(connection.apiKey),
                 next: { revalidate: 300 },
@@ -155,6 +156,8 @@ async function fetchJellyfinSubtitleMeta(requests: JellyfinMetaRequest[]): Promi
                     parentId: item?.ParentId || null,
                     seriesName: item?.SeriesName || null,
                     seasonName: item?.SeasonName || null,
+                    indexNumber: typeof item?.IndexNumber === 'number' ? item.IndexNumber : null,
+                    parentIndexNumber: typeof item?.ParentIndexNumber === 'number' ? item.ParentIndexNumber : null,
                     albumName: item?.Album || null,
                     albumArtist: item?.AlbumArtist || item?.AlbumArtists?.[0]?.Name || item?.AlbumArtists?.[0] || null,
                     artist: item?.Artists?.[0] || null,
@@ -214,6 +217,8 @@ type JellyfinSubtitleMeta = {
     parentId: string | null;
     seriesName: string | null;
     seasonName: string | null;
+    indexNumber: number | null;
+    parentIndexNumber: number | null;
     albumName: string | null;
     albumArtist: string | null;
     artist: string | null;
@@ -584,9 +589,20 @@ export default async function LogsPage({
     function getMediaSubtitle(media: SafeMedia | null, serverId: string | null | undefined): string | null {
         if (!media) return null;
         const metadata = media.jellyfinMediaId ? jellyfinMetaMap.get(getMetaKey(serverId, media.jellyfinMediaId)) : null;
-        if (media.type === 'Episode') return metadata?.seriesName || parentMap.get(getMetaKey(serverId, media.parentId))?.title || null;
-        if (media.type === 'Audio' || media.type === 'Track') return metadata?.albumArtist || metadata?.artist || media.artist || null;
-        return null;
+        const parent = media.parentId ? parentMap.get(getMetaKey(serverId, media.parentId)) : null;
+
+        return formatMediaSubtitle({
+            type: media.type,
+            seriesName: metadata?.seriesName || null,
+            seasonName: metadata?.seasonName || (parent?.type === 'Season' ? parent.title : null),
+            indexNumber: metadata?.indexNumber ?? null,
+            parentIndexNumber: metadata?.parentIndexNumber ?? null,
+            albumName: metadata?.albumName || (parent?.type === 'MusicAlbum' ? parent.title : null),
+            albumArtist: metadata?.albumArtist || null,
+            artist: metadata?.artist || media.artist || parent?.artist || null,
+            parentTitle: parent?.title || null,
+            parentArtist: parent?.artist || null,
+        }, locale);
     }
 
     return (
@@ -635,29 +651,42 @@ export default async function LogsPage({
 
                 <div className="space-y-4">
                     {activeTab === 'application' && (newCountryAlerts > 0 || topHotIps.length > 0) && (
-                        <Card className="border-amber-500/30 bg-amber-500/5">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base flex items-center gap-2">
-                                    <ShieldAlert className="w-4 h-4 text-amber-400" />
-                                    {tl('smartAlertsTitle')}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid gap-2 md:grid-cols-2">
-                                    <div className="rounded-md border border-border p-3">
-                                        <div className="text-xs text-muted-foreground">{tl('smartNewCountryLabel')}</div>
-                                        <div className="mt-1 text-lg font-semibold text-amber-400">{newCountryAlerts}</div>
-                                    </div>
-                                    <div className="rounded-md border border-border p-3">
-                                        <div className="text-xs text-muted-foreground">{tl('smartIpBurstLabel')}</div>
-                                        <div className="mt-1 flex items-center gap-2">
-                                            <AlertTriangle className="w-4 h-4 text-red-400" />
-                                            <span className="text-lg font-semibold text-red-400">{topHotIps.length}</span>
-                                        </div>
-                                    </div>
+                        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 shadow-sm space-y-3">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="flex items-center gap-2">
+                                    <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                                    <h3 className="text-sm font-bold text-amber-500 tracking-tight flex items-center gap-2">
+                                        {tl('smartAlertsTitle')}
+                                    </h3>
                                 </div>
-                            </CardContent>
-                        </Card>
+                                <span className="text-xs text-muted-foreground">
+                                    ℹ Disparaît automatiquement après 24h sans activité anormale (fenêtre glissante)
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-3 flex-wrap text-xs">
+                                {newCountryAlerts > 0 && (
+                                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10">
+                                        <span className="font-semibold text-amber-400">{newCountryAlerts}</span>
+                                        <span className="text-muted-foreground">{tl('smartNewCountryLabel')}</span>
+                                    </div>
+                                )}
+
+                                {topHotIps.map(({ ipAddress, attempts }: { ipAddress: string; attempts: number }) => (
+                                    <Link
+                                        key={ipAddress}
+                                        href={buildPageUrl(1, activeTab) + (buildPageUrl(1, activeTab).includes('?') ? '&' : '?') + `query=${encodeURIComponent(ipAddress)}`}
+                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 transition-colors cursor-pointer group"
+                                        title={`Cliquer pour filtrer les journaux sur l'IP ${ipAddress}`}
+                                    >
+                                        <AlertTriangle className="w-3.5 h-3.5 text-red-400 group-hover:scale-110 transition-transform" />
+                                        <span className="font-mono font-bold text-red-400">{ipAddress}</span>
+                                        <span className="text-red-300/80">({attempts} req/24h)</span>
+                                        <span className="text-[10px] underline ml-1 text-red-400">Filtrer</span>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
                     )}
 
                     <Card className="app-surface shadow-sm ring-1 ring-border/70">

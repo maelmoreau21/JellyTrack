@@ -485,7 +485,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                       <div className={`${meta.color} w-6 h-6 rounded-full flex items-center justify-center text-xs text-white`}>{meta.icon}</div>
                       <div className="flex-1">
                         <div className="text-[12px] font-medium">{meta.label}{g.count>1 ? ` · ${g.count}` : ''}</div>
-                        <div className="text-muted-foreground text-[11px]">{formatTime(g.pos)} — {Math.round((g.pos / durationMs) * 100)}%{detail ? ` · ${detail}` : ''}</div>
+                        <div className="text-muted-foreground text-[11px]">{formatTime(g.pos)} — {durationMs > 0 ? Math.min(100, Math.max(0, Math.round((g.pos / durationMs) * 100))) : 0}%{detail ? ` · ${detail}` : ''}</div>
                       </div>
                     </div>
                   );
