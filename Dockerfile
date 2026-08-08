@@ -98,7 +98,7 @@ RUN find /app/node_modules -type f -name "*.map" -delete 2>/dev/null || true && 
 
 # ── STAGE 3: Final lightweight runner image ──
 FROM node:26-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl su-exec shadow
+RUN apk add --no-cache libc6-compat openssl
 
 WORKDIR /app
 

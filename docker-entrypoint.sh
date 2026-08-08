@@ -53,42 +53,11 @@ else
   echo "Database: using provided DATABASE_URL"
 fi
 
-# PUID / PGID support.
-PUID=${PUID:-1001}
-PGID=${PGID:-1001}
-
-IS_ROOT=false
-if [ "$(id -u)" = "0" ]; then
-  IS_ROOT=true
-fi
-
-if [ "$IS_ROOT" = "true" ]; then
-  echo "Running as root. Configuring user: UID=$PUID, GID=$PGID"
-
-  # Update the nextjs group GID and user UID on the fly
-  if [ "$(id -g nextjs)" != "$PGID" ]; then
-      groupmod -o -g "$PGID" nodejs 2>/dev/null || true
-  fi
-  if [ "$(id -u nextjs)" != "$PUID" ]; then
-      usermod -o -u "$PUID" nextjs 2>/dev/null || true
-  fi
-
-  # Fix ownership of runtime-writable directories only.
-  chown -R "$PUID:$PGID" /data/backups 2>/dev/null || true
-  mkdir -p /app/.next/cache 2>/dev/null || true
-  chown -R "$PUID:$PGID" /app/.next 2>/dev/null || true
-else
-  echo "Running as non-root user ($(id -un)). Skipping UID/GID and chown configuration."
-  # Try to create cache directory if it doesn't exist
-  mkdir -p /app/.next/cache 2>/dev/null || true
-fi
+# Ensure runtime directories exist
+mkdir -p /app/.next/cache /data/backups 2>/dev/null || true
 
 run_prisma() {
-  if [ "$IS_ROOT" = "true" ]; then
-    su-exec "$PUID:$PGID" npx prisma "$@"
-  else
-    npx prisma "$@"
-  fi
+  npx prisma "$@"
 }
 
 run_prisma_db_push() {
@@ -152,10 +121,6 @@ fi
 # Store the runtime port for the healthcheck script
 echo "${PORT:-3000}" > /tmp/jellytrack-port
 
-# Launch app as the configured user.
+# Launch app
 echo "Launching Next.js Standalone server..."
-if [ "$IS_ROOT" = "true" ]; then
-  exec su-exec "$PUID:$PGID" node server.js
-else
-  exec node server.js
-fi
+exec node server.js

@@ -3,6 +3,7 @@ services:
     build: .
     image: ghcr.io/maelmoreau21/jellytrack:latest
     container_name: JellyTrack_app
+    user: "${PUID:-1000}:${PGID:-1000}"
     env_file:
       - .env
     ports:
@@ -38,9 +39,7 @@ services:
       JELLYFIN_WEBHOOK_SECRET: ${JELLYFIN_WEBHOOK_SECRET:?Set JELLYFIN_WEBHOOK_SECRET in .env}
       PLUGIN_KEY_PEPPER: ${PLUGIN_KEY_PEPPER:?Set PLUGIN_KEY_PEPPER in .env}
 
-      # Runtime user and backup location
-      PUID: ${PUID:-1000}
-      PGID: ${PGID:-1000}
+      # Backup location
       BACKUP_DIR: ${BACKUP_DIR:-/data/backups}
     volumes:
       - JellyTrack_backups:/data/backups
