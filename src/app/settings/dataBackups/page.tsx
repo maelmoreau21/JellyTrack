@@ -112,17 +112,28 @@ export default function SettingsDataBackupsPage() {
         setMsg(null);
         try {
             const text = await file.text();
-            const json = JSON.parse(text);
-            const res = await fetch("/api/backup/import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(json) });
+            try {
+                JSON.parse(text);
+            } catch (jsonErr: any) {
+                setMsg({ type: "error", text: (t("jsonParseError") || "Format JSON invalide.") + ` (${jsonErr?.message || ""})` });
+                setImporting(false);
+                return;
+            }
+
+            const res = await fetch("/api/backup/import", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: text,
+            });
             const data = await res.json().catch(() => ({}));
             if (res.ok && data.success) {
                 setMsg({ type: "success", text: t("restoreSuccess") || "Restauration effectuée avec succès." });
                 setTimeout(() => window.location.reload(), 1200);
             } else {
-                setMsg({ type: "error", text: data.error || t("invalidBackup") });
+                setMsg({ type: "error", text: data.error || t("invalidBackup") || "Échec de l'importation." });
             }
         } catch (e: any) {
-            setMsg({ type: "error", text: (e?.message as string) || t("jsonParseError") });
+            setMsg({ type: "error", text: (e?.message as string) || t("fileReadError") || "Erreur de lecture du fichier." });
         } finally {
             setImporting(false);
         }
