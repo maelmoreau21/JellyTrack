@@ -9,7 +9,7 @@ import { replaceSystemHealthState } from "@/lib/systemHealth";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { resolveAutoBackupFile } from "@/lib/backupDir";
 import { revalidateDashboardCache } from "@/lib/revalidate";
-import { extractBackupData, normalizeBackupData } from "@/lib/backupUtils";
+import { batchCreateMany, cleanJsonText, extractBackupData, normalizeBackupData } from "@/lib/backupUtils";
 import { z } from "zod";
 
 const restoreBackupSchema = z.object({
@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: await apiT('fileNotFound') }, { status: 404 });
         }
 
-        const raw = fs.readFileSync(backupFile.filePath, "utf-8");
+        let raw = fs.readFileSync(backupFile.filePath, "utf-8");
+        raw = cleanJsonText(raw);
         let backup: any;
         try {
             backup = JSON.parse(raw);
@@ -66,30 +67,12 @@ export async function POST(req: NextRequest) {
             await tx.systemHealthEvent.deleteMany();
             await tx.systemHealthState.deleteMany();
 
-            // Restore servers first (FK parent)
-            if (normalized.servers.length > 0) {
-                await tx.server.createMany({ data: normalized.servers });
-            }
-
-            // Restore users
-            if (normalized.users.length > 0) {
-                await tx.user.createMany({ data: normalized.users });
-            }
-
-            // Restore media
-            if (normalized.media.length > 0) {
-                await tx.media.createMany({ data: normalized.media });
-            }
-
-            // Restore playback history
-            if (normalized.playbackHistory.length > 0) {
-                await tx.playbackHistory.createMany({ data: normalized.playbackHistory });
-            }
-
-            // Restore telemetry events (if present in backup)
-            if (normalized.telemetryEvents.length > 0) {
-                await tx.telemetryEvent.createMany({ data: normalized.telemetryEvents });
-            }
+            // Insert normalized records using batching to avoid PostgreSQL parameter limit overflow (>65,535 params)
+            await batchCreateMany((batch) => tx.server.createMany({ data: batch }), normalized.servers, 1000);
+            await batchCreateMany((batch) => tx.user.createMany({ data: batch }), normalized.users, 1000);
+            await batchCreateMany((batch) => tx.media.createMany({ data: batch }), normalized.media, 1000);
+            await batchCreateMany((batch) => tx.playbackHistory.createMany({ data: batch }), normalized.playbackHistory, 1000);
+            await batchCreateMany((batch) => tx.telemetryEvent.createMany({ data: batch }), normalized.telemetryEvents, 1000);
 
             // Restore settings
             if (normalized.settings) {

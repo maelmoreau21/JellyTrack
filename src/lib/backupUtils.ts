@@ -133,11 +133,54 @@ export type NormalizedBackupData = {
     systemHealth: any | null;
 };
 
+export function cleanJsonText(rawText: string): string {
+    if (!rawText) return "";
+    let text = rawText.trim();
+    if (text.charCodeAt(0) === 0xFEFF) {
+        text = text.slice(1).trim();
+    }
+    return text;
+}
+
+export async function batchCreateMany<T>(
+    createFn: (batch: T[]) => Promise<unknown>,
+    items: T[],
+    chunkSize: number = 1000
+): Promise<void> {
+    if (!items || items.length === 0) return;
+    for (let i = 0; i < items.length; i += chunkSize) {
+        const chunk = items.slice(i, i + chunkSize);
+        await createFn(chunk);
+    }
+}
+
 export function extractBackupData(body: any): any {
     if (!body || typeof body !== "object") return null;
-    if (body.data && typeof body.data === "object") return body.data;
-    if (Array.isArray(body.servers) || Array.isArray(body.playbackHistory) || Array.isArray(body.media) || Array.isArray(body.users)) {
-        return body;
+
+    let candidate = body;
+    if (body.data && typeof body.data === "object" && !Array.isArray(body.data)) {
+        candidate = body.data;
+    }
+
+    if (candidate && typeof candidate === "object") {
+        if (!candidate.playbackHistory && candidate.playback_history) {
+            candidate.playbackHistory = candidate.playback_history;
+        }
+        if (!candidate.telemetryEvents && candidate.telemetry_events) {
+            candidate.telemetryEvents = candidate.telemetry_events;
+        }
+        if (!candidate.systemHealth && candidate.system_health) {
+            candidate.systemHealth = candidate.system_health;
+        }
+        if (
+            Array.isArray(candidate.servers) ||
+            Array.isArray(candidate.playbackHistory) ||
+            Array.isArray(candidate.media) ||
+            Array.isArray(candidate.users) ||
+            candidate.settings
+        ) {
+            return candidate;
+        }
     }
     return null;
 }

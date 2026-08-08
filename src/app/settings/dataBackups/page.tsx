@@ -133,7 +133,8 @@ export default function SettingsDataBackupsPage() {
                 setMsg({ type: "success", text: t("restoreSuccess") || "Restauration effectuée avec succès." });
                 setTimeout(() => window.location.reload(), 1200);
             } else {
-                setMsg({ type: "error", text: data.error || t("invalidBackup") || "Échec de l'importation." });
+                const errorMsg = data.error || data.message || (res.status === 413 ? "Fichier trop volumineux (max 50 Mo)." : null) || t("invalidBackup") || "Échec de l'importation.";
+                setMsg({ type: "error", text: errorMsg });
             }
         } catch (e: any) {
             setMsg({ type: "error", text: (e?.message as string) || t("fileReadError") || "Erreur de lecture du fichier." });

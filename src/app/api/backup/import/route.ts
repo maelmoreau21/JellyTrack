@@ -4,7 +4,7 @@ import { isAuthError } from "@/lib/auth";
 import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { replaceSystemHealthState } from "@/lib/systemHealth";
 import { revalidateDashboardCache } from "@/lib/revalidate";
-import { extractBackupData, normalizeBackupData } from "@/lib/backupUtils";
+import { batchCreateMany, cleanJsonText, extractBackupData, normalizeBackupData } from "@/lib/backupUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +29,7 @@ async function readJsonBodyWithLimit(req: NextRequest): Promise<unknown> {
 
     let fullText = "";
 
-    // 1. Primary Strategy: StreamUint8Array chunks via req.body.getReader()
-    // This bypasses Undici/Next.js internal consumeBody 10MB limit and reads the full request body until done === true.
+    // 1. Primary Strategy: Stream Uint8Array chunks via req.body.getReader()
     if (req.body) {
         try {
             const reader = req.body.getReader();
@@ -55,7 +54,7 @@ async function readJsonBodyWithLimit(req: NextRequest): Promise<unknown> {
             }
         } catch (err: unknown) {
             if (err instanceof BackupPayloadTooLargeError) throw err;
-            // Fallthrough to alternative methods if req.body reader fails
+            // Fallthrough
         }
     }
 
@@ -115,7 +114,8 @@ async function readJsonBodyWithLimit(req: NextRequest): Promise<unknown> {
         }
     }
 
-    if (!fullText || !fullText.trim()) return null;
+    fullText = cleanJsonText(fullText);
+    if (!fullText) return null;
 
     if (Buffer.byteLength(fullText, "utf-8") > MAX_BACKUP_IMPORT_BYTES) {
         throw new BackupPayloadTooLargeError();
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 
         if (!extracted) {
             return NextResponse.json({
-                error: "Invalid backup file format. Expected a JellyTrack backup JSON file."
+                error: "Invalid backup file format. Missing expected database entities (servers, users, media, playbackHistory)."
             }, { status: 400 });
         }
 
@@ -158,61 +158,46 @@ export async function POST(req: NextRequest) {
             await tx.systemHealthState.deleteMany();
             await tx.globalSettings.deleteMany();
 
-            // 2. Insert normalized records
-            if (normalized.servers.length > 0) {
-                await tx.server.createMany({ data: normalized.servers });
-            }
+            // 2. Insert normalized records using batching to avoid PostgreSQL parameter limit overflow (>65,535 params)
+            await batchCreateMany((batch) => tx.server.createMany({ data: batch }), normalized.servers, 1000);
+            await batchCreateMany((batch) => tx.user.createMany({ data: batch }), normalized.users, 1000);
+            await batchCreateMany((batch) => tx.media.createMany({ data: batch }), normalized.media, 1000);
+            await batchCreateMany((batch) => tx.playbackHistory.createMany({ data: batch }), normalized.playbackHistory, 1000);
+            await batchCreateMany((batch) => tx.telemetryEvent.createMany({ data: batch }), normalized.telemetryEvents, 1000);
 
-            if (normalized.users.length > 0) {
-                await tx.user.createMany({ data: normalized.users });
-            }
-
-            if (normalized.media.length > 0) {
-                await tx.media.createMany({ data: normalized.media });
-            }
-
-            if (normalized.playbackHistory.length > 0) {
-                await tx.playbackHistory.createMany({ data: normalized.playbackHistory });
-            }
-
-            if (normalized.telemetryEvents.length > 0) {
-                await tx.telemetryEvent.createMany({ data: normalized.telemetryEvents });
-            }
-
-            if (normalized.settings) {
-                const cs = normalized.settings as Record<string, unknown>;
-                await tx.globalSettings.create({
-                    data: {
-                        id: "global",
-                        discordWebhookUrl: (cs['discordWebhookUrl'] as string) ?? null,
-                        discordAlertCondition: (cs['discordAlertCondition'] as string) ?? "ALL",
-                        discordAlertsEnabled: (cs['discordAlertsEnabled'] as boolean) ?? false,
-                        excludedLibraries: Array.isArray(cs['excludedLibraries']) ? (cs['excludedLibraries'] as string[]) : [],
-                        syncCronHour: typeof cs['syncCronHour'] === "number" ? cs['syncCronHour'] : 3,
-                        syncCronMinute: typeof cs['syncCronMinute'] === "number" ? cs['syncCronMinute'] : 0,
-                        backupCronHour: typeof cs['backupCronHour'] === "number" ? cs['backupCronHour'] : 3,
-                        backupCronMinute: typeof cs['backupCronMinute'] === "number" ? cs['backupCronMinute'] : 30,
-                        defaultLocale: (cs['defaultLocale'] as string) ?? "en",
-                        timeFormat: (cs['timeFormat'] as string) ?? "24h",
-                        maxConcurrentTranscodes: typeof cs['maxConcurrentTranscodes'] === "number" ? cs['maxConcurrentTranscodes'] : 0,
-                        wrappedVisible: typeof cs['wrappedVisible'] === "boolean" ? cs['wrappedVisible'] : true,
-                        wrappedPeriodEnabled: typeof cs['wrappedPeriodEnabled'] === "boolean" ? cs['wrappedPeriodEnabled'] : true,
-                        wrappedStartMonth: typeof cs['wrappedStartMonth'] === "number" ? cs['wrappedStartMonth'] : 12,
-                        wrappedStartDay: typeof cs['wrappedStartDay'] === "number" ? cs['wrappedStartDay'] : 1,
-                        wrappedEndMonth: typeof cs['wrappedEndMonth'] === "number" ? cs['wrappedEndMonth'] : 1,
-                        wrappedEndDay: typeof cs['wrappedEndDay'] === "number" ? cs['wrappedEndDay'] : 31,
-                        pluginKeyRotationDays: typeof cs['pluginKeyRotationDays'] === "number" ? cs['pluginKeyRotationDays'] : 90,
-                        pluginAutoRotateEnabled: typeof cs['pluginAutoRotateEnabled'] === "boolean" ? cs['pluginAutoRotateEnabled'] : false,
-                        pluginKeyRotationGraceHours: typeof cs['pluginKeyRotationGraceHours'] === "number" ? cs['pluginKeyRotationGraceHours'] : 24,
-                        pluginTelemetrySettings: (cs['pluginTelemetrySettings'] as any) ?? null,
-                        authRememberThirtyDaysEnabled: typeof cs['authRememberThirtyDaysEnabled'] === "boolean" ? cs['authRememberThirtyDaysEnabled'] : true,
-                        authSessionsRevokedAt: cs['authSessionsRevokedAt'] ? new Date(String(cs['authSessionsRevokedAt'])) : null,
-                        resolutionThresholds: (cs['resolutionThresholds'] as any) ?? null,
-                    }
-                });
-            }
+            // 3. Ensure globalSettings singleton is always present
+            const cs = (normalized.settings || {}) as Record<string, unknown>;
+            await tx.globalSettings.create({
+                data: {
+                    id: "global",
+                    discordWebhookUrl: (cs['discordWebhookUrl'] as string) ?? null,
+                    discordAlertCondition: (cs['discordAlertCondition'] as string) ?? "ALL",
+                    discordAlertsEnabled: (cs['discordAlertsEnabled'] as boolean) ?? false,
+                    excludedLibraries: Array.isArray(cs['excludedLibraries']) ? (cs['excludedLibraries'] as string[]) : [],
+                    syncCronHour: typeof cs['syncCronHour'] === "number" ? cs['syncCronHour'] : 3,
+                    syncCronMinute: typeof cs['syncCronMinute'] === "number" ? cs['syncCronMinute'] : 0,
+                    backupCronHour: typeof cs['backupCronHour'] === "number" ? cs['backupCronHour'] : 3,
+                    backupCronMinute: typeof cs['backupCronMinute'] === "number" ? cs['backupCronMinute'] : 30,
+                    defaultLocale: (cs['defaultLocale'] as string) ?? "en",
+                    timeFormat: (cs['timeFormat'] as string) ?? "24h",
+                    maxConcurrentTranscodes: typeof cs['maxConcurrentTranscodes'] === "number" ? cs['maxConcurrentTranscodes'] : 0,
+                    wrappedVisible: typeof cs['wrappedVisible'] === "boolean" ? cs['wrappedVisible'] : true,
+                    wrappedPeriodEnabled: typeof cs['wrappedPeriodEnabled'] === "boolean" ? cs['wrappedPeriodEnabled'] : true,
+                    wrappedStartMonth: typeof cs['wrappedStartMonth'] === "number" ? cs['wrappedStartMonth'] : 12,
+                    wrappedStartDay: typeof cs['wrappedStartDay'] === "number" ? cs['wrappedStartDay'] : 1,
+                    wrappedEndMonth: typeof cs['wrappedEndMonth'] === "number" ? cs['wrappedEndMonth'] : 1,
+                    wrappedEndDay: typeof cs['wrappedEndDay'] === "number" ? cs['wrappedEndDay'] : 31,
+                    pluginKeyRotationDays: typeof cs['pluginKeyRotationDays'] === "number" ? cs['pluginKeyRotationDays'] : 90,
+                    pluginAutoRotateEnabled: typeof cs['pluginAutoRotateEnabled'] === "boolean" ? cs['pluginAutoRotateEnabled'] : false,
+                    pluginKeyRotationGraceHours: typeof cs['pluginKeyRotationGraceHours'] === "number" ? cs['pluginKeyRotationGraceHours'] : 24,
+                    pluginTelemetrySettings: (cs['pluginTelemetrySettings'] as any) ?? null,
+                    authRememberThirtyDaysEnabled: typeof cs['authRememberThirtyDaysEnabled'] === "boolean" ? cs['authRememberThirtyDaysEnabled'] : true,
+                    authSessionsRevokedAt: cs['authSessionsRevokedAt'] ? new Date(String(cs['authSessionsRevokedAt'])) : null,
+                    resolutionThresholds: (cs['resolutionThresholds'] as any) ?? null,
+                }
+            });
         }, {
-            timeout: 120000 // Give it 120 seconds if the DB is massive
+            timeout: 180000 // 3 minutes timeout for huge database imports
         });
 
         if (normalized.systemHealth) {
