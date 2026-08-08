@@ -4,7 +4,7 @@ ARG BUILDPLATFORM
 # ── STAGE 1: Install dependencies & generate Prisma client ──
 FROM --platform=$BUILDPLATFORM node:26-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl python3 build-base git ca-certificates
-RUN corepack enable && corepack prepare pnpm@10.2.0 --activate
+RUN npm install -g pnpm@10.2.0
 
 WORKDIR /app
 
@@ -32,7 +32,7 @@ RUN pnpm init && pnpm add prisma@7.8.0 dotenv@17.4.2
 # ── STAGE 2: Build Next.js application & clean up assets ──
 FROM --platform=$BUILDPLATFORM node:26-alpine AS builder
 RUN apk add --no-cache libc6-compat binutils openssl
-RUN corepack enable && corepack prepare pnpm@10.2.0 --activate
+RUN npm install -g pnpm@10.2.0
 
 WORKDIR /app
 
