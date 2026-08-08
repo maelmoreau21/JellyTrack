@@ -118,12 +118,14 @@ export default function SettingsDataBackupsPage() {
         setImporting(true);
         setMsg(null);
         try {
-            const formData = new FormData();
-            formData.append("file", file);
+            const buffer = await file.arrayBuffer();
 
             const res = await fetch("/api/backup/import", {
                 method: "POST",
-                body: formData,
+                headers: {
+                    "Content-Type": "application/octet-stream",
+                },
+                body: buffer,
             });
 
             const data = await res.json().catch(() => ({}));

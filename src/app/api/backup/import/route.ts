@@ -22,30 +22,62 @@ class BackupPayloadTooLargeError extends Error {
 }
 
 async function readJsonBodyWithLimit(req: NextRequest): Promise<unknown> {
+    const contentLength = Number(req.headers.get("content-length") || "0");
+    if (Number.isFinite(contentLength) && contentLength > MAX_BACKUP_IMPORT_BYTES) {
+        throw new BackupPayloadTooLargeError();
+    }
+
     const contentType = req.headers.get("content-type") || "";
 
-    // 1. Handle FormData file upload (preferred for large backup files to avoid HTTP body truncation)
+    // 1. Try Multipart Form Data if present (with req.clone() fallback for Next.js)
     if (contentType.includes("multipart/form-data")) {
-        let formData: FormData;
+        let formData: FormData | null = null;
         try {
-            formData = await req.formData();
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : "Failed to read form data";
-            throw new Error(`Failed to parse multipart form data: ${msg}`);
+            formData = await req.clone().formData();
+        } catch {
+            try {
+                formData = await req.formData();
+            } catch {
+                formData = null;
+            }
         }
 
-        const file = formData.get("file") as File | null;
-        if (!file) {
-            throw new Error("No backup file attached in form data.");
+        if (formData) {
+            const file = formData.get("file") as File | null;
+            if (file) {
+                if (file.size > MAX_BACKUP_IMPORT_BYTES) {
+                    throw new BackupPayloadTooLargeError();
+                }
+                const text = await file.text();
+                if (!text || !text.trim()) return null;
+                try {
+                    return JSON.parse(text);
+                } catch (err: unknown) {
+                    const msg = err instanceof Error ? err.message : "Invalid JSON syntax";
+                    throw new SyntaxError(`Invalid backup JSON: ${msg}`);
+                }
+            }
         }
+    }
 
-        if (file.size > MAX_BACKUP_IMPORT_BYTES) {
+    // 2. Read raw binary ArrayBuffer (works for application/octet-stream, application/json, or fallbacks)
+    let buffer: ArrayBuffer | null = null;
+    try {
+        buffer = await req.clone().arrayBuffer();
+    } catch {
+        try {
+            buffer = await req.arrayBuffer();
+        } catch {
+            buffer = null;
+        }
+    }
+
+    if (buffer && buffer.byteLength > 0) {
+        if (buffer.byteLength > MAX_BACKUP_IMPORT_BYTES) {
             throw new BackupPayloadTooLargeError();
         }
-
-        const text = await file.text();
+        const text = new TextDecoder("utf-8").decode(buffer);
         if (!text || !text.trim()) return null;
-
         try {
             return JSON.parse(text);
         } catch (err: unknown) {
@@ -54,12 +86,7 @@ async function readJsonBodyWithLimit(req: NextRequest): Promise<unknown> {
         }
     }
 
-    // 2. Handle direct raw JSON body POST request
-    const contentLength = Number(req.headers.get("content-length") || "0");
-    if (Number.isFinite(contentLength) && contentLength > MAX_BACKUP_IMPORT_BYTES) {
-        throw new BackupPayloadTooLargeError();
-    }
-
+    // 3. Final fallback: req.text()
     let text = "";
     try {
         text = await req.text();
