@@ -108,23 +108,24 @@ export default function SettingsDataBackupsPage() {
             setMsg({ type: "error", text: t("fileReadError") || "Veuillez sélectionner un fichier." });
             return;
         }
+
+        const maxBytes = 50 * 1024 * 1024;
+        if (file.size > maxBytes) {
+            setMsg({ type: "error", text: "Le fichier de sauvegarde est trop volumineux (limite 50 Mo)." });
+            return;
+        }
+
         setImporting(true);
         setMsg(null);
         try {
-            const text = await file.text();
-            try {
-                JSON.parse(text);
-            } catch (jsonErr: any) {
-                setMsg({ type: "error", text: (t("jsonParseError") || "Format JSON invalide.") + ` (${jsonErr?.message || ""})` });
-                setImporting(false);
-                return;
-            }
+            const formData = new FormData();
+            formData.append("file", file);
 
             const res = await fetch("/api/backup/import", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: text,
+                body: formData,
             });
+
             const data = await res.json().catch(() => ({}));
             if (res.ok && data.success) {
                 setMsg({ type: "success", text: t("restoreSuccess") || "Restauration effectuée avec succès." });

@@ -22,6 +22,39 @@ class BackupPayloadTooLargeError extends Error {
 }
 
 async function readJsonBodyWithLimit(req: NextRequest): Promise<unknown> {
+    const contentType = req.headers.get("content-type") || "";
+
+    // 1. Handle FormData file upload (preferred for large backup files to avoid HTTP body truncation)
+    if (contentType.includes("multipart/form-data")) {
+        let formData: FormData;
+        try {
+            formData = await req.formData();
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Failed to read form data";
+            throw new Error(`Failed to parse multipart form data: ${msg}`);
+        }
+
+        const file = formData.get("file") as File | null;
+        if (!file) {
+            throw new Error("No backup file attached in form data.");
+        }
+
+        if (file.size > MAX_BACKUP_IMPORT_BYTES) {
+            throw new BackupPayloadTooLargeError();
+        }
+
+        const text = await file.text();
+        if (!text || !text.trim()) return null;
+
+        try {
+            return JSON.parse(text);
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Invalid JSON syntax";
+            throw new SyntaxError(`Invalid backup JSON: ${msg}`);
+        }
+    }
+
+    // 2. Handle direct raw JSON body POST request
     const contentLength = Number(req.headers.get("content-length") || "0");
     if (Number.isFinite(contentLength) && contentLength > MAX_BACKUP_IMPORT_BYTES) {
         throw new BackupPayloadTooLargeError();
