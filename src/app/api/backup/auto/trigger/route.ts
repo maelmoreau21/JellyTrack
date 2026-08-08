@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     if (isAuthError(auth)) return auth;
 
     try {
-        const fileName = await performAutoBackup();
+        const fileName = await performAutoBackup("manuelle");
         return NextResponse.json({ success: true, message: await apiT('backupCreated', { fileName }), fileName });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);

@@ -1,24 +1,25 @@
 import prisma from "@/lib/prisma";
 import { appendHealthEvent, markBackupFinished, markBackupStarted, readSystemHealthState } from "@/lib/systemHealth";
-import { getBackupDirectory } from "@/lib/backupDir";
+import { getBackupDirectory, resolveAutoBackupFile } from "@/lib/backupDir";
 import { redactBackupData } from "@/lib/backupSecurity";
 import { logger } from "@/lib/logger";
 
-const MAX_BACKUPS = 5;
+const MAX_BACKUPS = 10;
 
 /**
- * Performs a full auto-backup of the database to a JSON file.
- * Implements rolling rotation: keeps only the 5 most recent backups.
+ * Performs a backup of the database to a JSON file.
+ * Mode can be 'auto' or 'manuelle'.
+ * Implements rolling rotation: keeps only recent backups.
  */
-export async function performAutoBackup(): Promise<string> {
-    logger.info("[Auto-Backup] Starting automated backup...");
+export async function performAutoBackup(mode: 'auto' | 'manuelle' = 'auto'): Promise<string> {
+    logger.info(`[Backup] Starting ${mode} backup...`);
     await markBackupStarted();
 
     try {
         const fs = await import("fs");
         const path = await import("path");
         const backupDir = getBackupDirectory();
-        logger.info({ backupDir }, `[Auto-Backup] Using backup directory`);
+        logger.info({ backupDir }, `[Backup] Using backup directory`);
 
         // Fetch all data
         const servers = await prisma.server.findMany();
@@ -32,7 +33,7 @@ export async function performAutoBackup(): Promise<string> {
         const backupContent = {
             version: "1.0",
             exportDate: new Date().toISOString(),
-            type: "auto-backup",
+            type: mode === "manuelle" ? "manual-backup" : "auto-backup",
             data: redactBackupData({
                 servers,
                 users,
@@ -47,7 +48,8 @@ export async function performAutoBackup(): Promise<string> {
         // Generate filename with date
         const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         const timeStr = new Date().toISOString().split('T')[1].replace(/:/g, '-').split('.')[0]; // HH-MM-SS
-        const fileName = `JellyTrack-auto-${dateStr}_${timeStr}.json`;
+        const prefix = mode === "manuelle" ? "JellyTrack-manuelle-" : "JellyTrack-auto-";
+        const fileName = `${prefix}${dateStr}_${timeStr}.json`;
         const filePath = path.join(backupDir, fileName);
 
         // BigInt-safe JSON serializer (Prisma returns BigInt for durationMs, positionTicks, etc.)
@@ -57,12 +59,12 @@ export async function performAutoBackup(): Promise<string> {
         const backupJsonString = JSON.stringify(backupContent, bigIntReplacer, 2);
         fs.writeFileSync(filePath, backupJsonString, "utf-8");
         const fileSizeMb = (Buffer.byteLength(backupJsonString) / 1024 / 1024).toFixed(2);
-        logger.info({ fileName, fileSizeMb }, `[Auto-Backup] Backup saved`);
+        logger.info({ fileName, fileSizeMb }, `[Backup] Backup saved`);
 
         // Rolling rotation: delete oldest files if we exceed MAX_BACKUPS
         type BackupFile = { name: string; time: number };
         const backupFiles = fs.readdirSync(backupDir)
-            .filter((f: string) => f.endsWith(".json") && f.startsWith("JellyTrack-auto-"))
+            .filter((f: string) => resolveAutoBackupFile(f) !== null)
             .map((f: string): BackupFile => ({
                 name: f,
                 time: fs.statSync(path.join(backupDir, f)).mtime.getTime(),

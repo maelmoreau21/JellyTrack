@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 const FALLBACK_TMP_DIR = "jellytrack-backups";
-const AUTO_BACKUP_FILE_PATTERN = /^JellyTrack-auto-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/;
+const AUTO_BACKUP_FILE_PATTERN = /^JellyTrack-(auto|manuelle|manual)-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.json$/;
 let cachedBackupDirectory: string | null = null;
 
 function isWritableDirectory(directory: string) {

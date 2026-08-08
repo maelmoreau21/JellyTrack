@@ -60,6 +60,9 @@
     "maxConcurrentTranscodesTitle": "Simultaneous Transcodes Threshold",
     "maxConcurrentTranscodesDesc": "0 = disabled. Alert if the number exceeds this threshold.",
     "backupsCount": "Backups",
+    "backupAuto": "Automatic",
+    "backupManual": "Manual",
+    "backupType": "Type",
     "totalSize": "Total Size",
     "latestBackup": "Latest Backup",
     "quickActionsBackupDesc": "Create an immediate backup or export the current database state.",
@@ -69,7 +72,10 @@
     "file": "File",
     "actions": "Actions",
     "confirmDeleteBackup": "Delete this backup?",
-    "confirmRestoreBackup": "Restoring will replace your current database. Continue?"
+    "confirmRestoreBackup": "Restoring will replace your current database. Continue?",
+    "download": "Download",
+    "downloadBackup": "Download",
+    "importBackupDesc": "Select a JSON backup file from your computer to restore your database."
   },
   "securitySettings": {
     "authSessionsTitle": "Web sessions",

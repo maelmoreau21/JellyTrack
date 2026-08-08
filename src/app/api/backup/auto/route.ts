@@ -14,8 +14,10 @@ export async function GET() {
             .filter((fileName: string) => resolveAutoBackupFile(fileName) !== null)
             .map((f: string) => {
                 const stats = fs.statSync(path.join(backupDir, f));
+                const isAuto = f.startsWith("JellyTrack-auto-");
                 return {
                     name: f,
+                    type: isAuto ? "auto" : "manual",
                     size: stats.size,
                     sizeMb: (stats.size / 1024 / 1024).toFixed(2),
                     date: stats.mtime.toISOString(),
