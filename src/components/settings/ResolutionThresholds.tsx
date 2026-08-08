@@ -45,22 +45,22 @@ export function ResolutionThresholds({ value, onChange }: ResolutionThresholdsPr
             </div>
             
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-500">{t("maxWidth")}</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">{t("maxWidth")}</label>
                 <Input 
                   type="number" 
                   value={current.maxW} 
                   onChange={(e) => handleChange(key, "maxW", e.target.value)}
-                  className="h-8 text-sm"
+                  className="h-9 text-sm font-medium"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs text-zinc-500">{t("maxHeight")}</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">{t("maxHeight")}</label>
                 <Input 
                   type="number" 
                   value={current.maxH} 
                   onChange={(e) => handleChange(key, "maxH", e.target.value)}
-                  className="h-8 text-sm"
+                  className="h-9 text-sm font-medium"
                 />
               </div>
             </div>

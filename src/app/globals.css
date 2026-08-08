@@ -71,7 +71,7 @@
   --accent-foreground: #ECFDF5;
   --destructive: #D64545;
   --border: rgba(15, 23, 42, 0.13);
-  --input: #EEF3F8;
+  --input: rgba(15, 23, 42, 0.2);
   --ring: #6366F1;
   --surface-card: #F8FAFC;
   --surface-soft: #F0F4F9;
@@ -133,7 +133,7 @@ html:not(.dark) {
   --accent-foreground: #E2E8F0;
   --destructive: #FB7185;
   --border: rgba(148, 163, 184, 0.14);
-  --input: #172033;
+  --input: rgba(148, 163, 184, 0.22);
   --ring: #22D3EE;
   --surface-card: #111827;
   --surface-soft: #172033;
