@@ -203,11 +203,12 @@ export const config = {
          * Match all request paths except for the ones starting with:
          * - api/auth (NextAuth endpoints)
          * - api/plugin/events (Internal plugin API)
+         * - api/backup (Backup import/export endpoints - allows large payload streaming)
          * - favicon.ico (favicon)
          * - logo.svg, icon.svg
          * - _next/static (static files)
          * - _next/image (image optimization files)
          */
-        "/((?!api/auth|api/plugin/events|favicon\\.ico|logo\\.svg|icon\\.svg|_next/static|_next/image).*)",
+        "/((?!api/auth|api/plugin/events|api/backup|favicon\\.ico|logo\\.svg|icon\\.svg|_next/static|_next/image).*)",
     ],
 };
