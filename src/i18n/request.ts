@@ -1,6 +1,6 @@
 import { getRequestConfig } from 'next-intl/server';
 import { cookies, headers } from 'next/headers';
-import type { AbstractIntlMessages } from 'use-intl/core';
+import type { AbstractIntlMessages } from 'next-intl';
 import enMessages from '../../messages/en.json';
 import fallbackMessages from '../../messages/fallback.json';
 import { DEFAULT_LOCALE, isSupportedLocale } from './locales';
