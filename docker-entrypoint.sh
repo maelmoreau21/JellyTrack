@@ -3,6 +3,10 @@ set -e
 
 echo "Starting JellyTrack Server..."
 
+# Ensure cache directory points to writable tmpfs
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/.cache}"
+export PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+
 # Normalize JELLYTRACK_* environment variable aliases
 export TZ="${TZ:-UTC}"
 export PORT="${JELLYTRACK_PORT:-${PORT:-3000}}"

@@ -26,7 +26,9 @@ RUN pnpm exec prisma generate
 
 # Install an isolated Prisma CLI and its dependencies in a separate directory
 WORKDIR /app/prisma-cli
-RUN pnpm init && pnpm add prisma@7.8.0 dotenv@17.4.2
+COPY prisma ./prisma
+ENV PRISMA_CLI_BINARY_TARGETS="linux-musl-openssl-3.0.x,linux-musl-arm64-openssl-3.0.x"
+RUN pnpm init && pnpm add prisma@7.8.0 dotenv@17.4.2 && pnpm exec prisma generate
 
 
 # ── STAGE 2: Build Next.js application & clean up assets ──
@@ -72,11 +74,11 @@ RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-mus
     find /app/prisma-cli/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
 
 # Strip debug symbols from Prisma engine binaries to reduce binary size significantly
-RUN find /app/node_modules -name "libquery_engine-linux-musl.so.node" -exec strip {} \; 2>/dev/null || true && \
-    find /app/node_modules -name "schema-engine-linux-musl" -exec strip {} \; 2>/dev/null || true && \
+RUN find /app/node_modules -name "*query_engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
+    find /app/node_modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
     # Strip prisma-cli engines
-    find /app/prisma-cli/node_modules -name "libquery_engine-linux-musl.so.node" -exec strip {} \; 2>/dev/null || true && \
-    find /app/prisma-cli/node_modules -name "schema-engine-linux-musl" -exec strip {} \; 2>/dev/null || true
+    find /app/prisma-cli/node_modules -name "*query_engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true
 
 # Clean up unnecessary files inside node_modules (source maps, typings, readmes, tests) to save space
 RUN find /app/node_modules -type f -name "*.map" -delete 2>/dev/null || true && \
