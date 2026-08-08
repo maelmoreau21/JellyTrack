@@ -16,7 +16,7 @@ describe("validateEnv", () => {
     });
 
     it("passes validation when JELLYTRACK_* environment variables are supplied", () => {
-        process.env.NODE_ENV = "production";
+        (process.env as Record<string, string>).NODE_ENV = "production";
         delete process.env.NEXT_PHASE;
         process.env.JELLYTRACK_SECRET = "valid_secret_123456789012345";
         process.env.JELLYTRACK_JELLYFIN_API_KEY = "valid_api_key_1234567890";
@@ -26,7 +26,7 @@ describe("validateEnv", () => {
     });
 
     it("fails validation when required variables are missing in production", () => {
-        process.env.NODE_ENV = "production";
+        (process.env as Record<string, string>).NODE_ENV = "production";
         delete process.env.NEXT_PHASE;
         const exitSpy = vi.spyOn(process, "exit").mockImplementation((() => {}) as any);
 

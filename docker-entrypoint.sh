@@ -4,6 +4,7 @@ set -e
 echo "Starting JellyTrack Server..."
 
 # Normalize JELLYTRACK_* environment variable aliases
+export TZ="${TZ:-UTC}"
 export PORT="${JELLYTRACK_PORT:-${PORT:-3000}}"
 export NEXTAUTH_SECRET="${NEXTAUTH_SECRET:-${JELLYTRACK_SECRET:-}}"
 export JELLYFIN_WEBHOOK_SECRET="${JELLYFIN_WEBHOOK_SECRET:-${JELLYTRACK_WEBHOOK_SECRET:-}}"

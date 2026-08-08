@@ -5,15 +5,15 @@ import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
 // Register the same factory for both local and aliased imports so modules
 // importing either './prisma' or '@/lib/prisma' receive the mocked client.
 function prismaMockFactory() {
-  const mediaUpsert = vi.fn(async () => ({}));
-  const mediaUpdateMany = vi.fn(async () => ({ count: 0 }));
-  const userUpsert = vi.fn(async () => ({}));
+  const mediaUpsert = vi.fn(async (..._args: any[]) => ({}));
+  const mediaUpdateMany = vi.fn(async (..._args: any[]) => ({ count: 0 }));
+  const userUpsert = vi.fn(async (..._args: any[]) => ({}));
 
   const tx = {
     media: {
       findMany: vi.fn(async () => []),
-      create: async (...args: any[]) => mediaUpsert(...args),
-      update: async (...args: any[]) => mediaUpsert(...args),
+      create: mediaUpsert,
+      update: mediaUpsert,
       delete: vi.fn(async () => ({})),
     },
     playbackHistory: { updateMany: vi.fn(async () => ({})) },

@@ -4,14 +4,15 @@ ARG BUILDPLATFORM
 # ── STAGE 1: Install dependencies & generate Prisma client ──
 FROM --platform=$BUILDPLATFORM node:26-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl python3 build-base git ca-certificates
+RUN corepack enable && corepack prepare pnpm@10.2.0 --activate
 
 WORKDIR /app
 
 # Copy lockfile and package configuration
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install all dependencies (including devDependencies for building)
-RUN npm ci --no-audit --progress=false
+RUN pnpm install --frozen-lockfile
 
 # Copy Prisma schema to generate the client
 COPY prisma ./prisma
@@ -21,16 +22,17 @@ ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholde
 ENV DATABASE_URL=${DATABASE_URL}
 
 # Generate Prisma Client
-RUN npx prisma generate
+RUN pnpm exec prisma generate
 
 # Install an isolated Prisma CLI and its dependencies in a separate directory
 WORKDIR /app/prisma-cli
-RUN npm init -y && npm install prisma@7.8.0 dotenv@17.4.2 --no-audit --progress=false
+RUN pnpm init && pnpm add prisma@7.8.0 dotenv@17.4.2
 
 
 # ── STAGE 2: Build Next.js application & clean up assets ──
 FROM --platform=$BUILDPLATFORM node:26-alpine AS builder
 RUN apk add --no-cache libc6-compat binutils openssl
+RUN corepack enable && corepack prepare pnpm@10.2.0 --activate
 
 WORKDIR /app
 
@@ -49,7 +51,7 @@ ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholde
 ENV DATABASE_URL=${DATABASE_URL}
 
 # Build Next.js standalone package
-RUN NEXTAUTH_SECRET=build-placeholder npm run build
+RUN NEXTAUTH_SECRET=build-placeholder pnpm run build
 
 # ── Clean up Prisma engines: keep only linux-musl (Alpine), remove all others ──
 # We clean BOTH main node_modules (to optimize standalone copy) and prisma-cli node_modules (to optimize runtime copy)
@@ -102,6 +104,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV TZ=UTC
 
 # Ensure runtime directories exist and are owned by the default node user (UID/GID 1000)
 RUN mkdir -p /data/backups /app/.next/cache && \
