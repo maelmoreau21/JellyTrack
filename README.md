@@ -78,7 +78,7 @@ JellyTrack runs on `http://localhost:3000` by default.
 - Docker uses Node 24.
 - Prisma 7 stores its CLI datasource URL in `prisma.config.ts`.
 - Runtime database access uses `@prisma/adapter-pg` with `DATABASE_URL`.
-- `npx prisma generate` must be run after schema changes.
+- `pnpm exec prisma generate` must be run after schema changes.
 - Migrations live in `prisma/migrations`.
 
 ## Jellyfin Plugin Configuration
@@ -132,16 +132,16 @@ Downloads always count as complete views, including audio and short media, unles
 ## Development
 
 ```bash
-npm install
-npx prisma generate
-npm run test
-npm run check:i18n
-npm run lint
-npm run build
-npm outdated --json
+pnpm install
+pnpm exec prisma generate
+pnpm test
+pnpm check:i18n
+pnpm lint
+pnpm build
+pnpm outdated --json
 ```
 
-`npm outdated --json` is expected to return `{}` after dependency updates.
+`pnpm outdated --json` is expected to return `{}` after dependency updates.
 
 ## License
 
