@@ -28,7 +28,7 @@ RUN pnpm exec prisma generate
 WORKDIR /app/prisma-cli
 COPY prisma ./prisma
 ENV PRISMA_CLI_BINARY_TARGETS="linux-musl-openssl-3.0.x,linux-musl-arm64-openssl-3.0.x"
-RUN pnpm init && pnpm add prisma@7.8.0 dotenv@17.4.2 && pnpm exec prisma generate
+RUN pnpm init && pnpm add prisma@7.8.0 @prisma/client@7.8.0 dotenv@17.4.2 && pnpm exec prisma generate
 
 
 # ── STAGE 2: Build Next.js application & clean up assets ──
