@@ -435,18 +435,22 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         });
     })();
 
-    // Telemetry timeline: group pauses, audio & subtitle changes per session date
-    const telemetryMap = new Map<string, { pauses: number; audioChanges: number; subtitleChanges: number }>();
-    effectiveHistory.forEach((h: PlaybackHistory) => {
-        const dateKey = new Date(h.startedAt).toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
-        const entry = telemetryMap.get(dateKey) || { pauses: 0, audioChanges: 0, subtitleChanges: 0 };
+    // Telemetry timeline: group pauses, audio & subtitle changes per session date (chronological)
+    const telemetryMap = new Map<string, { timestamp: number; displayDate: string; pauses: number; audioChanges: number; subtitleChanges: number; seeks: number }>();
+    const sortedHistoryForTelemetry = [...effectiveHistory].sort((a, b) => new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime());
+    sortedHistoryForTelemetry.forEach((h: PlaybackHistory) => {
+        const d = new Date(h.startedAt);
+        const isoKey = d.toISOString().split("T")[0];
+        const displayDate = d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
+        const entry = telemetryMap.get(isoKey) || { timestamp: d.getTime(), displayDate, pauses: 0, audioChanges: 0, subtitleChanges: 0, seeks: 0 };
         entry.pauses += h.pauseCount || 0;
         entry.audioChanges += h.audioChanges || 0;
         entry.subtitleChanges += h.subtitleChanges || 0;
-        telemetryMap.set(dateKey, entry);
+        entry.seeks += (h.seekCount || 0) + (h.rewatchCount || 0);
+        telemetryMap.set(isoKey, entry);
     });
-    const telemetryData = Array.from(telemetryMap.entries()).map(([date, v]) => ({ date, ...v }));
-    const hasTelemetry = telemetryData.some(d => d.pauses > 0 || d.audioChanges > 0 || d.subtitleChanges > 0);
+    const telemetryData = Array.from(telemetryMap.values()).map(v => ({ date: v.displayDate, pauses: v.pauses, audioChanges: v.audioChanges, subtitleChanges: v.subtitleChanges, seeks: v.seeks }));
+    const hasTelemetry = telemetryData.some(d => d.pauses > 0 || d.audioChanges > 0 || d.subtitleChanges > 0 || (d.seeks || 0) > 0);
 
     // Fetch positional telemetry events for timeline chart
     const playbackIds = effectiveHistory.map((h: PlaybackHistory) => h.id);
@@ -502,7 +506,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const playbackUserMap = new Map(effectiveHistory.map((h: PlaybackHistory) => [h.id, h.user?.username || tc('deletedUser')]));
     const jumpSignalMap = new Map<string, { eventType: "seek" | "replay"; label: string; count: number; playbacks: Set<string> }>();
     const speedSignalMap = new Map<string, { label: string; count: number; estimated: number }>();
-    const languageSwitchMap = new Map<string, { label: string; count: number; kind: "audio" | "subtitle" }>();
+    const languageSwitchMap = new Map<string, { label: string; count: number; kind: "audio" | "subtitle"; positions: Set<string> }>();
     const languageSegmentMap = new Map<string, { label: string; range: string; count: number; sessions: Set<string>; kind: "audio" | "subtitle" }>();
 
     for (const event of rawTelemetryEvents) {
@@ -523,24 +527,32 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         }
 
         if (eventType === "speed_change" && metadata) {
-            const label = typeof metadata.toRateLabel === "string" ? metadata.toRateLabel : formatRate(metadata.toRate);
-            if (label) {
-                const entry = speedSignalMap.get(label) || { label, count: 0, estimated: 0 };
-                entry.count += 1;
-                if (metadata.source === "estimated") entry.estimated += 1;
-                speedSignalMap.set(label, entry);
+            const toRate = typeof metadata.toRate === "number" ? metadata.toRate : null;
+            const isInitialNormal = metadata.initial === true && (toRate === null || Math.abs(toRate - 1.0) < 0.001);
+            if (!isInitialNormal) {
+                const label = typeof metadata.toRateLabel === "string" ? metadata.toRateLabel : formatRate(metadata.toRate);
+                if (label && label !== "x1") {
+                    const entry = speedSignalMap.get(label) || { label, count: 0, estimated: 0 };
+                    entry.count += 1;
+                    if (metadata.source === "estimated") entry.estimated += 1;
+                    speedSignalMap.set(label, entry);
+                }
             }
         }
 
         if ((eventType === "audio_change" || eventType === "subtitle_change") && metadata) {
             const label = `${formatChangeSide(metadata.from)} -> ${formatChangeSide(metadata.to)}`;
+            const posMs = Number(event.positionMs);
+            const posLabel = Number.isFinite(posMs) && posMs >= 0 ? formatPositionMs(posMs) : null;
             const key = `${eventType}:${label}`;
             const entry = languageSwitchMap.get(key) || {
                 label,
                 count: 0,
                 kind: eventType === "audio_change" ? "audio" : "subtitle",
+                positions: new Set<string>(),
             };
             entry.count += 1;
+            if (posLabel) entry.positions.add(posLabel);
             languageSwitchMap.set(key, entry);
         }
     }
@@ -1033,24 +1045,53 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                     {languageSwitchSignals.length === 0 ? (
                                         <p className="text-sm text-muted-foreground">{t('noBehaviorSignals')}</p>
                                     ) : languageSwitchSignals.map((entry) => (
-                                        <div key={`${entry.kind}:${entry.label}`} className="rounded-md border border-border px-3 py-2">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <span className="text-xs">{entry.label}</span>
-                                                <Badge variant="outline">{entry.count}</Badge>
+                                        <div key={`${entry.kind}:${entry.label}`} className="rounded-lg border border-border/60 bg-muted/20 p-2.5 space-y-1">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    {entry.kind === 'audio' ? (
+                                                        <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/30 gap-1 text-[10px] shrink-0 font-medium">
+                                                            <Headphones className="w-3 h-3" /> Audio
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge className="bg-cyan-500/15 text-cyan-400 border-cyan-500/30 gap-1 text-[10px] shrink-0 font-medium">
+                                                            <Languages className="w-3 h-3" /> Sous-titres
+                                                        </Badge>
+                                                    )}
+                                                    <span className="text-xs font-semibold text-foreground truncate">{entry.label}</span>
+                                                </div>
+                                                <Badge variant="outline" className="text-[11px] font-mono shrink-0">{entry.count}x</Badge>
                                             </div>
-                                            <p className="mt-1 text-[11px] text-muted-foreground">{entry.kind === 'audio' ? t('audioChanges') : t('subtitleChanges')}</p>
+                                            {entry.positions && entry.positions.size > 0 && (
+                                                <p className="text-[11px] font-mono text-muted-foreground pt-0.5">
+                                                    ⏱️ Changement à {Array.from(entry.positions).join(', ')}
+                                                </p>
+                                            )}
                                         </div>
                                     ))}
                                     {languageSegments.length > 0 && (
                                         <div className="pt-2 space-y-2 border-t border-border/60">
-                                            <p className="text-xs font-medium text-muted-foreground">{t('languageSegments')}</p>
+                                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('languageSegments')}</p>
                                             {languageSegments.map((entry) => (
-                                                <div key={`${entry.kind}:${entry.label}:${entry.range}`} className="rounded-md border border-border px-3 py-2">
+                                                <div key={`${entry.kind}:${entry.label}:${entry.range}`} className="rounded-lg border border-border/60 bg-muted/20 p-2.5">
                                                     <div className="flex items-center justify-between gap-3">
-                                                        <span className="text-xs font-medium">{entry.label}</span>
-                                                        <Badge variant="outline">{entry.sessionsCount}</Badge>
+                                                        <div className="flex items-center gap-2">
+                                                            {entry.kind === 'audio' ? (
+                                                                <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/30 gap-1 text-[10px] font-medium">
+                                                                    <Headphones className="w-3 h-3" /> Audio
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge className="bg-cyan-500/15 text-cyan-400 border-cyan-500/30 gap-1 text-[10px] font-medium">
+                                                                    <Languages className="w-3 h-3" /> Sous-titres
+                                                                </Badge>
+                                                            )}
+                                                            <span className="text-xs font-semibold text-foreground">{entry.label}</span>
+                                                        </div>
+                                                        <Badge variant="outline" className="text-[10px]">{entry.sessionsCount} session{entry.sessionsCount > 1 ? 's' : ''}</Badge>
                                                     </div>
-                                                    <p className="mt-1 font-mono text-[11px] text-muted-foreground">{entry.range}</p>
+                                                    <div className="mt-1.5 flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                                                        <span>Moment du film :</span>
+                                                        <span className="text-foreground/90 font-medium">{entry.range}</span>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

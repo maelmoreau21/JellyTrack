@@ -1539,10 +1539,12 @@ export async function POST(req: Request) {
                 const previousAt = typeof previousRate?.at === "number" && Number.isFinite(previousRate.at)
                     ? previousRate.at
                     : null;
-                const bucketChanged = previousBucket === null || Math.abs(previousBucket - rateObservation.bucket) > 0.001;
+                const isActualSpeedChange = previousBucket !== null
+                    ? Math.abs(previousBucket - rateObservation.bucket) > 0.001
+                    : Math.abs(rateObservation.bucket - 1.0) > 0.001;
                 const outsideCooldown = previousAt === null || now - previousAt >= 15_000;
 
-                if (bucketChanged && outsideCooldown) {
+                if (isActualSpeedChange && outsideCooldown) {
                     if (previousBucket !== null) {
                         updates.speedChangeCount = { increment: 1 };
                     }

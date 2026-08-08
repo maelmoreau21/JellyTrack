@@ -340,5 +340,3 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
         </form>
     );
 }
-    );
-}
