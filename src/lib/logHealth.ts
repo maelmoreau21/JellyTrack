@@ -114,17 +114,15 @@ export async function getLogHealthSnapshot() {
         const detailCount = normalizeDetailCount(event.details);
         const kind = (event.kind || "").toLowerCase();
         const isErrorLike = kind.includes("error");
-        const isCleanupLike = kind.includes("ghost") || kind.includes("orphan") || kind.includes("open-playbacks");
+        const isCleanupLike = kind.includes("ghost") || kind.includes("orphan") || kind.includes("open-playback") || kind.includes("cleanup") || kind.includes("clean") || kind.includes("prune") || kind.includes("purge");
         const isSuccessLike = kind === "sync_success" || kind.includes("success") || kind.includes("ping") || kind.includes("ok");
-
-        if (isErrorLike) {
-            if (event.source === "monitor") dayEntry.monitorErrors += detailCount;
-            if (event.source === "sync") dayEntry.syncErrors += detailCount;
-            if (event.source === "backup") dayEntry.backupErrors += detailCount;
-        }
 
         if (isCleanupLike) {
             dayEntry.cleanupOps += detailCount;
+        } else if (isErrorLike) {
+            if (event.source === "monitor") dayEntry.monitorErrors += detailCount;
+            if (event.source === "sync") dayEntry.syncErrors += detailCount;
+            if (event.source === "backup") dayEntry.backupErrors += detailCount;
         }
 
         if (isSuccessLike) {
@@ -137,8 +135,11 @@ export async function getLogHealthSnapshot() {
         }
     });
 
+    const isValkeyEnabled = Boolean((process.env.VALKEY_URL || process.env.REDIS_URL)?.trim());
+
     return {
         status: healthState,
+        isValkeyEnabled,
         excludedLibraries: settings?.excludedLibraries || [],
         counts: {
             activeStreams: activeStreams.length,

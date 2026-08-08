@@ -1517,7 +1517,7 @@ export async function POST(req: Request) {
                 now,
                 positionTicks,
             });
-            if (rateObservation && positionMs > 0) {
+            if (rateObservation && positionMs > 0 && rateObservation.source === "jellyfin") {
                 const currentMaxRate = parsePlaybackRate((activePlayback as Record<string, unknown>).maxPlaybackRate);
                 if (currentMaxRate === null || rateObservation.bucket > currentMaxRate) {
                     updates.maxPlaybackRate = rateObservation.bucket;

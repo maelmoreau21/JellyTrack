@@ -196,6 +196,7 @@
     "directStream": "Direct stream"
   },
   "dashboard": {
+    "title": "Tableau de bord",
     "abandoned": "Abandonné",
     "activeStreams": "Flux Actifs",
     "activeUsers": "utilisateur(s) actif(s)",

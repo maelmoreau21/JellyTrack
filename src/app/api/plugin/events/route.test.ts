@@ -570,7 +570,7 @@ describe("/api/plugin/events schema v3 ingestion", () => {
         }));
     });
 
-    it("records a lightweight speed signal from stable progress deltas", async () => {
+    it("records speed_change events for explicit speed signals", async () => {
         const now = Date.now();
         mocks.prisma.media.findFirst.mockResolvedValue(streamMedia);
         mocks.prisma.activeStream.findUnique.mockResolvedValue({
@@ -596,6 +596,7 @@ describe("/api/plugin/events schema v3 ingestion", () => {
             serverId: "jellyfin-main",
             sessionId: "session-1",
             positionTicks: 250_000_000,
+            playbackSpeed: 1.5,
             isPaused: false,
             user: { jellyfinUserId: "jf-user-1", username: "Alice" },
             media: {
@@ -620,7 +621,7 @@ describe("/api/plugin/events schema v3 ingestion", () => {
         expect(JSON.parse(speedEvent.metadata)).toEqual(expect.objectContaining({
             toRate: 1.5,
             toRateLabel: "x1.5",
-            source: "estimated",
+            source: "jellyfin",
             initial: true,
         }));
         expect(mocks.prisma.playbackHistory.update).toHaveBeenCalledWith(expect.objectContaining({

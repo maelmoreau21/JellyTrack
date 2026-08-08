@@ -196,6 +196,7 @@
     "directStream": "Direct stream"
   },
   "dashboard": {
+    "title": "Panel de control",
     "abandoned": "Abandonado",
     "activeStreams": "Transmisiones activas",
     "activeUsers": "usuario(s) activo(s)",

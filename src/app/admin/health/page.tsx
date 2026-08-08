@@ -80,7 +80,7 @@ export default async function HealthPage() {
                         <p className="text-muted-foreground max-w-2xl">{t("logHealthDesc")}</p>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div className={`grid grid-cols-1 gap-4 md:grid-cols-2 ${snapshot.isValkeyEnabled !== false ? "lg:grid-cols-4" : "lg:grid-cols-2"}`}>
                         <Card className="app-surface border-border">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -110,31 +110,35 @@ export default async function HealthPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="app-surface border-border">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                                    {t("dbWithoutValkey")}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-xl font-semibold">{snapshot.counts.dbStreamsWithoutValkey}</div>
-                                <p className="mt-1.5 text-xs text-muted-foreground">{t("dbWithoutValkeyDesc")}</p>
-                            </CardContent>
-                        </Card>
+                        {snapshot.isValkeyEnabled !== false && (
+                            <>
+                                <Card className="app-surface border-border">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                                            {t("dbWithoutValkey")}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-xl font-semibold">{snapshot.counts.dbStreamsWithoutValkey}</div>
+                                        <p className="mt-1.5 text-xs text-muted-foreground">{t("dbWithoutValkeyDesc")}</p>
+                                    </CardContent>
+                                </Card>
 
-                        <Card className="app-surface border-border">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                                    <Activity className="h-4 w-4 text-emerald-500" />
-                                    {t("valkeyOrphan")}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-xl font-semibold">{snapshot.counts.valkeyOrphans}</div>
-                                <p className="mt-1.5 text-xs text-muted-foreground">{t("valkeyOrphanDesc")}</p>
-                            </CardContent>
-                        </Card>
+                                <Card className="app-surface border-border">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                                            <Activity className="h-4 w-4 text-emerald-500" />
+                                            {t("valkeyOrphan")}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-xl font-semibold">{snapshot.counts.valkeyOrphans}</div>
+                                        <p className="mt-1.5 text-xs text-muted-foreground">{t("valkeyOrphanDesc")}</p>
+                                    </CardContent>
+                                </Card>
+                            </>
+                        )}
                     </div>
 
                     <Card className="app-surface border-border">

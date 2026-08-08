@@ -178,7 +178,7 @@ export default async function DashboardPage(props: {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4">
           <div className="flex flex-col gap-2 min-w-0">
             <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 min-w-0">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h2>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
               <div className="w-full md:w-auto overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
                 <MediaFilter />
               </div>
@@ -436,8 +436,8 @@ export default async function DashboardPage(props: {
                 <HeatmapWrapper selectedServerIds={selectedServerIds} />
               </Suspense>,
 
-              /* Dataviz Row : Plateformes + Top Users + Live */
-              <div key="platforms" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 min-w-0">
+              /* Dataviz Row : Top Users + Plateformes */
+              <div key="users-platforms" className="grid gap-4 md:grid-cols-2 min-w-0">
 
                 <Card className="col-span-1 app-surface-soft border-border backdrop-blur-sm shadow-sm">
                   <CardHeader>
@@ -479,7 +479,10 @@ export default async function DashboardPage(props: {
                     </div>
                   </CardContent>
                 </Card>
+              </div>,
 
+              /* Dedicated Live Streams Row */
+              <div key="live-streams" className="w-full">
                 <ErrorBoundary name="Live Streams">
                   <LiveStreamsPanel
                     initialStreams={liveStreams}

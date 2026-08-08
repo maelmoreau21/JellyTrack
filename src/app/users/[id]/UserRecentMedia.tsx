@@ -361,7 +361,7 @@ export default async function UserRecentMedia({
                         <LogFilters 
                             initialQuery={query} initialSort={sort} initialHideZapped={hideZapped} initialType={typeFilter}
                             initialClient={clientParams} initialAudio={audioParams} initialSubtitle={subtitleParams}
-                            initialDateFrom={dateFromParam} initialDateTo={dateToParam} hideSearch={true}
+                            initialDateFrom={dateFromParam} initialDateTo={dateToParam} hideSearch={true} hideExport={true}
                         />
                     </div>
                 </div>

@@ -196,6 +196,7 @@
     "directStream": "Direct stream"
   },
   "dashboard": {
+    "title": "Dashboard",
     "abandoned": "Abandoned",
     "activeStreams": "Active Streams",
     "activeUsers": "active user(s)",

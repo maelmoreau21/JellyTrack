@@ -76,10 +76,10 @@ export function HealthAnomalyCharts({ timeline }: { timeline: TimelinePoint[] })
                             iconType="circle"
                             wrapperStyle={{ fontSize: "11px", fontWeight: 600, paddingBottom: "16px" }}
                         />
-                        <Area type="monotone" dataKey="cleanupOps" name={t('anomalyCleanupOps')} stroke="#10b981" fill="#10b981" fillOpacity={0.16} strokeWidth={2} stackId="1" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                        <Area type="monotone" dataKey="monitorErrors" name={t('anomalyMonitorErrors')} stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.16} strokeWidth={2} stackId="1" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                        <Area type="monotone" dataKey="syncErrors" name={t('anomalySyncErrors')} stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.16} strokeWidth={2} stackId="1" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                        <Area type="monotone" dataKey="backupErrors" name={t('anomalyBackupErrors')} stroke="#ef4444" fill="#ef4444" fillOpacity={0.16} strokeWidth={2} stackId="1" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                        <Area type="monotone" dataKey="cleanupOps" name={t('anomalyCleanupOps')} stroke="#10b981" fill="#10b981" fillOpacity={0.16} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                        <Area type="monotone" dataKey="monitorErrors" name={t('anomalyMonitorErrors')} stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.16} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                        <Area type="monotone" dataKey="syncErrors" name={t('anomalySyncErrors')} stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.16} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+                        <Area type="monotone" dataKey="backupErrors" name={t('anomalyBackupErrors')} stroke="#ef4444" fill="#ef4444" fillOpacity={0.16} strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>

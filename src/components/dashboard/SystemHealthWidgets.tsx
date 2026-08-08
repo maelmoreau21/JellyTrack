@@ -14,6 +14,7 @@ type SystemStatus = {
 
 type Snapshot = {
     status: SystemStatus;
+    isValkeyEnabled?: boolean;
     excludedLibraries: string[];
     counts: {
         activeStreams: number;
@@ -93,7 +94,7 @@ export function SystemHealthWidgets({ initialSnapshot }: { initialSnapshot: Snap
             </div>
 
             <Card className="app-surface border-border">
-                <CardContent className="grid gap-4 p-5 md:grid-cols-4">
+                <CardContent className={`grid gap-4 p-5 ${snapshot.isValkeyEnabled !== false ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
                     <div className="app-surface-soft rounded-lg border border-border p-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> {t('activeStreams')}</div>
                         <div className="mt-2 text-3xl font-bold">{snapshot.counts.activeStreams}</div>
@@ -102,10 +103,12 @@ export function SystemHealthWidgets({ initialSnapshot }: { initialSnapshot: Snap
                         <div className="flex items-center gap-2 text-sm text-muted-foreground"><ShieldAlert className="h-4 w-4 text-amber-500" /> {t('openPlaybackOrphans')}</div>
                         <div className="mt-2 text-3xl font-bold">{snapshot.counts.openPlaybackOrphans}</div>
                     </div>
-                    <div className="app-surface-soft rounded-lg border border-border p-4">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground"><AlertTriangle className="h-4 w-4 text-rose-500" /> {t('dbWithoutValkey')}</div>
-                        <div className="mt-2 text-3xl font-bold">{snapshot.counts.dbStreamsWithoutValkey}</div>
-                    </div>
+                    {snapshot.isValkeyEnabled !== false && (
+                        <div className="app-surface-soft rounded-lg border border-border p-4">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground"><AlertTriangle className="h-4 w-4 text-rose-500" /> {t('dbWithoutValkey')}</div>
+                            <div className="mt-2 text-3xl font-bold">{snapshot.counts.dbStreamsWithoutValkey}</div>
+                        </div>
+                    )}
                     <div className="app-surface-soft rounded-lg border border-border p-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground"><HeartPulse className="h-4 w-4 text-primary" /> {t('excludedLibraries')}</div>
                         <div className="mt-2 text-3xl font-bold">{snapshot.excludedLibraries.length}</div>

@@ -359,7 +359,7 @@ export function LiveStreamsPanel({
     const useTimeline = streams.length >= 3 && !forceCards;
 
     return (
-        <Card className="col-span-3 app-surface-soft border-border/50 shadow-sm">
+        <Card className="w-full app-surface-soft border-border/50 shadow-sm">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>

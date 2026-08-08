@@ -277,7 +277,7 @@ html:not(.dark) {
   }
 
   .app-field {
-    border: 1px solid var(--border-strong);
+    border: 1px solid rgba(15, 23, 42, 0.25);
     background: var(--input);
     color: var(--foreground);
     box-shadow: inset 0 1px rgba(255, 255, 255, 0.42), 0 0 0 1px rgba(15, 23, 42, 0.03);
@@ -291,7 +291,7 @@ html:not(.dark) {
   }
 
   .dark .app-field {
-    border-color: var(--border-strong);
+    border: 1px solid rgba(148, 163, 184, 0.35);
     background: #172033;
     color: #E2E8F0;
     box-shadow: inset 0 1px rgba(255, 255, 255, 0.035);
