@@ -27,81 +27,102 @@ async function readJsonBodyWithLimit(req: NextRequest): Promise<unknown> {
         throw new BackupPayloadTooLargeError();
     }
 
-    const contentType = req.headers.get("content-type") || "";
+    let fullText = "";
 
-    // 1. Try Multipart Form Data if present (with req.clone() fallback for Next.js)
-    if (contentType.includes("multipart/form-data")) {
-        let formData: FormData | null = null;
+    // 1. Primary Strategy: StreamUint8Array chunks via req.body.getReader()
+    // This bypasses Undici/Next.js internal consumeBody 10MB limit and reads the full request body until done === true.
+    if (req.body) {
         try {
-            formData = await req.clone().formData();
+            const reader = req.body.getReader();
+            const chunks: Uint8Array[] = [];
+            let totalBytes = 0;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                if (value && value.byteLength > 0) {
+                    totalBytes += value.byteLength;
+                    if (totalBytes > MAX_BACKUP_IMPORT_BYTES) {
+                        throw new BackupPayloadTooLargeError();
+                    }
+                    chunks.push(value);
+                }
+            }
+
+            if (chunks.length > 0) {
+                const fullBuffer = Buffer.concat(chunks);
+                fullText = fullBuffer.toString("utf-8");
+            }
+        } catch (err: unknown) {
+            if (err instanceof BackupPayloadTooLargeError) throw err;
+            // Fallthrough to alternative methods if req.body reader fails
+        }
+    }
+
+    // 2. Secondary Strategy: Multipart Form Data
+    if (!fullText) {
+        const contentType = req.headers.get("content-type") || "";
+        if (contentType.includes("multipart/form-data")) {
+            let formData: FormData | null = null;
+            try {
+                formData = await req.clone().formData();
+            } catch {
+                try {
+                    formData = await req.formData();
+                } catch {
+                    formData = null;
+                }
+            }
+
+            if (formData) {
+                const file = formData.get("file") as File | null;
+                if (file) {
+                    if (file.size > MAX_BACKUP_IMPORT_BYTES) {
+                        throw new BackupPayloadTooLargeError();
+                    }
+                    fullText = await file.text();
+                }
+            }
+        }
+    }
+
+    // 3. Fallback Strategy: req.arrayBuffer() or req.text()
+    if (!fullText) {
+        let buffer: ArrayBuffer | null = null;
+        try {
+            buffer = await req.clone().arrayBuffer();
         } catch {
             try {
-                formData = await req.formData();
+                buffer = await req.arrayBuffer();
             } catch {
-                formData = null;
+                buffer = null;
             }
         }
 
-        if (formData) {
-            const file = formData.get("file") as File | null;
-            if (file) {
-                if (file.size > MAX_BACKUP_IMPORT_BYTES) {
-                    throw new BackupPayloadTooLargeError();
-                }
-                const text = await file.text();
-                if (!text || !text.trim()) return null;
-                try {
-                    return JSON.parse(text);
-                } catch (err: unknown) {
-                    const msg = err instanceof Error ? err.message : "Invalid JSON syntax";
-                    throw new SyntaxError(`Invalid backup JSON: ${msg}`);
-                }
+        if (buffer && buffer.byteLength > 0) {
+            if (buffer.byteLength > MAX_BACKUP_IMPORT_BYTES) {
+                throw new BackupPayloadTooLargeError();
             }
+            fullText = new TextDecoder("utf-8").decode(buffer);
         }
     }
 
-    // 2. Read raw binary ArrayBuffer (works for application/octet-stream, application/json, or fallbacks)
-    let buffer: ArrayBuffer | null = null;
-    try {
-        buffer = await req.clone().arrayBuffer();
-    } catch {
+    if (!fullText) {
         try {
-            buffer = await req.arrayBuffer();
+            fullText = await req.text();
         } catch {
-            buffer = null;
+            return null;
         }
     }
 
-    if (buffer && buffer.byteLength > 0) {
-        if (buffer.byteLength > MAX_BACKUP_IMPORT_BYTES) {
-            throw new BackupPayloadTooLargeError();
-        }
-        const text = new TextDecoder("utf-8").decode(buffer);
-        if (!text || !text.trim()) return null;
-        try {
-            return JSON.parse(text);
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : "Invalid JSON syntax";
-            throw new SyntaxError(`Invalid backup JSON: ${msg}`);
-        }
-    }
+    if (!fullText || !fullText.trim()) return null;
 
-    // 3. Final fallback: req.text()
-    let text = "";
-    try {
-        text = await req.text();
-    } catch {
-        return null;
-    }
-
-    if (!text || !text.trim()) return null;
-
-    if (Buffer.byteLength(text, "utf-8") > MAX_BACKUP_IMPORT_BYTES) {
+    if (Buffer.byteLength(fullText, "utf-8") > MAX_BACKUP_IMPORT_BYTES) {
         throw new BackupPayloadTooLargeError();
     }
 
     try {
-        return JSON.parse(text);
+        return JSON.parse(fullText);
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Invalid JSON syntax";
         throw new SyntaxError(`Invalid backup JSON: ${msg}`);
