@@ -3,9 +3,15 @@ set -e
 
 echo "Starting JellyTrack Server..."
 
+# Normalize JELLYTRACK_* environment variable aliases
+export PORT="${JELLYTRACK_PORT:-${PORT:-3000}}"
+export NEXTAUTH_SECRET="${NEXTAUTH_SECRET:-${JELLYTRACK_SECRET:-}}"
+export JELLYFIN_WEBHOOK_SECRET="${JELLYFIN_WEBHOOK_SECRET:-${JELLYTRACK_WEBHOOK_SECRET:-}}"
+export JELLYFIN_API_KEY="${JELLYFIN_API_KEY:-${JELLYTRACK_JELLYFIN_API_KEY:-}}"
+
 # Build DATABASE_URL from env vars (DB_* or POSTGRES_*).
 # Priority order for compatibility:
-# DB_* (host-network friendly) > POSTGRES_* (legacy) > defaults
+# DB_* / JELLYTRACK_DB_* (host-network friendly) > POSTGRES_* (legacy) > defaults
 # Treat obvious placeholder values as "not provided" so the entrypoint can
 # reconstruct a usable DATABASE_URL without removing or changing user env vars.
 rebuild_db=false
@@ -26,15 +32,15 @@ urlencode() {
 }
 
 if [ "$rebuild_db" = true ]; then
-  DB_USER=${DB_USER:-${POSTGRES_USER:-JellyTrack}}
-  if [ -z "${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}" ] && [ "${NODE_ENV:-}" = "production" ]; then
-    echo "ERROR: DB_PASSWORD or POSTGRES_PASSWORD must be set in production."
+  DB_USER=${JELLYTRACK_DB_USER:-${DB_USER:-${POSTGRES_USER:-JellyTrack}}}
+  if [ -z "${JELLYTRACK_DB_PASSWORD:-${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}}" ] && [ "${NODE_ENV:-}" = "production" ]; then
+    echo "ERROR: DB_PASSWORD, JELLYTRACK_DB_PASSWORD, or POSTGRES_PASSWORD must be set in production."
     exit 1
   fi
-  DB_PASSWORD=${DB_PASSWORD:-${POSTGRES_PASSWORD:-JellyTrack_password}}
+  DB_PASSWORD=${JELLYTRACK_DB_PASSWORD:-${DB_PASSWORD:-${POSTGRES_PASSWORD:-JellyTrack_password}}}
   DB_HOST=${DB_HOST:-${POSTGRES_IP:-postgres}}
   DB_PORT=${DB_PORT:-${POSTGRES_PORT:-5432}}
-  DB_NAME=${DB_NAME:-${POSTGRES_DB:-JellyTrack}}
+  DB_NAME=${JELLYTRACK_DB_NAME:-${DB_NAME:-${POSTGRES_DB:-JellyTrack}}}
 
   # Encode user and password to safely handle special characters in URIs
   SAFE_USER=$(urlencode "$DB_USER")

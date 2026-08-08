@@ -23,7 +23,7 @@ function normalizePluginKey(value: string | null | undefined): string | null {
 
 
 function getPluginKeyPepper(): string {
-    const pepper = String(process.env.PLUGIN_KEY_PEPPER || process.env.NEXTAUTH_SECRET || "").trim();
+    const pepper = String(process.env.PLUGIN_KEY_PEPPER || process.env.JELLYTRACK_SECRET || process.env.NEXTAUTH_SECRET || "").trim();
     return pepper;
 }
 

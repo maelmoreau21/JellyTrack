@@ -1,6 +1,6 @@
 type ResolvedAuthSecret = {
     value: string;
-    source: "NEXTAUTH_SECRET" | "AUTH_SECRET" | "derived";
+    source: "NEXTAUTH_SECRET" | "AUTH_SECRET" | "JELLYTRACK_SECRET" | "derived";
 };
 
 const INVALID_SECRET_VALUES = new Set([
@@ -33,12 +33,12 @@ function normalizeSecret(value: string | undefined) {
 
 function buildDerivedSecret() {
     const entropyParts = [
-        process.env.JELLYFIN_API_KEY,
+        process.env.JELLYFIN_API_KEY || process.env.JELLYTRACK_JELLYFIN_API_KEY,
         process.env.DATABASE_URL,
         process.env.JELLYFIN_URL,
         process.env.NEXTAUTH_URL,
         process.env.HOSTNAME,
-        process.env.PORT,
+        process.env.PORT || process.env.JELLYTRACK_PORT,
     ].filter((value): value is string => Boolean(value && value.trim()));
 
     const seed = entropyParts.length > 0
@@ -66,6 +66,11 @@ function buildDerivedSecret() {
     ].join("-");
 }
 
+export function resetCachedAuthSecret() {
+    cachedSecret = null;
+    warnedAboutDerivedSecret = false;
+}
+
 export function getResolvedAuthSecret() {
     if (cachedSecret) {
         return cachedSecret;
@@ -83,12 +88,18 @@ export function getResolvedAuthSecret() {
         return cachedSecret;
     }
 
+    const jellytrackSecret = normalizeSecret(process.env.JELLYTRACK_SECRET);
+    if (jellytrackSecret) {
+        cachedSecret = { value: jellytrackSecret, source: "JELLYTRACK_SECRET" };
+        return cachedSecret;
+    }
+
     const isProduction = process.env.NODE_ENV === "production";
     const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 
     // Production runtime must have an explicit secret to avoid accidental weak deployments.
     if (isProduction && !isBuildPhase) {
-        throw new Error("[Auth] NEXTAUTH_SECRET (ou AUTH_SECRET) est obligatoire en production runtime.");
+        throw new Error("[Auth] NEXTAUTH_SECRET (ou AUTH_SECRET / JELLYTRACK_SECRET) est obligatoire en production runtime.");
     }
 
     const derivedSecret = buildDerivedSecret();
@@ -96,7 +107,7 @@ export function getResolvedAuthSecret() {
 
     if (!isBuildPhase && !warnedAboutDerivedSecret) {
         warnedAboutDerivedSecret = true;
-        console.warn("[Auth] NEXTAUTH_SECRET/AUTH_SECRET absent ou invalide. Secret derive utilise (mode non-production).");
+        console.warn("[Auth] NEXTAUTH_SECRET/AUTH_SECRET/JELLYTRACK_SECRET absent ou invalide. Secret derive utilise (mode non-production).");
     }
 
     return cachedSecret;

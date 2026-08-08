@@ -13,18 +13,33 @@ export function validateEnv() {
         return;
     }
 
-    const required = [
-        { key: "NEXTAUTH_SECRET", placeholder: "CHANGE_ME" },
-        { key: "JELLYFIN_API_KEY", placeholder: "CHANGE_ME" },
-        { key: "JELLYFIN_WEBHOOK_SECRET", placeholder: "CHANGE_ME" },
+    const requiredGroups = [
+        {
+            name: "NEXTAUTH_SECRET (or AUTH_SECRET / JELLYTRACK_SECRET)",
+            keys: ["NEXTAUTH_SECRET", "AUTH_SECRET", "JELLYTRACK_SECRET"],
+            placeholder: "CHANGE_ME",
+        },
+        {
+            name: "JELLYFIN_API_KEY (or JELLYTRACK_JELLYFIN_API_KEY)",
+            keys: ["JELLYFIN_API_KEY", "JELLYTRACK_JELLYFIN_API_KEY"],
+            placeholder: "CHANGE_ME",
+        },
+        {
+            name: "JELLYFIN_WEBHOOK_SECRET (or JELLYTRACK_WEBHOOK_SECRET)",
+            keys: ["JELLYFIN_WEBHOOK_SECRET", "JELLYTRACK_WEBHOOK_SECRET"],
+            placeholder: "CHANGE_ME",
+        },
     ];
 
     const invalidVars: string[] = [];
 
-    for (const req of required) {
-        const val = process.env[req.key];
-        if (!val || val.trim() === "" || val.includes(req.placeholder)) {
-            invalidVars.push(req.key);
+    for (const group of requiredGroups) {
+        const isValid = group.keys.some((key) => {
+            const val = process.env[key];
+            return Boolean(val && val.trim() !== "" && !val.includes(group.placeholder));
+        });
+        if (!isValid) {
+            invalidVars.push(group.name);
         }
     }
 
