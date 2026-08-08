@@ -7,14 +7,18 @@ import { Pool } from 'pg'
  * encoding user and password with encodeURIComponent to handle special
  * characters (e.g. &, @, #) that would otherwise corrupt the URI.
  */
-function buildSafeConnectionString(): string | undefined {
+function getDatabaseUrl(): string | undefined {
+  const envUrl = process.env.DATABASE_URL;
+  if (envUrl && !envUrl.toLowerCase().includes("placeholder")) {
+    return envUrl;
+  }
+
   const dbUser = process.env.JELLYTRACK_DB_USER ?? process.env.DB_USER ?? process.env.POSTGRES_USER;
   const dbPassword = process.env.JELLYTRACK_DB_PASSWORD ?? process.env.DB_PASSWORD ?? process.env.POSTGRES_PASSWORD;
   const dbHost = process.env.DB_HOST ?? process.env.POSTGRES_IP ?? 'localhost';
   const dbPort = process.env.DB_PORT ?? process.env.POSTGRES_PORT ?? '5432';
   const dbName = process.env.JELLYTRACK_DB_NAME ?? process.env.DB_NAME ?? process.env.POSTGRES_DB ?? 'JellyTrack';
 
-  // Only rebuild if at least user or password are explicitly provided
   if (!dbUser && !dbPassword) return undefined;
 
   const safeUser = encodeURIComponent(dbUser || 'JellyTrack');
@@ -24,10 +28,7 @@ function buildSafeConnectionString(): string | undefined {
 }
 
 const prismaClientSingleton = () => {
-  // Prefer a safely-built connection string from individual env vars,
-  // falling back to the raw DATABASE_URL (which should already be encoded
-  // if built by docker-entrypoint.sh).
-  const connectionString = buildSafeConnectionString() || process.env.DATABASE_URL;
+  const connectionString = getDatabaseUrl();
   let maxConnections = 10; // Default pg pool size
 
   if (connectionString) {

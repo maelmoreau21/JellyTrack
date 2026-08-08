@@ -131,6 +131,9 @@ fi
 # Store the runtime port for the healthcheck script
 echo "${PORT:-3000}" > /tmp/jellytrack-port
 
+# Configure Node.js memory limit for restricted container environments (e.g. mem_limit: 256m)
+export NODE_OPTIONS="${NODE_OPTIONS:---max-old-space-size=192}"
+
 # Launch app
 echo "Launching Next.js Standalone server..."
 exec node server.js
