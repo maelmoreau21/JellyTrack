@@ -261,7 +261,24 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                        log.mediaSubtitle !== 'Unknown' && 
                        log.mediaSubtitle.trim().length > 0 &&
                        log.mediaSubtitle !== displayTitle ? (
-                        <span className="text-xs text-muted-foreground truncate flex items-center gap-1" title={log.mediaSubtitle}>{log.mediaSubtitle}</span>
+                        <div className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5" title={log.mediaSubtitle}>
+                          {(() => {
+                            const bulletIdx = log.mediaSubtitle.indexOf(' • ');
+                            if (bulletIdx > 0 && bulletIdx <= 20) {
+                              const code = log.mediaSubtitle.slice(0, bulletIdx);
+                              const rest = log.mediaSubtitle.slice(bulletIdx + 3);
+                              return (
+                                <span className="truncate flex items-center gap-1">
+                                  <span className="font-semibold text-primary bg-primary/10 dark:bg-primary/20 px-1 py-0.2 rounded text-[10px] shrink-0 tracking-wide font-mono">
+                                    {code}
+                                  </span>
+                                  <span className="truncate">{rest}</span>
+                                </span>
+                              );
+                            }
+                            return <span className="truncate">{log.mediaSubtitle}</span>;
+                          })()}
+                        </div>
                       ) : null}
                     </div>
                   </div>

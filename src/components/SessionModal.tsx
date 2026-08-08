@@ -274,7 +274,24 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
           <div className="flex-1">
             <h3 className="text-xl font-bold text-foreground">{session.media?.title || t("unknownMedia")}</h3>
             {session.mediaSubtitle && (
-              <div className="text-xs text-primary font-semibold mt-0.5">{session.mediaSubtitle}</div>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {(() => {
+                  const bulletIdx = session.mediaSubtitle.indexOf(' • ');
+                  if (bulletIdx > 0 && bulletIdx <= 20) {
+                    const code = session.mediaSubtitle.slice(0, bulletIdx);
+                    const rest = session.mediaSubtitle.slice(bulletIdx + 3);
+                    return (
+                      <>
+                        <span className="font-bold text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-md font-mono tracking-wide shadow-sm">
+                          {code}
+                        </span>
+                        <span className="text-sm font-semibold text-primary">{rest}</span>
+                      </>
+                    );
+                  }
+                  return <div className="text-xs text-primary font-semibold">{session.mediaSubtitle}</div>;
+                })()}
+              </div>
             )}
             <div className="text-sm text-muted-foreground font-medium mt-0.5">{session.user?.username} - {session.clientName || t("unknown")}</div>
             <div className="mt-3 space-y-2">

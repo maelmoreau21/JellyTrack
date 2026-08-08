@@ -14,6 +14,7 @@ import type { TimelineEvent, SessionTimeline } from "./MediaTimelineChart";
 import PosterRotatorPoster from "./PosterRotatorPoster";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
+import { formatMediaCode } from '@/lib/mediaSubtitle';
 import { isZapped } from "@/lib/statsUtils";
 import { User2 } from "lucide-react";
 
@@ -178,6 +179,8 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     const normalizedMediaResolution = normalizeResolution(media.resolution);
 
     // Fetch metadata from Jellyfin API
+    let indexNumber: number | null = null;
+    let parentIndexNumber: number | null = null;
     let overview = "";
     let communityRating: number | null = null;
     let productionYear: number | null = null;
@@ -201,7 +204,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
         const jellyfinApiKey = process.env.JELLYFIN_API_KEY;
         if (jellyfinUrl && jellyfinApiKey) {
             const res = await fetch(
-                `${jellyfinUrl}/Items/${encodeURIComponent(id)}?Fields=Overview,CommunityRating,ProductionYear,SeriesId,SeriesName,SeasonId,SeasonName,AlbumId,Album,AlbumArtist,AlbumArtists,IntroStartPositionMs,IntroStartPositionTicks,IntroEndPositionMs,IntroEndPositionTicks,CreditsPositionMs,CreditsStartPositionMs,CreditsPositionTicks,CreditsStartPositionTicks,People,ImageTags`,
+                `${jellyfinUrl}/Items/${encodeURIComponent(id)}?Fields=Overview,CommunityRating,ProductionYear,IndexNumber,ParentIndexNumber,SeriesId,SeriesName,SeasonId,SeasonName,AlbumId,Album,AlbumArtist,AlbumArtists,IntroStartPositionMs,IntroStartPositionTicks,IntroEndPositionMs,IntroEndPositionTicks,CreditsPositionMs,CreditsStartPositionMs,CreditsPositionTicks,CreditsStartPositionTicks,People,ImageTags`,
                 {
                     headers: {
                         Authorization: `MediaBrowser Token="${jellyfinApiKey}"`,
@@ -211,6 +214,8 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
             );
             if (res.ok) {
                 const data = await res.json();
+                indexNumber = typeof data.IndexNumber === 'number' ? data.IndexNumber : null;
+                parentIndexNumber = typeof data.ParentIndexNumber === 'number' ? data.ParentIndexNumber : null;
                 overview = data.Overview || "";
                 communityRating = data.CommunityRating || null;
                 productionYear = data.ProductionYear || null;
@@ -279,6 +284,8 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     } catch (err) {
         console.warn('[Media Profile] Failed to resolve DB ancestry for media:', err);
     }
+
+    const mediaCode = formatMediaCode(media.type, indexNumber, parentIndexNumber, locale);
 
     // Fetch children items (Seasons for Series, Episodes for Season, Tracks for MusicAlbum)
     const isParentType = ['Series', 'Season', 'MusicAlbum'].includes(media.type);
@@ -739,7 +746,14 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                         <><ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" /><Link href={`/media/${albumId}`} className="hover:text-zinc-900 dark:hover:text-white transition-colors">{albumName}</Link></>
                     )}
                     <ChevronRight className="w-3.5 h-3.5 text-muted-foreground dark:text-zinc-600" />
-                    <span className="text-zinc-900 dark:text-slate-200 font-medium truncate max-w-xs">{media.title}</span>
+                    <span className="text-zinc-900 dark:text-slate-200 font-medium truncate max-w-xs flex items-center gap-1.5">
+                        {mediaCode && (
+                            <span className="font-mono text-primary font-bold text-xs bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
+                                {mediaCode}
+                            </span>
+                        )}
+                        <span className="truncate">{media.title}</span>
+                    </span>
                 </nav>
 
                 {/* Quick navigation for Episodes / Audio tracks */}
@@ -808,6 +822,11 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                 {renderHierarchyLinks()}
                                 <div className="flex items-center gap-2 mt-4 flex-wrap">
                                     <Badge variant="outline" className="bg-white/50 dark:bg-white/5 backdrop-blur-sm">{media.type}</Badge>
+                                    {mediaCode && (
+                                        <Badge variant="default" className="bg-primary text-primary-foreground font-mono font-bold tracking-wide shadow-sm">
+                                            {mediaCode}
+                                        </Badge>
+                                    )}
                                     {media.resolution && <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">{normalizedMediaResolution}</Badge>}
                                     {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-foreground/80 dark:text-slate-300 backdrop-blur-sm">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
                                     {productionYear && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-foreground/80 dark:text-slate-300 backdrop-blur-sm">{productionYear}</Badge>}
