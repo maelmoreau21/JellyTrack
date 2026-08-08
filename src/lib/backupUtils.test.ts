@@ -4,11 +4,11 @@ import { safeBigInt, extractBackupData, normalizeBackupData } from "./backupUtil
 describe("backupUtils", () => {
     describe("safeBigInt", () => {
         it("should parse integers, numbers, floats, and bigint strings cleanly", () => {
-            expect(safeBigInt(100)).toBe(100n);
-            expect(safeBigInt(100.99)).toBe(100n);
-            expect(safeBigInt("123.45")).toBe(123n);
-            expect(safeBigInt("999")).toBe(999n);
-            expect(safeBigInt(50n)).toBe(50n);
+            expect(safeBigInt(100)).toEqual(BigInt(100));
+            expect(safeBigInt(100.99)).toEqual(BigInt(100));
+            expect(safeBigInt("123.45")).toEqual(BigInt(123));
+            expect(safeBigInt("999")).toEqual(BigInt(999));
+            expect(safeBigInt(BigInt(50))).toEqual(BigInt(50));
             expect(safeBigInt(null)).toBeNull();
             expect(safeBigInt(undefined)).toBeNull();
             expect(safeBigInt("")).toBeNull();
@@ -54,15 +54,15 @@ describe("backupUtils", () => {
 
             expect(normalized.servers.length).toBeGreaterThan(0);
             expect(normalized.media.length).toBe(1);
-            expect(normalized.media[0].durationMs).toBe(123n);
-            expect(normalized.media[0].size).toBe(500000n);
+            expect(normalized.media[0].durationMs).toEqual(BigInt(123));
+            expect(normalized.media[0].size).toEqual(BigInt(500000));
 
             expect(normalized.playbackHistory.length).toBe(1);
             expect(normalized.playbackHistory[0].id).toBe("ph1");
 
             expect(normalized.telemetryEvents.length).toBe(1);
             expect(normalized.telemetryEvents[0].id).toBe("te1");
-            expect(normalized.telemetryEvents[0].positionMs).toBe(12n);
+            expect(normalized.telemetryEvents[0].positionMs).toEqual(BigInt(12));
         });
     });
 });

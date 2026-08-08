@@ -9,6 +9,7 @@ import { replaceSystemHealthState } from "@/lib/systemHealth";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { resolveAutoBackupFile } from "@/lib/backupDir";
 import { revalidateDashboardCache } from "@/lib/revalidate";
+import { extractBackupData, normalizeBackupData } from "@/lib/backupUtils";
 import { z } from "zod";
 
 const restoreBackupSchema = z.object({

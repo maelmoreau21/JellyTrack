@@ -168,7 +168,7 @@ export function normalizeBackupData(rawBackupData: any): NormalizedBackupData {
             updatedAt: new Date(),
         }];
 
-    const validServerIds = new Set(servers.map(s => s.id));
+    const validServerIds = new Set(servers.map((s: { id: string }) => s.id));
     const defaultServerId = servers[0].id;
 
     const rawUsers = Array.isArray(rawBackupData?.users) ? rawBackupData.users : [];
@@ -187,7 +187,7 @@ export function normalizeBackupData(rawBackupData: any): NormalizedBackupData {
         updatedAt: safeDate(u.updatedAt) ?? new Date(),
     }));
 
-    const validUserIds = new Set(users.map(u => u.id));
+    const validUserIds = new Set(users.map((u: { id: string }) => u.id));
 
     const rawMedia = Array.isArray(rawBackupData?.media) ? rawBackupData.media : [];
     const media = rawMedia.map((m: any, index: number) => ({
@@ -216,7 +216,7 @@ export function normalizeBackupData(rawBackupData: any): NormalizedBackupData {
         updatedAt: safeDate(m.updatedAt) ?? new Date(),
     }));
 
-    const validMediaIds = new Set(media.map(m => m.id));
+    const validMediaIds = new Set(media.map((m: { id: string }) => m.id));
 
     const rawPlayback = Array.isArray(rawBackupData?.playbackHistory) ? rawBackupData.playbackHistory : [];
     const playbackHistory = rawPlayback
@@ -260,7 +260,7 @@ export function normalizeBackupData(rawBackupData: any): NormalizedBackupData {
             };
         });
 
-    const validPlaybackIds = new Set(playbackHistory.map(ph => ph.id));
+    const validPlaybackIds = new Set(playbackHistory.map((ph: { id: string }) => ph.id));
     const playbackServerMap = new Map<string, string>();
     for (const ph of playbackHistory) {
         playbackServerMap.set(ph.id, ph.serverId);
