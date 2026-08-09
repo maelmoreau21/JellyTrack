@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
         const fileBuffer = fs.readFileSync(backupFile.filePath);
         const isZip = backupFile.fileName.endsWith(".zip");
 
-        return new NextResponse(fileBuffer, {
+        return new NextResponse(new Uint8Array(fileBuffer), {
             status: 200,
             headers: {
                 "Content-Type": isZip ? "application/zip" : "application/json",

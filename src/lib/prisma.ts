@@ -85,6 +85,12 @@ function createPrismaStub() {
   const dbProxy = new Proxy({}, {
     get(_t, modelName: string) {
       if (modelName === '$connect' || modelName === '$disconnect') return async () => {};
+      if (modelName === '$transaction') return async (fnOrArray: any) => {
+        if (typeof fnOrArray === 'function') return fnOrArray(dbProxy);
+        if (Array.isArray(fnOrArray)) return Promise.all(fnOrArray);
+        return null;
+      };
+      if (modelName === '$executeRawUnsafe' || modelName === '$queryRawUnsafe' || modelName === '$executeRaw' || modelName === '$queryRaw') return async () => 0;
       return new Proxy({}, modelHandler);
     }
   });
