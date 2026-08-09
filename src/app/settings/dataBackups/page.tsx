@@ -109,9 +109,9 @@ export default function SettingsDataBackupsPage() {
             return;
         }
 
-        const maxBytes = 50 * 1024 * 1024;
+        const maxBytes = 100 * 1024 * 1024;
         if (file.size > maxBytes) {
-            setMsg({ type: "error", text: "Le fichier de sauvegarde est trop volumineux (limite 50 Mo)." });
+            setMsg({ type: "error", text: "Le fichier de sauvegarde est trop volumineux (limite 100 Mo)." });
             return;
         }
 
@@ -311,7 +311,7 @@ export default function SettingsDataBackupsPage() {
                                 {t("importBackup") || "Importer une sauvegarde"}
                             </CardTitle>
                             <CardDescription>
-                                {t("importBackupDesc") || "Sélectionnez un fichier de sauvegarde JSON (.json) depuis votre ordinateur pour restaurer votre base de données."}
+                                {t("importBackupDesc") || "Sélectionnez un fichier d'archive de sauvegarde (.zip) ou de sauvegarde ancienne (.json) depuis votre ordinateur pour restaurer votre base de données."}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -321,7 +321,7 @@ export default function SettingsDataBackupsPage() {
                                     <Input
                                         id="import-file"
                                         type="file"
-                                        accept=".json,application/json"
+                                        accept=".zip,.json,application/zip,application/x-zip-compressed,application/json"
                                         ref={fileRef}
                                         className="cursor-pointer"
                                     />

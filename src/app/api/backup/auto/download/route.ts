@@ -28,11 +28,12 @@ export async function GET(req: NextRequest) {
         }
 
         const fileBuffer = fs.readFileSync(backupFile.filePath);
+        const isZip = backupFile.fileName.endsWith(".zip");
 
         return new NextResponse(fileBuffer, {
             status: 200,
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": isZip ? "application/zip" : "application/json",
                 "Content-Disposition": `attachment; filename="${backupFile.fileName}"`,
                 "Cache-Control": "no-store, max-age=0",
                 "Pragma": "no-cache",

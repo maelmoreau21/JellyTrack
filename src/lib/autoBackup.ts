@@ -2,12 +2,13 @@ import prisma from "@/lib/prisma";
 import { appendHealthEvent, markBackupFinished, markBackupStarted, readSystemHealthState } from "@/lib/systemHealth";
 import { getBackupDirectory, resolveAutoBackupFile } from "@/lib/backupDir";
 import { redactBackupData } from "@/lib/backupSecurity";
+import { createZipBackup } from "@/lib/backupUtils";
 import { logger } from "@/lib/logger";
 
 const MAX_BACKUPS = 10;
 
 /**
- * Performs a backup of the database to a JSON file.
+ * Performs a backup of the database to a compressed ZIP file containing database.sql and settings.json.
  * Mode can be 'auto' or 'manuelle'.
  * Implements rolling rotation: keeps only recent backups.
  */
@@ -30,36 +31,29 @@ export async function performAutoBackup(mode: 'auto' | 'manuelle' = 'auto'): Pro
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
         const systemHealth = await readSystemHealthState();
 
-        const backupContent = {
-            version: "1.0",
-            exportDate: new Date().toISOString(),
-            type: mode === "manuelle" ? "manual-backup" : "auto-backup",
-            data: redactBackupData({
-                servers,
-                users,
-                media,
-                playbackHistory,
-                telemetryEvents,
-                settings,
-                systemHealth,
-            })
-        };
+        const rawData = redactBackupData({
+            servers,
+            users,
+            media,
+            playbackHistory,
+            telemetryEvents,
+            settings,
+            systemHealth,
+        });
 
-        // Generate filename with date
+        // Generate filename with date (.zip)
         const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         const timeStr = new Date().toISOString().split('T')[1].replace(/:/g, '-').split('.')[0]; // HH-MM-SS
         const prefix = mode === "manuelle" ? "JellyTrack-manuelle-" : "JellyTrack-auto-";
-        const fileName = `${prefix}${dateStr}_${timeStr}.json`;
+        const fileName = `${prefix}${dateStr}_${timeStr}.zip`;
         const filePath = path.join(backupDir, fileName);
 
-        // BigInt-safe JSON serializer (Prisma returns BigInt for durationMs, positionTicks, etc.)
-        const bigIntReplacer = (_key: string, value: unknown) => typeof value === 'bigint' ? value.toString() : value;
+        // Generate ZIP backup buffer
+        const zipBuffer = await createZipBackup(rawData);
+        fs.writeFileSync(filePath, zipBuffer);
 
-        // Write backup file
-        const backupJsonString = JSON.stringify(backupContent, bigIntReplacer, 2);
-        fs.writeFileSync(filePath, backupJsonString, "utf-8");
-        const fileSizeMb = (Buffer.byteLength(backupJsonString) / 1024 / 1024).toFixed(2);
-        logger.info({ fileName, fileSizeMb }, `[Backup] Backup saved`);
+        const fileSizeMb = (zipBuffer.length / 1024 / 1024).toFixed(2);
+        logger.info({ fileName, fileSizeMb }, `[Backup] ZIP backup saved`);
 
         // Rolling rotation: delete oldest files if we exceed MAX_BACKUPS
         type BackupFile = { name: string; time: number };
@@ -88,7 +82,7 @@ export async function performAutoBackup(mode: 'auto' | 'manuelle' = 'auto'): Pro
         await appendHealthEvent({
             source: "backup",
             kind: "success",
-            message: `Automated backup created: ${fileName}`,
+            message: `Automated ZIP backup created: ${fileName}`,
             details: { fileName },
         });
         return fileName;
@@ -104,4 +98,3 @@ export async function performAutoBackup(mode: 'auto' | 'manuelle' = 'auto'): Pro
         throw error;
     }
 }
-

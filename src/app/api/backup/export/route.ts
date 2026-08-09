@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { readSystemHealthState } from "@/lib/systemHealth";
 import { redactBackupData } from "@/lib/backupSecurity";
+import { createZipBackup } from "@/lib/backupUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,6 @@ export async function GET() {
     if (isAuthError(auth)) return auth;
 
     try {
-        // Fetch all the data we need to construct a huge JSON backup file.
         const servers = await prisma.server.findMany();
         const users = await prisma.user.findMany();
         const media = await prisma.media.findMany();
@@ -20,29 +20,24 @@ export async function GET() {
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
         const systemHealth = await readSystemHealthState({ eventLimit: 200 });
 
-        const backupContent = {
-            version: "1.0",
-            exportDate: new Date().toISOString(),
-            data: redactBackupData({
-                servers,
-                users,
-                media,
-                playbackHistory,
-                telemetryEvents,
-                settings,
-                systemHealth,
-            })
-        };
+        const rawData = redactBackupData({
+            servers,
+            users,
+            media,
+            playbackHistory,
+            telemetryEvents,
+            settings,
+            systemHealth,
+        });
 
-        // BigInt-safe JSON serializer (Prisma returns BigInt for durationMs, positionTicks, etc.)
-        const bigIntReplacer = (_key: string, value: unknown) => typeof value === 'bigint' ? value.toString() : value;
+        const zipBuffer = await createZipBackup(rawData);
+        const filename = `JellyTrack-backup-${new Date().toISOString().split('T')[0]}.zip`;
 
-        // Construct standard file headers to serve the file instantly downstream.
-        return new NextResponse(JSON.stringify(backupContent, bigIntReplacer, 2), {
+        return new NextResponse(zipBuffer, {
             status: 200,
             headers: {
-                "Content-Type": "application/json",
-                "Content-Disposition": `attachment; filename="JellyTrack-backup-${new Date().toISOString().split('T')[0]}.json"`,
+                "Content-Type": "application/zip",
+                "Content-Disposition": `attachment; filename="${filename}"`,
                 "Cache-Control": "no-store, max-age=0",
                 "Pragma": "no-cache",
             }
