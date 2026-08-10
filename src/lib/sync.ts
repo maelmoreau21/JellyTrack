@@ -11,6 +11,115 @@ import {
     resolveServerApiKey,
 } from "@/lib/jellyfinServers";
 
+interface PrunedJellyfinItem {
+    Id: string;
+    Name: string;
+    Type: string;
+    CollectionType: string | null;
+    ParentId: string | null;
+    SeasonId: string | null;
+    SeriesId: string | null;
+    AlbumId: string | null;
+    Genres: string[];
+    Studios: string[];
+    Directors: string[];
+    Actors: string[];
+    MediaSourceSize: bigint | null;
+    VideoStreamWidth: number | null;
+    VideoStreamHeight: number | null;
+    RunTimeTicks: bigint | null;
+    AlbumArtist: string | null;
+    DateCreated: Date;
+}
+
+function pruneJellyfinItem(raw: Record<string, any>): PrunedJellyfinItem {
+    const rawId = typeof raw?.Id === 'string' ? raw.Id : String(raw?.Id || '');
+    const genres = Array.isArray(raw?.Genres)
+        ? (raw.Genres.filter((g: unknown) => typeof g === 'string') as string[])
+        : [];
+    const studios = Array.isArray(raw?.Studios)
+        ? (raw.Studios.map((s: any) => s?.Name).filter((n: unknown) => typeof n === 'string') as string[])
+        : [];
+    const people = Array.isArray(raw?.People) ? raw.People : [];
+    const directors = people
+        .filter((p: any) => p?.Type === 'Director')
+        .map((p: any) => p?.Name)
+        .filter((n: unknown) => typeof n === 'string') as string[];
+    const actors = people
+        .filter((p: any) => p?.Type === 'Actor')
+        .map((p: any) => p?.Name)
+        .filter((n: unknown) => typeof n === 'string') as string[];
+
+    let mediaSourceSize: bigint | null = null;
+    let videoStreamWidth: number | null = null;
+    let videoStreamHeight: number | null = null;
+
+    if (raw?.MediaSources?.[0]) {
+        const ms = raw.MediaSources[0];
+        if (ms.Size !== undefined && ms.Size !== null) {
+            try {
+                mediaSourceSize = BigInt(ms.Size);
+            } catch {
+                mediaSourceSize = null;
+            }
+        }
+        const vs = Array.isArray(ms.MediaStreams)
+            ? ms.MediaStreams.find((s: any) => s?.Type === 'Video')
+            : undefined;
+        if (vs) {
+            const w = vs.Width;
+            const h = vs.Height;
+            videoStreamWidth = typeof w === 'number' ? w : (typeof w === 'string' && !Number.isNaN(Number(w)) ? Number(w) : null);
+            videoStreamHeight = typeof h === 'number' ? h : (typeof h === 'string' && !Number.isNaN(Number(h)) ? Number(h) : null);
+        }
+    }
+
+    let runTimeTicks: bigint | null = null;
+    if (raw?.RunTimeTicks !== undefined && raw?.RunTimeTicks !== null) {
+        const ticksNum = Number(raw.RunTimeTicks);
+        if (!Number.isNaN(ticksNum)) {
+            runTimeTicks = BigInt(Math.floor(ticksNum / 10000));
+        }
+    }
+
+    const artist = (typeof raw?.AlbumArtist === 'string' && raw.AlbumArtist.trim())
+        ? raw.AlbumArtist.trim()
+        : (typeof raw?.AlbumArtists?.[0]?.Name === 'string' && raw.AlbumArtists[0].Name.trim())
+            ? raw.AlbumArtists[0].Name.trim()
+            : (typeof raw?.Artists?.[0] === 'string' && raw.Artists[0].trim())
+                ? raw.Artists[0].trim()
+                : null;
+
+    let dateCreated = new Date();
+    if (raw?.DateCreated) {
+        const parsed = new Date(raw.DateCreated);
+        if (!Number.isNaN(parsed.getTime())) {
+            dateCreated = parsed;
+        }
+    }
+
+    return {
+        Id: rawId,
+        Name: typeof raw?.Name === 'string' ? raw.Name : 'Unknown',
+        Type: typeof raw?.Type === 'string' ? raw.Type : '',
+        CollectionType: typeof raw?.CollectionType === 'string' ? raw.CollectionType : null,
+        ParentId: typeof raw?.ParentId === 'string' ? raw.ParentId : null,
+        SeasonId: typeof raw?.SeasonId === 'string' ? raw.SeasonId : null,
+        SeriesId: typeof raw?.SeriesId === 'string' ? raw.SeriesId : null,
+        AlbumId: typeof raw?.AlbumId === 'string' ? raw.AlbumId : null,
+        Genres: genres,
+        Studios: studios,
+        Directors: directors,
+        Actors: actors,
+        MediaSourceSize: mediaSourceSize,
+        VideoStreamWidth: videoStreamWidth,
+        VideoStreamHeight: videoStreamHeight,
+        RunTimeTicks: runTimeTicks,
+        AlbumArtist: artist,
+        DateCreated: dateCreated,
+    };
+}
+
 /**
  * Main synchronization function for the Jellyfin library.
  * Queries the Jellyfin API to fetch Users and Media (Movies, Series, Episodes),
@@ -256,8 +365,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 const DEFAULT_PAGE_SIZE = 200;
                 const SLOW_PAGE_SIZE = 50;
                 const SLOW_START_THRESHOLD = 2000;
-                type JellyfinItem = Record<string, any>;
-                const itemsById = new Map<string, JellyfinItem>();
+                const itemsById = new Map<string, PrunedJellyfinItem>();
 
                 for (const recentFilter of recentFilters) {
                     let filterFetched = false;
@@ -273,12 +381,12 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                                 const timeoutMs = startIndex >= SLOW_START_THRESHOLD ? 120000 : 60000;
                                 const retries = startIndex >= SLOW_START_THRESHOLD ? 6 : 4;
                                 console.log(`[Sync] [${currentServerName}] Fetching Items StartIndex=${startIndex} Limit=${currentPageSize} timeout=${timeoutMs} retries=${retries} queryVariant=${queryIndex + 1}`);
-                                const pageData = await fetchJsonWithRetry<{ Items?: JellyfinItem[] }>(pageUrl, { headers: jellyfinHeaders }, timeoutMs, retries);
-                                const pageItems: JellyfinItem[] = pageData.Items || [];
+                                const pageData = await fetchJsonWithRetry<{ Items?: Record<string, any>[] }>(pageUrl, { headers: jellyfinHeaders }, timeoutMs, retries);
+                                const pageItems: Record<string, any>[] = pageData.Items || [];
 
                                 for (const pageItem of pageItems) {
                                     const itemId = typeof pageItem?.Id === 'string' ? pageItem.Id : null;
-                                    if (itemId) itemsById.set(itemId, pageItem);
+                                    if (itemId) itemsById.set(itemId, pruneJellyfinItem(pageItem));
                                 }
 
                                 if (pageItems.length < currentPageSize) break;
@@ -327,7 +435,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                         let libraryName: string | null = null;
                         let collectionType: string | null = item.CollectionType || null;
 
-                        const potentialParents = [item.ParentId, item.SeasonId, item.SeriesId, item.AlbumId].filter(Boolean);
+                        const potentialParents = [item.ParentId, item.SeasonId, item.SeriesId, item.AlbumId].filter(Boolean) as string[];
                         for (const pid of potentialParents) {
                             if (libraryNameMap.has(pid)) {
                                 libraryName = libraryNameMap.get(pid)!;
@@ -362,24 +470,13 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                             if (collectionType) itemCollectionCache.set(item.Id, collectionType);
                         }
 
-                        const genres = item.Genres || [];
-                        const studios = ((item.Studios as Array<{ Name?: string }> | undefined) || []).map(s => s.Name).filter(Boolean) as string[];
-                        const people = (item.People as Array<{ Type?: string; Name?: string }> | undefined) || [];
-                        const directors = people.filter((p) => p.Type === "Director").map((p) => p.Name).filter(Boolean) as string[];
-                        const actors = people.filter((p) => p.Type === "Actor").map((p) => p.Name).filter(Boolean) as string[];
+                        const genres = item.Genres;
+                        const studios = item.Studios;
+                        const directors = item.Directors;
+                        const actors = item.Actors;
 
-                        let resolution: string | null = null;
-                        let sizeVal: bigint | null = null;
-                        if (item.MediaSources?.[0]) {
-                            const ms = item.MediaSources[0];
-                            sizeVal = ms.Size ? BigInt(ms.Size) : null;
-                            const vs = ms.MediaStreams?.find((s: unknown) => ((s as Record<string, unknown>)['Type'] === 'Video')) as Record<string, unknown> | undefined;
-                            const widthCandidate = vs?.Width;
-                            const heightCandidate = vs?.Height;
-                            const widthNum = (typeof widthCandidate === 'number') ? widthCandidate : (typeof widthCandidate === 'string' && !Number.isNaN(Number(widthCandidate)) ? Number(widthCandidate) : null);
-                            const heightNum = (typeof heightCandidate === 'number') ? heightCandidate : (typeof heightCandidate === 'string' && !Number.isNaN(Number(heightCandidate)) ? Number(heightCandidate) : null);
-                            resolution = resolutionFromDimensions(widthNum, heightNum, resolutionThresholds);
-                        }
+                        const resolution = resolutionFromDimensions(item.VideoStreamWidth, item.VideoStreamHeight, resolutionThresholds);
+                        const sizeVal = item.MediaSourceSize;
 
                         if (resolution && item.SeriesId) {
                             const sid = normalizeJellyfinId(item.SeriesId);
@@ -391,10 +488,10 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                             }
                         }
 
-                        const durationMs = item.RunTimeTicks ? BigInt(Math.floor(Number(item.RunTimeTicks) / 10000)) : null;
+                        const durationMs = item.RunTimeTicks;
                         const parentId = normalizeJellyfinId(item.AlbumId || item.SeasonId || item.SeriesId || item.ParentId || null);
-                        const artist = item.AlbumArtist || item.AlbumArtists?.[0]?.Name || item.Artists?.[0] || null;
-                        const dateAdded = item.DateCreated ? new Date(item.DateCreated) : new Date();
+                        const artist = item.AlbumArtist;
+                        const dateAdded = item.DateCreated;
 
                         if (item.Type === 'Episode' && item.SeriesId) {
                             const sid = normalizeJellyfinId(item.SeriesId);
