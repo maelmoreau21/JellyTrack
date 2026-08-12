@@ -29,9 +29,17 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
+  let locale = 'en';
+  let messages = {};
+  try {
+    locale = await getLocale();
+    messages = await getMessages();
+  } catch (error) {
+    console.warn('[layout] Unable to load i18n messages/locale, using fallback.', error);
+  }
+
   const isWrappedVisible = await getWrappedVisibility();
+
 
   return (
     <html lang={locale} suppressHydrationWarning>

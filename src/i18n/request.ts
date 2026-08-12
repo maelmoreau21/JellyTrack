@@ -86,10 +86,16 @@ export default getRequestConfig(async () => {
         }
     }
 
-    const localeMessages = (await import(`../../messages/${locale}.json`)).default;
+    let localeMessages: unknown = enMessages;
+    try {
+        localeMessages = (await import(`../../messages/${locale}.json`)).default;
+    } catch {
+        localeMessages = enMessages;
+    }
 
     return {
         locale,
         messages: mergeMessages(localeMessages, mergeMessages(fallbackMessages, enMessages)) as AbstractIntlMessages
     };
 });
+
