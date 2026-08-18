@@ -331,7 +331,7 @@ export default function SettingsDataBackupsPage() {
                                     disabled={importing}
                                     className="bg-purple-600 hover:bg-purple-700 text-white gap-2 shrink-0"
                                 >
-                                    {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileJson className="w-4 h-4" />}
+                                    {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                                     {importing ? (t("importing") || "Importation...") : (t("importBackup") || "Importer et restaurer")}
                                 </Button>
                             </div>

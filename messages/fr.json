@@ -840,7 +840,7 @@
     "ignored": "Ignored",
     "import backup": "Importer une sauvegarde",
     "importBackup": "Importer une sauvegarde",
-    "importBackupDesc": "Sélectionnez un fichier de sauvegarde JSON depuis votre ordinateur pour restaurer votre base de données.",
+    "importBackupDesc": "Sélectionnez un fichier d'archive ZIP (.zip) ou JSON (.json) depuis votre ordinateur pour restaurer votre base de données et vos paramètres.",
     "importing": "Importation en cours...",
     "invalidBackup": "Fichier de backup invalide.",
     "jellyfinUnreachable": "Jellyfin injoignable, affichage basé sur les médias déjà synchronisés.",

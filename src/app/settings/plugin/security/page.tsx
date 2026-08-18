@@ -19,25 +19,6 @@ type SecurityOverview = {
         lastSeen: string | null;
         connected: boolean;
     };
-    key: {
-        hasApiKey: boolean;
-        createdAt: string | null;
-        expiresAt: string | null;
-        expiresInDays: number | null;
-        expired: boolean;
-        expiringSoon: boolean;
-        previousKeyActive: boolean;
-        previousKeyGraceUntil: string | null;
-    };
-    metrics: {
-        totalAudit24h: number;
-        unauthorized24h: number;
-        rateLimited24h: number;
-        previousKeyUsed24h: number;
-        keyActions30d: number;
-        revocations30d: number;
-        policyChanges30d: number;
-    };
 };
 
 type SmartSecurityThresholds = {
@@ -321,73 +302,30 @@ export default function PluginSecurityPage() {
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <Card className="app-surface border-border">
-                    <CardHeader>
-                        <CardTitle className="text-base">{ts('pluginStateTitle')}</CardTitle>
-                        <CardDescription>{ts('pluginStateDesc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between">
-                            <span>{ts('statusLabel')}</span>
-                            {healthBadge}
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                            <span>{ts('serverLabel')}</span>
-                            <span className="font-medium truncate">{overview?.plugin.serverName || "-"}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                            <span>{ts('versionLabel')}</span>
-                            <span className="font-medium truncate">{overview?.plugin.version || "-"}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                            <span>{ts('lastPingLabel')}</span>
-                            <span className="font-medium">{formatDateTime(overview?.plugin.lastSeen || null, locale)}</span>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="app-surface border-border">
-                    <CardHeader>
-                        <CardTitle className="text-base">{ts('apiKeyStateTitle')}</CardTitle>
-                        <CardDescription>{ts('apiKeyStateDesc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between">
-                            <span>{ts('activeKeyLabel')}</span>
-                            <Badge variant={overview?.key.hasApiKey ? "default" : "destructive"}>{overview?.key.hasApiKey ? ts('yes') : ts('no')}</Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span>{ts('expirationStateLabel')}</span>
-                            <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-500/10">
-                                Permanente (sans expiration)
-                            </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span>{ts('previousKeyActiveLabel')}</span>
-                            <span className="font-medium">{overview?.key.previousKeyActive ? ts('yes') : ts('no')}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3">
-                            <span>{ts('graceUntilLabel')}</span>
-                            <span className="font-medium">{formatDateTime(overview?.key.previousKeyGraceUntil || null, locale)}</span>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="app-surface border-border">
-                    <CardHeader>
-                        <CardTitle className="text-base">{ts('recentAlertsTitle')}</CardTitle>
-                        <CardDescription>{ts('recentAlertsDesc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between"><span>{ts('audit24h')}</span><span className="font-semibold">{overview?.metrics.totalAudit24h ?? 0}</span></div>
-                        <div className="flex items-center justify-between"><span>{ts('unauthorized24h')}</span><span className="font-semibold">{overview?.metrics.unauthorized24h ?? 0}</span></div>
-                        <div className="flex items-center justify-between"><span>{ts('rateLimited24h')}</span><span className="font-semibold">{overview?.metrics.rateLimited24h ?? 0}</span></div>
-                        <div className="flex items-center justify-between"><span>{ts('oldKeyUsage24h')}</span><span className="font-semibold">{overview?.metrics.previousKeyUsed24h ?? 0}</span></div>
-                        <div className="flex items-center justify-between"><span>{ts('keyActions30d')}</span><span className="font-semibold">{overview?.metrics.keyActions30d ?? 0}</span></div>
-                    </CardContent>
-                </Card>
-            </div>
+            <Card className="app-surface border-border">
+                <CardHeader>
+                    <CardTitle className="text-base">{ts('pluginStateTitle')}</CardTitle>
+                    <CardDescription>{ts('pluginStateDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                        <span>{ts('statusLabel')}</span>
+                        {healthBadge}
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                        <span>{ts('serverLabel')}</span>
+                        <span className="font-medium truncate">{overview?.plugin.serverName || "-"}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                        <span>{ts('versionLabel')}</span>
+                        <span className="font-medium truncate">{overview?.plugin.version || "-"}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                        <span>{ts('lastPingLabel')}</span>
+                        <span className="font-medium">{formatDateTime(overview?.plugin.lastSeen || null, locale)}</span>
+                    </div>
+                </CardContent>
+            </Card>
 
             <Card className="app-surface border-border">
                 <CardHeader>
