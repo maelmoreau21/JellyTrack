@@ -8,17 +8,17 @@ function resolveImageCacheDir(): string {
     if (process.env.IMAGE_CACHE_DIR) {
         return process.env.IMAGE_CACHE_DIR;
     }
-    if (fs.existsSync("/data")) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ "/data")) {
         return "/data/cache/images";
     }
-    return path.join(process.cwd(), ".cache", "images");
+    return path.join(/*turbopackIgnore: true*/ process.cwd(), ".cache", "images");
 }
 
 const IMAGE_CACHE_DIR = resolveImageCacheDir();
 
 function ensureCacheDir(): void {
     try {
-        if (!fs.existsSync(IMAGE_CACHE_DIR)) {
+        if (!fs.existsSync(/*turbopackIgnore: true*/ IMAGE_CACHE_DIR)) {
             fs.mkdirSync(IMAGE_CACHE_DIR, { recursive: true });
         }
     } catch {
