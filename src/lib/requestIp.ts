@@ -37,6 +37,56 @@ export function normalizeIp(value: string | null | undefined): string | null {
   return normalized || null;
 }
 
+export function isPrivateOrLocalIp(value: string | null | undefined): boolean {
+  const ip = normalizeIp(value);
+  if (!ip) return true;
+
+  const lower = ip.toLowerCase();
+  if (lower === "localhost" || lower === "unknown" || lower === "::1" || lower === "0.0.0.0") {
+    return true;
+  }
+
+  // Check IPv4 private ranges
+  const ipv4Match = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(ip);
+  if (ipv4Match) {
+    const octet1 = Number(ipv4Match[1]);
+    const octet2 = Number(ipv4Match[2]);
+    const octet3 = Number(ipv4Match[3]);
+    const octet4 = Number(ipv4Match[4]);
+
+    if (octet1 > 255 || octet2 > 255 || octet3 > 255 || octet4 > 255) return false;
+
+    // 127.0.0.0/8 (Loopback)
+    if (octet1 === 127) return true;
+
+    // 10.0.0.0/8 (Private Class A)
+    if (octet1 === 10) return true;
+
+    // 172.16.0.0/12 (Private Class B: 172.16.0.0 - 172.31.255.255)
+    if (octet1 === 172 && octet2 >= 16 && octet2 <= 31) return true;
+
+    // 192.168.0.0/16 (Private Class C)
+    if (octet1 === 192 && octet2 === 168) return true;
+
+    // 169.254.0.0/16 (Link-local)
+    if (octet1 === 169 && octet2 === 254) return true;
+
+    // 0.0.0.0/8
+    if (octet1 === 0) return true;
+
+    return false;
+  }
+
+  // Check IPv6 private/local ranges
+  // Link-local: fe80::/10 (fe8x, fe9x, feax, febx)
+  if (/^fe[89ab]/i.test(lower)) return true;
+
+  // Unique local addresses: fc00::/7 (fcxx, fdxx)
+  if (/^f[cd]/i.test(lower)) return true;
+
+  return false;
+}
+
 export function getClientIpFromHeaders(headers: HeaderReader, fallback: string | null = "unknown"): string | null {
   if (!trustProxyHeaders()) {
     return fallback;

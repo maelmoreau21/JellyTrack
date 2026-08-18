@@ -22,6 +22,7 @@ import { buildJellyfinApiKeyHeaders } from "@/lib/jellyfinServers";
 import { normalizeLanguageTag } from "@/lib/language";
 import { formatMediaSubtitle } from "@/lib/mediaSubtitle";
 import { buildStreamValkeyKey } from "@/lib/serverRegistry";
+import { isPrivateOrLocalIp } from "@/lib/requestIp";
 
 import Link from "next/link";
 import { getServerSession } from "next-auth";
@@ -432,7 +433,7 @@ export default async function LogsPage({
             });
         }
 
-        const candidateIps = Array.from(new Set(logs.map(l => l.ipAddress).filter((v): v is string => !!v)));
+        const candidateIps = Array.from(new Set(logs.map(l => l.ipAddress).filter((v): v is string => !!v && !isPrivateOrLocalIp(v))));
         if (candidateIps.length > 0) {
             // eslint-disable-next-line react-hooks/purity
             const hotIpSince = new Date(Date.now() - hotIpWindowMs);
@@ -442,10 +443,12 @@ export default async function LogsPage({
                 _count: { _all: true },
             });
             hotIpRows.forEach(row => {
-                if (row.ipAddress && row._count._all >= hotIpThreshold) hotIpCountByIp.set(row.ipAddress, row._count._all);
+                if (row.ipAddress && !isPrivateOrLocalIp(row.ipAddress) && row._count._all >= hotIpThreshold) {
+                    hotIpCountByIp.set(row.ipAddress, row._count._all);
+                }
             });
             logs.forEach(log => {
-                if (log.ipAddress && (hotIpCountByIp.get(log.ipAddress) || 0) >= hotIpThreshold) {
+                if (log.ipAddress && !isPrivateOrLocalIp(log.ipAddress) && (hotIpCountByIp.get(log.ipAddress) || 0) >= hotIpThreshold) {
                     const flags = anomalyFlagsByLogId.get(log.id) || new Set<string>();
                     flags.add("ip_burst");
                     anomalyFlagsByLogId.set(log.id, flags);

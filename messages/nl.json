@@ -193,7 +193,9 @@
     "view": "weergave",
     "viewers": "kijkers",
     "views": "weergaven",
-    "directStream": "Direct stream"
+    "directStream": "Direct stream",
+    "day": "dag",
+    "days": "dagen"
   },
   "dashboard": {
     "abandoned": "Verlaten",
@@ -352,7 +354,8 @@
     "vsUsersOnPeriod": "vs {count} vorige periode",
     "watched": "bekeken",
     "worldMap": "Verbindingskaart",
-    "worldMapDesc": "Geografische verdeling van afspeelsessies."
+    "worldMapDesc": "Geografische verdeling van afspeelsessies.",
+    "title": "Dashboard"
   },
   "deepInsights": {
     "deviceEcosystem": "Apparaat-ecosysteem",
@@ -557,7 +560,13 @@
       "colUser": "Actor",
       "typeAudit": "Audit",
       "typeHealth": "Gezondheid"
-    }
+    },
+    "downloadLogs": "Logboeken downloaden",
+    "clearLogs": "Logboeken wissen",
+    "clearLogsConfirm": "Weet u zeker dat u alle systeemlogboeken wilt wissen?",
+    "clearLogsSuccess": "Systeemlogboeken succesvol gewist.",
+    "retentionConfig": "Bewaartermijn",
+    "levelAll": "Alle niveaus"
   },
   "media": {
     "1080pLabel": "1080p FHD",
@@ -810,8 +819,8 @@
     "collectionFilter": "Collectiefilter",
     "collectionFilterDesc": "Bibliotheken filteren op collectienaam.",
     "completed": "Voltooid",
-    "confirmDeleteBackup": "Weet u zeker dat u deze back-up wilt verwijderen?",
-    "confirmRestoreBackup": "Weet u zeker dat u deze back-up wilt herstellen? Huidige gegevens worden overschreven.",
+    "confirmDeleteBackup": "Deze back-up verwijderen?",
+    "confirmRestoreBackup": "Herstel vervangt uw huidige database. Doorgaan?",
     "cronSaved": "Schema's succesvol opgeslagen",
     "dataBackups": "Gegevensback-ups",
     "dataBackupsDesc": "Geschiedenis van automatische en handmatige back-ups.",
@@ -1015,8 +1024,6 @@
     "backupHistoryDesc": "Herstel of verwijder een bestaande back-up.",
     "file": "Bestand",
     "actions": "Acties",
-    "confirmDeleteBackup": "Deze back-up verwijderen?",
-    "confirmRestoreBackup": "Herstel vervangt uw huidige database. Doorgaan?",
     "backupError": "Error creating backup.",
     "deleteError": "Error deleting backup.",
     "restoreError": "Error restoring backup.",
@@ -1044,7 +1051,10 @@
     "telemetryTrackAudioSubtitleChanges": "Audio / ondertitels",
     "telemetryTrackSessionEnded": "Gebruiker vertrekt",
     "telemetrySave": "Telemetrie opslaan",
-    "schedulerEveryHours": "Elke {hours} u"
+    "schedulerEveryHours": "Elke {hours} u",
+    "logRetention": "Bewaartermijn van systeemlogboeken",
+    "logRetentionHint": "Tijdsduur vóór automatische rotatie en verwijdering van logbestanden.",
+    "retentionUnlimited": "Onbeperkt bewaren"
   },
   "timeRange": {
     "allTime": "Altijd",

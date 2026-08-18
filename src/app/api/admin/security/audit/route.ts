@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { readSmartSecurityThresholdsFromResolutionSettings } from "@/lib/securitySmartThresholds";
+import { isPrivateOrLocalIp } from "@/lib/requestIp";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     const hotIpRows = (Array.isArray(ipAttemptsRaw) ? ipAttemptsRaw : [])
-        .filter((row) => row?.ipAddress && row?._count?._all >= hotIpAttemptThreshold)
+        .filter((row) => row?.ipAddress && !isPrivateOrLocalIp(String(row.ipAddress)) && row?._count?._all >= hotIpAttemptThreshold)
         .map((row) => ({
             ipAddress: String(row.ipAddress),
             attempts: Number(row._count._all || 0),

@@ -193,10 +193,12 @@
     "view": "vista",
     "viewers": "espectadores",
     "views": "vistas",
-    "directStream": "Direct stream"
+    "directStream": "Direct stream",
+    "day": "día",
+    "days": "días"
   },
   "dashboard": {
-    "title": "Panel de control",
+    "title": "Panel",
     "abandoned": "Abandonado",
     "activeStreams": "Transmisiones activas",
     "activeUsers": "usuario(s) activo(s)",
@@ -558,7 +560,13 @@
       "colUser": "Actor",
       "typeAudit": "Auditoría",
       "typeHealth": "Salud"
-    }
+    },
+    "downloadLogs": "Descargar registros",
+    "clearLogs": "Limpiar registros",
+    "clearLogsConfirm": "¿Seguro que desea borrar todos los registros del sistema?",
+    "clearLogsSuccess": "Registros del sistema borrados con éxito.",
+    "retentionConfig": "Retención",
+    "levelAll": "Todos los niveles"
   },
   "media": {
     "1080pLabel": "1080p FHD",
@@ -811,8 +819,8 @@
     "collectionFilter": "Filtro de colección",
     "collectionFilterDesc": "Filtrar bibliotecas por nombre de colección.",
     "completed": "Completado",
-    "confirmDeleteBackup": "¿Está seguro de que desea eliminar esta copia de seguridad?",
-    "confirmRestoreBackup": "¿Está seguro de que desea restaurar esta copia de seguridad? Se sobrescribirán los datos actuales.",
+    "confirmDeleteBackup": "¿Eliminar esta copia de seguridad?",
+    "confirmRestoreBackup": "La restauración reemplazará su base de datos actual. ¿Continuar?",
     "cronSaved": "Horarios guardados correctamente",
     "dataBackups": "Copias de seguridad de datos",
     "dataBackupsDesc": "Historial de copias de seguridad automáticas y manuales.",
@@ -1016,8 +1024,6 @@
     "backupHistoryDesc": "Restaurar o eliminar una copia existente.",
     "file": "Archivo",
     "actions": "Acciones",
-    "confirmDeleteBackup": "¿Eliminar esta copia de seguridad?",
-    "confirmRestoreBackup": "La restauración reemplazará su base de datos actual. ¿Continuar?",
     "backupError": "Error creating backup.",
     "deleteError": "Error deleting backup.",
     "restoreError": "Error restoring backup.",
@@ -1045,7 +1051,10 @@
     "telemetryTrackAudioSubtitleChanges": "Audio / subtitulos",
     "telemetryTrackSessionEnded": "Salida de usuario",
     "telemetrySave": "Guardar telemetria",
-    "schedulerEveryHours": "Cada {hours} h"
+    "schedulerEveryHours": "Cada {hours} h",
+    "logRetention": "Retención de registros del sistema",
+    "logRetentionHint": "Duración antes de la rotación y eliminación automática de los archivos de registro.",
+    "retentionUnlimited": "Conservar indefinidamente"
   },
   "timeRange": {
     "allTime": "Todo el tiempo",

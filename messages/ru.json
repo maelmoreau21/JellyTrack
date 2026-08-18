@@ -193,7 +193,9 @@
     "view": "просмотр",
     "viewers": "зрители",
     "views": "просмотры",
-    "directStream": "Direct stream"
+    "directStream": "Direct stream",
+    "day": "день",
+    "days": "дней"
   },
   "dashboard": {
     "abandoned": "Брошено",
@@ -352,7 +354,8 @@
     "vsUsersOnPeriod": "vs {count} пред. период",
     "watched": "просмотрено",
     "worldMap": "Карта Подключений",
-    "worldMapDesc": "Географическое распределение сеансов воспроизведения."
+    "worldMapDesc": "Географическое распределение сеансов воспроизведения.",
+    "title": "Панель управления"
   },
   "deepInsights": {
     "deviceEcosystem": "Экосистема устройств",
@@ -557,7 +560,13 @@
       "colUser": "Актер",
       "typeAudit": "Аудит",
       "typeHealth": "Здоровье"
-    }
+    },
+    "downloadLogs": "Скачать журналы",
+    "clearLogs": "Очистить журналы",
+    "clearLogsConfirm": "Вы действительно хотите очистить все системные журналы?",
+    "clearLogsSuccess": "Системные журналы успешно очищены.",
+    "retentionConfig": "Хранение",
+    "levelAll": "Все уровни"
   },
   "media": {
     "1080pLabel": "1080p FHD",
@@ -810,8 +819,8 @@
     "collectionFilter": "Фильтр коллекций",
     "collectionFilterDesc": "Фильтровать библиотеки по имени коллекции.",
     "completed": "Завершено",
-    "confirmDeleteBackup": "Вы уверены, что хотите удалить эту резервную копию?",
-    "confirmRestoreBackup": "Вы уверены, что хотите восстановить эту резервную копию? Текущие данные будут перезаписаны.",
+    "confirmDeleteBackup": "Delete this backup?",
+    "confirmRestoreBackup": "Restoring will replace your current database. Continue?",
     "cronSaved": "Расписание сохранено",
     "dataBackups": "Ваши бэкапы",
     "dataBackupsDesc": "История созданных копий базы данных.",
@@ -1015,8 +1024,6 @@
     "backupHistoryDesc": "Restore or delete an existing backup.",
     "file": "File",
     "actions": "Actions",
-    "confirmDeleteBackup": "Delete this backup?",
-    "confirmRestoreBackup": "Restoring will replace your current database. Continue?",
     "backupError": "Error creating backup.",
     "deleteError": "Error deleting backup.",
     "restoreError": "Error restoring backup.",
@@ -1044,7 +1051,10 @@
     "telemetryTrackAudioSubtitleChanges": "Audio / subtitry",
     "telemetryTrackSessionEnded": "Uhod polzovatelya",
     "telemetrySave": "Sohranit telemetriyu",
-    "schedulerEveryHours": "Kazhdye {hours} ch"
+    "schedulerEveryHours": "Kazhdye {hours} ch",
+    "logRetention": "Срок хранения системных журналов",
+    "logRetentionHint": "Время до автоматической ротации и удаления файлов журналов.",
+    "retentionUnlimited": "Хранить бессрочно"
   },
   "timeRange": {
     "allTime": "За всё время",

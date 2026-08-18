@@ -193,7 +193,9 @@
     "view": "次观看",
     "viewers": "位观众",
     "views": "次观看",
-    "directStream": "Direct stream"
+    "directStream": "Direct stream",
+    "day": "天",
+    "days": "天"
   },
   "dashboard": {
     "abandoned": "已放弃",
@@ -352,7 +354,8 @@
     "vsUsersOnPeriod": "对比上一周期 {count}",
     "watched": "已观看",
     "worldMap": "连接地图",
-    "worldMapDesc": "播放会话的地理分布。"
+    "worldMapDesc": "播放会话的地理分布。",
+    "title": "控制面板"
   },
   "deepInsights": {
     "deviceEcosystem": "设备生态",
@@ -557,7 +560,13 @@
       "colUser": "执行者",
       "typeAudit": "审计",
       "typeHealth": "健康"
-    }
+    },
+    "downloadLogs": "下载日志",
+    "clearLogs": "清空日志",
+    "clearLogsConfirm": "确定要清除所有系统日志吗？",
+    "clearLogsSuccess": "系统日志已成功清除。",
+    "retentionConfig": "保留期",
+    "levelAll": "所有级别"
   },
   "media": {
     "1080pLabel": "1080p FHD",
@@ -810,8 +819,8 @@
     "collectionFilter": "收藏过滤器",
     "collectionFilterDesc": "按收藏名称过滤媒体库。",
     "completed": "已完成",
-    "confirmDeleteBackup": "您确定要删除此备份吗？",
-    "confirmRestoreBackup": "您确定要恢复此备份吗？当前数据将被覆盖。",
+    "confirmDeleteBackup": "Delete this backup?",
+    "confirmRestoreBackup": "Restoring will replace your current database. Continue?",
     "cronSaved": "计划任务已更新",
     "dataBackups": "数据备份",
     "dataBackupsDesc": "您手动和自动生成的数据库副本。",
@@ -1015,8 +1024,6 @@
     "backupHistoryDesc": "Restore or delete an existing backup.",
     "file": "File",
     "actions": "Actions",
-    "confirmDeleteBackup": "Delete this backup?",
-    "confirmRestoreBackup": "Restoring will replace your current database. Continue?",
     "backupError": "Error creating backup.",
     "deleteError": "Error deleting backup.",
     "restoreError": "Error restoring backup.",
@@ -1044,7 +1051,10 @@
     "telemetryTrackAudioSubtitleChanges": "音频 / 字幕",
     "telemetryTrackSessionEnded": "用户离开",
     "telemetrySave": "保存遥测",
-    "schedulerEveryHours": "每 {hours} 小时"
+    "schedulerEveryHours": "每 {hours} 小时",
+    "logRetention": "系统日志保留期",
+    "logRetentionHint": "日志文件和审计记录自动轮换与删除前的保存时间。",
+    "retentionUnlimited": "永久保留"
   },
   "timeRange": {
     "allTime": "全部时间",

@@ -193,7 +193,9 @@
     "view": "view",
     "viewers": "viewers",
     "views": "views",
-    "directStream": "Direct stream"
+    "directStream": "Direct stream",
+    "day": "Tag",
+    "days": "Tage"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -558,7 +560,13 @@
       "colUser": "Akteur",
       "typeAudit": "Audit",
       "typeHealth": "Gesundheit"
-    }
+    },
+    "downloadLogs": "Protokolle herunterladen",
+    "clearLogs": "Protokolle löschen",
+    "clearLogsConfirm": "Möchten Sie wirklich alle Systemprotokolle löschen?",
+    "clearLogsSuccess": "Systemprotokolle erfolgreich gelöscht.",
+    "retentionConfig": "Aufbewahrung",
+    "levelAll": "Alle Stufen"
   },
   "media": {
     "1080pLabel": "1080p FHD",
@@ -811,8 +819,8 @@
     "collectionFilter": "Sammlungsfilter",
     "collectionFilterDesc": "Bibliotheken nach Sammlungsnamen filtern.",
     "completed": "Abgeschlossen",
-    "confirmDeleteBackup": "Möchten Sie dieses Backup wirklich löschen?",
-    "confirmRestoreBackup": "Möchten Sie dieses Backup wirklich wiederherstellen? Aktuelle Daten werden überschrieben.",
+    "confirmDeleteBackup": "Dieses Backup löschen?",
+    "confirmRestoreBackup": "Durch das Wiederherstellen wird Ihre aktuelle Datenbank ersetzt. Fortfahren?",
     "cronSaved": "Zeitpläne erfolgreich gespeichert",
     "dataBackups": "Datensicherungen",
     "dataBackupsDesc": "Verlauf der automatischen und manuellen Sicherungen.",
@@ -832,9 +840,8 @@
     "fullSyncDesc": "Führt eine vollständige Synchronisierung aller Medienmetadaten durch. Dies kann einige Zeit dauern.",
     "ignored": "Ignoriert",
     "import backup": "Backup importieren",
-    "importBackup": "Backup importieren",
-    "importBackupDesc": "Wählen Sie eine JSON-Backup-Datei von Ihrem Computer aus, um Ihre Datenbank wiederherzustellen.",
     "importBackup": "Import Backup",
+    "importBackupDesc": "Wählen Sie eine JSON-Backup-Datei von Ihrem Computer aus, um Ihre Datenbank wiederherzustellen.",
     "importing": "Importing...",
     "invalidBackup": "Invalid backup file.",
     "jellyfinUnreachable": "Jellyfin nicht erreichbar, Anzeige basiert auf bereits synchronisierten Medien.",
@@ -1017,8 +1024,6 @@
     "backupHistoryDesc": "Ein vorhandenes Backup wiederherstellen oder löschen.",
     "file": "Datei",
     "actions": "Aktionen",
-    "confirmDeleteBackup": "Dieses Backup löschen?",
-    "confirmRestoreBackup": "Durch das Wiederherstellen wird Ihre aktuelle Datenbank ersetzt. Fortfahren?",
     "backupError": "Error creating backup.",
     "deleteError": "Error deleting backup.",
     "restoreError": "Error restoring backup.",
@@ -1046,7 +1051,10 @@
     "telemetryTrackAudioSubtitleChanges": "Audio / Untertitel",
     "telemetryTrackSessionEnded": "Benutzerabgang",
     "telemetrySave": "Telemetrie speichern",
-    "schedulerEveryHours": "Alle {hours} h"
+    "schedulerEveryHours": "Alle {hours} h",
+    "logRetention": "Systemprotokoll-Aufbewahrung",
+    "logRetentionHint": "Dauer vor der automatischen Rotation und Löschung von Protokolldateien.",
+    "retentionUnlimited": "Dauerhaft aufbewahren"
   },
   "timeRange": {
     "allTime": "All time",

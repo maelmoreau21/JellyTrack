@@ -193,7 +193,9 @@
     "view": "visualização",
     "viewers": "espectadores",
     "views": "visualizações",
-    "directStream": "Direct stream"
+    "directStream": "Direct stream",
+    "day": "dia",
+    "days": "dias"
   },
   "dashboard": {
     "abandoned": "Abandonado",
@@ -352,7 +354,8 @@
     "vsUsersOnPeriod": "vs {count} período anterior",
     "watched": "assistidos",
     "worldMap": "Mapa de Conexões",
-    "worldMapDesc": "Distribuição geográfica das sessões de reprodução."
+    "worldMapDesc": "Distribuição geográfica das sessões de reprodução.",
+    "title": "Painel"
   },
   "deepInsights": {
     "deviceEcosystem": "Ecossistema de dispositivos",
@@ -557,7 +560,13 @@
       "colUser": "Ator",
       "typeAudit": "Auditoria",
       "typeHealth": "Saúde"
-    }
+    },
+    "downloadLogs": "Baixar registros",
+    "clearLogs": "Limpar registros",
+    "clearLogsConfirm": "Tem certeza de que deseja limpar todos os registros do sistema?",
+    "clearLogsSuccess": "Registros do sistema apagados com sucesso.",
+    "retentionConfig": "Retenção",
+    "levelAll": "Todos os níveis"
   },
   "media": {
     "1080pLabel": "1080p FHD",
@@ -810,8 +819,8 @@
     "collectionFilter": "Filtro de coleção",
     "collectionFilterDesc": "Filtrar bibliotecas por nome de coleção.",
     "completed": "Concluído",
-    "confirmDeleteBackup": "Tem certeza de que deseja excluir este backup?",
-    "confirmRestoreBackup": "Tem certeza de que deseja restaurar este backup? Os dados atuais serão substituídos.",
+    "confirmDeleteBackup": "Delete this backup?",
+    "confirmRestoreBackup": "Restoring will replace your current database. Continue?",
     "cronSaved": "Agendamentos salvos com sucesso",
     "dataBackups": "Backups de dados",
     "dataBackupsDesc": "Histórico de backups automáticos e manuais.",
@@ -1015,8 +1024,6 @@
     "backupHistoryDesc": "Restore or delete an existing backup.",
     "file": "File",
     "actions": "Actions",
-    "confirmDeleteBackup": "Delete this backup?",
-    "confirmRestoreBackup": "Restoring will replace your current database. Continue?",
     "backupError": "Error creating backup.",
     "deleteError": "Error deleting backup.",
     "restoreError": "Error restoring backup.",
@@ -1044,7 +1051,10 @@
     "telemetryTrackAudioSubtitleChanges": "Audio / legendas",
     "telemetryTrackSessionEnded": "Saida do usuario",
     "telemetrySave": "Salvar telemetria",
-    "schedulerEveryHours": "A cada {hours} h"
+    "schedulerEveryHours": "A cada {hours} h",
+    "logRetention": "Retenção de registros do sistema",
+    "logRetentionHint": "Duração antes da rotação e exclusão automática de arquivos de log.",
+    "retentionUnlimited": "Manter indefinidamente"
   },
   "timeRange": {
     "allTime": "Todo o período",
