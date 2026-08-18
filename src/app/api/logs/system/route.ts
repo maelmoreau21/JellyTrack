@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { requireAdmin, isAuthError } from "@/lib/auth";
 import { getLogFilesList, deleteLogFileByName, clearSystemLogs, systemLog } from "@/lib/systemLogger";
 import prisma from "@/lib/prisma";
 import { normalizeSchedulerIntervals } from "@/lib/schedulerIntervals";
@@ -8,11 +7,9 @@ import { normalizeSchedulerIntervals } from "@/lib/schedulerIntervals";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-    const session = await getServerSession(authOptions);
-    const role = (session?.user as { role?: string })?.role;
-
-    if (!session || role !== "admin") {
-        return new NextResponse("Unauthorized", { status: 401 });
+    const auth = await requireAdmin();
+    if (isAuthError(auth)) {
+        return auth;
     }
 
     const files = getLogFilesList();
@@ -40,14 +37,12 @@ export async function GET() {
 }
 
 export async function DELETE(req: NextRequest) {
-    const session = await getServerSession(authOptions);
-    const role = (session?.user as { role?: string })?.role;
-    const username = session?.user?.name || "Admin";
-
-    if (!session || role !== "admin") {
-        return new NextResponse("Unauthorized", { status: 401 });
+    const auth = await requireAdmin();
+    if (isAuthError(auth)) {
+        return auth;
     }
 
+    const username = auth.username || "Admin";
     const { searchParams } = new URL(req.url);
     const filename = searchParams.get("file");
 

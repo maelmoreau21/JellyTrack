@@ -191,29 +191,70 @@ export function getLogFilesList(): LogFileInfo[] {
     return files;
 }
 
-export function getLogFileContentByName(filename?: string | null): { content: string; filename: string } | null {
+export function getLogFileContentByName(filename?: string | null): { content: string; filename: string } {
     ensureLogDir();
-    const safeFilename = filename ? path.basename(filename) : "jellytrack.log";
+    const today = new Date().toISOString().split("T")[0];
+    const defaultName = "jellytrack.log";
+    const safeFilename = filename ? path.basename(filename) : defaultName;
     const targetFile = path.join(LOG_DIR, safeFilename);
 
     try {
         if (fs.existsSync(targetFile)) {
             const content = fs.readFileSync(targetFile, "utf8");
-            return { content, filename: safeFilename };
+            if (content.length > 0) {
+                return { content, filename: safeFilename };
+            }
         }
     } catch {
-        return null;
+        // Continue to fallbacks
     }
 
-    // If main log file is requested but doesn't exist yet, return memory logs
-    if (safeFilename === "jellytrack.log" && memoryLogs.length > 0) {
-        return {
-            content: memoryLogs.map(formatLogLine).reverse().join(""),
-            filename: "jellytrack.log",
-        };
+    // Check main log file fallback
+    const mainFile = path.join(LOG_DIR, defaultName);
+    try {
+        if (fs.existsSync(mainFile)) {
+            const content = fs.readFileSync(mainFile, "utf8");
+            if (content.length > 0) {
+                return { content, filename: defaultName };
+            }
+        }
+    } catch {
+        // Continue to fallbacks
     }
 
-    return null;
+    // Check today daily file fallback
+    const todayFile = path.join(LOG_DIR, `jellytrack-${today}.log`);
+    try {
+        if (fs.existsSync(todayFile)) {
+            const content = fs.readFileSync(todayFile, "utf8");
+            if (content.length > 0) {
+                return { content, filename: `jellytrack-${today}.log` };
+            }
+        }
+    } catch {
+        // Continue
+    }
+
+    // If we have in-memory ring buffer logs
+    if (memoryLogs.length > 0) {
+        const memContent = memoryLogs.map(formatLogLine).reverse().join("");
+        try {
+            fs.writeFileSync(targetFile, memContent, "utf8");
+        } catch {
+            // Ignore write error
+        }
+        return { content: memContent, filename: safeFilename };
+    }
+
+    // Initial default fallback: create active log file and return it
+    const initialContent = `[${new Date().toISOString()}] [INFO] [System] Journal système JellyTrack actif.\n[${new Date().toISOString()}] [INFO] [System] Serveur opérationnel.\n`;
+    try {
+        fs.writeFileSync(targetFile, initialContent, "utf8");
+    } catch {
+        // Ignore write error
+    }
+
+    return { content: initialContent, filename: safeFilename };
 }
 
 export function deleteLogFileByName(filename: string): boolean {

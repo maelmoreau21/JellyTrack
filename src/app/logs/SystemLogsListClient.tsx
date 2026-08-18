@@ -18,9 +18,8 @@ import {
     HardDrive, 
     Clock, 
     RefreshCw,
-    CheckCircle2,
-    Calendar,
-    Archive
+    Archive,
+    Loader2
 } from "lucide-react";
 import Link from "next/link";
 import type { LogFileInfo } from "@/lib/systemLogger";
@@ -40,6 +39,7 @@ export default function SystemLogsListClient({ files: initialFiles, locale, rete
     const [files, setFiles] = useState<LogFileInfo[]>(initialFiles);
     const [searchQuery, setSearchQuery] = useState("");
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
     const [actionMsg, setActionMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     const refreshFiles = async () => {
@@ -59,6 +59,35 @@ export default function SystemLogsListClient({ files: initialFiles, locale, rete
         }
     };
 
+    const handleDownload = async (filename: string) => {
+        setDownloadingFile(filename);
+        setActionMsg(null);
+        try {
+            const res = await fetch(`/api/logs/system/download?file=${encodeURIComponent(filename)}`);
+            if (!res.ok) {
+                const text = await res.text();
+                setActionMsg({ type: "error", text: text || "Erreur lors du téléchargement du fichier." });
+                return;
+            }
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            setActionMsg({ type: "success", text: `Téléchargement de ${filename} réussi.` });
+        } catch (err: any) {
+            setActionMsg({ type: "error", text: err?.message || "Erreur réseau lors du téléchargement." });
+        } finally {
+            setDownloadingFile(null);
+        }
+    };
+
     const handleDeleteFile = async (filename: string) => {
         const confirmText = `Voulez-vous vraiment supprimer le fichier de log "${filename}" ?`;
         if (!window.confirm(confirmText)) return;
@@ -67,7 +96,7 @@ export default function SystemLogsListClient({ files: initialFiles, locale, rete
         try {
             const res = await fetch(`/api/logs/system?file=${encodeURIComponent(filename)}`, { method: "DELETE" });
             if (res.ok) {
-                setActionMsg({ type: "success", text: `Fichier ${filename} supprimé.` });
+                setActionMsg({ type: "success", text: `Fichier ${filename} supprimé avec succès.` });
                 setFiles((prev) => prev.filter((f) => f.filename !== filename));
             } else {
                 setActionMsg({ type: "error", text: "Impossible de supprimer le fichier de log." });
@@ -110,6 +139,11 @@ export default function SystemLogsListClient({ files: initialFiles, locale, rete
         if (totalSizeBytes < 1024 * 1024) return `${(totalSizeBytes / 1024).toFixed(1)} Ko`;
         return `${(totalSizeBytes / (1024 * 1024)).toFixed(2)} Mo`;
     }, [totalSizeBytes]);
+
+    const activeLogFilename = useMemo(() => {
+        const current = files.find((f) => f.isCurrent);
+        return current ? current.filename : "jellytrack.log";
+    }, [files]);
 
     return (
         <div className="w-full space-y-6">
@@ -195,14 +229,19 @@ export default function SystemLogsListClient({ files: initialFiles, locale, rete
                         Vider les logs
                     </Button>
 
-                    <a
-                        href="/api/logs/system/download?file=jellytrack.log"
-                        download
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 shadow-sm transition-all"
+                    <Button
+                        type="button"
+                        onClick={() => handleDownload(activeLogFilename)}
+                        disabled={downloadingFile === activeLogFilename}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 shadow-sm transition-all h-9"
                     >
-                        <Download className="w-3.5 h-3.5" />
+                        {downloadingFile === activeLogFilename ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                            <Download className="w-3.5 h-3.5" />
+                        )}
                         <span>Télécharger le journal actif</span>
-                    </a>
+                    </Button>
                 </div>
             </div>
 
@@ -266,15 +305,22 @@ export default function SystemLogsListClient({ files: initialFiles, locale, rete
                                     </TableCell>
                                     <TableCell className="py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <a
-                                                href={`/api/logs/system/download?file=${encodeURIComponent(file.filename)}`}
-                                                download={file.filename}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 transition-colors"
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleDownload(file.filename)}
+                                                disabled={downloadingFile === file.filename}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 transition-colors h-8"
                                                 title={`Télécharger ${file.filename}`}
                                             >
-                                                <Download className="w-3.5 h-3.5" />
+                                                {downloadingFile === file.filename ? (
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                ) : (
+                                                    <Download className="w-3.5 h-3.5" />
+                                                )}
                                                 <span>Télécharger</span>
-                                            </a>
+                                            </Button>
 
                                             {!file.isCurrent && (
                                                 <Button
