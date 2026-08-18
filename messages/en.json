@@ -737,7 +737,9 @@
     "serverCompare": "Server Compare",
     "pluginHealth": "Plugin Health",
     "backupServerActive": "Backup server active",
-    "backupServerDesc": "Connected to {server}. The primary server is unavailable."
+    "backupServerDesc": "Connected to {server}. The primary server is unavailable.",
+    "collapseMenu": "Collapse sidebar",
+    "expandMenu": "Expand sidebar"
   },
   "network": {
     "audioHDNotSupported": "HD audio not supported",

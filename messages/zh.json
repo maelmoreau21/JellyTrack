@@ -736,8 +736,10 @@
     "users": "用户",
     "serverCompare": "Server Compare",
     "pluginHealth": "Plugin Health",
-    "backupServerActive": "Backup server active",
-    "backupServerDesc": "Connected to {server}. The primary server is unavailable."
+    "backupServerActive": "备份服务器已激活",
+    "backupServerDesc": "已连接到 {server}。主服务器不可用。",
+    "collapseMenu": "折叠侧边栏",
+    "expandMenu": "展开侧边栏"
   },
   "network": {
     "audioHDNotSupported": "不支持高清音频",

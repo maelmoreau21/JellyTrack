@@ -737,7 +737,9 @@
     "serverCompare": "Comparaison de serveurs",
     "pluginHealth": "Santé du plugin",
     "backupServerActive": "Serveur de secours actif",
-    "backupServerDesc": "Connecté sur {server}. Le serveur principal est indisponible."
+    "backupServerDesc": "Connecté sur {server}. Le serveur principal est indisponible.",
+    "collapseMenu": "Réduire le menu",
+    "expandMenu": "Agrandir le menu"
   },
   "network": {
     "audioHDNotSupported": "Audio HD non supporté",

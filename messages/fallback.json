@@ -3,7 +3,9 @@
     "serverCompare": "Server Compare",
     "pluginHealth": "Plugin Health",
     "backupServerActive": "Backup server active",
-    "backupServerDesc": "Connected to {server}. The primary server is unavailable."
+    "backupServerDesc": "Connected to {server}. The primary server is unavailable.",
+    "collapseMenu": "Collapse sidebar",
+    "expandMenu": "Expand sidebar"
   },
   "anomalyChartsDesc": "14-day view of monitor, sync and backup errors, plus detected auto-cleanups.",
   "anomalyChartsTitle": "Anomaly charts",

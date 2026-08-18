@@ -737,8 +737,10 @@
     "users": "Usuarios",
     "serverCompare": "Server Compare",
     "pluginHealth": "Plugin Health",
-    "backupServerActive": "Backup server active",
-    "backupServerDesc": "Connected to {server}. The primary server is unavailable."
+    "backupServerActive": "Servidor de respaldo activo",
+    "backupServerDesc": "Conectado a {server}. El servidor principal no está disponible.",
+    "collapseMenu": "Plegar menú",
+    "expandMenu": "Desplegar menú"
   },
   "network": {
     "audioHDNotSupported": "Audio HD no compatible",

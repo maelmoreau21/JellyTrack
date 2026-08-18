@@ -7,7 +7,7 @@ import { ChevronDown, Globe } from 'lucide-react';
 import Image from 'next/image';
 import { AVAILABLE_LOCALES, DEFAULT_LOCALE, isSupportedLocale } from '@/i18n/locales';
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
     const locale = useLocale();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
@@ -47,6 +47,65 @@ export function LanguageSwitcher() {
         startTransition(() => {
             router.refresh();
         });
+    }
+
+    if (compact) {
+        return (
+            <div className="relative flex justify-center w-full" ref={ref}>
+                <button
+                    type="button"
+                    onClick={() => setOpen(!open)}
+                    disabled={isPending}
+                    className={`group relative flex h-10 w-10 items-center justify-center rounded-xl border border-sidebar-border bg-sidebar-accent/80 text-sidebar-foreground transition-all hover:border-cyan-400/40 hover:bg-cyan-400/10 shadow-sm ${open ? 'border-cyan-400/40 bg-cyan-400/15' : ''} ${isPending ? 'opacity-50 cursor-wait' : ''}`}
+                    aria-label="Language"
+                    aria-expanded={open}
+                    aria-haspopup="menu"
+                    aria-controls={open ? menuId : undefined}
+                >
+                    <Image 
+                        src={`https://flagcdn.com/w40/${current.iso}.png`} 
+                        alt={current.label}
+                        width={20}
+                        height={14}
+                        className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
+                    />
+                    <div className="pointer-events-none absolute left-full ml-2.5 top-1/2 -translate-y-1/2 z-50 hidden rounded-md bg-zinc-900 px-2.5 py-1 text-xs font-medium text-white shadow-lg dark:bg-zinc-100 dark:text-zinc-900 group-hover:block whitespace-nowrap">
+                        {current.label}
+                    </div>
+                </button>
+                {open && (
+                    <div
+                        id={menuId}
+                        role="menu"
+                        className="fixed left-[76px] bottom-16 z-[70] w-56 overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar/95 p-2 shadow-2xl backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 duration-200"
+                    >
+                        <div className="mb-2 rounded-xl border border-border/5 bg-muted/30 px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                            Interface
+                        </div>
+                        {AVAILABLE_LOCALES.map((loc) => (
+                            <button
+                                key={loc.code}
+                                type="button"
+                                role="menuitemradio"
+                                aria-checked={loc.code === selectedLocale}
+                                onClick={() => switchLocale(loc.code)}
+                                className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all ${loc.code === selectedLocale ? 'border-primary/20 bg-primary/10 text-primary dark:text-cyan-200' : 'border-transparent text-foreground/80 dark:text-slate-300 hover:bg-muted'}`}
+                            >
+                                <Image 
+                                    src={`https://flagcdn.com/w40/${loc.iso}.png`} 
+                                    alt=""
+                                    width={20}
+                                    height={14}
+                                    className="w-5 h-3.5 object-cover rounded-sm shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
+                                />
+                                <span className="flex-1 text-left">{loc.label}</span>
+                                {loc.code === selectedLocale && <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">Active</span>}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
     }
 
     return (

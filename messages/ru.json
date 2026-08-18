@@ -736,8 +736,10 @@
     "users": "Пользователи",
     "serverCompare": "Server Compare",
     "pluginHealth": "Plugin Health",
-    "backupServerActive": "Backup server active",
-    "backupServerDesc": "Connected to {server}. The primary server is unavailable."
+    "backupServerActive": "Резервный сервер активен",
+    "backupServerDesc": "Подключено к {server}. Основной сервер недоступен.",
+    "collapseMenu": "Свернуть панель",
+    "expandMenu": "Развернуть панель"
   },
   "network": {
     "audioHDNotSupported": "HD-аудио не поддерживается",
