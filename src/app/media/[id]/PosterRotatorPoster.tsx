@@ -29,10 +29,29 @@ export default function PosterRotatorPoster({ mediaId, serverId, title, src, can
     const reloadPoster = async () => {
         setStatus("loading");
         try {
+            // If PosterRotator plugin is available, trigger rotation first
+            try {
+                await fetch(`/api/media/${encodeURIComponent(mediaId)}/poster-rotator/rotate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ serverId }),
+                });
+            } catch {
+                // Ignore plugin rotate error, fallback to image cache-bust reload
+            }
+
             const url = `/api/jellyfin/image?itemId=${encodeURIComponent(mediaId)}&type=Primary&cacheBust=${Date.now()}&serverId=${encodeURIComponent(serverId)}`;
             const response = await fetch(url);
 
             if (response.ok) {
+                const contentType = response.headers.get("content-type") || "";
+                if (contentType.includes("image/svg")) {
+                    const text = await response.clone().text().catch(() => "");
+                    if (text.includes("No Image")) {
+                        setStatus("error");
+                        return;
+                    }
+                }
                 setCacheBust(Date.now());
                 setStatus("success");
                 return;

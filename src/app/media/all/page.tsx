@@ -124,6 +124,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
         select: {
             id: true,
             jellyfinMediaId: true,
+            serverId: true,
             title: true,
             type: true,
             parentId: true,
@@ -335,6 +336,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
         return {
             id: String(media.id),
             jellyfinMediaId: String(media.jellyfinMediaId),
+            serverId: String(media.serverId || ''),
             title: media.title || '',
             type: media.type || 'Movie',
             parentId: media.parentId || null,
@@ -387,7 +389,7 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                 {displayMedia.map((media) => (
                     <Link href={`/media/${media.jellyfinMediaId}`} key={media.id} className="group flex flex-col space-y-2">
                         <div className={`app-surface-soft relative ${media.type === 'MusicAlbum' ? 'aspect-square' : 'aspect-[2/3]'} rounded-md overflow-hidden ring-1 ring-zinc-200/50 dark:ring-white/10 shadow-lg`}>
-                            <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.type === 'MusicAlbum' ? undefined : (media.parentId || undefined))} alt={media.title} fill className="object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50" fallbackType={media.type === 'MusicAlbum' ? 'music' : 'movie'} />
+                            <FallbackImage src={getJellyfinImageUrl(media.jellyfinMediaId, 'Primary', media.type === 'MusicAlbum' ? undefined : (media.parentId || undefined), media.serverId)} alt={media.title} fill className="object-cover transition-transform duration-500 group-hover:scale-110 group-hover:brightness-50" fallbackType={media.type === 'MusicAlbum' ? 'music' : 'movie'} />
                             {showLibraryMediaBadges && (media.normalizedResolution && !['MusicAlbum', 'Season', 'Series'].includes(media.type)) && (
                                 <div className="absolute top-2 right-2 z-10">
                                     <Badge className={`px-1.5 py-0 text-[10px] font-black tracking-tighter uppercase ${media.normalizedResolution === '4K' ? 'bg-orange-500 text-black border-transparent' : media.normalizedResolution === '1080p' ? 'bg-blue-600 text-white border-transparent' : 'bg-zinc-800 text-muted-foreground border-zinc-700'}`}>

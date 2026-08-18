@@ -17,6 +17,11 @@ type JellyfinItemMeta = {
     seriesId: string | null;
     albumId: string | null;
     artistId: string | null;
+    parentPrimaryImageItemId: string | null;
+    parentThumbItemId: string | null;
+    hasPrimaryTag: boolean;
+    hasThumbTag: boolean;
+    hasBackdropTag: boolean;
 };
 
 function normalizeCandidateId(value: unknown): string | null {
@@ -27,7 +32,7 @@ function normalizeCandidateId(value: unknown): string | null {
 
 async function fetchJellyfinItemMeta(itemId: string, serverId?: string | null): Promise<JellyfinItemMeta | null> {
     const data = await fetchJellyfinJson<Record<string, unknown>>(
-        `/Items/${encodeURIComponent(itemId)}?Fields=ParentId,SeasonId,SeriesId,AlbumId,Type,ArtistItems`,
+        `/Items/${encodeURIComponent(itemId)}?Fields=ParentId,SeasonId,SeriesId,AlbumId,Type,ArtistItems,ImageTags,BackdropImageTags,SeriesPrimaryImageTag,SeriesThumbImageTag,ParentPrimaryImageItemId,ParentThumbItemId,AlbumPrimaryImageTag`,
         serverId
     );
     if (!data) return null;
@@ -39,6 +44,9 @@ async function fetchJellyfinItemMeta(itemId: string, serverId?: string | null): 
         artistId = normalizeCandidateId(data.ArtistItems[0]?.Id);
     }
 
+    const imageTags = (data?.ImageTags && typeof data.ImageTags === "object" ? data.ImageTags : {}) as Record<string, unknown>;
+    const backdropTags = Array.isArray(data?.BackdropImageTags) ? data.BackdropImageTags : [];
+
     return {
         id,
         type: typeof data?.Type === "string" ? data.Type : null,
@@ -47,6 +55,11 @@ async function fetchJellyfinItemMeta(itemId: string, serverId?: string | null): 
         seriesId: normalizeCandidateId(data?.SeriesId),
         albumId: normalizeCandidateId(data?.AlbumId),
         artistId,
+        parentPrimaryImageItemId: normalizeCandidateId(data?.ParentPrimaryImageItemId),
+        parentThumbItemId: normalizeCandidateId(data?.ParentThumbItemId),
+        hasPrimaryTag: Boolean(imageTags.Primary || data?.SeriesPrimaryImageTag || data?.AlbumPrimaryImageTag),
+        hasThumbTag: Boolean(imageTags.Thumb || data?.SeriesThumbImageTag),
+        hasBackdropTag: backdropTags.length > 0 || Boolean(imageTags.Backdrop),
     };
 }
 
@@ -95,6 +108,23 @@ async function fetchDatabaseCandidateIds(itemId: string, serverId?: string | nul
     return candidates;
 }
 
+function getFallbackImageTypes(requestedType: string): string[] {
+    switch (requestedType) {
+        case "Primary":
+            return ["Primary", "Thumb", "Backdrop", "Banner", "Art"];
+        case "Backdrop":
+            return ["Backdrop", "Thumb", "Primary"];
+        case "Thumb":
+            return ["Thumb", "Primary", "Backdrop"];
+        case "Logo":
+            return ["Logo", "Primary", "Banner", "Thumb"];
+        case "Banner":
+            return ["Banner", "Backdrop", "Primary"];
+        default:
+            return [requestedType, "Primary", "Thumb"];
+    }
+}
+
 export async function GET(req: NextRequest) {
     // SECURITY: Require authentication (defense-in-depth, middleware also checks)
     const session = await getServerSession(authOptions);
@@ -104,9 +134,9 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const itemId = searchParams.get("itemId");
-    const type = searchParams.get("type") || "Primary";
+    const requestedType = searchParams.get("type") || "Primary";
     const fallbackId = searchParams.get("fallbackId");
-    const serverId = searchParams.get("serverId");
+    const serverIdParam = searchParams.get("serverId");
     const noStore = searchParams.has("v") || searchParams.has("cacheBust");
 
     if (!itemId) {
@@ -114,7 +144,7 @@ export async function GET(req: NextRequest) {
     }
 
     // SECURITY: Validate type against allowlist (prevents path traversal like ../../)
-    if (!ALLOWED_IMAGE_TYPES.includes(type)) {
+    if (!ALLOWED_IMAGE_TYPES.includes(requestedType)) {
         return new NextResponse("Invalid image type", { status: 400 });
     }
 
@@ -125,79 +155,129 @@ export async function GET(req: NextRequest) {
     if (fallbackId && !UUID_PATTERN.test(fallbackId)) {
         return new NextResponse("Invalid fallback ID format", { status: 400 });
     }
-    if (serverId && !UUID_PATTERN.test(serverId)) {
+    if (serverIdParam && !UUID_PATTERN.test(serverIdParam)) {
         return new NextResponse("Invalid server ID format", { status: 400 });
     }
 
     try {
-        let response = await fetchJellyfinImage(itemId, type, serverId, noStore);
-        const attemptedIds = new Set<string>([itemId]);
+        // Automatic server ID resolution from database if not explicitly passed in query
+        let effectiveServerId = serverIdParam;
+        let dbMediaRecord: { serverId: string; parentId: string | null; type: string } | null = null;
 
-        const tryCandidate = async (candidate: string | null | undefined): Promise<boolean> => {
+        if (!effectiveServerId || !fallbackId) {
+            try {
+                dbMediaRecord = await prisma.media.findFirst({
+                    where: { jellyfinMediaId: itemId },
+                    select: { serverId: true, parentId: true, type: true },
+                });
+                if (!effectiveServerId && dbMediaRecord?.serverId) {
+                    effectiveServerId = dbMediaRecord.serverId;
+                }
+            } catch {
+                // DB not ready or stub active
+            }
+        }
+
+        let finalResponse: Response | null = null;
+        const attempted = new Set<string>();
+
+        const tryCandidate = async (candidate: string | null | undefined, typesToTry: string[]): Promise<Response | null> => {
             const candidateId = normalizeCandidateId(candidate);
-            if (!candidateId || attemptedIds.has(candidateId)) return false;
+            if (!candidateId) return null;
 
-            attemptedIds.add(candidateId);
-            const candidateResponse = await fetchJellyfinImage(candidateId, type, serverId, noStore);
-            if (!candidateResponse.ok) return false;
+            for (const t of typesToTry) {
+                const key = `${candidateId}:${t}`;
+                if (attempted.has(key)) continue;
+                attempted.add(key);
 
-            response = candidateResponse;
-            return true;
+                try {
+                    const candidateResponse = await fetchJellyfinImage(candidateId, t, effectiveServerId, noStore);
+                    if (candidateResponse.ok) {
+                        return candidateResponse;
+                    }
+                } catch {
+                    // Try next candidate
+                }
+            }
+            return null;
         };
 
-        // If the item has no image, try the fallback (e.g. parent album)
-        if (!response.ok && fallbackId) {
-            await tryCandidate(fallbackId);
+        const imageTypesToTry = getFallbackImageTypes(requestedType);
+
+        // Step 1: Try itemId with the requested type first
+        finalResponse = await tryCandidate(itemId, [requestedType]);
+
+        // Step 2: If fallbackId is provided, try fallbackId with requested type
+        if (!finalResponse && fallbackId) {
+            finalResponse = await tryCandidate(fallbackId, [requestedType]);
         }
 
-        // If still missing, walk known Jellyfin hierarchy IDs to match Jellyfin-like fallback behavior:
-        // Episode -> Season -> Series, Track -> Album -> Artist, Season -> Series.
-        if (!response.ok) {
-            const itemMeta = await fetchJellyfinItemMeta(itemId, serverId);
-            const candidateIds: string[] = [];
-            const addCandidate = (value: string | null | undefined) => {
-                const id = normalizeCandidateId(value);
-                if (!id || attemptedIds.has(id) || candidateIds.includes(id)) return;
-                candidateIds.push(id);
-            };
+        // Step 3: If still missing, query Jellyfin metadata and database hierarchy
+        if (!finalResponse) {
+            const itemMeta = await fetchJellyfinItemMeta(itemId, effectiveServerId);
 
-            for (const candidateId of await fetchDatabaseCandidateIds(itemId, serverId)) {
-                addCandidate(candidateId);
+            // If ParentPrimaryImageItemId is present, try it
+            if (itemMeta?.parentPrimaryImageItemId) {
+                finalResponse = await tryCandidate(itemMeta.parentPrimaryImageItemId, imageTypesToTry);
             }
-            addCandidate(itemMeta?.seasonId);
-            addCandidate(itemMeta?.seriesId);
-            addCandidate(itemMeta?.albumId);
 
-            const isAlbum = itemMeta?.type?.toLowerCase() === "musicalbum";
-            if (!isAlbum) {
+            // Try the item itself with fallback image types (e.g. Thumb, Backdrop)
+            if (!finalResponse) {
+                finalResponse = await tryCandidate(itemId, imageTypesToTry);
+            }
+
+            // Try Season / Series / Album / Artist / Parent hierarchy
+            if (!finalResponse) {
+                const hierarchyCandidates: string[] = [];
+                const addCandidate = (val: string | null | undefined) => {
+                    const id = normalizeCandidateId(val);
+                    if (id && !hierarchyCandidates.includes(id)) {
+                        hierarchyCandidates.push(id);
+                    }
+                };
+
+                addCandidate(itemMeta?.seasonId);
+                addCandidate(itemMeta?.seriesId);
+                addCandidate(itemMeta?.albumId);
+                addCandidate(itemMeta?.artistId);
                 addCandidate(itemMeta?.parentId);
-                addCandidate(itemMeta?.artistId); // Track or Album artist
-            }
+                addCandidate(itemMeta?.parentThumbItemId);
+                addCandidate(dbMediaRecord?.parentId);
+                addCandidate(fallbackId);
 
-            // If we have an album ID, look up its artist ID as a deep fallback
-            if (itemMeta?.albumId) {
-                const albumMeta = await fetchJellyfinItemMeta(itemMeta.albumId, serverId);
-                if (albumMeta?.artistId) {
-                    addCandidate(albumMeta.artistId);
+                // Deep lookup for album artist
+                if (itemMeta?.albumId) {
+                    const albumMeta = await fetchJellyfinItemMeta(itemMeta.albumId, effectiveServerId);
+                    if (albumMeta?.artistId) {
+                        addCandidate(albumMeta.artistId);
+                    }
+                    if (albumMeta?.parentId) {
+                        addCandidate(albumMeta.parentId);
+                    }
                 }
-            }
 
-            // Series can legitimately miss a primary image. In that case,
-            // use the first available season poster as visual fallback.
-            if ((itemMeta?.type || "").toLowerCase() === "series") {
-                const seasonCandidates = await fetchSeriesSeasonCandidateIds(itemId, serverId);
-                for (const seasonId of seasonCandidates) {
-                    addCandidate(seasonId);
+                // DB hierarchy candidates (e.g. grandparent series)
+                const dbCandidates = await fetchDatabaseCandidateIds(itemId, effectiveServerId);
+                for (const c of dbCandidates) {
+                    addCandidate(c);
                 }
-            }
 
-            for (const candidateId of candidateIds) {
-                const found = await tryCandidate(candidateId);
-                if (found) break;
+                // Series first season candidates
+                if ((itemMeta?.type || "").toLowerCase() === "series" || dbMediaRecord?.type === "Series") {
+                    const seasonCandidates = await fetchSeriesSeasonCandidateIds(itemId, effectiveServerId);
+                    for (const s of seasonCandidates) {
+                        addCandidate(s);
+                    }
+                }
+
+                for (const candidateId of hierarchyCandidates) {
+                    finalResponse = await tryCandidate(candidateId, imageTypesToTry);
+                    if (finalResponse) break;
+                }
             }
         }
 
-        if (!response.ok) {
+        if (!finalResponse) {
             // If Jellyfin doesn't have the image or returns an error, return a small SVG placeholder
             const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
             const encoder = new TextEncoder();
@@ -208,11 +288,11 @@ export async function GET(req: NextRequest) {
             return new NextResponse(buffer, { headers });
         }
 
-        const buffer = await response.arrayBuffer();
+        const buffer = await finalResponse.arrayBuffer();
         const headers = new Headers();
 
         // Retrieve content type from original server for our proxy (often image/jpeg or image/webp)
-        headers.set('Content-Type', response.headers.get('Content-Type') || 'image/jpeg');
+        headers.set('Content-Type', finalResponse.headers.get('Content-Type') || 'image/jpeg');
         // Long-term browser caching to offload the API
         headers.set('Cache-Control', noStore ? 'no-store' : 'public, max-age=2592000, immutable');
 

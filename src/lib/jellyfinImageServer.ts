@@ -18,45 +18,75 @@ function normalizeApiKey(value: string | null | undefined): string | null {
     return trimmed.length > 0 ? trimmed : null;
 }
 
-async function resolveJellyfinConnection(serverId?: string | null): Promise<JellyfinConnection | null> {
+export async function resolveJellyfinConnection(serverId?: string | null): Promise<JellyfinConnection | null> {
     const envBaseUrl = normalizeUrl(process.env.JELLYFIN_URL);
     const envApiKey = normalizeApiKey(process.env.JELLYFIN_API_KEY);
 
     if (serverId) {
-        const server = await prisma.server.findUnique({
-            where: { id: serverId },
-            select: { url: true, jellyfinApiKey: true, jellyfinServerId: true },
-        });
+        try {
+            const server = await prisma.server.findFirst({
+                where: {
+                    OR: [
+                        { id: serverId },
+                        { jellyfinServerId: serverId },
+                    ],
+                },
+                select: { url: true, jellyfinApiKey: true, jellyfinServerId: true },
+            });
 
-        if (server) {
-            const serverApiKey = normalizeApiKey(server.jellyfinApiKey);
-            if (serverApiKey) {
+            if (server) {
+                const serverApiKey = normalizeApiKey(server.jellyfinApiKey) || envApiKey;
                 const baseUrl = normalizeUrl(server.url) || envBaseUrl;
-                return baseUrl ? { baseUrl, apiKey: serverApiKey } : null;
+                if (baseUrl && serverApiKey) {
+                    return { baseUrl, apiKey: serverApiKey };
+                }
             }
+        } catch {
+            // DB lookup failed or stub active
+        }
+    }
 
-            const master = getMasterServerIdentityFromEnv();
-            const isPrimaryServer = server.jellyfinServerId === master.jellyfinServerId;
-            const baseUrl = isPrimaryServer ? envBaseUrl : "";
-            const apiKey = isPrimaryServer ? envApiKey : null;
+    if (envBaseUrl && envApiKey) {
+        return { baseUrl: envBaseUrl, apiKey: envApiKey };
+    }
+
+    // Fallback: look up primary or active server in database
+    try {
+        const dbServer = await prisma.server.findFirst({
+            where: { isActive: true },
+            orderBy: { createdAt: "asc" },
+            select: { url: true, jellyfinApiKey: true },
+        });
+        if (dbServer) {
+            const baseUrl = normalizeUrl(dbServer.url) || envBaseUrl;
+            const apiKey = normalizeApiKey(dbServer.jellyfinApiKey) || envApiKey;
             if (baseUrl && apiKey) {
                 return { baseUrl, apiKey };
             }
         }
+    } catch {
+        // DB not available or stub
     }
 
-    if (!envBaseUrl || !envApiKey) return null;
-    return { baseUrl: envBaseUrl, apiKey: envApiKey };
+    return null;
 }
 
-export async function fetchJellyfinImage(itemId: string, type: string, serverId?: string | null, noStore = false) {
+export async function fetchJellyfinImage(
+    itemId: string,
+    type: string,
+    serverId?: string | null,
+    noStore = false,
+    options?: { fillWidth?: number; quality?: number }
+) {
     const connection = await resolveJellyfinConnection(serverId);
 
     if (!connection) {
         throw new Error("JELLYFIN_URL ou JELLYFIN_API_KEY non configurées dans les variables d'environnement.");
     }
 
-    const url = `${connection.baseUrl}/Items/${encodeURIComponent(itemId)}/Images/${encodeURIComponent(type)}?fillWidth=300&quality=80`;
+    const fillWidth = options?.fillWidth ?? 300;
+    const quality = options?.quality ?? 80;
+    const url = `${connection.baseUrl}/Items/${encodeURIComponent(itemId)}/Images/${encodeURIComponent(type)}?fillWidth=${fillWidth}&quality=${quality}`;
 
     return fetch(url, {
         method: "GET",

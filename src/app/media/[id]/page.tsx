@@ -787,7 +787,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                     {hasBackdrop && (
                         <div className="absolute inset-0 z-0">
                             <FallbackImage 
-                                src={getJellyfinImageUrl(media.jellyfinMediaId, "Backdrop")} 
+                                src={getJellyfinImageUrl(media.jellyfinMediaId, "Backdrop", undefined, media.serverId)} 
                                 alt="Backdrop" 
                                 fill 
                                 className="object-cover opacity-30 dark:opacity-20 blur-xl scale-110" 
@@ -801,7 +801,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             mediaId={media.jellyfinMediaId}
                             serverId={media.serverId}
                             title={media.title}
-                            src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId)}
+                            src={getJellyfinImageUrl(media.jellyfinMediaId, "Primary", headerFallbackId, media.serverId)}
                             canRotate={isAdmin}
                             className={`relative ${media.type === 'Episode' ? 'w-full md:w-80 aspect-video' : ['MusicAlbum', 'Audio'].includes(media.type) ? 'w-48 aspect-square' : 'w-48 aspect-[2/3]'} bg-zinc-200 dark:bg-zinc-900 rounded-xl overflow-hidden ring-1 ring-zinc-300/30 dark:ring-white/10 shadow-2xl shrink-0`}
                         />
@@ -810,7 +810,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                 {hasLogo ? (
                                     <div className="h-16 md:h-24 w-full max-w-[300px] relative mb-2">
                                         <FallbackImage 
-                                            src={getJellyfinImageUrl(media.jellyfinMediaId, "Logo")} 
+                                            src={getJellyfinImageUrl(media.jellyfinMediaId, "Logo", undefined, media.serverId)} 
                                             alt={media.title} 
                                             fill 
                                             className="object-contain object-left" 
@@ -870,7 +870,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                 <div key={person.Id} className="flex-shrink-0 w-28 text-center space-y-2 group">
                                     <div className="relative w-28 h-28 rounded-full overflow-hidden ring-2 ring-zinc-200/50 dark:ring-white/10 group-hover:ring-primary/50 transition-all shadow-md">
                                         <FallbackImage 
-                                            src={getJellyfinImageUrl(person.Id, "Primary")} 
+                                            src={getJellyfinImageUrl(person.Id, "Primary", undefined, media.serverId)} 
                                             alt={person.Name} 
                                             fill 
                                             className="object-cover group-hover:scale-110 transition-transform duration-500" 
@@ -929,7 +929,7 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                                         >
                                                             <div className="relative w-8 h-8 rounded overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0">
                                                                 <FallbackImage
-                                                                    src={getJellyfinImageUrl(child.jellyfinMediaId, "Primary", media.jellyfinMediaId)}
+                                                                    src={getJellyfinImageUrl(child.jellyfinMediaId, "Primary", media.jellyfinMediaId, media.serverId)}
                                                                     alt={child.title}
                                                                     fill
                                                                     className="object-cover"
