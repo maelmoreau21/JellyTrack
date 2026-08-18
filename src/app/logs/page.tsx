@@ -5,8 +5,9 @@ import LogSearchBar from "./LogSearchBar";
 import { ColumnToggle } from "./ColumnToggle";
 import { SavedFilters } from "@/components/SavedFilters";
 import LogsListClient from "./LogsListClient";
-import SystemLogsListClient, { SystemLogEntry } from "./SystemLogsListClient";
-import { getRecentSystemLogs } from "@/lib/systemLogger";
+import SystemLogsListClient from "./SystemLogsListClient";
+import { getLogFilesList, type LogFileInfo } from "@/lib/systemLogger";
+import { normalizeSchedulerIntervals } from "@/lib/schedulerIntervals";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import prisma from "@/lib/prisma";
 import valkey from "@/lib/valkey";
@@ -310,7 +311,8 @@ export default async function LogsPage({
 
     let totalCount = 0;
     let safeLogs: SafeLog[] = [];
-    let systemLogs: SystemLogEntry[] = [];
+    let logFiles: LogFileInfo[] = [];
+    let retentionDays = 30;
     let jellyfinMetaMap = new Map<string, JellyfinSubtitleMeta>();
     let selectableServerOptions: any[] = [];
     let multiServerEnabled = false;
@@ -523,80 +525,21 @@ export default async function LogsPage({
             };
         });
     } else {
-        // --- System Logs Logic (Audit & Health) ---
-        const whereAudit: Prisma.AdminAuditLogWhereInput = {};
-        const whereHealth: Prisma.SystemHealthEventWhereInput = { kind: { not: 'monitor_ping' } };
-        
-        if (query) {
-            whereAudit.OR = [
-                { action: { contains: query, mode: 'insensitive' } },
-                { actorUsername: { contains: query, mode: 'insensitive' } },
-                { ipAddress: { contains: query, mode: 'insensitive' } },
-            ];
-            whereHealth.OR = [
-                { message: { contains: query, mode: 'insensitive' } },
-                { source: { contains: query, mode: 'insensitive' } },
-                { kind: { contains: query, mode: 'insensitive' } },
-            ];
+        // --- System Logs Files Logic ---
+        logFiles = getLogFilesList();
+        try {
+            const settings = await prisma.globalSettings.findUnique({
+                where: { id: "global" },
+                select: { resolutionThresholds: true },
+            });
+            const resolutionObj = settings?.resolutionThresholds && typeof settings.resolutionThresholds === "object"
+                ? (settings.resolutionThresholds as Record<string, unknown>)
+                : null;
+            const normalized = normalizeSchedulerIntervals(resolutionObj?.schedulerIntervals);
+            retentionDays = normalized.logRetentionDays;
+        } catch {
+            retentionDays = 30;
         }
-
-        const [auditCount, healthCount] = await Promise.all([
-            prisma.adminAuditLog.count({ where: whereAudit }),
-            prisma.systemHealthEvent.count({ where: whereHealth }),
-        ]);
-        totalCount = auditCount + healthCount;
-
-        const [auditLogs, healthLogs] = await Promise.all([
-            prisma.adminAuditLog.findMany({
-                where: whereAudit,
-                orderBy: { createdAt: 'desc' },
-                take: LOGS_PER_PAGE,
-                skip: (currentPage - 1) * LOGS_PER_PAGE,
-            }),
-            prisma.systemHealthEvent.findMany({
-                where: whereHealth,
-                orderBy: { createdAt: 'desc' },
-                take: LOGS_PER_PAGE,
-                skip: (currentPage - 1) * LOGS_PER_PAGE,
-            }),
-        ]);
-
-        const fileLogs = getRecentSystemLogs(100);
-
-        const combined: SystemLogEntry[] = [
-            ...fileLogs.map(l => ({
-                id: l.id,
-                type: (l.level === 'AUDIT' ? 'audit' : 'health') as 'audit' | 'health',
-                level: l.level,
-                source: l.source,
-                kind: l.level.toLowerCase(),
-                message: l.message,
-                createdAt: l.timestamp,
-                details: l.details,
-            })),
-            ...auditLogs.map(l => ({ 
-                id: l.id, 
-                type: 'audit' as const, 
-                level: 'AUDIT',
-                action: l.action, 
-                actorUsername: l.actorUsername ?? undefined,
-                ipAddress: l.ipAddress ?? undefined,
-                createdAt: l.createdAt.toISOString(), 
-                details: l.details 
-            })),
-            ...healthLogs.map(l => ({ 
-                id: l.id, 
-                type: 'health' as const, 
-                level: l.kind.toUpperCase(),
-                source: l.source, 
-                kind: l.kind, 
-                message: l.message, 
-                createdAt: l.createdAt.toISOString(), 
-                details: l.details 
-            })),
-        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-        systemLogs = combined.slice(0, LOGS_PER_PAGE * 2);
     }
 
     const totalPages = Math.ceil(totalCount / LOGS_PER_PAGE) || 1;
@@ -723,86 +666,86 @@ export default async function LogsPage({
                         </div>
                     )}
 
-                    <Card className="app-surface shadow-sm ring-1 ring-border/70">
-                        <CardContent className="space-y-4 pt-6">
-                            <div className="flex items-start gap-2 flex-wrap">
-                                <div className="flex-1 w-full relative z-10">
-                                    <LogSearchBar initialQuery={query} />
-                                </div>
-                                {activeTab === 'application' && (
-                                    <div className="flex items-center gap-2">
-                                        <SavedFilters />
-                                        <ColumnToggle visibleColumns={visibleColumns} />
+                    {activeTab === 'application' ? (
+                        <>
+                            <Card className="app-surface shadow-sm ring-1 ring-border/70">
+                                <CardContent className="space-y-4 pt-6">
+                                    <div className="flex items-start gap-2 flex-wrap">
+                                        <div className="flex-1 w-full relative z-10">
+                                            <LogSearchBar initialQuery={query} />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <SavedFilters />
+                                            <ColumnToggle visibleColumns={visibleColumns} />
+                                        </div>
                                     </div>
-                                )}
+
+                                    <div className="pt-2 border-t border-border/70 space-y-4">
+                                        <ServerFilter servers={selectableServerOptions} enabled={multiServerEnabled} showOutsideDashboard />
+                                        <LogFilters 
+                                            initialQuery={query} initialSort={sort} initialHideZapped={hideZapped} initialType={typeFilter}
+                                            initialClient={clientParams} initialAudio={audioParams} initialSubtitle={subtitleParams}
+                                            initialDateFrom={dateFromParam} initialDateTo={dateToParam} initialServers={serversParam}
+                                            serverOptions={selectableServerOptions} multiServerEnabled={multiServerEnabled} hideSearch={true}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <div className="app-surface-soft border rounded-md overflow-x-auto w-full mt-6">
+                                <LogsListClient 
+                                    serverLogs={safeLogs.map(log => ({ ...log, mediaSubtitle: getMediaSubtitle(log.media ?? null, log.serverId) }))}
+                                    visibleColumns={visibleColumns as string[]} 
+                                />
                             </div>
 
-                            {activeTab === 'application' && (
-                                <div className="pt-2 border-t border-border/70 space-y-4">
-                                    <ServerFilter servers={selectableServerOptions} enabled={multiServerEnabled} showOutsideDashboard />
-                                    <LogFilters 
-                                        initialQuery={query} initialSort={sort} initialHideZapped={hideZapped} initialType={typeFilter}
-                                        initialClient={clientParams} initialAudio={audioParams} initialSubtitle={subtitleParams}
-                                        initialDateFrom={dateFromParam} initialDateTo={dateToParam} initialServers={serversParam}
-                                        serverOptions={selectableServerOptions} multiServerEnabled={multiServerEnabled} hideSearch={true}
-                                    />
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-border/70 flex-wrap">
+                                    {safePage > 1 && (
+                                        <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-muted">
+                                            <ChevronLeft className="w-4 h-4" /> {tc('previous')}
+                                        </Link>
+                                    )}
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                            .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
+                                            .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                                                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                                                acc.push(p);
+                                                return acc;
+                                            }, [])
+                                            .map((item, idx) =>
+                                                item === "..." ? (
+                                                    <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">…</span>
+                                                ) : (
+                                                    <Link
+                                                        key={item}
+                                                        href={buildPageUrl(item as number)}
+                                                        className={`px-2.5 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition-colors ${item === safePage
+                                                                ? "bg-primary text-primary-foreground"
+                                                                : "text-foreground/75 hover:bg-muted hover:text-foreground"
+                                                            }`}
+                                                    >
+                                                        {item}
+                                                    </Link>
+                                                )
+                                            )}
+                                    </div>
+                                    {safePage < totalPages && (
+                                        <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-muted">
+                                            {tc('next')} <ChevronRight className="w-4 h-4" />
+                                        </Link>
+                                    )}
+                                    <span className="text-xs text-muted-foreground ml-0 md:ml-4 w-full md:w-auto text-center md:text-left">
+                                        Page {safePage} / {totalPages}
+                                    </span>
                                 </div>
                             )}
-                        </CardContent>
-                    </Card>
-
-                    <div className="app-surface-soft border rounded-md overflow-x-auto w-full mt-6">
-                        {activeTab === 'application' ? (
-                            <LogsListClient 
-                                serverLogs={safeLogs.map(log => ({ ...log, mediaSubtitle: getMediaSubtitle(log.media ?? null, log.serverId) }))}
-                                visibleColumns={visibleColumns as string[]} 
-                            />
-                        ) : (
-                            <SystemLogsListClient logs={systemLogs} locale={locale} />
-                        )}
-                    </div>
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-2 mt-4 md:mt-6 pt-3 md:pt-4 border-t border-border/70 flex-wrap">
-                            {safePage > 1 && (
-                                <Link href={buildPageUrl(safePage - 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-muted">
-                                    <ChevronLeft className="w-4 h-4" /> {tc('previous')}
-                                </Link>
-                            )}
-                            <div className="flex items-center gap-1">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                                    .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
-                                    .reduce<(number | string)[]>((acc, p, idx, arr) => {
-                                        if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                                        acc.push(p);
-                                        return acc;
-                                    }, [])
-                                    .map((item, idx) =>
-                                        item === "..." ? (
-                                            <span key={`ellipsis-${idx}`} className="px-2 text-zinc-500">…</span>
-                                        ) : (
-                                            <Link
-                                                key={item}
-                                                href={buildPageUrl(item as number)}
-                                                className={`px-2.5 md:px-3 py-1.5 rounded-md text-xs md:text-sm font-medium transition-colors ${item === safePage
-                                                        ? "bg-primary text-primary-foreground"
-                                                        : "text-foreground/75 hover:bg-muted hover:text-foreground"
-                                                    }`}
-                                            >
-                                                {item}
-                                            </Link>
-                                        )
-                                    )}
-                            </div>
-                            {safePage < totalPages && (
-                                <Link href={buildPageUrl(safePage + 1)} className="app-field flex items-center gap-1 px-2.5 md:px-3 py-1.5 md:py-2 rounded-md text-xs md:text-sm font-medium transition-colors hover:bg-muted">
-                                    {tc('next')} <ChevronRight className="w-4 h-4" />
-                                </Link>
-                            )}
-                            <span className="text-xs text-muted-foreground ml-0 md:ml-4 w-full md:w-auto text-center md:text-left">
-                                Page {safePage} / {totalPages}
-                            </span>
+                        </>
+                    ) : (
+                        <div className="mt-4">
+                            <SystemLogsListClient files={logFiles} locale={locale} retentionDays={retentionDays} />
                         </div>
                     )}
                 </div>

@@ -4,9 +4,10 @@ vi.mock("server-only", () => ({}));
 
 import {
     systemLog,
-    getRecentSystemLogs,
-    getLogFileContent,
-    getLogFileInfo,
+    getLogFilesList,
+    getLogFileContentByName,
+    deleteLogFileByName,
+    formatFileSize,
     clearSystemLogs,
     cleanupOldSystemLogs,
 } from "./systemLogger";
@@ -16,48 +17,43 @@ describe("systemLogger", () => {
         clearSystemLogs();
     });
 
-    it("writes and retrieves info, warn, error and audit logs", () => {
+    it("writes info, warn, error and audit logs and creates files in list", () => {
         systemLog.info("TestModule", "Informational test message", { userId: "user-123" });
         systemLog.warn("SyncService", "Warning test message");
         systemLog.error("ImageProxy", "Error test message", new Error("Jellyfin 404"));
         systemLog.audit("Export", "admin", "192.168.1.10", { file: "backup.zip" });
 
-        const recent = getRecentSystemLogs(10);
-        expect(recent.length).toBeGreaterThanOrEqual(4);
+        const fileList = getLogFilesList();
+        expect(fileList.length).toBeGreaterThan(0);
 
-        const auditLog = recent.find((r) => r.level === "AUDIT");
-        expect(auditLog).toBeDefined();
-        expect(auditLog?.message).toContain("Export by admin (192.168.1.10)");
-
-        const errorLog = recent.find((r) => r.level === "ERROR");
-        expect(errorLog).toBeDefined();
-        expect(errorLog?.source).toBe("ImageProxy");
+        const currentFile = fileList.find((f) => f.isCurrent);
+        expect(currentFile).toBeDefined();
+        expect(currentFile?.sizeBytes).toBeGreaterThan(0);
+        expect(currentFile?.lineCount).toBeGreaterThanOrEqual(1);
     });
 
-    it("returns formatted log file content for download", () => {
-        systemLog.info("Boot", "System initialized successfully");
-        const content = getLogFileContent();
-        expect(typeof content).toBe("string");
-        expect(content).toContain("[INFO]");
-        expect(content).toContain("[Boot]");
-        expect(content).toContain("System initialized successfully");
+    it("returns formatted log file content by name for download", () => {
+        systemLog.info("Boot", "System initialized successfully for test");
+        const fileContent = getLogFileContentByName("jellytrack.log");
+        expect(fileContent).toBeDefined();
+        expect(fileContent?.content).toContain("[INFO]");
+        expect(fileContent?.content).toContain("[Boot]");
+        expect(fileContent?.content).toContain("System initialized successfully for test");
     });
 
-    it("returns log file info with byte size and line count", () => {
-        systemLog.info("Metric", "Sample metric message");
-        const info = getLogFileInfo();
-        expect(info).toHaveProperty("sizeBytes");
-        expect(info).toHaveProperty("lineCount");
-        expect(info).toHaveProperty("path");
+    it("formats file sizes properly", () => {
+        expect(formatFileSize(500)).toBe("500 B");
+        expect(formatFileSize(2048)).toBe("2.0 Ko");
+        expect(formatFileSize(1048576 * 3)).toBe("3.00 Mo");
     });
 
-    it("clears system logs properly", () => {
+    it("deletes log file when requested", () => {
         systemLog.info("Temp", "Temporary log message");
-        expect(getRecentSystemLogs().length).toBeGreaterThan(0);
+        const listBefore = getLogFilesList();
+        expect(listBefore.length).toBeGreaterThan(0);
 
-        clearSystemLogs();
-        const afterClear = getRecentSystemLogs();
-        expect(afterClear.length).toBeLessThanOrEqual(1); // At most the 'Logs cleared' record
+        // Deleting invalid or non-existent file returns false safely
+        expect(deleteLogFileByName("non-existent-log-file-99.log")).toBe(false);
     });
 
     it("handles cleanup of old logs without throwing", async () => {

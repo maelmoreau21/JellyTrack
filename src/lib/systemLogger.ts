@@ -16,12 +16,29 @@ export type SystemLogEntry = {
     details?: unknown;
 };
 
+export type LogFileInfo = {
+    filename: string;
+    sizeBytes: number;
+    formattedSize: string;
+    lineCount: number;
+    updatedAt: string;
+    isCurrent: boolean;
+};
+
 const LOG_DIR = process.env.LOG_DIR || (fs.existsSync("/data") ? "/data/logs" : path.join(process.cwd(), "logs"));
-const LOG_FILE = path.join(LOG_DIR, "jellytrack.log");
+const MAIN_LOG_FILE = path.join(LOG_DIR, "jellytrack.log");
 const MAX_IN_MEMORY_LOGS = 1000;
 
-// In-memory ring buffer for fast client polling
+// In-memory ring buffer for live log events
 const memoryLogs: SystemLogEntry[] = [];
+
+export function formatFileSize(bytes: number): string {
+    if (!Number.isFinite(bytes) || bytes <= 0) return "0 Ko";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} Mo`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} Go`;
+}
 
 function ensureLogDir(): boolean {
     try {
@@ -39,10 +56,14 @@ function formatLogLine(entry: SystemLogEntry): string {
     return `[${entry.timestamp}] [${entry.level}] [${entry.source}] ${entry.message}${detailsStr}\n`;
 }
 
-function appendToLogFile(line: string) {
+function appendToLogFiles(line: string) {
     if (!ensureLogDir()) return;
+    const today = new Date().toISOString().split("T")[0];
+    const dailyFile = path.join(LOG_DIR, `jellytrack-${today}.log`);
+
     try {
-        fs.appendFileSync(LOG_FILE, line, { encoding: "utf8" });
+        fs.appendFileSync(dailyFile, line, { encoding: "utf8" });
+        fs.appendFileSync(MAIN_LOG_FILE, line, { encoding: "utf8" });
     } catch {
         // Ignore file system write errors gracefully in case of strict read-only storage
     }
@@ -65,9 +86,9 @@ export function writeSystemLog(level: SystemLogLevel, source: string, message: s
         memoryLogs.pop();
     }
 
-    // Write formatted log line to file
+    // Write formatted log line to daily log and master log file
     const line = formatLogLine(entry);
-    appendToLogFile(line);
+    appendToLogFiles(line);
 
     // Also mirror to pino structured logger
     const logPayload = { source, details };
@@ -100,105 +121,125 @@ export const systemLog = {
         writeSystemLog("AUDIT", "Audit", `${action} by ${actorUsername || "System"}${ipAddress ? ` (${ipAddress})` : ""}`, details),
 };
 
-export function getRecentSystemLogs(limit = 100): SystemLogEntry[] {
-    if (memoryLogs.length > 0) {
-        return memoryLogs.slice(0, limit);
-    }
+export function getLogFilesList(): LogFileInfo[] {
+    ensureLogDir();
+    const files: LogFileInfo[] = [];
+    const todayFilename = `jellytrack-${new Date().toISOString().split("T")[0]}.log`;
 
-    // If memory is empty (e.g. after server restart), read from log file
-    return readLogsFromFile(limit);
-}
-
-export function readLogsFromFile(limit = 100): SystemLogEntry[] {
     try {
-        if (!fs.existsSync(LOG_FILE)) return [];
-        const content = fs.readFileSync(LOG_FILE, "utf8");
-        const lines = content.split("\n").filter((l) => l.trim().length > 0);
-        const entries: SystemLogEntry[] = [];
+        if (fs.existsSync(LOG_DIR)) {
+            const dirEntries = fs.readdirSync(LOG_DIR);
+            for (const filename of dirEntries) {
+                if (!filename.endsWith(".log") && !filename.endsWith(".txt")) continue;
+                const fullPath = path.join(LOG_DIR, filename);
 
-        const logRegex = /^\[(.*?)\]\s+\[(.*?)\]\s+\[(.*?)\]\s+(.*?)(?:\s+\|\s+(.*))?$/;
+                try {
+                    const stats = fs.statSync(fullPath);
+                    if (!stats.isFile()) continue;
 
-        for (let i = lines.length - 1; i >= 0 && entries.length < limit; i--) {
-            const match = lines[i].match(logRegex);
-            if (match) {
-                const [, timestamp, level, source, message, detailsRaw] = match;
-                let details: unknown = undefined;
-                if (detailsRaw) {
+                    let lineCount = 0;
                     try {
-                        details = JSON.parse(detailsRaw);
+                        const content = fs.readFileSync(fullPath, "utf8");
+                        lineCount = content.split("\n").filter((l) => l.trim().length > 0).length;
                     } catch {
-                        details = detailsRaw;
+                        lineCount = 0;
                     }
+
+                    files.push({
+                        filename,
+                        sizeBytes: stats.size,
+                        formattedSize: formatFileSize(stats.size),
+                        lineCount,
+                        updatedAt: stats.mtime.toISOString(),
+                        isCurrent: filename === "jellytrack.log" || filename === todayFilename,
+                    });
+                } catch {
+                    // Ignore unreadable stats
                 }
-                entries.push({
-                    id: `file-${i}`,
-                    timestamp,
-                    level: (level as SystemLogLevel) || "INFO",
-                    source,
-                    message,
-                    details,
-                });
-            } else {
-                entries.push({
-                    id: `raw-${i}`,
-                    timestamp: new Date().toISOString(),
-                    level: "INFO",
-                    source: "System",
-                    message: lines[i],
-                });
             }
         }
-
-        return entries;
     } catch {
-        return [];
+        // Ignore directory read errors
     }
+
+    // Sort: current/today file first, then descending by updatedAt date
+    files.sort((a, b) => {
+        if (a.isCurrent && !b.isCurrent) return -1;
+        if (!a.isCurrent && b.isCurrent) return 1;
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+
+    // If no log file exists yet on disk, ensure an active one is created
+    if (files.length === 0) {
+        const initialFilename = "jellytrack.log";
+        const initialContent = `[${new Date().toISOString()}] [INFO] [System] Journal système initialisé.\n`;
+        try {
+            fs.writeFileSync(path.join(LOG_DIR, initialFilename), initialContent, "utf8");
+            files.push({
+                filename: initialFilename,
+                sizeBytes: Buffer.byteLength(initialContent),
+                formattedSize: formatFileSize(Buffer.byteLength(initialContent)),
+                lineCount: 1,
+                updatedAt: new Date().toISOString(),
+                isCurrent: true,
+            });
+        } catch {
+            // Ignore
+        }
+    }
+
+    return files;
 }
 
-export function getLogFileContent(): string {
+export function getLogFileContentByName(filename?: string | null): { content: string; filename: string } | null {
+    ensureLogDir();
+    const safeFilename = filename ? path.basename(filename) : "jellytrack.log";
+    const targetFile = path.join(LOG_DIR, safeFilename);
+
     try {
-        if (fs.existsSync(LOG_FILE)) {
-            return fs.readFileSync(LOG_FILE, "utf8");
+        if (fs.existsSync(targetFile)) {
+            const content = fs.readFileSync(targetFile, "utf8");
+            return { content, filename: safeFilename };
         }
     } catch {
-        // Fallback to memory logs
+        return null;
     }
 
-    if (memoryLogs.length > 0) {
-        return memoryLogs.map(formatLogLine).reverse().join("");
+    // If main log file is requested but doesn't exist yet, return memory logs
+    if (safeFilename === "jellytrack.log" && memoryLogs.length > 0) {
+        return {
+            content: memoryLogs.map(formatLogLine).reverse().join(""),
+            filename: "jellytrack.log",
+        };
     }
 
-    return `[${new Date().toISOString()}] [INFO] [System] Log file initialized.\n`;
+    return null;
 }
 
-export function getLogFileInfo(): { sizeBytes: number; lineCount: number; path: string } {
+export function deleteLogFileByName(filename: string): boolean {
+    ensureLogDir();
+    const safeFilename = path.basename(filename);
+    if (!safeFilename || safeFilename === "." || safeFilename === "..") return false;
+
+    const targetFile = path.join(LOG_DIR, safeFilename);
+
     try {
-        if (fs.existsSync(LOG_FILE)) {
-            const stats = fs.statSync(LOG_FILE);
-            const content = fs.readFileSync(LOG_FILE, "utf8");
-            const lineCount = content.split("\n").length;
-            return {
-                sizeBytes: stats.size,
-                lineCount,
-                path: LOG_FILE,
-            };
+        if (fs.existsSync(targetFile)) {
+            fs.unlinkSync(targetFile);
+            return true;
         }
     } catch {
-        // Ignore stat error
+        return false;
     }
 
-    return {
-        sizeBytes: 0,
-        lineCount: memoryLogs.length,
-        path: LOG_FILE,
-    };
+    return false;
 }
 
 export function clearSystemLogs(): boolean {
     memoryLogs.length = 0;
     try {
-        if (fs.existsSync(LOG_FILE)) {
-            fs.writeFileSync(LOG_FILE, `[${new Date().toISOString()}] [INFO] [System] Logs cleared by administrator.\n`, "utf8");
+        if (fs.existsSync(MAIN_LOG_FILE)) {
+            fs.writeFileSync(MAIN_LOG_FILE, `[${new Date().toISOString()}] [INFO] [System] Logs réinitialisés par l'administrateur.\n`, "utf8");
         }
         return true;
     } catch {
@@ -222,7 +263,7 @@ export async function cleanupOldSystemLogs(retentionDays = 30): Promise<{ delete
         if (fs.existsSync(LOG_DIR)) {
             const files = fs.readdirSync(LOG_DIR);
             for (const file of files) {
-                if (file.endsWith(".log") && file !== "jellytrack.log") {
+                if ((file.endsWith(".log") || file.endsWith(".txt")) && file !== "jellytrack.log") {
                     const filePath = path.join(LOG_DIR, file);
                     const stats = fs.statSync(filePath);
                     if (stats.mtime < cutoffDate) {
@@ -253,7 +294,7 @@ export async function cleanupOldSystemLogs(retentionDays = 30): Promise<{ delete
 
     systemLog.info(
         "Maintenance",
-        `System logs retention cleanup completed: ${deletedFiles} file(s) deleted, ${prunedDatabaseRows} database row(s) pruned older than ${retentionDays} days.`
+        `Nettoyage de rétention des logs terminé : ${deletedFiles} fichier(s) supprimé(s), ${prunedDatabaseRows} ligne(s) d'audit purgée(s) (plus de ${retentionDays} jours).`
     );
 
     return { deletedFiles, prunedDatabaseRows };

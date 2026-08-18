@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { getLogFileContent } from "@/lib/systemLogger";
+import { getLogFileContentByName } from "@/lib/systemLogger";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
     const role = (session?.user as { role?: string })?.role;
 
@@ -13,15 +13,20 @@ export async function GET() {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const content = getLogFileContent();
-    const dateStr = new Date().toISOString().split("T")[0];
-    const filename = `jellytrack-system-logs-${dateStr}.log`;
+    const { searchParams } = new URL(req.url);
+    const requestedFile = searchParams.get("file");
 
-    return new NextResponse(content, {
+    const fileResult = getLogFileContentByName(requestedFile);
+
+    if (!fileResult) {
+        return new NextResponse("Fichier de log introuvable", { status: 404 });
+    }
+
+    return new NextResponse(fileResult.content, {
         status: 200,
         headers: {
             "Content-Type": "text/plain; charset=utf-8",
-            "Content-Disposition": `attachment; filename="${filename}"`,
+            "Content-Disposition": `attachment; filename="${fileResult.filename}"`,
             "Cache-Control": "no-store, no-cache, must-revalidate",
         },
     });
