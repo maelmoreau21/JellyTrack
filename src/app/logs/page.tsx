@@ -6,6 +6,7 @@ import { ColumnToggle } from "./ColumnToggle";
 import { SavedFilters } from "@/components/SavedFilters";
 import LogsListClient from "./LogsListClient";
 import SystemLogsListClient, { SystemLogEntry } from "./SystemLogsListClient";
+import { getRecentSystemLogs } from "@/lib/systemLogger";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import prisma from "@/lib/prisma";
 import valkey from "@/lib/valkey";
@@ -560,10 +561,23 @@ export default async function LogsPage({
             }),
         ]);
 
-        const combined = [
+        const fileLogs = getRecentSystemLogs(100);
+
+        const combined: SystemLogEntry[] = [
+            ...fileLogs.map(l => ({
+                id: l.id,
+                type: (l.level === 'AUDIT' ? 'audit' : 'health') as 'audit' | 'health',
+                level: l.level,
+                source: l.source,
+                kind: l.level.toLowerCase(),
+                message: l.message,
+                createdAt: l.timestamp,
+                details: l.details,
+            })),
             ...auditLogs.map(l => ({ 
                 id: l.id, 
                 type: 'audit' as const, 
+                level: 'AUDIT',
                 action: l.action, 
                 actorUsername: l.actorUsername ?? undefined,
                 ipAddress: l.ipAddress ?? undefined,
@@ -573,6 +587,7 @@ export default async function LogsPage({
             ...healthLogs.map(l => ({ 
                 id: l.id, 
                 type: 'health' as const, 
+                level: l.kind.toUpperCase(),
                 source: l.source, 
                 kind: l.kind, 
                 message: l.message, 
@@ -581,7 +596,7 @@ export default async function LogsPage({
             })),
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-        systemLogs = combined.slice(0, LOGS_PER_PAGE);
+        systemLogs = combined.slice(0, LOGS_PER_PAGE * 2);
     }
 
     const totalPages = Math.ceil(totalCount / LOGS_PER_PAGE) || 1;

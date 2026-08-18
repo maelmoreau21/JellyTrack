@@ -161,6 +161,31 @@ export default function SchedulerSchedulesPage() {
                                 </div>
                             </div>
                         </div>
+
+                        <div className="app-surface-soft rounded-lg border p-4">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <div className="text-sm font-medium">{t('logRetention') || 'Rétention des journaux'}</div>
+                                    <div className="text-xs text-muted-foreground mt-1">{t('logRetentionHint') || "Durée de conservation automatique des fichiers de journaux système avant rotation et suppression."}</div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <select
+                                        value={intervals.logRetentionDays ?? 30}
+                                        onChange={(e) => updateInterval('logRetentionDays', parseInt(e.target.value) || 0)}
+                                        className="bg-background border border-border rounded-md px-3 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                                    >
+                                        <option value={7}>7 {tc('days') || 'jours'}</option>
+                                        <option value={14}>14 {tc('days') || 'jours'}</option>
+                                        <option value={30}>30 {tc('days') || 'jours'}</option>
+                                        <option value={60}>60 {tc('days') || 'jours'}</option>
+                                        <option value={90}>90 {tc('days') || 'jours'}</option>
+                                        <option value={180}>180 {tc('days') || 'jours'}</option>
+                                        <option value={365}>365 {tc('days') || 'jours'}</option>
+                                        <option value={0}>{t('retentionUnlimited') || 'Conserver indéfiniment'}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter>

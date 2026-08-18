@@ -110,8 +110,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV TZ=UTC
 
 # Ensure runtime directories exist and are owned by the default node user (UID/GID 1000)
-RUN mkdir -p /data/backups /app/.next/cache && \
-    chown -R node:node /data/backups /app
+RUN mkdir -p /data/backups /data/logs /app/.next/cache && \
+    chown -R node:node /data /app
 
 # Copy public folder and static assets from builder
 COPY --from=builder --chown=node:node /app/public ./public
@@ -119,6 +119,11 @@ COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
 # Copy Next.js standalone server
 COPY --from=builder --chown=node:node /app/.next/standalone ./
+
+# Ensure .next cache directory is fully writable by node
+RUN mkdir -p /app/.next/cache /data/logs /data/backups && \
+    chown -R node:node /app/.next /data && \
+    chmod -R 775 /app/.next/cache /data
 
 # Copy Prisma schema and config
 COPY --from=builder --chown=node:node /app/prisma ./prisma

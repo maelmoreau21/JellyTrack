@@ -4,6 +4,7 @@ import { logger } from '@/lib/logger';
 let recentSyncTask: ScheduledTask | null = null;
 let fullSyncTask: ScheduledTask | null = null;
 let backupTask: ScheduledTask | null = null;
+let logCleanupTask: ScheduledTask | null = null;
 
 interface CronSchedule {
     syncCronHour: number;
@@ -13,6 +14,7 @@ interface CronSchedule {
     recentSyncEveryHours: number;
     fullSyncEveryHours: number;
     backupEveryHours: number;
+    logRetentionDays?: number;
 }
 
 function clampHour(value: number): number {
@@ -46,6 +48,7 @@ export async function initCronJobs(schedule: CronSchedule) {
     const cron = (await import('node-cron')).default;
     const { syncJellyfinLibrary } = await import('@/lib/sync');
     const { performAutoBackup } = await import('@/lib/autoBackup');
+    const { cleanupOldSystemLogs } = await import('@/lib/systemLogger');
 
     const recentSyncCronExpr = buildEveryHoursCron(
         schedule.recentSyncEveryHours,
@@ -99,6 +102,17 @@ export async function initCronJobs(schedule: CronSchedule) {
             logger.error({ err }, "[Cron] Auto-backup failed");
         }
     });
+
+    // Daily system log retention cleanup at 04:00 UTC
+    logCleanupTask = cron.schedule("0 4 * * *", async () => {
+        logger.info("[Cron] Running daily system logs retention cleanup");
+        try {
+            const retentionDays = schedule.logRetentionDays ?? 30;
+            await cleanupOldSystemLogs(retentionDays);
+        } catch (err) {
+            logger.error({ err }, "[Cron] System log retention cleanup failed");
+        }
+    });
 }
 
 export async function rescheduleCronJobs(schedule: CronSchedule) {
@@ -106,6 +120,7 @@ export async function rescheduleCronJobs(schedule: CronSchedule) {
     if (recentSyncTask) { recentSyncTask.stop(); recentSyncTask = null; }
     if (fullSyncTask) { fullSyncTask.stop(); fullSyncTask = null; }
     if (backupTask) { backupTask.stop(); backupTask = null; }
+    if (logCleanupTask) { logCleanupTask.stop(); logCleanupTask = null; }
 
     logger.info("[CronManager] Rescheduling cron jobs...");
     await initCronJobs(schedule);

@@ -2,12 +2,14 @@ export type SchedulerIntervals = {
     recentSyncEveryHours: number;
     fullSyncEveryHours: number;
     backupEveryHours: number;
+    logRetentionDays: number;
 };
 
 export const DEFAULT_SCHEDULER_INTERVALS: SchedulerIntervals = {
     recentSyncEveryHours: 6,
     fullSyncEveryHours: 48,
     backupEveryHours: 24,
+    logRetentionDays: 30,
 };
 
 function toFiniteNumber(value: unknown): number | null {
@@ -35,6 +37,13 @@ function normalizeRepeatHours(value: unknown, fallback: number): number {
     return clamp(rounded, 1, 168);
 }
 
+function normalizeRetentionDays(value: unknown): number {
+    const parsed = toFiniteNumber(value);
+    if (parsed === null) return DEFAULT_SCHEDULER_INTERVALS.logRetentionDays;
+    const rounded = Math.round(parsed);
+    return clamp(rounded, 0, 365);
+}
+
 export function normalizeSchedulerIntervals(raw: unknown): SchedulerIntervals {
     const source = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
 
@@ -48,5 +57,6 @@ export function normalizeSchedulerIntervals(raw: unknown): SchedulerIntervals {
             source.backupEveryHours,
             DEFAULT_SCHEDULER_INTERVALS.backupEveryHours
         ),
+        logRetentionDays: normalizeRetentionDays(source.logRetentionDays),
     };
 }

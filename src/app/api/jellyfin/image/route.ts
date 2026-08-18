@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { fetchJellyfinImage, fetchJellyfinJson } from "@/lib/jellyfinImageServer";
+import { systemLog } from "@/lib/systemLogger";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
@@ -278,6 +279,7 @@ export async function GET(req: NextRequest) {
         }
 
         if (!finalResponse) {
+            systemLog.warn("ImageProxy", `Image not found for itemId=${itemId}, type=${requestedType}, fallbackId=${fallbackId || 'none'}`);
             // If Jellyfin doesn't have the image or returns an error, return a small SVG placeholder
             const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
             const encoder = new TextEncoder();
@@ -297,8 +299,8 @@ export async function GET(req: NextRequest) {
         headers.set('Cache-Control', noStore ? 'no-store' : 'public, max-age=2592000, immutable');
 
         return new NextResponse(buffer, { headers });
-    } catch (e) {
-        console.error("Jellyfin Image proxy error:", e);
+    } catch (e: any) {
+        systemLog.error("ImageProxy", `Image proxy error for itemId=${itemId}: ${e?.message || e}`, e);
         // Return a replacement SVG instead of a 500 error to avoid client-side side-effects
         const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
         const encoder = new TextEncoder();
