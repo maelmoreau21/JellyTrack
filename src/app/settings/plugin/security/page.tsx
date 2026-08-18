@@ -4,30 +4,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { signOut } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
-import { AlertCircle, Clock3, LogOut, RefreshCw, ShieldCheck, ShieldAlert } from "lucide-react";
+import { AlertCircle, Clock3, LogOut, RefreshCw, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-
-type OverviewEvent = {
-    id: string;
-    action: string;
-    actorUsername: string | null;
-    ipAddress: string | null;
-    createdAt: string;
-    details: Record<string, unknown> | null;
-};
 
 type SecurityOverview = {
     plugin: {
@@ -55,33 +38,6 @@ type SecurityOverview = {
         revocations30d: number;
         policyChanges30d: number;
     };
-    recentSecurityEvents: OverviewEvent[];
-};
-
-type AuditRow = {
-    id: string;
-    action: string;
-    actorUserId: string | null;
-    actorUsername: string | null;
-    target: string | null;
-    ipAddress: string | null;
-    details: Record<string, unknown> | null;
-    createdAt: string;
-    anomalyFlags?: string[];
-    ipAttemptCount24h?: number | null;
-    newCountryCount24h?: number | null;
-};
-
-type AuditAnomalies = {
-    ipAttemptThreshold: number;
-    ipWindowMinutes?: number;
-    newCountryGraceMinutes?: number;
-    hotIp24h: Array<{ ipAddress: string; attempts: number }>;
-    newCountrySuccess24h: {
-        count: number;
-        countries: string[];
-        ips: Array<{ ipAddress: string; count: number }>;
-    };
 };
 
 type SmartSecurityThresholds = {
@@ -95,16 +51,6 @@ type AuthSessionPolicy = {
     sessionsRevokedAt: string | null;
 };
 
-type AuditResponse = {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-    smart?: string;
-    anomalies?: AuditAnomalies;
-    rows: AuditRow[];
-};
-
 function formatDateTime(value: string | null, locale: string): string {
     if (!value) return "-";
     const date = new Date(value);
@@ -112,23 +58,11 @@ function formatDateTime(value: string | null, locale: string): string {
     return date.toLocaleString(locale);
 }
 
-function serializeDetails(details: Record<string, unknown> | null): string {
-    if (!details) return "-";
-    try {
-        return JSON.stringify(details);
-    } catch {
-        return "-";
-    }
-}
-
 export default function PluginSecurityPage() {
     const locale = useLocale();
     const ts = useTranslations('securitySettings');
 
     const [overview, setOverview] = useState<SecurityOverview | null>(null);
-    const [audit, setAudit] = useState<AuditResponse | null>(null);
-    const [auditPage, setAuditPage] = useState(1);
-    const [auditSmartFilter, setAuditSmartFilter] = useState<"all" | "new_country_success" | "ip_50_attempts">("all");
     const [loading, setLoading] = useState(false);
     const [savingSmartThresholds, setSavingSmartThresholds] = useState(false);
     const [savingAuthPolicy, setSavingAuthPolicy] = useState(false);
@@ -139,8 +73,8 @@ export default function PluginSecurityPage() {
 
     const [smartThresholds, setSmartThresholds] = useState<SmartSecurityThresholds>({
         ipAttemptThreshold: 50,
-        ipWindowMinutes: 24 * 60,
-        newCountryGraceMinutes: 5,
+        ipWindowMinutes: 60,
+        newCountryGraceMinutes: 120,
     });
 
     const loadOverview = useCallback(async () => {
@@ -150,22 +84,6 @@ export default function PluginSecurityPage() {
         }
         const data = (await res.json()) as SecurityOverview;
         setOverview(data);
-    }, []);
-
-    const loadAudit = useCallback(async (page: number, smartFilter: "all" | "new_country_success" | "ip_50_attempts") => {
-        const params = new URLSearchParams({
-            page: String(page),
-            pageSize: "25",
-        });
-        if (smartFilter !== "all") {
-            params.set("smart", smartFilter);
-        }
-        const res = await fetch(`/api/admin/security/audit?${params.toString()}`, { cache: "no-store" });
-        if (!res.ok) {
-            throw new Error("Failed to load audit logs");
-        }
-        const data = (await res.json()) as AuditResponse;
-        setAudit(data);
     }, []);
 
     const loadSmartThresholds = useCallback(async () => {
@@ -195,13 +113,13 @@ export default function PluginSecurityPage() {
         setLoading(true);
         setMessage(null);
         try {
-            await Promise.all([loadOverview(), loadAudit(auditPage, auditSmartFilter), loadSmartThresholds(), loadAuthSessionPolicy()]);
+            await Promise.all([loadOverview(), loadSmartThresholds(), loadAuthSessionPolicy()]);
         } catch {
             setMessage({ type: "error", text: ts('securityLoadError') });
         } finally {
             setLoading(false);
         }
-    }, [auditPage, auditSmartFilter, loadAudit, loadOverview, loadSmartThresholds, loadAuthSessionPolicy, ts]);
+    }, [loadOverview, loadSmartThresholds, loadAuthSessionPolicy, ts]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -253,17 +171,26 @@ export default function PluginSecurityPage() {
             const res = await fetch('/api/admin/auth/session-policy', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rememberSessionsExpireAfterDays }),
+                body: JSON.stringify({
+                    rememberSessionsExpireAfterDays,
+                }),
             });
 
-            const data = await res.json().catch(() => ({})) as AuthSessionPolicy & { error?: string };
+            const data = await res.json().catch(() => ({})) as {
+                error?: string;
+                policy?: AuthSessionPolicy;
+            };
+
             if (!res.ok) {
-                throw new Error(data.error || 'Session policy update failed');
+                throw new Error(data.error || 'Update failed');
             }
 
-            setAuthSessionPolicy(data);
-            setRememberSessionsExpireAfterDays(data.rememberSessionsExpireAfterDays !== false);
-            setMessage({ type: 'success', text: ts('authSessionsPolicySaved') });
+            if (data.policy) {
+                setAuthSessionPolicy(data.policy);
+                setRememberSessionsExpireAfterDays(data.policy.rememberSessionsExpireAfterDays !== false);
+            }
+
+            setMessage({ type: 'success', text: ts('authSessionsSaved') });
         } catch (error) {
             const text = error instanceof Error ? error.message : ts('unknownError');
             setMessage({ type: 'error', text });
@@ -273,25 +200,29 @@ export default function PluginSecurityPage() {
     };
 
     const revokeAllSessions = async () => {
-        const ok = window.confirm(ts('authSessionsRevokeConfirm'));
-        if (!ok) return;
+        const confirmed = window.confirm(ts('authSessionsRevokeConfirm'));
+        if (!confirmed) return;
 
         setRevokingSessions(true);
         setMessage(null);
 
         try {
-            const res = await fetch('/api/admin/auth/session-policy', {
+            const res = await fetch('/api/admin/auth/revoke-sessions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'revoke_all' }),
             });
-            const data = await res.json().catch(() => ({})) as { error?: string };
+
+            const data = await res.json().catch(() => ({})) as {
+                error?: string;
+                revokedAt?: string;
+            };
+
             if (!res.ok) {
-                throw new Error(data.error || 'Session revocation failed');
+                throw new Error(data.error || 'Revocation failed');
             }
 
-            await signOut({ redirect: false });
-            window.location.href = '/login';
+            setMessage({ type: 'success', text: ts('authSessionsRevokedSuccess') });
+            await signOut({ callbackUrl: '/login' });
         } catch (error) {
             const text = error instanceof Error ? error.message : ts('unknownError');
             setMessage({ type: 'error', text });
@@ -427,13 +358,9 @@ export default function PluginSecurityPage() {
                             <Badge variant={overview?.key.hasApiKey ? "default" : "destructive"}>{overview?.key.hasApiKey ? ts('yes') : ts('no')}</Badge>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span>{ts('expiresInLabel')}</span>
-                            <span className="font-medium">{overview?.key.expiresInDays == null ? "-" : ts('daysCount', { days: overview.key.expiresInDays })}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
                             <span>{ts('expirationStateLabel')}</span>
-                            <Badge variant={overview?.key.expired ? "destructive" : (overview?.key.expiringSoon ? "secondary" : "outline")}>
-                                {overview?.key.expired ? ts('expired') : (overview?.key.expiringSoon ? ts('soon') : "OK")}
+                            <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-500/10">
+                                Permanente (sans expiration)
                             </Badge>
                         </div>
                         <div className="flex items-center justify-between">
@@ -517,172 +444,6 @@ export default function PluginSecurityPage() {
                         <div className="h-10 flex items-center gap-2">
                             <Button variant="outline" onClick={saveSmartThresholdSettings} disabled={savingSmartThresholds}>
                                 {savingSmartThresholds ? ts('saving') : ts('save')}
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card className="app-surface border-border">
-                <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <ShieldAlert className="w-4 h-4" />
-                        {ts('recentSecurityEventsTitle')}
-                    </CardTitle>
-                    <CardDescription>{ts('recentSecurityEventsDesc')}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{ts('dateColumn')}</TableHead>
-                                <TableHead>{ts('actionColumn')}</TableHead>
-                                <TableHead>{ts('actorColumn')}</TableHead>
-                                <TableHead>IP</TableHead>
-                                <TableHead>{ts('detailsColumn')}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {(overview?.recentSecurityEvents || []).map((row) => (
-                                <TableRow key={row.id}>
-                                    <TableCell>{formatDateTime(row.createdAt, locale)}</TableCell>
-                                    <TableCell className="font-medium">{row.action}</TableCell>
-                                    <TableCell>{row.actorUsername || "-"}</TableCell>
-                                    <TableCell>{row.ipAddress || "-"}</TableCell>
-                                    <TableCell className="max-w-[420px] truncate">{serializeDetails(row.details)}</TableCell>
-                                </TableRow>
-                            ))}
-                            {(!overview || overview.recentSecurityEvents.length === 0) && (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
-                                        {ts('noRecentEvents')}
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-
-            <Card className="app-surface border-border">
-                <CardHeader>
-                    <CardTitle className="text-base">{ts('fullAuditTitle')}</CardTitle>
-                    <CardDescription>
-                        {ts('fullAuditDesc')}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-sm text-muted-foreground">{ts('smartFilterLabel')}</div>
-                        <select
-                            value={auditSmartFilter}
-                            onChange={(event) => {
-                                setAuditPage(1);
-                                setAuditSmartFilter(event.target.value as "all" | "new_country_success" | "ip_50_attempts");
-                            }}
-                            className="h-9 rounded-md border border-zinc-200 dark:border-zinc-700 bg-background px-3 text-sm"
-                        >
-                            <option value="all">{ts('filterAllEvents')}</option>
-                            <option value="new_country_success">{ts('filterNewCountrySuccess')}</option>
-                            <option value="ip_50_attempts">{ts('filterIpBurst', { threshold: audit?.anomalies?.ipAttemptThreshold ?? smartThresholds.ipAttemptThreshold })}</option>
-                        </select>
-                    </div>
-
-                    {audit?.anomalies && (audit.anomalies.hotIp24h.length > 0 || audit.anomalies.newCountrySuccess24h.count > 0) && (
-                        <div className="grid gap-3 md:grid-cols-2">
-                            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3">
-                                <div className="text-xs text-red-300">{ts('ipBurst24h')}</div>
-                                <div className="mt-1 text-lg font-semibold text-red-200">{audit.anomalies.hotIp24h.length}</div>
-                                <div className="mt-1 space-y-1">
-                                    {audit.anomalies.hotIp24h.slice(0, 3).map((item) => (
-                                        <div key={item.ipAddress} className="text-xs text-red-100/90">
-                                            {item.ipAddress}: {ts('attemptCount', { count: item.attempts })}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
-                                <div className="text-xs text-amber-300">{ts('newCountryConnections24h')}</div>
-                                <div className="mt-1 text-lg font-semibold text-amber-200">{audit.anomalies.newCountrySuccess24h.count}</div>
-                                <div className="mt-1 text-xs text-amber-100/90">
-                                    {(audit.anomalies.newCountrySuccess24h.countries || []).slice(0, 5).join(", ") || ts('noCountryDetected')}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{ts('dateColumn')}</TableHead>
-                                <TableHead>{ts('actionColumn')}</TableHead>
-                                <TableHead>{ts('actorColumn')}</TableHead>
-                                <TableHead>{ts('targetColumn')}</TableHead>
-                                <TableHead>IP</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {(audit?.rows || []).map((row) => (
-                                <TableRow key={row.id}>
-                                    <TableCell>{formatDateTime(row.createdAt, locale)}</TableCell>
-                                    <TableCell className="font-medium">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span>{row.action}</span>
-                                            {(row.anomalyFlags || []).includes("new_country_success") && (
-                                                <Badge variant="outline" className="border-amber-500/50 text-amber-300 bg-amber-500/10">
-                                                    {ts('newCountryBadge')}
-                                                </Badge>
-                                            )}
-                                            {(row.anomalyFlags || []).includes("ip_50_attempts") && (
-                                                <Badge variant="destructive">
-                                                    {ts('ipBurstBadge')}
-                                                </Badge>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{row.actorUsername || row.actorUserId || "-"}</TableCell>
-                                    <TableCell>{row.target || "-"}</TableCell>
-                                    <TableCell>
-                                        <div>{row.ipAddress || "-"}</div>
-                                        {(row.anomalyFlags || []).includes("ip_50_attempts") && (row.ipAttemptCount24h || 0) > 0 && (
-                                            <div className="text-[11px] text-red-400">{ts('attempts24h', { count: row.ipAttemptCount24h ?? 0 })}</div>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {(!audit || audit.rows.length === 0) && (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
-                                        {ts('noAuditLogs')}
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">
-                            {ts('pageStatus', {
-                                page: audit?.page || 1,
-                                totalPages: audit?.totalPages || 1,
-                                total: audit?.total || 0,
-                            })}
-                        </p>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="outline"
-                                onClick={() => setAuditPage((prev) => Math.max(1, prev - 1))}
-                                disabled={!audit || audit.page <= 1 || loading}
-                            >
-                                {ts('previousPage')}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={() => setAuditPage((prev) => Math.min(audit?.totalPages || prev, prev + 1))}
-                                disabled={!audit || audit.page >= audit.totalPages || loading}
-                            >
-                                {ts('nextPage')}
                             </Button>
                         </div>
                     </div>

@@ -334,6 +334,7 @@ export async function POST(req: NextRequest) {
                     recentSyncEveryHours: normalizedIntervals.recentSyncEveryHours,
                     fullSyncEveryHours: normalizedIntervals.fullSyncEveryHours,
                     backupEveryHours: normalizedIntervals.backupEveryHours,
+                    logRetentionDays: normalizedIntervals.logRetentionDays,
                 });
             } catch (err) {
                 console.warn("[Settings] Could not reschedule cron jobs:", err);

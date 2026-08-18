@@ -26,6 +26,7 @@ export async function register() {
         let recentSyncEveryHours = DEFAULT_SCHEDULER_INTERVALS.recentSyncEveryHours;
         let fullSyncEveryHours = DEFAULT_SCHEDULER_INTERVALS.fullSyncEveryHours;
         let backupEveryHours = DEFAULT_SCHEDULER_INTERVALS.backupEveryHours;
+        let logRetentionDays = DEFAULT_SCHEDULER_INTERVALS.logRetentionDays;
         try {
             const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } });
             if (settings) {
@@ -42,11 +43,11 @@ export async function register() {
                 recentSyncEveryHours = schedulerIntervals.recentSyncEveryHours;
                 fullSyncEveryHours = schedulerIntervals.fullSyncEveryHours;
                 backupEveryHours = schedulerIntervals.backupEveryHours;
+                logRetentionDays = schedulerIntervals.logRetentionDays;
             }
         } catch (err) {
             console.warn("[Instrumentation] Unable to read cron settings, using defaults:", err);
         }
-
         // Initialize cron tasks with configured schedule
         await initCronJobs({
             syncCronHour,
@@ -56,6 +57,7 @@ export async function register() {
             recentSyncEveryHours,
             fullSyncEveryHours,
             backupEveryHours,
+            logRetentionDays,
         });
     }
 }
