@@ -1,8 +1,8 @@
 import "server-only";
 
 import prisma from "@/lib/prisma";
-import { buildJellyfinApiKeyHeaders } from "@/lib/jellyfinServers";
-import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
+import { buildJellyfinApiKeyHeaders, buildJellyfinImageHeaders } from "@/lib/jellyfinServers";
+import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
 
 type JellyfinConnection = {
     baseUrl: string;
@@ -76,8 +76,8 @@ export async function fetchJellyfinImage(
     type: string,
     serverId?: string | null,
     noStore = false,
-    options?: { fillWidth?: number; quality?: number }
-) {
+    options?: { fillWidth?: number; quality?: number; tag?: string }
+): Promise<Response> {
     const connection = await resolveJellyfinConnection(serverId);
 
     if (!connection) {
@@ -86,11 +86,54 @@ export async function fetchJellyfinImage(
 
     const fillWidth = options?.fillWidth ?? 300;
     const quality = options?.quality ?? 80;
-    const url = `${connection.baseUrl}/Items/${encodeURIComponent(itemId)}/Images/${encodeURIComponent(type)}?fillWidth=${fillWidth}&quality=${quality}`;
+    const tagParam = options?.tag ? `&tag=${encodeURIComponent(options.tag)}` : "";
+    const headers = buildJellyfinImageHeaders(connection.apiKey);
 
-    return fetch(url, {
+    const candidateIds = Array.from(new Set([
+        itemId,
+        compactJellyfinId(itemId),
+        normalizeJellyfinId(itemId) || itemId,
+    ]));
+
+    for (const candidateId of candidateIds) {
+        // Primary attempt: standard Items image path with API key in query and headers
+        const url = `${connection.baseUrl}/Items/${encodeURIComponent(candidateId)}/Images/${encodeURIComponent(type)}?fillWidth=${fillWidth}&quality=${quality}&api_key=${encodeURIComponent(connection.apiKey)}${tagParam}`;
+        try {
+            const res = await fetch(url, {
+                method: "GET",
+                headers,
+                cache: "no-store",
+            });
+            if (res.ok) {
+                return res;
+            }
+        } catch {
+            // Try next candidate
+        }
+
+        // Secondary attempt: Users image path if it could be a user profile image
+        if (type === "Primary") {
+            const userUrl = `${connection.baseUrl}/Users/${encodeURIComponent(candidateId)}/Images/Primary?fillWidth=${fillWidth}&quality=${quality}&api_key=${encodeURIComponent(connection.apiKey)}`;
+            try {
+                const userRes = await fetch(userUrl, {
+                    method: "GET",
+                    headers,
+                    cache: "no-store",
+                });
+                if (userRes.ok) {
+                    return userRes;
+                }
+            } catch {
+                // Ignore
+            }
+        }
+    }
+
+    // Return last response or 404
+    const defaultUrl = `${connection.baseUrl}/Items/${encodeURIComponent(itemId)}/Images/${encodeURIComponent(type)}?fillWidth=${fillWidth}&quality=${quality}`;
+    return fetch(defaultUrl, {
         method: "GET",
-        headers: buildJellyfinApiKeyHeaders(connection.apiKey),
+        headers,
         cache: "no-store",
     });
 }

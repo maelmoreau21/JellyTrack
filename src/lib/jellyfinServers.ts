@@ -44,11 +44,21 @@ function getServerSortRank(server: Pick<JellyfinServerConnection, "isPrimary" | 
 
 export function buildJellyfinApiKeyHeaders(apiKey: string): HeadersInit {
   const token = String(apiKey || "").trim();
-  // Jellyfin 12+ requires Authorization header with MediaBrowser scheme.
-  // X-Emby-Token is disabled by default in 10.12+.
   return {
     Accept: "application/json",
-    Authorization: `MediaBrowser Token="${token}"`,
+    "X-Emby-Token": token,
+    "X-MediaBrowser-Token": token,
+    Authorization: `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="1.0.0", Token="${token}"`,
+  };
+}
+
+export function buildJellyfinImageHeaders(apiKey: string): HeadersInit {
+  const token = String(apiKey || "").trim();
+  return {
+    Accept: "image/webp,image/avif,image/jpeg,image/png,image/*,*/*;q=0.8",
+    "X-Emby-Token": token,
+    "X-MediaBrowser-Token": token,
+    Authorization: `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="1.0.0", Token="${token}"`,
   };
 }
 

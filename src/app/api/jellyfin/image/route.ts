@@ -4,6 +4,8 @@ import { fetchJellyfinImage, fetchJellyfinJson } from "@/lib/jellyfinImageServer
 import { systemLog } from "@/lib/systemLogger";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { getCachedImage, saveCachedImage } from "@/lib/imageCache";
+import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
 
 // Allowed image types for the Jellyfin image proxy (prevent path traversal)
 const ALLOWED_IMAGE_TYPES = ["Primary", "Thumb", "Backdrop", "Banner", "Logo", "Art"];
@@ -28,7 +30,7 @@ type JellyfinItemMeta = {
 function normalizeCandidateId(value: unknown): string | null {
     const id = typeof value === "string" ? value.trim() : "";
     if (!id) return null;
-    return UUID_PATTERN.test(id) ? id : null;
+    return UUID_PATTERN.test(id) ? (normalizeJellyfinId(id) || id) : null;
 }
 
 async function fetchJellyfinItemMeta(itemId: string, serverId?: string | null): Promise<JellyfinItemMeta | null> {
@@ -179,7 +181,31 @@ export async function GET(req: NextRequest) {
             }
         }
 
+        // STEP 1: Persistent Cache Check (Keep existing images unless user explicitly clicked refresh)
+        if (!noStore) {
+            const cached = await getCachedImage(effectiveServerId, itemId, requestedType);
+            if (cached) {
+                const headers = new Headers();
+                headers.set("Content-Type", cached.contentType);
+                headers.set("Cache-Control", "public, max-age=31536000, immutable");
+                return new NextResponse(new Uint8Array(cached.data), { headers });
+            }
+
+            if (fallbackId) {
+                const fallbackCached = await getCachedImage(effectiveServerId, fallbackId, requestedType);
+                if (fallbackCached) {
+                    const headers = new Headers();
+                    headers.set("Content-Type", fallbackCached.contentType);
+                    headers.set("Cache-Control", "public, max-age=31536000, immutable");
+                    return new NextResponse(new Uint8Array(fallbackCached.data), { headers });
+                }
+            }
+        }
+
+        // STEP 2: Live Fetch from Jellyfin (Supporting Jellyfin 10.11 and 12)
         let finalResponse: Response | null = null;
+        let matchedCandidateId: string | null = null;
+        let matchedType: string = requestedType;
         const attempted = new Set<string>();
 
         const tryCandidate = async (candidate: string | null | undefined, typesToTry: string[]): Promise<Response | null> => {
@@ -194,7 +220,12 @@ export async function GET(req: NextRequest) {
                 try {
                     const candidateResponse = await fetchJellyfinImage(candidateId, t, effectiveServerId, noStore);
                     if (candidateResponse.ok) {
-                        return candidateResponse;
+                        const contentType = candidateResponse.headers.get("content-type") || "";
+                        if (!contentType.includes("image/svg")) {
+                            matchedCandidateId = candidateId;
+                            matchedType = t;
+                            return candidateResponse;
+                        }
                     }
                 } catch {
                     // Try next candidate
@@ -205,29 +236,26 @@ export async function GET(req: NextRequest) {
 
         const imageTypesToTry = getFallbackImageTypes(requestedType);
 
-        // Step 1: Try itemId with the requested type first
+        // Try itemId with requested type
         finalResponse = await tryCandidate(itemId, [requestedType]);
 
-        // Step 2: If fallbackId is provided, try fallbackId with requested type
+        // Try fallbackId with requested type
         if (!finalResponse && fallbackId) {
             finalResponse = await tryCandidate(fallbackId, [requestedType]);
         }
 
-        // Step 3: If still missing, query Jellyfin metadata and database hierarchy
+        // If still missing, query Jellyfin metadata and database hierarchy
         if (!finalResponse) {
             const itemMeta = await fetchJellyfinItemMeta(itemId, effectiveServerId);
 
-            // If ParentPrimaryImageItemId is present, try it
             if (itemMeta?.parentPrimaryImageItemId) {
                 finalResponse = await tryCandidate(itemMeta.parentPrimaryImageItemId, imageTypesToTry);
             }
 
-            // Try the item itself with fallback image types (e.g. Thumb, Backdrop)
             if (!finalResponse) {
                 finalResponse = await tryCandidate(itemId, imageTypesToTry);
             }
 
-            // Try Season / Series / Album / Artist / Parent hierarchy
             if (!finalResponse) {
                 const hierarchyCandidates: string[] = [];
                 const addCandidate = (val: string | null | undefined) => {
@@ -246,7 +274,6 @@ export async function GET(req: NextRequest) {
                 addCandidate(dbMediaRecord?.parentId);
                 addCandidate(fallbackId);
 
-                // Deep lookup for album artist
                 if (itemMeta?.albumId) {
                     const albumMeta = await fetchJellyfinItemMeta(itemMeta.albumId, effectiveServerId);
                     if (albumMeta?.artistId) {
@@ -257,13 +284,11 @@ export async function GET(req: NextRequest) {
                     }
                 }
 
-                // DB hierarchy candidates (e.g. grandparent series)
                 const dbCandidates = await fetchDatabaseCandidateIds(itemId, effectiveServerId);
                 for (const c of dbCandidates) {
                     addCandidate(c);
                 }
 
-                // Series first season candidates
                 if ((itemMeta?.type || "").toLowerCase() === "series" || dbMediaRecord?.type === "Series") {
                     const seasonCandidates = await fetchSeriesSeasonCandidateIds(itemId, effectiveServerId);
                     for (const s of seasonCandidates) {
@@ -278,36 +303,53 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        if (!finalResponse) {
-            systemLog.warn("ImageProxy", `Image not found for itemId=${itemId}, type=${requestedType}, fallbackId=${fallbackId || 'none'}`);
-            // If Jellyfin doesn't have the image or returns an error, return a small SVG placeholder
-            const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
-            const encoder = new TextEncoder();
-            const buffer = encoder.encode(placeholder);
+        // STEP 3: Handle Found Response or Cached Fallback
+        if (finalResponse && finalResponse.ok) {
+            const arrayBuf = await finalResponse.arrayBuffer();
+            const buffer = Buffer.from(arrayBuf);
+            const contentType = finalResponse.headers.get("content-type") || "image/jpeg";
+
+            // Save to persistent image cache for itemId so it stays preserved
+            await saveCachedImage(effectiveServerId, itemId, requestedType, buffer, contentType);
+            if (matchedCandidateId && matchedCandidateId !== itemId) {
+                await saveCachedImage(effectiveServerId, matchedCandidateId, matchedType, buffer, contentType);
+            }
+
             const headers = new Headers();
-            headers.set('Content-Type', 'image/svg+xml');
-            headers.set('Cache-Control', 'public, max-age=60, immutable');
-            return new NextResponse(buffer, { headers });
+            headers.set("Content-Type", contentType);
+            headers.set("Cache-Control", noStore ? "no-store, no-cache, must-revalidate" : "public, max-age=31536000, immutable");
+
+            return new NextResponse(new Uint8Array(buffer), { headers });
         }
 
-        const buffer = await finalResponse.arrayBuffer();
-        const headers = new Headers();
+        // If Jellyfin has no image right now, check if we had an existing cached image on disk
+        const existingCache = await getCachedImage(effectiveServerId, itemId, requestedType)
+            || (fallbackId ? await getCachedImage(effectiveServerId, fallbackId, requestedType) : null);
 
-        // Retrieve content type from original server for our proxy (often image/jpeg or image/webp)
-        headers.set('Content-Type', finalResponse.headers.get('Content-Type') || 'image/jpeg');
-        // Long-term browser caching to offload the API
-        headers.set('Cache-Control', noStore ? 'no-store' : 'public, max-age=2592000, immutable');
+        if (existingCache) {
+            const headers = new Headers();
+            headers.set("Content-Type", existingCache.contentType);
+            headers.set("Cache-Control", "public, max-age=31536000, immutable");
+            return new NextResponse(new Uint8Array(existingCache.data), { headers });
+        }
 
-        return new NextResponse(buffer, { headers });
-    } catch (e: any) {
-        systemLog.error("ImageProxy", `Image proxy error for itemId=${itemId}: ${e?.message || e}`, e);
-        // Return a replacement SVG instead of a 500 error to avoid client-side side-effects
+        // Return clean placeholder SVG if no image exists anywhere
+        systemLog.warn("ImageProxy", `Image not found for itemId=${itemId}, type=${requestedType}, fallbackId=${fallbackId || 'none'}`);
         const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
         const encoder = new TextEncoder();
         const buffer = encoder.encode(placeholder);
         const headers = new Headers();
-        headers.set('Content-Type', 'image/svg+xml');
-        headers.set('Cache-Control', 'public, max-age=60, immutable');
+        headers.set("Content-Type", "image/svg+xml");
+        headers.set("Cache-Control", "public, max-age=60, immutable");
+        return new NextResponse(buffer, { headers });
+    } catch (e: any) {
+        systemLog.error("ImageProxy", `Image proxy error for itemId=${itemId}: ${e?.message || e}`, e);
+        const placeholder = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800"><rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" fill="#9ca3af" font-size="20" text-anchor="middle" dominant-baseline="middle">No Image</text></svg>`;
+        const encoder = new TextEncoder();
+        const buffer = encoder.encode(placeholder);
+        const headers = new Headers();
+        headers.set("Content-Type", "image/svg+xml");
+        headers.set("Cache-Control", "public, max-age=60, immutable");
         return new NextResponse(buffer, { headers });
     }
 }
