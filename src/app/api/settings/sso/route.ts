@@ -87,8 +87,8 @@ export async function PUT(req: NextRequest) {
     const clientIp = getClientIpFromHeaders(req.headers);
     await writeAdminAuditLog({
       action: "SSO_SETTINGS_UPDATED",
-      actorUsername: auth.session.user.name || "admin",
-      actorIp: clientIp,
+      actorUsername: auth.session?.user?.name || "admin",
+      ipAddress: clientIp,
       details: {
         enabled: newDbConfig.enabled,
         url: newDbConfig.url,
