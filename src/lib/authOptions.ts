@@ -33,6 +33,10 @@ import {
     type OidcConfig,
 } from "@/lib/oidcConfig";
 
+if (typeof process.env.NEXTAUTH_URL === "string" && process.env.NEXTAUTH_URL.trim() === "") {
+    delete process.env.NEXTAUTH_URL;
+}
+
 const authSecret = getResolvedAuthSecret();
 
 function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers"] {

@@ -5,6 +5,10 @@ import { getResolvedAuthSecret } from "@/lib/authSecret";
 import { isSessionTokenActive } from "@/lib/authSession";
 import { AVAILABLE_LOCALES, DEFAULT_LOCALE, isSupportedLocale } from "@/i18n/locales";
 
+if (typeof process.env.NEXTAUTH_URL === "string" && process.env.NEXTAUTH_URL.trim() === "") {
+    delete process.env.NEXTAUTH_URL;
+}
+
 function escapeRegExp(value: string) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -121,7 +125,9 @@ export default withAuth(
                         }
                     });
                 } else {
-                    responseToUse = NextResponse.redirect(new URL("/login", req.url));
+                    const loginUrl = req.nextUrl.clone();
+                    loginUrl.pathname = "/login";
+                    responseToUse = NextResponse.redirect(loginUrl);
                 }
             } else {
                 // User is authenticated
@@ -142,15 +148,21 @@ export default withAuth(
                     } else {
                         const isAdminPage = ADMIN_PAGE_PATHS.some((p) => matchesPath(pathname, p));
                         if (isAdminPage) {
-                            responseToUse = NextResponse.redirect(new URL("/", req.url));
+                            const homeUrl = req.nextUrl.clone();
+                            homeUrl.pathname = "/";
+                            responseToUse = NextResponse.redirect(homeUrl);
                         } else {
                             const isRedirectList = REDIRECT_IF_NOT_ADMIN.some((p) => matchesPath(pathname, p, false));
                             if (isRedirectList) {
                                 const jellyfinUserId = token?.jellyfinUserId as string;
                                 if (jellyfinUserId) {
-                                    responseToUse = NextResponse.redirect(new URL(`/users/${jellyfinUserId}`, req.url));
+                                    const userUrl = req.nextUrl.clone();
+                                    userUrl.pathname = `/users/${jellyfinUserId}`;
+                                    responseToUse = NextResponse.redirect(userUrl);
                                 } else {
-                                    responseToUse = NextResponse.redirect(new URL("/login", req.url));
+                                    const loginUrl = req.nextUrl.clone();
+                                    loginUrl.pathname = "/login";
+                                    responseToUse = NextResponse.redirect(loginUrl);
                                 }
                             } else {
                                 responseToUse = NextResponse.next({
