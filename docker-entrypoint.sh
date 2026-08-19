@@ -61,6 +61,7 @@ fi
 mkdir -p /app/.next/cache /data/backups 2>/dev/null || true
 
 run_prisma() {
+  export NODE_PATH="/app/prisma-cli/node_modules:${NODE_PATH:-}"
   if [ -x "./prisma-cli/node_modules/.bin/prisma" ]; then
     ./prisma-cli/node_modules/.bin/prisma "$@"
   elif [ -x "./node_modules/.bin/prisma" ]; then

@@ -1,4 +1,8 @@
-import "dotenv/config";
+try {
+  require("dotenv/config");
+} catch {
+  // Environment variables are already exported by container/environment
+}
 import { defineConfig } from "prisma/config";
 
 function getDatabaseUrl(): string {
