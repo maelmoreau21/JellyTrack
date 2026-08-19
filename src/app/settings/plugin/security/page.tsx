@@ -136,17 +136,29 @@ export default function PluginSecurityPage() {
         }
     }, []);
 
+    const [ssoActive, setSsoActive] = useState(false);
+
+    const loadSsoStatus = useCallback(async () => {
+        try {
+            const res = await fetch('/api/settings/sso', { cache: 'no-store' });
+            if (res.ok) {
+                const data = await res.json();
+                setSsoActive(Boolean(data?.enabled));
+            }
+        } catch {}
+    }, []);
+
     const refreshAll = useCallback(async () => {
         setLoading(true);
         setMessage(null);
         try {
-            await Promise.all([loadOverview(), loadSmartThresholds(), loadAuthSessionPolicy(), loadTelemetrySettings()]);
+            await Promise.all([loadOverview(), loadSmartThresholds(), loadAuthSessionPolicy(), loadTelemetrySettings(), loadSsoStatus()]);
         } catch {
             setMessage({ type: "error", text: ts('securityLoadError') });
         } finally {
             setLoading(false);
         }
-    }, [loadOverview, loadSmartThresholds, loadAuthSessionPolicy, loadTelemetrySettings, ts]);
+    }, [loadOverview, loadSmartThresholds, loadAuthSessionPolicy, loadTelemetrySettings, loadSsoStatus, ts]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -356,23 +368,32 @@ export default function PluginSecurityPage() {
                     <CardDescription>{ts('authSessionsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex flex-col gap-4 rounded-lg border border-border/70 bg-background/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="space-y-1">
-                            <Label htmlFor="remember-30-days" className="text-sm font-medium">
-                                {ts('authSessionsRememberThirtyDays')}
-                            </Label>
-                            <p className="text-xs text-muted-foreground">
-                                {rememberSessionsExpireAfterDays
-                                    ? ts('authSessionsRememberThirtyDaysOn')
-                                    : ts('authSessionsRememberThirtyDaysOff')}
-                            </p>
+                    {ssoActive ? (
+                        <div className="flex flex-col gap-2 rounded-lg border border-primary/25 bg-primary/5 p-4">
+                            <div className="flex items-center gap-2 font-medium text-xs text-primary">
+                                <ShieldCheck className="w-4 h-4" />
+                                {ts('ssoManagedSessionNotice') || 'L\'authentification SSO OIDC est active. Les durées de session et la persistance sont directement gérées par votre fournisseur d\'identité (Authentik / OpenID Connect).'}
+                            </div>
                         </div>
-                        <Switch
-                            id="remember-30-days"
-                            checked={rememberSessionsExpireAfterDays}
-                            onCheckedChange={(checked) => setRememberSessionsExpireAfterDays(Boolean(checked))}
-                        />
-                    </div>
+                    ) : (
+                        <div className="flex flex-col gap-4 rounded-lg border border-border/70 bg-background/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="space-y-1">
+                                <Label htmlFor="remember-30-days" className="text-sm font-medium">
+                                    {ts('authSessionsRememberThirtyDays')}
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                    {rememberSessionsExpireAfterDays
+                                        ? ts('authSessionsRememberThirtyDaysOn')
+                                        : ts('authSessionsRememberThirtyDaysOff')}
+                                </p>
+                            </div>
+                            <Switch
+                                id="remember-30-days"
+                                checked={rememberSessionsExpireAfterDays}
+                                onCheckedChange={(checked) => setRememberSessionsExpireAfterDays(Boolean(checked))}
+                            />
+                        </div>
+                    )}
 
                     <div className="flex flex-col gap-3 rounded-lg border border-red-500/25 bg-red-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="space-y-1">

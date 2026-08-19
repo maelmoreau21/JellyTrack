@@ -3,7 +3,7 @@ import { PlayCircle, Server, Database, Palette, BarChart3, Shield, Clock, GitBra
 import { getTranslations } from 'next-intl/server';
 import Image from "next/image";
 
-const version = process.env.APP_VERSION || "1.6.1";
+const version = process.env.APP_VERSION || "2.0.0";
 
 const techStackIcons = [Server, Palette, Database, BarChart3, Shield, Clock];
 const techStackNames = ["Next.js", "React", "Prisma", "Recharts", "NextAuth.js", "Node-Cron"];

@@ -15,5 +15,5 @@ export default async function SettingsPage({ searchParams }: { searchParams?: Pr
     }
 
     const query = params.toString();
-    redirect(query ? `/settings/plugin?${query}` : '/settings/plugin');
+    redirect(query ? `/settings/jellyfin?${query}` : '/settings/jellyfin');
 }

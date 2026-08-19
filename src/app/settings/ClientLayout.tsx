@@ -9,12 +9,41 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
     const pathname = usePathname();
 
     const tabs = [
-        { href: '/settings/plugin', key: 'pluginTitle', exact: true },
-        { href: '/settings/plugin/security', key: 'authSecurity' },
-        { href: '/settings/scheduler', key: 'taskScheduler' },
-        { href: '/settings/notifications', key: 'notifications' },
-        { href: '/settings/media', key: 'mediaSettings' },
-        { href: '/settings/dataBackups', key: 'dataBackups' },
+        {
+            href: '/settings/jellyfin',
+            key: 'jellyfinTitle',
+            isActive: (p: string) => p === '/settings/jellyfin' || p === '/settings/plugin' || p === '/settings',
+        },
+        {
+            href: '/settings/sso',
+            key: 'ssoTitle',
+            isActive: (p: string) => p?.startsWith('/settings/sso'),
+        },
+        {
+            href: '/settings/plugin/security',
+            key: 'authSecurity',
+            isActive: (p: string) => p?.startsWith('/settings/plugin/security'),
+        },
+        {
+            href: '/settings/scheduler',
+            key: 'taskScheduler',
+            isActive: (p: string) => p?.startsWith('/settings/scheduler'),
+        },
+        {
+            href: '/settings/notifications',
+            key: 'notifications',
+            isActive: (p: string) => p?.startsWith('/settings/notifications'),
+        },
+        {
+            href: '/settings/media',
+            key: 'mediaSettings',
+            isActive: (p: string) => p?.startsWith('/settings/media'),
+        },
+        {
+            href: '/settings/dataBackups',
+            key: 'dataBackups',
+            isActive: (p: string) => p?.startsWith('/settings/dataBackups'),
+        },
     ];
 
     return (
@@ -24,7 +53,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                     <main className="space-y-4 md:space-y-6 max-w-[1300px] mx-auto w-full">
                         <nav className="flex gap-2 overflow-auto pb-4 border-b border-border/70">
                             {tabs.map(tab => {
-                                const active = tab.exact ? pathname === tab.href : pathname?.startsWith(tab.href);
+                                const active = tab.isActive(pathname || '');
                                 return (
                                     <Link
                                         key={tab.href}

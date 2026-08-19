@@ -10,6 +10,8 @@ declare module "next-auth" {
             authServerUrl?: string;
             authServerJellyfinServerId?: string;
             authServerIsPrimary?: boolean;
+            authProvider?: "oidc" | "local" | "jellyfin";
+            groups?: string[];
         };
     }
     interface User extends DefaultUser {
@@ -20,6 +22,8 @@ declare module "next-auth" {
         authServerJellyfinServerId?: string;
         authServerIsPrimary?: boolean;
         rememberMe?: boolean;
+        authProvider?: "oidc" | "local" | "jellyfin";
+        groups?: string[];
     }
 }
 
@@ -36,5 +40,7 @@ declare module "next-auth/jwt" {
         sessionExpiresAt?: number;
         sessionIssuedAt?: number;
         sessionExpired?: boolean;
+        authProvider?: "oidc" | "local" | "jellyfin";
+        groups?: string[];
     }
 }

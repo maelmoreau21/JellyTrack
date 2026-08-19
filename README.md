@@ -129,6 +129,35 @@ JellyTrack classifies completion cumulatively by user + media. If someone starts
 
 Downloads always count as complete views, including audio and short media, unless the media belongs to an excluded library.
 
+## Authentication & SSO (v2.0.0+)
+
+JellyTrack v2.0.0 introduces OpenID Connect (OIDC) Single Sign-On (SSO), enabling multi-factor authentication (2FA/MFA) and centralized directory management through providers like **Authentik**, **Keycloak**, **Authelia**, etc.
+
+### SSO Configuration
+
+Configure the following environment variables in `.env`:
+
+```bash
+# Enable SSO OIDC
+OIDC_ENABLED=true
+OIDC_URL=https://authentik.example.com/application/o/jellytrack/
+OIDC_CLIENT_ID=jellytrack
+OIDC_CLIENT_SECRET=your_oidc_client_secret
+
+# Group mapping (LDAP/SSO directory)
+OIDC_USER_GROUP=jellyfin-users
+OIDC_ADMIN_GROUP=jellyfin-admins
+
+# Emergency Local Administrator Access (optional)
+JELLYTRACK_LOCAL_ADMIN_USER=admin
+JELLYTRACK_LOCAL_ADMIN_PASSWORD=your_emergency_password
+```
+
+1. In your SSO provider (e.g. Authentik), create an OAuth2/OpenID Provider with Redirect URI:
+   `https://<your-jellytrack-domain>/api/auth/callback/oidc`
+2. Users logging in via SSO are linked automatically with their Jellyfin account based on their matching username from LDAP.
+3. If `OIDC_ENABLED=false`, JellyTrack falls back to direct Jellyfin credentials authentication.
+
 ## Development
 
 ```bash

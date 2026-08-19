@@ -4,11 +4,15 @@ import LoginForm from "./LoginForm";
 import { LoginLanguageSwitcher } from "./LoginLanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getTranslations } from 'next-intl/server';
+import { isOidcEnabled, isLocalAdminConfigured } from "@/lib/oidcConfig";
 
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
     const t = await getTranslations('login');
+    const oidcEnabled = isOidcEnabled();
+    const localAdminEnabled = isLocalAdminConfigured();
+
     return (
         <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 selection:bg-indigo-500/30 overflow-hidden relative">
             {/* Background Aurora glowing blobs */}
@@ -42,12 +46,14 @@ export default async function LoginPage() {
                             </div>
                             <div>
                                 <CardTitle className="text-2xl font-bold tracking-tight text-foreground">{t('title')}</CardTitle>
-                                <CardDescription className="text-muted-foreground mt-1 text-sm font-medium">{t('subtitle')}</CardDescription>
+                                <CardDescription className="text-muted-foreground mt-1 text-sm font-medium">
+                                    {oidcEnabled ? (t('ssoSubtitle') || t('subtitle')) : t('subtitle')}
+                                </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
                     <Suspense fallback={<div className="p-6 text-center text-muted-foreground">{t('loadingForm')}</div>}>
-                        <LoginForm />
+                        <LoginForm oidcEnabled={oidcEnabled} localAdminEnabled={localAdminEnabled} />
                     </Suspense>
                 </Card>
 

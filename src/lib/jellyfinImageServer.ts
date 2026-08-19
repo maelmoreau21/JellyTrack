@@ -75,7 +75,7 @@ export async function fetchJellyfinImage(
     itemId: string,
     type: string,
     serverId?: string | null,
-    noStore = false,
+    _noStore = false,
     options?: { fillWidth?: number; quality?: number; tag?: string }
 ): Promise<Response> {
     const connection = await resolveJellyfinConnection(serverId);
