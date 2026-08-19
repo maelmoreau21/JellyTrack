@@ -61,12 +61,14 @@ fi
 mkdir -p /app/.next/cache /data/backups 2>/dev/null || true
 
 run_prisma() {
-  if [ -x "./node_modules/.bin/prisma" ]; then
+  if [ -x "./prisma-cli/node_modules/.bin/prisma" ]; then
+    ./prisma-cli/node_modules/.bin/prisma "$@"
+  elif [ -x "./node_modules/.bin/prisma" ]; then
     ./node_modules/.bin/prisma "$@"
   elif command -v pnpm >/dev/null 2>&1; then
     pnpm exec prisma "$@"
   else
-    node ./node_modules/prisma/build/index.js "$@"
+    node ./prisma-cli/node_modules/prisma/build/index.js "$@" 2>/dev/null || node ./node_modules/prisma/build/index.js "$@"
   fi
 }
 

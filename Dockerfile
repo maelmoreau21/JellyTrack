@@ -129,8 +129,8 @@ RUN mkdir -p /app/.next/cache /data/logs /data/backups && \
 COPY --from=builder --chown=node:node /app/prisma ./prisma
 COPY --from=builder --chown=node:node /app/prisma.config.ts ./prisma.config.ts
 
-# Copy Prisma CLI and its full dependency tree into node_modules
-COPY --from=builder --chown=node:node /app/prisma-cli/node_modules ./node_modules
+# Copy Prisma CLI and its isolated dependencies
+COPY --from=builder --chown=node:node /app/prisma-cli ./prisma-cli
 
 # OCI labels
 LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTrack"
