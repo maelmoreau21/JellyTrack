@@ -57,18 +57,6 @@ interface SsoConfigData {
   callbackPath: string;
 }
 
-interface TestResult {
-  success: boolean;
-  issuer?: string;
-  authorizationEndpoint?: string;
-  tokenEndpoint?: string;
-  userinfoEndpoint?: string;
-  jwksUri?: string;
-  scopesSupported?: string[];
-  wellKnownUrl?: string;
-  error?: string;
-}
-
 async function copyText(text: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
@@ -102,10 +90,6 @@ export function SsoSettingsClient() {
   const [formUserGroup, setFormUserGroup] = useState("");
   const [formAdminGroup, setFormAdminGroup] = useState("");
 
-  // Test connection state
-  const [testUrl, setTestUrl] = useState("");
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const populateFormFromData = useCallback((data: SsoConfigData) => {
@@ -116,10 +100,7 @@ export function SsoSettingsClient() {
     setFormClientSecret(data.hasClientSecret ? data.clientSecretMasked : "");
     setFormUserGroup(data.userGroup || "");
     setFormAdminGroup(data.adminGroup || "");
-    if (!testUrl && data.url) {
-      setTestUrl(data.url);
-    }
-  }, [testUrl]);
+  }, []);
 
   const fetchSsoInfo = useCallback(async () => {
     setLoading(true);
@@ -176,27 +157,6 @@ export function SsoSettingsClient() {
       setMessage({ type: "error", text: err.message || ts("saveError") || "Erreur lors de l'enregistrement de la configuration SSO." });
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleTestConnection = async () => {
-    setTesting(true);
-    setTestResult(null);
-    try {
-      const res = await fetch("/api/settings/sso/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: testUrl || formUrl }),
-      });
-      const data: TestResult = await res.json();
-      setTestResult(data);
-    } catch (err: any) {
-      setTestResult({
-        success: false,
-        error: err.message || "Network error when testing OIDC provider",
-      });
-    } finally {
-      setTesting(false);
     }
   };
 
@@ -589,91 +549,6 @@ export function SsoSettingsClient() {
           </CardContent>
         </Card>
       </form>
-
-      {/* Discovery & Connectivity Tester */}
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            {ts("testConnectionTitle")}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            {ts("testConnectionDesc")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Input
-              value={testUrl}
-              onChange={(e) => setTestUrl(e.target.value)}
-              placeholder="https://authentik.domain.com/application/o/jellytrack/"
-              className="text-xs font-mono"
-            />
-            <Button
-              onClick={handleTestConnection}
-              disabled={testing || (!testUrl.trim() && !formUrl.trim())}
-              className="gap-2 shrink-0 font-medium"
-            >
-              {testing ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {ts("testing")}
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4" />
-                  {ts("testButton")}
-                </>
-              )}
-            </Button>
-          </div>
-
-          {testResult && (
-            <div
-              className={`p-4 rounded-xl border space-y-3 text-xs animate-in fade-in duration-200 ${
-                testResult.success
-                  ? "bg-emerald-500/5 border-emerald-500/20 text-foreground"
-                  : "bg-red-500/5 border-red-500/20 text-red-500"
-              }`}
-            >
-              <div className="flex items-center gap-2 font-semibold">
-                {testResult.success ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    <span className="text-emerald-600 dark:text-emerald-400">{ts("testSuccess")}</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                    <span>{ts("testFailed")}: {testResult.error}</span>
-                  </>
-                )}
-              </div>
-
-              {testResult.success && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-border/40 font-mono text-[11px]">
-                  <div>
-                    <span className="text-muted-foreground font-sans">{ts("issuer")}:</span>{" "}
-                    <span className="truncate">{testResult.issuer}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground font-sans">{ts("authorizationEndpoint")}:</span>{" "}
-                    <span className="truncate">{testResult.authorizationEndpoint}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground font-sans">{ts("tokenEndpoint")}:</span>{" "}
-                    <span className="truncate">{testResult.tokenEndpoint}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground font-sans">{ts("userinfoEndpoint")}:</span>{" "}
-                    <span className="truncate">{testResult.userinfoEndpoint}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

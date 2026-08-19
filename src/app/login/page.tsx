@@ -4,13 +4,14 @@ import LoginForm from "./LoginForm";
 import { LoginLanguageSwitcher } from "./LoginLanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getTranslations } from 'next-intl/server';
-import { isOidcEnabled, isLocalAdminConfigured } from "@/lib/oidcConfig";
+import { getOidcConfigAsync, isLocalAdminConfigured } from "@/lib/oidcConfig";
 
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
     const t = await getTranslations('login');
-    const oidcEnabled = isOidcEnabled();
+    const oidcConfig = await getOidcConfigAsync();
+    const oidcEnabled = oidcConfig.enabled;
     const localAdminEnabled = isLocalAdminConfigured();
 
     return (

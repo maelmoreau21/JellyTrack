@@ -1,13 +1,8 @@
 import type { NextRequest } from "next/server";
 import NextAuth from "next-auth";
 import { getToken } from "next-auth/jwt";
-import { authOptions } from "@/lib/authOptions";
+import { authOptions, getDynamicAuthOptions } from "@/lib/authOptions";
 import { parseRememberMe } from "@/lib/authSession";
-
-const nextAuthHandler = NextAuth(authOptions as any) as (
-    req: NextRequest,
-    context: AuthRouteContext
-) => Promise<Response>;
 
 type AuthRouteContext = {
     params: Promise<{ nextauth: string[] }> | { nextauth: string[] };
@@ -132,8 +127,13 @@ async function resolveRememberMe(req: NextRequest): Promise<boolean | null> {
 }
 
 async function handleAuth(req: NextRequest, context: AuthRouteContext) {
+    const dynamicOptions = await getDynamicAuthOptions();
+    const handler = NextAuth(dynamicOptions as any) as (
+        req: NextRequest,
+        context: AuthRouteContext
+    ) => Promise<Response>;
     const rememberMe = await resolveRememberMe(req);
-    const response = await nextAuthHandler(req, context);
+    const response = await handler(req, context);
     return applySessionCookiePersistence(response, rememberMe);
 }
 

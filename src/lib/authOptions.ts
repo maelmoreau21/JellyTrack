@@ -24,18 +24,20 @@ import { getClientIpFromHeaders } from "@/lib/requestIp";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import {
     getOidcConfig,
+    getOidcConfigAsync,
     isLocalAdminConfigured,
     getLocalAdminCredentials,
     extractGroupsFromProfile,
     evaluateOidcGroupPermissions,
     resolveJellyfinUserForOidc,
+    type OidcConfig,
 } from "@/lib/oidcConfig";
 
 const authSecret = getResolvedAuthSecret();
 
-function buildAuthProviders(): NextAuthOptions["providers"] {
+function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers"] {
     const providers: NextAuthOptions["providers"] = [];
-    const oidc = getOidcConfig();
+    const oidc = customOidc || getOidcConfig();
 
     // 1. SSO OIDC Provider (when OIDC_ENABLED is true)
     if (oidc.enabled && oidc.url && oidc.clientId) {
@@ -331,7 +333,7 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async signIn({ user, account, profile }) {
             if (account?.provider === "oidc") {
-                const currentOidc = getOidcConfig();
+                const currentOidc = await getOidcConfigAsync();
                 const groups = user.groups || extractGroupsFromProfile(profile);
                 const groupEval = evaluateOidcGroupPermissions(groups, currentOidc);
 
@@ -468,4 +470,17 @@ export const authOptions: NextAuthOptions = {
     },
     secret: authSecret.value,
 };
+
+export async function getDynamicAuthOptions(): Promise<NextAuthOptions> {
+    try {
+        const oidc = await getOidcConfigAsync();
+        return {
+            ...authOptions,
+            providers: buildAuthProviders(oidc),
+        };
+    } catch {
+        return authOptions;
+    }
+}
+
 

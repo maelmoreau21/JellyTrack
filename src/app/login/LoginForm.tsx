@@ -109,7 +109,7 @@ export default function LoginForm({ oidcEnabled = false, localAdminEnabled = fal
     if (oidcEnabled && !isLocalLogin) {
         return (
             <div className="space-y-4">
-                <CardContent className="space-y-5 pt-6">
+                <CardContent className="space-y-4 pt-6">
                     {error && (
                         <div className="p-3.5 rounded-xl flex items-start gap-3 text-sm bg-red-500/10 text-red-400 border border-red-500/20 shadow-sm animate-in fade-in duration-200">
                             <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
@@ -118,12 +118,9 @@ export default function LoginForm({ oidcEnabled = false, localAdminEnabled = fal
                     )}
 
                     <div className="py-2 flex flex-col items-center justify-center text-center space-y-2">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-1">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500/15 to-cyan-500/15 border border-indigo-500/20 flex items-center justify-center text-indigo-500 dark:text-cyan-400 shadow-inner">
                             <ShieldCheck className="w-6 h-6" />
                         </div>
-                        <p className="text-sm text-muted-foreground font-medium max-w-xs">
-                            {t('ssoLoginPrompt')}
-                        </p>
                     </div>
                 </CardContent>
 
@@ -145,8 +142,7 @@ export default function LoginForm({ oidcEnabled = false, localAdminEnabled = fal
                             </>
                         ) : (
                             <>
-                                <ShieldCheck className="w-4 h-4" />
-                                {t('signInSso')}
+                                {t('signIn')}
                                 <ArrowRight className="w-4 h-4 ml-1" />
                             </>
                         )}
