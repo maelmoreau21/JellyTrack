@@ -8,8 +8,8 @@ RUN npm install -g pnpm@10.2.0
 
 WORKDIR /app
 
-# Copy lockfile and package configuration
-COPY package.json pnpm-lock.yaml ./
+# Copy lockfile, package configuration and npmrc
+COPY package.json pnpm-lock.yaml .npmrc* ./
 
 # Install all dependencies (including devDependencies for building)
 RUN pnpm install --frozen-lockfile
@@ -41,6 +41,8 @@ WORKDIR /app
 # Copy main node_modules and isolated prisma-cli from deps
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /app/.npmrc* ./
 COPY --from=deps /app/prisma ./prisma
 COPY --from=deps /app/prisma-cli ./prisma-cli
 
@@ -52,11 +54,17 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 ENV DATABASE_URL=${DATABASE_URL}
 
-# Build Next.js standalone package (generates minimal production bundle in .next/standalone)
+# Build Next.js standalone package
 RUN NEXTAUTH_SECRET=build-placeholder pnpm run build
 
-# ── Clean up Prisma engines in prisma-cli: keep only linux-musl, delete all other OS engines ──
-RUN find /app/prisma-cli/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+# Prune devDependencies to keep ONLY production modules (~60MB instead of 1.9GB)
+RUN pnpm prune --prod
+
+# Clean up Prisma engines: keep only linux-musl, remove all others
+RUN find /app/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/node_modules/@prisma/engines -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/node_modules/@prisma/engines -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules/.prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/prisma-cli/node_modules/@prisma/engines -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/prisma-cli/node_modules/@prisma/engines -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/prisma-cli/node_modules/prisma -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
@@ -64,19 +72,24 @@ RUN find /app/prisma-cli/node_modules/.prisma -name "libquery_engine-*" ! -name 
     find /app/prisma-cli/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
     find /app/prisma-cli/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true
 
-# Strip debug symbols from Prisma engine binaries to reduce size
-RUN find /app/prisma-cli/node_modules -name "*query_engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
-    find /app/prisma-cli/node_modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
-    find /app/.next/standalone -name "*query_engine*linux-musl*" -exec strip {} \; 2>/dev/null || true
+# Strip debug symbols from Prisma engine binaries
+RUN find /app/node_modules -name "*query_engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
+    find /app/node_modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -name "*query_engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true
 
-# Clean up unnecessary files inside standalone and prisma-cli (source maps, typings, tests, docs)
-RUN find /app/.next/standalone -type f -name "*.map" -delete 2>/dev/null || true && \
+# Clean up unnecessary files inside node_modules and standalone (source maps, typings, readmes, tests)
+RUN find /app/node_modules -type f -name "*.map" -delete 2>/dev/null || true && \
+    find /app/node_modules -type f -name "*.ts" -delete 2>/dev/null || true && \
+    find /app/node_modules -type f -name "*.tsx" -delete 2>/dev/null || true && \
+    find /app/node_modules -type f -name "*.md" -delete 2>/dev/null || true && \
+    find /app/node_modules -type d -name "test" -exec rm -rf {} \; 2>/dev/null || true && \
+    find /app/node_modules -type d -name "tests" -exec rm -rf {} \; 2>/dev/null || true && \
+    find /app/node_modules -type d -name "__tests__" -exec rm -rf {} \; 2>/dev/null || true && \
+    find /app/.next/standalone -type f -name "*.map" -delete 2>/dev/null || true && \
     find /app/.next/standalone -type f -name "*.ts" -delete 2>/dev/null || true && \
     find /app/.next/standalone -type f -name "*.tsx" -delete 2>/dev/null || true && \
     find /app/.next/standalone -type f -name "*.md" -delete 2>/dev/null || true && \
-    find /app/.next/standalone -type d -name "test" -exec rm -rf {} \; 2>/dev/null || true && \
-    find /app/.next/standalone -type d -name "tests" -exec rm -rf {} \; 2>/dev/null || true && \
-    find /app/.next/standalone -type d -name "__tests__" -exec rm -rf {} \; 2>/dev/null || true && \
     find /app/prisma-cli/node_modules -type f -name "*.map" -delete 2>/dev/null || true && \
     find /app/prisma-cli/node_modules -type f -name "*.ts" -delete 2>/dev/null || true && \
     find /app/prisma-cli/node_modules -type f -name "*.tsx" -delete 2>/dev/null || true && \
@@ -86,7 +99,7 @@ RUN find /app/.next/standalone -type f -name "*.map" -delete 2>/dev/null || true
     find /app/prisma-cli/node_modules -type d -name "__tests__" -exec rm -rf {} \; 2>/dev/null || true
 
 
-# ── STAGE 3: Final lightweight runner image (< 250MB) ──
+# ── STAGE 3: Final lightweight & rock-solid runner image (~240MB) ──
 FROM node:22-alpine AS runner
 RUN apk add --no-cache libc6-compat openssl
 
@@ -105,10 +118,11 @@ RUN mkdir -p /data/backups /data/logs /app/.next/cache && \
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-# Copy ONLY the minimal standalone server (contains only production node_modules, not the 1.9GB devDependencies)
+# Copy pruned production node_modules and standalone server
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 
-# Copy Prisma schema, config, and lightweight CLI
+# Copy Prisma schema, config, and lightweight migration CLI
 COPY --from=builder --chown=node:node /app/prisma ./prisma
 COPY --from=builder --chown=node:node /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=node:node /app/prisma-cli ./prisma-cli
