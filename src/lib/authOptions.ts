@@ -41,22 +41,23 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
 
     // 1. SSO OIDC Provider (when OIDC_ENABLED is true)
     if (oidc.enabled && oidc.url && oidc.clientId) {
-        const cleanUrl = oidc.url.replace(/\/+$/, "").replace(/\/\.well-known\/openid-configuration$/, "");
-        providers.push({
-            id: "oidc",
-            name: "SSO",
-            type: "oauth",
-            wellKnown: `${cleanUrl}/.well-known/openid-configuration`,
-            authorization: {
-                params: {
-                    scope: "openid email profile groups",
+        const cleanUrl = oidc.url.trim().replace(/\/\.well-known\/openid-configuration$/, "").replace(/\/+$/, "");
+        if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://")) {
+            providers.push({
+                id: "oidc",
+                name: "SSO",
+                type: "oauth",
+                wellKnown: `${cleanUrl}/.well-known/openid-configuration`,
+                authorization: {
+                    params: {
+                        scope: "openid email profile groups",
+                    },
                 },
-            },
-            idToken: true,
-            checks: ["state"],
-            clientId: oidc.clientId,
-            clientSecret: oidc.clientSecret || undefined,
-            profile(profile) {
+                idToken: true,
+                checks: ["state"],
+                clientId: oidc.clientId,
+                clientSecret: oidc.clientSecret || undefined,
+                profile(profile) {
                 const username = String(
                     profile.preferred_username ||
                     profile.username ||
@@ -81,6 +82,7 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                 };
             },
         });
+        }
     }
 
     // 2. Emergency Local Admin Credentials Provider (if configured)

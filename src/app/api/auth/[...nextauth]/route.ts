@@ -126,7 +126,16 @@ async function resolveRememberMe(req: NextRequest): Promise<boolean | null> {
     return null;
 }
 
+function ensureNextAuthUrl(req: NextRequest) {
+    if (!process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL.trim() === "") {
+        const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || req.nextUrl.host || "localhost:3000";
+        const proto = req.headers.get("x-forwarded-proto") || req.nextUrl.protocol.replace(/:$/, "") || "http";
+        process.env.NEXTAUTH_URL = `${proto}://${host}`;
+    }
+}
+
 async function handleAuth(req: NextRequest, context: AuthRouteContext) {
+    ensureNextAuthUrl(req);
     const dynamicOptions = await getDynamicAuthOptions();
     const handler = NextAuth(dynamicOptions as any) as (
         req: NextRequest,
