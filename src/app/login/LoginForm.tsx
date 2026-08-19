@@ -108,60 +108,52 @@ export default function LoginForm({ oidcEnabled = false, localAdminEnabled = fal
     // 1. SSO Mode (OIDC Enabled)
     if (oidcEnabled && !isLocalLogin) {
         return (
-            <div className="space-y-4">
-                <CardContent className="space-y-4 pt-6">
-                    {error && (
-                        <div className="p-3.5 rounded-xl flex items-start gap-3 text-sm bg-red-500/10 text-red-400 border border-red-500/20 shadow-sm animate-in fade-in duration-200">
-                            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                            <p className="leading-5 font-medium">{error}</p>
-                        </div>
-                    )}
-
-                    <div className="py-2 flex flex-col items-center justify-center text-center space-y-2">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500/15 to-cyan-500/15 border border-indigo-500/20 flex items-center justify-center text-indigo-500 dark:text-cyan-400 shadow-inner">
-                            <ShieldCheck className="w-6 h-6" />
-                        </div>
+            <div className="px-6 pb-6 pt-2 space-y-3">
+                {error && (
+                    <div className="p-3 rounded-xl flex items-start gap-2.5 text-sm bg-red-500/10 text-red-400 border border-red-500/20 shadow-sm animate-in fade-in duration-200">
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                        <p className="leading-5 font-medium text-xs">{error}</p>
                     </div>
-                </CardContent>
+                )}
 
-                <CardFooter className="flex flex-col gap-3 pt-0 pb-6">
-                    <button
-                        type="button"
-                        onClick={handleSsoLogin}
-                        disabled={isLoading}
-                        className={`w-full flex items-center justify-center gap-2.5 h-11 rounded-xl font-semibold text-sm transition-all shadow-lg ${
-                            isLoading
-                                ? "bg-indigo-600/50 text-indigo-200 cursor-not-allowed"
-                                : "bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-600 text-white hover:from-indigo-500 hover:to-cyan-500 hover:shadow-indigo-500/25 hover:scale-[1.01] active:scale-[0.99] duration-150"
-                        }`}
-                    >
-                        {isLoading ? (
-                            <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                {t('verifying')}
-                            </>
-                        ) : (
-                            <>
-                                {t('signIn')}
-                                <ArrowRight className="w-4 h-4 ml-1" />
-                            </>
-                        )}
-                    </button>
+                <button
+                    type="button"
+                    onClick={handleSsoLogin}
+                    disabled={isLoading}
+                    className={`w-full flex items-center justify-center gap-2.5 h-11 rounded-xl font-semibold text-sm transition-all shadow-lg ${
+                        isLoading
+                            ? "bg-indigo-600/50 text-indigo-200 cursor-not-allowed"
+                            : "bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-600 text-white hover:from-indigo-500 hover:to-cyan-500 hover:shadow-indigo-500/25 hover:scale-[1.01] active:scale-[0.99] duration-150"
+                    }`}
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            {t('verifying')}
+                        </>
+                    ) : (
+                        <>
+                            {t('signIn')}
+                            <ArrowRight className="w-4 h-4 ml-1" />
+                        </>
+                    )}
+                </button>
 
-                    {localAdminEnabled && (
+                {localAdminEnabled && (
+                    <div className="text-center pt-1">
                         <button
                             type="button"
                             onClick={() => {
                                 setError(null);
                                 setIsLocalLogin(true);
                             }}
-                            className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors pt-2 flex items-center justify-center gap-1.5"
+                            className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors inline-flex items-center justify-center gap-1.5"
                         >
                             <KeyRound className="w-3.5 h-3.5 opacity-60" />
                             {t('localLogin')}
                         </button>
-                    )}
-                </CardFooter>
+                    </div>
+                )}
             </div>
         );
     }

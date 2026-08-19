@@ -24,7 +24,7 @@ export default async function LoginPage() {
 
             <div className="z-10 flex flex-col items-center gap-4 w-full max-w-sm">
                 <Card className="w-full border border-white/20 dark:border-white/10 bg-white/30 dark:bg-slate-900/40 backdrop-blur-xl shadow-2xl">
-                    <CardHeader className="space-y-3 pb-6 border-b border-white/10 dark:border-white/5">
+                    <CardHeader className={`space-y-3 ${oidcEnabled ? 'pb-2 border-none' : 'pb-6 border-b border-white/10 dark:border-white/5'}`}>
                         <div className="flex flex-col items-center gap-3 text-center">
                             <div className="bg-gradient-to-tr from-indigo-500/10 to-cyan-500/10 dark:from-indigo-500/20 dark:to-cyan-500/20 p-3 rounded-2xl border border-white/25 dark:border-white/15 shadow-lg transition-transform hover:scale-105 duration-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="18 23 64 69" className="w-14 h-14">
@@ -47,9 +47,11 @@ export default async function LoginPage() {
                             </div>
                             <div>
                                 <CardTitle className="text-2xl font-bold tracking-tight text-foreground">{t('title')}</CardTitle>
-                                <CardDescription className="text-muted-foreground mt-1 text-sm font-medium">
-                                    {oidcEnabled ? (t('ssoSubtitle') || t('subtitle')) : t('subtitle')}
-                                </CardDescription>
+                                {!oidcEnabled && (
+                                    <CardDescription className="text-muted-foreground mt-1 text-sm font-medium">
+                                        {t('subtitle')}
+                                    </CardDescription>
+                                )}
                             </div>
                         </div>
                     </CardHeader>
