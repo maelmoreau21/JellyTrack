@@ -117,7 +117,8 @@ RUN mkdir -p /data/backups /data/logs /app/.next/cache && \
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-# Copy Next.js standalone server
+# Copy full node_modules and standalone server from builder so all pnpm modules & symlinks resolve
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 
 # Ensure .next cache directory is fully writable by node
