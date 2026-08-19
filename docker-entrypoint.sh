@@ -11,6 +11,7 @@ export PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
 export TZ="${TZ:-UTC}"
 export PORT="${JELLYTRACK_PORT:-${PORT:-3000}}"
 export NEXTAUTH_SECRET="${NEXTAUTH_SECRET:-${JELLYTRACK_SECRET:-}}"
+export NEXTAUTH_URL="${NEXTAUTH_URL:-${JELLYTRACK_URL:-${JELLYGATE_URL:-}}}"
 export JELLYFIN_WEBHOOK_SECRET="${JELLYFIN_WEBHOOK_SECRET:-${JELLYTRACK_WEBHOOK_SECRET:-}}"
 export JELLYFIN_API_KEY="${JELLYFIN_API_KEY:-${JELLYTRACK_JELLYFIN_API_KEY:-}}"
 export JELLYTRACK_LOCAL_ADMIN_USER="${JELLYTRACK_LOCAL_ADMIN_USER:-${JELLYGATE_LOCAL_ADMIN_USER:-admin}}"
@@ -61,6 +62,7 @@ fi
 
 # Ensure runtime directories exist
 mkdir -p /app/.next/cache /data/backups 2>/dev/null || true
+chmod -R 777 /app/.next/cache /data/backups 2>/dev/null || true
 
 run_prisma() {
   export NODE_PATH="/app/prisma-cli/node_modules:${NODE_PATH:-}"

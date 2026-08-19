@@ -44,19 +44,18 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
         const cleanUrl = oidc.url.replace(/\/+$/, "").replace(/\/\.well-known\/openid-configuration$/, "");
         providers.push({
             id: "oidc",
-            name: "SSO (OpenID Connect)",
+            name: "SSO",
             type: "oauth",
             wellKnown: `${cleanUrl}/.well-known/openid-configuration`,
-            issuer: cleanUrl,
             authorization: {
                 params: {
                     scope: "openid email profile groups",
                 },
             },
             idToken: true,
-            checks: ["pkce", "state"],
+            checks: ["state"],
             clientId: oidc.clientId,
-            clientSecret: oidc.clientSecret,
+            clientSecret: oidc.clientSecret || undefined,
             profile(profile) {
                 const username = String(
                     profile.preferred_username ||
@@ -467,6 +466,7 @@ export const authOptions: NextAuthOptions = {
     },
     pages: {
         signIn: "/login",
+        error: "/login",
     },
     secret: authSecret.value,
 };
