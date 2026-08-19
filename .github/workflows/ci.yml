@@ -133,6 +133,7 @@ jobs:
             -e NEXTAUTH_URL="http://localhost:3000" \
             -e JELLYFIN_API_KEY="ci-jellyfin-api-key" \
             -e JELLYFIN_WEBHOOK_SECRET="ci-webhook-secret" \
+            -e POSTGRES_PASSWORD="ci-test-password" \
             -e PRISMA_USE_STUB=true \
             jellytrack:ci-test
 

@@ -46,7 +46,7 @@ urlencode() {
 
 if [ "$rebuild_db" = true ]; then
   DB_USER=${JELLYTRACK_DB_USER:-${DB_USER:-${POSTGRES_USER:-JellyTrack}}}
-  if [ -z "${JELLYTRACK_DB_PASSWORD:-${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}}" ] && [ "${NODE_ENV:-}" = "production" ]; then
+  if [ -z "${JELLYTRACK_DB_PASSWORD:-${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}}" ] && [ "${NODE_ENV:-}" = "production" ] && [ "${PRISMA_USE_STUB:-}" != "true" ]; then
     echo "ERROR: DB_PASSWORD, JELLYTRACK_DB_PASSWORD, or POSTGRES_PASSWORD must be set in production."
     exit 1
   fi
@@ -115,7 +115,7 @@ baseline_prisma_migrations() {
 }
 
 # Prisma schema setup.
-if [ -d "prisma/migrations" ] && [ -n "$(find prisma/migrations -mindepth 2 -maxdepth 2 -name migration.sql -type f 2>/dev/null | head -n 1)" ]; then
+if [ "${PRISMA_USE_STUB:-}" != "true" ] && [ -d "prisma/migrations" ] && [ -n "$(find prisma/migrations -mindepth 2 -maxdepth 2 -name migration.sql -type f 2>/dev/null | head -n 1)" ]; then
   echo "Prisma migrations detected. Running prisma migrate deploy..."
   migration_log="$(mktemp)"
   if run_prisma migrate deploy >"$migration_log" 2>&1; then
