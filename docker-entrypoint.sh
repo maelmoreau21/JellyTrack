@@ -115,7 +115,9 @@ baseline_prisma_migrations() {
 }
 
 # Prisma schema setup.
-if [ "${PRISMA_USE_STUB:-}" != "true" ] && [ -d "prisma/migrations" ] && [ -n "$(find prisma/migrations -mindepth 2 -maxdepth 2 -name migration.sql -type f 2>/dev/null | head -n 1)" ]; then
+if [ "${PRISMA_USE_STUB:-}" = "true" ]; then
+  echo "PRISMA_USE_STUB is true: skipping database migrations and connection for smoke test."
+elif [ -d "prisma/migrations" ] && [ -n "$(find prisma/migrations -mindepth 2 -maxdepth 2 -name migration.sql -type f 2>/dev/null | head -n 1)" ]; then
   echo "Prisma migrations detected. Running prisma migrate deploy..."
   migration_log="$(mktemp)"
   if run_prisma migrate deploy >"$migration_log" 2>&1; then
