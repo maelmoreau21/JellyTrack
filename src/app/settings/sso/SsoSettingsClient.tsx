@@ -6,11 +6,13 @@ import {
   AlertCircle,
   CheckCircle2,
   Copy,
-  ExternalLink,
-  HelpCircle,
+  Eye,
+  EyeOff,
   KeyRound,
   Loader2,
+  Lock,
   RefreshCw,
+  Save,
   Shield,
   ShieldAlert,
   ShieldCheck,
@@ -22,8 +24,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
-interface SsoInfo {
+interface SsoConfigData {
   enabled: boolean;
   url: string;
   clientId: string;
@@ -31,6 +34,24 @@ interface SsoInfo {
   clientSecretMasked: string;
   userGroup: string;
   adminGroup: string;
+  origins?: Record<string, "env" | "db" | "default">;
+  isEnvControlled: {
+    enabled: boolean;
+    url: boolean;
+    clientId: boolean;
+    clientSecret: boolean;
+    userGroup: boolean;
+    adminGroup: boolean;
+  };
+  dbConfig?: {
+    enabled: boolean;
+    url: string;
+    clientId: string;
+    hasClientSecret: boolean;
+    clientSecretMasked: string;
+    userGroup: string;
+    adminGroup: string;
+  };
   localAdminConfigured: boolean;
   localAdminUser: string;
   callbackPath: string;
@@ -67,13 +88,38 @@ export function SsoSettingsClient() {
   const t = useTranslations("settings");
   const ts = useTranslations("ssoSettings");
 
-  const [info, setInfo] = useState<SsoInfo | null>(null);
+  const [info, setInfo] = useState<SsoConfigData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [copiedCallback, setCopiedCallback] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
+
+  // Form edit state
+  const [formEnabled, setFormEnabled] = useState(false);
+  const [formUrl, setFormUrl] = useState("");
+  const [formClientId, setFormClientId] = useState("");
+  const [formClientSecret, setFormClientSecret] = useState("");
+  const [formUserGroup, setFormUserGroup] = useState("");
+  const [formAdminGroup, setFormAdminGroup] = useState("");
+
+  // Test connection state
   const [testUrl, setTestUrl] = useState("");
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const populateFormFromData = useCallback((data: SsoConfigData) => {
+    setInfo(data);
+    setFormEnabled(data.enabled);
+    setFormUrl(data.url || "");
+    setFormClientId(data.clientId || "");
+    setFormClientSecret(data.hasClientSecret ? data.clientSecretMasked : "");
+    setFormUserGroup(data.userGroup || "");
+    setFormAdminGroup(data.adminGroup || "");
+    if (!testUrl && data.url) {
+      setTestUrl(data.url);
+    }
+  }, [testUrl]);
 
   const fetchSsoInfo = useCallback(async () => {
     setLoading(true);
@@ -83,21 +129,55 @@ export function SsoSettingsClient() {
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
-      const data: SsoInfo = await res.json();
-      setInfo(data);
-      if (!testUrl && data.url) {
-        setTestUrl(data.url);
-      }
+      const data: SsoConfigData = await res.json();
+      populateFormFromData(data);
     } catch {
       setMessage({ type: "error", text: ts("loadError") });
     } finally {
       setLoading(false);
     }
-  }, [ts, testUrl]);
+  }, [ts, populateFormFromData]);
 
   useEffect(() => {
     fetchSsoInfo();
   }, [fetchSsoInfo]);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage(null);
+
+    const isSecretUnchangedMask = formClientSecret.includes("••••••••");
+
+    try {
+      const res = await fetch("/api/settings/sso", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enabled: formEnabled,
+          url: formUrl,
+          clientId: formClientId,
+          clientSecret: isSecretUnchangedMask ? undefined : formClientSecret,
+          keepExistingSecret: isSecretUnchangedMask,
+          userGroup: formUserGroup,
+          adminGroup: formAdminGroup,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${res.status}`);
+      }
+
+      const updated: SsoConfigData = await res.json();
+      populateFormFromData(updated);
+      setMessage({ type: "success", text: ts("saveSuccess") || "Configuration SSO enregistrée avec succès." });
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || ts("saveError") || "Erreur lors de l'enregistrement de la configuration SSO." });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleTestConnection = async () => {
     setTesting(true);
@@ -106,7 +186,7 @@ export function SsoSettingsClient() {
       const res = await fetch("/api/settings/sso/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: testUrl }),
+        body: JSON.stringify({ url: testUrl || formUrl }),
       });
       const data: TestResult = await res.json();
       setTestResult(data);
@@ -137,6 +217,17 @@ export function SsoSettingsClient() {
       </div>
     );
   }
+
+  const isEnv = info?.isEnvControlled || {
+    enabled: false,
+    url: false,
+    clientId: false,
+    clientSecret: false,
+    userGroup: false,
+    adminGroup: false,
+  };
+
+  const hasAnyEnvOverride = Object.values(isEnv).some(Boolean);
 
   return (
     <div className="space-y-6">
@@ -180,6 +271,12 @@ export function SsoSettingsClient() {
                   <Badge variant="secondary" className="gap-1 px-2.5 py-0.5">
                     <ShieldAlert className="w-3 h-3" />
                     {ts("statusInactive")}
+                  </Badge>
+                )}
+                {hasAnyEnvOverride && (
+                  <Badge variant="outline" className="text-[11px] border-amber-500/40 text-amber-600 dark:text-amber-400 gap-1">
+                    <Lock className="w-3 h-3" />
+                    {ts("envPriorityBadge") || "Variables Docker (.env) prioritaires"}
                   </Badge>
                 )}
               </div>
@@ -284,93 +381,214 @@ export function SsoSettingsClient() {
         </CardContent>
       </Card>
 
-      {/* OIDC Config & Groups Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* OIDC Parameters */}
-        <Card className="border-border/60 shadow-sm flex flex-col justify-between">
+      {/* SSO Configuration Form */}
+      <form onSubmit={handleSaveSettings} className="space-y-6">
+        <Card className="border-border/60 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              {ts("oidcParamsTitle")}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {ts("oidcParamsDesc")}
-            </CardDescription>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  {ts("ssoConfigFormTitle") || "Configuration & Rôles SSO"}
+                </CardTitle>
+                <CardDescription className="text-xs mt-1">
+                  {ts("ssoConfigFormDesc") || "Modifiez les réglages SSO ci-dessous. Les variables définies dans votre docker-compose / .env restent toujours prioritaires."}
+                </CardDescription>
+              </div>
+
+              <div className="flex items-center gap-3 p-2.5 rounded-xl border bg-muted/30">
+                <div className="space-y-0.5">
+                  <Label htmlFor="sso-toggle" className="text-xs font-semibold cursor-pointer">
+                    {ts("enableSsoLabel") || "Activer l'authentification SSO"}
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    {isEnv.enabled ? (ts("envOverrideNotice") || "Verrouillé par OIDC_ENABLED dans .env") : (ts("dbConfigurableNotice") || "Enregistré en base de données")}
+                  </p>
+                </div>
+                <Switch
+                  id="sso-toggle"
+                  checked={formEnabled}
+                  disabled={isEnv.enabled}
+                  onCheckedChange={setFormEnabled}
+                />
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">{ts("oidcUrlLabel")}</Label>
-              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50 font-mono text-xs truncate">
-                {info?.url || <span className="text-muted-foreground italic">{ts("notConfigured")}</span>}
+          <CardContent className="space-y-6">
+            {/* OIDC Provider Parameters */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="space-y-2 lg:col-span-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="oidc-url" className="text-xs font-medium">
+                    {ts("oidcUrlLabel")}
+                  </Label>
+                  {isEnv.url && (
+                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600 dark:text-amber-400 gap-1 font-normal">
+                      <Lock className="w-2.5 h-2.5" />
+                      {ts("dockerEnvLocked") || "Défini par Docker (.env)"}
+                    </Badge>
+                  )}
+                </div>
+                <Input
+                  id="oidc-url"
+                  value={formUrl}
+                  disabled={isEnv.url}
+                  onChange={(e) => setFormUrl(e.target.value)}
+                  placeholder="https://authentik.domain.com/application/o/jellytrack/"
+                  className="font-mono text-xs"
+                />
+                <p className="text-[11px] text-muted-foreground leading-4">
+                  {ts("oidcUrlHint") || "URL de découverte ou base de votre fournisseur OpenID Connect (ex: Authentik, Keycloak, Authelia)."}
+                </p>
+              </div>
+
+              <div className="space-y-2 lg:col-span-1">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="oidc-client-id" className="text-xs font-medium">
+                    {ts("clientIdLabel")}
+                  </Label>
+                  {isEnv.clientId && (
+                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600 dark:text-amber-400 gap-1 font-normal">
+                      <Lock className="w-2.5 h-2.5" />
+                      {ts("dockerEnvLocked") || "Défini par Docker (.env)"}
+                    </Badge>
+                  )}
+                </div>
+                <Input
+                  id="oidc-client-id"
+                  value={formClientId}
+                  disabled={isEnv.clientId}
+                  onChange={(e) => setFormClientId(e.target.value)}
+                  placeholder="jellytrack"
+                  className="font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-2 lg:col-span-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="oidc-client-secret" className="text-xs font-medium">
+                    {ts("clientSecretLabel")}
+                  </Label>
+                  {isEnv.clientSecret && (
+                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600 dark:text-amber-400 gap-1 font-normal">
+                      <Lock className="w-2.5 h-2.5" />
+                      {ts("dockerEnvLocked") || "Défini par Docker (.env)"}
+                    </Badge>
+                  )}
+                </div>
+                <div className="relative">
+                  <Input
+                    id="oidc-client-secret"
+                    type={showSecret ? "text" : "password"}
+                    value={formClientSecret}
+                    disabled={isEnv.clientSecret}
+                    onChange={(e) => setFormClientSecret(e.target.value)}
+                    placeholder="••••••••••••••••"
+                    className="font-mono text-xs pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSecret(!showSecret)}
+                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">{ts("clientIdLabel")}</Label>
-              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50 font-mono text-xs truncate">
-                {info?.clientId || <span className="text-muted-foreground italic">{ts("notConfigured")}</span>}
+            {/* Groups & Roles Mapping */}
+            <div className="pt-2 border-t border-border/40">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-indigo-500" />
+                {ts("groupsTitle")}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="user-group" className="text-xs font-medium">
+                      {ts("userGroupLabel")}
+                    </Label>
+                    {isEnv.userGroup && (
+                      <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600 dark:text-amber-400 gap-1 font-normal">
+                        <Lock className="w-2.5 h-2.5" />
+                        {ts("dockerEnvLocked") || "Docker (.env)"}
+                      </Badge>
+                    )}
+                  </div>
+                  <Input
+                    id="user-group"
+                    value={formUserGroup}
+                    disabled={isEnv.userGroup}
+                    onChange={(e) => setFormUserGroup(e.target.value)}
+                    placeholder="jellyfin-users"
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-[11px] text-muted-foreground leading-4">
+                    {ts("userGroupHint")}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="admin-group" className="text-xs font-medium">
+                      {ts("adminGroupLabel")}
+                    </Label>
+                    {isEnv.adminGroup && (
+                      <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600 dark:text-amber-400 gap-1 font-normal">
+                        <Lock className="w-2.5 h-2.5" />
+                        {ts("dockerEnvLocked") || "Docker (.env)"}
+                      </Badge>
+                    )}
+                  </div>
+                  <Input
+                    id="admin-group"
+                    value={formAdminGroup}
+                    disabled={isEnv.adminGroup}
+                    onChange={(e) => setFormAdminGroup(e.target.value)}
+                    placeholder="jellyfin-admins"
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-[11px] text-muted-foreground leading-4">
+                    {ts("adminGroupHint")}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">{ts("clientSecretLabel")}</Label>
-              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50 font-mono text-xs truncate">
-                {info?.hasClientSecret ? (
-                  info.clientSecretMasked
+            {/* Save Button */}
+            <div className="flex items-center justify-between pt-3 border-t border-border/40">
+              <p className="text-xs text-muted-foreground">
+                {hasAnyEnvOverride ? (
+                  <span className="text-amber-600 dark:text-amber-400">
+                    * Les champs définis dans le docker-compose / .env restent prioritaires sur la base de données.
+                  </span>
                 ) : (
-                  <span className="text-muted-foreground italic">{ts("notConfiguredOrPublic")}</span>
+                  <span>Tous les réglages ci-dessus sont configurés et stockés dans votre base de données.</span>
                 )}
-              </div>
+              </p>
+
+              <Button
+                type="submit"
+                disabled={saving}
+                className="gap-2 font-medium bg-gradient-to-r from-indigo-600 to-cyan-600 text-white hover:from-indigo-500 hover:to-cyan-500 shadow-md"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {ts("saving") || "Enregistrement..."}
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    {ts("saveButton") || "Enregistrer les réglages SSO"}
+                  </>
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
-
-        {/* Groups & Roles Mapping */}
-        <Card className="border-border/60 shadow-sm flex flex-col justify-between">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Users className="w-4 h-4 text-indigo-500" />
-              {ts("groupsTitle")}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {ts("groupsDesc")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs text-muted-foreground">{ts("userGroupLabel")}</Label>
-                <Badge variant="outline" className="text-[10px] font-normal">
-                  {ts("userRole")}
-                </Badge>
-              </div>
-              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50 font-mono text-xs truncate flex items-center justify-between">
-                <span>{info?.userGroup || <span className="text-muted-foreground italic">{ts("allAllowed")}</span>}</span>
-                {info?.userGroup && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-4">
-                {ts("userGroupHint")}
-              </p>
-            </div>
-
-            <div className="space-y-1.5 pt-1">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs text-muted-foreground">{ts("adminGroupLabel")}</Label>
-                <Badge variant="default" className="bg-indigo-600 text-white text-[10px] font-normal">
-                  {ts("adminRole")}
-                </Badge>
-              </div>
-              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50 font-mono text-xs truncate flex items-center justify-between">
-                <span>{info?.adminGroup || <span className="text-muted-foreground italic">{ts("notConfigured")}</span>}</span>
-                {info?.adminGroup && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-4">
-                {ts("adminGroupHint")}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      </form>
 
       {/* Discovery & Connectivity Tester */}
       <Card className="border-border/60 shadow-sm">
@@ -393,7 +611,7 @@ export function SsoSettingsClient() {
             />
             <Button
               onClick={handleTestConnection}
-              disabled={testing || !testUrl.trim()}
+              disabled={testing || (!testUrl.trim() && !formUrl.trim())}
               className="gap-2 shrink-0 font-medium"
             >
               {testing ? (
@@ -454,35 +672,6 @@ export function SsoSettingsClient() {
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Authentik Setup Guide */}
-      <Card className="border-border/60 bg-muted/20 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 text-primary" />
-            {ts("authentikGuideTitle")}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            {ts("authentikGuideDesc")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3 text-xs text-muted-foreground leading-relaxed">
-          <ol className="list-decimal list-inside space-y-2 pl-1">
-            <li>
-              <strong className="text-foreground">{ts("step1Title")}</strong> : {ts("step1Desc")}
-            </li>
-            <li>
-              <strong className="text-foreground">{ts("step2Title")}</strong> : {ts("step2Desc")} (<code>{callbackUrl}</code>).
-            </li>
-            <li>
-              <strong className="text-foreground">{ts("step3Title")}</strong> : {ts("step3Desc")}
-            </li>
-            <li>
-              <strong className="text-foreground">{ts("step4Title")}</strong> : {ts("step4Desc")}
-            </li>
-          </ol>
         </CardContent>
       </Card>
     </div>

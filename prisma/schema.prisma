@@ -245,6 +245,7 @@ model GlobalSettings {
   authRememberThirtyDaysEnabled Boolean @default(true) // Remembered web sessions expire after 30 days when enabled
   authSessionsRevokedAt DateTime? // Invalidate web sessions issued before this timestamp
   resolutionThresholds  Json?    // Configurable boundaries for resolution detection (minWidth, minHeight, etc.)
+  ssoSettings           Json?    // SSO OpenID Connect database settings (fallback when env is empty)
   updatedAt             DateTime @updatedAt
 }
 

@@ -1066,7 +1066,7 @@
     "logRetentionHint": "日志文件和审计记录自动轮换与删除前的保存时间。",
     "retentionUnlimited": "永久保留",
     "jellyfinTitle": "Jellyfin",
-    "ssoTitle": "SSO (OIDC)"
+    "ssoTitle": "SSO"
   },
   "timeRange": {
     "allTime": "全部时间",
@@ -1432,7 +1432,7 @@
     }
   },
   "ssoSettings": {
-    "title": "SSO (OpenID Connect)",
+    "title": "SSO Authentication",
     "loading": "Loading SSO settings...",
     "loadError": "Failed to load SSO configuration.",
     "statusActive": "Active (OIDC)",
@@ -1475,15 +1475,16 @@
     "authorizationEndpoint": "Auth Endpoint",
     "tokenEndpoint": "Token Endpoint",
     "userinfoEndpoint": "UserInfo Endpoint",
-    "authentikGuideTitle": "Authentik Configuration Guide",
-    "authentikGuideDesc": "Quick steps to connect Authentik 2026.5.6 (or any standard OIDC provider) with JellyTrack.",
-    "step1Title": "1. Create an OAuth2/OpenID Provider",
-    "step1Desc": "In Authentik Admin Interface > Applications > Providers, create an OAuth2/OpenID Provider (Client type: Confidential, Scopes: openid, email, profile, groups).",
-    "step2Title": "2. Add the Redirect URI",
-    "step2Desc": "Add the exact Redirect URI above to the provider's allowed Redirect URIs",
-    "step3Title": "3. Create and Bind the Application",
-    "step3Desc": "In Applications > Applications, create 'JellyTrack' and assign the provider created in step 1.",
-    "step4Title": "4. Set Environment Variables",
-    "step4Desc": "Configure OIDC_ENABLED=true, OIDC_URL, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, OIDC_USER_GROUP, and OIDC_ADMIN_GROUP in your environment."
+    "ssoConfigFormTitle": "SSO Configuration & Roles",
+    "ssoConfigFormDesc": "Edit SSO settings below. Variables defined in docker-compose / .env always take precedence.",
+    "enableSsoLabel": "Enable SSO Authentication",
+    "envOverrideNotice": "Locked by OIDC_ENABLED in .env",
+    "dbConfigurableNotice": "Saved in database",
+    "dockerEnvLocked": "Set by Docker (.env)",
+    "oidcUrlHint": "Discovery or base URL of your OpenID Connect provider (e.g. Authentik, Keycloak, Authelia).",
+    "envPriorityBadge": "Docker (.env) variables prioritized",
+    "saveButton": "Save SSO Settings",
+    "saveSuccess": "SSO configuration saved successfully.",
+    "saveError": "Failed to save SSO configuration."
   }
 }

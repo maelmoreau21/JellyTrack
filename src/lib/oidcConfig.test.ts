@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   isOidcEnabled,
   getOidcConfig,
+  resolveOidcConfig,
   isLocalAdminConfigured,
   getLocalAdminCredentials,
   extractGroupsFromProfile,
@@ -159,6 +160,55 @@ describe("oidcConfig", () => {
       const res = evaluateOidcGroupPermissions(["any-group"], { userGroup: "", adminGroup: "" });
       expect(res.isAdmin).toBe(false);
       expect(res.isAllowed).toBe(true);
+    });
+  });
+
+  describe("resolveOidcConfig (DB + Env precedence)", () => {
+    it("uses DB settings when environment variables are unset", () => {
+      const db = {
+        enabled: true,
+        url: "https://db-authentik.example.com",
+        clientId: "db-client",
+        clientSecret: "db-secret",
+        userGroup: "db-users",
+        adminGroup: "db-admins",
+      };
+
+      const resolved = resolveOidcConfig(db);
+      expect(resolved.enabled).toBe(true);
+      expect(resolved.url).toBe("https://db-authentik.example.com");
+      expect(resolved.clientId).toBe("db-client");
+      expect(resolved.clientSecret).toBe("db-secret");
+      expect(resolved.userGroup).toBe("db-users");
+      expect(resolved.adminGroup).toBe("db-admins");
+      expect(resolved.isEnvControlled.url).toBe(false);
+      expect(resolved.isEnvControlled.clientId).toBe(false);
+    });
+
+    it("prioritizes environment variables over DB settings when env is set", () => {
+      vi.stubEnv("OIDC_ENABLED", "true");
+      vi.stubEnv("OIDC_URL", "https://env-authentik.example.com");
+      vi.stubEnv("OIDC_CLIENT_ID", "env-client");
+      // Leaving secret and groups unset in env to test partial DB fallback
+
+      const db = {
+        enabled: false,
+        url: "https://db-authentik.example.com",
+        clientId: "db-client",
+        clientSecret: "db-secret-saved",
+        userGroup: "db-users-saved",
+        adminGroup: "db-admins-saved",
+      };
+
+      const resolved = resolveOidcConfig(db);
+      expect(resolved.enabled).toBe(true); // From env
+      expect(resolved.url).toBe("https://env-authentik.example.com"); // From env
+      expect(resolved.clientId).toBe("env-client"); // From env
+      expect(resolved.clientSecret).toBe("db-secret-saved"); // From DB
+      expect(resolved.userGroup).toBe("db-users-saved"); // From DB
+      expect(resolved.adminGroup).toBe("db-admins-saved"); // From DB
+      expect(resolved.isEnvControlled.url).toBe(true);
+      expect(resolved.isEnvControlled.clientSecret).toBe(false);
     });
   });
 

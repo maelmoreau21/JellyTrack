@@ -12,6 +12,28 @@ export interface OidcConfig {
   adminGroup: string;
 }
 
+export interface OidcConfigFieldOrigins {
+  enabled: "env" | "db" | "default";
+  url: "env" | "db" | "default";
+  clientId: "env" | "db" | "default";
+  clientSecret: "env" | "db" | "default";
+  userGroup: "env" | "db" | "default";
+  adminGroup: "env" | "db" | "default";
+}
+
+export interface DetailedOidcConfig extends OidcConfig {
+  origins: OidcConfigFieldOrigins;
+  isEnvControlled: {
+    enabled: boolean;
+    url: boolean;
+    clientId: boolean;
+    clientSecret: boolean;
+    userGroup: boolean;
+    adminGroup: boolean;
+  };
+  dbConfig: OidcConfig;
+}
+
 export interface LocalAdminCredentials {
   username: string;
   password?: string;
@@ -24,24 +46,68 @@ export interface OidcGroupEvaluation {
   userGroups: string[];
 }
 
-/**
- * Checks if OIDC authentication is enabled via environment variables.
- */
-export function isOidcEnabled(): boolean {
-  const envVal = String(process.env.OIDC_ENABLED || "").trim().toLowerCase();
-  return envVal === "true" || envVal === "1" || envVal === "yes" || envVal === "on";
+let inMemoryDbSsoConfig: OidcConfig | null = null;
+
+export function parseDbSsoSettings(raw: unknown): OidcConfig {
+  const defaultObj: OidcConfig = {
+    enabled: false,
+    url: "",
+    clientId: "",
+    clientSecret: "",
+    userGroup: "",
+    adminGroup: "",
+  };
+
+  if (!raw || typeof raw !== "object") {
+    return defaultObj;
+  }
+
+  const obj = raw as Record<string, unknown>;
+  return {
+    enabled: Boolean(obj.enabled),
+    url: typeof obj.url === "string" ? obj.url.trim().replace(/\/+$/, "") : "",
+    clientId: typeof obj.clientId === "string" ? obj.clientId.trim() : "",
+    clientSecret: typeof obj.clientSecret === "string" ? obj.clientSecret.trim() : "",
+    userGroup: typeof obj.userGroup === "string" ? obj.userGroup.trim() : "",
+    adminGroup: typeof obj.adminGroup === "string" ? obj.adminGroup.trim() : "",
+  };
+}
+
+export function setInMemoryDbSsoConfig(config: OidcConfig) {
+  inMemoryDbSsoConfig = { ...config };
 }
 
 /**
- * Returns the resolved OIDC configuration from environment.
+ * Resolves OIDC configuration with strict priority:
+ * Docker / Environment variables ALWAYS override database settings.
  */
-export function getOidcConfig(): OidcConfig {
-  const enabled = isOidcEnabled();
-  const url = String(process.env.OIDC_URL || process.env.OIDC_ISSUER || "").trim().replace(/\/+$/, "");
-  const clientId = String(process.env.OIDC_CLIENT_ID || "").trim();
-  const clientSecret = String(process.env.OIDC_CLIENT_SECRET || "").trim();
-  const userGroup = String(process.env.OIDC_USER_GROUP || "").trim();
-  const adminGroup = String(process.env.OIDC_ADMIN_GROUP || "").trim();
+export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): DetailedOidcConfig {
+  const db: OidcConfig = {
+    enabled: Boolean(dbSettings?.enabled ?? inMemoryDbSsoConfig?.enabled ?? false),
+    url: String(dbSettings?.url ?? inMemoryDbSsoConfig?.url ?? "").trim().replace(/\/+$/, ""),
+    clientId: String(dbSettings?.clientId ?? inMemoryDbSsoConfig?.clientId ?? "").trim(),
+    clientSecret: String(dbSettings?.clientSecret ?? inMemoryDbSsoConfig?.clientSecret ?? "").trim(),
+    userGroup: String(dbSettings?.userGroup ?? inMemoryDbSsoConfig?.userGroup ?? "").trim(),
+    adminGroup: String(dbSettings?.adminGroup ?? inMemoryDbSsoConfig?.adminGroup ?? "").trim(),
+  };
+
+  const envEnabledRaw = process.env.OIDC_ENABLED;
+  const hasEnvEnabled = envEnabledRaw !== undefined && envEnabledRaw.trim().length > 0;
+  const envEnabledLower = String(envEnabledRaw || "").trim().toLowerCase();
+  const envEnabled = envEnabledLower === "true" || envEnabledLower === "1" || envEnabledLower === "yes" || envEnabledLower === "on";
+
+  const envUrl = String(process.env.OIDC_URL || process.env.OIDC_ISSUER || "").trim().replace(/\/+$/, "");
+  const envClientId = String(process.env.OIDC_CLIENT_ID || "").trim();
+  const envClientSecret = String(process.env.OIDC_CLIENT_SECRET || "").trim();
+  const envUserGroup = String(process.env.OIDC_USER_GROUP || "").trim();
+  const envAdminGroup = String(process.env.OIDC_ADMIN_GROUP || "").trim();
+
+  const enabled = hasEnvEnabled ? envEnabled : db.enabled;
+  const url = envUrl.length > 0 ? envUrl : db.url;
+  const clientId = envClientId.length > 0 ? envClientId : db.clientId;
+  const clientSecret = envClientSecret.length > 0 ? envClientSecret : db.clientSecret;
+  const userGroup = envUserGroup.length > 0 ? envUserGroup : db.userGroup;
+  const adminGroup = envAdminGroup.length > 0 ? envAdminGroup : db.adminGroup;
 
   return {
     enabled,
@@ -50,7 +116,55 @@ export function getOidcConfig(): OidcConfig {
     clientSecret,
     userGroup,
     adminGroup,
+    origins: {
+      enabled: hasEnvEnabled ? "env" : (dbSettings?.enabled !== undefined ? "db" : "default"),
+      url: envUrl.length > 0 ? "env" : (db.url.length > 0 ? "db" : "default"),
+      clientId: envClientId.length > 0 ? "env" : (db.clientId.length > 0 ? "db" : "default"),
+      clientSecret: envClientSecret.length > 0 ? "env" : (db.clientSecret.length > 0 ? "db" : "default"),
+      userGroup: envUserGroup.length > 0 ? "env" : (db.userGroup.length > 0 ? "db" : "default"),
+      adminGroup: envAdminGroup.length > 0 ? "env" : (db.adminGroup.length > 0 ? "db" : "default"),
+    },
+    isEnvControlled: {
+      enabled: hasEnvEnabled,
+      url: envUrl.length > 0,
+      clientId: envClientId.length > 0,
+      clientSecret: envClientSecret.length > 0,
+      userGroup: envUserGroup.length > 0,
+      adminGroup: envAdminGroup.length > 0,
+    },
+    dbConfig: db,
   };
+}
+
+/**
+ * Checks if OIDC authentication is enabled (env priority, DB fallback).
+ */
+export function isOidcEnabled(): boolean {
+  return resolveOidcConfig().enabled;
+}
+
+/**
+ * Returns the resolved OIDC configuration.
+ */
+export function getOidcConfig(): OidcConfig {
+  return resolveOidcConfig();
+}
+
+/**
+ * Loads OIDC settings from database asynchronously and returns resolved configuration.
+ */
+export async function getOidcConfigAsync(): Promise<DetailedOidcConfig> {
+  try {
+    const settings = await (prisma as any).globalSettings?.findUnique({
+      where: { id: "global" },
+      select: { ssoSettings: true },
+    });
+    const dbConfig = parseDbSsoSettings(settings?.ssoSettings);
+    setInMemoryDbSsoConfig(dbConfig);
+    return resolveOidcConfig(dbConfig);
+  } catch {
+    return resolveOidcConfig();
+  }
 }
 
 /**
