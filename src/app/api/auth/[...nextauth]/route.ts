@@ -143,9 +143,13 @@ export function ensureNextAuthUrl(req: NextRequest) {
     const proto = isHttps ? "https" : (rawForwardedProto || req.nextUrl.protocol || "http").split(",")[0].trim().replace(/:$/, "");
 
     const configured = process.env.NEXTAUTH_URL?.trim();
-    const isLocalhostFallback = !configured || /^(https?:\/\/)?(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(configured);
 
-    if (host && (isLocalhostFallback || !configured)) {
+    // Detect if current NEXTAUTH_URL is a localhost/container fallback
+    // This matches: http://localhost:3000, http://127.0.0.1:3005, http://0.0.0.0:3000, etc.
+    const isConfiguredLocalhost = !configured || /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?\/?$/i.test(configured);
+
+    // Override when: no config, or config is a localhost fallback (e.g. docker-compose default)
+    if (host && isConfiguredLocalhost) {
         process.env.NEXTAUTH_URL = `${proto}://${host}`;
     }
 }
