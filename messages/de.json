@@ -576,7 +576,13 @@
         "clearLogsConfirm": "Möchten Sie wirklich alle Systemprotokolle löschen?",
         "clearLogsSuccess": "Systemprotokolle erfolgreich gelöscht.",
         "retentionConfig": "Aufbewahrung",
-        "levelAll": "Alle Stufen"
+        "levelAll": "Alle Stufen",
+        "quickPresets": "Schnellfilter",
+        "quickAll": "Alle",
+        "quickTranscodes": "Transcodes",
+        "quickDirectPlay": "Direct Play",
+        "quick4K": "4K UHD",
+        "quickZapped": "Gezappt < 1 Min"
     },
     "media": {
         "1080pLabel": "1080p FHD",
@@ -1069,7 +1075,9 @@
         "ssoTitle": "SSO",
         "integrityCheckTask": "Integritätsprüfung",
         "integrityCheckTaskDesc": "Erkennt und schließt verwaiste Wiedergabesitzungen (Netzwerkabbrüche oder Client-Abstürze).",
-        "schedulerIntegrityIntervalHint": "Intervall in Minuten für die Bereinigung verwaister Sitzungen (z. B. 15)"
+        "schedulerIntegrityIntervalHint": "Intervall in Minuten für die Bereinigung verwaister Sitzungen (z. B. 15)",
+        "jellyfinServersTitle": "Verbundene Jellyfin-Server",
+        "jellyfinServersDesc": "Verwalten Sie mit JellyTrack verbundene Jellyfin-Instanzen, konfigurieren Sie Plugin-API-Schlüssel und wechseln Sie zwischen Servern."
     },
     "timeRange": {
         "allTime": "All time",

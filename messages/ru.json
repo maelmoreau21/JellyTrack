@@ -576,7 +576,13 @@
         "clearLogsConfirm": "Вы действительно хотите очистить все системные журналы?",
         "clearLogsSuccess": "Системные журналы успешно очищены.",
         "retentionConfig": "Хранение",
-        "levelAll": "Все уровни"
+        "levelAll": "Все уровни",
+        "quickPresets": "Быстрые фильтры",
+        "quickAll": "Все",
+        "quickTranscodes": "Транскодирование",
+        "quickDirectPlay": "Direct Play",
+        "quick4K": "4K UHD",
+        "quickZapped": "Переключено < 1 мин"
     },
     "media": {
         "1080pLabel": "1080p FHD",
@@ -1069,7 +1075,9 @@
         "ssoTitle": "SSO",
         "integrityCheckTask": "Проверка целостности",
         "integrityCheckTaskDesc": "Обнаруживает и закрывает потерянные сеансы воспроизведения (обрывы сети или сбои клиента).",
-        "schedulerIntegrityIntervalHint": "Интервал в минутах для очистки потерянных сеансов (например, 15)"
+        "schedulerIntegrityIntervalHint": "Интервал в минутах для очистки потерянных сеансов (например, 15)",
+        "jellyfinServersTitle": "Подключенные серверы Jellyfin",
+        "jellyfinServersDesc": "Управляйте экземплярами Jellyfin, подключенными к JellyTrack, настраивайте ключи API плагина и переключайтесь между серверами."
     },
     "timeRange": {
         "allTime": "За всё время",

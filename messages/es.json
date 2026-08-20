@@ -576,7 +576,13 @@
         "clearLogsConfirm": "¿Seguro que desea borrar todos los registros del sistema?",
         "clearLogsSuccess": "Registros del sistema borrados con éxito.",
         "retentionConfig": "Retención",
-        "levelAll": "Todos los niveles"
+        "levelAll": "Todos los niveles",
+        "quickPresets": "Filtros rápidos",
+        "quickAll": "Todos",
+        "quickTranscodes": "Transcodificaciones",
+        "quickDirectPlay": "Direct Play",
+        "quick4K": "4K UHD",
+        "quickZapped": "Zapeados < 1 min"
     },
     "media": {
         "1080pLabel": "1080p FHD",
@@ -1069,7 +1075,9 @@
         "ssoTitle": "SSO",
         "integrityCheckTask": "Verificación de integridad",
         "integrityCheckTaskDesc": "Detecta y cierra sesiones de reproducción huérfanas (cortes de red o cierres inesperados).",
-        "schedulerIntegrityIntervalHint": "Intervalo en minutos para la limpieza de sesiones huérfanas (ej: 15)"
+        "schedulerIntegrityIntervalHint": "Intervalo en minutos para la limpieza de sesiones huérfanas (ej: 15)",
+        "jellyfinServersTitle": "Servidores Jellyfin conectados",
+        "jellyfinServersDesc": "Administre las instancias de Jellyfin conectadas a JellyTrack, configure las claves API del plugin y cambie entre servidores."
     },
     "timeRange": {
         "allTime": "Todo el tiempo",

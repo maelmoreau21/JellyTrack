@@ -576,7 +576,13 @@
         "clearLogsConfirm": "确定要清除所有系统日志吗？",
         "clearLogsSuccess": "系统日志已成功清除。",
         "retentionConfig": "保留期",
-        "levelAll": "所有级别"
+        "levelAll": "所有级别",
+        "quickPresets": "快捷筛选",
+        "quickAll": "全部",
+        "quickTranscodes": "转码",
+        "quickDirectPlay": "直接播放",
+        "quick4K": "4K UHD",
+        "quickZapped": "跳过 < 1 分钟"
     },
     "media": {
         "1080pLabel": "1080p FHD",
@@ -1069,7 +1075,9 @@
         "ssoTitle": "SSO",
         "integrityCheckTask": "完整性检查",
         "integrityCheckTaskDesc": "检测并关闭孤立的播放会话（网络中断或客户端崩溃）。",
-        "schedulerIntegrityIntervalHint": "清理孤立会话的时间间隔（分钟，例如：15）"
+        "schedulerIntegrityIntervalHint": "清理孤立会话的时间间隔（分钟，例如：15）",
+        "jellyfinServersTitle": "已连接的 Jellyfin 服务器",
+        "jellyfinServersDesc": "管理连接到 JellyTrack 的 Jellyfin 实例，配置插件 API 密钥，并在服务器之间切换。"
     },
     "timeRange": {
         "allTime": "全部时间",

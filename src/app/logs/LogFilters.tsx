@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ArrowUpDown, Download, Filter, Film, Tv, Music, BookOpen, Server, RotateCcw } from "lucide-react";
+import { Search, ArrowUpDown, Download, Filter, Film, Tv, Music, BookOpen, Server, RotateCcw, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
@@ -134,68 +134,6 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
 
     return (
         <form id="log-filters-form" className="flex flex-col gap-3" onSubmit={handleSubmit}>
-            {/* Quick 1-Click Filter Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
-                <span className="text-muted-foreground font-semibold mr-1 shrink-0 flex items-center gap-1">
-                    <Filter className="w-3 h-3" /> Rapide :
-                </span>
-                <button
-                    type="button"
-                    onClick={() => setQuickFilter("all")}
-                    className={`px-2.5 py-1 rounded-full border transition-colors ${
-                        !currentPlayMethod && !currentResolution && !isZappedExplicit
-                            ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
-                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
-                    }`}
-                >
-                    Tous
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setQuickFilter("transcode")}
-                    className={`px-2.5 py-1 rounded-full border transition-colors ${
-                        currentPlayMethod === "transcode"
-                            ? "bg-purple-500/20 text-purple-400 border-purple-500/40 font-bold shadow-sm"
-                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
-                    }`}
-                >
-                    ⚡ Transcodes
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setQuickFilter("directPlay")}
-                    className={`px-2.5 py-1 rounded-full border transition-colors ${
-                        currentPlayMethod === "directplay"
-                            ? "bg-blue-500/20 text-blue-400 border-blue-500/40 font-bold shadow-sm"
-                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
-                    }`}
-                >
-                    🚀 Direct Play
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setQuickFilter("4k")}
-                    className={`px-2.5 py-1 rounded-full border transition-colors ${
-                        currentResolution.includes("4k")
-                            ? "bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold shadow-sm"
-                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
-                    }`}
-                >
-                    🌟 4K UHD
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setQuickFilter("zapped")}
-                    className={`px-2.5 py-1 rounded-full border transition-colors ${
-                        isZappedExplicit
-                            ? "bg-red-500/20 text-red-400 border-red-500/40 font-bold shadow-sm"
-                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
-                    }`}
-                >
-                    ⏸️ Zappés &lt; 1 min
-                </button>
-            </div>
-
             <div className="flex flex-wrap items-center justify-between gap-3 w-full">
                 {!hideSearch && (
                     <div className="relative flex-1 min-w-[240px]">
@@ -304,7 +242,71 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
 
             {isAdvancedOpen && (
                 <div className="col-span-1 md:col-span-4 p-4 rounded-xl app-surface-soft border border-border flex flex-col gap-4 mt-1 transition-all">
-                    
+                    {/* Quick Presets */}
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-primary" />
+                            {t('quickPresets')}
+                        </label>
+                        <div className="app-surface-nested flex flex-wrap items-center p-1 rounded-lg w-fit gap-1">
+                            <button
+                                type="button"
+                                onClick={() => setQuickFilter("all")}
+                                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                                    !currentPlayMethod && !currentResolution && !isZappedExplicit
+                                        ? "bg-primary/15 text-primary shadow-sm border border-primary/25"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
+                            >
+                                {t('quickAll')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setQuickFilter("transcode")}
+                                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                                    currentPlayMethod === "transcode"
+                                        ? "bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-sm font-bold"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
+                            >
+                                ⚡ {t('quickTranscodes')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setQuickFilter("directPlay")}
+                                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                                    currentPlayMethod === "directplay"
+                                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/40 shadow-sm font-bold"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
+                            >
+                                🚀 {t('quickDirectPlay')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setQuickFilter("4k")}
+                                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                                    currentResolution.includes("4k")
+                                        ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm font-bold"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
+                            >
+                                🌟 {t('quick4K')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setQuickFilter("zapped")}
+                                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                                    isZappedExplicit
+                                        ? "bg-red-500/20 text-red-400 border border-red-500/40 shadow-sm font-bold"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
+                            >
+                                ⏸️ {t('quickZapped')}
+                            </button>
+                        </div>
+                    </div>
+
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Media Type Segmented Control */}
                         <div className="space-y-1.5">

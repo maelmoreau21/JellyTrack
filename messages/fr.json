@@ -576,7 +576,13 @@
             "colUser": "Acteur",
             "typeAudit": "Audit",
             "typeHealth": "Santé"
-        }
+        },
+        "quickPresets": "Filtres rapides",
+        "quickAll": "Tous",
+        "quickTranscodes": "Transcodes",
+        "quickDirectPlay": "Direct Play",
+        "quick4K": "4K UHD",
+        "quickZapped": "Zappés < 1 min"
     },
     "media": {
         "1080pLabel": "1080p FHD",
@@ -1069,7 +1075,9 @@
         "telemetrySave": "Sauvegarder la télémétrie",
         "schedulerEveryHours": "Toutes les {hours} h",
         "generateGlobalFirst": "Générez d'abord la clé globale du plugin",
-        "telemetryTrackAudioSubtitleChanges": "Changements audio / sous-titres"
+        "telemetryTrackAudioSubtitleChanges": "Changements audio / sous-titres",
+        "jellyfinServersTitle": "Serveurs Jellyfin connectés",
+        "jellyfinServersDesc": "Gérez les instances Jellyfin associées à JellyTrack, configurez les clés d'API plugin et basculez entre les serveurs."
     },
     "ssoSettings": {
         "title": "Authentification SSO",

@@ -576,7 +576,13 @@
         "clearLogsConfirm": "Weet u zeker dat u alle systeemlogboeken wilt wissen?",
         "clearLogsSuccess": "Systeemlogboeken succesvol gewist.",
         "retentionConfig": "Bewaartermijn",
-        "levelAll": "Alle niveaus"
+        "levelAll": "Alle niveaus",
+        "quickPresets": "Snelfilters",
+        "quickAll": "Alle",
+        "quickTranscodes": "Transcodes",
+        "quickDirectPlay": "Direct Play",
+        "quick4K": "4K UHD",
+        "quickZapped": "Gezapt < 1 min"
     },
     "media": {
         "1080pLabel": "1080p FHD",
@@ -1069,7 +1075,9 @@
         "ssoTitle": "SSO",
         "integrityCheckTask": "Integriteitscontrole",
         "integrityCheckTaskDesc": "Detecteert en sluit verweesde afspeelsessies (netwerkstoringen of client-crashes).",
-        "schedulerIntegrityIntervalHint": "Interval in minuten voor het opschonen van verweesde sessies (bijv. 15)"
+        "schedulerIntegrityIntervalHint": "Interval in minuten voor het opschonen van verweesde sessies (bijv. 15)",
+        "jellyfinServersTitle": "Verbonden Jellyfin-servers",
+        "jellyfinServersDesc": "Beheer Jellyfin-instanties die zijn verbonden met JellyTrack, configureer plugin-API-sleutels en schakel tussen servers."
     },
     "timeRange": {
         "allTime": "Altijd",
