@@ -12,12 +12,17 @@ export TZ="${TZ:-UTC}"
 export PORT="${JELLYTRACK_PORT:-${PORT:-3000}}"
 export NEXTAUTH_SECRET="${NEXTAUTH_SECRET:-${JELLYTRACK_SECRET:-}}"
 raw_nextauth_url="${NEXTAUTH_URL:-${JELLYTRACK_URL:-${JELLYGATE_URL:-}}}"
-if [ -n "$raw_nextauth_url" ]; then
-  export NEXTAUTH_URL="$raw_nextauth_url"
-else
-  # Do not hardcode localhost so NextAuth route handler dynamically infers the public domain from HTTP request headers
-  unset NEXTAUTH_URL
-fi
+case "$raw_nextauth_url" in
+  *localhost*|*127.0.0.1*|*0.0.0.0*)
+    unset NEXTAUTH_URL
+    ;;
+  http*://*)
+    export NEXTAUTH_URL="$raw_nextauth_url"
+    ;;
+  *)
+    unset NEXTAUTH_URL
+    ;;
+esac
 export JELLYFIN_WEBHOOK_SECRET="${JELLYFIN_WEBHOOK_SECRET:-${JELLYTRACK_WEBHOOK_SECRET:-}}"
 export JELLYFIN_API_KEY="${JELLYFIN_API_KEY:-${JELLYTRACK_JELLYFIN_API_KEY:-}}"
 export JELLYTRACK_LOCAL_ADMIN_USER="${JELLYTRACK_LOCAL_ADMIN_USER:-${JELLYGATE_LOCAL_ADMIN_USER:-admin}}"

@@ -134,6 +134,11 @@ ENV HOSTNAME="0.0.0.0"
 COPY docker-entrypoint.sh ./
 RUN sed -i 's/\r$//' ./docker-entrypoint.sh && chmod +x ./docker-entrypoint.sh && chown node:node ./docker-entrypoint.sh
 
+# Ensure runtime directories exist and have proper permissions for the node user
+RUN mkdir -p /app/.next/cache/images /app/.next/cache/fetch-cache /data/backups /data/logs && \
+    chown -R node:node /app /data && \
+    chmod -R 777 /app/.next/cache /data
+
 # Run as non-root user 'node'
 USER node
 

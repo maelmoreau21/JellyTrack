@@ -131,6 +131,16 @@ export function ensureNextAuthUrl(req: NextRequest) {
     const rawForwardedProto = req.headers.get("x-forwarded-proto");
     const host = (rawForwardedHost || req.headers.get("host") || req.nextUrl.host || "").split(",")[0].trim();
 
+    const hostWithoutPort = host.replace(/:\d+$/, "").toLowerCase();
+    const isLocalhostOrLanIp =
+        !hostWithoutPort ||
+        hostWithoutPort === "localhost" ||
+        hostWithoutPort === "127.0.0.1" ||
+        hostWithoutPort === "0.0.0.0" ||
+        hostWithoutPort.endsWith(".local") ||
+        hostWithoutPort.endsWith(".lan") ||
+        /^(\d{1,3}\.){3}\d{1,3}$/.test(hostWithoutPort);
+
     const isHttps =
         rawForwardedProto?.split(",")[0].trim().toLowerCase() === "https" ||
         req.headers.get("x-forwarded-ssl") === "on" ||
@@ -138,7 +148,8 @@ export function ensureNextAuthUrl(req: NextRequest) {
         req.headers.get("front-end-https") === "on" ||
         Boolean(req.headers.get("origin")?.startsWith("https://")) ||
         Boolean(req.headers.get("referer")?.startsWith("https://")) ||
-        req.nextUrl.protocol === "https:";
+        req.nextUrl.protocol === "https:" ||
+        !isLocalhostOrLanIp;
 
     const proto = isHttps ? "https" : (rawForwardedProto || req.nextUrl.protocol || "http").split(",")[0].trim().replace(/:$/, "");
 

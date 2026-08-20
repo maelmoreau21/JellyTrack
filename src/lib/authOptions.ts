@@ -61,6 +61,9 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                 checks: ["state"],
                 clientId: oidc.clientId,
                 clientSecret: oidc.clientSecret || undefined,
+                client: {
+                    id_token_signed_response_alg: (oidc.tokenAlg || process.env.OIDC_TOKEN_ALG || process.env.OIDC_ALG || "HS256").trim(),
+                },
                 profile(profile) {
                 const username = String(
                     profile.preferred_username ||

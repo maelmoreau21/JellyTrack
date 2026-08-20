@@ -34,6 +34,7 @@ interface SsoConfigData {
   clientSecretMasked: string;
   userGroup: string;
   adminGroup: string;
+  tokenAlg?: string;
   origins?: Record<string, "env" | "db" | "default">;
   isEnvControlled: {
     enabled: boolean;
@@ -42,6 +43,7 @@ interface SsoConfigData {
     clientSecret: boolean;
     userGroup: boolean;
     adminGroup: boolean;
+    tokenAlg?: boolean;
   };
   dbConfig?: {
     enabled: boolean;
@@ -51,6 +53,7 @@ interface SsoConfigData {
     clientSecretMasked: string;
     userGroup: string;
     adminGroup: string;
+    tokenAlg?: string;
   };
   localAdminConfigured: boolean;
   localAdminUser: string;
@@ -89,6 +92,7 @@ export function SsoSettingsClient() {
   const [formClientSecret, setFormClientSecret] = useState("");
   const [formUserGroup, setFormUserGroup] = useState("");
   const [formAdminGroup, setFormAdminGroup] = useState("");
+  const [formTokenAlg, setFormTokenAlg] = useState("HS256");
 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -100,6 +104,7 @@ export function SsoSettingsClient() {
     setFormClientSecret(data.hasClientSecret ? data.clientSecretMasked : "");
     setFormUserGroup(data.userGroup || "");
     setFormAdminGroup(data.adminGroup || "");
+    setFormTokenAlg(data.tokenAlg || "HS256");
   }, []);
 
   const fetchSsoInfo = useCallback(async () => {
@@ -142,6 +147,7 @@ export function SsoSettingsClient() {
           keepExistingSecret: isSecretUnchangedMask,
           userGroup: formUserGroup,
           adminGroup: formAdminGroup,
+          tokenAlg: formTokenAlg,
         }),
       });
 
@@ -185,6 +191,7 @@ export function SsoSettingsClient() {
     clientSecret: false,
     userGroup: false,
     adminGroup: false,
+    tokenAlg: false,
   };
 
   const hasAnyEnvOverride = Object.values(isEnv).some(Boolean);
@@ -424,7 +431,7 @@ export function SsoSettingsClient() {
                 />
               </div>
 
-              <div className="space-y-2 lg:col-span-2">
+              <div className="space-y-2 lg:col-span-1">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="oidc-client-secret" className="text-xs font-medium">
                     {ts("clientSecretLabel")}
@@ -454,6 +461,31 @@ export function SsoSettingsClient() {
                     {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+              </div>
+
+              <div className="space-y-2 lg:col-span-1">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="oidc-token-alg" className="text-xs font-medium">
+                    Algorithme de signature
+                  </Label>
+                  {isEnv.tokenAlg && (
+                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600 dark:text-amber-400 gap-1 font-normal">
+                      <Lock className="w-2.5 h-2.5" />
+                      {ts("dockerEnvLocked") || "Docker (.env)"}
+                    </Badge>
+                  )}
+                </div>
+                <select
+                  id="oidc-token-alg"
+                  value={formTokenAlg}
+                  disabled={isEnv.tokenAlg}
+                  onChange={(e) => setFormTokenAlg(e.target.value)}
+                  aria-label="Algorithme de signature du token OIDC"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                >
+                  <option value="HS256">HS256 (Secret partagé / Authentik défaut)</option>
+                  <option value="RS256">RS256 (Clé RSA / Certificat)</option>
+                </select>
               </div>
             </div>
 

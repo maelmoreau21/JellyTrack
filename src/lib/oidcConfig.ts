@@ -10,6 +10,7 @@ export interface OidcConfig {
   clientSecret: string;
   userGroup: string;
   adminGroup: string;
+  tokenAlg?: string;
 }
 
 export interface OidcConfigFieldOrigins {
@@ -19,6 +20,7 @@ export interface OidcConfigFieldOrigins {
   clientSecret: "env" | "db" | "default";
   userGroup: "env" | "db" | "default";
   adminGroup: "env" | "db" | "default";
+  tokenAlg: "env" | "db" | "default";
 }
 
 export interface DetailedOidcConfig extends OidcConfig {
@@ -30,6 +32,7 @@ export interface DetailedOidcConfig extends OidcConfig {
     clientSecret: boolean;
     userGroup: boolean;
     adminGroup: boolean;
+    tokenAlg: boolean;
   };
   dbConfig: OidcConfig;
 }
@@ -56,6 +59,7 @@ export function parseDbSsoSettings(raw: unknown): OidcConfig {
     clientSecret: "",
     userGroup: "",
     adminGroup: "",
+    tokenAlg: "HS256",
   };
 
   if (!raw || typeof raw !== "object") {
@@ -70,6 +74,7 @@ export function parseDbSsoSettings(raw: unknown): OidcConfig {
     clientSecret: typeof obj.clientSecret === "string" ? obj.clientSecret.trim() : "",
     userGroup: typeof obj.userGroup === "string" ? obj.userGroup.trim() : "",
     adminGroup: typeof obj.adminGroup === "string" ? obj.adminGroup.trim() : "",
+    tokenAlg: typeof obj.tokenAlg === "string" && obj.tokenAlg.trim() ? obj.tokenAlg.trim() : "HS256",
   };
 }
 
@@ -89,6 +94,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
     clientSecret: String(dbSettings?.clientSecret ?? inMemoryDbSsoConfig?.clientSecret ?? "").trim(),
     userGroup: String(dbSettings?.userGroup ?? inMemoryDbSsoConfig?.userGroup ?? "").trim(),
     adminGroup: String(dbSettings?.adminGroup ?? inMemoryDbSsoConfig?.adminGroup ?? "").trim(),
+    tokenAlg: String(dbSettings?.tokenAlg ?? inMemoryDbSsoConfig?.tokenAlg ?? "HS256").trim() || "HS256",
   };
 
   const envEnabledRaw = process.env.OIDC_ENABLED;
@@ -101,6 +107,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
   const envClientSecret = String(process.env.OIDC_CLIENT_SECRET || "").trim();
   const envUserGroup = String(process.env.OIDC_USER_GROUP || "").trim();
   const envAdminGroup = String(process.env.OIDC_ADMIN_GROUP || "").trim();
+  const envTokenAlg = String(process.env.OIDC_TOKEN_ALG || process.env.OIDC_ALG || "").trim();
 
   const enabled = hasEnvEnabled ? envEnabled : db.enabled;
   const url = envUrl.length > 0 ? envUrl : db.url;
@@ -108,6 +115,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
   const clientSecret = envClientSecret.length > 0 ? envClientSecret : db.clientSecret;
   const userGroup = envUserGroup.length > 0 ? envUserGroup : db.userGroup;
   const adminGroup = envAdminGroup.length > 0 ? envAdminGroup : db.adminGroup;
+  const tokenAlg = envTokenAlg.length > 0 ? envTokenAlg : db.tokenAlg;
 
   return {
     enabled,
@@ -116,6 +124,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
     clientSecret,
     userGroup,
     adminGroup,
+    tokenAlg,
     origins: {
       enabled: hasEnvEnabled ? "env" : (dbSettings?.enabled !== undefined ? "db" : "default"),
       url: envUrl.length > 0 ? "env" : (db.url.length > 0 ? "db" : "default"),
@@ -123,6 +132,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
       clientSecret: envClientSecret.length > 0 ? "env" : (db.clientSecret.length > 0 ? "db" : "default"),
       userGroup: envUserGroup.length > 0 ? "env" : (db.userGroup.length > 0 ? "db" : "default"),
       adminGroup: envAdminGroup.length > 0 ? "env" : (db.adminGroup.length > 0 ? "db" : "default"),
+      tokenAlg: envTokenAlg.length > 0 ? "env" : (db.tokenAlg ? "db" : "default"),
     },
     isEnvControlled: {
       enabled: hasEnvEnabled,
@@ -131,6 +141,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
       clientSecret: envClientSecret.length > 0,
       userGroup: envUserGroup.length > 0,
       adminGroup: envAdminGroup.length > 0,
+      tokenAlg: envTokenAlg.length > 0,
     },
     dbConfig: db,
   };

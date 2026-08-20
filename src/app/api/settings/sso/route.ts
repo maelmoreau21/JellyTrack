@@ -32,6 +32,7 @@ export async function GET() {
       : "",
     userGroup: oidc.userGroup,
     adminGroup: oidc.adminGroup,
+    tokenAlg: oidc.tokenAlg || "HS256",
     origins: oidc.origins,
     isEnvControlled: oidc.isEnvControlled,
     dbConfig: {
@@ -44,6 +45,7 @@ export async function GET() {
         : "",
       userGroup: oidc.dbConfig.userGroup,
       adminGroup: oidc.dbConfig.adminGroup,
+      tokenAlg: oidc.dbConfig.tokenAlg || "HS256",
     },
     localAdminConfigured: local.isConfigured,
     localAdminUser: local.username,
@@ -74,6 +76,7 @@ export async function PUT(req: NextRequest) {
           : (body.keepExistingSecret ? currentDbConfig.clientSecret : (typeof body.clientSecret === "string" ? body.clientSecret.trim() : currentDbConfig.clientSecret)),
       userGroup: typeof body.userGroup === "string" ? body.userGroup.trim() : currentDbConfig.userGroup,
       adminGroup: typeof body.adminGroup === "string" ? body.adminGroup.trim() : currentDbConfig.adminGroup,
+      tokenAlg: typeof body.tokenAlg === "string" && body.tokenAlg.trim() ? body.tokenAlg.trim() : currentDbConfig.tokenAlg || "HS256",
     };
 
     await (prisma as any).globalSettings?.upsert({
@@ -95,6 +98,7 @@ export async function PUT(req: NextRequest) {
         clientId: newDbConfig.clientId,
         userGroup: newDbConfig.userGroup,
         adminGroup: newDbConfig.adminGroup,
+        tokenAlg: newDbConfig.tokenAlg,
       },
     });
 
@@ -113,6 +117,7 @@ export async function PUT(req: NextRequest) {
         : "",
       userGroup: oidc.userGroup,
       adminGroup: oidc.adminGroup,
+      tokenAlg: oidc.tokenAlg || "HS256",
       origins: oidc.origins,
       isEnvControlled: oidc.isEnvControlled,
       dbConfig: {
@@ -125,6 +130,7 @@ export async function PUT(req: NextRequest) {
           : "",
         userGroup: oidc.dbConfig.userGroup,
         adminGroup: oidc.dbConfig.adminGroup,
+        tokenAlg: oidc.dbConfig.tokenAlg || "HS256",
       },
       localAdminConfigured: local.isConfigured,
       localAdminUser: local.username,
