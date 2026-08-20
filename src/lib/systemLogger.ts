@@ -28,6 +28,7 @@ export type LogFileInfo = {
 const LOG_DIR = process.env.LOG_DIR || (fs.existsSync("/data") ? "/data/logs" : path.join(process.cwd(), "logs"));
 const MAIN_LOG_FILE = path.join(LOG_DIR, "jellytrack.log");
 const MAX_IN_MEMORY_LOGS = 1000;
+const MAX_LOG_FILE_SIZE_BYTES = Number(process.env.LOG_MAX_FILE_SIZE_BYTES) || 5 * 1024 * 1024; // 5 MB per log file by default
 
 // In-memory ring buffer for live log events
 const memoryLogs: SystemLogEntry[] = [];
@@ -56,13 +57,64 @@ function formatLogLine(entry: SystemLogEntry): string {
     return `[${entry.timestamp}] [${entry.level}] [${entry.source}] ${entry.message}${detailsStr}\n`;
 }
 
+/**
+ * Returns the currently active daily log filename, automatically creating indexed files (-1, -2, ...)
+ * when the file size threshold is reached.
+ */
+function getActiveDailyLogFile(today: string): string {
+    const baseName = `jellytrack-${today}`;
+    const primaryFile = path.join(LOG_DIR, `${baseName}.log`);
+
+    try {
+        if (!fs.existsSync(primaryFile)) {
+            return primaryFile;
+        }
+
+        const primaryStats = fs.statSync(primaryFile);
+        if (primaryStats.size < MAX_LOG_FILE_SIZE_BYTES) {
+            return primaryFile;
+        }
+
+        let index = 1;
+        while (index < 1000) {
+            const indexedFile = path.join(LOG_DIR, `${baseName}-${index}.log`);
+            if (!fs.existsSync(indexedFile)) {
+                return indexedFile;
+            }
+            const stats = fs.statSync(indexedFile);
+            if (stats.size < MAX_LOG_FILE_SIZE_BYTES) {
+                return indexedFile;
+            }
+            index++;
+        }
+        return path.join(LOG_DIR, `${baseName}-${index}.log`);
+    } catch {
+        return primaryFile;
+    }
+}
+
 function appendToLogFiles(line: string) {
     if (!ensureLogDir()) return;
     const today = new Date().toISOString().split("T")[0];
-    const dailyFile = path.join(LOG_DIR, `jellytrack-${today}.log`);
+    const dailyFile = getActiveDailyLogFile(today);
 
     try {
         fs.appendFileSync(dailyFile, line, { encoding: "utf8" });
+
+        // Handle master log file size rotation
+        try {
+            if (fs.existsSync(MAIN_LOG_FILE)) {
+                const mainStats = fs.statSync(MAIN_LOG_FILE);
+                if (mainStats.size >= MAX_LOG_FILE_SIZE_BYTES) {
+                    const rotatedMain = path.join(LOG_DIR, "jellytrack.1.log");
+                    try {
+                        if (fs.existsSync(rotatedMain)) fs.unlinkSync(rotatedMain);
+                        fs.renameSync(MAIN_LOG_FILE, rotatedMain);
+                    } catch {}
+                }
+            }
+        } catch {}
+
         fs.appendFileSync(MAIN_LOG_FILE, line, { encoding: "utf8" });
     } catch {
         // Ignore file system write errors gracefully in case of strict read-only storage
@@ -151,7 +203,7 @@ export function getLogFilesList(): LogFileInfo[] {
                         formattedSize: formatFileSize(stats.size),
                         lineCount,
                         updatedAt: stats.mtime.toISOString(),
-                        isCurrent: filename === "jellytrack.log" || filename === todayFilename,
+                        isCurrent: filename === "jellytrack.log" || filename === todayFilename || filename.startsWith(`jellytrack-${new Date().toISOString().split("T")[0]}`),
                     });
                 } catch {
                     // Ignore unreadable stats

@@ -61,4 +61,12 @@ describe("systemLogger", () => {
         expect(result).toHaveProperty("deletedFiles");
         expect(result).toHaveProperty("prunedDatabaseRows");
     });
+
+    it("correctly identifies current daily log files", () => {
+        systemLog.info("DailyTest", "Message for today");
+        const list = getLogFilesList();
+        const today = new Date().toISOString().split("T")[0];
+        const todayFile = list.find(f => f.filename.includes(today) && f.isCurrent);
+        expect(todayFile).toBeDefined();
+    });
 });

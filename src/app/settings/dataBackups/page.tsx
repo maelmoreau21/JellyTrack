@@ -109,6 +109,11 @@ export default function SettingsDataBackupsPage() {
             return;
         }
 
+        if (!file.name.toLowerCase().endsWith(".zip")) {
+            setMsg({ type: "error", text: "Format invalide. Seuls les fichiers d'archive (.zip) sont acceptés." });
+            return;
+        }
+
         const maxBytes = 100 * 1024 * 1024;
         if (file.size > maxBytes) {
             setMsg({ type: "error", text: "Le fichier de sauvegarde est trop volumineux (limite 100 Mo)." });
@@ -133,7 +138,7 @@ export default function SettingsDataBackupsPage() {
                 setMsg({ type: "success", text: t("restoreSuccess") || "Restauration effectuée avec succès." });
                 setTimeout(() => window.location.reload(), 1200);
             } else {
-                const errorMsg = data.error || data.message || (res.status === 413 ? "Fichier trop volumineux (max 50 Mo)." : null) || t("invalidBackup") || "Échec de l'importation.";
+                const errorMsg = data.error || data.message || (res.status === 413 ? "Fichier trop volumineux (max 100 Mo)." : null) || t("invalidBackup") || "Échec de l'importation.";
                 setMsg({ type: "error", text: errorMsg });
             }
         } catch (e: any) {
@@ -311,7 +316,7 @@ export default function SettingsDataBackupsPage() {
                                 {t("importBackup") || "Importer une sauvegarde"}
                             </CardTitle>
                             <CardDescription>
-                                {t("importBackupDesc") || "Sélectionnez un fichier d'archive de sauvegarde (.zip) ou de sauvegarde ancienne (.json) depuis votre ordinateur pour restaurer votre base de données."}
+                                {t("importBackupDesc") || "Sélectionnez un fichier d'archive de sauvegarde (.zip) depuis votre ordinateur pour restaurer votre base de données et l'ensemble des paramètres."}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -321,7 +326,7 @@ export default function SettingsDataBackupsPage() {
                                     <Input
                                         id="import-file"
                                         type="file"
-                                        accept=".zip,.json,application/zip,application/x-zip-compressed,application/json"
+                                        accept=".zip,application/zip,application/x-zip-compressed"
                                         ref={fileRef}
                                         className="cursor-pointer"
                                     />

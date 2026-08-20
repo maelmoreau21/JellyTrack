@@ -59,6 +59,8 @@ export type NormalizedBackupData = {
         jellyfinServerId: string;
         name: string;
         url: string;
+        jellyfinApiKey: string | null;
+        allowAuthFallback: boolean;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -132,6 +134,29 @@ export type NormalizedBackupData = {
         metadata: string | null;
         createdAt: Date;
     }>;
+    dailyStats: Array<{
+        id: string;
+        date: Date;
+        userId: string | null;
+        libraryName: string | null;
+        mediaType: string | null;
+        totalPlays: number;
+        totalDuration: number;
+        directPlays: number;
+        transcodes: number;
+        uniqueMedia: number;
+        updatedAt: Date;
+    }>;
+    adminAuditLogs: Array<{
+        id: string;
+        action: string;
+        actorUserId: string | null;
+        actorUsername: string | null;
+        target: string | null;
+        ipAddress: string | null;
+        details: any | null;
+        createdAt: Date;
+    }>;
     settings: Record<string, unknown> | null;
     systemHealth: any | null;
 };
@@ -172,6 +197,12 @@ export function extractBackupData(body: any): any {
         if (!candidate.telemetryEvents && candidate.telemetry_events) {
             candidate.telemetryEvents = candidate.telemetry_events;
         }
+        if (!candidate.dailyStats && candidate.daily_stats) {
+            candidate.dailyStats = candidate.daily_stats;
+        }
+        if (!candidate.adminAuditLogs && candidate.admin_audit_logs) {
+            candidate.adminAuditLogs = candidate.admin_audit_logs;
+        }
         if (!candidate.systemHealth && candidate.system_health) {
             candidate.systemHealth = candidate.system_health;
         }
@@ -200,6 +231,8 @@ export function normalizeBackupData(rawBackupData: any): NormalizedBackupData {
                 : `imported-server-${index + 1}`,
             name: (typeof s.name === "string" && s.name.trim()) ? s.name.trim() : `Imported Server ${index + 1}`,
             url: (typeof s.url === "string" && s.url.trim()) ? s.url.trim() : masterIdentity.url,
+            jellyfinApiKey: typeof s.jellyfinApiKey === "string" ? s.jellyfinApiKey : null,
+            allowAuthFallback: typeof s.allowAuthFallback === "boolean" ? s.allowAuthFallback : false,
             isActive: typeof s.isActive === "boolean" ? s.isActive : true,
             createdAt: safeDate(s.createdAt) ?? new Date(),
             updatedAt: safeDate(s.updatedAt) ?? new Date(),
@@ -209,6 +242,8 @@ export function normalizeBackupData(rawBackupData: any): NormalizedBackupData {
             jellyfinServerId: masterIdentity.jellyfinServerId,
             name: masterIdentity.name,
             url: masterIdentity.url,
+            jellyfinApiKey: null,
+            allowAuthFallback: false,
             isActive: true,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -333,12 +368,41 @@ export function normalizeBackupData(rawBackupData: any): NormalizedBackupData {
             };
         });
 
+    const rawDailyStats = Array.isArray(rawBackupData?.dailyStats) ? rawBackupData.dailyStats : [];
+    const dailyStats = rawDailyStats.map((ds: any) => ({
+        id: (typeof ds.id === "string" && ds.id.trim()) ? ds.id.trim() : randomUUID(),
+        date: safeDate(ds.date) ?? new Date(),
+        userId: ds.userId ? String(ds.userId).trim() : null,
+        libraryName: ds.libraryName ? String(ds.libraryName).trim() : null,
+        mediaType: ds.mediaType ? String(ds.mediaType).trim() : null,
+        totalPlays: safeInt(ds.totalPlays, 0),
+        totalDuration: safeInt(ds.totalDuration, 0),
+        directPlays: safeInt(ds.directPlays, 0),
+        transcodes: safeInt(ds.transcodes, 0),
+        uniqueMedia: safeInt(ds.uniqueMedia, 0),
+        updatedAt: safeDate(ds.updatedAt) ?? new Date(),
+    }));
+
+    const rawAdminLogs = Array.isArray(rawBackupData?.adminAuditLogs) ? rawBackupData.adminAuditLogs : [];
+    const adminAuditLogs = rawAdminLogs.map((log: any) => ({
+        id: (typeof log.id === "string" && log.id.trim()) ? log.id.trim() : randomUUID(),
+        action: String(log.action || "unknown"),
+        actorUserId: log.actorUserId ? String(log.actorUserId).trim() : null,
+        actorUsername: log.actorUsername ? String(log.actorUsername).trim() : null,
+        target: log.target ? String(log.target).trim() : null,
+        ipAddress: log.ipAddress ? String(log.ipAddress).trim() : null,
+        details: log.details ?? null,
+        createdAt: safeDate(log.createdAt) ?? new Date(),
+    }));
+
     return {
         servers,
         users,
         media,
         playbackHistory,
         telemetryEvents,
+        dailyStats,
+        adminAuditLogs,
         settings: (rawBackupData?.settings && typeof rawBackupData.settings === "object") ? rawBackupData.settings : null,
         systemHealth: rawBackupData?.systemHealth || null,
     };
@@ -379,7 +443,7 @@ export function generateDatabaseSqlDump(data: NormalizedBackupData): string {
     lines.push(`-- JellyTrack PostgreSQL Database Backup Dump`);
     lines.push(`-- Created at ${new Date().toISOString()}`);
     lines.push(``);
-    lines.push(`TRUNCATE TABLE "ActiveStream", "TelemetryEvent", "PlaybackHistory", "Media", "User", "Server", "SystemHealthEvent", "SystemHealthState", "GlobalSettings" CASCADE;`);
+    lines.push(`TRUNCATE TABLE "ActiveStream", "TelemetryEvent", "PlaybackHistory", "DailyStats", "Media", "User", "Server", "AdminAuditLog", "SystemHealthEvent", "SystemHealthState", "GlobalSettings" CASCADE;`);
     lines.push(``);
 
     // 1. Server
@@ -387,8 +451,8 @@ export function generateDatabaseSqlDump(data: NormalizedBackupData): string {
         lines.push(`-- Table: Server`);
         for (let i = 0; i < data.servers.length; i += 500) {
             const batch = data.servers.slice(i, i + 500);
-            const valueRows = batch.map(s => `(${formatSqlValue(s.id)}, ${formatSqlValue(s.jellyfinServerId)}, ${formatSqlValue(s.name)}, ${formatSqlValue(s.url)}, ${formatSqlValue(s.isActive)}, ${formatSqlValue(s.createdAt)}, ${formatSqlValue(s.updatedAt)})`);
-            lines.push(`INSERT INTO "Server" ("id", "jellyfinServerId", "name", "url", "isActive", "createdAt", "updatedAt") VALUES\n${valueRows.join(",\n")};`);
+            const valueRows = batch.map(s => `(${formatSqlValue(s.id)}, ${formatSqlValue(s.jellyfinServerId)}, ${formatSqlValue(s.name)}, ${formatSqlValue(s.url)}, ${formatSqlValue(s.jellyfinApiKey)}, ${formatSqlValue(s.allowAuthFallback)}, ${formatSqlValue(s.isActive)}, ${formatSqlValue(s.createdAt)}, ${formatSqlValue(s.updatedAt)})`);
+            lines.push(`INSERT INTO "Server" ("id", "jellyfinServerId", "name", "url", "jellyfinApiKey", "allowAuthFallback", "isActive", "createdAt", "updatedAt") VALUES\n${valueRows.join(",\n")};`);
         }
         lines.push(``);
     }
@@ -440,8 +504,15 @@ export function generateDatabaseSqlDump(data: NormalizedBackupData): string {
     return lines.join("\n");
 }
 
+function safeJsonReplacer(_key: string, value: unknown) {
+    if (typeof value === "bigint") {
+        return value.toString();
+    }
+    return value;
+}
+
 /**
- * Creates a ZIP buffer containing database.sql, settings.json, and manifest.json.
+ * Creates a ZIP buffer containing database.json, settings.json, manifest.json, and database.sql.
  */
 export async function createZipBackup(rawBackupData: any): Promise<Buffer> {
     const normalized = normalizeBackupData(extractBackupData(rawBackupData) || rawBackupData);
@@ -450,7 +521,7 @@ export async function createZipBackup(rawBackupData: any): Promise<Buffer> {
     const manifest = {
         generator: "JellyTrack Backup Engine v2.0",
         version: "2.0",
-        format: "zip-sql",
+        format: "zip-json",
         exportDate: new Date().toISOString(),
         tables: {
             servers: normalized.servers.length,
@@ -458,7 +529,19 @@ export async function createZipBackup(rawBackupData: any): Promise<Buffer> {
             media: normalized.media.length,
             playbackHistory: normalized.playbackHistory.length,
             telemetryEvents: normalized.telemetryEvents.length,
+            dailyStats: normalized.dailyStats.length,
+            adminAuditLogs: normalized.adminAuditLogs.length,
         }
+    };
+
+    const databaseContent = {
+        servers: normalized.servers,
+        users: normalized.users,
+        media: normalized.media,
+        playbackHistory: normalized.playbackHistory,
+        telemetryEvents: normalized.telemetryEvents,
+        dailyStats: normalized.dailyStats,
+        adminAuditLogs: normalized.adminAuditLogs,
     };
 
     const settingsContent = {
@@ -470,6 +553,7 @@ export async function createZipBackup(rawBackupData: any): Promise<Buffer> {
 
     const zip = new JSZip();
     zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+    zip.file("database.json", JSON.stringify(databaseContent, safeJsonReplacer, 2));
     zip.file("settings.json", JSON.stringify(settingsContent, null, 2));
     zip.file("database.sql", sqlDump);
 
@@ -483,21 +567,27 @@ export async function createZipBackup(rawBackupData: any): Promise<Buffer> {
 }
 
 /**
- * Unpacks a ZIP backup buffer and returns database.sql, settings.json, and manifest.json contents.
+ * Unpacks a ZIP backup buffer and returns database, settings, and manifest contents.
  */
-export async function unpackBackupZip(buffer: Buffer): Promise<{ sqlDump: string | null; settings: any | null; manifest: any | null } | null> {
+export async function unpackBackupZip(buffer: Buffer): Promise<{ databaseData: any | null; sqlDump: string | null; settings: any | null; manifest: any | null } | null> {
     try {
         const zip = await JSZip.loadAsync(buffer);
         const manifestFile = zip.file("manifest.json");
+        const databaseFile = zip.file("database.json");
         const settingsFile = zip.file("settings.json");
         const sqlFile = zip.file("database.sql");
-
-        const sqlDump = sqlFile ? await sqlFile.async("string") : null;
 
         let manifest = null;
         if (manifestFile) {
             try {
                 manifest = JSON.parse(await manifestFile.async("string"));
+            } catch {}
+        }
+
+        let databaseData = null;
+        if (databaseFile) {
+            try {
+                databaseData = JSON.parse(await databaseFile.async("string"));
             } catch {}
         }
 
@@ -508,134 +598,82 @@ export async function unpackBackupZip(buffer: Buffer): Promise<{ sqlDump: string
             } catch {}
         }
 
-        return { sqlDump, settings, manifest };
+        const sqlDump = sqlFile ? await sqlFile.async("string") : null;
+
+        return { databaseData, sqlDump, settings, manifest };
     } catch {
         return null;
     }
 }
 
 /**
- * Executes a raw SQL dump string safely in PostgreSQL.
- */
-export async function executeSqlDump(sqlDump: string): Promise<void> {
-    const statements = sqlDump
-        .split(/;\r?\n/)
-        .map(s => s.trim())
-        .filter(s => s.length > 0 && !s.startsWith("--"));
-
-    await prisma.$transaction(async (tx: any) => {
-        for (const stmt of statements) {
-            await tx.$executeRawUnsafe(stmt);
-        }
-    }, {
-        timeout: 180000,
-    });
-}
-
-/**
- * High-level restoration procedure supporting both ZIP archives and legacy JSON backups.
+ * High-level restoration procedure supporting ZIP archives and legacy JSON backups.
+ * Executes transactional restoration using Prisma Client to ensure compatibility with all DB setups (internal/external).
  */
 export async function restoreBackupBuffer(buffer: Buffer): Promise<{ success: boolean; mode: "zip" | "json" }> {
     const unpacked = await unpackBackupZip(buffer);
 
-    if (unpacked && unpacked.sqlDump) {
-        // ZIP restoration path
-        await executeSqlDump(unpacked.sqlDump);
+    let rawToRestore: any = null;
+    let mode: "zip" | "json" = "zip";
 
-        if (unpacked.settings?.settings) {
-            const cs = unpacked.settings.settings as Record<string, unknown>;
-            await prisma.globalSettings.upsert({
-                where: { id: "global" },
-                create: {
-                    id: "global",
-                    discordWebhookUrl: (cs['discordWebhookUrl'] as string) ?? null,
-                    discordAlertCondition: (cs['discordAlertCondition'] as string) ?? "ALL",
-                    discordAlertsEnabled: (cs['discordAlertsEnabled'] as boolean) ?? false,
-                    excludedLibraries: Array.isArray(cs['excludedLibraries']) ? (cs['excludedLibraries'] as string[]) : [],
-                    syncCronHour: typeof cs['syncCronHour'] === "number" ? cs['syncCronHour'] : 3,
-                    syncCronMinute: typeof cs['syncCronMinute'] === "number" ? cs['syncCronMinute'] : 0,
-                    backupCronHour: typeof cs['backupCronHour'] === "number" ? cs['backupCronHour'] : 3,
-                    backupCronMinute: typeof cs['backupCronMinute'] === "number" ? cs['backupCronMinute'] : 30,
-                    defaultLocale: (cs['defaultLocale'] as string) ?? "en",
-                    timeFormat: (cs['timeFormat'] as string) ?? "24h",
-                    maxConcurrentTranscodes: typeof cs['maxConcurrentTranscodes'] === "number" ? cs['maxConcurrentTranscodes'] : 0,
-                    wrappedVisible: typeof cs['wrappedVisible'] === "boolean" ? cs['wrappedVisible'] : true,
-                    wrappedPeriodEnabled: typeof cs['wrappedPeriodEnabled'] === "boolean" ? cs['wrappedPeriodEnabled'] : true,
-                    wrappedStartMonth: typeof cs['wrappedStartMonth'] === "number" ? cs['wrappedStartMonth'] : 12,
-                    wrappedStartDay: typeof cs['wrappedStartDay'] === "number" ? cs['wrappedStartDay'] : 1,
-                    wrappedEndMonth: typeof cs['wrappedEndMonth'] === "number" ? cs['wrappedEndMonth'] : 1,
-                    wrappedEndDay: typeof cs['wrappedEndDay'] === "number" ? cs['wrappedEndDay'] : 31,
-                    pluginKeyRotationDays: typeof cs['pluginKeyRotationDays'] === "number" ? cs['pluginKeyRotationDays'] : 90,
-                    pluginAutoRotateEnabled: typeof cs['pluginAutoRotateEnabled'] === "boolean" ? cs['pluginAutoRotateEnabled'] : false,
-                    pluginKeyRotationGraceHours: typeof cs['pluginKeyRotationGraceHours'] === "number" ? cs['pluginKeyRotationGraceHours'] : 24,
-                    pluginTelemetrySettings: (cs['pluginTelemetrySettings'] as any) ?? null,
-                    authRememberThirtyDaysEnabled: typeof cs['authRememberThirtyDaysEnabled'] === "boolean" ? cs['authRememberThirtyDaysEnabled'] : true,
-                    authSessionsRevokedAt: cs['authSessionsRevokedAt'] ? new Date(String(cs['authSessionsRevokedAt'])) : null,
-                    resolutionThresholds: (cs['resolutionThresholds'] as any) ?? null,
-                },
-                update: {
-                    discordWebhookUrl: (cs['discordWebhookUrl'] as string) ?? null,
-                    discordAlertCondition: (cs['discordAlertCondition'] as string) ?? "ALL",
-                    discordAlertsEnabled: (cs['discordAlertsEnabled'] as boolean) ?? false,
-                    excludedLibraries: Array.isArray(cs['excludedLibraries']) ? (cs['excludedLibraries'] as string[]) : [],
-                    syncCronHour: typeof cs['syncCronHour'] === "number" ? cs['syncCronHour'] : 3,
-                    syncCronMinute: typeof cs['syncCronMinute'] === "number" ? cs['syncCronMinute'] : 0,
-                    backupCronHour: typeof cs['backupCronHour'] === "number" ? cs['backupCronHour'] : 3,
-                    backupCronMinute: typeof cs['backupCronMinute'] === "number" ? cs['backupCronMinute'] : 30,
-                    defaultLocale: (cs['defaultLocale'] as string) ?? "en",
-                    timeFormat: (cs['timeFormat'] as string) ?? "24h",
-                    maxConcurrentTranscodes: typeof cs['maxConcurrentTranscodes'] === "number" ? cs['maxConcurrentTranscodes'] : 0,
-                    wrappedVisible: typeof cs['wrappedVisible'] === "boolean" ? cs['wrappedVisible'] : true,
-                    wrappedPeriodEnabled: typeof cs['wrappedPeriodEnabled'] === "boolean" ? cs['wrappedPeriodEnabled'] : true,
-                    wrappedStartMonth: typeof cs['wrappedStartMonth'] === "number" ? cs['wrappedStartMonth'] : 12,
-                    wrappedStartDay: typeof cs['wrappedStartDay'] === "number" ? cs['wrappedStartDay'] : 1,
-                    wrappedEndMonth: typeof cs['wrappedEndMonth'] === "number" ? cs['wrappedEndMonth'] : 1,
-                    wrappedEndDay: typeof cs['wrappedEndDay'] === "number" ? cs['wrappedEndDay'] : 31,
-                    pluginKeyRotationDays: typeof cs['pluginKeyRotationDays'] === "number" ? cs['pluginKeyRotationDays'] : 90,
-                    pluginAutoRotateEnabled: typeof cs['pluginAutoRotateEnabled'] === "boolean" ? cs['pluginAutoRotateEnabled'] : false,
-                    pluginKeyRotationGraceHours: typeof cs['pluginKeyRotationGraceHours'] === "number" ? cs['pluginKeyRotationGraceHours'] : 24,
-                    pluginTelemetrySettings: (cs['pluginTelemetrySettings'] as any) ?? null,
-                    authRememberThirtyDaysEnabled: typeof cs['authRememberThirtyDaysEnabled'] === "boolean" ? cs['authRememberThirtyDaysEnabled'] : true,
-                    authSessionsRevokedAt: cs['authSessionsRevokedAt'] ? new Date(String(cs['authSessionsRevokedAt'])) : null,
-                    resolutionThresholds: (cs['resolutionThresholds'] as any) ?? null,
-                }
-            });
+    if (unpacked) {
+        mode = "zip";
+        if (unpacked.databaseData) {
+            rawToRestore = {
+                ...unpacked.databaseData,
+                settings: unpacked.settings?.settings ?? null,
+                systemHealth: unpacked.settings?.systemHealth ?? null,
+            };
+        } else if (unpacked.settings) {
+            rawToRestore = {
+                settings: unpacked.settings?.settings ?? null,
+                systemHealth: unpacked.settings?.systemHealth ?? null,
+            };
         }
-
-        if (unpacked.settings?.systemHealth) {
-            await replaceSystemHealthState(unpacked.settings.systemHealth);
-        }
-
-        return { success: true, mode: "zip" };
     }
 
-    // Legacy JSON fallback
-    const rawText = cleanJsonText(buffer.toString("utf-8"));
-    const json = JSON.parse(rawText);
-    const extracted = extractBackupData(json);
-    if (!extracted) {
-        throw new Error("Invalid backup format");
+    if (!rawToRestore) {
+        // Fallback for legacy raw JSON file
+        try {
+            const rawText = cleanJsonText(buffer.toString("utf-8"));
+            const json = JSON.parse(rawText);
+            rawToRestore = extractBackupData(json) || json;
+            mode = "json";
+        } catch {
+            throw new Error("Format de sauvegarde invalide. Veuillez fournir un fichier .zip valide.");
+        }
     }
 
-    const normalized = normalizeBackupData(extracted);
+    const normalized = normalizeBackupData(rawToRestore);
 
     await prisma.$transaction(async (tx) => {
+        // 1. Clear tables in correct FK order
         await tx.activeStream.deleteMany();
         await tx.telemetryEvent.deleteMany();
         await tx.playbackHistory.deleteMany();
+        await tx.dailyStats.deleteMany();
         await tx.media.deleteMany();
         await tx.user.deleteMany();
         await tx.server.deleteMany();
+        await tx.adminAuditLog.deleteMany();
         await tx.systemHealthEvent.deleteMany();
         await tx.systemHealthState.deleteMany();
         await tx.globalSettings.deleteMany();
 
+        // 2. Insert entities in correct FK order
         await batchCreateMany((batch) => tx.server.createMany({ data: batch }), normalized.servers, 1000);
         await batchCreateMany((batch) => tx.user.createMany({ data: batch }), normalized.users, 1000);
         await batchCreateMany((batch) => tx.media.createMany({ data: batch }), normalized.media, 1000);
         await batchCreateMany((batch) => tx.playbackHistory.createMany({ data: batch }), normalized.playbackHistory, 1000);
         await batchCreateMany((batch) => tx.telemetryEvent.createMany({ data: batch }), normalized.telemetryEvents, 1000);
+        if (normalized.dailyStats.length > 0) {
+            await batchCreateMany((batch) => tx.dailyStats.createMany({ data: batch }), normalized.dailyStats, 1000);
+        }
+        if (normalized.adminAuditLogs.length > 0) {
+            await batchCreateMany((batch) => tx.adminAuditLog.createMany({ data: batch }), normalized.adminAuditLogs, 1000);
+        }
 
+        // 3. Restore all GlobalSettings
         const cs = (normalized.settings || {}) as Record<string, unknown>;
         await tx.globalSettings.create({
             data: {
@@ -643,6 +681,7 @@ export async function restoreBackupBuffer(buffer: Buffer): Promise<{ success: bo
                 discordWebhookUrl: (cs['discordWebhookUrl'] as string) ?? null,
                 discordAlertCondition: (cs['discordAlertCondition'] as string) ?? "ALL",
                 discordAlertsEnabled: (cs['discordAlertsEnabled'] as boolean) ?? false,
+                maxConcurrentTranscodes: typeof cs['maxConcurrentTranscodes'] === "number" ? cs['maxConcurrentTranscodes'] : 0,
                 excludedLibraries: Array.isArray(cs['excludedLibraries']) ? (cs['excludedLibraries'] as string[]) : [],
                 syncCronHour: typeof cs['syncCronHour'] === "number" ? cs['syncCronHour'] : 3,
                 syncCronMinute: typeof cs['syncCronMinute'] === "number" ? cs['syncCronMinute'] : 0,
@@ -650,20 +689,28 @@ export async function restoreBackupBuffer(buffer: Buffer): Promise<{ success: bo
                 backupCronMinute: typeof cs['backupCronMinute'] === "number" ? cs['backupCronMinute'] : 30,
                 defaultLocale: (cs['defaultLocale'] as string) ?? "en",
                 timeFormat: (cs['timeFormat'] as string) ?? "24h",
-                maxConcurrentTranscodes: typeof cs['maxConcurrentTranscodes'] === "number" ? cs['maxConcurrentTranscodes'] : 0,
                 wrappedVisible: typeof cs['wrappedVisible'] === "boolean" ? cs['wrappedVisible'] : true,
                 wrappedPeriodEnabled: typeof cs['wrappedPeriodEnabled'] === "boolean" ? cs['wrappedPeriodEnabled'] : true,
                 wrappedStartMonth: typeof cs['wrappedStartMonth'] === "number" ? cs['wrappedStartMonth'] : 12,
                 wrappedStartDay: typeof cs['wrappedStartDay'] === "number" ? cs['wrappedStartDay'] : 1,
                 wrappedEndMonth: typeof cs['wrappedEndMonth'] === "number" ? cs['wrappedEndMonth'] : 1,
                 wrappedEndDay: typeof cs['wrappedEndDay'] === "number" ? cs['wrappedEndDay'] : 31,
+                pluginApiKey: (cs['pluginApiKey'] as string) ?? null,
+                pluginPreviousApiKey: (cs['pluginPreviousApiKey'] as string) ?? null,
+                pluginPreviousApiKeyExpiresAt: safeDate(cs['pluginPreviousApiKeyExpiresAt']),
+                pluginKeyCreatedAt: safeDate(cs['pluginKeyCreatedAt']),
+                pluginKeyExpiresAt: safeDate(cs['pluginKeyExpiresAt']),
                 pluginKeyRotationDays: typeof cs['pluginKeyRotationDays'] === "number" ? cs['pluginKeyRotationDays'] : 90,
                 pluginAutoRotateEnabled: typeof cs['pluginAutoRotateEnabled'] === "boolean" ? cs['pluginAutoRotateEnabled'] : false,
                 pluginKeyRotationGraceHours: typeof cs['pluginKeyRotationGraceHours'] === "number" ? cs['pluginKeyRotationGraceHours'] : 24,
+                pluginLastSeen: safeDate(cs['pluginLastSeen']),
+                pluginVersion: (cs['pluginVersion'] as string) ?? null,
+                pluginServerName: (cs['pluginServerName'] as string) ?? null,
                 pluginTelemetrySettings: (cs['pluginTelemetrySettings'] as any) ?? null,
                 authRememberThirtyDaysEnabled: typeof cs['authRememberThirtyDaysEnabled'] === "boolean" ? cs['authRememberThirtyDaysEnabled'] : true,
-                authSessionsRevokedAt: cs['authSessionsRevokedAt'] ? new Date(String(cs['authSessionsRevokedAt'])) : null,
+                authSessionsRevokedAt: safeDate(cs['authSessionsRevokedAt']),
                 resolutionThresholds: (cs['resolutionThresholds'] as any) ?? null,
+                ssoSettings: (cs['ssoSettings'] as any) ?? null,
             }
         });
     }, { timeout: 180000 });
@@ -672,5 +719,5 @@ export async function restoreBackupBuffer(buffer: Buffer): Promise<{ success: bo
         await replaceSystemHealthState(normalized.systemHealth);
     }
 
-    return { success: true, mode: "json" };
+    return { success: true, mode };
 }

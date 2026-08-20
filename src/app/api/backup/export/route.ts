@@ -17,18 +17,22 @@ export async function GET() {
         const media = await prisma.media.findMany();
         const playbackHistory = await prisma.playbackHistory.findMany();
         const telemetryEvents = await prisma.telemetryEvent.findMany();
+        const dailyStats = await prisma.dailyStats.findMany();
+        const adminAuditLogs = await prisma.adminAuditLog.findMany();
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
         const systemHealth = await readSystemHealthState({ eventLimit: 200 });
 
-        const rawData = redactBackupData({
+        const rawData = {
             servers,
             users,
             media,
             playbackHistory,
             telemetryEvents,
+            dailyStats,
+            adminAuditLogs,
             settings,
             systemHealth,
-        });
+        };
 
         const zipBuffer = await createZipBackup(rawData);
         const filename = `JellyTrack-backup-${new Date().toISOString().split('T')[0]}.zip`;

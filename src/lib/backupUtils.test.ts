@@ -104,8 +104,9 @@ describe("backupUtils", () => {
 
             const unpacked = await unpackBackupZip(zipBuffer);
             expect(unpacked).not.toBeNull();
+            expect(unpacked?.databaseData?.servers?.length).toBe(1);
             expect(unpacked?.sqlDump).toContain("INSERT INTO \"Server\"");
-            expect(unpacked?.manifest?.format).toBe("zip-sql");
+            expect(unpacked?.manifest?.format).toBe("zip-json");
             expect(unpacked?.settings?.settings?.defaultLocale).toBe("fr");
         });
     });

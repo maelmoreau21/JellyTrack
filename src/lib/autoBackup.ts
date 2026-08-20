@@ -28,18 +28,22 @@ export async function performAutoBackup(mode: 'auto' | 'manuelle' = 'auto'): Pro
         const media = await prisma.media.findMany();
         const playbackHistory = await prisma.playbackHistory.findMany();
         const telemetryEvents = await prisma.telemetryEvent.findMany();
+        const dailyStats = await prisma.dailyStats.findMany();
+        const adminAuditLogs = await prisma.adminAuditLog.findMany();
         const settings = await prisma.globalSettings.findFirst({ where: { id: "global" } });
         const systemHealth = await readSystemHealthState();
 
-        const rawData = redactBackupData({
+        const rawData = {
             servers,
             users,
             media,
             playbackHistory,
             telemetryEvents,
+            dailyStats,
+            adminAuditLogs,
             settings,
             systemHealth,
-        });
+        };
 
         // Generate filename with date (.zip)
         const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
