@@ -7,7 +7,13 @@ const eslintConfig = defineConfig([
   globalIgnores([
     "**/*.js",
     "**/*.mjs",
+    "node_modules/**",
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
     ".github/**",
+    "archived/**",
   ]),
   ...fixupConfigRules(nextVitals),
   ...fixupConfigRules(nextTs),
@@ -22,14 +28,6 @@ const eslintConfig = defineConfig([
       "prefer-const": "warn",
     },
   },
-  globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-    // Ignore our local archive of candidate files
-    "archived/**",
-  ]),
 ]);
 
 export default eslintConfig;

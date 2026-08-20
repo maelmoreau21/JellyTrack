@@ -66,12 +66,12 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
     const [pageSize, setPageSize] = useState(25);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [copied, setCopied] = useState(false);
-
-    const now = Date.now();
-    const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-    const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+    const [now] = useState(() => Date.now());
 
     const filteredUsers = useMemo(() => {
+        const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+        const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+
         return users.filter((u) => {
             // Search filter
             if (search.trim()) {
@@ -100,7 +100,7 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
 
             return true;
         });
-    }, [users, search, filterType, now, thirtyDaysMs, ninetyDaysMs]);
+    }, [users, search, filterType, now]);
 
     const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
     const safePage = Math.min(page, totalPages);
