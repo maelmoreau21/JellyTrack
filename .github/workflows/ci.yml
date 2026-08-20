@@ -151,7 +151,7 @@ jobs:
           }
 
           echo "Checking HTTP API health JSON output..."
-          curl -f --retry 10 --retry-delay 3 --retry-all-errors --retry-connrefused -s http://localhost:3000/api/health | grep -q "status" || {
+          curl -s --retry 10 --retry-delay 3 --retry-connrefused http://localhost:3000/api/health | grep -q "status" || {
             echo "API health test failed! Full container logs:"
             docker logs jellytrack-test
             exit 1
