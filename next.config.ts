@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '50mb',
     },
   },
-  serverExternalPackages: ['node-cron', 'geoip-country'],
+  serverExternalPackages: ['node-cron', 'geoip-country', 'prisma', '@prisma/client', '@prisma/engines'],
   async headers() {
     return [
       {

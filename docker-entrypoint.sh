@@ -76,15 +76,19 @@ mkdir -p /app/.next/cache/images /app/.next/cache/fetch-cache /data/backups /dat
 chmod -R 777 /app/prisma-cli /app/.next/cache /data /tmp/.cache 2>/dev/null || true
 
 run_prisma() {
-  export NODE_PATH="/app/prisma-cli/node_modules:${NODE_PATH:-}"
-  if [ -x "./prisma-cli/node_modules/.bin/prisma" ]; then
-    ./prisma-cli/node_modules/.bin/prisma "$@"
+  if [ -f "./node_modules/prisma/build/index.js" ]; then
+    node ./node_modules/prisma/build/index.js "$@"
   elif [ -x "./node_modules/.bin/prisma" ]; then
     ./node_modules/.bin/prisma "$@"
+  elif [ -f "./prisma-cli/node_modules/prisma/build/index.js" ]; then
+    node ./prisma-cli/node_modules/prisma/build/index.js "$@"
+  elif [ -x "./prisma-cli/node_modules/.bin/prisma" ]; then
+    ./prisma-cli/node_modules/.bin/prisma "$@"
   elif command -v pnpm >/dev/null 2>&1; then
     pnpm exec prisma "$@"
   else
-    node ./prisma-cli/node_modules/prisma/build/index.js "$@" 2>/dev/null || node ./node_modules/prisma/build/index.js "$@"
+    echo "ERROR: Prisma CLI executable not found."
+    exit 1
   fi
 }
 
