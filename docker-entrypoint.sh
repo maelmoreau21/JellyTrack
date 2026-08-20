@@ -42,7 +42,7 @@ fi
 
 # Percent-encode a string for safe inclusion in a URI using Node.js.
 urlencode() {
-  node -e 'console.log(encodeURIComponent(process.argv[1]))' "$1"
+  node -e 'console.log(encodeURIComponent(process.argv[1] || ""))' "$1" 2>/dev/null || echo "$1"
 }
 
 if [ "$rebuild_db" = true ]; then
@@ -67,8 +67,8 @@ else
 fi
 
 # Ensure runtime directories exist
-mkdir -p /app/.next/cache /data/backups 2>/dev/null || true
-chmod -R 777 /app/.next/cache /data/backups 2>/dev/null || true
+mkdir -p /app/.next/cache/images /app/.next/cache/fetch-cache /data/backups /data/logs /tmp/.cache 2>/dev/null || true
+chmod -R 777 /app/.next/cache /data /tmp/.cache 2>/dev/null || true
 
 run_prisma() {
   export NODE_PATH="/app/prisma-cli/node_modules:${NODE_PATH:-}"

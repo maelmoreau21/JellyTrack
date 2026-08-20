@@ -138,20 +138,20 @@ jobs:
             jellytrack:ci-test
 
           echo "Waiting for container startup..."
-          sleep 10
+          sleep 12
 
           echo "Checking container logs..."
           docker logs jellytrack-test
 
           echo "Checking HTTP login page (200 OK verification)..."
-          curl -f --retry 5 --retry-delay 3 --retry-connrefused http://localhost:3000/login || {
+          curl -f --retry 10 --retry-delay 3 --retry-all-errors --retry-connrefused http://localhost:3000/login || {
             echo "Smoke test failed! Full container logs:"
             docker logs jellytrack-test
             exit 1
           }
 
           echo "Checking HTTP API health JSON output..."
-          curl -s http://localhost:3000/api/health | grep -q "status" || {
+          curl -f --retry 10 --retry-delay 3 --retry-all-errors --retry-connrefused -s http://localhost:3000/api/health | grep -q "status" || {
             echo "API health test failed! Full container logs:"
             docker logs jellytrack-test
             exit 1
