@@ -28,7 +28,7 @@ RUN pnpm exec prisma generate
 WORKDIR /app/prisma-cli
 COPY prisma ./prisma
 ENV PRISMA_CLI_BINARY_TARGETS="linux-musl-openssl-3.0.x,linux-musl-arm64-openssl-3.0.x"
-RUN pnpm init && pnpm add --save-prod prisma@7.8.0 dotenv@17.4.2
+RUN npm init -y && npm install --no-audit --no-fund --omit=dev prisma@7.8.0 dotenv@17.4.2
 
 
 # ── STAGE 2: Build Next.js application & clean up assets ──
@@ -128,7 +128,7 @@ RUN sed -i 's/\r$//' ./docker-entrypoint.sh && \
     chmod +x ./docker-entrypoint.sh && \
     mkdir -p /app/.next/cache/images /app/.next/cache/fetch-cache /data/backups /data/logs && \
     chown -R node:node /app /data && \
-    chmod -R 777 /app/.next/cache /data
+    chmod -R 777 /app/prisma-cli /app/.next/cache /data
 
 USER node
 
