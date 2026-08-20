@@ -26,7 +26,7 @@ export interface JellyfinAuthAttemptResult {
 }
 
 const JELLYTRACK_CLIENT_HEADER =
-  'MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="1.0.0"';
+  'MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="2.0.0"';
 
 function normalizeUrl(value: string | null | undefined): string {
   return String(value || "").trim().replace(/\/+$/, "");
@@ -48,7 +48,7 @@ export function buildJellyfinApiKeyHeaders(apiKey: string): HeadersInit {
     Accept: "application/json",
     "X-Emby-Token": token,
     "X-MediaBrowser-Token": token,
-    Authorization: `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="1.0.0", Token="${token}"`,
+    Authorization: `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="2.0.0", Token="${token}"`,
   };
 }
 
@@ -58,7 +58,7 @@ export function buildJellyfinImageHeaders(apiKey: string): HeadersInit {
     Accept: "image/webp,image/avif,image/jpeg,image/png,image/*,*/*;q=0.8",
     "X-Emby-Token": token,
     "X-MediaBrowser-Token": token,
-    Authorization: `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="1.0.0", Token="${token}"`,
+    Authorization: `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="2.0.0", Token="${token}"`,
   };
 }
 

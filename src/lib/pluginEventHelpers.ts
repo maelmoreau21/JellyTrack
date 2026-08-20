@@ -36,7 +36,7 @@ export const ALLOWED_PLUGIN_EVENTS = new Set([
 
 export const DOWNLOAD_EVENT_ALIASES = new Set(["ItemDownloaded", "DownloadCompleted"]);
 export const CURRENT_PLUGIN_EVENT_SCHEMA_VERSION = 3;
-export const MIN_SUPPORTED_PLUGIN_EVENT_SCHEMA_VERSION = 2;
+export const MIN_SUPPORTED_PLUGIN_EVENT_SCHEMA_VERSION = 3;
 const parsedMaxPluginEventBytes = Number(process.env.PLUGIN_EVENT_MAX_BYTES);
 export const MAX_PLUGIN_EVENT_BYTES = Number.isFinite(parsedMaxPluginEventBytes)
     ? parsedMaxPluginEventBytes

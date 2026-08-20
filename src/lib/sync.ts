@@ -343,19 +343,15 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     console.warn(`[Sync] [${currentServerName}] UserViews unavailable, continuing without view mapping.`, viewsError);
                 }
 
-                // 3. Sync Media Items
-                const baseItemsQueries = [
-                    `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book,BoxSet&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios,RunTimeTicks,ProductionYear,Path`,
-                    `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,Genres,MediaSources,ParentId,People,Studios,RunTimeTicks`,
-                    `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum&Recursive=true&Fields=DateCreated,Genres,MediaSources,ParentId,People,RunTimeTicks`,
-                ];
+                // 3. Sync Media Items (Jellyfin 10.11.11+ / Jellyfin 12 native query)
+                const baseItemsQuery = `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book,BoxSet&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,DateLastSaved,Genres,MediaSources,ParentId,People,Studios,RunTimeTicks,ProductionYear,Path`;
+
                 let recentFilters: string[] = [''];
                 if (options?.recentOnly) {
                     const sevenDaysAgo = new Date();
                     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
                     const sinceIso = sevenDaysAgo.toISOString();
-                    // Query both newly created and recently saved items to avoid missing imports
-                    // where filesystem metadata keeps an old creation date.
+                    // Query both newly created and recently saved items natively supported in Jellyfin 10.11+ and 12
                     recentFilters = [
                         `&MinDateCreated=${sinceIso}&SortBy=DateCreated&SortOrder=Descending`,
                         `&MinDateLastSaved=${sinceIso}&SortBy=DateLastSaved&SortOrder=Descending`,
@@ -368,50 +364,24 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 const itemsById = new Map<string, PrunedJellyfinItem>();
 
                 for (const recentFilter of recentFilters) {
-                    let filterFetched = false;
-                    let filterError: unknown = null;
+                    let startIndex = 0;
+                    while (true) {
+                        const currentPageSize = startIndex >= SLOW_START_THRESHOLD ? SLOW_PAGE_SIZE : DEFAULT_PAGE_SIZE;
+                        const pageUrl = `${baseUrl}/Items?${baseItemsQuery}${recentFilter}&StartIndex=${startIndex}&Limit=${currentPageSize}`;
+                        const timeoutMs = startIndex >= SLOW_START_THRESHOLD ? 120000 : 60000;
+                        const retries = startIndex >= SLOW_START_THRESHOLD ? 6 : 4;
+                        console.log(`[Sync] [${currentServerName}] Fetching Items StartIndex=${startIndex} Limit=${currentPageSize} timeout=${timeoutMs} retries=${retries}`);
+                        const pageData = await fetchJsonWithRetry<{ Items?: Record<string, any>[] }>(pageUrl, { headers: jellyfinHeaders }, timeoutMs, retries);
+                        const pageItems: Record<string, any>[] = pageData.Items || [];
 
-                    for (let queryIndex = 0; queryIndex < baseItemsQueries.length && !filterFetched; queryIndex++) {
-                        const baseItemsQuery = baseItemsQueries[queryIndex];
-                        try {
-                            let startIndex = 0;
-                            while (true) {
-                                const currentPageSize = startIndex >= SLOW_START_THRESHOLD ? SLOW_PAGE_SIZE : DEFAULT_PAGE_SIZE;
-                                const pageUrl = `${baseUrl}/Items?${baseItemsQuery}${recentFilter}&StartIndex=${startIndex}&Limit=${currentPageSize}`;
-                                const timeoutMs = startIndex >= SLOW_START_THRESHOLD ? 120000 : 60000;
-                                const retries = startIndex >= SLOW_START_THRESHOLD ? 6 : 4;
-                                console.log(`[Sync] [${currentServerName}] Fetching Items StartIndex=${startIndex} Limit=${currentPageSize} timeout=${timeoutMs} retries=${retries} queryVariant=${queryIndex + 1}`);
-                                const pageData = await fetchJsonWithRetry<{ Items?: Record<string, any>[] }>(pageUrl, { headers: jellyfinHeaders }, timeoutMs, retries);
-                                const pageItems: Record<string, any>[] = pageData.Items || [];
-
-                                for (const pageItem of pageItems) {
-                                    const itemId = typeof pageItem?.Id === 'string' ? pageItem.Id : null;
-                                    if (itemId) itemsById.set(itemId, pruneJellyfinItem(pageItem));
-                                }
-
-                                if (pageItems.length < currentPageSize) break;
-                                startIndex += currentPageSize;
-                                if (startIndex >= 50000) break;
-                            }
-                            filterFetched = true;
-                        } catch (itemsError) {
-                            filterError = itemsError;
-                            if (isHttpStatus(itemsError, [400]) && queryIndex < baseItemsQueries.length - 1) {
-                                console.warn(`[Sync] [${currentServerName}] Items query variant ${queryIndex + 1} incompatible (HTTP 400), trying safer variant.`);
-                                continue;
-                            }
-                            break;
+                        for (const pageItem of pageItems) {
+                            const itemId = typeof pageItem?.Id === 'string' ? pageItem.Id : null;
+                            if (itemId) itemsById.set(itemId, pruneJellyfinItem(pageItem));
                         }
-                    }
 
-                    if (!filterFetched) {
-                        // Jellyfin may reject some recent-only filters (e.g. MinDateLastSaved) depending on version.
-                        if (recentFilter.includes("MinDateLastSaved") && isHttpStatus(filterError, [400])) {
-                            console.warn(`[Sync] [${currentServerName}] MinDateLastSaved unsupported, skipping this recent filter.`);
-                            continue;
-                        }
-                        if (filterError instanceof Error) throw filterError;
-                        throw new Error(`Unable to fetch Items for filter: ${recentFilter || "<full>"}`);
+                        if (pageItems.length < currentPageSize) break;
+                        startIndex += currentPageSize;
+                        if (startIndex >= 50000) break;
                     }
                 }
 

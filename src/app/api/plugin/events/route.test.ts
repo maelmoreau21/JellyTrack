@@ -459,7 +459,7 @@ describe("/api/plugin/events schema v3 ingestion", () => {
         expect(mocks.prisma.playbackHistory.update).toHaveBeenCalledTimes(1);
     });
 
-    it("uses the session fast path for schema v2 PlaybackProgress", async () => {
+    it("updates playback status for schema v3 PlaybackProgress", async () => {
         mocks.prisma.media.findFirst.mockResolvedValue(streamMedia);
         mocks.prisma.activeStream.findUnique.mockResolvedValue({
             ...activeStream,
@@ -474,7 +474,7 @@ describe("/api/plugin/events schema v3 ingestion", () => {
 
         const response = await POST(requestFor({
             event: "PlaybackProgress",
-            eventSchemaVersion: 2,
+            eventSchemaVersion: 3,
             serverId: "jellyfin-main",
             sessionId: "session-1",
             positionTicks: 50_000_000,
@@ -500,11 +500,26 @@ describe("/api/plugin/events schema v3 ingestion", () => {
             where: { id: "user-db-1" },
             data: { lastActive: expect.any(Date) },
         });
-        expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
-        expect(mocks.prisma.activeStream.upsert).toHaveBeenCalledWith(expect.objectContaining({
-            update: expect.objectContaining({ playbackId: "playback-1" }),
-            create: expect.objectContaining({ playbackId: "playback-1" }),
+        expect(mocks.prisma.playbackHistory.update).toHaveBeenCalledWith({
+            where: { id: "playback-1" },
+            data: expect.objectContaining({
+                durationWatched: expect.any(Number),
+            }),
+        });
+    });
+
+    it("rejects legacy plugin event schema versions (< 3)", async () => {
+        const response = await POST(requestFor({
+            event: "PlaybackProgress",
+            eventSchemaVersion: 2,
+            serverId: "jellyfin-main",
+            sessionId: "session-legacy",
+            user: { jellyfinUserId: "jf-user-1", username: "Alice" },
         }));
+
+        expect(response.status).toBe(400);
+        const data = await response.json();
+        expect(data.error).toBe("Unsupported eventSchemaVersion.");
     });
 
     it("records backward progress jumps as replay events with range metadata", async () => {
