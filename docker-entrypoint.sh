@@ -15,7 +15,8 @@ raw_nextauth_url="${NEXTAUTH_URL:-${JELLYTRACK_URL:-${JELLYGATE_URL:-}}}"
 if [ -n "$raw_nextauth_url" ]; then
   export NEXTAUTH_URL="$raw_nextauth_url"
 else
-  export NEXTAUTH_URL="http://localhost:${PORT:-3000}"
+  # Do not hardcode localhost so NextAuth route handler dynamically infers the public domain from HTTP request headers
+  unset NEXTAUTH_URL
 fi
 export JELLYFIN_WEBHOOK_SECRET="${JELLYFIN_WEBHOOK_SECRET:-${JELLYTRACK_WEBHOOK_SECRET:-}}"
 export JELLYFIN_API_KEY="${JELLYFIN_API_KEY:-${JELLYTRACK_JELLYFIN_API_KEY:-}}"

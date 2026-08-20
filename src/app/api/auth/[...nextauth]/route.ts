@@ -126,10 +126,16 @@ async function resolveRememberMe(req: NextRequest): Promise<boolean | null> {
     return null;
 }
 
-function ensureNextAuthUrl(req: NextRequest) {
-    if (!process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL.trim() === "") {
-        const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || req.nextUrl.host || "localhost:3000";
-        const proto = req.headers.get("x-forwarded-proto") || req.nextUrl.protocol.replace(/:$/, "") || "http";
+export function ensureNextAuthUrl(req: NextRequest) {
+    const rawForwardedHost = req.headers.get("x-forwarded-host");
+    const rawForwardedProto = req.headers.get("x-forwarded-proto");
+    const host = (rawForwardedHost || req.headers.get("host") || req.nextUrl.host || "").split(",")[0].trim();
+    const proto = (rawForwardedProto || req.nextUrl.protocol || "http").split(",")[0].trim().replace(/:$/, "");
+
+    const configured = process.env.NEXTAUTH_URL?.trim();
+    const isLocalhostFallback = !configured || /^(https?:\/\/)?(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(configured);
+
+    if (host && (isLocalhostFallback || !configured)) {
         process.env.NEXTAUTH_URL = `${proto}://${host}`;
     }
 }
