@@ -695,6 +695,45 @@ export default async function LogsPage({
                                 </CardContent>
                             </Card>
 
+                            {/* Distribution & Stream Method Mini-Bar */}
+                            {safeLogs.length > 0 && (
+                                <div className="app-surface-soft border border-border/80 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                                    <div className="flex items-center gap-4 flex-wrap w-full sm:w-auto">
+                                        <span className="font-semibold text-muted-foreground">Répartition page ({safeLogs.length}) :</span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                                            <span>
+                                                DirectPlay : <strong className="text-blue-400 font-bold">{safeLogs.filter(l => (l.playMethod || '').toLowerCase().includes('direct')).length}</strong>
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-purple-400" />
+                                            <span>
+                                                Transcode : <strong className="text-purple-400 font-bold">{safeLogs.filter(l => (l.playMethod || '').toLowerCase().includes('transcode')).length}</strong>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Mini ratio bar */}
+                                    <div className="w-full sm:w-48 h-2 rounded-full bg-zinc-800 overflow-hidden flex shrink-0">
+                                        <div
+                                            className="bg-blue-400 h-full transition-all"
+                                            style={{
+                                                width: `${(safeLogs.filter(l => (l.playMethod || '').toLowerCase().includes('direct')).length / Math.max(1, safeLogs.length)) * 100}%`,
+                                            }}
+                                            title="DirectPlay"
+                                        />
+                                        <div
+                                            className="bg-purple-500 h-full transition-all"
+                                            style={{
+                                                width: `${(safeLogs.filter(l => (l.playMethod || '').toLowerCase().includes('transcode')).length / Math.max(1, safeLogs.length)) * 100}%`,
+                                            }}
+                                            title="Transcode"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="app-surface-soft border rounded-md overflow-x-auto w-full mt-6">
                                 <LogsListClient 
                                     serverLogs={safeLogs.map(log => ({ ...log, mediaSubtitle: getMediaSubtitle(log.media ?? null, log.serverId) }))}

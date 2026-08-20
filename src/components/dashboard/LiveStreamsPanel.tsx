@@ -7,6 +7,7 @@ import { PlayCircle, LayoutList, Rows3, Headphones, Languages, MapPin } from "lu
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FallbackImage } from "@/components/FallbackImage";
 import { KillStreamButton } from "@/components/dashboard/KillStreamButton";
+import { SendMessageModal } from "@/components/dashboard/SendMessageModal";
 import { formatMediaSubtitle } from "@/lib/mediaSubtitle";
 
 interface LiveStream {
@@ -224,6 +225,7 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                     >
                         {stream.playMethod === "Transcode" ? (isAudio ? "Audio Transcodé" : tc('transcode')) : tc('directPlay')}
                     </span>
+                    <SendMessageModal sessionId={stream.sessionId} userName={stream.user} mediaTitle={stream.mediaTitle} />
                     <KillStreamButton sessionId={stream.sessionId} mediaTitle={stream.mediaTitle} />
                 </div>
 
@@ -279,6 +281,7 @@ function StreamTimeline({ stream, colorIndex }: { stream: LiveStream; colorIndex
                         </span>
                         {stream.isPaused && <span className="text-[10px] text-yellow-500">⏸</span>}
                         <span className="text-[10px] text-muted-foreground">{stream.progressPercent}%</span>
+                        <SendMessageModal sessionId={stream.sessionId} userName={stream.user} mediaTitle={stream.mediaTitle} />
                         <KillStreamButton sessionId={stream.sessionId} mediaTitle={stream.mediaTitle} />
                     </div>
                 </div>

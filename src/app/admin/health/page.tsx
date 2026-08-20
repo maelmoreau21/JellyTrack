@@ -8,6 +8,9 @@ import RecentClosuresClient from "./RecentClosuresClient";
 import { HealthAnomalyCharts } from "@/components/admin/HealthAnomalyCharts";
 import { getLocale, getTranslations } from "next-intl/server";
 import PluginHealthCenterClient from "@/app/admin/plugin-health/PluginHealthCenterClient";
+import { getActiveSecurityAnomalies, SecurityAlert } from "@/lib/anomalyDetector";
+import { Badge } from "@/components/ui/badge";
+import { ShieldCheck, ShieldAlert as ShieldIcon, AlertOctagon, UserX, FileWarning } from "lucide-react";
 
 interface OrphanPlayback {
     id: string;
@@ -20,7 +23,6 @@ interface OrphanPlayback {
 
 export const dynamic = "force-dynamic";
 
-
 export default async function HealthPage() {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
@@ -28,10 +30,11 @@ export default async function HealthPage() {
         redirect(uid ? `/users/${uid}` : "/login");
     }
 
-    const [t, locale, snapshot] = await Promise.all([
+    const [t, locale, snapshot, securityAlerts] = await Promise.all([
         getTranslations("dashboard"),
         getLocale(),
         getLogHealthSnapshot(),
+        getActiveSecurityAnomalies(),
     ]);
 
     const isFr = locale.toLowerCase().startsWith("fr");
@@ -69,6 +72,84 @@ export default async function HealthPage() {
                         <h2 className="text-xl font-semibold">{isFr ? "Sante du plugin" : "Plugin Health"}</h2>
                     </div>
                     <PluginHealthCenterClient embedded />
+                </section>
+
+                {/* Real-time Security & Media Anomalies Detection */}
+                <section className="space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                            <ShieldIcon className="h-5 w-5 text-amber-400" />
+                            <h2 className="text-xl font-semibold">
+                                {isFr ? "Détection d'Anomalies & Partage de Compte" : "Security Anomalies & Account Sharing"}
+                            </h2>
+                        </div>
+                        {securityAlerts.length === 0 ? (
+                            <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 flex items-center gap-1.5 py-1">
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                {isFr ? "Aucune anomalie détectée" : "No anomalies detected"}
+                            </Badge>
+                        ) : (
+                            <Badge variant="destructive" className="flex items-center gap-1.5 py-1">
+                                <AlertOctagon className="w-3.5 h-3.5" />
+                                {securityAlerts.length} {isFr ? "alerte(s) active(s)" : "active alert(s)"}
+                            </Badge>
+                        )}
+                    </div>
+
+                    {securityAlerts.length === 0 ? (
+                        <div className="app-surface-soft border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3 text-sm text-emerald-300">
+                            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                            <span>
+                                {isFr
+                                    ? "Toutes les lectures récentes sont nominales. Aucun comportement suspect de multi-connexion IP ni fichier corrompu identifié."
+                                    : "All recent sessions are operating normally. No suspicious multi-IP logins or corrupted media detected."}
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {securityAlerts.map((alert) => (
+                                <div
+                                    key={alert.id}
+                                    className={`app-surface border rounded-2xl p-4 flex items-start gap-3.5 transition-all shadow-sm ${
+                                        alert.severity === "critical"
+                                            ? "border-red-500/40 bg-red-500/5 hover:border-red-500/60"
+                                            : "border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60"
+                                    }`}
+                                >
+                                    <div
+                                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                                            alert.severity === "critical"
+                                                ? "bg-red-500/15 text-red-400 border border-red-500/25"
+                                                : "bg-amber-500/15 text-amber-400 border border-amber-500/25"
+                                        }`}
+                                    >
+                                        {alert.type === "account_sharing" ? (
+                                            <UserX className="w-4 h-4" />
+                                        ) : (
+                                            <FileWarning className="w-4 h-4" />
+                                        )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <h4
+                                                className={`text-sm font-bold truncate ${
+                                                    alert.severity === "critical" ? "text-red-400" : "text-amber-400"
+                                                }`}
+                                            >
+                                                {alert.title}
+                                            </h4>
+                                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                                                {new Date(alert.timestamp).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                            {alert.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </section>
 
                 <section className="space-y-5">

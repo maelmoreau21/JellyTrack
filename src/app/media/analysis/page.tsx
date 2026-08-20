@@ -15,6 +15,10 @@ export const dynamic = "force-dynamic";
 
 import { requireAdmin, isAuthError } from "@/lib/auth";
 import { redirect } from 'next/navigation';
+import { getBingeWatchingStats } from "@/lib/bingeTracker";
+import { getTasteInsights } from "@/lib/tasteInsights";
+import { Flame, Lightbulb, TrendingUp, Sparkles, Film, Tv, Award } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default async function AnalysisPage({ searchParams }: { searchParams?: Promise<{ servers?: string }> }) {
     const auth = await requireAdmin();
@@ -24,12 +28,14 @@ export default async function AnalysisPage({ searchParams }: { searchParams?: Pr
     const tc = await getTranslations('common');
     const resolvedSearchParams = searchParams ? await searchParams : {};
 
-    const [settings, serverRows] = await Promise.all([
+    const [settings, serverRows, bingeStats, tasteInsights] = await Promise.all([
         prisma.globalSettings.findUnique({ where: { id: 'global' } }),
         prisma.server.findMany({
             select: { id: true, name: true, isActive: true, url: true, jellyfinServerId: true },
             orderBy: { name: 'asc' },
         }),
+        getBingeWatchingStats(30),
+        getTasteInsights(30),
     ]);
     const excludedLibraries = settings?.excludedLibraries || [];
     const { buildExcludedMediaClause } = await import('@/lib/mediaPolicy');
@@ -235,6 +241,172 @@ export default async function AnalysisPage({ searchParams }: { searchParams?: Pr
                     </CardHeader>
                     <CardContent>
                         <div className="h-[340px]"><LazyGenreDistributionChart data={topGenres} /></div>
+                    </CardContent>
+                </Card>
+
+                {/* 1. Binge-Watching Tracker Card */}
+                <Card className="app-surface border border-border shadow-sm">
+                    <CardHeader>
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div>
+                                <CardTitle className="text-xl flex items-center gap-2 text-foreground">
+                                    <Flame className="w-5 h-5 text-orange-500 animate-pulse" />
+                                    Binge-Watching Tracker (Marathons de Séries)
+                                </CardTitle>
+                                <CardDescription>
+                                    Détection automatique des séries dévorées d&apos;une traite (sessions de 3 épisodes consécutifs ou plus).
+                                </CardDescription>
+                            </div>
+                            <Badge variant="outline" className="border-orange-500/30 text-orange-400 bg-orange-500/10">
+                                30 derniers jours
+                            </Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* Summary highlight banner */}
+                        {bingeStats.mostBingedSeries ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="app-surface-soft border border-orange-500/20 rounded-xl p-4 bg-orange-500/5">
+                                    <span className="text-xs text-muted-foreground font-semibold">Série N°1 des marathons</span>
+                                    <div className="text-lg font-bold text-foreground truncate mt-1">
+                                        {bingeStats.mostBingedSeries.seriesTitle}
+                                    </div>
+                                    <div className="text-xs text-orange-400 mt-1 font-medium">
+                                        {bingeStats.mostBingedSeries.totalBingeSessions} marathons enregistrés
+                                    </div>
+                                </div>
+
+                                <div className="app-surface-soft border border-border rounded-xl p-4">
+                                    <span className="text-xs text-muted-foreground font-semibold">Intensité moyenne</span>
+                                    <div className="text-2xl font-black text-foreground mt-1 metric-glow-emerald">
+                                        {bingeStats.mostBingedSeries.avgEpisodesPerSession} <span className="text-xs font-normal text-muted-foreground">épisodes / session</span>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                        Record : {bingeStats.mostBingedSeries.maxEpisodesInSingleRun} épisodes d&apos;affilée
+                                    </div>
+                                </div>
+
+                                <div className="app-surface-soft border border-border rounded-xl p-4">
+                                    <span className="text-xs text-muted-foreground font-semibold">Marathons globaux (30j)</span>
+                                    <div className="text-2xl font-black text-foreground mt-1 metric-glow-violet">
+                                        {bingeStats.totalBingeSessionsMonth} <span className="text-xs font-normal text-muted-foreground">sessions</span>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1 truncate">
+                                        Top binger : {bingeStats.mostBingedSeries.topBingerUsername}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-6 text-sm text-muted-foreground">
+                                Aucun marathon détecté sur les 30 derniers jours (minimum 3 épisodes consécutifs).
+                            </div>
+                        )}
+
+                        {/* Top Binged Series List */}
+                        {bingeStats.allBingedSeries.length > 0 && (
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                    Classement des séries les plus marathonées
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {bingeStats.allBingedSeries.slice(0, 4).map((s, idx) => (
+                                        <div
+                                            key={s.seriesId}
+                                            className="app-surface-soft border border-border/80 rounded-xl p-3.5 flex items-center justify-between gap-3 hover:border-primary/30 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center font-bold text-sm shrink-0">
+                                                    #{idx + 1}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-sm text-foreground truncate">{s.seriesTitle}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Moy. {s.avgEpisodesPerSession} épisodes • Max {s.maxEpisodesInSingleRun}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <span className="text-sm font-bold text-emerald-400 font-mono">{s.totalHoursBunged}h</span>
+                                                <span className="block text-[10px] text-muted-foreground">{s.totalBingeSessions} sessions</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* 2. Smart Insights & Acquisition Suggestions Card */}
+                <Card className="app-surface border border-border shadow-sm">
+                    <CardHeader>
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div>
+                                <CardTitle className="text-xl flex items-center gap-2 text-foreground">
+                                    <Lightbulb className="w-5 h-5 text-yellow-400" />
+                                    Suggestions d&apos;Acquisitions & Tendances (Smart Insights)
+                                </CardTitle>
+                                <CardDescription>
+                                    Recommandations basées sur les genres, réalisateurs et acteurs les plus consommés pour optimiser vos ajouts dans la bibliothèque.
+                                </CardDescription>
+                            </div>
+                            <Badge variant="outline" className="border-yellow-500/30 text-yellow-400 bg-yellow-500/10">
+                                IA JellyTrack
+                            </Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* Recommendations Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {tasteInsights.acquisitionSuggestions.map((sug, i) => (
+                                <div
+                                    key={i}
+                                    className="app-surface-soft border border-border rounded-xl p-4 flex flex-col justify-between hover:border-yellow-500/30 transition-colors"
+                                >
+                                    <div>
+                                        <div className="flex items-center justify-between gap-2 mb-2">
+                                            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                                {sug.category}
+                                            </span>
+                                            <Badge variant="secondary" className="text-[10px] bg-yellow-500/15 text-yellow-400 border border-yellow-500/30">
+                                                {sug.badge}
+                                            </Badge>
+                                        </div>
+                                        <h4 className="font-bold text-sm text-foreground mb-1.5">{sug.title}</h4>
+                                        <p className="text-xs text-muted-foreground leading-relaxed">{sug.reason}</p>
+                                    </div>
+                                    <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground">Indice d&apos;intérêt</span>
+                                        <span className="font-bold text-yellow-400">{sug.scorePercent}%</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Top Genres Breakdown Bar */}
+                        {tasteInsights.topGenres.length > 0 && (
+                            <div className="space-y-2">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                    Genres dominants en temps de visionnage
+                                </h4>
+                                <div className="space-y-2">
+                                    {tasteInsights.topGenres.slice(0, 4).map((g) => (
+                                        <div key={g.name} className="space-y-1">
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="font-medium text-foreground">{g.name}</span>
+                                                <span className="text-muted-foreground font-mono">{g.totalHours}h ({g.percentage}%)</span>
+                                            </div>
+                                            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full bg-gradient-to-r from-yellow-500 to-amber-400"
+                                                    style={{ width: `${Math.max(4, g.percentage)}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

@@ -99,13 +99,103 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
         router.push(`${pathname}?${params.toString()}`);
     };
 
+    const setQuickFilter = (type: "all" | "transcode" | "directPlay" | "4k" | "zapped") => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("page");
+
+        if (type === "all") {
+            params.delete("playMethod");
+            params.delete("resolution");
+            params.delete("hideZapped");
+        } else if (type === "transcode") {
+            params.set("playMethod", "Transcode");
+            params.delete("resolution");
+        } else if (type === "directPlay") {
+            params.set("playMethod", "DirectPlay");
+            params.delete("resolution");
+        } else if (type === "4k") {
+            params.set("resolution", "4K");
+            params.delete("playMethod");
+        } else if (type === "zapped") {
+            params.set("hideZapped", "false");
+        }
+
+        router.push(`${window.location.pathname}?${params.toString()}`);
+    };
+
+    const currentPlayMethod = (searchParams.get("playMethod") || "").toLowerCase();
+    const currentResolution = (searchParams.get("resolution") || "").toLowerCase();
+    const isZappedExplicit = searchParams.get("hideZapped") === "false";
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         applyFiltersWithState();
     };
 
     return (
-        <form id="log-filters-form" className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <form id="log-filters-form" className="flex flex-col gap-3" onSubmit={handleSubmit}>
+            {/* Quick 1-Click Filter Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+                <span className="text-muted-foreground font-semibold mr-1 shrink-0 flex items-center gap-1">
+                    <Filter className="w-3 h-3" /> Rapide :
+                </span>
+                <button
+                    type="button"
+                    onClick={() => setQuickFilter("all")}
+                    className={`px-2.5 py-1 rounded-full border transition-colors ${
+                        !currentPlayMethod && !currentResolution && !isZappedExplicit
+                            ? "bg-primary text-primary-foreground border-primary font-bold shadow-sm"
+                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
+                    }`}
+                >
+                    Tous
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setQuickFilter("transcode")}
+                    className={`px-2.5 py-1 rounded-full border transition-colors ${
+                        currentPlayMethod === "transcode"
+                            ? "bg-purple-500/20 text-purple-400 border-purple-500/40 font-bold shadow-sm"
+                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
+                    }`}
+                >
+                    ⚡ Transcodes
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setQuickFilter("directPlay")}
+                    className={`px-2.5 py-1 rounded-full border transition-colors ${
+                        currentPlayMethod === "directplay"
+                            ? "bg-blue-500/20 text-blue-400 border-blue-500/40 font-bold shadow-sm"
+                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
+                    }`}
+                >
+                    🚀 Direct Play
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setQuickFilter("4k")}
+                    className={`px-2.5 py-1 rounded-full border transition-colors ${
+                        currentResolution.includes("4k")
+                            ? "bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold shadow-sm"
+                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
+                    }`}
+                >
+                    🌟 4K UHD
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setQuickFilter("zapped")}
+                    className={`px-2.5 py-1 rounded-full border transition-colors ${
+                        isZappedExplicit
+                            ? "bg-red-500/20 text-red-400 border-red-500/40 font-bold shadow-sm"
+                            : "bg-muted/40 text-muted-foreground hover:bg-muted border-border"
+                    }`}
+                >
+                    ⏸️ Zappés &lt; 1 min
+                </button>
+            </div>
+
             <div className="flex flex-wrap items-center justify-between gap-3 w-full">
                 {!hideSearch && (
                     <div className="relative flex-1 min-w-[240px]">

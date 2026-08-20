@@ -36,7 +36,7 @@ const adminNavigationKeys = [
     { key: 'cleanup', href: '/admin/cleanup', icon: Eraser },
     { key: 'logHealth', href: '/admin/health', icon: HeartPulse },
     { key: 'logs', href: '/logs', icon: ScrollText },
-    { key: 'settings', href: '/settings/plugin', icon: Settings },
+    { key: 'settings', href: '/settings', icon: Settings },
     { key: 'serverCompare', href: '/admin/server-compare', icon: GitCompareArrows },
 ];
 

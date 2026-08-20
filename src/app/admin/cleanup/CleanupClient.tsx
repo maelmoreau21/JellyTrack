@@ -26,12 +26,17 @@ import {
     CheckCircle2,
     AlertTriangle,
     Loader2,
+    Database,
+    Copy,
+    Download,
+    HardDrive,
 } from "lucide-react";
 import { formatDistanceToNow, type Locale } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { escapeCsvCell } from "@/lib/csv";
 import {
     Dialog,
     DialogContent,
@@ -73,6 +78,18 @@ interface AbandonedMedia {
     type: string;
     maxCompletion: number;
     lastPlayed: DateValue;
+    size?: string | number | null;
+}
+
+export interface DuplicateMediaItem {
+    id: string;
+    jellyfinMediaId: string;
+    title: string;
+    type: string;
+    resolution?: string | null;
+    libraryName?: string | null;
+    size?: string | null;
+    duplicateGroup: string;
 }
 
 interface StaleMovieRecommendationItem {
@@ -84,8 +101,10 @@ interface StaleMovieRecommendationItem {
 }
 
 interface CleanupData {
+    totalRecoverableSizeBytes?: string;
     ghostMedia: GhostMedia[];
     abandonedMedia: AbandonedMedia[];
+    duplicateMedia?: DuplicateMediaItem[];
     recommendations?: {
         staleMoviesToDelete?: {
             count: number;
@@ -209,9 +228,10 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
     const [searchValue, setSearchValue] = useState("");
     const [period, setPeriod] = useState<PeriodValue>("30d");
     const [pageSize, setPageSize] = useState<number>(25);
-    const [activeTab, setActiveTab] = useState<"ghosts" | "abandoned">("ghosts");
+    const [activeTab, setActiveTab] = useState<"ghosts" | "abandoned" | "duplicates">("ghosts");
     const [ghostFilter, setGhostFilter] = useState<string>("all");
     const [abandonFilter, setAbandonFilter] = useState<string>("all");
+    const [duplicateFilter, setDuplicateFilter] = useState<string>("all");
     const [abandonedSort, setAbandonedSort] = useState<AbandonedSortValue>("completion");
     const [showSuggestedOnly, setShowSuggestedOnly] = useState(false);
     const [dismissedSuggestion, setDismissedSuggestion] = useState(false);
@@ -221,6 +241,7 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
     const [toasts, setToasts] = useState<CleanupToast[]>([]);
     const [ghostPage, setGhostPage] = useState(1);
     const [abandonedPage, setAbandonedPage] = useState(1);
+    const [duplicatePage, setDuplicatePage] = useState(1);
 
     const staleMovieSuggestion = initialData.recommendations?.staleMoviesToDelete;
     const suggestedGhostIds = useMemo(
@@ -273,6 +294,13 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
         });
     }, [initialData.abandonedMedia, period, searchQuery]);
 
+    const baseDuplicates = useMemo(() => {
+        return (initialData.duplicateMedia || []).filter((media) => {
+            const title = normalizeForSearch(media.title);
+            return searchQuery.length === 0 || title.includes(searchQuery);
+        });
+    }, [initialData.duplicateMedia, searchQuery]);
+
     const filteredGhosts = useMemo(() => {
         const scoped = ghostFilter === "all"
             ? baseGhosts
@@ -301,6 +329,72 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
 
         return sorted;
     }, [abandonFilter, abandonedSort, baseAbandoned]);
+
+    const filteredDuplicates = useMemo(() => {
+        if (duplicateFilter === "all") return baseDuplicates;
+        return baseDuplicates.filter((media) => media.type === duplicateFilter);
+    }, [baseDuplicates, duplicateFilter]);
+
+    const duplicatePageData = useMemo(
+        () => paginateItems(filteredDuplicates, duplicatePage, pageSize),
+        [filteredDuplicates, duplicatePage, pageSize]
+    );
+
+    const handleExportActiveCsv = () => {
+        let headers: string[] = [];
+        let rows: string[][] = [];
+
+        if (activeTab === "ghosts") {
+            headers = ["Title", "Type", "JellyfinId", "Size", "DateAdded"];
+            rows = filteredGhosts.map((m) => [
+                escapeCsvCell(m.title),
+                escapeCsvCell(m.type),
+                escapeCsvCell(m.jellyfinMediaId),
+                escapeCsvCell(formatBytes(m.size)),
+                escapeCsvCell(m.dateAdded ? new Date(m.dateAdded).toISOString() : ""),
+            ]);
+        } else if (activeTab === "abandoned") {
+            headers = ["Title", "Type", "JellyfinId", "MaxCompletionPct", "LastPlayed"];
+            rows = filteredAbandoned.map((m) => [
+                escapeCsvCell(m.title),
+                escapeCsvCell(m.type),
+                escapeCsvCell(m.jellyfinMediaId),
+                escapeCsvCell(`${m.maxCompletion}%`),
+                escapeCsvCell(m.lastPlayed ? new Date(m.lastPlayed).toISOString() : ""),
+            ]);
+        } else {
+            headers = ["Title", "Type", "JellyfinId", "Resolution", "Library", "Size"];
+            rows = filteredDuplicates.map((m) => [
+                escapeCsvCell(m.title),
+                escapeCsvCell(m.type),
+                escapeCsvCell(m.jellyfinMediaId),
+                escapeCsvCell(m.resolution || "Unknown"),
+                escapeCsvCell(m.libraryName || ""),
+                escapeCsvCell(formatBytes(m.size)),
+            ]);
+        }
+
+        const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `jellytrack_${activeTab}_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleExportActiveJson = () => {
+        const data = activeTab === "ghosts" ? filteredGhosts : activeTab === "abandoned" ? filteredAbandoned : filteredDuplicates;
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `jellytrack_${activeTab}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     const ghostPageData = useMemo(
         () => paginateItems(filteredGhosts, ghostPage, pageSize),
@@ -474,8 +568,53 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
 
     return (
         <>
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "ghosts" | "abandoned")} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+        {/* Top Recoverable Storage & Status Banner */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="app-surface-soft border border-primary/30 rounded-2xl p-4 flex items-center gap-4 bg-primary/5">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                    <HardDrive className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                    <div className="text-xs font-semibold text-muted-foreground">Espace récupérable estimé</div>
+                    <div className="text-2xl font-black text-foreground metric-glow-emerald">
+                        {formatBytes(initialData.totalRecoverableSizeBytes || "0")}
+                    </div>
+                </div>
+            </div>
+
+            <div className="app-surface-soft border border-border rounded-2xl p-4 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shrink-0">
+                    <Ghost className="w-5 h-5" />
+                </div>
+                <div>
+                    <div className="text-xs font-semibold text-muted-foreground">{t('ghostMedia')}</div>
+                    <div className="text-xl font-bold text-foreground">{baseGhosts.length}</div>
+                </div>
+            </div>
+
+            <div className="app-surface-soft border border-border rounded-2xl p-4 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 shrink-0">
+                    <HeartCrack className="w-5 h-5" />
+                </div>
+                <div>
+                    <div className="text-xs font-semibold text-muted-foreground">{t('abandonedMedia')}</div>
+                    <div className="text-xl font-bold text-foreground">{baseAbandoned.length}</div>
+                </div>
+            </div>
+
+            <div className="app-surface-soft border border-border rounded-2xl p-4 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                    <Copy className="w-5 h-5" />
+                </div>
+                <div>
+                    <div className="text-xs font-semibold text-muted-foreground">Doublons détectés</div>
+                    <div className="text-xl font-bold text-foreground">{baseDuplicates.length}</div>
+                </div>
+            </div>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "ghosts" | "abandoned" | "duplicates")} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
                 <TabsTrigger value="ghosts" className="flex items-center gap-2">
                     <Ghost className="w-4 h-4" />
                     {t('ghostMedia')} ({baseGhosts.length})
@@ -483,6 +622,10 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                 <TabsTrigger value="abandoned" className="flex items-center gap-2">
                     <HeartCrack className="w-4 h-4" />
                     {t('abandonedMedia')} ({baseAbandoned.length})
+                </TabsTrigger>
+                <TabsTrigger value="duplicates" className="flex items-center gap-2">
+                    <Copy className="w-4 h-4" />
+                    Doublons ({baseDuplicates.length})
                 </TabsTrigger>
             </TabsList>
 
@@ -637,6 +780,15 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                                 ))}
                             </SelectContent>
                         </Select>
+
+                        <Button size="sm" variant="outline" onClick={handleExportActiveCsv} className="gap-1.5 bg-background/70 border-border">
+                            <Download className="h-4 w-4" />
+                            CSV
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={handleExportActiveJson} className="gap-1.5 bg-background/70 border-border">
+                            <Download className="h-4 w-4" />
+                            JSON
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -807,6 +959,90 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
                             abandonedPageData,
                             () => setAbandonedPage((current) => Math.max(1, current - 1)),
                             () => setAbandonedPage((current) => Math.min(abandonedPageData.totalPages, current + 1))
+                        )}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="duplicates" className="mt-6">
+                <Card className="app-surface-soft border-border backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="text-blue-400 flex items-center gap-2">
+                            <Copy className="w-5 h-5" />
+                            Doublons Détectés
+                        </CardTitle>
+                        <CardDescription>
+                            Médias présents en plusieurs exemplaires ou différentes résolutions (ex: 1080p et 4K) sur vos serveurs.
+                        </CardDescription>
+                        <div className="flex flex-wrap gap-2 pt-2">
+                            {[
+                                { key: "all", label: "Tout" },
+                                { key: "Movie", label: "Films" },
+                                { key: "Series", label: "Séries" },
+                            ].map(f => (
+                                <button key={f.key} onClick={() => { setDuplicateFilter(f.key); setDuplicatePage(1); }}
+                                    className={filterChipClass(duplicateFilter === f.key, "orange")}>
+                                    {f.label}
+                                </button>
+                            ))}
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="rounded-md border border-border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="border-border hover:bg-zinc-200 dark:hover:bg-zinc-800/50">
+                                        <TableHead>{t('colTitle')}</TableHead>
+                                        <TableHead className="w-[100px]">{t('colType')}</TableHead>
+                                        <TableHead className="w-[120px]">Résolution</TableHead>
+                                        <TableHead className="w-[180px]">Bibliothèque</TableHead>
+                                        <TableHead className="w-[120px] text-right">Taille</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredDuplicates.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-24 text-center text-zinc-500">
+                                                Aucun doublon détecté. Votre médiathèque est parfaitement organisée !
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                    {duplicatePageData.pageItems.map((media) => (
+                                        <TableRow key={media.id} className="border-border hover:bg-zinc-200 dark:hover:bg-zinc-800/20">
+                                            <TableCell className="font-medium text-foreground">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{media.title}</span>
+                                                    <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                                                        {media.duplicateGroup}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="border-zinc-200 dark:border-zinc-700 flex items-center gap-1.5 w-fit">
+                                                    {getTypeIcon(media.type)}
+                                                    {getTypeLabel(media.type, t)}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="secondary" className="text-xs">
+                                                    {media.resolution || "Inconnue"}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground text-sm">
+                                                {media.libraryName || "-"}
+                                            </TableCell>
+                                            <TableCell className="text-right font-mono text-sm">
+                                                {formatBytes(media.size || 0)}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                        {renderPagination(
+                            duplicatePageData,
+                            () => setDuplicatePage((current) => Math.max(1, current - 1)),
+                            () => setDuplicatePage((current) => Math.min(duplicatePageData.totalPages, current + 1))
                         )}
                     </CardContent>
                 </Card>

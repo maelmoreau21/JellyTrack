@@ -213,7 +213,63 @@ async function getCleanupData() {
         return sum + (media.size || BigInt(0));
     }, BigInt(0));
 
+    // 3. Duplicate media detection (e.g. movies or series with same title / multiple quality versions)
+    const allParentMedia = await prisma.media.findMany({
+        where: { type: { in: ['Movie', 'Series'] } },
+        select: {
+            id: true,
+            serverId: true,
+            jellyfinMediaId: true,
+            title: true,
+            type: true,
+            resolution: true,
+            size: true,
+            libraryName: true,
+            createdAt: true,
+            dateAdded: true,
+        }
+    });
+
+    const mediaByNormTitle = new Map<string, typeof allParentMedia>();
+    for (const item of allParentMedia) {
+        const key = `${item.type}:${(item.title || '').trim().toLowerCase().replace(/[\s\-_.:]+/g, ' ')}`;
+        const list = mediaByNormTitle.get(key) || [];
+        list.push(item);
+        mediaByNormTitle.set(key, list);
+    }
+
+    const duplicateMedia: Array<{
+        id: string;
+        jellyfinMediaId: string;
+        title: string;
+        type: string;
+        resolution?: string | null;
+        libraryName?: string | null;
+        size?: string | null;
+        duplicateGroup: string;
+    }> = [];
+
+    for (const [groupKey, items] of mediaByNormTitle.entries()) {
+        if (items.length > 1) {
+            for (const item of items) {
+                duplicateMedia.push({
+                    id: item.id,
+                    jellyfinMediaId: item.jellyfinMediaId,
+                    title: item.title,
+                    type: item.type,
+                    resolution: item.resolution,
+                    libraryName: item.libraryName,
+                    size: item.size ? item.size.toString() : null,
+                    duplicateGroup: groupKey,
+                });
+            }
+        }
+    }
+
+    const totalGhostSizeBytes = ghostMedia.reduce((sum, media) => sum + (media.size || BigInt(0)), BigInt(0));
+
     return {
+        totalRecoverableSizeBytes: totalGhostSizeBytes.toString(),
         ghostMedia: ghostMedia.map(item => ({
             ...item,
             durationMs: item.durationMs ? Number(item.durationMs).toString() : null,
@@ -223,6 +279,7 @@ async function getCleanupData() {
             ...item,
             durationMs: item.durationMs ? Number(item.durationMs).toString() : null
         })),
+        duplicateMedia,
         recommendations: {
             staleMoviesToDelete: {
                 count: staleMovieCandidates.length,

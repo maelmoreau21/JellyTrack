@@ -18,6 +18,7 @@ import { cookies } from "next/headers";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
 import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
+import { MediaHeaderNav } from "@/components/media/MediaHeaderNav";
 
 export const dynamic = "force-dynamic";
 
@@ -150,6 +151,7 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
   return (
     <div className="flex-col md:flex">
       <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
+        <MediaHeaderNav />
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3 md:gap-4 min-w-0">
