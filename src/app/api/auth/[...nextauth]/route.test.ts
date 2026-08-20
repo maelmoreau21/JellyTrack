@@ -54,6 +54,18 @@ describe("ensureNextAuthUrl", () => {
     expect(process.env.NEXTAUTH_URL).toBe("http://192.168.1.50:3005");
   });
 
+  it("detects https from referer header when reverse proxy omits x-forwarded-proto", () => {
+    const req = new NextRequest("http://localhost:3005/api/auth/signin/oidc", {
+      headers: {
+        host: "jellytrack.dfmag.fr",
+        referer: "https://jellytrack.dfmag.fr/login",
+      },
+    });
+
+    ensureNextAuthUrl(req);
+    expect(process.env.NEXTAUTH_URL).toBe("https://jellytrack.dfmag.fr");
+  });
+
   it("preserves explicitly configured non-localhost custom NEXTAUTH_URL", () => {
     process.env.NEXTAUTH_URL = "https://custom-domain.com";
 

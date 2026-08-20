@@ -130,7 +130,17 @@ export function ensureNextAuthUrl(req: NextRequest) {
     const rawForwardedHost = req.headers.get("x-forwarded-host");
     const rawForwardedProto = req.headers.get("x-forwarded-proto");
     const host = (rawForwardedHost || req.headers.get("host") || req.nextUrl.host || "").split(",")[0].trim();
-    const proto = (rawForwardedProto || req.nextUrl.protocol || "http").split(",")[0].trim().replace(/:$/, "");
+
+    const isHttps =
+        rawForwardedProto?.split(",")[0].trim().toLowerCase() === "https" ||
+        req.headers.get("x-forwarded-ssl") === "on" ||
+        req.headers.get("x-forwarded-scheme") === "https" ||
+        req.headers.get("front-end-https") === "on" ||
+        Boolean(req.headers.get("origin")?.startsWith("https://")) ||
+        Boolean(req.headers.get("referer")?.startsWith("https://")) ||
+        req.nextUrl.protocol === "https:";
+
+    const proto = isHttps ? "https" : (rawForwardedProto || req.nextUrl.protocol || "http").split(",")[0].trim().replace(/:$/, "");
 
     const configured = process.env.NEXTAUTH_URL?.trim();
     const isLocalhostFallback = !configured || /^(https?:\/\/)?(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(configured);
