@@ -143,6 +143,28 @@ export default function SchedulerSchedulesPage() {
                         <div className="app-surface-soft rounded-lg border p-4">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
+                                    <div className="text-sm font-medium">{t('integrityCheckTask') || "Vérification d'intégrité"}</div>
+                                    <div className="text-xs text-muted-foreground mt-1">{t('schedulerIntegrityIntervalHint') || "Intervalle de vérification et fermeture automatique des sessions de lecture orphelines."}</div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Clock3 className="w-4 h-4 text-emerald-400" />
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        max={168}
+                                        step={1}
+                                        value={intervals.integrityCheckEveryHours ?? 6}
+                                        onChange={(e) => updateInterval('integrityCheckEveryHours', Math.max(1, Math.min(168, parseInt(e.target.value) || 1)))}
+                                        className="w-24 font-mono"
+                                    />
+                                    <span className="text-sm text-muted-foreground">h</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="app-surface-soft rounded-lg border p-4">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
                                     <div className="text-sm font-medium">{t('backupTask')}</div>
                                     <div className="text-xs text-muted-foreground mt-1">{t('schedulerBackupIntervalHint')}</div>
                                 </div>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isAuthError } from "@/lib/auth";
 import { requireAdminMutation } from "@/lib/adminRequestGuard";
-import { getPluginKeySnapshot } from "@/lib/pluginKeyManager";
+import { getPluginKeySnapshot, rotatePluginApiKey } from "@/lib/pluginKeyManager";
 import { deriveScopedPluginApiKey } from "@/lib/pluginServerKey";
 import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
 import { z } from "zod";
@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 const pluginKeyPostSchema = z.object({
   id: z.string().optional(),
   jellyfinServerId: z.string().optional(),
+  regenerate: z.boolean().optional(),
 });
 
 const SENSITIVE_RESPONSE_HEADERS = {
@@ -50,16 +51,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Serveur introuvable." }, { status: 404 });
   }
 
-  const { snapshot } = await getPluginKeySnapshot();
+  let { snapshot } = await getPluginKeySnapshot();
 
-  if (!snapshot.currentKeyHash) {
-    return NextResponse.json(
-      {
-        error:
-          "Aucune cle plugin globale active. Generez-la depuis les reglages plugin avant de creer une cle serveur.",
+  const shouldRegenerate = Boolean(body.regenerate);
+  if (!snapshot.currentKeyHash || shouldRegenerate) {
+    const rotated = await rotatePluginApiKey({
+      reason: "manual",
+      context: {
+        actorUserId: auth.linkedUserDbIds[0] ?? null,
+        actorUsername: auth.username || null,
+        ipAddress: getRequestIp(req),
       },
-      { status: 400 },
-    );
+    });
+    snapshot = rotated.snapshot;
   }
 
   const pluginApiKey = deriveScopedPluginApiKey(snapshot.currentKeyHash, server.jellyfinServerId);

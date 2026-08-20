@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, Database, Save, Play, Clock3 } from "lucide-react";
+import { RefreshCw, Database, Save, Play, Clock3, ShieldCheck } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
 import { DEFAULT_SCHEDULER_INTERVALS, normalizeSchedulerIntervals, type SchedulerIntervals } from "@/lib/schedulerIntervals";
@@ -15,6 +15,7 @@ export default function SchedulerTasksPage() {
         recentSync: { loading: false, msg: null },
         fullSync: { loading: false, msg: null },
         backup: { loading: false, msg: null },
+        integrityCheck: { loading: false, msg: null },
     });
 
     useEffect(() => {
@@ -119,6 +120,33 @@ export default function SchedulerTasksPage() {
                         >
                             <Play className={`w-3.5 h-3.5 ${taskStatus.fullSync.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.fullSync.loading ? tc('running') : tc('run')}
+                        </button>
+                    </div>
+
+                    <div className="app-surface-soft flex items-center justify-between rounded-lg border p-4">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                                <span className="font-medium text-sm">{t('integrityCheckTask') || "Vérification d'intégrité"}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1 ml-6">{t('integrityCheckTaskDesc') || "Détecte et ferme les sessions orphelines bloquées à l'état actif (coupures réseau ou crashs clients)."}</p>
+                            <div className="mt-2 ml-6 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-300">
+                                <Clock3 className="w-3 h-3" />
+                                {t('schedulerEveryHours', { hours: intervals.integrityCheckEveryHours ?? 6 })}
+                            </div>
+                            {taskStatus.integrityCheck?.msg && (
+                                <div className={`mt-2 ml-6 text-xs ${taskStatus.integrityCheck.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    {taskStatus.integrityCheck.msg.text}
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => runTask('integrityCheck', '/api/admin/integrity-cleanup')}
+                            disabled={taskStatus.integrityCheck?.loading}
+                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.integrityCheck?.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-emerald-600 dark:bg-emerald-500 text-white hover:bg-emerald-500 dark:hover:bg-emerald-400 border-white/20 dark:shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-md active:scale-95'}`}
+                        >
+                            <Play className={`w-3.5 h-3.5 ${taskStatus.integrityCheck?.loading ? 'animate-spin' : ''}`} />
+                            {taskStatus.integrityCheck?.loading ? tc('running') : tc('run')}
                         </button>
                     </div>
 

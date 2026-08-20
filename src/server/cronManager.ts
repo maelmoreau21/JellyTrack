@@ -5,6 +5,7 @@ let recentSyncTask: ScheduledTask | null = null;
 let fullSyncTask: ScheduledTask | null = null;
 let backupTask: ScheduledTask | null = null;
 let logCleanupTask: ScheduledTask | null = null;
+let integrityCheckTask: ScheduledTask | null = null;
 
 interface CronSchedule {
     syncCronHour: number;
@@ -14,6 +15,7 @@ interface CronSchedule {
     recentSyncEveryHours: number;
     fullSyncEveryHours: number;
     backupEveryHours: number;
+    integrityCheckEveryHours?: number;
     logRetentionDays?: number;
 }
 
@@ -49,6 +51,7 @@ export async function initCronJobs(schedule: CronSchedule) {
     const { syncJellyfinLibrary } = await import('@/lib/sync');
     const { performAutoBackup } = await import('@/lib/autoBackup');
     const { cleanupOldSystemLogs } = await import('@/lib/systemLogger');
+    const { cleanupOrphanedSessions } = await import('@/lib/cleanup');
 
     const recentSyncCronExpr = buildEveryHoursCron(
         schedule.recentSyncEveryHours,
@@ -65,10 +68,17 @@ export async function initCronJobs(schedule: CronSchedule) {
         schedule.backupCronHour,
         schedule.backupCronMinute
     );
+    const integrityCheckHours = schedule.integrityCheckEveryHours ?? 6;
+    const integrityCronExpr = buildEveryHoursCron(
+        integrityCheckHours,
+        schedule.syncCronHour,
+        schedule.syncCronMinute
+    );
 
     logger.info({ recentSyncCronExpr, recentSyncEveryHours: schedule.recentSyncEveryHours }, `[CronManager] Scheduling recent sync`);
     logger.info({ fullSyncCronExpr, fullSyncEveryHours: schedule.fullSyncEveryHours }, `[CronManager] Scheduling full sync`);
     logger.info({ backupCronExpr, backupCronHour: schedule.backupCronHour, backupCronMinute: schedule.backupCronMinute }, `[CronManager] Scheduling backup`);
+    logger.info({ integrityCronExpr, integrityCheckEveryHours: integrityCheckHours }, `[CronManager] Scheduling integrity check`);
 
     recentSyncTask = cron.schedule(recentSyncCronExpr, async () => {
         logger.info({ recentSyncEveryHours: schedule.recentSyncEveryHours }, `[Cron] Automatic trigger of recent synchronization`);
@@ -103,6 +113,15 @@ export async function initCronJobs(schedule: CronSchedule) {
         }
     });
 
+    integrityCheckTask = cron.schedule(integrityCronExpr, async () => {
+        logger.info({ integrityCheckEveryHours: integrityCheckHours }, `[Cron] Running scheduled integrity check`);
+        try {
+            await cleanupOrphanedSessions();
+        } catch (err) {
+            logger.error({ err }, "[Cron] Scheduled integrity check failed");
+        }
+    });
+
     // Daily system log retention cleanup at 04:00 UTC
     logCleanupTask = cron.schedule("0 4 * * *", async () => {
         logger.info("[Cron] Running daily system logs retention cleanup");
@@ -120,6 +139,7 @@ export async function rescheduleCronJobs(schedule: CronSchedule) {
     if (recentSyncTask) { recentSyncTask.stop(); recentSyncTask = null; }
     if (fullSyncTask) { fullSyncTask.stop(); fullSyncTask = null; }
     if (backupTask) { backupTask.stop(); backupTask = null; }
+    if (integrityCheckTask) { integrityCheckTask.stop(); integrityCheckTask = null; }
     if (logCleanupTask) { logCleanupTask.stop(); logCleanupTask = null; }
 
     logger.info("[CronManager] Rescheduling cron jobs...");

@@ -2,6 +2,7 @@ export type SchedulerIntervals = {
     recentSyncEveryHours: number;
     fullSyncEveryHours: number;
     backupEveryHours: number;
+    integrityCheckEveryHours: number;
     logRetentionDays: number;
 };
 
@@ -9,6 +10,7 @@ export const DEFAULT_SCHEDULER_INTERVALS: SchedulerIntervals = {
     recentSyncEveryHours: 6,
     fullSyncEveryHours: 48,
     backupEveryHours: 24,
+    integrityCheckEveryHours: 6,
     logRetentionDays: 30,
 };
 
@@ -56,6 +58,10 @@ export function normalizeSchedulerIntervals(raw: unknown): SchedulerIntervals {
         backupEveryHours: normalizeRepeatHours(
             source.backupEveryHours,
             DEFAULT_SCHEDULER_INTERVALS.backupEveryHours
+        ),
+        integrityCheckEveryHours: normalizeRepeatHours(
+            source.integrityCheckEveryHours,
+            DEFAULT_SCHEDULER_INTERVALS.integrityCheckEveryHours
         ),
         logRetentionDays: normalizeRetentionDays(source.logRetentionDays),
     };

@@ -143,7 +143,7 @@ export function JellyfinServersSettings() {
     }
   };
 
-  const fetchServerPluginKey = async (id: string): Promise<string | null> => {
+  const fetchServerPluginKey = async (id: string, regenerate = false): Promise<string | null> => {
     const target = servers.find((s) => s.id === id);
     const jellyfinServerId = target?.jellyfinServerId;
     setPluginLoadingServerId(id || null);
@@ -151,7 +151,7 @@ export function JellyfinServersSettings() {
       const res = await fetch('/api/settings/jellyfin-servers/plugin-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, jellyfinServerId }),
+        body: JSON.stringify({ id, jellyfinServerId, regenerate }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -192,9 +192,9 @@ export function JellyfinServersSettings() {
     setTimeout(() => setCopiedPluginEndpointServerId((prev) => (prev === id ? null : prev)), 1800);
   };
 
-  const handleDeriveServerPluginKey = async (id: string) => {
+  const handleRegenerateServerPluginKey = async (id: string) => {
     try {
-      const key = await fetchServerPluginKey(id);
+      const key = await fetchServerPluginKey(id, true);
       if (!key) return;
       setPluginKeyByServerId((prev) => ({ ...prev, [id]: key || '' }));
       setPluginKeyVisible((prev) => ({ ...prev, [id]: true }));
@@ -262,41 +262,6 @@ export function JellyfinServersSettings() {
             </button>
           </div>
         )}
-
-        <div
-          className={`p-3 rounded-md flex flex-col gap-3 text-sm border sm:flex-row sm:items-center sm:justify-between ${
-            pluginKeyReady
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/30'
-              : 'bg-red-50 text-red-800 border-red-300 dark:bg-red-500/10 dark:text-red-200 dark:border-red-500/30'
-          }`}
-        >
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 mt-0.5" />
-              <div>
-                <p className={`font-semibold ${pluginKeyReady ? 'text-emerald-900 dark:text-emerald-100' : 'text-red-900 dark:text-red-200'}`}>
-                  {pluginKeyReady ? t('globalPluginKeyActive') : t('globalPluginKeyMissing')}
-                </p>
-                <p className={pluginKeyReady ? 'text-emerald-800 dark:text-emerald-100/90' : 'text-red-800 dark:text-red-200/90'}>
-                  {pluginKeyReady
-                    ? t('globalPluginKeyActiveDesc')
-                    : t('globalPluginKeyMissingDesc')}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleGenerateGlobalPluginKey}
-              disabled={globalPluginKeyLoading}
-              className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border text-xs font-medium disabled:opacity-60 ${
-                pluginKeyReady
-                  ? 'border-emerald-500/35 bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:border-emerald-400/30 dark:bg-emerald-500/20 dark:hover:bg-emerald-500/30 dark:text-emerald-50'
-                  : 'border-red-500/35 bg-red-100 text-red-900 hover:bg-red-200 dark:border-red-400/30 dark:bg-red-500/20 dark:hover:bg-red-500/30 dark:text-red-100'
-              }`}
-            >
-              {globalPluginKeyLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              {pluginKeyReady ? t('regenerateGlobalPluginKey') : t('generateGlobalPluginKey')}
-            </button>
-          </div>
 
         <div className="space-y-3">
           {loading ? (
@@ -386,13 +351,13 @@ export function JellyfinServersSettings() {
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-2">
                     <div className="xl:col-span-8 relative">
                       <Label className="text-xs">{t('serverPluginKeyLabel')}</Label>
-                      <Input readOnly type={pluginKeyVisible[server.id] ? 'text' : 'password'} value={pluginKeyVisible[server.id] ? pluginKeyByServerId[server.id] || '' : server.pluginKeyMasked || ''} className="font-mono text-xs pr-10" placeholder={pluginKeyReady ? t('clickToShow') : t('generateGlobalFirst')} />
-                      <button type="button" onClick={() => handleTogglePluginKeyVisibility(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="absolute right-2 top-[30px] text-zinc-500 hover:text-foreground disabled:opacity-40">
+                      <Input readOnly type={pluginKeyVisible[server.id] ? 'text' : 'password'} value={pluginKeyVisible[server.id] ? pluginKeyByServerId[server.id] || '' : server.pluginKeyMasked || ''} className="font-mono text-xs pr-10" placeholder={t('clickToShow')} />
+                      <button type="button" onClick={() => handleTogglePluginKeyVisibility(server.id)} disabled={pluginLoadingServerId === server.id} className="absolute right-2 top-[30px] text-zinc-500 hover:text-foreground disabled:opacity-40">
                         {pluginKeyVisible[server.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
                     <div className="xl:col-span-4 flex items-end">
-                      <button type="button" onClick={() => handleCopyPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
+                      <button type="button" onClick={() => handleCopyPluginKey(server.id)} disabled={pluginLoadingServerId === server.id} className="w-full inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
                         {pluginLoadingServerId === server.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
                         {copiedPluginKeyServerId === server.id ? t('keyCopied') : t('copyKey')}
                       </button>
@@ -400,7 +365,7 @@ export function JellyfinServersSettings() {
                   </div>
 
                   <div className="flex justify-end">
-                    <button type="button" onClick={() => handleDeriveServerPluginKey(server.id)} disabled={!pluginKeyReady || pluginLoadingServerId === server.id} className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
+                    <button type="button" onClick={() => handleRegenerateServerPluginKey(server.id)} disabled={pluginLoadingServerId === server.id} className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 border border-border hover:bg-muted text-xs font-medium disabled:opacity-60">
                       {pluginLoadingServerId === server.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                       {t('deriveServerKey')}
                     </button>
