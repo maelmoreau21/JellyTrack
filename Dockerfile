@@ -3,7 +3,7 @@ ARG BUILDPLATFORM
 
 # ── STAGE 1: Install dependencies & generate Prisma client ──
 FROM --platform=$BUILDPLATFORM node:22-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl python3 build-base git ca-certificates
+RUN apk add --no-cache libc6-compat openssl python3 build-base git ca-certificates binutils
 RUN npm install -g pnpm@10.2.0
 
 WORKDIR /app
@@ -28,11 +28,18 @@ RUN pnpm exec prisma generate
 WORKDIR /app/prisma-cli
 COPY prisma ./prisma
 ENV PRISMA_CLI_BINARY_TARGETS="linux-musl-openssl-3.0.x,linux-musl-arm64-openssl-3.0.x"
-RUN npm init -y && npm install --no-audit --no-fund --omit=dev prisma@7.8.0 dotenv@17.4.2 && \
-    npm cache clean --force
+RUN npm init -y && \
+    npm install --no-audit --no-fund --omit=dev prisma@7.8.0 dotenv@17.4.2 && \
+    npm cache clean --force && \
+    find /app/prisma-cli/node_modules -name "*query_engine*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -type f \( -name "*.map" -o -name "*.ts" -o -name "*.tsx" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" -o -name "*.d.ts" \) -delete 2>/dev/null || true && \
+    find /app/prisma-cli/node_modules -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "docs" -o -name "examples" \) -exec rm -rf {} + 2>/dev/null || true
 
 
-# ── STAGE 2: Build Next.js application & clean up assets ──
+# ── STAGE 2: Build Next.js application & assemble runtime ──
 FROM --platform=$BUILDPLATFORM node:22-alpine AS builder
 RUN apk add --no-cache libc6-compat binutils openssl
 RUN npm install -g pnpm@10.2.0
@@ -47,8 +54,15 @@ COPY --from=deps /app/.npmrc* ./
 COPY --from=deps /app/prisma ./prisma
 COPY --from=deps /app/prisma-cli ./prisma-cli
 
-# Copy source code
-COPY . .
+# Copy only source files needed for build (prevents pulling host build artifacts)
+COPY src ./src
+COPY public ./public
+COPY messages ./messages
+COPY next.config.ts ./
+COPY tsconfig.json ./
+COPY postcss.config.mjs ./
+COPY prisma.config.ts ./
+COPY docker-entrypoint.sh ./
 
 # Build variables
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -56,16 +70,7 @@ ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholde
 ENV DATABASE_URL=${DATABASE_URL}
 
 # Build Next.js standalone package
-RUN NEXTAUTH_SECRET=build-placeholder pnpm run build && \
-    rm -rf /app/.next/cache
-
-# ── Aggressively clean prisma-cli: keep only schema-engine for linux-musl, strip binaries, remove everything else ──
-RUN find /app/prisma-cli/node_modules -name "*query_engine*" -delete 2>/dev/null || true && \
-    find /app/prisma-cli/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    find /app/prisma-cli/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    find /app/prisma-cli/node_modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
-    find /app/prisma-cli/node_modules -type f \( -name "*.map" -o -name "*.ts" -o -name "*.tsx" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" -o -name "*.d.ts" \) -delete 2>/dev/null || true && \
-    find /app/prisma-cli/node_modules -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "docs" -o -name "examples" \) -exec rm -rf {} + 2>/dev/null || true
+RUN NEXTAUTH_SECRET=build-placeholder pnpm run build
 
 # ── Clean standalone output: remove source maps, docs, tests, non-musl sharp/prisma prebuilts ──
 RUN find /app/.next/standalone -type f \( -name "*.map" -o -name "*.d.ts" -o -name "*.ts" -o -name "*.tsx" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true && \
@@ -76,7 +81,7 @@ RUN find /app/.next/standalone -type f \( -name "*.map" -o -name "*.d.ts" -o -na
     find /app/.next/standalone/node_modules -name "*.node" -exec strip {} \; 2>/dev/null || true && \
     find /app/.next/standalone/node_modules/@img -mindepth 1 -maxdepth 1 ! -name "*linuxmusl*" ! -name "sharp" ! -name "colour" -exec rm -rf {} + 2>/dev/null || true
 
-# ── Copy serverExternalPackages that standalone doesn't bundle ──
+# ── Extract serverExternalPackages that standalone doesn't bundle ──
 RUN pnpm prune --prod && \
     mkdir -p /app/external-modules && \
     for pkg in node-cron geoip-country; do \
@@ -87,10 +92,29 @@ RUN pnpm prune --prod && \
     find /app/external-modules -type f \( -name "*.map" -o -name "*.d.ts" -o -name "*.ts" -o -name "*.tsx" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true && \
     find /app/external-modules -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "docs" -o -name "examples" \) -exec rm -rf {} + 2>/dev/null || true
 
+# ── Assemble single clean runtime directory with final permissions ──
+RUN mkdir -p /app/runtime/.next /app/runtime/node_modules /app/runtime/.next/cache/images /app/runtime/.next/cache/fetch-cache && \
+    cp -r /app/.next/standalone/* /app/runtime/ && \
+    cp -r /app/.next/standalone/.next/* /app/runtime/.next/ && \
+    cp -r /app/.next/static /app/runtime/.next/static && \
+    cp -r /app/public /app/runtime/public && \
+    cp -r /app/external-modules/* /app/runtime/node_modules/ && \
+    cp -r /app/prisma /app/runtime/prisma && \
+    cp /app/prisma.config.ts /app/runtime/prisma.config.ts && \
+    cp -r /app/prisma-cli /app/runtime/prisma-cli && \
+    cp /app/docker-entrypoint.sh /app/runtime/docker-entrypoint.sh && \
+    sed -i 's/\r$//' /app/runtime/docker-entrypoint.sh && \
+    chmod 755 /app/runtime/docker-entrypoint.sh && \
+    chmod -R 777 /app/runtime/prisma-cli /app/runtime/.next/cache && \
+    find /app/runtime -type f \( -name "*.map" -o -name "*.d.ts" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true
 
-# ── STAGE 3: Final lightweight & rock-solid runner image ──
+
+# ── STAGE 3: Final lightweight & rock-solid single-layer runner image ──
 FROM node:22-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat openssl && \
+    mkdir -p /data/backups /data/logs /tmp/.cache && \
+    chown -R node:node /data /tmp/.cache && \
+    chmod -R 777 /data /tmp/.cache
 
 WORKDIR /app
 
@@ -100,33 +124,8 @@ ENV TZ=UTC
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Setup runtime folders and permissions in initial layer before copying app files
-# This prevents Docker layer duplication when chmod/chown is executed
-RUN mkdir -p /app/.next/cache/images /app/.next/cache/fetch-cache /data/backups /data/logs /tmp/.cache && \
-    chown -R node:node /app /data /tmp/.cache && \
-    chmod -R 777 /data /tmp/.cache
-
-# Copy the entrypoint script
-COPY --chown=node:node docker-entrypoint.sh ./
-RUN sed -i 's/\r$//' ./docker-entrypoint.sh && chmod 755 ./docker-entrypoint.sh
-
-# Copy public folder and static assets from builder
-COPY --from=builder --chown=node:node /app/public ./public
-COPY --from=builder --chown=node:node /app/.next/static ./.next/static
-
-# Copy standalone server (includes its own node_modules with bundled deps)
-COPY --from=builder --chown=node:node /app/.next/standalone ./
-
-# Copy serverExternalPackages that standalone doesn't include
-COPY --from=builder --chown=node:node /app/external-modules/ ./node_modules/
-
-# Copy Prisma schema, config, and lightweight migration CLI
-COPY --from=builder --chown=node:node /app/prisma ./prisma
-COPY --from=builder --chown=node:node /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder --chown=node:node /app/prisma-cli ./prisma-cli
-
-# Set write permissions on required runtime folders without full tree layer duplication
-RUN chmod -R 777 /app/prisma-cli /app/.next/cache 2>/dev/null || true
+# Copy entire pre-built runtime with exact ownership in ONE single layer
+COPY --from=builder --chown=node:node /app/runtime /app
 
 # OCI labels
 LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTrack"
