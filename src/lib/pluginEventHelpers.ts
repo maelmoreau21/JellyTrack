@@ -18,11 +18,6 @@ import {
 export type JellyfinPerson = { type?: string; Type?: string; name?: string; Name?: string };
 export type Studio = { name?: string; Name?: string };
 
-export const CORS_HEADERS = {
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Api-Key",
-};
-
 export const ALLOWED_PLUGIN_EVENTS = new Set([
     "Heartbeat",
     "MediaDownloaded",
@@ -49,121 +44,23 @@ export class PayloadTooLargeError extends Error {
     }
 }
 
-// When a new start event arrives but a session for the same user+media was
-// closed recently (within this window), prefer reopening that session
-// instead of creating a new row. This prevents short-lived race duplicates.
 export const MERGE_WINDOW_MS = Number(process.env.MERGE_WINDOW_MS) || 60 * 60 * 1000; // 1 hour default
 
-export interface PluginAuthResult {
-    authorized: boolean;
-    usedPreviousKey: boolean;
-    autoRotated: boolean;
-    scopeServerId: string | null;
-}
+import {
+    CORS_HEADERS,
+    corsJson,
+    extractBearerToken,
+    verifyPluginAuth,
+    type PluginAuthResult,
+} from "@/lib/pluginAuth";
 
-export function corsJson(body: unknown, init?: { status?: number }) {
-    return NextResponse.json(body, { ...init, headers: CORS_HEADERS });
-}
-
-export async function verifyPluginAuth(req: Request): Promise<PluginAuthResult> {
-    const { snapshot, autoRotated } = await getPluginKeySnapshot();
-
-    const currentKeyHash = snapshot.currentKeyHash?.trim() || null;
-    const previousKeyHash = snapshot.previousKeyHash?.trim() || null;
-
-    const bearerParsed = parsePluginApiKeyCandidate(extractBearerToken(req.headers.get("authorization")));
-    const headerParsed = parsePluginApiKeyCandidate(req.headers.get("x-api-key"));
-
-    const bearerScopedCurrent = verifyScopedPluginApiKey(bearerParsed.scopedToken, currentKeyHash);
-    if (bearerScopedCurrent.valid) {
-        return {
-            authorized: true,
-            usedPreviousKey: false,
-            autoRotated,
-            scopeServerId: bearerScopedCurrent.jellyfinServerId,
-        };
-    }
-
-    const headerScopedCurrent = verifyScopedPluginApiKey(headerParsed.scopedToken, currentKeyHash);
-    if (headerScopedCurrent.valid) {
-        return {
-            authorized: true,
-            usedPreviousKey: false,
-            autoRotated,
-            scopeServerId: headerScopedCurrent.jellyfinServerId,
-        };
-    }
-
-    if (!bearerParsed.scoped && await comparePluginApiKey(bearerParsed.rawKey, currentKeyHash)) {
-        return {
-            authorized: true,
-            usedPreviousKey: false,
-            autoRotated,
-            scopeServerId: null,
-        };
-    }
-
-    if (!headerParsed.scoped && await comparePluginApiKey(headerParsed.rawKey, currentKeyHash)) {
-        return {
-            authorized: true,
-            usedPreviousKey: false,
-            autoRotated,
-            scopeServerId: null,
-        };
-    }
-
-    if (!isPreviousPluginKeyValid(snapshot) || !previousKeyHash) {
-        return { authorized: false, usedPreviousKey: false, autoRotated, scopeServerId: null };
-    }
-
-    const bearerScopedPrevious = verifyScopedPluginApiKey(bearerParsed.scopedToken, previousKeyHash);
-    if (bearerScopedPrevious.valid) {
-        return {
-            authorized: true,
-            usedPreviousKey: true,
-            autoRotated,
-            scopeServerId: bearerScopedPrevious.jellyfinServerId,
-        };
-    }
-
-    const headerScopedPrevious = verifyScopedPluginApiKey(headerParsed.scopedToken, previousKeyHash);
-    if (headerScopedPrevious.valid) {
-        return {
-            authorized: true,
-            usedPreviousKey: true,
-            autoRotated,
-            scopeServerId: headerScopedPrevious.jellyfinServerId,
-        };
-    }
-
-    if (!bearerParsed.scoped && await comparePluginApiKey(bearerParsed.rawKey, previousKeyHash)) {
-        return {
-            authorized: true,
-            usedPreviousKey: true,
-            autoRotated,
-            scopeServerId: null,
-        };
-    }
-
-    if (!headerParsed.scoped && await comparePluginApiKey(headerParsed.rawKey, previousKeyHash)) {
-        return {
-            authorized: true,
-            usedPreviousKey: true,
-            autoRotated,
-            scopeServerId: null,
-        };
-    }
-
-    return { authorized: false, usedPreviousKey: false, autoRotated, scopeServerId: null };
-}
-
-export function extractBearerToken(headerValue: string | null): string | null {
-    if (!headerValue) return null;
-    const match = headerValue.match(/^Bearer\s+(.+)$/i);
-    if (!match) return null;
-    const token = match[1].trim();
-    return token.length > 0 ? token : null;
-}
+export {
+    CORS_HEADERS,
+    corsJson,
+    extractBearerToken,
+    verifyPluginAuth,
+    type PluginAuthResult,
+};
 
 export function getPluginEventRateLimitIdentifier(req: Request): string {
     const token = extractBearerToken(req.headers.get("authorization")) || req.headers.get("x-api-key") || "no-key";
@@ -181,58 +78,44 @@ export function normalizePluginEventName(event: string): string {
     return DOWNLOAD_EVENT_ALIASES.has(event) ? "MediaDownloaded" : event;
 }
 
-const AUDIO_WALL_CLOCK_TYPES = new Set(["audio", "track", "audiobook"]);
+import {
+    parseFiniteNumber,
+    COMMON_PLAYBACK_RATES,
+    AUDIO_WALL_CLOCK_TYPES,
+    isFeishinClient,
+    isAudioWallClockCandidate,
+    shouldPreferWallClockForFeishinAudio,
+    shouldPromoteDurationToWallClock,
+    parsePlaybackRate,
+    readPlaybackRate,
+    bucketPlaybackRate,
+    formatPlaybackRate,
+    formatPositionLabel,
+    buildJumpMetadata,
+    inferJumpFromMetadata,
+    estimatePlaybackRate,
+    type PlaybackRateSource,
+    type PlaybackRateObservation,
+} from "@/lib/playbackTelemetry";
 
-export function isFeishinClient(clientName: unknown): boolean {
-    return typeof clientName === "string" && clientName.toLowerCase().includes("feishin");
-}
-
-export function isAudioWallClockCandidate(mediaType: unknown): boolean {
-    return typeof mediaType === "string" && AUDIO_WALL_CLOCK_TYPES.has(mediaType.trim().toLowerCase());
-}
-
-export function shouldPreferWallClockForFeishinAudio(input: {
-    mediaType: unknown;
-    clientName: unknown;
-    wallDeltaS: number;
-    tickDeltaS: number | null;
-    isPaused?: boolean;
-}): boolean {
-    if (input.isPaused) return false;
-    if (!isAudioWallClockCandidate(input.mediaType) || !isFeishinClient(input.clientName)) return false;
-    if (!Number.isFinite(input.wallDeltaS) || input.wallDeltaS <= 0) return false;
-
-    if (input.tickDeltaS === null || !Number.isFinite(input.tickDeltaS)) return true;
-    if (input.tickDeltaS <= 0) return true;
-
-    const wall = Math.max(1, input.wallDeltaS);
-    return input.tickDeltaS <= Math.max(3, wall * 0.35);
-}
-
-export function shouldPromoteDurationToWallClock(input: {
-    mediaType: unknown;
-    clientName: unknown;
-    wallClockS: number;
-    computedDurationS: number;
-}): boolean {
-    if (!isAudioWallClockCandidate(input.mediaType) || !isFeishinClient(input.clientName)) return false;
-    if (!Number.isFinite(input.wallClockS) || input.wallClockS <= 0) return false;
-    if (input.computedDurationS <= 0) return true;
-    if (input.wallClockS < 20) return false;
-    return input.computedDurationS <= input.wallClockS * 0.5;
-}
-
-const COMMON_PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4];
-
-type PlaybackRateSource = "jellyfin" | "estimated";
-
-type PlaybackRateObservation = {
-    rate: number;
-    bucket: number;
-    source: PlaybackRateSource;
-    confidence: number;
-    wallDeltaMs?: number;
-    positionDeltaMs?: number;
+export {
+    parseFiniteNumber,
+    COMMON_PLAYBACK_RATES,
+    AUDIO_WALL_CLOCK_TYPES,
+    isFeishinClient,
+    isAudioWallClockCandidate,
+    shouldPreferWallClockForFeishinAudio,
+    shouldPromoteDurationToWallClock,
+    parsePlaybackRate,
+    readPlaybackRate,
+    bucketPlaybackRate,
+    formatPlaybackRate,
+    formatPositionLabel,
+    buildJumpMetadata,
+    inferJumpFromMetadata,
+    estimatePlaybackRate,
+    type PlaybackRateSource,
+    type PlaybackRateObservation,
 };
 
 export function parseObservedAtMs(payload: Record<string, any>): number | null {
@@ -252,157 +135,6 @@ export function parseObservedAtMs(payload: Record<string, any>): number | null {
     }
 
     return null;
-}
-
-export function parsePlaybackRate(raw: unknown): number | null {
-    const value = typeof raw === "number"
-        ? raw
-        : typeof raw === "string"
-            ? Number(raw.trim().replace(/^x/i, ""))
-            : NaN;
-
-    if (!Number.isFinite(value) || value < 0.25 || value > 4) {
-        return null;
-    }
-
-    return value;
-}
-
-export function readPlaybackRate(payload: Record<string, any>, sessionPayload: Record<string, any>): number | null {
-    return parsePlaybackRate(
-        payload.playbackRate ??
-        payload.PlaybackRate ??
-        payload.playbackSpeed ??
-        payload.PlaybackSpeed ??
-        payload.speed ??
-        payload.Speed ??
-        sessionPayload.playbackRate ??
-        sessionPayload.PlaybackRate ??
-        sessionPayload.playbackSpeed ??
-        sessionPayload.PlaybackSpeed ??
-        sessionPayload.speed ??
-        sessionPayload.Speed
-    );
-}
-
-export function bucketPlaybackRate(rate: number): number {
-    return COMMON_PLAYBACK_RATES.reduce((best, candidate) => (
-        Math.abs(candidate - rate) < Math.abs(best - rate) ? candidate : best
-    ), COMMON_PLAYBACK_RATES[0]);
-}
-
-export function formatPlaybackRate(rate: number | null | undefined): string | null {
-    if (!Number.isFinite(Number(rate))) return null;
-    return `x${Number(rate).toFixed(2).replace(/\.?0+$/, "")}`;
-}
-
-export function formatPositionLabel(ms: number | null | undefined): string | null {
-    if (!Number.isFinite(Number(ms)) || Number(ms) < 0) return null;
-    const totalSeconds = Math.floor(Number(ms) / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    if (hours > 0) {
-        return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-    }
-    return `${minutes}:${String(seconds).padStart(2, "0")}`;
-}
-
-export function buildJumpMetadata(input: {
-    fromMs: number;
-    toMs: number;
-    deltaMs: number;
-    source: string;
-    existing?: Record<string, unknown> | null;
-}) {
-    const direction = input.deltaMs >= 0 ? "forward" : "backward";
-    const rangeStartMs = Math.min(input.fromMs, input.toMs);
-    const rangeEndMs = Math.max(input.fromMs, input.toMs);
-
-    return {
-        ...(input.existing || {}),
-        fromMs: input.fromMs,
-        toMs: input.toMs,
-        deltaMs: input.deltaMs,
-        direction,
-        source: input.source,
-        fromLabel: formatPositionLabel(input.fromMs),
-        toLabel: formatPositionLabel(input.toMs),
-        rangeStartMs,
-        rangeEndMs,
-        rangeLabel: `${formatPositionLabel(rangeStartMs)} -> ${formatPositionLabel(rangeEndMs)}`,
-    };
-}
-
-export function inferJumpFromMetadata(metadata: Record<string, unknown>, fallbackPositionMs: number): {
-    fromMs: number;
-    toMs: number;
-    deltaMs: number;
-    direction: "forward" | "backward";
-} | null {
-    const fromMsRaw = parseFiniteNumber(metadata.fromMs);
-    const toMsRaw = parseFiniteNumber(metadata.toMs);
-    const fromTicks = parseFiniteNumber(metadata.fromTicks);
-    const toTicks = parseFiniteNumber(metadata.toTicks);
-
-    const fromMs = fromMsRaw ?? (fromTicks !== null ? Math.floor(fromTicks / 10_000) : null);
-    const toMs = toMsRaw ?? (toTicks !== null ? Math.floor(toTicks / 10_000) : fallbackPositionMs);
-
-    if (fromMs === null || toMs === null) return null;
-
-    const rawDelta = parseFiniteNumber(metadata.deltaMs);
-    const deltaMs = rawDelta ?? (toMs - fromMs);
-    const directionRaw = typeof metadata.direction === "string" ? metadata.direction.toLowerCase() : "";
-    const direction = directionRaw === "backward" || deltaMs < 0 ? "backward" : "forward";
-
-    return { fromMs, toMs, deltaMs, direction };
-}
-
-export function estimatePlaybackRate(input: {
-    explicitRate: number | null;
-    isPaused: boolean;
-    appearsSeek: boolean;
-    prevTime: number | null;
-    prevTick: number | null;
-    now: number;
-    positionTicks: number;
-}): PlaybackRateObservation | null {
-    if (input.explicitRate !== null) {
-        const bucket = bucketPlaybackRate(input.explicitRate);
-        return {
-            rate: input.explicitRate,
-            bucket,
-            source: "jellyfin",
-            confidence: 1,
-        };
-    }
-
-    if (input.isPaused || input.appearsSeek || input.prevTime === null || input.prevTick === null) {
-        return null;
-    }
-
-    const wallDeltaMs = input.now - input.prevTime;
-    const positionDeltaMs = (input.positionTicks - input.prevTick) / 10_000;
-    if (wallDeltaMs < 2_000 || wallDeltaMs > 60_000 || positionDeltaMs <= 0) {
-        return null;
-    }
-
-    const rate = positionDeltaMs / wallDeltaMs;
-    if (!Number.isFinite(rate) || rate < 0.25 || rate > 4) {
-        return null;
-    }
-
-    const bucket = bucketPlaybackRate(rate);
-    const confidence = wallDeltaMs >= 10_000 ? 0.8 : 0.6;
-
-    return {
-        rate,
-        bucket,
-        source: "estimated",
-        confidence,
-        wallDeltaMs: Math.round(wallDeltaMs),
-        positionDeltaMs: Math.round(positionDeltaMs),
-    };
 }
 
 export interface PluginSchemaVersionResult {
@@ -430,20 +162,7 @@ export function parsePositiveInteger(raw: unknown): number | null {
     return null;
 }
 
-export function parseFiniteNumber(raw: unknown): number | null {
-    if (typeof raw === "number" && Number.isFinite(raw)) {
-        return raw;
-    }
 
-    if (typeof raw === "string") {
-        const value = Number(raw.trim());
-        if (Number.isFinite(value)) {
-            return value;
-        }
-    }
-
-    return null;
-}
 
 export function cleanIp(raw: unknown): string | null {
     if (typeof raw !== "string") return null;
