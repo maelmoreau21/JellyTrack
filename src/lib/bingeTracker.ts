@@ -58,12 +58,13 @@ export async function getBingeWatchingStats(days: number = 30): Promise<BingeSta
     }
 
     // Resolve series parent titles
+    // NOTE: media.parentId stores the Jellyfin ID (jellyfinMediaId), not the Prisma UUID (id)
     const parentIds = Array.from(new Set(playbacks.map((p) => p.media?.parentId).filter(Boolean))) as string[];
     const parentMedia = await prisma.media.findMany({
-        where: { id: { in: parentIds } },
-        select: { id: true, title: true, type: true, parentId: true },
+        where: { jellyfinMediaId: { in: parentIds } },
+        select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true },
     });
-    const parentMap = new Map(parentMedia.map((p) => [p.id, p]));
+    const parentMap = new Map(parentMedia.map((p) => [p.jellyfinMediaId, p]));
 
     // If parent is Season, find the grand-parent (Series)
     const grandParentIds = Array.from(
@@ -74,10 +75,10 @@ export async function getBingeWatchingStats(days: number = 30): Promise<BingeSta
         )
     );
     const grandParentMedia = await prisma.media.findMany({
-        where: { id: { in: grandParentIds } },
-        select: { id: true, title: true },
+        where: { jellyfinMediaId: { in: grandParentIds } },
+        select: { id: true, jellyfinMediaId: true, title: true },
     });
-    const grandParentMap = new Map(grandParentMedia.map((p) => [p.id, p]));
+    const grandParentMap = new Map(grandParentMedia.map((p) => [p.jellyfinMediaId, p]));
 
     function resolveSeriesInfo(pMediaId: string | null | undefined): { seriesId: string; seriesTitle: string } {
         if (!pMediaId) return { seriesId: "unknown", seriesTitle: "Série inconnue" };

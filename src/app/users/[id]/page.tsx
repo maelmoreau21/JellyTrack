@@ -16,6 +16,7 @@ import valkey from "@/lib/valkey";
 import { buildStreamValkeyKey } from "@/lib/serverRegistry";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
 import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
+import { ProfileAvatar } from "./ProfileAvatar";
 
 export const dynamic = "force-dynamic";
 
@@ -169,13 +170,17 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
         <div className="flex-col md:flex">
             <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0 mb-6">
-                    <div className="flex flex-col space-y-2">
-                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                            {t('profile', { name: user.username || tc('deletedUser') })}
-                        </h2>
-                        <p className="text-muted-foreground text-sm">
-                            {t('jellyfinId')} {user.jellyfinUserId}
-                        </p>
+                    <div className="flex items-center gap-4">
+                        {/* Profile picture from Jellyfin */}
+                        <ProfileAvatar jellyfinUserId={jellyfinUserId} username={user.username || tc('deletedUser')} />
+                        <div className="flex flex-col space-y-2">
+                            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+                                {t('profile', { name: user.username || tc('deletedUser') })}
+                            </h2>
+                            <p className="text-muted-foreground text-sm">
+                                {t('jellyfinId')} {user.jellyfinUserId}
+                            </p>
+                        </div>
                     </div>
                     {showWrappedButton && (
                         <a

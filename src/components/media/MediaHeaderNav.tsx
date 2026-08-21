@@ -12,7 +12,6 @@ export function MediaHeaderNav() {
 
     const tabs = [
         { href: '/media/all', label: t('allMedia'), icon: Film, isActive: (p: string) => p.startsWith('/media/all') || p === '/media' },
-        { href: '/recent', label: tn('recentlyAdded'), icon: Sparkles, isActive: (p: string) => p.startsWith('/recent') },
         { href: '/media/popular', label: t.has('popularTab') ? t('popularTab') : 'Top Contenus', icon: Trophy, isActive: (p: string) => p.startsWith('/media/popular') },
         { href: '/media/analysis', label: t('deepAnalysisTitle'), icon: BarChart3, isActive: (p: string) => p.startsWith('/media/analysis') },
         { href: '/media/collections', label: t('libraries'), icon: Layers, isActive: (p: string) => p.startsWith('/media/collections') },

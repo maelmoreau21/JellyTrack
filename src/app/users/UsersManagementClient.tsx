@@ -35,6 +35,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { escapeCsvCell } from "@/lib/csv";
+import { ProfileAvatar } from "./[id]/ProfileAvatar";
 
 export interface UserStatsItem {
     id: string;
@@ -344,11 +345,9 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
                                         <TableCell>
                                             <Link
                                                 href={`/users/${user.jellyfinUserId}`}
-                                                className="font-semibold text-foreground hover:text-primary transition-colors flex items-center gap-2"
+                                                className="font-semibold text-foreground hover:text-primary transition-colors flex items-center gap-2.5"
                                             >
-                                                <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                                                    {user.username.slice(0, 2).toUpperCase()}
-                                                </div>
+                                                <ProfileAvatar jellyfinUserId={user.jellyfinUserId} username={user.username} size={28} />
                                                 <span>{user.username}</span>
                                             </Link>
                                         </TableCell>

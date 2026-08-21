@@ -6,7 +6,7 @@ import { getJellyfinImageUrl } from "@/lib/jellyfin";
 import { normalizeResolution } from '@/lib/utils';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { redirect } from "next/navigation";
@@ -18,7 +18,7 @@ import { cookies } from "next/headers";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
 import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
-import { MediaHeaderNav } from "@/components/media/MediaHeaderNav";
+
 
 export const dynamic = "force-dynamic";
 
@@ -151,7 +151,6 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
   return (
     <div className="flex-col md:flex">
       <div className="flex-1 space-y-4 md:space-y-6 p-4 md:p-8 pt-4 md:pt-6 max-w-[1400px] mx-auto w-full">
-        <MediaHeaderNav />
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3 md:gap-4 min-w-0">
@@ -159,14 +158,6 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
               <Sparkles className="w-7 h-7 text-primary" />
               {t('title')}
             </h2>
-            <Tabs defaultValue={type || "all"} className="w-full md:w-[380px]">
-              <TabsList className="app-field border-zinc-700/60 w-full">
-                <TabsTrigger value="all" asChild><Link href={buildUrl({})}>{tc('all')}</Link></TabsTrigger>
-                <TabsTrigger value="movie" asChild><Link href={buildUrl({ type: "movie" })}>{tc('movies')}</Link></TabsTrigger>
-                <TabsTrigger value="series" asChild><Link href={buildUrl({ type: "series" })}>{tc('series')}</Link></TabsTrigger>
-                <TabsTrigger value="music" asChild><Link href={buildUrl({ type: "music" })}>{tc('music')}</Link></TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
           <span className="app-chip text-sm px-2.5 py-1 rounded-md">{totalCount} {t('mediaCount')}</span>
         </div>
