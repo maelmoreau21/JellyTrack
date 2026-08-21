@@ -86,16 +86,21 @@ RUN find /app/.next/standalone -type f \( -name "*.map" -o -name "*.d.ts" -o -na
 RUN mkdir -p /app/runtime/.next /app/runtime/node_modules /app/runtime/.next/cache/images /app/runtime/.next/cache/fetch-cache && \
     cp -r /app/.next/standalone/* /app/runtime/ && \
     cp -r /app/.next/standalone/.next/* /app/runtime/.next/ && \
+    rm -rf /app/runtime/prisma /app/runtime/public /app/runtime/.next/static && \
     cp -r /app/.next/static /app/runtime/.next/static && \
     cp -r /app/public /app/runtime/public && \
-    cp -r /tmp/external-tools-modules/* /app/runtime/node_modules/ && \
+    cp -r /tmp/external-tools-modules/. /app/runtime/node_modules/ && \
     cp -r /app/prisma /app/runtime/prisma && \
     cp /app/prisma.config.ts /app/runtime/prisma.config.ts && \
     cp /app/docker-entrypoint.sh /app/runtime/docker-entrypoint.sh && \
     sed -i 's/\r$//' /app/runtime/docker-entrypoint.sh && \
     chmod 755 /app/runtime/docker-entrypoint.sh && \
     chmod -R 777 /app/runtime/node_modules /app/runtime/.next/cache && \
-    find /app/runtime -type f \( -name "*.map" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true
+    find /app/runtime -type f \( -name "*.map" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true && \
+    test -f /app/runtime/prisma/schema.prisma && \
+    test -f /app/runtime/prisma.config.ts && \
+    test -f /app/runtime/docker-entrypoint.sh && \
+    echo "Runtime assembly verified successfully: /app/prisma/schema.prisma confirmed."
 
 
 # ── STAGE 3: Final lightweight & rock-solid single-layer runner image ──
