@@ -73,21 +73,17 @@ fi
 
 # Ensure runtime directories exist
 mkdir -p /app/.next/cache/images /app/.next/cache/fetch-cache /data/backups /data/logs /tmp/.cache 2>/dev/null || true
-chmod -R 777 /app/prisma-cli /app/.next/cache /data /tmp/.cache 2>/dev/null || true
+chmod -R 777 /app/.next/cache /data /tmp/.cache 2>/dev/null || true
 
 run_prisma() {
-  if [ -f "./node_modules/prisma/build/index.js" ]; then
-    node ./node_modules/prisma/build/index.js "$@"
-  elif [ -x "./node_modules/.bin/prisma" ]; then
+  if [ -x "./node_modules/.bin/prisma" ]; then
     ./node_modules/.bin/prisma "$@"
-  elif [ -f "./prisma-cli/node_modules/prisma/build/index.js" ]; then
-    node ./prisma-cli/node_modules/prisma/build/index.js "$@"
-  elif [ -x "./prisma-cli/node_modules/.bin/prisma" ]; then
-    ./prisma-cli/node_modules/.bin/prisma "$@"
+  elif [ -f "./node_modules/prisma/build/index.js" ]; then
+    node ./node_modules/prisma/build/index.js "$@"
   elif command -v pnpm >/dev/null 2>&1; then
     pnpm exec prisma "$@"
   else
-    echo "ERROR: Prisma CLI executable not found."
+    echo "ERROR: Prisma CLI executable not found in node_modules."
     exit 1
   fi
 }

@@ -24,6 +24,19 @@ ENV DATABASE_URL=${DATABASE_URL}
 # Generate Prisma Client
 RUN pnpm exec prisma generate
 
+# Install production CLI and external tools with self-contained flat node_modules
+WORKDIR /app/external-tools
+ENV PRISMA_CLI_BINARY_TARGETS="linux-musl-openssl-3.0.x,linux-musl-arm64-openssl-3.0.x"
+RUN npm init -y && \
+    npm install --no-audit --no-fund --omit=dev prisma@^7.8.0 dotenv@^17.4.2 node-cron@^4.5.0 geoip-country@^5.0.202608182354 && \
+    npm cache clean --force && \
+    find /app/external-tools/node_modules -name "*query_engine*" -delete 2>/dev/null || true && \
+    find /app/external-tools/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/external-tools/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
+    find /app/external-tools/node_modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
+    find /app/external-tools/node_modules -type f \( -name "*.map" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true && \
+    find /app/external-tools/node_modules -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "docs" -o -name "examples" \) -exec rm -rf {} + 2>/dev/null || true
+
 
 # ── STAGE 2: Build Next.js application & assemble runtime ──
 FROM --platform=$BUILDPLATFORM node:22-alpine AS builder
@@ -32,12 +45,13 @@ RUN npm install -g pnpm@10.2.0
 
 WORKDIR /app
 
-# Copy main node_modules from deps
+# Copy main node_modules and external tools from deps
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=deps /app/.npmrc* ./
 COPY --from=deps /app/prisma ./prisma
+COPY --from=deps /app/external-tools/node_modules ./external-node-modules
 
 # Copy only source files needed for build
 COPY src ./src
@@ -66,27 +80,13 @@ RUN find /app/.next/standalone -type f \( -name "*.map" -o -name "*.d.ts" -o -na
     find /app/.next/standalone/node_modules -name "*.node" -exec strip {} \; 2>/dev/null || true && \
     find /app/.next/standalone/node_modules/@img -mindepth 1 -maxdepth 1 ! -name "*linuxmusl*" ! -name "sharp" ! -name "colour" -exec rm -rf {} + 2>/dev/null || true
 
-# ── Extract serverExternalPackages and Prisma CLI tools ──
-RUN pnpm prune --prod && \
-    mkdir -p /app/external-modules && \
-    for pkg in node-cron geoip-country prisma @prisma dotenv; do \
-      if [ -d "/app/node_modules/$pkg" ]; then \
-        cp -r "/app/node_modules/$pkg" "/app/external-modules/$pkg"; \
-      fi; \
-    done && \
-    find /app/external-modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    find /app/external-modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    find /app/external-modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
-    find /app/external-modules -type f \( -name "*.map" -o -name "*.ts" -o -name "*.tsx" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true && \
-    find /app/external-modules -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "docs" -o -name "examples" \) -exec rm -rf {} + 2>/dev/null || true
-
 # ── Assemble single clean runtime directory with final permissions ──
 RUN mkdir -p /app/runtime/.next /app/runtime/node_modules /app/runtime/.next/cache/images /app/runtime/.next/cache/fetch-cache && \
     cp -r /app/.next/standalone/* /app/runtime/ && \
     cp -r /app/.next/standalone/.next/* /app/runtime/.next/ && \
     cp -r /app/.next/static /app/runtime/.next/static && \
     cp -r /app/public /app/runtime/public && \
-    cp -r /app/external-modules/* /app/runtime/node_modules/ && \
+    cp -r /app/external-node-modules/* /app/runtime/node_modules/ && \
     cp -r /app/prisma /app/runtime/prisma && \
     cp /app/prisma.config.ts /app/runtime/prisma.config.ts && \
     cp /app/docker-entrypoint.sh /app/runtime/docker-entrypoint.sh && \
