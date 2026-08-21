@@ -45,13 +45,15 @@ RUN npm install -g pnpm@10.2.0
 
 WORKDIR /app
 
-# Copy main node_modules and external tools from deps
+# Copy main node_modules from deps
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=deps /app/.npmrc* ./
 COPY --from=deps /app/prisma ./prisma
-COPY --from=deps /app/external-tools/node_modules ./external-node-modules
+
+# Copy external tools outside /app to /tmp/external-tools so Next.js TypeScript check does not scan it
+COPY --from=deps /app/external-tools/node_modules /tmp/external-tools-modules
 
 # Copy only source files needed for build
 COPY src ./src
@@ -86,7 +88,7 @@ RUN mkdir -p /app/runtime/.next /app/runtime/node_modules /app/runtime/.next/cac
     cp -r /app/.next/standalone/.next/* /app/runtime/.next/ && \
     cp -r /app/.next/static /app/runtime/.next/static && \
     cp -r /app/public /app/runtime/public && \
-    cp -r /app/external-node-modules/* /app/runtime/node_modules/ && \
+    cp -r /tmp/external-tools-modules/* /app/runtime/node_modules/ && \
     cp -r /app/prisma /app/runtime/prisma && \
     cp /app/prisma.config.ts /app/runtime/prisma.config.ts && \
     cp /app/docker-entrypoint.sh /app/runtime/docker-entrypoint.sh && \
