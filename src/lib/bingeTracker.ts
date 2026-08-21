@@ -58,13 +58,22 @@ export async function getBingeWatchingStats(days: number = 30): Promise<BingeSta
     }
 
     // Resolve series parent titles
-    // NOTE: media.parentId stores the Jellyfin ID (jellyfinMediaId), not the Prisma UUID (id)
+    // Support both jellyfinMediaId and internal id (for DB and test mocks)
     const parentIds = Array.from(new Set(playbacks.map((p) => p.media?.parentId).filter(Boolean))) as string[];
-    const parentMedia = await prisma.media.findMany({
-        where: { jellyfinMediaId: { in: parentIds } },
+    const parentMedia = parentIds.length > 0 ? await prisma.media.findMany({
+        where: {
+            OR: [
+                { jellyfinMediaId: { in: parentIds } },
+                { id: { in: parentIds } },
+            ],
+        },
         select: { id: true, jellyfinMediaId: true, title: true, type: true, parentId: true },
-    });
-    const parentMap = new Map(parentMedia.map((p) => [p.jellyfinMediaId, p]));
+    }) : [];
+    const parentMap = new Map<string, typeof parentMedia[0]>();
+    for (const p of parentMedia) {
+        if (p.jellyfinMediaId) parentMap.set(p.jellyfinMediaId, p);
+        if (p.id) parentMap.set(p.id, p);
+    }
 
     // If parent is Season, find the grand-parent (Series)
     const grandParentIds = Array.from(
@@ -74,11 +83,20 @@ export async function getBingeWatchingStats(days: number = 30): Promise<BingeSta
                 .map((p) => p.parentId as string)
         )
     );
-    const grandParentMedia = await prisma.media.findMany({
-        where: { jellyfinMediaId: { in: grandParentIds } },
+    const grandParentMedia = grandParentIds.length > 0 ? await prisma.media.findMany({
+        where: {
+            OR: [
+                { jellyfinMediaId: { in: grandParentIds } },
+                { id: { in: grandParentIds } },
+            ],
+        },
         select: { id: true, jellyfinMediaId: true, title: true },
-    });
-    const grandParentMap = new Map(grandParentMedia.map((p) => [p.jellyfinMediaId, p]));
+    }) : [];
+    const grandParentMap = new Map<string, typeof grandParentMedia[0]>();
+    for (const p of grandParentMedia) {
+        if (p.jellyfinMediaId) grandParentMap.set(p.jellyfinMediaId, p);
+        if (p.id) grandParentMap.set(p.id, p);
+    }
 
     function resolveSeriesInfo(pMediaId: string | null | undefined): { seriesId: string; seriesTitle: string } {
         if (!pMediaId) return { seriesId: "unknown", seriesTitle: "Série inconnue" };
