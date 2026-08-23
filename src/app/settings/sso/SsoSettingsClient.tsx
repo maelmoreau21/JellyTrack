@@ -383,8 +383,8 @@ export function SsoSettingsClient() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* OIDC Provider Parameters */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="space-y-2 lg:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2 md:col-span-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="oidc-url" className="text-xs font-medium">
                     {ts("oidcUrlLabel")}
@@ -409,7 +409,7 @@ export function SsoSettingsClient() {
                 </p>
               </div>
 
-              <div className="space-y-2 lg:col-span-1">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="oidc-client-id" className="text-xs font-medium">
                     {ts("clientIdLabel")}
@@ -431,7 +431,7 @@ export function SsoSettingsClient() {
                 />
               </div>
 
-              <div className="space-y-2 lg:col-span-1">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="oidc-client-secret" className="text-xs font-medium">
                     {ts("clientSecretLabel")}
@@ -460,21 +460,6 @@ export function SsoSettingsClient() {
                   >
                     {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
-                </div>
-              </div>
-
-              <div className="space-y-2 lg:col-span-1">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="oidc-token-alg" className="text-xs font-medium">
-                    Algorithme de signature
-                  </Label>
-                  <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-600 dark:text-emerald-400 gap-1 font-normal">
-                    <Lock className="w-2.5 h-2.5" />
-                    Standard OIDC
-                  </Badge>
-                </div>
-                <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted/50 px-3 py-1 text-xs font-mono text-muted-foreground">
-                  RS256 (Clé RSA / Certificat Authentik)
                 </div>
               </div>
             </div>

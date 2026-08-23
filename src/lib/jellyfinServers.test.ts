@@ -19,4 +19,11 @@ describe("fetchJellyfinSystemInfo", () => {
     expect(urls.length).toBeGreaterThan(0);
     expect(urls.every((url) => !/[?&]ApiKey=/i.test(url))).toBe(true);
   });
+
+  it("masks secrets correctly", async () => {
+    const { maskSecret } = await import("./jellyfinServers");
+    expect(maskSecret("")).toBe("");
+    expect(maskSecret("123456")).toBe("******");
+    expect(maskSecret("my-secret-key-12345")).toBe("my-*************345");
+  });
 });

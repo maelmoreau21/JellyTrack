@@ -1078,7 +1078,12 @@
         "generateGlobalFirst": "Générez d'abord la clé globale du plugin",
         "telemetryTrackAudioSubtitleChanges": "Changements audio / sous-titres",
         "jellyfinServersTitle": "Serveurs Jellyfin connectés",
-        "jellyfinServersDesc": "Gérez les instances Jellyfin associées à JellyTrack, configurez les clés d'API plugin et basculez entre les serveurs."
+        "jellyfinServersDesc": "Gérez les instances Jellyfin associées à JellyTrack, configurez les clés d'API plugin et basculez entre les serveurs.",
+        "editServer": "Modifier le serveur",
+        "saveServer": "Enregistrer les modifications",
+        "serverUpdatedSuccess": "Serveur Jellyfin mis à jour avec succès.",
+        "serverUpdateError": "Erreur lors de la mise à jour du serveur.",
+        "serverApiKeyHint": "Laissez vide pour conserver la clé actuelle."
     },
     "ssoSettings": {
         "title": "Authentification SSO",

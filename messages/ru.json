@@ -1078,7 +1078,12 @@
         "integrityCheckTaskDesc": "Обнаруживает и закрывает потерянные сеансы воспроизведения (обрывы сети или сбои клиента).",
         "schedulerIntegrityIntervalHint": "Интервал в минутах для очистки потерянных сеансов (например, 15)",
         "jellyfinServersTitle": "Подключенные серверы Jellyfin",
-        "jellyfinServersDesc": "Управляйте экземплярами Jellyfin, подключенными к JellyTrack, настраивайте ключи API плагина и переключайтесь между серверами."
+        "jellyfinServersDesc": "Управляйте экземплярами Jellyfin, подключенными к JellyTrack, настраивайте ключи API плагина и переключайтесь между серверами.",
+        "editServer": "Редактировать сервер",
+        "saveServer": "Сохранить изменения",
+        "serverUpdatedSuccess": "Сервер Jellyfin успешно обновлен.",
+        "serverUpdateError": "Ошибка при обновлении сервера Jellyfin.",
+        "serverApiKeyHint": "Оставьте пустым, чтобы сохранить текущий ключ."
     },
     "timeRange": {
         "allTime": "За всё время",

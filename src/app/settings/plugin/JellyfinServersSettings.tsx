@@ -9,9 +9,11 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  Pencil,
   Plug,
   Plus,
   RefreshCw,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -75,6 +77,15 @@ export function JellyfinServersSettings() {
   const [apiKey, setApiKey] = useState<string>('');
   const [allowAuthFallback, setAllowAuthFallback] = useState<boolean>(true);
 
+  // Server Edit State
+  const [editingServerId, setEditingServerId] = useState<string | null>(null);
+  const [editName, setEditName] = useState<string>('');
+  const [editUrl, setEditUrl] = useState<string>('');
+  const [editApiKey, setEditApiKey] = useState<string>('');
+  const [editAllowFallback, setEditAllowFallback] = useState<boolean>(true);
+  const [editSaving, setEditSaving] = useState<boolean>(false);
+  const [editShowApiKey, setEditShowApiKey] = useState<boolean>(false);
+
   const fetchInfo = useCallback(async () => {
     await Promise.resolve();
     setLoading(true);
@@ -112,6 +123,51 @@ export function JellyfinServersSettings() {
   useEffect(() => {
     fetchInfo();
   }, [fetchInfo]);
+
+  const handleStartEdit = (server: JellyfinServerRow) => {
+    setEditingServerId(server.id);
+    setEditName(server.name);
+    setEditUrl(server.url);
+    setEditApiKey('');
+    setEditAllowFallback(server.allowAuthFallback);
+    setEditShowApiKey(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingServerId(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingServerId) return;
+    setEditSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/settings/jellyfin-servers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingServerId,
+          name: editName.trim(),
+          url: editUrl.trim(),
+          apiKey: editApiKey.trim() ? editApiKey.trim() : undefined,
+          allowAuthFallback: editAllowFallback,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setMessage({ type: 'error', text: (err && err.error) || t('serverUpdateError') || 'Erreur lors de la mise à jour.' });
+        setEditSaving(false);
+        return;
+      }
+      setMessage({ type: 'success', text: t('serverUpdatedSuccess') || 'Serveur Jellyfin mis à jour avec succès.' });
+      setEditingServerId(null);
+      await fetchInfo();
+    } catch {
+      setMessage({ type: 'error', text: t('serverUpdateError') || 'Erreur lors de la mise à jour.' });
+    } finally {
+      setEditSaving(false);
+    }
+  };
 
   const effectivePluginEndpoint = typeof window !== 'undefined' ? `${window.location.origin}${pluginEndpointPath}` : pluginEndpointPath;
   const getPluginStateForServer = (server: JellyfinServerRow): PluginConnectionState => {
@@ -310,25 +366,124 @@ export function JellyfinServersSettings() {
                     </div>
                   </div>
 
-                  <p className="text-[11px] text-muted-foreground max-w-lg">{server.connectionMessage}</p>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-                  <div className="lg:col-span-3">
-                    <Label className="text-xs">{t('serverNameLabel')}</Label>
-                    <Input value={server.name} readOnly className="text-xs" />
-                  </div>
-                  <div className="lg:col-span-5">
-                    <Label className="text-xs">{t('serverUrlLabel')}</Label>
-                    <Input value={server.url} readOnly className="font-mono text-xs" />
-                  </div>
-                  <div className="lg:col-span-4">
-                    <Label className="text-xs">{t('serverApiKeyLabel')}</Label>
-                    <Input value={server.hasApiKey ? server.apiKeyMasked : t('notConfigured')} readOnly className="font-mono text-xs" />
+                  <div className="flex items-center gap-2">
+                    <p className="text-[11px] text-muted-foreground max-w-xs sm:text-right">{server.connectionMessage}</p>
+                    {editingServerId !== server.id && (
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(server)}
+                        className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs border border-border bg-muted/40 hover:bg-muted font-medium text-foreground transition-colors shrink-0"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        {t('editServer') || "Modifier"}
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                {server.isPrimary && <p className="text-[11px] text-muted-foreground">{t('serverLockedDesc')}</p>}
+                {editingServerId === server.id ? (
+                  <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 space-y-4 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                        <Pencil className="w-3.5 h-3.5" />
+                        {t('editServer') || "Modifier la configuration du serveur"}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                      <div className="lg:col-span-3">
+                        <Label className="text-xs font-medium">{t('serverNameLabel')}</Label>
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="Nom du serveur"
+                          className="text-xs mt-1 bg-background"
+                        />
+                      </div>
+                      <div className="lg:col-span-5">
+                        <Label className="text-xs font-medium">{t('serverUrlLabel')}</Label>
+                        <Input
+                          value={editUrl}
+                          onChange={(e) => setEditUrl(e.target.value)}
+                          placeholder="http://jellyfin.local:8096"
+                          className="font-mono text-xs mt-1 bg-background"
+                        />
+                      </div>
+                      <div className="lg:col-span-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-medium">{t('serverApiKeyLabel')}</Label>
+                        </div>
+                        <div className="relative mt-1">
+                          <Input
+                            type={editShowApiKey ? "text" : "password"}
+                            value={editApiKey}
+                            onChange={(e) => setEditApiKey(e.target.value)}
+                            placeholder={t('serverApiKeyHint') || "Laisser vide pour conserver"}
+                            className="font-mono text-xs pr-9 bg-background"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setEditShowApiKey(!editShowApiKey)}
+                            className="absolute right-2.5 top-2 text-muted-foreground hover:text-foreground"
+                          >
+                            {editShowApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
+                      <div>
+                        {!server.isPrimary && (
+                          <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editAllowFallback}
+                              onChange={(e) => setEditAllowFallback(e.target.checked)}
+                              className="rounded border-border"
+                            />
+                            {t('allowAuthFallback')}
+                          </label>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          disabled={editSaving}
+                          className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs border border-border hover:bg-muted font-medium transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          {t('cancel') || "Annuler"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveEdit}
+                          disabled={editSaving || !editUrl.trim() || !editName.trim()}
+                          className="inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors disabled:opacity-50"
+                        >
+                          {editSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                          {t('saveServer') || "Enregistrer"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                    <div className="lg:col-span-3">
+                      <Label className="text-xs text-muted-foreground">{t('serverNameLabel')}</Label>
+                      <Input value={server.name} readOnly className="text-xs bg-muted/20" />
+                    </div>
+                    <div className="lg:col-span-5">
+                      <Label className="text-xs text-muted-foreground">{t('serverUrlLabel')}</Label>
+                      <Input value={server.url} readOnly className="font-mono text-xs bg-muted/20" />
+                    </div>
+                    <div className="lg:col-span-4">
+                      <Label className="text-xs text-muted-foreground">{t('serverApiKeyLabel')}</Label>
+                      <Input value={server.hasApiKey ? server.apiKeyMasked : t('notConfigured')} readOnly className="font-mono text-xs bg-muted/20" />
+                    </div>
+                  </div>
+                )}
 
                 <div className="rounded-lg border border-border p-3 space-y-2 bg-muted/10">
                   <p className="text-xs font-semibold text-foreground">{t('pluginConnectionFor', { name: server.name })}</p>

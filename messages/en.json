@@ -1078,7 +1078,12 @@
         "generateGlobalFirst": "Generate the global plugin key first",
         "telemetryTrackAudioSubtitleChanges": "Audio / Subtitle changes",
         "jellyfinServersTitle": "Connected Jellyfin Servers",
-        "jellyfinServersDesc": "Manage Jellyfin instances connected to JellyTrack, configure plugin API keys, and switch between servers."
+        "jellyfinServersDesc": "Manage Jellyfin instances connected to JellyTrack, configure plugin API keys, and switch between servers.",
+        "editServer": "Edit server",
+        "saveServer": "Save changes",
+        "serverUpdatedSuccess": "Jellyfin server updated successfully.",
+        "serverUpdateError": "Failed to update Jellyfin server.",
+        "serverApiKeyHint": "Leave blank to keep current key."
     },
     "ssoSettings": {
         "title": "SSO Authentication",

@@ -1078,7 +1078,12 @@
         "integrityCheckTaskDesc": "Erkennt und schließt verwaiste Wiedergabesitzungen (Netzwerkabbrüche oder Client-Abstürze).",
         "schedulerIntegrityIntervalHint": "Intervall in Minuten für die Bereinigung verwaister Sitzungen (z. B. 15)",
         "jellyfinServersTitle": "Verbundene Jellyfin-Server",
-        "jellyfinServersDesc": "Verwalten Sie mit JellyTrack verbundene Jellyfin-Instanzen, konfigurieren Sie Plugin-API-Schlüssel und wechseln Sie zwischen Servern."
+        "jellyfinServersDesc": "Verwalten Sie mit JellyTrack verbundene Jellyfin-Instanzen, konfigurieren Sie Plugin-API-Schlüssel und wechseln Sie zwischen Servern.",
+        "editServer": "Server bearbeiten",
+        "saveServer": "Änderungen speichern",
+        "serverUpdatedSuccess": "Jellyfin-Server erfolgreich aktualisiert.",
+        "serverUpdateError": "Fehler beim Aktualisieren des Jellyfin-Servers.",
+        "serverApiKeyHint": "Leer lassen, um den aktuellen Schlüssel beizubehalten."
     },
     "timeRange": {
         "allTime": "All time",

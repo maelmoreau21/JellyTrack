@@ -159,7 +159,39 @@ export async function upsertServerRecord(identity: ServerIdentity): Promise<Serv
 }
 
 export async function ensureMasterServer(): Promise<ServerRecord> {
-  return upsertServerRecord(getMasterServerIdentityFromEnv());
+  const masterIdentity = getMasterServerIdentityFromEnv();
+  const safeServerId = masterIdentity.jellyfinServerId.trim() || DEFAULT_MASTER_SERVER_ID;
+  const prismaAny = prisma as any;
+
+  if (!prismaAny?.server || typeof prismaAny.server.findFirst !== "function") {
+    return upsertServerRecord(masterIdentity);
+  }
+
+  const existing = await prismaAny.server.findFirst({
+    where: {
+      OR: [
+        { jellyfinServerId: safeServerId },
+        { isActive: true },
+      ],
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (existing) {
+    const hasExplicitEnvUrl = Boolean(process.env.JELLYFIN_URL && process.env.JELLYFIN_URL.trim());
+    const hasExplicitEnvName = Boolean(process.env.JELLYFIN_SERVER_NAME && process.env.JELLYFIN_SERVER_NAME.trim());
+
+    if (!hasExplicitEnvUrl && !hasExplicitEnvName) {
+      return {
+        id: existing.id,
+        jellyfinServerId: existing.jellyfinServerId,
+        name: existing.name,
+        url: existing.url,
+      };
+    }
+  }
+
+  return upsertServerRecord(masterIdentity);
 }
 
 export function buildStreamValkeyKey(serverId: string, sessionId: string): string {

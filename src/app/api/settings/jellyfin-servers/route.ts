@@ -27,6 +27,8 @@ const serverPostSchema = z.object({
 const serverPatchSchema = z.object({
   id: z.string(),
   name: z.string().optional(),
+  url: z.string().optional(),
+  apiKey: z.string().optional(),
   allowAuthFallback: z.any().optional(),
   isActive: z.any().optional(),
 });
@@ -270,10 +272,39 @@ export async function PATCH(req: NextRequest) {
   const nextIsActive =
     parseResult.data.isActive === undefined ? existing.isActive : asBoolean(parseResult.data.isActive, existing.isActive);
 
+  const nextUrl =
+    parseResult.data.url !== undefined
+      ? normalizeUrl(parseResult.data.url)
+      : existing.url;
+
+  const nextApiKey =
+    parseResult.data.apiKey !== undefined && parseResult.data.apiKey.trim().length > 0
+      ? normalizeSecret(parseResult.data.apiKey)
+      : existing.jellyfinApiKey;
+
+  if (!nextUrl) {
+    return NextResponse.json({ error: "Server URL required." }, { status: 400 });
+  }
+
+  let resolvedServerId = existing.jellyfinServerId;
+  if (nextUrl !== existing.url || (parseResult.data.apiKey !== undefined && parseResult.data.apiKey.trim().length > 0)) {
+    if (nextApiKey) {
+      const info = await fetchJellyfinSystemInfo({ url: nextUrl, apiKey: nextApiKey });
+      if (info?.serverId) {
+        resolvedServerId = info.serverId;
+      }
+    }
+  }
+
   const updated = await prismaAny.server.update({
     where: { id },
     data: {
       name: nextName,
+      url: nextUrl,
+      ...(parseResult.data.apiKey !== undefined && parseResult.data.apiKey.trim().length > 0
+        ? { jellyfinApiKey: nextApiKey }
+        : {}),
+      ...(resolvedServerId !== existing.jellyfinServerId ? { jellyfinServerId: resolvedServerId } : {}),
       allowAuthFallback:
         existing.jellyfinServerId === master.jellyfinServerId ? false : Boolean(nextAllowFallback),
       isActive: Boolean(nextIsActive),

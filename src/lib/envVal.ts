@@ -19,16 +19,6 @@ export function validateEnv() {
             keys: ["NEXTAUTH_SECRET", "AUTH_SECRET", "JELLYTRACK_SECRET"],
             placeholder: "CHANGE_ME",
         },
-        {
-            name: "JELLYFIN_API_KEY (or JELLYTRACK_JELLYFIN_API_KEY)",
-            keys: ["JELLYFIN_API_KEY", "JELLYTRACK_JELLYFIN_API_KEY"],
-            placeholder: "CHANGE_ME",
-        },
-        {
-            name: "JELLYFIN_WEBHOOK_SECRET (or JELLYTRACK_WEBHOOK_SECRET)",
-            keys: ["JELLYFIN_WEBHOOK_SECRET", "JELLYTRACK_WEBHOOK_SECRET"],
-            placeholder: "CHANGE_ME",
-        },
     ];
 
     const invalidVars: string[] = [];

@@ -1078,7 +1078,12 @@
         "integrityCheckTaskDesc": "Rileva e chiude le sessioni di riproduzione orfane (disconnessioni di rete o arresti anomali del client).",
         "schedulerIntegrityIntervalHint": "Intervallo in minuti per la pulizia delle sessioni orfane (es: 15)",
         "jellyfinServersTitle": "Server Jellyfin collegati",
-        "jellyfinServersDesc": "Gestisci le istanze Jellyfin connesse a JellyTrack, configura le chiavi API del plugin e passa da un server all'altro."
+        "jellyfinServersDesc": "Gestisci le istanze Jellyfin connesse a JellyTrack, configura le chiavi API del plugin e passa da un server all'altro.",
+        "editServer": "Modifica server",
+        "saveServer": "Salva modifiche",
+        "serverUpdatedSuccess": "Server Jellyfin aggiornato con successo.",
+        "serverUpdateError": "Errore durante l'aggiornamento del server Jellyfin.",
+        "serverApiKeyHint": "Lascia vuoto per mantenere la chiave corrente."
     },
     "timeRange": {
         "allTime": "Sempre",

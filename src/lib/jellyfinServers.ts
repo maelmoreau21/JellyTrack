@@ -123,7 +123,7 @@ export async function getConfiguredJellyfinServers(): Promise<JellyfinServerConn
       id: row.id,
       jellyfinServerId: row.jellyfinServerId,
       name: row.name,
-      url: isPrimary && !rowApiKey ? masterUrl : rowUrl,
+      url: rowUrl || masterUrl,
       apiKey: rowApiKey,
       allowAuthFallback: row.allowAuthFallback === true,
       isPrimary,
@@ -296,4 +296,9 @@ export function maskSecret(secret: string | null | undefined): string {
   if (!value) return "";
   if (value.length <= 6) return "*".repeat(value.length);
   return `${value.slice(0, 3)}${"*".repeat(Math.max(4, value.length - 6))}${value.slice(-3)}`;
+}
+
+export async function getPrimaryJellyfinServer(): Promise<JellyfinServerConnection | null> {
+  const servers = await getConfiguredJellyfinServers();
+  return servers.find((s) => s.isPrimary) || servers[0] || null;
 }

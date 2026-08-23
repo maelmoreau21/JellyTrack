@@ -1078,7 +1078,12 @@
         "integrityCheckTaskDesc": "检测并关闭孤立的播放会话（网络中断或客户端崩溃）。",
         "schedulerIntegrityIntervalHint": "清理孤立会话的时间间隔（分钟，例如：15）",
         "jellyfinServersTitle": "已连接的 Jellyfin 服务器",
-        "jellyfinServersDesc": "管理连接到 JellyTrack 的 Jellyfin 实例，配置插件 API 密钥，并在服务器之间切换。"
+        "jellyfinServersDesc": "管理连接到 JellyTrack 的 Jellyfin 实例，配置插件 API 密钥，并在服务器之间切换。",
+        "editServer": "编辑服务器",
+        "saveServer": "保存更改",
+        "serverUpdatedSuccess": "Jellyfin 服务器更新成功。",
+        "serverUpdateError": "更新 Jellyfin 服务器失败。",
+        "serverApiKeyHint": "留空以保留当前密钥。"
     },
     "timeRange": {
         "allTime": "全部时间",

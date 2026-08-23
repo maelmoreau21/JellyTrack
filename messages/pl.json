@@ -1078,7 +1078,12 @@
         "integrityCheckTaskDesc": "Wykrywa i zamyka osierocone sesje odtwarzania (rozłączenia sieciowe lub awarie klienta).",
         "schedulerIntegrityIntervalHint": "Interwał w minutach do czyszczenia osieroconych sesji (np. 15)",
         "jellyfinServersTitle": "Połączone serwery Jellyfin",
-        "jellyfinServersDesc": "Zarządzaj instancjami Jellyfin połączonymi z JellyTrack, konfiguruj klucze API wtyczki i przełączaj się między serwerami."
+        "jellyfinServersDesc": "Zarządzaj instancjami Jellyfin połączonymi z JellyTrack, konfiguruj klucze API wtyczki i przełączaj się między serwerami.",
+        "editServer": "Edytuj serwer",
+        "saveServer": "Zapisz zmiany",
+        "serverUpdatedSuccess": "Serwer Jellyfin został pomyślnie zaktualizowany.",
+        "serverUpdateError": "Błąd podczas aktualizacji serwera Jellyfin.",
+        "serverApiKeyHint": "Pozostaw puste, aby zachować obecny klucz."
     },
     "timeRange": {
         "allTime": "Cały czas",

@@ -1078,7 +1078,12 @@
         "integrityCheckTaskDesc": "Detecta y cierra sesiones de reproducción huérfanas (cortes de red o cierres inesperados).",
         "schedulerIntegrityIntervalHint": "Intervalo en minutos para la limpieza de sesiones huérfanas (ej: 15)",
         "jellyfinServersTitle": "Servidores Jellyfin conectados",
-        "jellyfinServersDesc": "Administre las instancias de Jellyfin conectadas a JellyTrack, configure las claves API del plugin y cambie entre servidores."
+        "jellyfinServersDesc": "Administre las instancias de Jellyfin conectadas a JellyTrack, configure las claves API del plugin y cambie entre servidores.",
+        "editServer": "Editar servidor",
+        "saveServer": "Guardar cambios",
+        "serverUpdatedSuccess": "Servidor Jellyfin actualizado con éxito.",
+        "serverUpdateError": "Error al actualizar el servidor Jellyfin.",
+        "serverApiKeyHint": "Dejar en blanco para mantener la clave actual."
     },
     "timeRange": {
         "allTime": "Todo el tiempo",
