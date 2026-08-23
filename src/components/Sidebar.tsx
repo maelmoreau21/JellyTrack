@@ -103,13 +103,13 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
 
     const navigation = isAdmin
         ? [
-            ...adminNavItems.map(item => ({ name: t(item.key as any), href: item.href, icon: item.icon })),
             ...myAccountItem,
+            ...adminNavItems.map(item => ({ name: t(item.key as any), href: item.href, icon: item.icon })),
         ]
         : [
+            ...myAccountItem,
             { name: t('library'), href: '/media', icon: Film },
             { name: t('recentlyAdded'), href: '/recent', icon: Sparkles },
-            ...myAccountItem,
             // Only show wrapped if globally visible AND active
             ...(isWrappedVisible && jellyfinUserId ? [{ name: t('myWrapped'), href: `/wrapped/${jellyfinUserId}`, icon: Gift }] : []),
         ];

@@ -329,26 +329,6 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
 
                 {/* Right Action buttons */}
                 <div className="flex items-center gap-2 flex-wrap">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenMergeDialog()}
-                        className="border-indigo-500/40 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 flex items-center gap-1.5"
-                    >
-                        <GitMerge className="h-4 w-4" />
-                        <span>{t("mergeUsers")}</span>
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setInviteOpen(true)}
-                        className="border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1.5"
-                    >
-                        <UserPlus className="h-4 w-4" />
-                        <span>Inviter / Inscrire</span>
-                    </Button>
-
                     <Button variant="outline" size="sm" onClick={handleExportCsv} className="flex items-center gap-1.5">
                         <Download className="h-4 w-4" />
                         <span>Export CSV</span>
