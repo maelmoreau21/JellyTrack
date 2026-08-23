@@ -66,9 +66,9 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                 },
                 profile(profile) {
                 const username = String(
+                    profile.name ||
                     profile.preferred_username ||
                     profile.username ||
-                    profile.name ||
                     profile.nickname ||
                     profile.email ||
                     profile.sub ||

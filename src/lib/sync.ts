@@ -189,11 +189,44 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     const username = typeof user.Name === "string" && user.Name.trim()
                         ? user.Name.trim()
                         : jellyfinUserId;
-                    await prisma.user.upsert({
+                    const dbUser = await prisma.user.upsert({
                         where: { jellyfinUserId_serverId: { jellyfinUserId, serverId: currentServerId } },
                         update: { username },
                         create: { serverId: currentServerId, jellyfinUserId, username },
+                        select: { id: true, username: true, jellyfinUserId: true },
                     });
+
+                    // Auto-cleanup any orphan oidc-* user records matching this username
+                    if (typeof prisma.user?.findMany === "function") {
+                        const orphanMatches = await prisma.user.findMany({
+                            where: {
+                                serverId: currentServerId,
+                                id: { not: dbUser.id },
+                                jellyfinUserId: { startsWith: "oidc-" },
+                                username: { equals: username, mode: "insensitive" },
+                            },
+                        }).catch(() => []);
+
+                        for (const orphan of orphanMatches) {
+                            if (typeof prisma.playbackHistory?.updateMany === "function") {
+                                await prisma.playbackHistory.updateMany({
+                                    where: { userId: orphan.id },
+                                    data: { userId: dbUser.id },
+                                }).catch(() => null);
+                            }
+                            if (typeof prisma.activeStream?.updateMany === "function") {
+                                await prisma.activeStream.updateMany({
+                                    where: { userId: orphan.id },
+                                    data: { userId: dbUser.id },
+                                }).catch(() => null);
+                            }
+                            if (typeof prisma.user?.delete === "function") {
+                                await prisma.user.delete({ where: { id: orphan.id } }).catch(() => null);
+                            }
+                            console.log(`[Sync] Merged orphan SSO user ${orphan.username} (${orphan.jellyfinUserId}) into canonical user ${dbUser.username} (${dbUser.jellyfinUserId})`);
+                        }
+                    }
+
                     usersCount++;
                 }
 

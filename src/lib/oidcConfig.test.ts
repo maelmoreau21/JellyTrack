@@ -7,6 +7,7 @@ import {
   getLocalAdminCredentials,
   extractGroupsFromProfile,
   evaluateOidcGroupPermissions,
+  extractCandidateUsernames,
   resolveJellyfinUserForOidc,
 } from "@/lib/oidcConfig";
 
@@ -223,10 +224,41 @@ describe("oidcConfig", () => {
     });
   });
 
+  describe("extractCandidateUsernames", () => {
+    it("extracts all identity candidates from standard Authentik/OIDC claims", () => {
+      const profile = {
+        name: "Maël Moreau",
+        preferred_username: "mmoreau",
+        email: "mael.moreau@example.com",
+        given_name: "Maël",
+        family_name: "Moreau",
+        sub: "authentik-sub-123",
+      };
+
+      const candidates = extractCandidateUsernames("mmoreau", profile);
+      expect(candidates).toContain("Maël Moreau");
+      expect(candidates).toContain("mmoreau");
+      expect(candidates).toContain("mael.moreau@example.com");
+      expect(candidates).toContain("mael.moreau");
+      expect(candidates).toContain("Maël");
+      expect(candidates).toContain("Moreau");
+    });
+  });
+
   describe("resolveJellyfinUserForOidc", () => {
     it("returns fallback ID for username when offline/stub mode", async () => {
       const res = await resolveJellyfinUserForOidc("Mael", { sub: "auth0|12345" });
       expect(res.username).toBe("Mael");
+      expect(res.jellyfinUserId).toBeDefined();
+    });
+
+    it("extracts candidates when username is mmoreau and profile has Maël Moreau", async () => {
+      const profile = {
+        name: "Maël Moreau",
+        preferred_username: "mmoreau",
+        email: "mael@test.com",
+      };
+      const res = await resolveJellyfinUserForOidc("mmoreau", profile);
       expect(res.jellyfinUserId).toBeDefined();
     });
   });

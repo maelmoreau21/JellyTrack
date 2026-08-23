@@ -1175,6 +1175,8 @@
         "viewWrapped": "View JellyTrack Wrapped"
     },
     "users": {
+        "autoMergeAll": "Auto-resolve and Merge",
+        "autoMerging": "Resolving...",
         "colFavPlatform": "Favorite Platform",
         "colLastActive": "Last Active",
         "colRank": "Rank",
@@ -1182,10 +1184,24 @@
         "colTotalTime": "Total Time",
         "colUser": "User",
         "description": "Loyalty analysis and global ranking of server members.",
+        "duplicatesFound": "{count, plural, =1 {1 potential orphan SSO duplicate detected} other {# potential orphan SSO duplicates detected}}",
+        "duplicatesFoundDesc": "Orphan SSO accounts (e.g. oidc-...) can be automatically merged with their matching Jellyfin users.",
         "leaderboard": "Global Leaderboard",
         "leaderboardDesc": "All historized users, sorted by total playback volume.",
+        "mergeAction": "Merge",
+        "mergeConfirm": "Confirm Merge",
+        "mergeError": "Failed to merge users",
+        "mergeSuccess": "Users were successfully merged.",
+        "mergeSummary": "Transferred sessions: {sessions}, streams: {streams}.",
+        "mergeUsers": "Merge Users",
+        "mergeUsersDesc": "Transfer playback history and statistics from a source user to a target user, then delete the source account.",
         "never": "Never",
         "noUsers": "No synced users yet.",
+        "orphanSso": "Orphan SSO",
+        "selectSource": "Select account to merge...",
+        "selectTarget": "Select account to keep...",
+        "sourceUser": "Source account (will be deleted)",
+        "targetUser": "Target account (will be kept)",
         "title": "Users"
     },
     "wrapped": {

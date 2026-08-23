@@ -1175,6 +1175,8 @@
         "viewWrapped": "Voir le JellyTrack Wrapped"
     },
     "users": {
+        "autoMergeAll": "Résoudre et fusionner automatiquement",
+        "autoMerging": "Résolution en cours...",
         "colFavPlatform": "Plateforme Favorie",
         "colLastActive": "Dernière Act.",
         "colRank": "Rang",
@@ -1182,10 +1184,24 @@
         "colTotalTime": "Temps Total",
         "colUser": "Utilisateur",
         "description": "Analyse de la fidélité et classement global des membres du serveur.",
+        "duplicatesFound": "{count, plural, =1 {1 doublon SSO orphelin détecté} other {# doublons SSO orphelins détectés}}",
+        "duplicatesFoundDesc": "Des comptes SSO orphelins (ex: oidc-...) peuvent être automatiquement fusionnés avec les utilisateurs Jellyfin correspondants.",
         "leaderboard": "Classement Global",
         "leaderboardDesc": "Tous les utilisateurs historisés, triés par volume total de lecture.",
+        "mergeAction": "Fusionner",
+        "mergeConfirm": "Confirmer la fusion",
+        "mergeError": "Erreur lors de la fusion",
+        "mergeSuccess": "Les utilisateurs ont été fusionnés avec succès.",
+        "mergeSummary": "Sessions transférées : {sessions}, flux : {streams}.",
+        "mergeUsers": "Fusionner des utilisateurs",
+        "mergeUsersDesc": "Transfère l'historique et les statistiques d'un utilisateur source vers un utilisateur cible, puis supprime le compte source.",
         "never": "Jamais",
         "noUsers": "Aucun utilisateur synchronisé pour le moment.",
+        "orphanSso": "SSO Orphelin",
+        "selectSource": "Sélectionner le compte à fusionner...",
+        "selectTarget": "Sélectionner le compte à conserver...",
+        "sourceUser": "Compte source (sera supprimé)",
+        "targetUser": "Compte cible (sera conservé)",
         "title": "Utilisateurs"
     },
     "wrapped": {

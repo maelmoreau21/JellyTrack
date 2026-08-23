@@ -277,15 +277,85 @@ export function evaluateOidcGroupPermissions(
 }
 
 /**
- * Resolves a Jellyfin user from an OIDC username by matching against the JellyTrack database
- * or querying the Jellyfin server API directly (since Jellyfin uses the same LDAP directory).
+ * Extracts candidate usernames and identity aliases from an OIDC profile.
+ * Supports Authentik, Keycloak, Authelia, Google, Azure AD, etc.
+ */
+export function extractCandidateUsernames(username?: string, profile?: any): string[] {
+  const candidates = new Set<string>();
+
+  const add = (val: unknown) => {
+    if (typeof val === "string") {
+      const trimmed = val.trim();
+      if (trimmed && trimmed.toLowerCase() !== "user" && trimmed.toLowerCase() !== "unknown") {
+        candidates.add(trimmed);
+      }
+    }
+  };
+
+  add(username);
+
+  if (profile && typeof profile === "object") {
+    add(profile.name);
+    add(profile.displayName);
+    add(profile.display_name);
+    add(profile.preferred_username);
+    add(profile.username);
+    add(profile.nickname);
+    add(profile.uid);
+
+    if (typeof profile.email === "string" && profile.email.includes("@")) {
+      add(profile.email);
+      const localPart = profile.email.split("@")[0].trim();
+      add(localPart);
+    }
+
+    const givenName = typeof profile.given_name === "string" ? profile.given_name.trim() : "";
+    const familyName = typeof profile.family_name === "string" ? profile.family_name.trim() : "";
+    if (givenName && familyName) {
+      add(`${givenName} ${familyName}`);
+      add(`${familyName} ${givenName}`);
+      add(`${givenName}${familyName}`);
+      add(`${givenName}.${familyName}`);
+      add(`${givenName[0]}${familyName}`);
+      add(givenName);
+      add(familyName);
+    } else if (givenName) {
+      add(givenName);
+    } else if (familyName) {
+      add(familyName);
+    }
+
+    add(profile["https://goauthentik.io/username"]);
+    add(profile["https://goauthentik.io/user_username"]);
+    add(profile.samaccountname);
+    add(profile.sAMAccountName);
+    add(profile.sub);
+  }
+
+  return Array.from(candidates);
+}
+
+function normalizeIdentityName(str: string): string {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * Resolves a Jellyfin user from an OIDC username and profile claims by matching against
+ * the JellyTrack database and querying the Jellyfin server API directly.
+ * Automatically merges/cleans up any orphan or duplicate SSO users.
  */
 export async function resolveJellyfinUserForOidc(
   username: string,
   profile?: any
 ): Promise<{ jellyfinUserId: string; username: string; userDbId?: string }> {
-  const cleanUsername = String(username || "").trim();
-  if (!cleanUsername) {
+  const candidates = extractCandidateUsernames(username, profile);
+  const cleanUsername = String(username || candidates[0] || "User").trim();
+
+  if (candidates.length === 0) {
     return {
       jellyfinUserId: "oidc-user",
       username: "OIDC User",
@@ -295,24 +365,37 @@ export async function resolveJellyfinUserForOidc(
   try {
     const masterIdentity = getMasterServerIdentityFromEnv();
     const primaryServer = await ensureMasterServer();
-
-    // 1. Check local JellyTrack DB for existing user with this username
     const prismaAny = prisma as any;
-    if (prismaAny?.user?.findFirst) {
-      const existingUser = await prismaAny.user.findFirst({
+
+    // 1. Check local JellyTrack DB for existing user matching any candidate
+    if (prismaAny?.user?.findMany) {
+      const dbUsers = await prismaAny.user.findMany({
         where: {
           serverId: primaryServer.id,
-          username: { equals: cleanUsername, mode: "insensitive" },
         },
         select: { id: true, jellyfinUserId: true, username: true },
       });
 
-      if (existingUser?.jellyfinUserId) {
-        return {
-          jellyfinUserId: existingUser.jellyfinUserId,
-          username: existingUser.username || cleanUsername,
-          userDbId: existingUser.id,
-        };
+      // Priority 1: Match real Jellyfin user (not oidc-*) by username or ID
+      for (const cand of candidates) {
+        const candNorm = normalizeIdentityName(cand);
+        const match = dbUsers.find((u: any) => {
+          if (u.jellyfinUserId?.startsWith("oidc-")) return false;
+          const uNorm = normalizeIdentityName(u.username || "");
+          const uIdNorm = normalizeIdentityName(u.jellyfinUserId || "");
+          return uNorm === candNorm || uIdNorm === candNorm || u.username.toLowerCase() === cand.toLowerCase();
+        });
+
+        if (match) {
+          // Auto-cleanup any orphan oidc-* user records for these candidates
+          await cleanupOrphanDuplicatesForCandidates(primaryServer.id, match.id, candidates);
+
+          return {
+            jellyfinUserId: match.jellyfinUserId,
+            username: match.username || cleanUsername,
+            userDbId: match.id,
+          };
+        }
       }
     }
 
@@ -341,15 +424,25 @@ export async function resolveJellyfinUserForOidc(
             const data = await res.json();
             const usersList = Array.isArray(data) ? data : Array.isArray(data?.Items) ? data.Items : [];
 
-            const matched = usersList.find(
-              (u: any) => String(u?.Name || "").trim().toLowerCase() === cleanUsername.toLowerCase()
-            );
+            // Match against any candidate (exact or normalized)
+            let matchedUser: any = null;
+            for (const cand of candidates) {
+              const candNorm = normalizeIdentityName(cand);
+              matchedUser = usersList.find((u: any) => {
+                const uName = String(u?.Name || "").trim();
+                const uNorm = normalizeIdentityName(uName);
+                return uName.toLowerCase() === cand.toLowerCase() || uNorm === candNorm;
+              });
+              if (matchedUser) break;
+            }
 
-            if (matched && matched.Id) {
+            if (matchedUser && matchedUser.Id) {
               clearTimeout(timeout);
-              const jellyfinUserId = normalizeJellyfinId(matched.Id) || String(matched.Id);
+              const jellyfinUserId = normalizeJellyfinId(matchedUser.Id) || String(matchedUser.Id);
+              const canonicalUsername = matchedUser.Name || cleanUsername;
 
               // Upsert in local database for seamless stats and sync
+              let dbId: string | undefined;
               if (prismaAny?.user?.upsert) {
                 const upserted = await prismaAny.user.upsert({
                   where: {
@@ -361,27 +454,29 @@ export async function resolveJellyfinUserForOidc(
                   create: {
                     serverId: primaryServer.id,
                     jellyfinUserId,
-                    username: matched.Name || cleanUsername,
+                    username: canonicalUsername,
                     isActive: true,
                     lastActive: new Date(),
                   },
                   update: {
-                    username: matched.Name || cleanUsername,
+                    username: canonicalUsername,
                     lastActive: new Date(),
                   },
                   select: { id: true },
                 }).catch(() => null);
 
-                return {
-                  jellyfinUserId,
-                  username: matched.Name || cleanUsername,
-                  userDbId: upserted?.id,
-                };
+                dbId = upserted?.id;
+
+                // Auto-cleanup any orphan oidc-* user records for these candidates
+                if (dbId) {
+                  await cleanupOrphanDuplicatesForCandidates(primaryServer.id, dbId, candidates);
+                }
               }
 
               return {
                 jellyfinUserId,
-                username: matched.Name || cleanUsername,
+                username: canonicalUsername,
+                userDbId: dbId,
               };
             }
           }
@@ -428,3 +523,51 @@ export async function resolveJellyfinUserForOidc(
     };
   }
 }
+
+/**
+ * Helper to clean up / merge orphan oidc-* users matching candidate names into the canonical user.
+ */
+async function cleanupOrphanDuplicatesForCandidates(
+  serverId: string,
+  canonicalUserDbId: string,
+  candidates: string[]
+): Promise<void> {
+  try {
+    const prismaAny = prisma as any;
+    if (!prismaAny?.user?.findMany) return;
+
+    const duplicates = await prismaAny.user.findMany({
+      where: {
+        serverId,
+        id: { not: canonicalUserDbId },
+        OR: [
+          { jellyfinUserId: { startsWith: "oidc-" } },
+          { username: { in: candidates, mode: "insensitive" } },
+        ],
+      },
+    });
+
+    for (const dup of duplicates) {
+      if (dup.id === canonicalUserDbId) continue;
+      // Reassign playback history and streams
+      if (prismaAny?.playbackHistory?.updateMany) {
+        await prismaAny.playbackHistory.updateMany({
+          where: { userId: dup.id },
+          data: { userId: canonicalUserDbId },
+        }).catch(() => null);
+      }
+      if (prismaAny?.activeStream?.updateMany) {
+        await prismaAny.activeStream.updateMany({
+          where: { userId: dup.id },
+          data: { userId: canonicalUserDbId },
+        }).catch(() => null);
+      }
+      // Delete duplicate
+      await prismaAny.user.delete({ where: { id: dup.id } }).catch(() => null);
+      console.log(`[OIDC] Auto-merged duplicate user ${dup.username} (${dup.jellyfinUserId}) into canonical user ${canonicalUserDbId}`);
+    }
+  } catch (err) {
+    console.warn("[OIDC] Auto-cleanup of orphan duplicates encountered a non-fatal error:", err);
+  }
+}
+
