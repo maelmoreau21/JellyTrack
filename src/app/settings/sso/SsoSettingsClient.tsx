@@ -468,25 +468,14 @@ export function SsoSettingsClient() {
                   <Label htmlFor="oidc-token-alg" className="text-xs font-medium">
                     Algorithme de signature
                   </Label>
-                  {isEnv.tokenAlg && (
-                    <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600 dark:text-amber-400 gap-1 font-normal">
-                      <Lock className="w-2.5 h-2.5" />
-                      {ts("dockerEnvLocked") || "Docker (.env)"}
-                    </Badge>
-                  )}
+                  <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-600 dark:text-emerald-400 gap-1 font-normal">
+                    <Lock className="w-2.5 h-2.5" />
+                    Standard OIDC
+                  </Badge>
                 </div>
-                <select
-                  id="oidc-token-alg"
-                  value={formTokenAlg}
-                  disabled={isEnv.tokenAlg}
-                  onChange={(e) => setFormTokenAlg(e.target.value)}
-                  aria-label="Algorithme de signature du token OIDC"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 font-mono"
-                >
-                  <option value="RS256">RS256 (Clé RSA / Certificat - Recommandé, Authentik / Keycloak / Authelia)</option>
-                  <option value="HS256">HS256 (Secret partagé client_secret)</option>
-                  <option value="ES256">ES256 (Courbe elliptique ECDSA)</option>
-                </select>
+                <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted/50 px-3 py-1 text-xs font-mono text-muted-foreground">
+                  RS256 (Clé RSA / Certificat Authentik)
+                </div>
               </div>
             </div>
 

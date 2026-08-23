@@ -764,7 +764,8 @@
         "backupServerActive": "Servidor de respaldo activo",
         "backupServerDesc": "Conectado a {server}. El servidor principal no está disponible.",
         "collapseMenu": "Plegar menú",
-        "expandMenu": "Desplegar menú"
+        "expandMenu": "Desplegar menú",
+        "myAccount": "Mi Cuenta"
     },
     "network": {
         "audioHDNotSupported": "Audio HD no compatible",
@@ -1140,7 +1141,24 @@
         "leaderboardDesc": "Todos los usuarios registrados, ordenados por volumen total de reproducción.",
         "never": "Nunca",
         "noUsers": "Aún no hay usuarios sincronizados.",
-        "title": "Usuarios"
+        "title": "Usuarios",
+        "autoMergeAll": "Resolver y fusionar automáticamente",
+        "autoMerging": "Resolviendo...",
+        "duplicatesFound": "{count, plural, =1 {1 duplicado SSO huérfano detectado} other {# duplicados SSO huérfanos detectados}}",
+        "duplicatesFoundDesc": "Las cuentas SSO huérfanas (ej. oidc-...) se pueden fusionar automáticamente con sus usuarios de Jellyfin correspondientes.",
+        "mergeAction": "Fusionar",
+        "mergeConfirm": "Confirmar fusión",
+        "mergeError": "Error al fusionar",
+        "mergeSuccess": "Los usuarios se fusionaron correctamente.",
+        "mergeSummary": "Sesiones transferidas: {sessions}, transmisiones: {streams}.",
+        "mergeUsers": "Fusionar usuarios",
+        "mergeUsersDesc": "Transfiere el historial y las estadísticas de un usuario de origen a un usuario de destino y elimina la cuenta de origen.",
+        "merging": "Fusionando...",
+        "orphanSso": "SSO Huérfano",
+        "selectSource": "Seleccionar cuenta a fusionar...",
+        "selectTarget": "Seleccionar cuenta a conservar...",
+        "sourceUser": "Cuenta de origen (se eliminará)",
+        "targetUser": "Cuenta de destino (se conservará)"
     },
     "wrapped": {
         "acrossSessions": "a través de {count} sesiones",

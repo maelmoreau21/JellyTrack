@@ -764,7 +764,8 @@
         "backupServerActive": "备份服务器已激活",
         "backupServerDesc": "已连接到 {server}。主服务器不可用。",
         "collapseMenu": "折叠侧边栏",
-        "expandMenu": "展开侧边栏"
+        "expandMenu": "展开侧边栏",
+        "myAccount": "我的账户"
     },
     "network": {
         "audioHDNotSupported": "不支持高清音频",
@@ -1140,7 +1141,24 @@
         "leaderboardDesc": "按累计播放时长排序的所有注册用户。",
         "never": "从未",
         "noUsers": "暂无已同步用户。",
-        "title": "用户"
+        "title": "用户",
+        "autoMergeAll": "自动解析并合并",
+        "autoMerging": "正在解析...",
+        "duplicatesFound": "{count, plural, =1 {检测到 1 个孤立的 SSO 副本} other {检测到 # 个孤立的 SSO 副本}}",
+        "duplicatesFoundDesc": "孤立的 SSO 账户（如 oidc-...）可以自动合并到对应的 Jellyfin 用户中。",
+        "mergeAction": "合并",
+        "mergeConfirm": "确认合并",
+        "mergeError": "合并出错",
+        "mergeSuccess": "用户合并成功。",
+        "mergeSummary": "已转移会话：{sessions}，流：{streams}。",
+        "mergeUsers": "合并用户",
+        "mergeUsersDesc": "将源用户的历史记录和统计信息转移给目标用户，并删除源账户。",
+        "merging": "正在合并...",
+        "orphanSso": "孤立 SSO",
+        "selectSource": "选择要合并的账户...",
+        "selectTarget": "选择要保留的账户...",
+        "sourceUser": "源账户（将被删除）",
+        "targetUser": "目标账户（将被保留）"
     },
     "wrapped": {
         "acrossSessions": "分布在 {count} 次会话中",

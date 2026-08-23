@@ -1203,7 +1203,8 @@
         "selectTarget": "Select account to keep...",
         "sourceUser": "Source account (will be deleted)",
         "targetUser": "Target account (will be kept)",
-        "title": "Users"
+        "title": "Users",
+        "merging": "Merging..."
     },
     "wrapped": {
         "acrossSessions": "across {count} sessions",

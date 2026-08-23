@@ -764,7 +764,8 @@
         "backupServerActive": "Backup-Server aktiv",
         "backupServerDesc": "Verbunden mit {server}. Der primäre Server ist nicht verfügbar.",
         "collapseMenu": "Seitenleiste einklappen",
-        "expandMenu": "Seitenleiste ausklappen"
+        "expandMenu": "Seitenleiste ausklappen",
+        "myAccount": "Mein Konto"
     },
     "network": {
         "audioHDNotSupported": "HD audio not supported",
@@ -1140,7 +1141,24 @@
         "leaderboardDesc": "All historized users, sorted by total playback volume.",
         "never": "Never",
         "noUsers": "No synced users yet.",
-        "title": "Users"
+        "title": "Users",
+        "autoMergeAll": "Automatisch lösen und zusammenführen",
+        "autoMerging": "Wird gelöst...",
+        "duplicatesFound": "{count, plural, =1 {1 verwaistes SSO-Duplikat gefunden} other {# verwaiste SSO-Duplikate gefunden}}",
+        "duplicatesFoundDesc": "Verwaiste SSO-Konten (z. B. oidc-...) können automatisch mit den entsprechenden Jellyfin-Benutzern zusammengeführt werden.",
+        "mergeAction": "Zusammenführen",
+        "mergeConfirm": "Zusammenführung bestätigen",
+        "mergeError": "Fehler beim Zusammenführen",
+        "mergeSuccess": "Benutzer wurden erfolgreich zusammengeführt.",
+        "mergeSummary": "Übertragene Sitzungen: {sessions}, Streams: {streams}.",
+        "mergeUsers": "Benutzer zusammenführen",
+        "mergeUsersDesc": "Überträgt Verlauf und Statistiken von einem Quellbenutzer auf einen Zielbenutzer und löscht das Quellkonto.",
+        "merging": "Wird zusammengeführt...",
+        "orphanSso": "Verwaistes SSO",
+        "selectSource": "Zu fusionierendes Konto auswählen...",
+        "selectTarget": "Zu behaltendes Konto auswählen...",
+        "sourceUser": "Quellkonto (wird gelöscht)",
+        "targetUser": "Zielkonto (wird behalten)"
     },
     "wrapped": {
         "acrossSessions": "across {count} sessions",

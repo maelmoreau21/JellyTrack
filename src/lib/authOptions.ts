@@ -62,7 +62,7 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                 clientId: oidc.clientId,
                 clientSecret: oidc.clientSecret || undefined,
                 client: {
-                    id_token_signed_response_alg: (oidc.tokenAlg || process.env.OIDC_TOKEN_ALG || process.env.OIDC_ALG || "RS256").trim(),
+                    id_token_signed_response_alg: "RS256",
                 },
                 profile(profile) {
                 const username = String(

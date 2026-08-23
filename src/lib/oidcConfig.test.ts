@@ -56,14 +56,14 @@ describe("oidcConfig", () => {
       expect(config.tokenAlg).toBe("RS256");
     });
 
-    it("respects custom OIDC_TOKEN_ALG env variable", () => {
+    it("enforces RS256 algorithm strictly", () => {
       vi.stubEnv("OIDC_ENABLED", "true");
       vi.stubEnv("OIDC_URL", "https://authentik.example.com/application/o/jellytrack");
       vi.stubEnv("OIDC_CLIENT_ID", "jellytrack-app");
       vi.stubEnv("OIDC_TOKEN_ALG", "ES256");
 
       const config = getOidcConfig();
-      expect(config.tokenAlg).toBe("ES256");
+      expect(config.tokenAlg).toBe("RS256");
     });
   });
 

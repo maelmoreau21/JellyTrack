@@ -764,7 +764,8 @@
         "backupServerActive": "Back-upserver actief",
         "backupServerDesc": "Verbonden met {server}. De primaire server is niet beschikbaar.",
         "collapseMenu": "Zijbalk inklappen",
-        "expandMenu": "Zijbalk uitklappen"
+        "expandMenu": "Zijbalk uitklappen",
+        "myAccount": "Mijn Account"
     },
     "network": {
         "audioHDNotSupported": "HD-audio niet ondersteund",
@@ -1140,7 +1141,24 @@
         "leaderboardDesc": "Alle gehistoriseerde gebruikers, gesorteerd op totaal afspeelvolume.",
         "never": "Nooit",
         "noUsers": "Nog geen gesynchroniseerde gebruikers.",
-        "title": "Gebruikers"
+        "title": "Gebruikers",
+        "autoMergeAll": "Automatisch oplossen en samenvoegen",
+        "autoMerging": "Bezig met oplossen...",
+        "duplicatesFound": "{count, plural, =1 {1 verweesd SSO-duplicaat gedetecteerd} other {# verweesde SSO-duplicaten gedetecteerd}}",
+        "duplicatesFoundDesc": "Verweesde SSO-accounts (bijv. oidc-...) kunnen automatisch worden samengevoegd met de overeenkomstige Jellyfin-gebruikers.",
+        "mergeAction": "Samenvoegen",
+        "mergeConfirm": "Samenvoeging bevestigen",
+        "mergeError": "Fout bij samenvoegen",
+        "mergeSuccess": "Gebruikers succesvol samengevoegd.",
+        "mergeSummary": "Overgedragen sessies: {sessions}, streams: {streams}.",
+        "mergeUsers": "Gebruikers samenvoegen",
+        "mergeUsersDesc": "Draagt geschiedenis en statistieken over van een brongebruiker naar een doelgebruiker en verwijdert het bronaccount.",
+        "merging": "Bezig met samenvoegen...",
+        "orphanSso": "Verweesde SSO",
+        "selectSource": "Selecteer account om samen te voegen...",
+        "selectTarget": "Selecteer account om te behouden...",
+        "sourceUser": "Bronaccount (wordt verwijderd)",
+        "targetUser": "Doelaccount (wordt behouden)"
     },
     "wrapped": {
         "acrossSessions": "over {count} sessies",

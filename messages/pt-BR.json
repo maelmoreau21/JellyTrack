@@ -764,7 +764,8 @@
         "backupServerActive": "Servidor de backup ativo",
         "backupServerDesc": "Conectado a {server}. O servidor principal está indisponível.",
         "collapseMenu": "Recolher barra lateral",
-        "expandMenu": "Expandir barra lateral"
+        "expandMenu": "Expandir barra lateral",
+        "myAccount": "Minha Conta"
     },
     "network": {
         "audioHDNotSupported": "Áudio HD não suportado",
@@ -1140,7 +1141,24 @@
         "leaderboardDesc": "Todos os usuários registrados, ordenados por volume total de reprodução.",
         "never": "Nunca",
         "noUsers": "Nenhum usuário sincronizado ainda.",
-        "title": "Usuários"
+        "title": "Usuários",
+        "autoMergeAll": "Resolver e mesclar automaticamente",
+        "autoMerging": "Resolvendo...",
+        "duplicatesFound": "{count, plural, =1 {1 duplicata SSO órfã detectada} other {# duplicatas SSO órfãs detectadas}}",
+        "duplicatesFoundDesc": "Contas SSO órfãs (ex: oidc-...) podem ser mescladas automaticamente com os usuários Jellyfin correspondentes.",
+        "mergeAction": "Mesclar",
+        "mergeConfirm": "Confirmar mesclagem",
+        "mergeError": "Erro ao mesclar",
+        "mergeSuccess": "Usuários mesclados com sucesso.",
+        "mergeSummary": "Sessões transferidas: {sessions}, streams: {streams}.",
+        "mergeUsers": "Mesclar usuários",
+        "mergeUsersDesc": "Transfere o histórico e estatísticas de um usuário de origem para um usuário de destino e exclui a conta de origem.",
+        "merging": "Mesclando...",
+        "orphanSso": "SSO Órfão",
+        "selectSource": "Selecionar conta para mesclar...",
+        "selectTarget": "Selecionar conta para manter...",
+        "sourceUser": "Conta de origem (será excluída)",
+        "targetUser": "Conta de destino (será mantida)"
     },
     "wrapped": {
         "acrossSessions": "em {count} sessões",

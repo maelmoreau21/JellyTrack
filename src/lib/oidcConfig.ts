@@ -115,7 +115,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
   const clientSecret = envClientSecret.length > 0 ? envClientSecret : db.clientSecret;
   const userGroup = envUserGroup.length > 0 ? envUserGroup : db.userGroup;
   const adminGroup = envAdminGroup.length > 0 ? envAdminGroup : db.adminGroup;
-  const tokenAlg = envTokenAlg.length > 0 ? envTokenAlg : db.tokenAlg;
+  const tokenAlg = "RS256";
 
   return {
     enabled,
@@ -132,7 +132,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
       clientSecret: envClientSecret.length > 0 ? "env" : (db.clientSecret.length > 0 ? "db" : "default"),
       userGroup: envUserGroup.length > 0 ? "env" : (db.userGroup.length > 0 ? "db" : "default"),
       adminGroup: envAdminGroup.length > 0 ? "env" : (db.adminGroup.length > 0 ? "db" : "default"),
-      tokenAlg: envTokenAlg.length > 0 ? "env" : (db.tokenAlg ? "db" : "default"),
+      tokenAlg: "default",
     },
     isEnvControlled: {
       enabled: hasEnvEnabled,
@@ -141,7 +141,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
       clientSecret: envClientSecret.length > 0,
       userGroup: envUserGroup.length > 0,
       adminGroup: envAdminGroup.length > 0,
-      tokenAlg: envTokenAlg.length > 0,
+      tokenAlg: false,
     },
     dbConfig: db,
   };

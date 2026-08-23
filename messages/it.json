@@ -764,7 +764,8 @@
         "backupServerActive": "Server di backup attivo",
         "backupServerDesc": "Connesso a {server}. Il server principale non è disponibile.",
         "collapseMenu": "Comprimi menu",
-        "expandMenu": "Espandi menu"
+        "expandMenu": "Espandi menu",
+        "myAccount": "Il Mio Account"
     },
     "network": {
         "audioHDNotSupported": "Audio HD non supportato",
@@ -1140,7 +1141,24 @@
         "leaderboardDesc": "Tutti gli utenti registrati, ordinati per volume totale di riproduzione.",
         "never": "Mai",
         "noUsers": "Ancora nessun utente sincronizzato.",
-        "title": "Utenti"
+        "title": "Utenti",
+        "autoMergeAll": "Risolvi e unisci automaticamente",
+        "autoMerging": "Risoluzione in corso...",
+        "duplicatesFound": "{count, plural, =1 {1 duplicato SSO orfano rilevato} other {# duplicati SSO orfani rilevati}}",
+        "duplicatesFoundDesc": "Gli account SSO orfani (es. oidc-...) possono essere uniti automaticamente con gli utenti Jellyfin corrispondenti.",
+        "mergeAction": "Unisci",
+        "mergeConfirm": "Conferma unione",
+        "mergeError": "Errore durante l'unione",
+        "mergeSuccess": "Gli utenti sono stati uniti con successo.",
+        "mergeSummary": "Sessioni trasferite: {sessions}, flussi: {streams}.",
+        "mergeUsers": "Unisci utenti",
+        "mergeUsersDesc": "Trasferisce la cronologia e le statistiche da un utente di origine a un utente di destinazione ed elimina l'account di origine.",
+        "merging": "Unione in corso...",
+        "orphanSso": "SSO Orfano",
+        "selectSource": "Seleziona account da unire...",
+        "selectTarget": "Seleziona account da conservare...",
+        "sourceUser": "Account di origine (verrà eliminato)",
+        "targetUser": "Account di destinazione (verrà conservato)"
     },
     "wrapped": {
         "acrossSessions": "attraverso {count} sessioni",

@@ -764,7 +764,8 @@
         "backupServerActive": "Serwer zapasowy aktywny",
         "backupServerDesc": "Połączono z {server}. Główny serwer jest niedostępny.",
         "collapseMenu": "Zwiń pasek boczny",
-        "expandMenu": "Rozwiń pasek boczny"
+        "expandMenu": "Rozwiń pasek boczny",
+        "myAccount": "Moje Konto"
     },
     "network": {
         "audioHDNotSupported": "Audio HD nieobsługiwane",
@@ -1140,7 +1141,24 @@
         "leaderboardDesc": "Ranking użytkowników według łącznego czasu oglądania.",
         "never": "Nigdy",
         "noUsers": "Brak zsynchronizowanych użytkowników.",
-        "title": "Użytkownicy"
+        "title": "Użytkownicy",
+        "autoMergeAll": "Automatycznie rozwiąż i połącz",
+        "autoMerging": "Rozwiązywanie...",
+        "duplicatesFound": "{count, plural, =1 {Wykryto 1 osierocony duplikat SSO} other {Wykryto # osieroconych duplikatów SSO}}",
+        "duplicatesFoundDesc": "Osierocone konta SSO (np. oidc-...) można automatycznie połączyć z odpowiednimi użytkownikami Jellyfin.",
+        "mergeAction": "Połącz",
+        "mergeConfirm": "Potwierdź połączenie",
+        "mergeError": "Błąd podczas łączenia",
+        "mergeSuccess": "Użytkownicy zostali pomyślnie połączeni.",
+        "mergeSummary": "Przeniesione sesje: {sessions}, strumienie: {streams}.",
+        "mergeUsers": "Połącz użytkowników",
+        "mergeUsersDesc": "Przenosi historię i statystyki z konta źródłowego na docelowe i usuwa konto źródłowe.",
+        "merging": "Łączenie...",
+        "orphanSso": "Osierocone SSO",
+        "selectSource": "Wybierz konto do połączenia...",
+        "selectTarget": "Wybierz konto do zachowania...",
+        "sourceUser": "Konto źródłowe (zostanie usunięte)",
+        "targetUser": "Konto docelowe (zostanie zachowane)"
     },
     "wrapped": {
         "acrossSessions": "w {count} sesjach",

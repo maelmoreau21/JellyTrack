@@ -1203,7 +1203,8 @@
         "selectTarget": "Sélectionner le compte à conserver...",
         "sourceUser": "Compte source (sera supprimé)",
         "targetUser": "Compte cible (sera conservé)",
-        "title": "Utilisateurs"
+        "title": "Utilisateurs",
+        "merging": "Fusion en cours..."
     },
     "wrapped": {
         "acrossSessions": "sur {count} sessions",
