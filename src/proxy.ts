@@ -76,13 +76,11 @@ const ADMIN_API_PATHS = [
 const ADMIN_PAGE_PATHS = [
     "/admin",
     "/settings",
-    "/media/collections",
-    "/media/analysis",
-    "/media/all"
+    "/media/analysis"
 ];
 
 // Pages that redirect non-admins to their own profile
-const REDIRECT_IF_NOT_ADMIN = ["/users", "/logs", "/media", "/recent"];
+const REDIRECT_IF_NOT_ADMIN = ["/users", "/logs"];
 
 export default withAuth(
     function proxy(req) {

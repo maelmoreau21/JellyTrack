@@ -17,10 +17,10 @@ import { buildSelectableServerOptions } from '@/lib/selectableServers';
 
 export const dynamic = "force-dynamic";
 
-const ITEMS_PER_PAGE = 50;
-
-import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAuth, isAuthError } from "@/lib/auth";
 import { redirect } from "next/navigation";
+
+const ITEMS_PER_PAGE = 50;
 
 type AllMediaSearchParams = {
     excludeTypes?: string;
@@ -42,7 +42,7 @@ function shouldShowLibraryMediaBadges(resolutionThresholds: unknown): boolean {
 }
 
 export default async function AllMediaPage({ searchParams: searchParamsPromise }: { searchParams?: Promise<AllMediaSearchParams> }) {
-    const auth = await requireAdmin();
+    const auth = await requireAuth();
     if (isAuthError(auth)) redirect("/login");
 
     const searchParams = (await searchParamsPromise) || {};
@@ -55,6 +55,21 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
     const q = typeof searchParams?.q === 'string' ? (searchParams.q || '').trim() : undefined;
     const genre = typeof searchParams?.genre === 'string' ? (searchParams.genre || '').trim() : undefined;
     const currentPage = Math.max(1, parseInt(searchParams?.page || '1', 10) || 1);
+
+    const scopedLinkedIds = auth.linkedJellyfinUserIds.length > 0
+        ? auth.linkedJellyfinUserIds
+        : (auth.jellyfinUserId ? [auth.jellyfinUserId] : []);
+
+    const scopedDbUserIds = !auth.isAdmin && scopedLinkedIds.length > 0
+        ? (await prisma.user.findMany({
+            where: { jellyfinUserId: { in: scopedLinkedIds } },
+            select: { id: true },
+        })).map((user) => user.id)
+        : [];
+
+    const userPlaybackCondition = !auth.isAdmin
+        ? (scopedDbUserIds.length > 0 ? { userId: { in: scopedDbUserIds } } : { userId: "__none__" })
+        : {};
 
     const [settings, serverRows] = await Promise.all([
         prisma.globalSettings.findUnique({ where: { id: 'global' } }),
@@ -155,13 +170,13 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
         const [movieAgg, movieDirectPlayAgg] = await Promise.all([
             prisma.playbackHistory.groupBy({
                 by: ['mediaId'],
-                where: { mediaId: { in: movieDbIds }, ...ZAPPING_CONDITION },
+                where: { mediaId: { in: movieDbIds }, ...userPlaybackCondition, ...ZAPPING_CONDITION },
                 _count: { _all: true },
                 _sum: { durationWatched: true },
             }),
             prisma.playbackHistory.groupBy({
                 by: ['mediaId'],
-                where: { mediaId: { in: movieDbIds }, playMethod: 'DirectPlay', ...ZAPPING_CONDITION },
+                where: { mediaId: { in: movieDbIds }, playMethod: 'DirectPlay', ...userPlaybackCondition, ...ZAPPING_CONDITION },
                 _count: { _all: true },
             }),
         ]);
@@ -221,13 +236,13 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
                 const [episodeAgg, episodeDirectPlayAgg] = await Promise.all([
                     prisma.playbackHistory.groupBy({
                         by: ['mediaId'],
-                        where: { mediaId: { in: episodeIds }, ...ZAPPING_CONDITION },
+                        where: { mediaId: { in: episodeIds }, ...userPlaybackCondition, ...ZAPPING_CONDITION },
                         _count: { _all: true },
                         _sum: { durationWatched: true },
                     }),
                     prisma.playbackHistory.groupBy({
                         by: ['mediaId'],
-                        where: { mediaId: { in: episodeIds }, playMethod: 'DirectPlay', ...ZAPPING_CONDITION },
+                        where: { mediaId: { in: episodeIds }, playMethod: 'DirectPlay', ...userPlaybackCondition, ...ZAPPING_CONDITION },
                         _count: { _all: true },
                     }),
                 ]);
@@ -268,13 +283,13 @@ export default async function AllMediaPage({ searchParams: searchParamsPromise }
             const [trackAgg, trackDirectPlayAgg] = await Promise.all([
                 prisma.playbackHistory.groupBy({
                     by: ['mediaId'],
-                    where: { mediaId: { in: trackIds }, ...ZAPPING_CONDITION },
+                    where: { mediaId: { in: trackIds }, ...userPlaybackCondition, ...ZAPPING_CONDITION },
                     _count: { _all: true },
                     _sum: { durationWatched: true },
                 }),
                 prisma.playbackHistory.groupBy({
                     by: ['mediaId'],
-                    where: { mediaId: { in: trackIds }, playMethod: 'DirectPlay', ...ZAPPING_CONDITION },
+                    where: { mediaId: { in: trackIds }, playMethod: 'DirectPlay', ...userPlaybackCondition, ...ZAPPING_CONDITION },
                     _count: { _all: true },
                 }),
             ]);

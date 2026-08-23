@@ -7,8 +7,7 @@ import { normalizeResolution } from '@/lib/utils';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { requireAuth, isAuthError } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getTranslations, getLocale } from 'next-intl/server';
 import { buildExcludedMediaClause } from '@/lib/mediaPolicy';
@@ -18,7 +17,6 @@ import { cookies } from "next/headers";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
 import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
-
 
 export const dynamic = "force-dynamic";
 
@@ -43,14 +41,27 @@ function isNew(date: Date): boolean {
 }
 
 export default async function RecentPage({ searchParams }: { searchParams: Promise<{ type?: string; page?: string; servers?: string }> }) {
+  const auth = await requireAuth();
+  if (isAuthError(auth)) redirect("/login");
+
   const t = await getTranslations('recent');
   const tc = await getTranslations('common');
   const locale = await getLocale();
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.isAdmin) {
-    const uid = (session?.user as unknown as { jellyfinUserId?: string })?.jellyfinUserId;
-    redirect(uid ? `/users/${uid}` : "/login");
-  }
+
+  const scopedLinkedIds = auth.linkedJellyfinUserIds.length > 0
+    ? auth.linkedJellyfinUserIds
+    : (auth.jellyfinUserId ? [auth.jellyfinUserId] : []);
+
+  const scopedDbUserIds = !auth.isAdmin && scopedLinkedIds.length > 0
+    ? (await prisma.user.findMany({
+        where: { jellyfinUserId: { in: scopedLinkedIds } },
+        select: { id: true },
+      })).map((user) => user.id)
+    : [];
+
+  const userPlaybackFilter = !auth.isAdmin
+    ? (scopedDbUserIds.length > 0 ? { userId: { in: scopedDbUserIds } } : { userId: "__none__" })
+    : {};
 
   const sParams = await searchParams;
   const type = sParams.type;
@@ -116,7 +127,15 @@ export default async function RecentPage({ searchParams }: { searchParams: Promi
       artist: true,
       dateAdded: true,
       createdAt: true,
-      _count: { select: { playbackHistory: true } },
+      _count: {
+        select: {
+          playbackHistory: {
+            where: {
+              ...userPlaybackFilter,
+            },
+          },
+        },
+      },
     },
   });
 

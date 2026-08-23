@@ -96,12 +96,22 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
         ? adminNavigationKeys
         : adminNavigationKeys.filter(item => item.key !== 'serverCompare');
 
+    const myAccountLabel = t.has('myAccount') ? t('myAccount') : t('myProfile');
+    const myAccountItem = jellyfinUserId
+        ? [{ name: myAccountLabel, href: `/users/${jellyfinUserId}`, icon: UserCircle }]
+        : [];
+
     const navigation = isAdmin
-        ? adminNavItems.map(item => ({ name: t(item.key as any), href: item.href, icon: item.icon }))
+        ? [
+            ...adminNavItems.map(item => ({ name: t(item.key as any), href: item.href, icon: item.icon })),
+            ...myAccountItem,
+        ]
         : [
-            { name: t('myProfile'), href: `/users/${jellyfinUserId || ''}`, icon: UserCircle },
+            { name: t('library'), href: '/media', icon: Film },
+            { name: t('recentlyAdded'), href: '/recent', icon: Sparkles },
+            ...myAccountItem,
             // Only show wrapped if globally visible AND active
-            ...(isWrappedVisible ? [{ name: t('myWrapped'), href: `/wrapped/${jellyfinUserId || ''}`, icon: Gift }] : []),
+            ...(isWrappedVisible && jellyfinUserId ? [{ name: t('myWrapped'), href: `/wrapped/${jellyfinUserId}`, icon: Gift }] : []),
         ];
 
     const sidebarContent = (
@@ -110,7 +120,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
             {isCollapsed ? (
                 <div className="flex h-16 shrink-0 items-center justify-between border-b border-sidebar-border bg-sidebar/80 backdrop-blur-xl px-2.5">
                     <Link
-                        href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`}
+                        href={isAdmin ? "/" : (jellyfinUserId ? `/users/${jellyfinUserId}` : "/media")}
                         className="flex h-10 w-10 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent overflow-hidden shadow-sm transition-opacity hover:opacity-90"
                         title="JellyTrack"
                     >
@@ -153,7 +163,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
             ) : (
                 <div className="flex h-16 shrink-0 items-center justify-between border-b border-sidebar-border bg-sidebar/80 backdrop-blur-xl px-4">
                     <Link
-                        href={isAdmin ? "/" : `/users/${jellyfinUserId || ''}`}
+                        href={isAdmin ? "/" : (jellyfinUserId ? `/users/${jellyfinUserId}` : "/media")}
                         className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-sidebar-foreground transition-opacity hover:opacity-90 min-w-0"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent overflow-hidden shadow-sm">

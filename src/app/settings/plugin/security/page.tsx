@@ -263,7 +263,7 @@ export default function PluginSecurityPage() {
                 <CardHeader>
                     <CardTitle className="text-base">{ts('pluginStateTitle')}</CardTitle>
                     <CardDescription>{ts('pluginStateDesc')}</CardDescription>
-                </CardHeader>der>
+                </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
                         <span>{ts('statusLabel')}</span>

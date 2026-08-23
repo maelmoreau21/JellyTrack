@@ -6,7 +6,7 @@ import { buildExcludedMediaClause, normalizeLibraryKey } from '@/lib/mediaPolicy
 import { getSanitizedLibraryNames, GHOST_LIBRARY_NAMES } from "@/lib/libraryUtils";
 import { ZAPPING_CONDITION } from '@/lib/statsUtils';
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
-import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAuth, isAuthError } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
@@ -69,64 +69,71 @@ type LibraryStatsEntry = {
 };
 
 export default async function CollectionsPage({ searchParams }: { searchParams?: Promise<CollectionsSearchParams> }) {
-    const auth = await requireAdmin();
+    const auth = await requireAuth();
     if (isAuthError(auth)) redirect("/login");
-
-    const resolvedSearchParams = (searchParams ? await searchParams : {}) as CollectionsSearchParams;
 
     const t = await getTranslations('media');
     const tc = await getTranslations('common');
+    const resolvedSearchParams = searchParams ? await searchParams : {};
+    const debugRequested = readFirstSearchParam(resolvedSearchParams.debugCollections) === "1";
+
+    const scopedLinkedIds = auth.linkedJellyfinUserIds.length > 0
+        ? auth.linkedJellyfinUserIds
+        : (auth.jellyfinUserId ? [auth.jellyfinUserId] : []);
+
+    const scopedDbUserIds = !auth.isAdmin && scopedLinkedIds.length > 0
+        ? (await prisma.user.findMany({
+            where: { jellyfinUserId: { in: scopedLinkedIds } },
+            select: { id: true },
+        })).map((user) => user.id)
+        : [];
 
     const [settings, serverRows, sanitizedLibraries] = await Promise.all([
-        prisma.globalSettings.findUnique({ where: { id: "global" } }),
+        prisma.globalSettings.findUnique({ where: { id: 'global' } }),
         prisma.server.findMany({
             select: { id: true, name: true, isActive: true, url: true, jellyfinServerId: true },
-            orderBy: { name: "asc" },
+            orderBy: { name: 'asc' },
         }),
         getSanitizedLibraryNames(),
     ]);
-
     const excludedLibraries = settings?.excludedLibraries || [];
 
-    const jellytrackMode = (process.env.JELLYTRACK_MODE || "single").toLowerCase();
+    const jellytrackMode = (process.env.JELLYTRACK_MODE || 'single').toLowerCase();
     const selectableServerOptions = buildSelectableServerOptions(serverRows);
-    const multiServerEnabled = jellytrackMode === "multi" && selectableServerOptions.length > 1;
-
-    const serversParam = readFirstSearchParam(resolvedSearchParams.servers);
+    const multiServerEnabled = jellytrackMode === 'multi' && selectableServerOptions.length > 1;
     const cookieStore = await cookies();
     const persistedScopeCookie = cookieStore.get(GLOBAL_SERVER_SCOPE_COOKIE)?.value ?? null;
-    const { selectedServerIds } = await resolveSelectedServerIdsAsync({
+    const { selectedServerIds, selectedServerIdsParam: serversParam } = await resolveSelectedServerIdsAsync({
         multiServerEnabled,
         selectableServerIds: selectableServerOptions.map((server) => server.id),
-        requestedServersParam: serversParam,
+        requestedServersParam: readFirstSearchParam(resolvedSearchParams.servers),
         cookieServersParam: persistedScopeCookie,
     });
     const selectedServerScope = selectedServerIds.length > 0 ? { in: selectedServerIds } : undefined;
 
-    const excludedClause = buildExcludedMediaClause(excludedLibraries);
-    const mediaWhere: Record<string, any> = { libraryName: { not: null } };
-    if (selectedServerScope) mediaWhere.serverId = selectedServerScope;
-    if (excludedClause) mediaWhere.AND = [excludedClause];
-
-    // Fetch all leaf media items for library aggregation (include ids for deduplication)
+    // Fetch all media items in a single query
+    // Respect excluded libraries policy
     const allMedia = await prisma.media.findMany({
-        where: mediaWhere,
+        where: {
+            libraryName: { not: null },
+            ...(selectedServerScope ? { serverId: selectedServerScope } : {}),
+            ...(buildExcludedMediaClause(excludedLibraries) ? buildExcludedMediaClause(excludedLibraries) : {}),
+        },
         select: {
             id: true,
             serverId: true,
             jellyfinMediaId: true,
-            parentId: true,
+            title: true,
             type: true,
+            parentId: true,
+            libraryName: true,
+            collectionType: true,
             size: true,
             durationMs: true,
-            libraryName: true,
-            title: true,
-            collectionType: true,
-        }
+        },
     });
 
     const libraryStatsMap = new Map<string, LibraryStatsEntry>();
-
     const ghostNames = new Set(GHOST_LIBRARY_NAMES);
 
     // Initial pass to set up mapping from normalized key to preferred display name
@@ -142,8 +149,8 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
                 items: 0,
                 movies: 0,
                 series: 0,
-                        music: 0,
-                        tracks: 0,
+                music: 0,
+                tracks: 0,
                 books: 0,
                 collectionType: null,
                 uniqueMovies: new Set<string>(),
@@ -199,8 +206,8 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
                 items: 0,
                 movies: 0,
                 series: 0,
-                    music: 0,
-                    tracks: 0,
+                music: 0,
+                tracks: 0,
                 books: 0,
                 collectionType: m.collectionType,
                 uniqueMovies: new Set<string>(),
@@ -219,63 +226,60 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
         lib.rawNames.add(m.libraryName);
         if (!lib.collectionType && m.collectionType) lib.collectionType = m.collectionType;
 
-        // Aggregate size (if present) from all media records
-        if (m.size != null) {
-            const sizeBig = typeof m.size === 'bigint' ? m.size : BigInt(Math.floor(Number(m.size)));
-            lib.size = (lib.size || BigInt(0)) + sizeBig;
-            totalSizeBytes += sizeBig;
-        }
-
-        const LEAF_TYPES = new Set(['Movie', 'Episode', 'Audio', 'Track', 'Book', 'AudioBook']);
-        // Aggregate media duration (if present)
-        if (m.durationMs != null) {
-            const durBig = typeof m.durationMs === 'bigint' ? m.durationMs : BigInt(Math.floor(Number(m.durationMs)));
-            
-            // Only aggregate if it's a leaf node to avoid overestimation by counting container times
-            if (LEAF_TYPES.has(m.type || '')) {
-                lib.duration = (lib.duration || BigInt(0)) + durBig;
-                totalDurationMs += durBig;
-            }
-        }
-
-        const mediaKey = m.jellyfinMediaId
-            ? encodeServerScopedTarget(m.serverId, String(m.jellyfinMediaId))
-            : encodeServerScopedTarget(m.serverId, String(m.id || ''));
-
+        const size = m.size ? BigInt(m.size) : BigInt(0);
+        const duration = m.durationMs ? BigInt(m.durationMs) : BigInt(0);
+        
+        // In multi-server, use compound key serverId::jellyfinId to avoid collision
+        const itemCompoundKey = encodeServerScopedTarget(m.serverId, m.jellyfinMediaId);
+        
         if (TOP_LEVEL_TYPES.has(m.type || '')) {
-            if (m.type === 'Movie') {
-                lib.uniqueMovies.add(mediaKey);
-            } else if (m.type === 'Series') {
-                lib.uniqueSeries.add(mediaKey);
-            } else if (m.type === 'MusicAlbum') {
-                lib.uniqueMusicAlbums.add(mediaKey);
-            } else if (m.type === 'Book' || m.type === 'AudioBook') {
-                lib.uniqueBooks.add(mediaKey);
+            lib.size += size;
+            lib.duration += duration;
+            totalSizeBytes += size;
+            totalDurationMs += duration;
+
+            if (m.type === 'Movie') lib.uniqueMovies.add(itemCompoundKey);
+            else if (m.type === 'Series') lib.uniqueSeries.add(itemCompoundKey);
+            else if (m.type === 'MusicAlbum') lib.uniqueMusicAlbums.add(itemCompoundKey);
+            else if (m.type === 'Book' || m.type === 'AudioBook') lib.uniqueBooks.add(itemCompoundKey);
+        } else if (m.type === 'Season') {
+            // Add Season duration & size to total library size, and resolve its Series ID to ensure
+            // series count is correct even when the parent Series is missing from this library.
+            lib.size += size;
+            lib.duration += duration;
+            totalSizeBytes += size;
+            totalDurationMs += duration;
+            if (m.parentId) {
+                lib.pendingSeasonIds.add(encodeServerScopedTarget(m.serverId, m.parentId));
             }
-        } else {
-            if (m.type === 'Season') {
-                if (m.parentId) lib.uniqueSeries.add(encodeServerScopedTarget(m.serverId, String(m.parentId)));
-                else if (m.jellyfinMediaId) lib.pendingSeasonIds.add(encodeServerScopedTarget(m.serverId, String(m.jellyfinMediaId)));
-            }
-            if (m.type === 'Episode') {
-                lib.ignoredEpisodes = (lib.ignoredEpisodes || 0) + 1;
-                if (m.parentId) lib.pendingSeasonIds.add(encodeServerScopedTarget(m.serverId, String(m.parentId)));
-            }
-            if (m.type === 'Track' || m.type === 'Audio') {
-                lib.ignoredTracks = (lib.ignoredTracks || 0) + 1;
-                lib.tracks = (lib.tracks || 0) + 1;
-                if (m.parentId) lib.pendingAlbumIds.add(encodeServerScopedTarget(m.serverId, String(m.parentId)));
+        } else if (m.type === 'Episode') {
+            // Track Episode sizes and durations, but don't count towards parent series directly
+            lib.size += size;
+            lib.duration += duration;
+            totalSizeBytes += size;
+            totalDurationMs += duration;
+            lib.ignoredEpisodes += 1;
+        } else if (m.type === 'Audio' || m.type === 'Track') {
+            // Track audio tracks
+            lib.size += size;
+            lib.duration += duration;
+            totalSizeBytes += size;
+            totalDurationMs += duration;
+            lib.tracks = (lib.tracks || 0) + 1;
+            if (m.parentId) {
+                lib.pendingAlbumIds.add(encodeServerScopedTarget(m.serverId, m.parentId));
             }
         }
     }
 
-    // Resolve pending season/album parent ids to their parent series/album entries
+    // Resolve any parent items (Series, Albums) that were referenced by children (Seasons, Tracks)
+    // but not counted in this library yet.
     try {
         const allPendingSeasonIds = new Set<string>();
         const allPendingAlbumIds = new Set<string>();
         for (const [, s] of libraryStatsMap) {
-            for (const id of s.pendingSeasonIds || []) allPendingSeasonIds.add(id);
-            for (const id of s.pendingAlbumIds || []) allPendingAlbumIds.add(id);
+            s.pendingSeasonIds?.forEach(id => allPendingSeasonIds.add(id));
+            s.pendingAlbumIds?.forEach(id => allPendingAlbumIds.add(id));
         }
 
         if (allPendingSeasonIds.size > 0) {
@@ -283,7 +287,7 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
                 .map((value) => decodeServerScopedTarget(value))
                 .filter((value): value is ServerScopedTarget => Boolean(value));
 
-            const seasons = seasonTargets.length > 0
+            const seriesList = seasonTargets.length > 0
                 ? await prisma.media.findMany({
                     where: {
                         OR: seasonTargets.map((target) => ({
@@ -295,7 +299,7 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
                 })
                 : [];
 
-            for (const se of seasons) {
+            for (const se of seriesList) {
                 const seriesId = se.parentId || se.jellyfinMediaId;
                 const key = normalizeLibraryKey(se.libraryName) || se.libraryName || tc('other');
                 if (!libraryStatsMap.has(key)) continue;
@@ -356,9 +360,16 @@ export default async function CollectionsPage({ searchParams }: { searchParams?:
     }
 
     try {
-        const playbackWhere = selectedServerScope
-            ? { ...ZAPPING_CONDITION, serverId: selectedServerScope }
-            : ZAPPING_CONDITION;
+        const playbackWhere: Record<string, unknown> = {
+            ...ZAPPING_CONDITION,
+        };
+        if (selectedServerScope) {
+            playbackWhere.serverId = selectedServerScope;
+        }
+        if (!auth.isAdmin) {
+            playbackWhere.userId = scopedDbUserIds.length > 0 ? { in: scopedDbUserIds } : "__none__";
+        }
+
         const playbackAgg = await prisma.playbackHistory.groupBy({
             by: ['mediaId'],
             _sum: { durationWatched: true },

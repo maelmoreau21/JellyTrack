@@ -6,7 +6,7 @@ import { Film, Tv, Award, Play, Clock, Library, Video, Users, Building } from "l
 import Link from "next/link";
 import { ServerFilter } from "@/components/dashboard/ServerFilter";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
-import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAuth, isAuthError } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
@@ -15,11 +15,22 @@ import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 export const dynamic = "force-dynamic";
 
 export default async function PopularMediaPage({ searchParams: searchParamsPromise }: { searchParams?: Promise<{ servers?: string }> }) {
-    const auth = await requireAdmin();
+    const auth = await requireAuth();
     if (isAuthError(auth)) redirect("/login");
 
     const searchParams = (await searchParamsPromise) || {};
     const tc = await getTranslations("common");
+
+    const scopedLinkedIds = auth.linkedJellyfinUserIds.length > 0
+        ? auth.linkedJellyfinUserIds
+        : (auth.jellyfinUserId ? [auth.jellyfinUserId] : []);
+
+    const scopedDbUserIds = !auth.isAdmin && scopedLinkedIds.length > 0
+        ? (await prisma.user.findMany({
+            where: { jellyfinUserId: { in: scopedLinkedIds } },
+            select: { id: true },
+        })).map((user) => user.id)
+        : [];
 
     const serverRows = await prisma.server.findMany({
         select: { id: true, name: true, isActive: true, url: true, jellyfinServerId: true },
@@ -45,6 +56,9 @@ export default async function PopularMediaPage({ searchParams: searchParamsPromi
     };
     if (selectedServerScope) {
         playbackWhere.serverId = selectedServerScope;
+    }
+    if (!auth.isAdmin) {
+        playbackWhere.userId = scopedDbUserIds.length > 0 ? { in: scopedDbUserIds } : "__none__";
     }
 
     // 1. Top 5 Movies
