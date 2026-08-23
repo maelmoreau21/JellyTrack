@@ -66,6 +66,7 @@ describe("SSO Settings API", () => {
       expect(json.clientSecretMasked).toContain("••••••••");
       expect(json.userGroup).toBe("jellyfin-users");
       expect(json.adminGroup).toBe("jellyfin-admins");
+      expect(json.tokenAlg).toBe("RS256");
       expect(json.localAdminConfigured).toBe(true);
       expect(json.localAdminUser).toBe("admin");
       expect(json.callbackPath).toBe("/api/auth/callback/oidc");

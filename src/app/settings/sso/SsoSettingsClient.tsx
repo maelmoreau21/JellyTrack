@@ -92,7 +92,7 @@ export function SsoSettingsClient() {
   const [formClientSecret, setFormClientSecret] = useState("");
   const [formUserGroup, setFormUserGroup] = useState("");
   const [formAdminGroup, setFormAdminGroup] = useState("");
-  const [formTokenAlg, setFormTokenAlg] = useState("HS256");
+  const [formTokenAlg, setFormTokenAlg] = useState("RS256");
 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -104,7 +104,7 @@ export function SsoSettingsClient() {
     setFormClientSecret(data.hasClientSecret ? data.clientSecretMasked : "");
     setFormUserGroup(data.userGroup || "");
     setFormAdminGroup(data.adminGroup || "");
-    setFormTokenAlg(data.tokenAlg || "HS256");
+    setFormTokenAlg(data.tokenAlg || "RS256");
   }, []);
 
   const fetchSsoInfo = useCallback(async () => {
@@ -483,8 +483,9 @@ export function SsoSettingsClient() {
                   aria-label="Algorithme de signature du token OIDC"
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 font-mono"
                 >
-                  <option value="HS256">HS256 (Secret partagé / Authentik défaut)</option>
-                  <option value="RS256">RS256 (Clé RSA / Certificat)</option>
+                  <option value="RS256">RS256 (Clé RSA / Certificat - Recommandé, Authentik / Keycloak / Authelia)</option>
+                  <option value="HS256">HS256 (Secret partagé client_secret)</option>
+                  <option value="ES256">ES256 (Courbe elliptique ECDSA)</option>
                 </select>
               </div>
             </div>

@@ -59,7 +59,7 @@ export function parseDbSsoSettings(raw: unknown): OidcConfig {
     clientSecret: "",
     userGroup: "",
     adminGroup: "",
-    tokenAlg: "HS256",
+    tokenAlg: "RS256",
   };
 
   if (!raw || typeof raw !== "object") {
@@ -74,7 +74,7 @@ export function parseDbSsoSettings(raw: unknown): OidcConfig {
     clientSecret: typeof obj.clientSecret === "string" ? obj.clientSecret.trim() : "",
     userGroup: typeof obj.userGroup === "string" ? obj.userGroup.trim() : "",
     adminGroup: typeof obj.adminGroup === "string" ? obj.adminGroup.trim() : "",
-    tokenAlg: typeof obj.tokenAlg === "string" && obj.tokenAlg.trim() ? obj.tokenAlg.trim() : "HS256",
+    tokenAlg: typeof obj.tokenAlg === "string" && obj.tokenAlg.trim() ? obj.tokenAlg.trim() : "RS256",
   };
 }
 
@@ -94,7 +94,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
     clientSecret: String(dbSettings?.clientSecret ?? inMemoryDbSsoConfig?.clientSecret ?? "").trim(),
     userGroup: String(dbSettings?.userGroup ?? inMemoryDbSsoConfig?.userGroup ?? "").trim(),
     adminGroup: String(dbSettings?.adminGroup ?? inMemoryDbSsoConfig?.adminGroup ?? "").trim(),
-    tokenAlg: String(dbSettings?.tokenAlg ?? inMemoryDbSsoConfig?.tokenAlg ?? "HS256").trim() || "HS256",
+    tokenAlg: String(dbSettings?.tokenAlg ?? inMemoryDbSsoConfig?.tokenAlg ?? "RS256").trim() || "RS256",
   };
 
   const envEnabledRaw = process.env.OIDC_ENABLED;

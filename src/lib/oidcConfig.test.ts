@@ -37,7 +37,7 @@ describe("oidcConfig", () => {
   });
 
   describe("getOidcConfig", () => {
-    it("returns clean OIDC configuration", () => {
+    it("returns clean OIDC configuration with default RS256 alg", () => {
       vi.stubEnv("OIDC_ENABLED", "true");
       vi.stubEnv("OIDC_URL", "https://authentik.example.com/application/o/jellytrack///");
       vi.stubEnv("OIDC_CLIENT_ID", "jellytrack-app");
@@ -52,6 +52,17 @@ describe("oidcConfig", () => {
       expect(config.clientSecret).toBe("super-secret");
       expect(config.userGroup).toBe("jellyfin-users");
       expect(config.adminGroup).toBe("jellyfin-admins");
+      expect(config.tokenAlg).toBe("RS256");
+    });
+
+    it("respects custom OIDC_TOKEN_ALG env variable", () => {
+      vi.stubEnv("OIDC_ENABLED", "true");
+      vi.stubEnv("OIDC_URL", "https://authentik.example.com/application/o/jellytrack");
+      vi.stubEnv("OIDC_CLIENT_ID", "jellytrack-app");
+      vi.stubEnv("OIDC_TOKEN_ALG", "ES256");
+
+      const config = getOidcConfig();
+      expect(config.tokenAlg).toBe("ES256");
     });
   });
 

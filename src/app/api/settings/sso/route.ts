@@ -32,7 +32,7 @@ export async function GET() {
       : "",
     userGroup: oidc.userGroup,
     adminGroup: oidc.adminGroup,
-    tokenAlg: oidc.tokenAlg || "HS256",
+    tokenAlg: oidc.tokenAlg || "RS256",
     origins: oidc.origins,
     isEnvControlled: oidc.isEnvControlled,
     dbConfig: {
@@ -45,7 +45,7 @@ export async function GET() {
         : "",
       userGroup: oidc.dbConfig.userGroup,
       adminGroup: oidc.dbConfig.adminGroup,
-      tokenAlg: oidc.dbConfig.tokenAlg || "HS256",
+      tokenAlg: oidc.dbConfig.tokenAlg || "RS256",
     },
     localAdminConfigured: local.isConfigured,
     localAdminUser: local.username,
@@ -76,7 +76,7 @@ export async function PUT(req: NextRequest) {
           : (body.keepExistingSecret ? currentDbConfig.clientSecret : (typeof body.clientSecret === "string" ? body.clientSecret.trim() : currentDbConfig.clientSecret)),
       userGroup: typeof body.userGroup === "string" ? body.userGroup.trim() : currentDbConfig.userGroup,
       adminGroup: typeof body.adminGroup === "string" ? body.adminGroup.trim() : currentDbConfig.adminGroup,
-      tokenAlg: typeof body.tokenAlg === "string" && body.tokenAlg.trim() ? body.tokenAlg.trim() : currentDbConfig.tokenAlg || "HS256",
+      tokenAlg: typeof body.tokenAlg === "string" && body.tokenAlg.trim() ? body.tokenAlg.trim() : currentDbConfig.tokenAlg || "RS256",
     };
 
     await (prisma as any).globalSettings?.upsert({
@@ -117,7 +117,7 @@ export async function PUT(req: NextRequest) {
         : "",
       userGroup: oidc.userGroup,
       adminGroup: oidc.adminGroup,
-      tokenAlg: oidc.tokenAlg || "HS256",
+      tokenAlg: oidc.tokenAlg || "RS256",
       origins: oidc.origins,
       isEnvControlled: oidc.isEnvControlled,
       dbConfig: {
@@ -130,7 +130,7 @@ export async function PUT(req: NextRequest) {
           : "",
         userGroup: oidc.dbConfig.userGroup,
         adminGroup: oidc.dbConfig.adminGroup,
-        tokenAlg: oidc.dbConfig.tokenAlg || "HS256",
+        tokenAlg: oidc.dbConfig.tokenAlg || "RS256",
       },
       localAdminConfigured: local.isConfigured,
       localAdminUser: local.username,
