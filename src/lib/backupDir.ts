@@ -36,8 +36,9 @@ export function getBackupDirectory() {
 
     const candidates = [
         configured,
-        "./backups",
+        "/data/backups",
         path.join(/*turbopackIgnore: true*/ process.cwd(), "backups"),
+        "./backups",
         path.join(os.tmpdir(), FALLBACK_TMP_DIR),
     ].filter(Boolean);
 
@@ -48,7 +49,11 @@ export function getBackupDirectory() {
             cachedBackupDirectory = candidate;
 
             if (configured && path.resolve(/*turbopackIgnore: true*/ configured) !== candidate) {
-                console.warn(`[Backup] BACKUP_DIR is not writable (${configured}). Falling back to ${candidate}.`);
+                console.warn(`[Backup] Configured BACKUP_DIR is not writable (${configured}). Falling back to ${candidate}.`);
+            }
+
+            if (candidate.startsWith(os.tmpdir())) {
+                console.warn(`[Backup] WARNING: Backups are currently being stored in temporary directory (${candidate}). To keep backups across container updates, mount a persistent volume at /data/backups or set BACKUP_DIR.`);
             }
 
             return candidate;
