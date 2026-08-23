@@ -24,11 +24,16 @@ function isWritableDirectory(directory: string) {
 }
 
 export function getBackupDirectory() {
-    if (cachedBackupDirectory) {
+    const configured = String(process.env.BACKUP_DIR || "").trim();
+    if (configured && isWritableDirectory(path.resolve(/*turbopackIgnore: true*/ configured))) {
+        cachedBackupDirectory = path.resolve(/*turbopackIgnore: true*/ configured);
         return cachedBackupDirectory;
     }
 
-    const configured = String(process.env.BACKUP_DIR || "").trim();
+    if (cachedBackupDirectory && isWritableDirectory(cachedBackupDirectory)) {
+        return cachedBackupDirectory;
+    }
+
     const candidates = [
         configured,
         "./backups",

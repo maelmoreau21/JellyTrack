@@ -89,6 +89,17 @@ export async function performAutoBackup(mode: 'auto' | 'manuelle' = 'auto'): Pro
             message: `Automated ZIP backup created: ${fileName}`,
             details: { fileName },
         });
+
+        try {
+            const { writeAdminAuditLog } = await import("@/lib/adminAudit");
+            await writeAdminAuditLog({
+                action: mode === "manuelle" ? "Backup manuel créé" : "Backup automatique créé",
+                actorUserId: "system",
+                actorUsername: mode === "manuelle" ? "admin" : "Planificateur",
+                details: { fileName, fileSizeMb, backupDir },
+            });
+        } catch {}
+
         return fileName;
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error);

@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { signOut } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
-import { AlertCircle, Clock3, LogOut, RefreshCw, ShieldCheck, SlidersHorizontal, Loader2 } from "lucide-react";
+import { AlertCircle, RefreshCw, ShieldCheck, SlidersHorizontal, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,11 +24,6 @@ type SmartSecurityThresholds = {
     ipAttemptThreshold: number;
     ipWindowMinutes: number;
     newCountryGraceMinutes: number;
-};
-
-type AuthSessionPolicy = {
-    rememberSessionsExpireAfterDays: boolean;
-    sessionsRevokedAt: string | null;
 };
 
 type PluginTelemetrySettings = {
@@ -79,11 +73,7 @@ export default function PluginSecurityPage() {
     const [overview, setOverview] = useState<SecurityOverview | null>(null);
     const [loading, setLoading] = useState(false);
     const [savingSmartThresholds, setSavingSmartThresholds] = useState(false);
-    const [savingAuthPolicy, setSavingAuthPolicy] = useState(false);
-    const [revokingSessions, setRevokingSessions] = useState(false);
     const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-    const [authSessionPolicy, setAuthSessionPolicy] = useState<AuthSessionPolicy | null>(null);
-    const [rememberSessionsExpireAfterDays, setRememberSessionsExpireAfterDays] = useState(true);
 
     const [telemetrySettings, setTelemetrySettings] = useState<PluginTelemetrySettings>(DEFAULT_TELEMETRY_SETTINGS);
     const [telemetrySaving, setTelemetrySaving] = useState(false);
@@ -115,17 +105,6 @@ export default function PluginSecurityPage() {
         }
     }, []);
 
-    const loadAuthSessionPolicy = useCallback(async () => {
-        const res = await fetch('/api/admin/auth/session-policy', { cache: 'no-store' });
-        if (!res.ok) {
-            throw new Error('Failed to load auth session policy');
-        }
-
-        const data = (await res.json()) as AuthSessionPolicy;
-        setAuthSessionPolicy(data);
-        setRememberSessionsExpireAfterDays(data.rememberSessionsExpireAfterDays !== false);
-    }, []);
-
     const loadTelemetrySettings = useCallback(async () => {
         const res = await fetch('/api/settings', { cache: 'no-store' });
         if (res.ok) {
@@ -136,29 +115,17 @@ export default function PluginSecurityPage() {
         }
     }, []);
 
-    const [ssoActive, setSsoActive] = useState(false);
-
-    const loadSsoStatus = useCallback(async () => {
-        try {
-            const res = await fetch('/api/settings/sso', { cache: 'no-store' });
-            if (res.ok) {
-                const data = await res.json();
-                setSsoActive(Boolean(data?.enabled));
-            }
-        } catch {}
-    }, []);
-
     const refreshAll = useCallback(async () => {
         setLoading(true);
         setMessage(null);
         try {
-            await Promise.all([loadOverview(), loadSmartThresholds(), loadAuthSessionPolicy(), loadTelemetrySettings(), loadSsoStatus()]);
+            await Promise.all([loadOverview(), loadSmartThresholds(), loadTelemetrySettings()]);
         } catch {
             setMessage({ type: "error", text: ts('securityLoadError') });
         } finally {
             setLoading(false);
         }
-    }, [loadOverview, loadSmartThresholds, loadAuthSessionPolicy, loadTelemetrySettings, loadSsoStatus, ts]);
+    }, [loadOverview, loadSmartThresholds, loadTelemetrySettings, ts]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -255,73 +222,6 @@ export default function PluginSecurityPage() {
         }
     };
 
-    const saveAuthSessionPolicy = async () => {
-        setSavingAuthPolicy(true);
-        setMessage(null);
-
-        try {
-            const res = await fetch('/api/admin/auth/session-policy', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    rememberSessionsExpireAfterDays,
-                }),
-            });
-
-            const data = await res.json().catch(() => ({})) as {
-                error?: string;
-                policy?: AuthSessionPolicy;
-            };
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Update failed');
-            }
-
-            if (data.policy) {
-                setAuthSessionPolicy(data.policy);
-                setRememberSessionsExpireAfterDays(data.policy.rememberSessionsExpireAfterDays !== false);
-            }
-
-            setMessage({ type: 'success', text: ts('authSessionsSaved') });
-        } catch (error) {
-            const text = error instanceof Error ? error.message : ts('unknownError');
-            setMessage({ type: 'error', text });
-        } finally {
-            setSavingAuthPolicy(false);
-        }
-    };
-
-    const revokeAllSessions = async () => {
-        const confirmed = window.confirm(ts('authSessionsRevokeConfirm'));
-        if (!confirmed) return;
-
-        setRevokingSessions(true);
-        setMessage(null);
-
-        try {
-            const res = await fetch('/api/admin/auth/revoke-sessions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            const data = await res.json().catch(() => ({})) as {
-                error?: string;
-                revokedAt?: string;
-            };
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Revocation failed');
-            }
-
-            setMessage({ type: 'success', text: ts('authSessionsRevokedSuccess') });
-            await signOut({ callbackUrl: '/login' });
-        } catch (error) {
-            const text = error instanceof Error ? error.message : ts('unknownError');
-            setMessage({ type: 'error', text });
-            setRevokingSessions(false);
-        }
-    };
-
     const healthBadge = useMemo(() => {
         if (!overview?.plugin.connected) {
             return <Badge className="app-chip border-red-500/35 text-red-600 dark:text-red-300">{ts('offline')}</Badge>;
@@ -361,72 +261,9 @@ export default function PluginSecurityPage() {
 
             <Card className="app-surface border-border">
                 <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <Clock3 className="w-4 h-4" />
-                        {ts('authSessionsTitle')}
-                    </CardTitle>
-                    <CardDescription>{ts('authSessionsDesc')}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {ssoActive ? (
-                        <div className="flex flex-col gap-2 rounded-lg border border-primary/25 bg-primary/5 p-4">
-                            <div className="flex items-center gap-2 font-medium text-xs text-primary">
-                                <ShieldCheck className="w-4 h-4" />
-                                {ts('ssoManagedSessionNotice') || 'L\'authentification SSO OIDC est active. Les durées de session et la persistance sont directement gérées par votre fournisseur d\'identité (Authentik / OpenID Connect).'}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col gap-4 rounded-lg border border-border/70 bg-background/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="space-y-1">
-                                <Label htmlFor="remember-30-days" className="text-sm font-medium">
-                                    {ts('authSessionsRememberThirtyDays')}
-                                </Label>
-                                <p className="text-xs text-muted-foreground">
-                                    {rememberSessionsExpireAfterDays
-                                        ? ts('authSessionsRememberThirtyDaysOn')
-                                        : ts('authSessionsRememberThirtyDaysOff')}
-                                </p>
-                            </div>
-                            <Switch
-                                id="remember-30-days"
-                                checked={rememberSessionsExpireAfterDays}
-                                onCheckedChange={(checked) => setRememberSessionsExpireAfterDays(Boolean(checked))}
-                            />
-                        </div>
-                    )}
-
-                    <div className="flex flex-col gap-3 rounded-lg border border-red-500/25 bg-red-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="space-y-1">
-                            <div className="text-sm font-medium text-red-700 dark:text-red-300">{ts('authSessionsRevokeTitle')}</div>
-                            <p className="text-xs text-red-700/80 dark:text-red-200/80">
-                                {ts('authSessionsRevokeDesc')}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                {ts('authSessionsLastRevoked', {
-                                    date: authSessionPolicy?.sessionsRevokedAt
-                                        ? formatDateTime(authSessionPolicy.sessionsRevokedAt, locale)
-                                        : '-',
-                                })}
-                            </p>
-                        </div>
-                        <Button variant="destructive" onClick={revokeAllSessions} disabled={revokingSessions}>
-                            <LogOut className="w-4 h-4" />
-                            {revokingSessions ? ts('authSessionsRevoking') : ts('authSessionsRevokeButton')}
-                        </Button>
-                    </div>
-                </CardContent>
-                <CardContent className="pt-0">
-                    <Button variant="outline" onClick={saveAuthSessionPolicy} disabled={savingAuthPolicy}>
-                        {savingAuthPolicy ? ts('saving') : ts('authSessionsSavePolicy')}
-                    </Button>
-                </CardContent>
-            </Card>
-
-            <Card className="app-surface border-border">
-                <CardHeader>
                     <CardTitle className="text-base">{ts('pluginStateTitle')}</CardTitle>
                     <CardDescription>{ts('pluginStateDesc')}</CardDescription>
-                </CardHeader>
+                </CardHeader>der>
                 <CardContent className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
                         <span>{ts('statusLabel')}</span>

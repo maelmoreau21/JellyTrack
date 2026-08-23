@@ -614,18 +614,27 @@ export default function CleanupClient({ initialData }: { initialData: CleanupDat
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "ghosts" | "abandoned" | "duplicates")} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
-                <TabsTrigger value="ghosts" className="flex items-center gap-2">
-                    <Ghost className="w-4 h-4" />
-                    {t('ghostMedia')} ({baseGhosts.length})
+            <TabsList className="app-surface-soft border border-border/80 w-full sm:w-auto inline-flex flex-wrap sm:flex-nowrap h-auto p-1 gap-1.5 min-h-[42px]">
+                <TabsTrigger value="ghosts" className="flex items-center gap-2 px-3.5 py-2 text-xs md:text-sm font-medium">
+                    <Ghost className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>{t('ghostMedia')}</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-red-500/10 text-red-400 font-mono">
+                        {baseGhosts.length}
+                    </Badge>
                 </TabsTrigger>
-                <TabsTrigger value="abandoned" className="flex items-center gap-2">
-                    <HeartCrack className="w-4 h-4" />
-                    {t('abandonedMedia')} ({baseAbandoned.length})
+                <TabsTrigger value="abandoned" className="flex items-center gap-2 px-3.5 py-2 text-xs md:text-sm font-medium">
+                    <HeartCrack className="w-4 h-4 text-orange-400 shrink-0" />
+                    <span>{t('abandonedMedia')}</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-orange-500/10 text-orange-400 font-mono">
+                        {baseAbandoned.length}
+                    </Badge>
                 </TabsTrigger>
-                <TabsTrigger value="duplicates" className="flex items-center gap-2">
-                    <Copy className="w-4 h-4" />
-                    Doublons ({baseDuplicates.length})
+                <TabsTrigger value="duplicates" className="flex items-center gap-2 px-3.5 py-2 text-xs md:text-sm font-medium">
+                    <Copy className="w-4 h-4 text-blue-400 shrink-0" />
+                    <span>Doublons</span>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 font-mono">
+                        {baseDuplicates.length}
+                    </Badge>
                 </TabsTrigger>
             </TabsList>
 

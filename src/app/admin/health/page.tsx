@@ -1,4 +1,4 @@
-﻿import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/authOptions";
@@ -173,9 +173,9 @@ export default async function HealthPage() {
 
                 {/* Main Navigation Tabs */}
                 <Tabs defaultValue="cleanup" className="space-y-6">
-                    <TabsList className="app-field border-border w-full md:w-auto grid grid-cols-3 md:inline-flex p-1">
-                        <TabsTrigger value="cleanup" className="flex items-center gap-2">
-                            <Eraser className="w-4 h-4" />
+                    <TabsList className="app-field border-border w-full md:w-auto inline-flex flex-wrap md:flex-nowrap p-1 h-auto gap-1">
+                        <TabsTrigger value="cleanup" className="flex items-center gap-2 px-3 py-2 text-xs md:text-sm font-medium">
+                            <Eraser className="w-4 h-4 text-primary shrink-0" />
                             <span>{isFr ? "Nettoyage & Stockage" : "Media Cleanup"}</span>
                             {ghostCount > 0 && (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary">
@@ -183,8 +183,8 @@ export default async function HealthPage() {
                                 </Badge>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="security" className="flex items-center gap-2">
-                            <ShieldIcon className="w-4 h-4" />
+                        <TabsTrigger value="security" className="flex items-center gap-2 px-3 py-2 text-xs md:text-sm font-medium">
+                            <ShieldIcon className="w-4 h-4 text-emerald-400 shrink-0" />
                             <span>{isFr ? "Sécurité & Anomalies" : "Security & Alerts"}</span>
                             {securityAlerts.length > 0 && (
                                 <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
@@ -192,8 +192,8 @@ export default async function HealthPage() {
                                 </Badge>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="logs" className="flex items-center gap-2">
-                            <Activity className="w-4 h-4" />
+                        <TabsTrigger value="logs" className="flex items-center gap-2 px-3 py-2 text-xs md:text-sm font-medium">
+                            <Activity className="w-4 h-4 text-sky-400 shrink-0" />
                             <span>{isFr ? "Moteur & Logs" : "Logs & Engine"}</span>
                         </TabsTrigger>
                     </TabsList>
