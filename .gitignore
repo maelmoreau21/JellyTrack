@@ -25,12 +25,15 @@
 *.pem
 
 # debug
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 eslint-report.json
 .codex-dev-server*.log
+scratch/
+.venv/
 
 # env files
 .env*
