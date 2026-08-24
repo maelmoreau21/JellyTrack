@@ -10,6 +10,7 @@ import { LogFilters } from "@/app/logs/LogFilters";
 import { ColumnToggle } from "@/app/logs/ColumnToggle";
 import { SavedFilters } from "@/components/SavedFilters";
 import { formatMediaSubtitle } from "@/lib/mediaSubtitle";
+import { normalizeBitrateToKbps } from "@/lib/bitrate";
 import type { SafeLog, SafeTelemetryEvent } from '@/types/logs';
 import type { Prisma } from '@prisma/client';
 
@@ -282,6 +283,7 @@ export default async function UserRecentMedia({
             }) : [],
             isActuallyActive: !log.endedAt && activePairSet.has(`${log.userId}:${log.mediaId}`),
             isReconnection: reconnectionSet.has(log.id),
+            bitrate: normalizeBitrateToKbps(log.bitrate),
         };
     });
 

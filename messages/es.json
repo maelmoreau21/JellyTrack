@@ -630,7 +630,10 @@
         "totalMediaDesc": "Número de elementos multimedia indexados.",
         "uniqueGenres": "Géneros únicos",
         "videoQuality": "Calidad de video general",
-        "videoQualityDesc": "Distribución por resolución certificada."
+        "videoQualityDesc": "Distribución por resolución certificada.",
+        "noPlays": "Aún sin reproducciones",
+        "noContentAdded": "Sin contenido añadido",
+        "popularTab": "Popular"
     },
     "mediaProfile": {
         "allUsers": "Todos los usuarios",
@@ -1083,7 +1086,12 @@
         "saveServer": "Guardar cambios",
         "serverUpdatedSuccess": "Servidor Jellyfin actualizado con éxito.",
         "serverUpdateError": "Error al actualizar el servidor Jellyfin.",
-        "serverApiKeyHint": "Dejar en blanco para mantener la clave actual."
+        "serverApiKeyHint": "Dejar en blanco para mantener la clave actual.",
+        "copy": "Copiar",
+        "copied": "¡Copiado!",
+        "pluginKeyGenerateError": "No se pudo generar la clave API del plugin.",
+        "pluginKeyGeneratedSuccess": "Nueva clave API del plugin generada con éxito.",
+        "networkErrorGenerateKey": "Error de red al generar la clave."
     },
     "timeRange": {
         "allTime": "Todo el tiempo",
@@ -1510,6 +1518,7 @@
         "envPriorityBadge": "Docker (.env) variables prioritized",
         "saveButton": "Save SSO Settings",
         "saveSuccess": "SSO configuration saved successfully.",
-        "saveError": "Failed to save SSO configuration."
+        "saveError": "Failed to save SSO configuration.",
+        "saving": "Guardando..."
     }
 }

@@ -5,6 +5,7 @@ import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { getRequestIp, writeAdminAuditLog } from "@/lib/adminAudit";
 import { normalizePluginTelemetrySettings } from "@/lib/pluginTelemetrySettings";
+import { normalizeBitrateToKbps } from "@/lib/bitrate";
 
 export const dynamic = "force-dynamic";
 
@@ -263,9 +264,7 @@ async function buildPluginHealthSnapshot() {
             active: activeStreamsAgg._count._all,
             transcodes: transcodeStreams,
             stale: staleStreams,
-            avgBitrateKbps: activeStreamsAgg._avg.bitrate !== null
-                ? Number(activeStreamsAgg._avg.bitrate)
-                : null,
+            avgBitrateKbps: normalizeBitrateToKbps(activeStreamsAgg._avg.bitrate),
         },
         pluginReportedMetrics: {
             queueDepth: normalizedQueueDepth,

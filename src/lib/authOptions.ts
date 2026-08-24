@@ -409,7 +409,8 @@ export const authOptions: NextAuthOptions = {
             const nowSeconds = Math.floor(Date.now() / 1000);
             const sessionPolicy = await getAuthSessionPolicy();
             if (user) {
-                const rememberMe = user.rememberMe === true;
+                const isOidcUser = user.authProvider === "oidc";
+                const rememberMe = user.rememberMe === true || isOidcUser;
                 const rememberedMaxAge = sessionPolicy.rememberSessionsExpireAfterDays
                     ? REMEMBERED_SESSION_MAX_AGE_SECONDS
                     : INDEFINITE_SESSION_MAX_AGE_SECONDS;

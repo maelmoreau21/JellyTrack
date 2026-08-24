@@ -9,6 +9,7 @@ import { ChevronDown, RefreshCw } from "lucide-react";
 import { FallbackImage } from "@/components/FallbackImage";
 import { useTranslations } from 'next-intl';
 import { normalizeResolution } from '@/lib/utils';
+import { normalizeBitrateToKbps } from '@/lib/bitrate';
 import type { SafeLog, SafeTelemetryEvent } from '@/types/logs';
 
 export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: SafeLog; visibleColumns: string[]; onOpenDetails?: (log: SafeLog)=>void }) {
@@ -303,14 +304,16 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                 </TableCell>
               );
 
-            case 'audioBitrate':
+            case 'audioBitrate': {
+              const displayBitrate = normalizeBitrateToKbps(log.bitrate);
               return (
                 <TableCell key="audioBitrate" className={cn("hidden lg:table-cell border-r border-border")}>
                   <div className="text-xs text-muted-foreground">
-                    {typeof log.bitrate === 'number' && log.bitrate > 0 ? `${log.bitrate} kbps` : '—'}
+                    {typeof displayBitrate === 'number' && displayBitrate > 0 ? `${displayBitrate} kbps` : '—'}
                   </div>
                 </TableCell>
               );
+            }
 
             case 'ip':
               return (

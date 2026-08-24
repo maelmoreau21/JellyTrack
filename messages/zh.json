@@ -630,7 +630,10 @@
         "totalMediaDesc": "已索引的媒体项目数量。",
         "uniqueGenres": "唯一类型数",
         "videoQuality": "整体视频质量",
-        "videoQualityDesc": "按认证分辨率分布。"
+        "videoQualityDesc": "按认证分辨率分布。",
+        "noPlays": "暂无播放",
+        "noContentAdded": "未添加内容",
+        "popularTab": "热门"
     },
     "mediaProfile": {
         "allUsers": "所有用户",
@@ -1083,7 +1086,12 @@
         "saveServer": "保存更改",
         "serverUpdatedSuccess": "Jellyfin 服务器更新成功。",
         "serverUpdateError": "更新 Jellyfin 服务器失败。",
-        "serverApiKeyHint": "留空以保留当前密钥。"
+        "serverApiKeyHint": "留空以保留当前密钥。",
+        "copy": "复制",
+        "copied": "已复制！",
+        "pluginKeyGenerateError": "无法生成插件 API 密钥。",
+        "pluginKeyGeneratedSuccess": "已成功生成新插件 API 密钥。",
+        "networkErrorGenerateKey": "生成密钥时发生网络错误。"
     },
     "timeRange": {
         "allTime": "全部时间",
@@ -1510,6 +1518,7 @@
         "envPriorityBadge": "Docker (.env) variables prioritized",
         "saveButton": "Save SSO Settings",
         "saveSuccess": "SSO configuration saved successfully.",
-        "saveError": "Failed to save SSO configuration."
+        "saveError": "Failed to save SSO configuration.",
+        "saving": "保存中..."
     }
 }

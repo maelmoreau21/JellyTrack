@@ -10,6 +10,7 @@ import { cookies } from "next/headers";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
 import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { buildSelectableServerOptions } from "@/lib/selectableServers";
+import { normalizeBitrateToKbps } from "@/lib/bitrate";
 import { Activity, ArrowUpRight, Gauge, Server, Zap } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -32,9 +33,10 @@ type ServerMetric = {
 };
 
 function formatBitrateKbps(value: number | null): string {
-    if (value === null || !Number.isFinite(value)) return "-";
-    if (value >= 1000) return `${(value / 1000).toFixed(1)} Mbps`;
-    return `${Math.round(value)} kbps`;
+    const norm = normalizeBitrateToKbps(value);
+    if (norm === null || !Number.isFinite(norm)) return "-";
+    if (norm >= 1000) return `${(norm / 1000).toFixed(1)} Mbps`;
+    return `${Math.round(norm)} kbps`;
 }
 
 function formatHeartbeatGap(seconds: number): string {
@@ -174,7 +176,7 @@ export default async function ServerComparePage({
     const transcodeMap = new Map(transcodeAgg.map((row) => [row.serverId, row._count._all]));
     const staleMap = new Map(staleAgg.map((row) => [row.serverId, row._count._all]));
     const bitrateMap = new Map(
-        bitrateAgg.map((row) => [row.serverId, row._avg.bitrate !== null ? Number(row._avg.bitrate) : null])
+        bitrateAgg.map((row) => [row.serverId, normalizeBitrateToKbps(row._avg.bitrate)])
     );
     const playbackMap = new Map(
         playbackAgg.map((row) => [

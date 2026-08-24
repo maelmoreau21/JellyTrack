@@ -630,7 +630,10 @@
         "totalMediaDesc": "Nombre d'éléments multimédia indexés.",
         "uniqueGenres": "Genres uniques",
         "videoQuality": "Qualité Vidéo Globale",
-        "videoQualityDesc": "Répartition par résolution certifiée."
+        "videoQualityDesc": "Répartition par résolution certifiée.",
+        "noPlays": "Aucune lecture",
+        "noContentAdded": "Aucun contenu ajouté",
+        "popularTab": "Populaires"
     },
     "mediaProfile": {
         "allUsers": "Tous les Utilisateurs",
@@ -1083,7 +1086,12 @@
         "saveServer": "Enregistrer les modifications",
         "serverUpdatedSuccess": "Serveur Jellyfin mis à jour avec succès.",
         "serverUpdateError": "Erreur lors de la mise à jour du serveur.",
-        "serverApiKeyHint": "Laissez vide pour conserver la clé actuelle."
+        "serverApiKeyHint": "Laissez vide pour conserver la clé actuelle.",
+        "copy": "Copier",
+        "copied": "Copié !",
+        "pluginKeyGenerateError": "Impossible de générer la clé d'API du plugin.",
+        "pluginKeyGeneratedSuccess": "Nouvelle clé d'API générée avec succès.",
+        "networkErrorGenerateKey": "Erreur réseau lors de la génération de la clé."
     },
     "ssoSettings": {
         "title": "Authentification SSO",
@@ -1129,7 +1137,8 @@
         "envPriorityBadge": "Variables Docker (.env) prioritaires",
         "saveButton": "Enregistrer les réglages SSO",
         "saveSuccess": "Configuration SSO enregistrée avec succès.",
-        "saveError": "Erreur lors de l'enregistrement de la configuration SSO."
+        "saveError": "Erreur lors de l'enregistrement de la configuration SSO.",
+        "saving": "Enregistrement..."
     },
     "timeRange": {
         "allTime": "Tout temps",

@@ -630,7 +630,10 @@
         "totalMediaDesc": "Aantal geïndexeerde mediabestanden.",
         "uniqueGenres": "Unieke genres",
         "videoQuality": "Algemene videokwaliteit",
-        "videoQualityDesc": "Verdeling op gecertificeerde resolutie."
+        "videoQualityDesc": "Verdeling op gecertificeerde resolutie.",
+        "noPlays": "Nog geen afspelen",
+        "noContentAdded": "Geen inhoud toegevoegd",
+        "popularTab": "Populair"
     },
     "mediaProfile": {
         "allUsers": "Alle gebruikers",
@@ -1083,7 +1086,12 @@
         "saveServer": "Wijzigingen opslaan",
         "serverUpdatedSuccess": "Jellyfin-server succesvol bijgewerkt.",
         "serverUpdateError": "Fout bij bijwerken van Jellyfin-server.",
-        "serverApiKeyHint": "Leeg laten om huidige sleutel te behouden."
+        "serverApiKeyHint": "Leeg laten om huidige sleutel te behouden.",
+        "copy": "Kopiëren",
+        "copied": "Gekopieerd!",
+        "pluginKeyGenerateError": "Kan plugin-API-sleutel niet genereren.",
+        "pluginKeyGeneratedSuccess": "Nieuwe plugin-API-sleutel succesvol gegenereerd.",
+        "networkErrorGenerateKey": "Netwerkfout bij genereren van sleutel."
     },
     "timeRange": {
         "allTime": "Altijd",
@@ -1510,6 +1518,7 @@
         "envPriorityBadge": "Docker (.env) variables prioritized",
         "saveButton": "Save SSO Settings",
         "saveSuccess": "SSO configuration saved successfully.",
-        "saveError": "Failed to save SSO configuration."
+        "saveError": "Failed to save SSO configuration.",
+        "saving": "Opslaan..."
     }
 }

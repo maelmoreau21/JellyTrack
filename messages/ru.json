@@ -630,7 +630,10 @@
         "totalMediaDesc": "Количество индексированных медиафайлов.",
         "uniqueGenres": "Уникальные жанры",
         "videoQuality": "Общее качество видео",
-        "videoQualityDesc": "Распределение контента по качеству."
+        "videoQualityDesc": "Распределение контента по качеству.",
+        "noPlays": "Пока нет просмотров",
+        "noContentAdded": "Нет добавленного контента",
+        "popularTab": "Популярное"
     },
     "mediaProfile": {
         "allUsers": "Все",
@@ -1083,7 +1086,12 @@
         "saveServer": "Сохранить изменения",
         "serverUpdatedSuccess": "Сервер Jellyfin успешно обновлен.",
         "serverUpdateError": "Ошибка при обновлении сервера Jellyfin.",
-        "serverApiKeyHint": "Оставьте пустым, чтобы сохранить текущий ключ."
+        "serverApiKeyHint": "Оставьте пустым, чтобы сохранить текущий ключ.",
+        "copy": "Копировать",
+        "copied": "Скопировано!",
+        "pluginKeyGenerateError": "Не удалось создать ключ API плагина.",
+        "pluginKeyGeneratedSuccess": "Новый ключ API плагина успешно создан.",
+        "networkErrorGenerateKey": "Сетевая ошибка при создании ключа."
     },
     "timeRange": {
         "allTime": "За всё время",
@@ -1510,6 +1518,7 @@
         "envPriorityBadge": "Docker (.env) variables prioritized",
         "saveButton": "Save SSO Settings",
         "saveSuccess": "SSO configuration saved successfully.",
-        "saveError": "Failed to save SSO configuration."
+        "saveError": "Failed to save SSO configuration.",
+        "saving": "Сохранение..."
     }
 }

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocale, useTranslations } from "next-intl";
+import { normalizeBitrateToKbps } from "@/lib/bitrate";
 import ResponsiveContainer from "@/components/charts/ResponsiveContainerGuard";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
 import {
@@ -157,9 +158,10 @@ function formatPercent(value: number | null): string {
 }
 
 function formatBitrateKbps(value: number | null): string {
-    if (value === null || !Number.isFinite(value)) return "-";
-    if (value >= 1000) return `${(value / 1000).toFixed(1)} Mbps`;
-    return `${Math.round(value)} kbps`;
+    const norm = normalizeBitrateToKbps(value);
+    if (norm === null || !Number.isFinite(norm)) return "-";
+    if (norm >= 1000) return `${(norm / 1000).toFixed(1)} Mbps`;
+    return `${Math.round(norm)} kbps`;
 }
 
 export default function PluginHealthCenterClient({ embedded = false }: { embedded?: boolean }) {
