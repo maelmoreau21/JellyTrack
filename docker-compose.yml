@@ -22,6 +22,7 @@ services:
       DB_NAME: ${DB_NAME:-}
 
       # Core app
+      TZ: ${TZ:-Europe/Paris}
       VALKEY_URL: ${VALKEY_URL:-${REDIS_URL:-redis://valkey:6379}}
       JELLYTRACK_MODE: ${JELLYTRACK_MODE:-single}
       PORT: ${PORT:-3000}

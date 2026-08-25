@@ -3,8 +3,20 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { useTimeFormat } from "@/lib/timeFormat";
+import { 
+  Pause, 
+  Volume2, 
+  Subtitles, 
+  FastForward, 
+  RotateCcw, 
+  Gauge, 
+  Download, 
+  Square, 
+  Activity, 
+  LucideIcon 
+} from "lucide-react";
 
 type TelemetryEvent = {
   eventType?: string | null;
@@ -112,16 +124,31 @@ function parseChangeDetail(eventType: string, metadata: unknown): string {
   return "";
 }
 
-function formatCreatedAt(value: string | number | null | undefined): string {
-  if (value === null || value === undefined) return "";
-  const date = new Date(String(value));
-  if (Number.isNaN(date.getTime())) return "";
-  return format(date, "PPpp");
-}
-
 export default function SessionModal({ open, onClose, session }: { open: boolean; onClose: () => void; session: SessionType }) {
   const t = useTranslations("logs");
+  const locale = useLocale();
+  const { formatDateTime, timeFormat } = useTimeFormat();
+
   if (!open) return null;
+
+  const formatCreatedAt = (value: string | number | null | undefined): string => {
+    if (value === null || value === undefined) return "";
+    const date = new Date(String(value));
+    if (Number.isNaN(date.getTime())) return "";
+    try {
+      return date.toLocaleString(locale === "fr" ? "fr-FR" : locale || "fr-FR", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: timeFormat === "12h",
+      });
+    } catch {
+      return formatDateTime(date);
+    }
+  };
 
   const mediaDurationCandidate = Number(session.media?.durationMs || 0);
   const mediaDurationMs = Number.isFinite(mediaDurationCandidate) && mediaDurationCandidate > 0
@@ -229,26 +256,26 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
     { pause: 0, audio: 0, subtitles: 0, seek: 0, replay: 0, speed: 0, stop: 0, other: 0 },
   );
 
-  const getEventMeta = (type: string) => {
+  const getEventMeta = (type: string): { marker: string; iconColor: string; Icon: LucideIcon; label: string } => {
     switch (type) {
       case "pause":
-        return { marker: "bg-amber-500", icon: "Pause", label: t("timeline.label.pause") };
+        return { marker: "bg-amber-500", iconColor: "text-amber-500", Icon: Pause, label: t("timeline.label.pause") };
       case "audio_change":
-        return { marker: "bg-sky-500", icon: "A", label: t("timeline.label.audio_change") };
+        return { marker: "bg-sky-500", iconColor: "text-sky-500", Icon: Volume2, label: t("timeline.label.audio_change") };
       case "subtitle_change":
-        return { marker: "bg-emerald-500", icon: "Sub", label: t("timeline.label.subtitle_change") };
+        return { marker: "bg-emerald-500", iconColor: "text-emerald-500", Icon: Subtitles, label: t("timeline.label.subtitle_change") };
       case "seek":
-        return { marker: "bg-orange-500", icon: "Skip", label: t("timeline.label.seek") };
+        return { marker: "bg-orange-500", iconColor: "text-orange-500", Icon: FastForward, label: t("timeline.label.seek") };
       case "replay":
-        return { marker: "bg-green-500", icon: "Replay", label: t("timeline.label.replay") };
+        return { marker: "bg-green-500", iconColor: "text-green-500", Icon: RotateCcw, label: t("timeline.label.replay") };
       case "speed_change":
-        return { marker: "bg-blue-500", icon: "x", label: t("timeline.label.speed_change") };
+        return { marker: "bg-blue-500", iconColor: "text-blue-500", Icon: Gauge, label: t("timeline.label.speed_change") };
       case "download":
-        return { marker: "bg-violet-500", icon: "Download", label: t("timeline.label.download") };
+        return { marker: "bg-violet-500", iconColor: "text-violet-500", Icon: Download, label: t("timeline.label.download") };
       case "stop":
-        return { marker: "bg-rose-500", icon: "Stop", label: t("timeline.label.stop") };
+        return { marker: "bg-rose-500", iconColor: "text-rose-500", Icon: Square, label: t("timeline.label.stop") };
       default:
-        return { marker: "bg-zinc-500", icon: "-", label: `${t("timeline.label.default")} (${type || "?"})` };
+        return { marker: "bg-zinc-500", iconColor: "text-zinc-500", Icon: Activity, label: `${t("timeline.label.default")} (${type || "?"})` };
     }
   };
 
@@ -333,7 +360,7 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
                             className="absolute top-1/2 -translate-y-1/2 z-10"
                             style={{ left: `${pct}%`, transform: "translate(-50%, -50%)" }}
                             onClick={() => jumpTo(group.pos)}
-                            title={`${meta.icon} ${meta.label}${detail ? ` - ${detail}` : ""} @ ${formatTime(group.pos)}${group.count > 1 ? ` (${group.count})` : ""}`}
+                            title={`${meta.label}${detail ? ` - ${detail}` : ""} @ ${formatTime(group.pos)}${group.count > 1 ? ` (x${group.count})` : ""}`}
                           >
                             <span className={`block h-10 w-[3px] rounded-full ${meta.marker}`} />
                             {group.count > 1 ? (
@@ -363,9 +390,17 @@ export default function SessionModal({ open, onClose, session }: { open: boolean
                     const createdAtLabel = formatCreatedAt(group.events[0]?.createdAt);
                     return (
                       <div key={group.key || i} className="p-3 rounded-lg app-surface-soft border border-border/50 hover:border-primary/30 transition-colors">
-                        <div className="font-bold text-[12px] text-foreground">{meta.icon} {meta.label}{group.count > 1 ? ` - ${group.count}` : ""}</div>
+                        <div className="flex items-center gap-1.5 font-bold text-[12px] text-foreground">
+                          <meta.Icon className={`w-3.5 h-3.5 shrink-0 ${meta.iconColor}`} />
+                          <span>{meta.label}</span>
+                          {group.count > 1 && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-mono text-muted-foreground border-border/80 ml-1">
+                              x{group.count}
+                            </Badge>
+                          )}
+                        </div>
                         {createdAtLabel ? (
-                          <div className="text-muted-foreground text-[11px] font-medium">{createdAtLabel}</div>
+                          <div className="text-muted-foreground text-[11px] font-medium mt-0.5">{createdAtLabel}</div>
                         ) : null}
                         <div className="mt-1 text-[11px] text-foreground/80">
                           {formatTime(group.pos)} - {totalDurationMs > 0 ? Math.min(100, Math.max(0, Math.round((group.pos / totalDurationMs) * 100))) : 0}%{detail ? ` - ${detail}` : ""}
