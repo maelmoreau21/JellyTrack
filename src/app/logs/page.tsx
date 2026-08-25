@@ -206,7 +206,19 @@ function resolveAudioBitrateKbps(log: SafeLog, metadata: JellyfinSubtitleMeta | 
         if (audioStreams.length === 1) return audioStreams[0].bitRateKbps;
     }
 
-    return normalizeBitrateToKbps(log.bitrate ?? active?.bitrate ?? null);
+    const isAudioOnly = log.media?.type === 'Audio' || log.media?.type === 'MusicTrack' || log.media?.type === 'MusicAlbum';
+    const fallbackKbps = normalizeBitrateToKbps(log.bitrate ?? active?.bitrate ?? null);
+    
+    // For audio tracks (music), the stream bitrate represents audio.
+    // For video tracks, only fallback if the bitrate is in a reasonable audio range (<= 1536 kbps).
+    if (isAudioOnly) {
+        return fallbackKbps;
+    }
+    if (fallbackKbps !== null && fallbackKbps <= 1536) {
+        return fallbackKbps;
+    }
+
+    return null;
 }
 
 function toValidTimestamp(value: unknown): number | null {

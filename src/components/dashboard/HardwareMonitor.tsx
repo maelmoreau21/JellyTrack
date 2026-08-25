@@ -37,7 +37,7 @@ export function HardwareMonitor() {
     }
 
     return (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
             <Card className="app-surface-soft shadow-sm ring-1 ring-border/5">
                 <CardContent className="p-4 flex flex-row items-center gap-4">
                     <div className="p-2.5 bg-blue-500/10 rounded-lg">

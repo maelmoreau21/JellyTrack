@@ -69,7 +69,7 @@ export default function SchedulerTasksPage() {
                     <CardDescription>{t('taskSchedulerDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    <div className="app-surface-soft flex items-center justify-between rounded-lg border p-4">
+                    <div className="app-surface-soft flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                                 <RefreshCw className="w-4 h-4 text-sky-400 shrink-0" />
@@ -89,14 +89,14 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('recentSync', '/api/sync', { mode: 'recent' })}
                             disabled={taskStatus.recentSync.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.recentSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-sky-600 dark:bg-sky-500 text-white hover:bg-sky-500 dark:hover:bg-sky-400 border-white/20 dark:shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:shadow-md active:scale-95'}`}
+                            className={`w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.recentSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-sky-600 dark:bg-sky-500 text-white hover:bg-sky-500 dark:hover:bg-sky-400 border-white/20 dark:shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:shadow-md active:scale-95'}`}
                         >
                             <Play className={`w-3.5 h-3.5 ${taskStatus.recentSync.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.recentSync.loading ? tc('running') : tc('run')}
                         </button>
                     </div>
 
-                    <div className="app-surface-soft flex items-center justify-between rounded-lg border p-4">
+                    <div className="app-surface-soft flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                                 <Database className="w-4 h-4 text-violet-400 shrink-0" />
@@ -116,14 +116,14 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('fullSync', '/api/sync', { mode: 'full' })}
                             disabled={taskStatus.fullSync.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.fullSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-violet-600 dark:bg-violet-500 text-white hover:bg-violet-500 dark:hover:bg-violet-400 border-white/20 dark:shadow-[0_0_15px_rgba(139,92,246,0.15)] hover:shadow-md active:scale-95'}`}
+                            className={`w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.fullSync.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-violet-600 dark:bg-violet-500 text-white hover:bg-violet-500 dark:hover:bg-violet-400 border-white/20 dark:shadow-[0_0_15px_rgba(139,92,246,0.15)] hover:shadow-md active:scale-95'}`}
                         >
                             <Play className={`w-3.5 h-3.5 ${taskStatus.fullSync.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.fullSync.loading ? tc('running') : tc('run')}
                         </button>
                     </div>
 
-                    <div className="app-surface-soft flex items-center justify-between rounded-lg border p-4">
+                    <div className="app-surface-soft flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -143,14 +143,14 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('integrityCheck', '/api/admin/integrity-cleanup')}
                             disabled={taskStatus.integrityCheck?.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.integrityCheck?.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-emerald-600 dark:bg-emerald-500 text-white hover:bg-emerald-500 dark:hover:bg-emerald-400 border-white/20 dark:shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-md active:scale-95'}`}
+                            className={`w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.integrityCheck?.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-emerald-600 dark:bg-emerald-500 text-white hover:bg-emerald-500 dark:hover:bg-emerald-400 border-white/20 dark:shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-md active:scale-95'}`}
                         >
                             <Play className={`w-3.5 h-3.5 ${taskStatus.integrityCheck?.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.integrityCheck?.loading ? tc('running') : tc('run')}
                         </button>
                     </div>
 
-                    <div className="app-surface-soft flex items-center justify-between rounded-lg border p-4">
+                    <div className="app-surface-soft flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                                 <Save className="w-4 h-4 text-amber-400 shrink-0" />
@@ -170,7 +170,7 @@ export default function SchedulerTasksPage() {
                         <button
                             onClick={() => runTask('backup', '/api/backup/auto/trigger')}
                             disabled={taskStatus.backup.loading}
-                            className={`ml-3 shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.backup.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-amber-600 dark:bg-amber-500 text-white hover:bg-amber-500 dark:hover:bg-amber-400 border-white/20 dark:shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-md active:scale-95'}`}
+                            className={`w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.backup.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-amber-600 dark:bg-amber-500 text-white hover:bg-amber-500 dark:hover:bg-amber-400 border-white/20 dark:shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-md active:scale-95'}`}
                         >
                             <Play className={`w-3.5 h-3.5 ${taskStatus.backup.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.backup.loading ? tc('running') : tc('run')}

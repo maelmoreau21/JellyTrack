@@ -92,12 +92,12 @@ export default function SchedulerSchedulesPage() {
 
                     <div className="space-y-3">
                         <div className="app-surface-soft rounded-lg border p-4">
-                            <div className="flex items-center justify-between gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <div className="text-sm font-medium">{t('recentSync')}</div>
                                     <div className="text-xs text-muted-foreground mt-1">{t('schedulerRecentIntervalHint')}</div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                     <Clock3 className="w-4 h-4 text-sky-400" />
                                     <Input
                                         type="number"
@@ -114,12 +114,12 @@ export default function SchedulerSchedulesPage() {
                         </div>
 
                         <div className="app-surface-soft rounded-lg border p-4">
-                            <div className="flex items-center justify-between gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <div className="text-sm font-medium">{t('fullSync')}</div>
                                     <div className="text-xs text-muted-foreground mt-1">{t('schedulerFullIntervalHint')}</div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                     <Clock3 className="w-4 h-4 text-violet-400" />
                                     <Input
                                         type="number"
@@ -141,12 +141,12 @@ export default function SchedulerSchedulesPage() {
                         </div>
 
                         <div className="app-surface-soft rounded-lg border p-4">
-                            <div className="flex items-center justify-between gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <div className="text-sm font-medium">{t('integrityCheckTask') || "Vérification d'intégrité"}</div>
                                     <div className="text-xs text-muted-foreground mt-1">{t('schedulerIntegrityIntervalHint') || "Intervalle de vérification et fermeture automatique des sessions de lecture orphelines."}</div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                     <Clock3 className="w-4 h-4 text-emerald-400" />
                                     <Input
                                         type="number"
@@ -163,12 +163,12 @@ export default function SchedulerSchedulesPage() {
                         </div>
 
                         <div className="app-surface-soft rounded-lg border p-4">
-                            <div className="flex items-center justify-between gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <div className="text-sm font-medium">{t('backupTask')}</div>
                                     <div className="text-xs text-muted-foreground mt-1">{t('schedulerBackupIntervalHint')}</div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                     <Clock3 className="w-4 h-4 text-amber-400" />
                                     <Input
                                         type="number"
@@ -185,16 +185,16 @@ export default function SchedulerSchedulesPage() {
                         </div>
 
                         <div className="app-surface-soft rounded-lg border p-4">
-                            <div className="flex items-center justify-between gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <div className="text-sm font-medium">{t('logRetention') || 'Rétention des journaux'}</div>
                                     <div className="text-xs text-muted-foreground mt-1">{t('logRetentionHint') || "Durée de conservation automatique des fichiers de journaux système avant rotation et suppression."}</div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                                     <select
                                         value={intervals.logRetentionDays ?? 30}
                                         onChange={(e) => updateInterval('logRetentionDays', parseInt(e.target.value) || 0)}
-                                        className="bg-background border border-border rounded-md px-3 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-sm"
+                                        className="bg-background border border-border rounded-md px-3 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-primary shadow-sm max-w-[200px]"
                                     >
                                         <option value={7}>7 {tc('days') || 'jours'}</option>
                                         <option value={14}>14 {tc('days') || 'jours'}</option>

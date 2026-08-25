@@ -20,12 +20,6 @@ export default function SettingsNotificationsPage() {
     const [discordUrl, setDiscordUrl] = useState("");
     const [discordAlertCondition, setDiscordAlertCondition] = useState("ALL");
     const [maxConcurrentTranscodes, setMaxConcurrentTranscodes] = useState(0);
-    const [wrappedVisible, setWrappedVisible] = useState(true);
-    const [wrappedPeriodEnabled, setWrappedPeriodEnabled] = useState(true);
-    const [wrappedStartMonth, setWrappedStartMonth] = useState(12);
-    const [wrappedStartDay, setWrappedStartDay] = useState(1);
-    const [wrappedEndMonth, setWrappedEndMonth] = useState(1);
-    const [wrappedEndDay, setWrappedEndDay] = useState(31);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -37,12 +31,6 @@ export default function SettingsNotificationsPage() {
                     setDiscordUrl(data.discordWebhookUrl || "");
                     setDiscordAlertCondition(data.discordAlertCondition || "ALL");
                     setMaxConcurrentTranscodes(data.maxConcurrentTranscodes ?? 0);
-                    setWrappedVisible(data.wrappedVisible ?? true);
-                    setWrappedPeriodEnabled(data.wrappedPeriodEnabled ?? true);
-                    setWrappedStartMonth(data.wrappedStartMonth ?? 12);
-                    setWrappedStartDay(data.wrappedStartDay ?? 1);
-                    setWrappedEndMonth(data.wrappedEndMonth ?? 1);
-                    setWrappedEndDay(data.wrappedEndDay ?? 31);
                 }
             } catch {
                 console.error("Failed to load settings");
@@ -63,12 +51,6 @@ export default function SettingsNotificationsPage() {
                     discordAlertCondition: discordAlertCondition,
                     discordAlertsEnabled: discordEnabled,
                     maxConcurrentTranscodes: maxConcurrentTranscodes,
-                    wrappedVisible,
-                    wrappedPeriodEnabled,
-                    wrappedStartMonth,
-                    wrappedStartDay,
-                    wrappedEndMonth,
-                    wrappedEndDay,
                 })
             });
             if (res.ok) {
@@ -106,48 +88,7 @@ export default function SettingsNotificationsPage() {
                         <Switch id="discord-alerts" checked={discordEnabled} onCheckedChange={setDiscordEnabled} />
                     </div>
 
-                    {wrappedVisible && (
-                        <div className="space-y-4 border p-4 rounded-lg">
-                            <Label className="text-base underline mb-2 block">{t('wrappedPeriod')}</Label>
-                            <div className="flex items-center justify-between p-4 rounded-lg app-surface-soft border border-border/50">
-                                <div className="space-y-0.5">
-                                    <Label className="text-sm font-medium text-foreground">{t('autoAvailability')}</Label>
-                                    <p className="text-xs text-muted-foreground">{t('autoAvailabilityDesc')}</p>
-                                </div>
-                                <Switch checked={wrappedPeriodEnabled} onCheckedChange={setWrappedPeriodEnabled} />
-                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-3">
-                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">{t('wrappedStart')}</Label>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex-1">
-                                            <Label className="text-[10px] uppercase opacity-50 mb-1 block">{t('month')}</Label>
-                                            <Input type="number" min={1} max={12} value={wrappedStartMonth} onChange={(e) => setWrappedStartMonth(parseInt(e.target.value) || 1)} className="font-mono" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <Label className="text-[10px] uppercase opacity-50 mb-1 block">{t('day')}</Label>
-                                            <Input type="number" min={1} max={31} value={wrappedStartDay} onChange={(e) => setWrappedStartDay(parseInt(e.target.value) || 1)} className="font-mono" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">{t('wrappedEnd')}</Label>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex-1">
-                                            <Label className="text-[10px] uppercase opacity-50 mb-1 block">{t('month')}</Label>
-                                            <Input type="number" min={1} max={12} value={wrappedEndMonth} onChange={(e) => setWrappedEndMonth(parseInt(e.target.value) || 1)} className="font-mono" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <Label className="text-[10px] uppercase opacity-50 mb-1 block">{t('day')}</Label>
-                                            <Input type="number" min={1} max={31} value={wrappedEndDay} onChange={(e) => setWrappedEndDay(parseInt(e.target.value) || 1)} className="font-mono" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <p className="text-xs text-muted-foreground italic mt-2">{t('wrappedPeriodDesc')}</p>
-                        </div>
-                    )}
 
                     {discordEnabled && (
                         <div className="space-y-4">

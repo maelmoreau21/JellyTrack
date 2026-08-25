@@ -293,8 +293,8 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                     <ThemeToggle compact={true} />
                     <LogoutButton compact={true} />
                     <div className="text-center pt-1">
-                        <Link href="/about" title={`JellyTrack v${process.env.APP_VERSION || '1.0.0'}`} className="text-[10px] text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors">
-                            v{process.env.APP_VERSION || '1.0'}
+                        <Link href="/about" title={`JellyTrack v${process.env.APP_VERSION || '2.0.1'}`} className="text-[10px] text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors">
+                            v{process.env.APP_VERSION || '2.0.1'}
                         </Link>
                     </div>
                 </div>
@@ -305,7 +305,7 @@ export function Sidebar({ isWrappedVisible }: { isWrappedVisible?: boolean }) {
                     <LogoutButton />
                     <div className="text-center">
                         <Link href="/about" className="text-[11px] text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors">
-                            JellyTrack v{process.env.APP_VERSION || '1.0.0'}
+                            JellyTrack v{process.env.APP_VERSION || '2.0.1'}
                         </Link>
                     </div>
                 </div>

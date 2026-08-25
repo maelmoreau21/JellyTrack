@@ -350,7 +350,7 @@ export default function SettingsMediaPage() {
     if (loading) return <div className="p-8 max-w-[900px] mx-auto">{tc("loading")}</div>;
 
     return (
-        <div className="p-4 md:p-8 max-w-[1200px] mx-auto space-y-4">
+        <div className="p-4 md:p-8 max-w-[1200px] mx-auto space-y-4 pb-24 md:pb-12">
             <Card className="app-surface border-border shadow-sm text-zinc-900 dark:text-zinc-100">
                 <CardHeader>
                     <CardTitle className="text-2xl flex items-center gap-2">
@@ -619,8 +619,8 @@ export default function SettingsMediaPage() {
                     </div>
                 </CardContent>
 
-                <CardFooter className="app-surface-soft border-t border-border rounded-b-xl px-6 py-4 text-foreground">
-                    <div className="flex gap-3 w-full sm:w-auto ml-auto">
+                <CardFooter className="app-surface-soft border-t border-border rounded-b-xl px-4 sm:px-6 py-4 text-foreground">
+                    <div className="flex flex-col-reverse sm:flex-row gap-3 w-full sm:w-auto ml-auto">
                         <Button variant="outline" onClick={() => window.location.reload()} className="w-full sm:w-auto">{t("cancel")}</Button>
                         <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto shadow-sm">{saving ? t("saving") : t("saveSettings")}</Button>
                     </div>

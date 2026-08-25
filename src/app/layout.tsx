@@ -49,7 +49,7 @@ export default async function RootLayout({
           <NextIntlClientProvider messages={messages}>
             <AuthProvider>
               <Sidebar isWrappedVisible={isWrappedVisible} />
-              <main className="flex-1 min-w-0 h-[calc(100dvh-3.5rem)] md:h-screen overflow-y-auto overflow-x-hidden pt-14 md:pt-0">
+              <main className="flex-1 min-w-0 h-screen overflow-y-auto overflow-x-hidden pt-14 md:pt-0">
                 {children}
               </main>
             </AuthProvider>

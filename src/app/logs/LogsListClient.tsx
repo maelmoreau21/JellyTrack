@@ -239,7 +239,7 @@ export default function LogsListClient({ serverLogs, visibleColumns, initialColu
   };
 
   return (
-    <div ref={containerRef} className="w-full">
+    <div ref={containerRef} className="w-full overflow-x-auto">
       <Table className="table-fixed border-separate border-spacing-0">
         <TableHeader className="sticky top-0 z-30 app-surface-soft backdrop-blur-md">
           <TableRow className="hover:bg-transparent border-b border-border">

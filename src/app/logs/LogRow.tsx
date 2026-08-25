@@ -281,6 +281,37 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                           })()}
                         </div>
                       ) : null}
+
+                      {/* Mobile compact info strip: Resolution, PlayMethod/Status, Duration, Client */}
+                      <div className="flex lg:hidden items-center gap-1.5 flex-wrap mt-1 text-[10px]">
+                        {!isAudioMedia && normalizedResolution && normalizedResolution !== 'Unknown' && (
+                          <span className="px-1.5 py-0.5 rounded app-chip font-medium">
+                            {normalizedResolution}
+                          </span>
+                        )}
+                        <span className={`px-1.5 py-0.5 rounded font-semibold ${
+                          isTranscode 
+                            ? 'bg-orange-500/15 text-orange-500 border border-orange-500/20' 
+                            : 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/20'
+                        }`}>
+                          {isTranscode ? (log.playMethod || 'Transcode') : (log.playMethod || 'DirectPlay')}
+                        </span>
+                        {log.isActuallyActive ? (
+                          <span className="text-amber-500 font-semibold uppercase tracking-wider animate-pulse flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                            Active
+                          </span>
+                        ) : log.durationWatched ? (
+                          <span className="text-muted-foreground font-mono">
+                            {formatDurationSeconds(log.durationWatched)}
+                          </span>
+                        ) : null}
+                        {log.clientName && (
+                          <span className="text-muted-foreground font-medium truncate max-w-[120px]">
+                            • {log.clientName}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </TableCell>
