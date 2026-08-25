@@ -175,3 +175,135 @@ export async function getLiveStreams(selectedServerIds: string[]): Promise<{
     activeStreamsCount,
   };
 }
+
+export interface UserActiveStreamInfo {
+  serverId: string;
+  sessionId: string;
+  itemId: string;
+  parentItemId?: string | null;
+  mediaTitle: string;
+  mediaSubtitle: string | null;
+  playMethod: string;
+  clientName: string;
+  deviceName: string;
+  progressPercent: number;
+  isPaused: boolean;
+  mediaType?: string | null;
+}
+
+/**
+ * Retrieves the currently active stream for a user across all their linked DB IDs.
+ * Combines database state with real-time Valkey state and multi-tier progress computation.
+ */
+export async function getUserActiveStream(userDbIds: string[]): Promise<UserActiveStreamInfo | null> {
+  if (!userDbIds || userDbIds.length === 0) return null;
+
+  const dbStream = await prisma.activeStream.findFirst({
+    where: { userId: { in: userDbIds } },
+    orderBy: { lastPingAt: "desc" },
+    include: {
+      media: {
+        select: {
+          jellyfinMediaId: true,
+          title: true,
+          type: true,
+          parentId: true,
+          artist: true,
+          durationMs: true,
+        },
+      },
+    },
+  });
+
+  if (!dbStream || !dbStream.media) return null;
+
+  const valkeyKey = buildStreamValkeyKey(dbStream.serverId, dbStream.sessionId);
+  let payload: Record<string, unknown> = {};
+  try {
+    const valkeyPayload = await valkey.get(valkeyKey);
+    if (valkeyPayload) {
+      payload = JSON.parse(valkeyPayload);
+    }
+  } catch {}
+
+  const itemMedia = dbStream.media;
+
+  // Calculate progress percentage with multiple fallback layers
+  let progressPercent = 0;
+  if (typeof payload["progressPercent"] === "number") {
+    progressPercent = payload["progressPercent"] as number;
+  } else if (typeof payload["ProgressPercent"] === "number") {
+    progressPercent = payload["ProgressPercent"] as number;
+  } else {
+    const runTimeTicks = Number(
+      payload["runTimeTicks"] ||
+      payload["RunTimeTicks"] ||
+      (itemMedia.durationMs ? Number(itemMedia.durationMs) * 10_000 : 0)
+    );
+    const posTicks = Number(
+      payload["positionTicks"] ??
+      payload["PositionTicks"] ??
+      payload["playbackPositionTicks"] ??
+      payload["PlaybackPositionTicks"] ??
+      dbStream.positionTicks ??
+      0
+    );
+    if (runTimeTicks > 0 && posTicks > 0) {
+      progressPercent = Math.min(100, Math.max(0, Math.round((posTicks / runTimeTicks) * 100)));
+    }
+  }
+
+  // Build enriched subtitle
+  let mediaSubtitle: string | null = null;
+  if (typeof payload["mediaSubtitle"] === "string") {
+    mediaSubtitle = payload["mediaSubtitle"] as string;
+  } else if (itemMedia.parentId) {
+    try {
+      const parentMedia = await prisma.media.findUnique({
+        where: {
+          jellyfinMediaId_serverId: {
+            jellyfinMediaId: itemMedia.parentId,
+            serverId: dbStream.serverId,
+          },
+        },
+        select: { title: true, parentId: true, artist: true },
+      });
+      if (parentMedia) {
+        if (itemMedia.type === "Episode" && parentMedia.parentId) {
+          const grandParent = await prisma.media.findUnique({
+            where: {
+              jellyfinMediaId_serverId: {
+                jellyfinMediaId: parentMedia.parentId,
+                serverId: dbStream.serverId,
+              },
+            },
+            select: { title: true },
+          });
+          mediaSubtitle = grandParent?.title ? `${grandParent.title} — ${parentMedia.title}` : parentMedia.title;
+        } else if (itemMedia.type === "Audio" || itemMedia.type === "Track") {
+          const resolvedArtist = itemMedia.artist || parentMedia.artist || null;
+          mediaSubtitle = resolvedArtist ? `${resolvedArtist} — ${parentMedia.title}` : parentMedia.title;
+        } else {
+          mediaSubtitle = parentMedia.title;
+        }
+      }
+    } catch {}
+  }
+
+  const isPaused = payload["isPaused"] === true || payload["IsPaused"] === true;
+
+  return {
+    serverId: dbStream.serverId,
+    sessionId: dbStream.sessionId,
+    itemId: itemMedia.jellyfinMediaId,
+    parentItemId: itemMedia.parentId,
+    mediaTitle: itemMedia.title || "Unknown",
+    mediaSubtitle,
+    playMethod: dbStream.playMethod || "DirectPlay",
+    clientName: dbStream.clientName || "Inconnu",
+    deviceName: dbStream.deviceName || "Inconnu",
+    progressPercent,
+    isPaused,
+    mediaType: itemMedia.type,
+  };
+}

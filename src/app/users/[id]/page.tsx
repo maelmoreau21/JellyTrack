@@ -12,11 +12,11 @@ import { authOptions } from "@/lib/authOptions";
 import { getTranslations } from 'next-intl/server';
 import { ensureMasterServer } from "@/lib/serverRegistry";
 import { resolveLinkedAccounts } from "@/lib/auth";
-import valkey from "@/lib/valkey";
-import { buildStreamValkeyKey } from "@/lib/serverRegistry";
 import { GLOBAL_SERVER_SCOPE_COOKIE } from "@/lib/serverScope";
 import { resolveSelectedServerIdsAsync } from "@/lib/serverScope.server";
 import { ProfileAvatar } from "./ProfileAvatar";
+import { UserActiveStream } from "./UserActiveStream";
+import { getUserActiveStream } from "@/lib/liveStreams";
 
 export const dynamic = "force-dynamic";
 
@@ -107,43 +107,8 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
         cookieServersParam: persistedScopeCookie,
     });
 
-    // Fetch active stream for this user (or linked users)
-    const currentActiveStream = await prisma.activeStream.findFirst({
-        where: { userId: { in: linkedUserDbIds } },
-        select: {
-            serverId: true,
-            sessionId: true,
-            clientName: true,
-            deviceName: true,
-            playMethod: true,
-            positionTicks: true,
-            media: {
-                select: {
-                    title: true,
-                    durationMs: true,
-                }
-            }
-        }
-    });
-
-    let liveProgressPercent = 0;
-    let isPaused = false;
-    if (currentActiveStream) {
-        try {
-            const valkeyKey = buildStreamValkeyKey(currentActiveStream.serverId, currentActiveStream.sessionId);
-            const valkeyPayload = await valkey.get(valkeyKey);
-            if (valkeyPayload) {
-                const parsed = JSON.parse(valkeyPayload);
-                isPaused = parsed.isPaused || parsed.IsPaused || false;
-                const totalMs = currentActiveStream.media?.durationMs ? Number(currentActiveStream.media.durationMs) : 0;
-                const positionTicks = parsed.positionTicks || parsed.PositionTicks || Number(currentActiveStream.positionTicks) || 0;
-                const positionMs = positionTicks / 10000;
-                if (totalMs > 0) {
-                    liveProgressPercent = Math.min(100, Math.round((positionMs / totalMs) * 100));
-                }
-            }
-        } catch {}
-    }
+    // Fetch active stream for this user (or linked users) with robust progress calculation
+    const initialActiveStream = await getUserActiveStream(linkedUserDbIds);
 
     const settings = await prisma.globalSettings.findUnique({ where: { id: "global" } }) as any;
     let showWrappedButton = true;
@@ -185,41 +150,14 @@ export default async function UserDetailPage({ params, searchParams }: UserPageP
                     {showWrappedButton && (
                         <a
                             href={`/wrapped/${jellyfinUserId}`}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full border border-border/40 shadow-sm hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-all bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full border border-white/20 shadow-md shadow-pink-500/10 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25"
                         >
                             🎁 {t('viewWrapped')}
                         </a>
                     )}
                 </div>
 
-                {currentActiveStream && (
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <span className="relative flex h-3.5 w-3.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
-                            </span>
-                            <div>
-                                <h3 className="text-xs font-semibold text-emerald-500 tracking-wider uppercase">Lecture en cours</h3>
-                                <p className="text-base font-bold text-foreground mt-0.5">
-                                    {currentActiveStream.media?.title}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    Sur {currentActiveStream.clientName} ({currentActiveStream.deviceName || "Inconnu"}) • {currentActiveStream.playMethod}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="w-full md:w-64 space-y-1.5 shrink-0">
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>{isPaused ? "En pause" : "En cours de lecture"}</span>
-                                <span>{liveProgressPercent}%</span>
-                            </div>
-                            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${liveProgressPercent}%` }}></div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <UserActiveStream userId={jellyfinUserId} initialStream={initialActiveStream} />
 
                 <Suspense fallback={<Skeleton className="w-full h-[250px] rounded-xl bg-zinc-900/50" />}>
                     <UserInfo userId={jellyfinUserId} userIds={linkedUserIds} userDbIds={linkedUserDbIds} />
