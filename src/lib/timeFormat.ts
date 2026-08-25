@@ -103,27 +103,3 @@ export function useTimeFormat() {
     return ctx;
 }
 
-/**
- * Server-side helper: format time for server components.
- * Reads timeFormat from database settings.
- */
-export async function getTimeFormat(): Promise<TimeFormat> {
-    try {
-        const { default: prisma } = await import("@/lib/prisma");
-        const settings = await (prisma as any).globalSettings.findUnique({
-            where: { id: "global" },
-        });
-        const tf = settings?.timeFormat;
-        return tf === "12h" || tf === "24h" ? tf : "24h";
-    } catch {
-        return "24h";
-    }
-}
-
-export function serverFormatTime(date: Date, format: TimeFormat, showSeconds = false): string {
-    return formatTimeValue(date, format, showSeconds);
-}
-
-export function serverFormatDateTime(date: Date, format: TimeFormat): string {
-    return formatDateTimeValue(date, format);
-}
