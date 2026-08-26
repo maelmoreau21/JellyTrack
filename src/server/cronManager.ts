@@ -1,5 +1,6 @@
 import type { ScheduledTask } from 'node-cron';
 import { logger } from '@/lib/logger';
+import { systemLog, cleanupOldSystemLogs } from '@/lib/systemLogger';
 
 let recentSyncTask: ScheduledTask | null = null;
 let fullSyncTask: ScheduledTask | null = null;
@@ -50,7 +51,6 @@ export async function initCronJobs(schedule: CronSchedule) {
     const cron = (await import('node-cron')).default;
     const { syncJellyfinLibrary } = await import('@/lib/sync');
     const { performAutoBackup } = await import('@/lib/autoBackup');
-    const { cleanupOldSystemLogs } = await import('@/lib/systemLogger');
     const { cleanupOrphanedSessions } = await import('@/lib/cleanup');
 
     const recentSyncCronExpr = buildEveryHoursCron(
