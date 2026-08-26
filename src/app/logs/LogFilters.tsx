@@ -134,9 +134,9 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
 
     return (
         <form id="log-filters-form" className="flex flex-col gap-3" onSubmit={handleSubmit}>
-            <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
                 {!hideSearch && (
-                    <div className="relative flex-1 min-w-[240px]">
+                    <div className="relative flex-1 w-full min-w-0 sm:min-w-[240px]">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <Input
                             name="query"
@@ -148,7 +148,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                     </div>
                 )}
 
-                <div className="flex flex-wrap items-center gap-2 shrink-0 ml-auto">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto justify-start sm:justify-end">
                     <div className="flex items-center gap-2 pr-1">
                         <input
                             type="checkbox"
@@ -170,7 +170,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                         type="button" 
                         variant="ghost"
                         size="sm"
-                        className="h-9 px-3 hover:bg-muted"
+                        className="h-9 px-2.5 sm:px-3 hover:bg-muted"
                         onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
                     >
                         <Filter className={`w-4 h-4 mr-1.5 ${isAdvancedOpen ? 'text-primary' : ''}`} />
@@ -182,7 +182,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                             type="button" 
                             variant="ghost"
                             size="sm"
-                            className="h-9 px-2.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="h-9 px-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                             onClick={() => {
                                 setMediaTypes([]);
                                 setSelectedServers([]);
@@ -195,7 +195,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                         </Button>
                     )}
 
-                    <div className="relative group h-9">
+                    <div className="relative group h-9 flex-1 sm:flex-initial min-w-[130px] sm:min-w-[170px]">
                         <Select 
                             defaultValue={initialSort} 
                             onValueChange={(val) => {
@@ -206,9 +206,9 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                                 router.push(`${pathname}?${params.toString()}`);
                             }}
                         >
-                            <SelectTrigger className="h-full w-[170px] sm:w-[200px] font-semibold text-foreground border border-border/80 dark:border-slate-700/80">
-                                <div className="flex items-center gap-2">
-                                    <ArrowUpDown className="w-4 h-4" />
+                            <SelectTrigger className="h-full w-full sm:w-[170px] md:w-[200px] font-semibold text-foreground border border-border/80 dark:border-slate-700/80">
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <ArrowUpDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                     <SelectValue placeholder={t('sortBy')} />
                                 </div>
                             </SelectTrigger>
@@ -221,7 +221,7 @@ export function LogFilters({ initialQuery, initialSort, initialHideZapped, initi
                         </Select>
                     </div>
 
-                    <button type="submit" className="bg-primary text-primary-foreground font-medium px-4 py-2 rounded-md hover:bg-primary/90 transition-colors h-9 text-xs sm:text-sm shrink-0">
+                    <button type="submit" className="bg-primary text-primary-foreground font-medium px-3.5 sm:px-4 py-2 rounded-md hover:bg-primary/90 transition-colors h-9 text-xs sm:text-sm shrink-0">
                         {tc('search')}
                     </button>
 

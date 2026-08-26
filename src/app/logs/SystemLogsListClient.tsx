@@ -284,11 +284,15 @@ export default function SystemLogsListClient({ files: initialFiles, locale, rete
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-xs font-bold text-foreground font-mono">{file.filename}</span>
-                                                    {file.isCurrent && (
+                                                    {file.filename === "jellytrack.log" || file.fileRole === "master" || file.isCurrent ? (
                                                         <Badge variant="outline" className="text-[9px] font-extrabold px-1.5 py-0 uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border-emerald-500/30">
-                                                            Actif / En cours
+                                                            Principal (Actif)
                                                         </Badge>
-                                                    )}
+                                                    ) : file.fileRole === "daily" ? (
+                                                        <Badge variant="outline" className="text-[9px] font-extrabold px-1.5 py-0 uppercase tracking-wider bg-sky-500/10 text-sky-500 border-sky-500/30">
+                                                            Journal du jour
+                                                        </Badge>
+                                                    ) : null}
                                                 </div>
                                                 <p className="text-[11px] text-muted-foreground mt-0.5">Format texte brut (.log)</p>
                                             </div>

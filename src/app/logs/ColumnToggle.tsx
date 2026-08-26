@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Columns3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { createPortal } from 'react-dom';
@@ -11,6 +11,7 @@ type Column = typeof ALL_COLUMNS[number];
 
 export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
     const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
     const t = useTranslations('logs');
     const [open, setOpen] = useState(false);
@@ -96,7 +97,8 @@ export function ColumnToggle({ visibleColumns }: { visibleColumns: Column[] }) {
         }
         const params = new URLSearchParams(searchParams.toString());
         params.set('cols', Array.from(current).join(','));
-        router.push(`/logs?${params.toString()}`);
+        const targetPath = pathname || window.location.pathname || '/logs';
+        router.push(`${targetPath}?${params.toString()}`);
     };
 
     const overlay = (

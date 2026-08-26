@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
 
+vi.mock("server-only", () => ({}));
+
 // Mock Prisma to avoid touching a real database during integration tests.
 // Register the same factory for both local and aliased imports so modules
 // importing either './prisma' or '@/lib/prisma' receive the mocked client.

@@ -11,6 +11,7 @@ import {
     resolveServerApiKey,
 } from "@/lib/jellyfinServers";
 import { pruneJellyfinItem, type PrunedJellyfinItem } from "@/lib/jellyfinItemPruner";
+import { systemLog } from "@/lib/systemLogger";
 
 /**
  * Main synchronization function for the Jellyfin library.
@@ -20,6 +21,7 @@ import { pruneJellyfinItem, type PrunedJellyfinItem } from "@/lib/jellyfinItemPr
 export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
     const mode = options?.recentOnly ? 'recent (last 7 days)' : 'full';
     console.log(`[Sync] Starting ${mode} synchronization of the Jellyfin library...`);
+    systemLog.info("Sync", `Démarrage de la synchronisation ${mode === 'full' ? 'complète' : 'récente'} de la bibliothèque Jellyfin...`);
     await markSyncStarted(options?.recentOnly ? 'recent' : 'full');
 
     const configuredServers = await getConfiguredJellyfinServers();
@@ -167,13 +169,13 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
 
             try {
                 // 1. Sync Users
-                let users: Array<{ Id?: string; Name?: string }> = [];
+                let users: Array<{ Id?: string; Name?: string; LastActivityDate?: string; LastLoginDate?: string }> = [];
                 try {
-                    users = await fetchJsonWithRetry<Array<{ Id?: string; Name?: string }>>(`${baseUrl}/Users`, { headers: jellyfinHeaders });
+                    users = await fetchJsonWithRetry<Array<{ Id?: string; Name?: string; LastActivityDate?: string; LastLoginDate?: string }>>(`${baseUrl}/Users`, { headers: jellyfinHeaders });
                 } catch (usersError) {
                     if (isHttpStatus(usersError, [400, 404, 405])) {
                         console.warn(`[Sync] [${currentServerName}] /Users incompatible, trying /Users/Query fallback.`);
-                        const usersQuery = await fetchJsonWithRetry<{ Items?: Array<{ Id?: string; Name?: string }> }>(
+                        const usersQuery = await fetchJsonWithRetry<{ Items?: Array<{ Id?: string; Name?: string; LastActivityDate?: string; LastLoginDate?: string }> }>(
                             `${baseUrl}/Users/Query`,
                             { headers: jellyfinHeaders },
                         );
@@ -189,10 +191,23 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     const username = typeof user.Name === "string" && user.Name.trim()
                         ? user.Name.trim()
                         : jellyfinUserId;
+                    
+                    const rawLastActive = user.LastActivityDate || user.LastLoginDate;
+                    const parsedLastActive = rawLastActive ? new Date(rawLastActive) : null;
+                    const validLastActive = parsedLastActive && !isNaN(parsedLastActive.getTime()) ? parsedLastActive : undefined;
+
                     const dbUser = await prisma.user.upsert({
                         where: { jellyfinUserId_serverId: { jellyfinUserId, serverId: currentServerId } },
-                        update: { username },
-                        create: { serverId: currentServerId, jellyfinUserId, username },
+                        update: {
+                            username,
+                            ...(validLastActive ? { lastActive: validLastActive } : {}),
+                        },
+                        create: {
+                            serverId: currentServerId,
+                            jellyfinUserId,
+                            username,
+                            ...(validLastActive ? { lastActive: validLastActive } : {}),
+                        },
                         select: { id: true, username: true, jellyfinUserId: true },
                     });
 
@@ -585,6 +600,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                 totalMediaCount += mediaCount;
 
                 console.log(`[Sync] Server ${currentServerName} finished: users=${usersCount}, media=${mediaCount}`);
+                systemLog.info("Sync", `Serveur ${currentServerName} synchronisé : ${usersCount} utilisateur(s), ${mediaCount} média(s) traité(s)`);
             } catch (serverError: unknown) {
                 let normalizedError = 'Unknown error';
                 if (serverError instanceof Error) normalizedError = serverError.message;
@@ -599,6 +615,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     error: normalizedError,
                 });
                 console.error(`[Sync] Server ${currentServerName} failed:`, normalizedError);
+                systemLog.error("Sync", `Échec de synchronisation pour ${currentServerName} : ${normalizedError}`);
             }
         }
 
@@ -607,6 +624,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
         }
 
         await markSyncFinished({ success: true, mode: options?.recentOnly ? 'recent' : 'full', users: totalUsersCount, media: totalMediaCount });
+        systemLog.info("Sync", `Synchronisation ${mode === 'full' ? 'complète' : 'récente'} terminée avec succès : ${totalUsersCount} utilisateur(s), ${totalMediaCount} média(s) au total`);
 
         if (failedServers.length > 0) {
             await appendHealthEvent({
@@ -637,6 +655,7 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
             if (typeof maybe.message === 'string') fullError = maybe.message;
         }
         console.error("[Sync Error]", fullError);
+        systemLog.error("Sync", `Erreur critique lors de la synchronisation : ${fullError}`);
         await appendHealthEvent({ source: 'sync', kind: 'sync_error', message: fullError, details: { count: 1 } });
         await markSyncFinished({ success: false, mode: options?.recentOnly ? 'recent' : 'full', error: fullError });
         return { success: false, error: fullError };

@@ -16,7 +16,7 @@ export default async function UsersPage() {
 
     const locale = await getLocale();
 
-    const [users, usageRows, streamMethodRows, clientRows, globalSettings] = await Promise.all([
+    const [users, usageRows, streamMethodRows, clientRows, globalSettings, latestSessionRows] = await Promise.all([
         prisma.user.findMany({
             select: {
                 id: true,
@@ -55,7 +55,21 @@ export default async function UsersPage() {
             where: { id: "global" },
             select: { ssoSettings: true },
         }),
+        prisma.playbackHistory.groupBy({
+            by: ["userId"],
+            where: {
+                userId: { not: null },
+            },
+            _max: { startedAt: true },
+        }),
     ]);
+
+    const latestSessionByUserId = new Map<string, Date>();
+    for (const row of latestSessionRows) {
+        if (row.userId && row._max.startedAt) {
+            latestSessionByUserId.set(row.userId, row._max.startedAt);
+        }
+    }
 
     // Compute total time & count
     const usageByUserId = new Map<string, { totalSeconds: number; sessionsCount: number }>();
@@ -108,13 +122,22 @@ export default async function UsersPage() {
             const totalStreams = methods.transcode + methods.directPlay;
             const transcodeRatio = totalStreams > 0 ? Math.round((methods.transcode / totalStreams) * 100) : 0;
 
+            const userLastActiveDate = user.lastActive ? new Date(user.lastActive) : null;
+            const latestSessionDate = latestSessionByUserId.get(user.id) || null;
+            const effectiveLastActive = (() => {
+                if (userLastActiveDate && latestSessionDate) {
+                    return userLastActiveDate > latestSessionDate ? userLastActiveDate : latestSessionDate;
+                }
+                return userLastActiveDate || latestSessionDate || null;
+            })();
+
             return {
                 id: user.id,
                 jellyfinUserId: user.jellyfinUserId,
                 username: user.username || "Utilisateur inconnu",
                 totalHours: parseFloat(((usage?.totalSeconds ?? 0) / 3600).toFixed(1)),
                 sessionsCount: usage?.sessionsCount ?? 0,
-                lastActive: user.lastActive ? user.lastActive.toISOString() : null,
+                lastActive: effectiveLastActive ? effectiveLastActive.toISOString() : null,
                 favoriteClient: favoriteClientByUserId.get(user.id) || "Inconnu",
                 transcodeCount: methods.transcode,
                 directPlayCount: methods.directPlay,

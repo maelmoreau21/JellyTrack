@@ -209,14 +209,14 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'startedAt':
               return (
-                <TableCell key="startedAt" className={cn("hidden md:table-cell whitespace-nowrap text-xs text-muted-foreground border-r border-border")}>
+                <TableCell key="startedAt" className={cn("whitespace-nowrap text-xs text-muted-foreground border-r border-border")}>
                   {log.startedAt ? new Date(log.startedAt).toLocaleTimeString() : '—'}
                 </TableCell>
               );
 
             case 'endedAt':
               return (
-                <TableCell key="endedAt" className={cn("hidden md:table-cell whitespace-nowrap border-r border-border")}>
+                <TableCell key="endedAt" className={cn("whitespace-nowrap border-r border-border text-xs text-muted-foreground")}>
                   {log.endedAt ? new Date(log.endedAt).toLocaleString() : '—'}
                 </TableCell>
               );
@@ -319,15 +319,15 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'client':
               return (
-                <TableCell key="client" className={cn("hidden lg:table-cell border-r border-border")}>
-                  <div className="text-sm font-semibold">{log.clientName || '—'}</div>
+                <TableCell key="client" className={cn("border-r border-border")}>
+                  <div className="text-sm font-semibold whitespace-nowrap">{log.clientName || '—'}</div>
                 </TableCell>
               );
 
             case 'resolution':
               return (
-                <TableCell key="resolution" className={cn("hidden lg:table-cell border-r border-border")}>
-                  <div className="text-xs font-medium px-2 py-0.5 rounded app-chip w-fit">
+                <TableCell key="resolution" className={cn("border-r border-border")}>
+                  <div className="text-xs font-medium px-2 py-0.5 rounded app-chip w-fit whitespace-nowrap">
                     {!isAudioMedia && normalizedResolution && normalizedResolution !== 'Unknown' 
                       ? normalizedResolution 
                       : '—'}
@@ -338,8 +338,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
             case 'audioBitrate': {
               const displayBitrate = normalizeBitrateToKbps(log.bitrate);
               return (
-                <TableCell key="audioBitrate" className={cn("hidden lg:table-cell border-r border-border")}>
-                  <div className="text-xs text-muted-foreground">
+                <TableCell key="audioBitrate" className={cn("border-r border-border")}>
+                  <div className="text-xs text-muted-foreground whitespace-nowrap">
                     {typeof displayBitrate === 'number' && displayBitrate > 0 ? `${displayBitrate} kbps` : '—'}
                   </div>
                 </TableCell>
@@ -348,9 +348,9 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'ip':
               return (
-                <TableCell key="ip" className={cn("hidden lg:table-cell border-r border-border")}>
+                <TableCell key="ip" className={cn("border-r border-border")}>
                   <div className={cn(
-                    "text-xs font-mono px-1.5 py-0.5 rounded-sm w-fit",
+                    "text-xs font-mono px-1.5 py-0.5 rounded-sm w-fit whitespace-nowrap",
                     hasIpBurstAnomaly
                       ? "bg-red-500/15 text-red-300 border border-red-500/30"
                       : "bg-muted"
@@ -367,8 +367,8 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'country':
               return (
-                <TableCell key="country" className={cn("hidden lg:table-cell border-r border-border")}>
-                  <div className="text-xs">
+                <TableCell key="country" className={cn("border-r border-border")}>
+                  <div className="text-xs whitespace-nowrap">
                     {(() => {
                       if (!log.country || log.country === 'Unknown') {
                         return log.city && log.city !== 'Unknown' ? log.city : '—';
@@ -383,7 +383,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
               const isAudioOnlyTranscode = isTranscode && (isAudioMedia || !log.videoCodec || log.videoCodec === 'copy' || log.videoCodec === 'direct');
               const hasPause = Boolean(log.pauseCount && log.pauseCount > 0);
               return (
-                <TableCell key="status" className={cn("hidden md:table-cell border-r border-border")}>
+                <TableCell key="status" className={cn("border-r border-border")}>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <Badge variant={isTranscode ? "destructive" : "default"} className={`shadow-sm ${isTranscode ? (isAudioOnlyTranscode ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20') : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}>
                       {isTranscode ? (isAudioOnlyTranscode ? 'Audio Transcodé' : (log.playMethod || 'Transcode')) : (log.playMethod || 'DirectPlay')}
@@ -406,7 +406,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'codecs':
               return (
-                <TableCell key="codecs" className={cn("hidden lg:table-cell border-r border-border")}>
+                <TableCell key="codecs" className={cn("border-r border-border")}>
                   {isTranscode && log.videoCodec ? (
                     <div className="flex flex-col text-xs text-muted-foreground font-mono">
                       <span>V: {log.videoCodec}</span>
@@ -420,7 +420,7 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'duration':
               return (
-                <TableCell key="duration" className={cn("text-right whitespace-nowrap hidden md:table-cell border-r border-border last:border-r-0")}>
+                <TableCell key="duration" className={cn("text-right whitespace-nowrap border-r border-border last:border-r-0")}>
                   {log.isActuallyActive
                     ? (
                       <span className="text-amber-500/80 animate-pulse text-xs uppercase tracking-wider font-semibold flex flex-row items-center justify-end gap-1"><span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>Active</span>
@@ -432,17 +432,17 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
 
             case 'pauseCount':
               return (
-                <TableCell key="pauseCount" className={cn("hidden lg:table-cell text-sm border-r border-border")}>{log.pauseCount ?? 0}</TableCell>
+                <TableCell key="pauseCount" className={cn("text-sm border-r border-border")}>{log.pauseCount ?? 0}</TableCell>
               );
 
             case 'audioChanges':
               return (
-                <TableCell key="audioChanges" className={cn("hidden lg:table-cell text-sm border-r border-border")}>{log.audioChanges ?? 0}</TableCell>
+                <TableCell key="audioChanges" className={cn("text-sm border-r border-border")}>{log.audioChanges ?? 0}</TableCell>
               );
 
             case 'subtitleChanges':
               return (
-                <TableCell key="subtitleChanges" className={cn("hidden lg:table-cell text-sm border-r border-border last:border-r-0")}>{log.subtitleChanges ?? 0}</TableCell>
+                <TableCell key="subtitleChanges" className={cn("text-sm border-r border-border last:border-r-0")}>{log.subtitleChanges ?? 0}</TableCell>
               );
 
             default:

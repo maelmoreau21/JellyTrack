@@ -331,13 +331,15 @@ export default async function UserRecentMedia({
             <CardContent className="space-y-4">
                 {/* Search & Filters */}
                 <div className="space-y-4 pb-2">
-                    <div className="flex items-start gap-2 flex-wrap">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3 w-full">
                         <div className="flex-1 w-full relative z-10">
                             <LogSearchBar initialQuery={query} />
                         </div>
-                        <div className="flex items-center gap-2">
-                            <SavedFilters />
-                            <ColumnToggle visibleColumns={visibleColumns as any} />
+                        <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap">
+                            <div className="flex items-center gap-2">
+                                <SavedFilters />
+                                <ColumnToggle visibleColumns={visibleColumns as any} />
+                            </div>
                             <div className="flex items-center gap-1">
                                 <a
                                     href={`/api/logs/export?${exportParams.toString()}`}

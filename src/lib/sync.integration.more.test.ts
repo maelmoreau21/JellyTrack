@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
 
+vi.mock("server-only", () => ({}));
+
 // Register the same prisma mock for both local and aliased imports
 function prismaMockFactory() {
   const mediaUpsert = vi.fn(async (..._args: any[]) => ({}));

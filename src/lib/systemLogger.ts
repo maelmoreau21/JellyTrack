@@ -23,6 +23,7 @@ export type LogFileInfo = {
     lineCount: number;
     updatedAt: string;
     isCurrent: boolean;
+    fileRole?: "master" | "daily" | "archive";
 };
 
 const LOG_DIR = process.env.LOG_DIR || (fs.existsSync("/data") ? "/data/logs" : path.join(process.cwd(), "logs"));
@@ -197,13 +198,18 @@ export function getLogFilesList(): LogFileInfo[] {
                         lineCount = 0;
                     }
 
+                    const isMaster = filename === "jellytrack.log";
+                    const isDaily = filename === todayFilename || filename.startsWith(`jellytrack-${new Date().toISOString().split("T")[0]}`);
+                    const fileRole = isMaster ? "master" : isDaily ? "daily" : "archive";
+
                     files.push({
                         filename,
                         sizeBytes: stats.size,
                         formattedSize: formatFileSize(stats.size),
                         lineCount,
                         updatedAt: stats.mtime.toISOString(),
-                        isCurrent: filename === "jellytrack.log" || filename === todayFilename || filename.startsWith(`jellytrack-${new Date().toISOString().split("T")[0]}`),
+                        isCurrent: isMaster,
+                        fileRole,
                     });
                 } catch {
                     // Ignore unreadable stats
@@ -214,10 +220,12 @@ export function getLogFilesList(): LogFileInfo[] {
         // Ignore directory read errors
     }
 
-    // Sort: current/today file first, then descending by updatedAt date
+    // Sort: master first, then daily, then descending by updatedAt date
     files.sort((a, b) => {
-        if (a.isCurrent && !b.isCurrent) return -1;
-        if (!a.isCurrent && b.isCurrent) return 1;
+        if (a.fileRole === "master" && b.fileRole !== "master") return -1;
+        if (a.fileRole !== "master" && b.fileRole === "master") return 1;
+        if (a.fileRole === "daily" && b.fileRole !== "daily") return -1;
+        if (a.fileRole !== "daily" && b.fileRole === "daily") return 1;
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
 

@@ -66,7 +66,7 @@ describe("systemLogger", () => {
         systemLog.info("DailyTest", "Message for today");
         const list = getLogFilesList();
         const today = new Date().toISOString().split("T")[0];
-        const todayFile = list.find(f => f.filename.includes(today) && f.isCurrent);
+        const todayFile = list.find(f => f.filename.includes(today) && (f.fileRole === "daily" || f.isCurrent));
         expect(todayFile).toBeDefined();
     });
 });

@@ -79,46 +79,65 @@ export async function initCronJobs(schedule: CronSchedule) {
     logger.info({ fullSyncCronExpr, fullSyncEveryHours: schedule.fullSyncEveryHours }, `[CronManager] Scheduling full sync`);
     logger.info({ backupCronExpr, backupCronHour: schedule.backupCronHour, backupCronMinute: schedule.backupCronMinute }, `[CronManager] Scheduling backup`);
     logger.info({ integrityCronExpr, integrityCheckEveryHours: integrityCheckHours }, `[CronManager] Scheduling integrity check`);
+    cleanupOldSystemLogs(schedule.logRetentionDays ?? 30).catch(() => null);
+
+    systemLog.info("CronManager", `Planification active : Sync récente (toutes les ${schedule.recentSyncEveryHours}h), Sync complète (toutes les ${schedule.fullSyncEveryHours}h), Backup (toutes les ${schedule.backupEveryHours}h), Intégrité (toutes les ${integrityCheckHours}h)`);
 
     recentSyncTask = cron.schedule(recentSyncCronExpr, async () => {
         logger.info({ recentSyncEveryHours: schedule.recentSyncEveryHours }, `[Cron] Automatic trigger of recent synchronization`);
+        systemLog.info("Cron", "Déclenchement automatique de la synchronisation récente");
         try {
             const result = await syncJellyfinLibrary({ recentOnly: true });
             if (!result?.success) {
                 logger.warn({ err: result?.error }, `[Cron] Recent synchronization failed`);
+                systemLog.warn("Cron", `Échec de la synchronisation récente : ${result?.error || 'Erreur inconnue'}`);
+            } else {
+                systemLog.info("Cron", "Synchronisation récente terminée avec succès");
             }
         } catch (error) {
             logger.error({ err: error }, "[Cron] Unhandled error during recent synchronization");
+            systemLog.error("Cron", `Erreur non gérée lors de la synchronisation récente : ${error instanceof Error ? error.message : String(error)}`);
         }
     });
 
     fullSyncTask = cron.schedule(fullSyncCronExpr, async () => {
         logger.info({ fullSyncEveryHours: schedule.fullSyncEveryHours }, `[Cron] Automatic trigger of full synchronization`);
+        systemLog.info("Cron", "Déclenchement automatique de la synchronisation complète");
         try {
             const result = await syncJellyfinLibrary({ recentOnly: false });
             if (!result?.success) {
                 logger.warn({ err: result?.error }, `[Cron] Full synchronization failed`);
+                systemLog.warn("Cron", `Échec de la synchronisation complète : ${result?.error || 'Erreur inconnue'}`);
+            } else {
+                systemLog.info("Cron", "Synchronisation complète terminée avec succès");
             }
         } catch (error) {
             logger.error({ err: error }, "[Cron] Unhandled error during full synchronization");
+            systemLog.error("Cron", `Erreur non gérée lors de la synchronisation complète : ${error instanceof Error ? error.message : String(error)}`);
         }
     });
 
     backupTask = cron.schedule(backupCronExpr, async () => {
         logger.info({ backupEveryHours: schedule.backupEveryHours }, `[Cron] Triggering automated backup`);
+        systemLog.info("Cron", "Déclenchement de la sauvegarde automatique");
         try {
-            await performAutoBackup();
+            const fileName = await performAutoBackup();
+            systemLog.info("Cron", `Sauvegarde automatique créée : ${fileName}`);
         } catch (err) {
             logger.error({ err }, "[Cron] Auto-backup failed");
+            systemLog.error("Cron", `Échec de la sauvegarde automatique : ${err instanceof Error ? err.message : String(err)}`);
         }
     });
 
     integrityCheckTask = cron.schedule(integrityCronExpr, async () => {
         logger.info({ integrityCheckEveryHours: integrityCheckHours }, `[Cron] Running scheduled integrity check`);
+        systemLog.info("Cron", "Vérification programmée de l'intégrité des sessions");
         try {
-            await cleanupOrphanedSessions();
+            const cleaned = await cleanupOrphanedSessions();
+            systemLog.info("Cron", `Vérification d'intégrité terminée (${cleaned} sessions orphelines traitées)`);
         } catch (err) {
             logger.error({ err }, "[Cron] Scheduled integrity check failed");
+            systemLog.error("Cron", `Échec de la vérification d'intégrité : ${err instanceof Error ? err.message : String(err)}`);
         }
     });
 
@@ -143,6 +162,7 @@ export async function rescheduleCronJobs(schedule: CronSchedule) {
     if (logCleanupTask) { logCleanupTask.stop(); logCleanupTask = null; }
 
     logger.info("[CronManager] Rescheduling cron jobs...");
+    systemLog.info("CronManager", "Reconfiguration des tâches planifiées...");
     await initCronJobs(schedule);
 }
 

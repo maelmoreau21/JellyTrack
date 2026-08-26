@@ -4,6 +4,7 @@ import { getBackupDirectory, resolveAutoBackupFile } from "@/lib/backupDir";
 import { redactBackupData } from "@/lib/backupSecurity";
 import { createZipBackup } from "@/lib/backupUtils";
 import { logger } from "@/lib/logger";
+import { systemLog } from "@/lib/systemLogger";
 
 const MAX_BACKUPS = 10;
 
@@ -14,6 +15,7 @@ const MAX_BACKUPS = 10;
  */
 export async function performAutoBackup(mode: 'auto' | 'manuelle' = 'auto'): Promise<string> {
     logger.info(`[Backup] Starting ${mode} backup...`);
+    systemLog.info("Backup", `Démarrage de la sauvegarde ${mode}...`);
     await markBackupStarted();
 
     try {
@@ -82,6 +84,7 @@ export async function performAutoBackup(mode: 'auto' | 'manuelle' = 'auto'): Pro
         }
 
         logger.info({ retainedCount: backupFiles.length > MAX_BACKUPS ? MAX_BACKUPS : backupFiles.length }, `[Auto-Backup] Complete`);
+        systemLog.info("Backup", `Sauvegarde ${mode} terminée avec succès : ${fileName} (${fileSizeMb} Mo)`);
         await markBackupFinished({ success: true, fileName });
         await appendHealthEvent({
             source: "backup",
@@ -103,6 +106,7 @@ export async function performAutoBackup(mode: 'auto' | 'manuelle' = 'auto'): Pro
         return fileName;
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error);
+        systemLog.error("Backup", `Erreur lors de la sauvegarde : ${msg || "Backup error"}`);
         await markBackupFinished({ success: false, error: msg || "Backup error" });
         await appendHealthEvent({
             source: "backup",

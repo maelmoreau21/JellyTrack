@@ -115,11 +115,25 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
     const totalHours = parseFloat((totalSeconds / 3600).toFixed(1));
     const avgSessionMin = sessionCount > 0 ? Math.round(totalSeconds / sessionCount / 60) : 0;
     const avgCompletion = completionCount > 0 ? Math.round(totalCompletions / completionCount) : 0;
-    const lastActive = users.reduce<Date | null>((acc, current) => {
+    const maxDbLastActive = users.reduce<Date | null>((acc, current) => {
         if (!current.lastActive) return acc;
         if (!acc || current.lastActive > acc) return current.lastActive;
         return acc;
     }, null);
+
+    const maxHistoryDate = mergedHistory.reduce<Date | null>((acc, current) => {
+        if (!current.startedAt) return acc;
+        const d = new Date(current.startedAt);
+        if (!acc || d > acc) return d;
+        return acc;
+    }, null);
+
+    const lastActive = (() => {
+        if (maxDbLastActive && maxHistoryDate) {
+            return maxDbLastActive > maxHistoryDate ? maxDbLastActive : maxHistoryDate;
+        }
+        return maxDbLastActive || maxHistoryDate || null;
+    })();
 
     const getTopItem = (map: Map<string, number>) => {
         if (map.size === 0) return "N/A";
