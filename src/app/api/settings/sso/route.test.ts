@@ -70,6 +70,7 @@ describe("SSO Settings API", () => {
       expect(json.localAdminConfigured).toBe(true);
       expect(json.localAdminUser).toBe("admin");
       expect(json.callbackPath).toBe("/api/auth/callback/oidc");
+      expect(json.autoRedirect).toBe(true);
     });
   });
 
@@ -80,6 +81,7 @@ describe("SSO Settings API", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           enabled: true,
+          autoRedirect: false,
           url: "https://my-sso.company.com",
           clientId: "jellytrack-app",
           clientSecret: "super-secret-pw",
@@ -92,6 +94,7 @@ describe("SSO Settings API", () => {
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.success).toBe(true);
+      expect(json.autoRedirect).toBe(false);
     });
   });
 });

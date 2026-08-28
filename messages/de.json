@@ -468,7 +468,12 @@
     "unauthorizedGroup": "Access denied: you do not belong to an authorized user or admin group.",
     "ssoError": "Error during SSO authentication.",
     "invalidCredentials": "Invalid credentials.",
-    "invalidLocalCredentials": "Invalid local admin credentials."
+    "invalidLocalCredentials": "Invalid local admin credentials.",
+    "autoRedirecting": "Weiterleitung zu Ihrem SSO-Anbieter...",
+    "autoRedirectHint": "Automatische Anmeldung über OpenID Connect...",
+    "loggedOutNotice": "Sie wurden erfolgreich abgemeldet.",
+    "continueManually": "Weiter zum SSO",
+    "cancelAutoRedirect": "Weiterleitung abbrechen"
   },
   "logs": {
     "activeFilter": "Active Filter:",
@@ -1513,6 +1518,9 @@
     "ssoConfigFormTitle": "SSO Configuration & Roles",
     "ssoConfigFormDesc": "Edit SSO settings below. Variables defined in docker-compose / .env always take precedence.",
     "enableSsoLabel": "Enable SSO Authentication",
+    "autoRedirectLabel": "Automatische SSO-Weiterleitung",
+    "autoRedirectNotice": "Nahtlose Anmeldung",
+    "autoRedirectHint": "Nicht authentifizierte Benutzer automatisch zum SSO-Anbieter weiterleiten, anstatt die Anmeldeseite anzuzeigen.",
     "envOverrideNotice": "Locked by OIDC_ENABLED in .env",
     "dbConfigurableNotice": "Saved in database",
     "dockerEnvLocked": "Set by Docker (.env)",

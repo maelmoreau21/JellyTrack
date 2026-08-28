@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, User, AlertCircle, Loader2, ArrowRight, ShieldCheck, KeyRound, ArrowLeft } from "lucide-react";
+import { Lock, User, AlertCircle, Loader2, ArrowRight, ShieldCheck, KeyRound, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,21 +12,28 @@ import { useTranslations } from "next-intl";
 interface LoginFormProps {
     oidcEnabled?: boolean;
     localAdminEnabled?: boolean;
+    autoRedirect?: boolean;
 }
 
-export default function LoginForm({ oidcEnabled = false, localAdminEnabled = false }: LoginFormProps) {
+export default function LoginForm({ oidcEnabled = false, localAdminEnabled = false, autoRedirect = true }: LoginFormProps) {
     const t = useTranslations('login');
     const router = useRouter();
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get("callbackUrl") || "/";
     const queryError = searchParams.get("error");
+    const isLogout = searchParams.get("logout") === "1" || searchParams.get("logout") === "true";
+    const isManual = searchParams.get("manual") === "1" || searchParams.get("manual") === "true";
+    const isLocalParam = searchParams.get("local") === "1" || searchParams.get("local") === "true";
 
     const [isLoading, setIsLoading] = useState(false);
-    const [isLocalLogin, setIsLocalLogin] = useState(false);
+    const [isAutoRedirecting, setIsAutoRedirecting] = useState(false);
+    const [isLocalLogin, setIsLocalLogin] = useState(isLocalParam);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const autoRedirectAttempted = useRef(false);
 
     useEffect(() => {
         if (!queryError) return;
@@ -49,8 +56,26 @@ export default function LoginForm({ oidcEnabled = false, localAdminEnabled = fal
         } catch {
             setError(t('ssoError'));
             setIsLoading(false);
+            setIsAutoRedirecting(false);
         }
     };
+
+    // Auto-redirect to SSO when enabled, and no errors/logout/manual override
+    useEffect(() => {
+        if (!oidcEnabled || !autoRedirect) return;
+        if (queryError || isLogout || isManual || isLocalParam || isLocalLogin) return;
+        if (autoRedirectAttempted.current) return;
+
+        autoRedirectAttempted.current = true;
+        setIsAutoRedirecting(true);
+        setIsLoading(true);
+
+        const timer = setTimeout(() => {
+            handleSsoLogin();
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, [oidcEnabled, autoRedirect, queryError, isLogout, isManual, isLocalParam, isLocalLogin, callbackUrl]);
 
     const handleLocalAdminLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -108,7 +133,7 @@ export default function LoginForm({ oidcEnabled = false, localAdminEnabled = fal
     // 1. SSO Mode (OIDC Enabled)
     if (oidcEnabled && !isLocalLogin) {
         return (
-            <div className="px-6 pb-6 pt-2 space-y-3">
+            <div className="px-6 pb-6 pt-2 space-y-3.5">
                 {error && (
                     <div className="p-3 rounded-xl flex items-start gap-2.5 text-sm bg-red-500/10 text-red-400 border border-red-500/20 shadow-sm animate-in fade-in duration-200">
                         <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -116,28 +141,58 @@ export default function LoginForm({ oidcEnabled = false, localAdminEnabled = fal
                     </div>
                 )}
 
-                <button
-                    type="button"
-                    onClick={handleSsoLogin}
-                    disabled={isLoading}
-                    className={`w-full flex items-center justify-center gap-2.5 h-11 rounded-xl font-semibold text-sm transition-all shadow-lg ${
-                        isLoading
-                            ? "bg-indigo-600/50 text-indigo-200 cursor-not-allowed"
-                            : "bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-600 text-white hover:from-indigo-500 hover:to-cyan-500 hover:shadow-indigo-500/25 hover:scale-[1.01] active:scale-[0.99] duration-150"
-                    }`}
-                >
-                    {isLoading ? (
-                        <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            {t('verifying')}
-                        </>
-                    ) : (
-                        <>
-                            {t('signIn')}
-                            <ArrowRight className="w-4 h-4 ml-1" />
-                        </>
-                    )}
-                </button>
+                {isLogout && !error && (
+                    <div className="p-3 rounded-xl flex items-start gap-2.5 text-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-sm animate-in fade-in duration-200">
+                        <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                        <p className="leading-5 font-medium text-xs">{t('loggedOutNotice') || "Vous avez été déconnecté avec succès."}</p>
+                    </div>
+                )}
+
+                {isAutoRedirecting && !error ? (
+                    <div className="py-3 flex flex-col items-center justify-center text-center space-y-3 animate-in fade-in duration-200">
+                        <div className="relative flex items-center justify-center">
+                            <div className="absolute w-10 h-10 rounded-full bg-indigo-500/20 animate-ping pointer-events-none" />
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                                <Loader2 className="w-5 h-5 text-white animate-spin" />
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-sm font-semibold text-foreground">{t('autoRedirecting') || "Redirection vers votre fournisseur SSO..."}</p>
+                            <p className="text-xs text-muted-foreground">{t('autoRedirectHint') || "Connexion automatique via OpenID Connect..."}</p>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleSsoLogin}
+                            className="mt-2 text-xs font-medium text-indigo-500 hover:text-indigo-400 dark:text-indigo-400 hover:underline transition-colors"
+                        >
+                            {t('continueManually') || "Continuer vers le SSO"}
+                        </button>
+                    </div>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={handleSsoLogin}
+                        disabled={isLoading}
+                        className={`w-full flex items-center justify-center gap-2.5 h-11 rounded-xl font-semibold text-sm transition-all shadow-lg ${
+                            isLoading
+                                ? "bg-indigo-600/50 text-indigo-200 cursor-not-allowed"
+                                : "bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-600 text-white hover:from-indigo-500 hover:to-cyan-500 hover:shadow-indigo-500/25 hover:scale-[1.01] active:scale-[0.99] duration-150"
+                        }`}
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                {t('verifying')}
+                            </>
+                        ) : (
+                            <>
+                                {t('signIn')}
+                                <ArrowRight className="w-4 h-4 ml-1" />
+                            </>
+                        )}
+                    </button>
+                )}
 
                 {localAdminEnabled && (
                     <div className="text-center pt-1">
@@ -145,6 +200,7 @@ export default function LoginForm({ oidcEnabled = false, localAdminEnabled = fal
                             type="button"
                             onClick={() => {
                                 setError(null);
+                                setIsAutoRedirecting(false);
                                 setIsLocalLogin(true);
                             }}
                             className="text-xs text-muted-foreground/60 hover:text-foreground transition-colors inline-flex items-center justify-center gap-1.5"

@@ -4,6 +4,7 @@ import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import prisma from "@/lib/prisma";
 import {
   getOidcConfigAsync,
+  resolveOidcConfig,
   setInMemoryDbSsoConfig,
   parseDbSsoSettings,
   isLocalAdminConfigured,
@@ -33,6 +34,7 @@ export async function GET() {
     userGroup: oidc.userGroup,
     adminGroup: oidc.adminGroup,
     tokenAlg: oidc.tokenAlg || "RS256",
+    autoRedirect: oidc.autoRedirect ?? true,
     origins: oidc.origins,
     isEnvControlled: oidc.isEnvControlled,
     dbConfig: {
@@ -46,6 +48,7 @@ export async function GET() {
       userGroup: oidc.dbConfig.userGroup,
       adminGroup: oidc.dbConfig.adminGroup,
       tokenAlg: oidc.dbConfig.tokenAlg || "RS256",
+      autoRedirect: oidc.dbConfig.autoRedirect ?? true,
     },
     localAdminConfigured: local.isConfigured,
     localAdminUser: local.username,
@@ -77,6 +80,7 @@ export async function PUT(req: NextRequest) {
       userGroup: typeof body.userGroup === "string" ? body.userGroup.trim() : currentDbConfig.userGroup,
       adminGroup: typeof body.adminGroup === "string" ? body.adminGroup.trim() : currentDbConfig.adminGroup,
       tokenAlg: "RS256",
+      autoRedirect: typeof body.autoRedirect === "boolean" ? body.autoRedirect : currentDbConfig.autoRedirect,
     };
 
     await (prisma as any).globalSettings?.upsert({
@@ -99,10 +103,11 @@ export async function PUT(req: NextRequest) {
         userGroup: newDbConfig.userGroup,
         adminGroup: newDbConfig.adminGroup,
         tokenAlg: newDbConfig.tokenAlg,
+        autoRedirect: newDbConfig.autoRedirect,
       },
     });
 
-    const oidc = await getOidcConfigAsync();
+    const oidc = resolveOidcConfig(newDbConfig);
     const local = getLocalAdminCredentials();
 
     return NextResponse.json({
@@ -118,6 +123,7 @@ export async function PUT(req: NextRequest) {
       userGroup: oidc.userGroup,
       adminGroup: oidc.adminGroup,
       tokenAlg: oidc.tokenAlg || "RS256",
+      autoRedirect: oidc.autoRedirect ?? true,
       origins: oidc.origins,
       isEnvControlled: oidc.isEnvControlled,
       dbConfig: {
@@ -131,6 +137,7 @@ export async function PUT(req: NextRequest) {
         userGroup: oidc.dbConfig.userGroup,
         adminGroup: oidc.dbConfig.adminGroup,
         tokenAlg: oidc.dbConfig.tokenAlg || "RS256",
+        autoRedirect: oidc.dbConfig.autoRedirect ?? true,
       },
       localAdminConfigured: local.isConfigured,
       localAdminUser: local.username,

@@ -35,6 +35,7 @@ interface SsoConfigData {
   userGroup: string;
   adminGroup: string;
   tokenAlg?: string;
+  autoRedirect?: boolean;
   origins?: Record<string, "env" | "db" | "default">;
   isEnvControlled: {
     enabled: boolean;
@@ -44,6 +45,7 @@ interface SsoConfigData {
     userGroup: boolean;
     adminGroup: boolean;
     tokenAlg?: boolean;
+    autoRedirect?: boolean;
   };
   dbConfig?: {
     enabled: boolean;
@@ -54,6 +56,7 @@ interface SsoConfigData {
     userGroup: string;
     adminGroup: string;
     tokenAlg?: string;
+    autoRedirect?: boolean;
   };
   localAdminConfigured: boolean;
   localAdminUser: string;
@@ -87,6 +90,7 @@ export function SsoSettingsClient() {
 
   // Form edit state
   const [formEnabled, setFormEnabled] = useState(false);
+  const [formAutoRedirect, setFormAutoRedirect] = useState(true);
   const [formUrl, setFormUrl] = useState("");
   const [formClientId, setFormClientId] = useState("");
   const [formClientSecret, setFormClientSecret] = useState("");
@@ -99,6 +103,7 @@ export function SsoSettingsClient() {
   const populateFormFromData = useCallback((data: SsoConfigData) => {
     setInfo(data);
     setFormEnabled(data.enabled);
+    setFormAutoRedirect(data.autoRedirect ?? true);
     setFormUrl(data.url || "");
     setFormClientId(data.clientId || "");
     setFormClientSecret(data.hasClientSecret ? data.clientSecretMasked : "");
@@ -141,6 +146,7 @@ export function SsoSettingsClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           enabled: formEnabled,
+          autoRedirect: formAutoRedirect,
           url: formUrl,
           clientId: formClientId,
           clientSecret: isSecretUnchangedMask ? undefined : formClientSecret,
@@ -363,21 +369,40 @@ export function SsoSettingsClient() {
                 </CardDescription>
               </div>
 
-              <div className="flex items-center gap-3 p-2.5 rounded-xl border bg-muted/30">
-                <div className="space-y-0.5">
-                  <Label htmlFor="sso-toggle" className="text-xs font-semibold cursor-pointer">
-                    {ts("enableSsoLabel") || "Activer l'authentification SSO"}
-                  </Label>
-                  <p className="text-[11px] text-muted-foreground">
-                    {isEnv.enabled ? (ts("envOverrideNotice") || "Verrouillé par OIDC_ENABLED dans .env") : (ts("dbConfigurableNotice") || "Enregistré en base de données")}
-                  </p>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex items-center gap-3 p-2.5 rounded-xl border bg-muted/30">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="sso-toggle" className="text-xs font-semibold cursor-pointer">
+                      {ts("enableSsoLabel") || "Activer l'authentification SSO"}
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isEnv.enabled ? (ts("envOverrideNotice") || "Verrouillé par OIDC_ENABLED dans .env") : (ts("dbConfigurableNotice") || "Enregistré en base de données")}
+                    </p>
+                  </div>
+                  <Switch
+                    id="sso-toggle"
+                    checked={formEnabled}
+                    disabled={isEnv.enabled}
+                    onCheckedChange={setFormEnabled}
+                  />
                 </div>
-                <Switch
-                  id="sso-toggle"
-                  checked={formEnabled}
-                  disabled={isEnv.enabled}
-                  onCheckedChange={setFormEnabled}
-                />
+
+                <div className="flex items-center gap-3 p-2.5 rounded-xl border bg-muted/30">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="auto-redirect-toggle" className="text-xs font-semibold cursor-pointer">
+                      {ts("autoRedirectLabel") || "Redirection auto vers SSO"}
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isEnv.autoRedirect ? (ts("envOverrideNotice") || "Verrouillé par .env") : (ts("autoRedirectNotice") || "Connexion transparente")}
+                    </p>
+                  </div>
+                  <Switch
+                    id="auto-redirect-toggle"
+                    checked={formAutoRedirect}
+                    disabled={isEnv.autoRedirect}
+                    onCheckedChange={setFormAutoRedirect}
+                  />
+                </div>
               </div>
             </div>
           </CardHeader>

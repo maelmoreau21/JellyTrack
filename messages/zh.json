@@ -468,7 +468,12 @@
     "unauthorizedGroup": "Access denied: you do not belong to an authorized user or admin group.",
     "ssoError": "Error during SSO authentication.",
     "invalidCredentials": "Invalid credentials.",
-    "invalidLocalCredentials": "Invalid local admin credentials."
+    "invalidLocalCredentials": "Invalid local admin credentials.",
+    "autoRedirecting": "正在重定向到您的 SSO 身份提供商...",
+    "autoRedirectHint": "通过 OpenID Connect 自动登录...",
+    "loggedOutNotice": "您已成功退出登录。",
+    "continueManually": "继续前往 SSO",
+    "cancelAutoRedirect": "取消重定向"
   },
   "logs": {
     "activeFilter": "活动过滤器：",
@@ -1512,8 +1517,11 @@
     "adminGroupHint": "Members of this group are automatically granted JellyTrack administrator rights.",
     "ssoConfigFormTitle": "SSO Configuration & Roles",
     "ssoConfigFormDesc": "Edit SSO settings below. Variables defined in docker-compose / .env always take precedence.",
-    "enableSsoLabel": "Enable SSO Authentication",
-    "envOverrideNotice": "Locked by OIDC_ENABLED in .env",
+    "enableSsoLabel": "启用 SSO 身份验证",
+    "autoRedirectLabel": "自动重定向到 SSO",
+    "autoRedirectNotice": "无缝登录",
+    "autoRedirectHint": "自动将未登录用户重定向到您的 SSO 提供商，而不是显示登录页面。",
+    "envOverrideNotice": "受 .env 中的 OIDC_ENABLED 锁定",
     "dbConfigurableNotice": "Saved in database",
     "dockerEnvLocked": "Set by Docker (.env)",
     "oidcUrlHint": "Discovery or base URL of your OpenID Connect provider (e.g. Authentik, Keycloak, Authelia).",

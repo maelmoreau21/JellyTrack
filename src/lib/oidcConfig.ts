@@ -11,6 +11,7 @@ export interface OidcConfig {
   userGroup: string;
   adminGroup: string;
   tokenAlg?: string;
+  autoRedirect?: boolean;
 }
 
 export interface OidcConfigFieldOrigins {
@@ -21,6 +22,7 @@ export interface OidcConfigFieldOrigins {
   userGroup: "env" | "db" | "default";
   adminGroup: "env" | "db" | "default";
   tokenAlg: "env" | "db" | "default";
+  autoRedirect: "env" | "db" | "default";
 }
 
 export interface DetailedOidcConfig extends OidcConfig {
@@ -33,6 +35,7 @@ export interface DetailedOidcConfig extends OidcConfig {
     userGroup: boolean;
     adminGroup: boolean;
     tokenAlg: boolean;
+    autoRedirect: boolean;
   };
   dbConfig: OidcConfig;
 }
@@ -60,6 +63,7 @@ export function parseDbSsoSettings(raw: unknown): OidcConfig {
     userGroup: "",
     adminGroup: "",
     tokenAlg: "RS256",
+    autoRedirect: true,
   };
 
   if (!raw || typeof raw !== "object") {
@@ -75,6 +79,7 @@ export function parseDbSsoSettings(raw: unknown): OidcConfig {
     userGroup: typeof obj.userGroup === "string" ? obj.userGroup.trim() : "",
     adminGroup: typeof obj.adminGroup === "string" ? obj.adminGroup.trim() : "",
     tokenAlg: typeof obj.tokenAlg === "string" && obj.tokenAlg.trim() ? obj.tokenAlg.trim() : "RS256",
+    autoRedirect: obj.autoRedirect !== undefined ? Boolean(obj.autoRedirect) : true,
   };
 }
 
@@ -95,6 +100,9 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
     userGroup: String(dbSettings?.userGroup ?? inMemoryDbSsoConfig?.userGroup ?? "").trim(),
     adminGroup: String(dbSettings?.adminGroup ?? inMemoryDbSsoConfig?.adminGroup ?? "").trim(),
     tokenAlg: String(dbSettings?.tokenAlg ?? inMemoryDbSsoConfig?.tokenAlg ?? "RS256").trim() || "RS256",
+    autoRedirect: typeof dbSettings?.autoRedirect === "boolean"
+      ? dbSettings.autoRedirect
+      : (typeof inMemoryDbSsoConfig?.autoRedirect === "boolean" ? inMemoryDbSsoConfig.autoRedirect : true),
   };
 
   const envEnabledRaw = process.env.OIDC_ENABLED;
@@ -109,6 +117,11 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
   const envAdminGroup = String(process.env.OIDC_ADMIN_GROUP || "").trim();
   const envTokenAlg = String(process.env.OIDC_TOKEN_ALG || process.env.OIDC_ALG || "").trim();
 
+  const envAutoRedirectRaw = process.env.OIDC_AUTO_REDIRECT || process.env.OIDC_AUTO_LOGIN;
+  const hasEnvAutoRedirect = envAutoRedirectRaw !== undefined && envAutoRedirectRaw.trim().length > 0;
+  const envAutoRedirectLower = String(envAutoRedirectRaw || "").trim().toLowerCase();
+  const envAutoRedirect = envAutoRedirectLower === "true" || envAutoRedirectLower === "1" || envAutoRedirectLower === "yes" || envAutoRedirectLower === "on";
+
   const enabled = hasEnvEnabled ? envEnabled : db.enabled;
   const url = envUrl.length > 0 ? envUrl : db.url;
   const clientId = envClientId.length > 0 ? envClientId : db.clientId;
@@ -116,6 +129,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
   const userGroup = envUserGroup.length > 0 ? envUserGroup : db.userGroup;
   const adminGroup = envAdminGroup.length > 0 ? envAdminGroup : db.adminGroup;
   const tokenAlg = "RS256";
+  const autoRedirect = hasEnvAutoRedirect ? envAutoRedirect : db.autoRedirect;
 
   return {
     enabled,
@@ -125,6 +139,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
     userGroup,
     adminGroup,
     tokenAlg,
+    autoRedirect,
     origins: {
       enabled: hasEnvEnabled ? "env" : (dbSettings?.enabled !== undefined ? "db" : "default"),
       url: envUrl.length > 0 ? "env" : (db.url.length > 0 ? "db" : "default"),
@@ -133,6 +148,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
       userGroup: envUserGroup.length > 0 ? "env" : (db.userGroup.length > 0 ? "db" : "default"),
       adminGroup: envAdminGroup.length > 0 ? "env" : (db.adminGroup.length > 0 ? "db" : "default"),
       tokenAlg: "default",
+      autoRedirect: hasEnvAutoRedirect ? "env" : (dbSettings?.autoRedirect !== undefined ? "db" : "default"),
     },
     isEnvControlled: {
       enabled: hasEnvEnabled,
@@ -142,6 +158,7 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
       userGroup: envUserGroup.length > 0,
       adminGroup: envAdminGroup.length > 0,
       tokenAlg: false,
+      autoRedirect: hasEnvAutoRedirect,
     },
     dbConfig: db,
   };

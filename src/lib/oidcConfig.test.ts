@@ -54,6 +54,7 @@ describe("oidcConfig", () => {
       expect(config.userGroup).toBe("jellyfin-users");
       expect(config.adminGroup).toBe("jellyfin-admins");
       expect(config.tokenAlg).toBe("RS256");
+      expect(config.autoRedirect).toBe(true);
     });
 
     it("enforces RS256 algorithm strictly", () => {
@@ -64,6 +65,17 @@ describe("oidcConfig", () => {
 
       const config = getOidcConfig();
       expect(config.tokenAlg).toBe("RS256");
+    });
+
+    it("respects OIDC_AUTO_REDIRECT environment variable", () => {
+      vi.stubEnv("OIDC_ENABLED", "true");
+      vi.stubEnv("OIDC_AUTO_REDIRECT", "false");
+
+      const config = getOidcConfig();
+      expect(config.autoRedirect).toBe(false);
+
+      vi.stubEnv("OIDC_AUTO_REDIRECT", "true");
+      expect(getOidcConfig().autoRedirect).toBe(true);
     });
   });
 

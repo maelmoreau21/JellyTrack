@@ -18,9 +18,21 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: 'JellyTrack Dashboard',
   description: 'Advanced analytics for Jellyfin',
+  manifest: '/manifest.webmanifest',
   icons: {
-    icon: '/logo.svg',
-    apple: '/logo.svg',
+    icon: [
+      { url: '/logo.svg', type: 'image/svg+xml', sizes: 'any' },
+      { url: '/icon.svg', type: 'image/svg+xml', sizes: 'any' },
+    ],
+    apple: [
+      { url: '/logo.svg', type: 'image/svg+xml', sizes: 'any' },
+    ],
+    shortcut: '/logo.svg',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'JellyTrack',
   },
 }
 

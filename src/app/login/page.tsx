@@ -56,7 +56,11 @@ export default async function LoginPage() {
                         </div>
                     </CardHeader>
                     <Suspense fallback={<div className="p-6 text-center text-muted-foreground">{t('loadingForm')}</div>}>
-                        <LoginForm oidcEnabled={oidcEnabled} localAdminEnabled={localAdminEnabled} />
+                        <LoginForm
+                            oidcEnabled={oidcEnabled}
+                            localAdminEnabled={localAdminEnabled}
+                            autoRedirect={oidcConfig.autoRedirect ?? true}
+                        />
                     </Suspense>
                 </Card>
 

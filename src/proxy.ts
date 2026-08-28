@@ -125,6 +125,10 @@ export default withAuth(
                 } else {
                     const loginUrl = req.nextUrl.clone();
                     loginUrl.pathname = "/login";
+                    if (pathname !== "/" && pathname !== "/login" && !loginUrl.searchParams.has("callbackUrl")) {
+                        const targetUrl = req.nextUrl.pathname + req.nextUrl.search;
+                        loginUrl.searchParams.set("callbackUrl", targetUrl);
+                    }
                     responseToUse = NextResponse.redirect(loginUrl);
                 }
             } else {
@@ -215,10 +219,10 @@ export const config = {
          * - api/plugin/events (Internal plugin API)
          * - api/backup (Backup import/export endpoints - allows large payload streaming)
          * - favicon.ico (favicon)
-         * - logo.svg, icon.svg
+         * - logo.svg, icon.svg, manifest.webmanifest, manifest.json
          * - _next/static (static files)
          * - _next/image (image optimization files)
          */
-        "/((?!api/auth|api/plugin/events|api/backup|favicon\\.ico|logo\\.svg|icon\\.svg|_next/static|_next/image).*)",
+        "/((?!api/auth|api/plugin/events|api/backup|favicon\\.ico|logo\\.svg|icon\\.svg|manifest\\.webmanifest|manifest\\.json|_next/static|_next/image).*)",
     ],
 };

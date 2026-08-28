@@ -13,7 +13,7 @@ export function LogoutButton({ className = "", compact = false }: LogoutButtonPr
     const t = useTranslations('nav');
     const handleLogout = async () => {
         await signOut({ redirect: false });
-        window.location.href = '/login';
+        window.location.href = '/login?logout=1';
     };
 
     if (compact) {
