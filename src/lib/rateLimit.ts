@@ -21,12 +21,27 @@ type InMemoryLoginState = {
 
 const inMemoryLoginRate = new Map<string, InMemoryLoginState>();
 
+export function resolveRateLimitIdentifier(ip: string, username?: string): string {
+    const cleanIp = String(ip || "").trim().toLowerCase();
+    const cleanUser = String(username || "").trim().toLowerCase();
+
+    if (cleanIp && cleanIp !== "unknown") {
+        return cleanIp;
+    }
+
+    if (cleanUser) {
+        return `user:${cleanUser}`;
+    }
+
+    return "unknown";
+}
+
 function getKey(identifier: string): string {
     return `ratelimit:login:${identifier}`;
 }
 
-function getInMemoryState(ip: string): InMemoryLoginState | null {
-    const key = getKey(ip);
+function getInMemoryState(identifier: string): InMemoryLoginState | null {
+    const key = getKey(identifier);
     const state = inMemoryLoginRate.get(key);
     if (!state) return null;
 
@@ -38,8 +53,8 @@ function getInMemoryState(ip: string): InMemoryLoginState | null {
     return state;
 }
 
-function checkInMemoryRate(ip: string): { allowed: boolean; remaining: number; retryAfterSeconds?: number } {
-    const state = getInMemoryState(ip);
+function checkInMemoryRate(identifier: string): { allowed: boolean; remaining: number; retryAfterSeconds?: number } {
+    const state = getInMemoryState(identifier);
     if (!state) {
         return { allowed: true, remaining: MAX_ATTEMPTS };
     }
@@ -58,9 +73,9 @@ function checkInMemoryRate(ip: string): { allowed: boolean; remaining: number; r
     };
 }
 
-function recordInMemoryFailure(ip: string): void {
-    const key = getKey(ip);
-    const state = getInMemoryState(ip);
+function recordInMemoryFailure(identifier: string): void {
+    const key = getKey(identifier);
+    const state = getInMemoryState(identifier);
     const now = Date.now();
 
     if (!state) {
@@ -79,16 +94,17 @@ function recordInMemoryFailure(ip: string): void {
     inMemoryLoginRate.set(key, state);
 }
 
-function resetInMemoryRate(ip: string): void {
-    inMemoryLoginRate.delete(getKey(ip));
+function resetInMemoryRate(identifier: string): void {
+    inMemoryLoginRate.delete(getKey(identifier));
 }
 
-export async function checkLoginRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number; retryAfterSeconds?: number }> {
+export async function checkLoginRateLimit(ip: string, username?: string): Promise<{ allowed: boolean; remaining: number; retryAfterSeconds?: number }> {
+    const identifier = resolveRateLimitIdentifier(ip, username);
     if (!hasValkeyUrl) {
-        return checkInMemoryRate(ip);
+        return checkInMemoryRate(identifier);
     }
 
-    const key = getKey(ip);
+    const key = getKey(identifier);
 
     try {
         const current = await valkey.get(key);
@@ -102,17 +118,18 @@ export async function checkLoginRateLimit(ip: string): Promise<{ allowed: boolea
         return { allowed: true, remaining: MAX_ATTEMPTS - attempts };
     } catch (error) {
         console.error("[RateLimit] Valkey error, using in-memory fallback:", error);
-        return checkInMemoryRate(ip);
+        return checkInMemoryRate(identifier);
     }
 }
 
-export async function recordFailedLogin(ip: string): Promise<void> {
+export async function recordFailedLogin(ip: string, username?: string): Promise<void> {
+    const identifier = resolveRateLimitIdentifier(ip, username);
     if (!hasValkeyUrl) {
-        recordInMemoryFailure(ip);
+        recordInMemoryFailure(identifier);
         return;
     }
 
-    const key = getKey(ip);
+    const key = getKey(identifier);
     try {
         const count = await valkey.incr(key);
         if (count === 1) {
@@ -125,20 +142,21 @@ export async function recordFailedLogin(ip: string): Promise<void> {
         }
     } catch (error) {
         console.error("[RateLimit] Failed to record attempt in Valkey, using in-memory fallback:", error);
-        recordInMemoryFailure(ip);
+        recordInMemoryFailure(identifier);
     }
 }
 
-export async function resetLoginRateLimit(ip: string): Promise<void> {
+export async function resetLoginRateLimit(ip: string, username?: string): Promise<void> {
+    const identifier = resolveRateLimitIdentifier(ip, username);
     if (!hasValkeyUrl) {
-        resetInMemoryRate(ip);
+        resetInMemoryRate(identifier);
         return;
     }
 
     try {
-        await valkey.del(getKey(ip));
+        await valkey.del(getKey(identifier));
     } catch (error) {
         console.error("[RateLimit] Failed to reset in Valkey, using in-memory fallback:", error);
-        resetInMemoryRate(ip);
+        resetInMemoryRate(identifier);
     }
 }

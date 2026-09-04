@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin, isAuthError } from "@/lib/auth";
+import { requireAdminMutation } from "@/lib/adminRequestGuard";
 import { getLogFilesList, deleteLogFileByName, clearSystemLogs, systemLog } from "@/lib/systemLogger";
 import prisma from "@/lib/prisma";
 import { normalizeSchedulerIntervals } from "@/lib/schedulerIntervals";
@@ -37,7 +38,7 @@ export async function GET() {
 }
 
 export async function DELETE(req: NextRequest) {
-    const auth = await requireAdmin();
+    const auth = await requireAdminMutation(req);
     if (isAuthError(auth)) {
         return auth;
     }

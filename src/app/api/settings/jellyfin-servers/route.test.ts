@@ -40,4 +40,37 @@ describe("/api/settings/jellyfin-servers API", () => {
     // Since mock prisma has stub or database, we verify handling
     expect([200, 404]).toContain(res.status);
   });
+
+  it("rejects cloud metadata URLs in POST", async () => {
+    const req = new NextRequest("http://localhost/api/settings/jellyfin-servers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Malicious Server",
+        url: "http://169.254.169.254/latest/meta-data/",
+        apiKey: "some-key",
+      }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("cloud metadata");
+  });
+
+  it("rejects cloud metadata URLs in PATCH", async () => {
+    const req = new NextRequest("http://localhost/api/settings/jellyfin-servers", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: "server-test-id",
+        url: "http://metadata.google.internal/computeMetadata/v1/",
+      }),
+    });
+
+    const res = await PATCH(req);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("cloud metadata");
+  });
 });

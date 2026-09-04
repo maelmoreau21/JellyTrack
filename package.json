@@ -73,25 +73,31 @@
   },
   "pnpm": {
     "overrides": {
-      "@hono/node-server": "1.19.14",
+      "@hono/node-server": "^1.19.15",
+      "deepmerge-ts": "^8.0.0",
       "express-rate-limit": "8.5.2",
-      "fast-uri": "3.1.2",
+      "fast-uri": "^3.1.6",
       "hono": "^4.12.27",
-      "ip-address": "10.2.0",
+      "ip-address": "^10.3.1",
+      "mysql2": "^3.23.1",
       "next-auth>uuid": "^14.0.2",
+      "qs": "^6.16.0",
       "vite": "^8.1.1"
     }
   },
   "overrides": {
-    "@hono/node-server": "1.19.14",
+    "@hono/node-server": "^1.19.15",
+    "deepmerge-ts": "^8.0.0",
     "express-rate-limit": "8.5.2",
-    "fast-uri": "3.1.2",
+    "fast-uri": "^3.1.6",
     "hono": "^4.12.27",
-    "ip-address": "10.2.0",
+    "ip-address": "^10.3.1",
+    "mysql2": "^3.23.1",
     "next-auth": {
       "uuid": "^14.0.2"
     },
     "postcss": "$postcss",
+    "qs": "^6.16.0",
     "vite": "^8.1.1"
   }
 }

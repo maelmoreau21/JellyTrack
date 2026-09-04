@@ -34,8 +34,8 @@ function isInternalAddress(hostname: string): boolean {
     return true;
   }
 
-  // Block private IP ranges
-  if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(hostname)) {
+  // Block private IP ranges and link-local / cloud metadata
+  if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/.test(hostname)) {
     return true;
   }
 

@@ -10,6 +10,15 @@ describe("redactBackupData", () => {
         discordWebhookUrl: "https://discord.com/api/webhooks/1/t",
         pluginApiKey: "hash",
         pluginPreviousApiKey: "old-hash",
+        ssoSettings: {
+          enabled: true,
+          url: "https://auth.example.com",
+          clientId: "my-client",
+          clientSecret: "super-secret-oidc-key",
+          dbConfig: {
+            clientSecret: "nested-secret",
+          },
+        },
       },
     });
 
@@ -17,6 +26,15 @@ describe("redactBackupData", () => {
     expect(redacted.settings).toEqual({
       id: "global",
       discordWebhookUrl: "https://discord.com/api/webhooks/1/t",
+      ssoSettings: {
+        enabled: true,
+        url: "https://auth.example.com",
+        clientId: "my-client",
+        clientSecret: "",
+        dbConfig: {
+          clientSecret: "",
+        },
+      },
     });
   });
 });

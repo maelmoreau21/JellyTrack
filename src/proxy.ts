@@ -70,7 +70,15 @@ const ADMIN_API_PATHS = [
     "/api/streams",
     "/api/hardware",
     "/api/jellyfin/kill-stream",
+    "/api/jellyfin/send-message",
     "/api/plugin/api-key",
+    "/api/geo-stats",
+    "/api/heatmap-detail",
+    "/api/metadata-audit",
+    "/api/predictions",
+    "/api/stats/deep",
+    "/api/logs",
+    "/api/newsletter",
 ];
 
 const ADMIN_PAGE_PATHS = [

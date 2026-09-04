@@ -13,6 +13,7 @@ import {
 } from "@/lib/oidcConfig";
 import { writeAdminAuditLog } from "@/lib/adminAudit";
 import { getClientIpFromHeaders } from "@/lib/requestIp";
+import { isCloudMetadataHost } from "@/lib/urlUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,29 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
+
+    if (typeof body.url === "string" && body.url.trim().length > 0) {
+      try {
+        const parsed = new URL(body.url.trim());
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+          return NextResponse.json(
+            { success: false, error: "SSO URL must use http or https protocol" },
+            { status: 400 }
+          );
+        }
+        if (isCloudMetadataHost(parsed.hostname)) {
+          return NextResponse.json(
+            { success: false, error: "SSO URL cannot target cloud metadata services" },
+            { status: 400 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { success: false, error: "Invalid SSO URL format" },
+          { status: 400 }
+        );
+      }
+    }
 
     const existingSettings = await (prisma as any).globalSettings?.findUnique({
       where: { id: "global" },

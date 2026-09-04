@@ -1,5 +1,6 @@
 import type { NextAuthOptions } from "next-auth";
 import type { Session } from "next-auth";
+import crypto from "crypto";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { checkLoginRateLimit, recordFailedLogin, resetLoginRateLimit } from "@/lib/rateLimit";
 import { getResolvedAuthSecret } from "@/lib/authSecret";
@@ -38,6 +39,12 @@ if (typeof process.env.NEXTAUTH_URL === "string" && process.env.NEXTAUTH_URL.tri
 }
 
 const authSecret = getResolvedAuthSecret();
+
+function timingSafeEqualStrings(a: string, b: string): boolean {
+    const bufA = crypto.createHash("sha256").update(a).digest();
+    const bufB = crypto.createHash("sha256").update(b).digest();
+    return crypto.timingSafeEqual(bufA, bufB);
+}
 
 function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers"] {
     const providers: NextAuthOptions["providers"] = [];
@@ -114,13 +121,16 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                     const headersList = await headers();
                     const clientIp = getClientIpFromHeaders(headersList, "unknown") || "unknown";
 
-                    const { allowed, retryAfterSeconds } = await checkLoginRateLimit(clientIp);
+                    const { allowed, retryAfterSeconds } = await checkLoginRateLimit(clientIp, credentials.username);
                     if (!allowed) {
                         throw new Error(apiTSync(locale, "tooManyAttempts", { minutes: Math.ceil((retryAfterSeconds || 900) / 60) }));
                     }
 
-                    if (credentials.username === local.username && credentials.password === local.password) {
-                        await resetLoginRateLimit(clientIp);
+                    const usernameMatches = timingSafeEqualStrings(credentials.username.trim(), local.username.trim());
+                    const passwordMatches = timingSafeEqualStrings(credentials.password, local.password);
+
+                    if (usernameMatches && passwordMatches) {
+                        await resetLoginRateLimit(clientIp, credentials.username);
 
                         await writeAdminAuditLog({
                             action: "Local Admin login successful",
@@ -145,7 +155,7 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                         };
                     }
 
-                    await recordFailedLogin(clientIp);
+                    await recordFailedLogin(clientIp, credentials.username);
                     throw new Error(apiTSync(locale, "badCredentials"));
                 },
             })
@@ -172,11 +182,11 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                     try { const c = await cookies(); locale = c.get("locale")?.value || "en"; } catch {}
                     const { apiTSync } = await import("@/lib/i18n-api");
 
-                    // SECURITY: Rate-limit login attempts by IP
+                    // SECURITY: Rate-limit login attempts by IP and username
                     const headersList = await headers();
                     const clientIp = getClientIpFromHeaders(headersList, "unknown") || "unknown";
 
-                    const { allowed, retryAfterSeconds } = await checkLoginRateLimit(clientIp);
+                    const { allowed, retryAfterSeconds } = await checkLoginRateLimit(clientIp, credentials.username);
                     if (!allowed) {
                         throw new Error(apiTSync(locale, "tooManyAttempts", { minutes: Math.ceil((retryAfterSeconds || 900) / 60) }));
                     }
@@ -276,7 +286,7 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                         }
 
                         if (!authenticatedUser || !authenticatedOn) {
-                            await recordFailedLogin(clientIp);
+                            await recordFailedLogin(clientIp, credentials.username);
 
                             const noReachableFallback = !fallbackAttempted || fallbackUnreachableOnly;
                             const primaryDownScenario = primaryCandidate && primaryStatus === "unreachable";
@@ -294,7 +304,7 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                         }
 
                         // Successful login — reset rate limit counter
-                        await resetLoginRateLimit(clientIp);
+                        await resetLoginRateLimit(clientIp, credentials.username);
 
                         // LOG AUDIT EVENT
                         await writeAdminAuditLog({
@@ -468,6 +478,23 @@ export const authOptions: NextAuthOptions = {
                 session.user.groups = token.groups;
             }
             return session;
+        },
+        async redirect({ url, baseUrl }) {
+            // Allows relative callback URLs (e.g. /users/123)
+            if (url.startsWith("/")) {
+                if (url.startsWith("//") || url.startsWith("/\\")) {
+                    return baseUrl;
+                }
+                return `${baseUrl}${url}`;
+            }
+            // Allows callback URLs on the same origin
+            try {
+                const parsedUrl = new URL(url);
+                if (parsedUrl.origin === baseUrl) {
+                    return url;
+                }
+            } catch {}
+            return baseUrl;
         },
     },
     session: {

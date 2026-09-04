@@ -34,7 +34,7 @@ export async function GET() {
             systemHealth,
         };
 
-        const zipBuffer = await createZipBackup(rawData);
+        const zipBuffer = await createZipBackup(redactBackupData(rawData));
         const filename = `JellyTrack-backup-${new Date().toISOString().split('T')[0]}.zip`;
 
         return new NextResponse(new Uint8Array(zipBuffer), {

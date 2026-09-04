@@ -11,6 +11,7 @@ import {
 import { getPluginKeySnapshot } from "@/lib/pluginKeyManager";
 import { getMasterServerIdentityFromEnv } from "@/lib/serverRegistry";
 import { deriveScopedPluginApiKey } from "@/lib/pluginServerKey";
+import { isCloudMetadataHost } from "@/lib/urlUtils";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,15 @@ async function probeConnection(url: string, apiKey: string | null): Promise<{ st
   const normalizedUrl = normalizeUrl(url);
   if (!normalizedUrl) {
     return { state: "offline", message: "Server URL missing." };
+  }
+
+  try {
+    const parsed = new URL(normalizedUrl);
+    if (!["http:", "https:"].includes(parsed.protocol) || isCloudMetadataHost(parsed.hostname)) {
+      return { state: "offline", message: "Invalid or restricted server URL." };
+    }
+  } catch {
+    return { state: "offline", message: "Invalid server URL." };
   }
 
   const normalizedApiKey = normalizeSecret(apiKey);
@@ -190,6 +200,9 @@ export async function POST(req: NextRequest) {
     if (!["http:", "https:"].includes(parsed.protocol)) {
       return NextResponse.json({ error: "Invalid Jellyfin URL." }, { status: 400 });
     }
+    if (isCloudMetadataHost(parsed.hostname)) {
+      return NextResponse.json({ error: "Jellyfin URL cannot target cloud metadata services." }, { status: 400 });
+    }
   } catch {
     return NextResponse.json({ error: "Invalid Jellyfin URL." }, { status: 400 });
   }
@@ -246,6 +259,24 @@ export async function PATCH(req: NextRequest) {
   const id = String(parseResult.data.id || "").trim();
   if (!id) {
     return NextResponse.json({ error: "Server not found." }, { status: 400 });
+  }
+
+  if (parseResult.data.url !== undefined) {
+    const candidateUrl = normalizeUrl(parseResult.data.url);
+    if (!candidateUrl) {
+      return NextResponse.json({ error: "Server URL required." }, { status: 400 });
+    }
+    try {
+      const parsed = new URL(candidateUrl);
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        return NextResponse.json({ error: "Invalid Jellyfin URL." }, { status: 400 });
+      }
+      if (isCloudMetadataHost(parsed.hostname)) {
+        return NextResponse.json({ error: "Jellyfin URL cannot target cloud metadata services." }, { status: 400 });
+      }
+    } catch {
+      return NextResponse.json({ error: "Invalid Jellyfin URL." }, { status: 400 });
+    }
   }
 
   const master = getMasterServerIdentityFromEnv();

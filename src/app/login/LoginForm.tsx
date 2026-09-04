@@ -8,6 +8,7 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslations } from "next-intl";
+import { getSafeCallbackUrl } from "@/lib/urlUtils";
 
 interface LoginFormProps {
     oidcEnabled?: boolean;
@@ -19,7 +20,7 @@ export default function LoginForm({ oidcEnabled = false, localAdminEnabled = fal
     const t = useTranslations('login');
     const router = useRouter();
     const searchParams = useSearchParams();
-    const callbackUrl = searchParams.get("callbackUrl") || "/";
+    const callbackUrl = getSafeCallbackUrl(searchParams.get("callbackUrl"));
     const queryError = searchParams.get("error");
     const isLogout = searchParams.get("logout") === "1" || searchParams.get("logout") === "true";
     const isManual = searchParams.get("manual") === "1" || searchParams.get("manual") === "true";

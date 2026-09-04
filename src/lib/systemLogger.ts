@@ -251,11 +251,14 @@ export function getLogFilesList(): LogFileInfo[] {
     return files;
 }
 
+const LOG_FILE_PATTERN = /^[a-zA-Z0-9._-]+\.log$/i;
+
 export function getLogFileContentByName(filename?: string | null): { content: string; filename: string } {
     ensureLogDir();
     const today = new Date().toISOString().split("T")[0];
     const defaultName = "jellytrack.log";
-    const safeFilename = filename ? path.basename(filename) : defaultName;
+    const rawSafe = filename ? path.basename(filename) : defaultName;
+    const safeFilename = LOG_FILE_PATTERN.test(rawSafe) ? rawSafe : defaultName;
     const targetFile = path.join(LOG_DIR, safeFilename);
 
     try {
@@ -319,10 +322,16 @@ export function getLogFileContentByName(filename?: string | null): { content: st
 
 export function deleteLogFileByName(filename: string): boolean {
     ensureLogDir();
+    if (!filename || typeof filename !== "string") return false;
     const safeFilename = path.basename(filename);
-    if (!safeFilename || safeFilename === "." || safeFilename === "..") return false;
+    if (!safeFilename || !LOG_FILE_PATTERN.test(safeFilename) || safeFilename === "." || safeFilename === "..") {
+        return false;
+    }
 
     const targetFile = path.join(LOG_DIR, safeFilename);
+    const resolvedPath = path.resolve(targetFile);
+    const resolvedLogDir = path.resolve(LOG_DIR);
+    if (!resolvedPath.startsWith(resolvedLogDir)) return false;
 
     try {
         if (fs.existsSync(targetFile)) {

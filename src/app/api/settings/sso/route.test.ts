@@ -96,5 +96,49 @@ describe("SSO Settings API", () => {
       expect(json.success).toBe(true);
       expect(json.autoRedirect).toBe(false);
     });
+
+    it("rejects cloud metadata URLs to prevent SSRF", async () => {
+      const metadataUrls = [
+        "http://169.254.169.254/latest/meta-data/",
+        "http://metadata.google.internal/computeMetadata/v1/",
+        "http://100.100.100.200/latest/meta-data/",
+      ];
+
+      for (const url of metadataUrls) {
+        const req = new NextRequest("http://localhost:3000/api/settings/sso", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            enabled: true,
+            url,
+            clientId: "jellytrack-app",
+          }),
+        });
+
+        const res = await PUT(req);
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.success).toBe(false);
+        expect(json.error).toContain("cloud metadata");
+      }
+    });
+
+    it("rejects non-http/https protocols", async () => {
+      const req = new NextRequest("http://localhost:3000/api/settings/sso", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enabled: true,
+          url: "gopher://evil.com",
+          clientId: "jellytrack-app",
+        }),
+      });
+
+      const res = await PUT(req);
+      expect(res.status).toBe(400);
+      const json = await res.json();
+      expect(json.success).toBe(false);
+      expect(json.error).toContain("http or https");
+    });
   });
 });
