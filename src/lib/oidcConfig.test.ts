@@ -237,7 +237,7 @@ describe("oidcConfig", () => {
   });
 
   describe("extractCandidateUsernames", () => {
-    it("extracts all identity candidates from standard Authentik/OIDC claims", () => {
+    it("extracts canonical identity candidates strictly by default (security against account hijacking)", () => {
       const profile = {
         name: "Maël Moreau",
         preferred_username: "mmoreau",
@@ -248,12 +248,33 @@ describe("oidcConfig", () => {
       };
 
       const candidates = extractCandidateUsernames("mmoreau", profile);
-      expect(candidates).toContain("Maël Moreau");
       expect(candidates).toContain("mmoreau");
-      expect(candidates).toContain("mael.moreau@example.com");
-      expect(candidates).toContain("mael.moreau");
+      expect(candidates).toContain("authentik-sub-123");
+      // Loose given/family names and email local-part must NOT be matched by default
+      expect(candidates).not.toContain("Maël");
+      expect(candidates).not.toContain("Moreau");
+      expect(candidates).not.toContain("mael.moreau@example.com");
+      expect(candidates).not.toContain("mael.moreau");
+    });
+
+    it("allows fuzzy identity candidates when OIDC_ALLOW_FUZZY_USER_MATCHING is enabled", () => {
+      vi.stubEnv("OIDC_ALLOW_FUZZY_USER_MATCHING", "true");
+      const profile = {
+        name: "Maël Moreau",
+        preferred_username: "mmoreau",
+        email: "mael.moreau@example.com",
+        given_name: "Maël",
+        family_name: "Moreau",
+        sub: "authentik-sub-123",
+      };
+
+      const candidates = extractCandidateUsernames("mmoreau", profile);
+      expect(candidates).toContain("mmoreau");
+      expect(candidates).toContain("Maël Moreau");
       expect(candidates).toContain("Maël");
       expect(candidates).toContain("Moreau");
+      expect(candidates).toContain("mael.moreau@example.com");
+      expect(candidates).toContain("mael.moreau");
     });
   });
 

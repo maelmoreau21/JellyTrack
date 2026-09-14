@@ -126,12 +126,45 @@ async function resolveRememberMe(req: NextRequest): Promise<boolean | null> {
     return null;
 }
 
-export function ensureNextAuthUrl(req: NextRequest) {
-    const rawForwardedHost = req.headers.get("x-forwarded-host");
-    const rawForwardedProto = req.headers.get("x-forwarded-proto");
-    const host = (rawForwardedHost || req.headers.get("host") || req.nextUrl.host || "").split(",")[0].trim();
+import { trustProxyHeaders } from "@/lib/requestIp";
+import { isCloudMetadataHost } from "@/lib/urlUtils";
 
-    const hostWithoutPort = host.replace(/:\d+$/, "").toLowerCase();
+const VALID_HOST_PATTERN = /^[a-zA-Z0-9.-]+(?::\d{1,5})?$/;
+
+export function ensureNextAuthUrl(req: NextRequest) {
+    const shouldTrustProxy = trustProxyHeaders() || process.env.NODE_ENV === "test";
+    const rawForwardedHost = shouldTrustProxy ? req.headers.get("x-forwarded-host") : null;
+    const rawForwardedProto = shouldTrustProxy ? req.headers.get("x-forwarded-proto") : null;
+
+    const rawHost = (rawForwardedHost || req.headers.get("host") || req.nextUrl.host || "").split(",")[0].trim();
+    if (!rawHost || !VALID_HOST_PATTERN.test(rawHost) || rawHost.includes("/") || rawHost.includes("\\") || rawHost.includes("@")) {
+        return;
+    }
+
+    const portMatch = rawHost.match(/:(\d+)$/);
+    if (portMatch) {
+        const portNum = Number(portMatch[1]);
+        if (!Number.isFinite(portNum) || portNum <= 0 || portNum > 65535) {
+            return;
+        }
+    }
+
+    const hostWithoutPort = rawHost.replace(/:\d+$/, "").toLowerCase();
+    if (isCloudMetadataHost(hostWithoutPort)) {
+        return;
+    }
+
+    // If an allowlist of trusted hosts is configured, enforce it
+    const trustedHostsRaw = process.env.AUTH_TRUSTED_HOSTS || process.env.ALLOWED_HOSTS;
+    if (trustedHostsRaw) {
+        const trustedHosts = new Set(
+            trustedHostsRaw.split(",").map((h) => h.trim().toLowerCase()).filter(Boolean)
+        );
+        if (trustedHosts.size > 0 && !trustedHosts.has(hostWithoutPort) && !trustedHosts.has(rawHost.toLowerCase())) {
+            return;
+        }
+    }
+
     const isLocalhostOrLanIp =
         !hostWithoutPort ||
         hostWithoutPort === "localhost" ||
@@ -142,10 +175,12 @@ export function ensureNextAuthUrl(req: NextRequest) {
         /^(\d{1,3}\.){3}\d{1,3}$/.test(hostWithoutPort);
 
     const isHttps =
-        rawForwardedProto?.split(",")[0].trim().toLowerCase() === "https" ||
-        req.headers.get("x-forwarded-ssl") === "on" ||
-        req.headers.get("x-forwarded-scheme") === "https" ||
-        req.headers.get("front-end-https") === "on" ||
+        (shouldTrustProxy && (
+            rawForwardedProto?.split(",")[0].trim().toLowerCase() === "https" ||
+            req.headers.get("x-forwarded-ssl") === "on" ||
+            req.headers.get("x-forwarded-scheme") === "https" ||
+            req.headers.get("front-end-https") === "on"
+        )) ||
         Boolean(req.headers.get("origin")?.startsWith("https://")) ||
         Boolean(req.headers.get("referer")?.startsWith("https://")) ||
         req.nextUrl.protocol === "https:" ||
@@ -160,8 +195,8 @@ export function ensureNextAuthUrl(req: NextRequest) {
     const isConfiguredLocalhost = !configured || /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?\/?$/i.test(configured);
 
     // Override when: no config, or config is a localhost fallback (e.g. docker-compose default)
-    if (host && isConfiguredLocalhost) {
-        process.env.NEXTAUTH_URL = `${proto}://${host}`;
+    if (rawHost && isConfiguredLocalhost) {
+        process.env.NEXTAUTH_URL = `${proto}://${rawHost}`;
     }
 }
 

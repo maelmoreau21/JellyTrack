@@ -131,7 +131,7 @@ Downloads always count as complete views, including audio and short media, unles
 
 ## Authentication & SSO (v2.0.0+)
 
-JellyTrack v2.0.0 introduces OpenID Connect (OIDC) Single Sign-On (SSO), enabling multi-factor authentication (2FA/MFA) and centralized directory management through providers like **Authentik**, **Keycloak**, **Authelia**, etc.
+JellyTrack v2.0.0+ includes hardened OpenID Connect (OIDC) Single Sign-On (SSO), enabling multi-factor authentication (2FA/MFA), centralized directory management, and **PKCE (Proof Key for Code Exchange — RFC 7636)** through providers like **Authentik**, **Keycloak**, **Authelia**, etc.
 
 ### SSO Configuration
 
@@ -148,15 +148,32 @@ OIDC_CLIENT_SECRET=your_oidc_client_secret
 OIDC_USER_GROUP=jellyfin-users
 OIDC_ADMIN_GROUP=jellyfin-admins
 
+# Reverse proxy support (recommended in production behind Nginx/Caddy/Traefik)
+TRUST_PROXY_HEADERS=true
+
+# Security: strict matching by default (canonical preferred_username/username).
+# Set to true only if you explicitly require legacy fuzzy matching on partial names.
+# OIDC_ALLOW_FUZZY_USER_MATCHING=false
+
 # Emergency Local Administrator Access (optional)
 JELLYTRACK_LOCAL_ADMIN_USER=admin
 JELLYTRACK_LOCAL_ADMIN_PASSWORD=your_emergency_password
 ```
 
-1. In your SSO provider (e.g. Authentik), create an OAuth2/OpenID Provider with Redirect URI:
+### Identity Provider (IdP) Setup
+
+1. **Redirect URI** : Register the exact callback URL in your provider:
    `https://<your-jellytrack-domain>/api/auth/callback/oidc`
-2. Users logging in via SSO are linked automatically with their Jellyfin account based on their matching username from LDAP.
-3. If `OIDC_ENABLED=false`, JellyTrack falls back to direct Jellyfin credentials authentication.
+2. **Scopes** : Ensure the client requests and accepts the following scopes:
+   `openid email profile groups`
+3. **PKCE Support** :
+   - JellyTrack automatically enforces PKCE using SHA-256 (`code_challenge_method=S256`).
+   - Modern providers (Authentik, Keycloak, Authelia) support S256 automatically without extra configuration.
+   - In Keycloak (optional hardening): under *Clients > [client] > Advanced*, you can set *Proof Key for Code Exchange Code Challenge Method* to `S256`.
+4. **User Reconciliation (Strict Mode)** :
+   - JellyTrack links the OIDC session to the Jellyfin user matching the canonical username (`preferred_username` or `username` claim).
+   - Ensure your SSO directory username matches the Jellyfin user name.
+5. **Fallback** : If `OIDC_ENABLED=false`, JellyTrack falls back to direct Jellyfin credentials authentication.
 
 ## Development
 

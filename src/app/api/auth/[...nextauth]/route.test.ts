@@ -79,4 +79,32 @@ describe("ensureNextAuthUrl", () => {
     ensureNextAuthUrl(req);
     expect(process.env.NEXTAUTH_URL).toBe("https://custom-domain.com");
   });
+
+  it("rejects host header containing path traversal, control characters or invalid syntax", () => {
+    delete process.env.NEXTAUTH_URL;
+
+    const req = new NextRequest("http://localhost:3005/api/auth/signin/oidc", {
+      headers: {
+        "x-forwarded-host": "attacker.com/evil",
+        "x-forwarded-proto": "https",
+      },
+    });
+
+    ensureNextAuthUrl(req);
+    expect(process.env.NEXTAUTH_URL).toBeUndefined();
+  });
+
+  it("rejects cloud metadata host targets", () => {
+    delete process.env.NEXTAUTH_URL;
+
+    const req = new NextRequest("http://localhost:3005/api/auth/signin/oidc", {
+      headers: {
+        "x-forwarded-host": "169.254.169.254",
+        "x-forwarded-proto": "http",
+      },
+    });
+
+    ensureNextAuthUrl(req);
+    expect(process.env.NEXTAUTH_URL).toBeUndefined();
+  });
 });

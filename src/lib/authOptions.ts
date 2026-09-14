@@ -65,7 +65,7 @@ function buildAuthProviders(customOidc?: OidcConfig): NextAuthOptions["providers
                     },
                 },
                 idToken: true,
-                checks: ["state"],
+                checks: ["pkce", "state"],
                 clientId: oidc.clientId,
                 clientSecret: oidc.clientSecret || undefined,
                 client: {

@@ -296,8 +296,18 @@ export function evaluateOidcGroupPermissions(
 /**
  * Extracts candidate usernames and identity aliases from an OIDC profile.
  * Supports Authentik, Keycloak, Authelia, Google, Azure AD, etc.
+ *
+ * SECURITY: By default, uses strict matching on canonical identity claims
+ * (preferred_username, username, sub, uid) to prevent pre-account takeover attacks.
+ * Fuzzy matching on given/family names and email local-parts is disabled by default,
+ * and only enabled when OIDC_ALLOW_FUZZY_USER_MATCHING=true or options.allowFuzzy is true.
  */
-export function extractCandidateUsernames(username?: string, profile?: any): string[] {
+export function extractCandidateUsernames(
+  username?: string,
+  profile?: any,
+  options?: { allowFuzzy?: boolean }
+): string[] {
+  const allowFuzzy = options?.allowFuzzy ?? (process.env.OIDC_ALLOW_FUZZY_USER_MATCHING === "true");
   const candidates = new Set<string>();
 
   const add = (val: unknown) => {
@@ -312,41 +322,53 @@ export function extractCandidateUsernames(username?: string, profile?: any): str
   add(username);
 
   if (profile && typeof profile === "object") {
-    add(profile.name);
-    add(profile.displayName);
-    add(profile.display_name);
+    // Canonical safe identity claims
     add(profile.preferred_username);
     add(profile.username);
-    add(profile.nickname);
-    add(profile.uid);
-
-    if (typeof profile.email === "string" && profile.email.includes("@")) {
-      add(profile.email);
-      const localPart = profile.email.split("@")[0].trim();
-      add(localPart);
-    }
-
-    const givenName = typeof profile.given_name === "string" ? profile.given_name.trim() : "";
-    const familyName = typeof profile.family_name === "string" ? profile.family_name.trim() : "";
-    if (givenName && familyName) {
-      add(`${givenName} ${familyName}`);
-      add(`${familyName} ${givenName}`);
-      add(`${givenName}${familyName}`);
-      add(`${givenName}.${familyName}`);
-      add(`${givenName[0]}${familyName}`);
-      add(givenName);
-      add(familyName);
-    } else if (givenName) {
-      add(givenName);
-    } else if (familyName) {
-      add(familyName);
-    }
-
     add(profile["https://goauthentik.io/username"]);
     add(profile["https://goauthentik.io/user_username"]);
     add(profile.samaccountname);
     add(profile.sAMAccountName);
+    add(profile.nickname);
+    add(profile.uid);
     add(profile.sub);
+
+    // Profile display name / full name (safe only if exact without spaces, or if fuzzy allowed)
+    if (typeof profile.displayName === "string" && (allowFuzzy || !profile.displayName.includes(" "))) {
+      add(profile.displayName);
+    }
+    if (typeof profile.display_name === "string" && (allowFuzzy || !profile.display_name.includes(" "))) {
+      add(profile.display_name);
+    }
+    if (typeof profile.name === "string" && (allowFuzzy || !profile.name.includes(" "))) {
+      add(profile.name);
+    }
+
+    // Fuzzy matching: given/family names, permutations, and email local parts
+    // SECURITY: Disabled by default to prevent pre-account takeover (CVE / CWE-287)
+    if (allowFuzzy) {
+      if (typeof profile.email === "string" && profile.email.includes("@")) {
+        add(profile.email);
+        const localPart = profile.email.split("@")[0].trim();
+        add(localPart);
+      }
+
+      const givenName = typeof profile.given_name === "string" ? profile.given_name.trim() : "";
+      const familyName = typeof profile.family_name === "string" ? profile.family_name.trim() : "";
+      if (givenName && familyName) {
+        add(`${givenName} ${familyName}`);
+        add(`${familyName} ${givenName}`);
+        add(`${givenName}${familyName}`);
+        add(`${givenName}.${familyName}`);
+        add(`${givenName[0]}${familyName}`);
+        add(givenName);
+        add(familyName);
+      } else if (givenName) {
+        add(givenName);
+      } else if (familyName) {
+        add(familyName);
+      }
+    }
   }
 
   return Array.from(candidates);

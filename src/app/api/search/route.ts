@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { formatMediaSubtitle } from "@/lib/mediaSubtitle";
+import { buildExcludedMediaClause } from "@/lib/mediaPolicy";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -17,21 +18,34 @@ export async function GET(req: NextRequest) {
 
   const isAdmin = session.user.isAdmin === true;
 
+  // Retrieve excluded libraries setting to prevent leaking private/excluded media
+  const settings = await prisma.globalSettings.findUnique({
+    where: { id: "global" },
+    select: { excludedLibraries: true },
+  }).catch(() => null);
+  const excludedClause = buildExcludedMediaClause(settings?.excludedLibraries);
+
+  const andConditions: any[] = [
+    {
+      OR: [
+        { title: { contains: q, mode: "insensitive" } },
+        { directors: { has: q } },
+        { actors: { has: q } },
+        { studios: { has: q } },
+      ],
+    },
+  ];
+
+  if (excludedClause) {
+    andConditions.push(excludedClause);
+  }
+
   // Search media across movies, series, albums, episodes, and tracks
   const rawMedia = await prisma.media.findMany({
     where: {
       type: { in: ["Movie", "Series", "MusicAlbum", "Episode", "Audio"] },
       libraryName: { not: null },
-      AND: [
-        {
-          OR: [
-            { title: { contains: q, mode: "insensitive" } },
-            { directors: { has: q } },
-            { actors: { has: q } },
-            { studios: { has: q } },
-          ],
-        },
-      ],
+      AND: andConditions,
     },
     select: {
       id: true,
