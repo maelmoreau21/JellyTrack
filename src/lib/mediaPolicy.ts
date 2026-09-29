@@ -195,7 +195,7 @@ export function inferLibraryKey(media: MediaLike): string | null {
     if (['movie'].includes(normalizedType)) return 'movies';
     if (['series', 'season', 'episode'].includes(normalizedType)) return 'tvshows';
     if (['audio', 'track', 'musicalbum'].includes(normalizedType)) return 'music';
-    if (['book', 'audiobook'].includes(normalizedType)) return 'books';
+    if (['book', 'audiobook', 'comic'].includes(normalizedType)) return 'books';
     if (['photo'].includes(normalizedType)) return 'photos';
     if (['video'].includes(normalizedType)) return 'homevideos';
 

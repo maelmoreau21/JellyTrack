@@ -114,3 +114,75 @@ export async function cleanupOrphanedSessions() {
         console.error("[Cleanup] Error during orphaned session cleanup:", msg);
     }
 }
+
+/**
+ * Retroactively consolidates fragmented playback history records across the entire database.
+ * Useful when users experienced network disconnects or pauses prior to JellyTrack 2.1.0,
+ * or during periodic database maintenance.
+ */
+export async function consolidateAllPlaybackHistory(options?: {
+    mergeWindowMs?: number;
+    serverId?: string;
+    since?: Date | null;
+}): Promise<{ examinedGroups: number; mergedSessions: number }> {
+    try {
+        const { consolidateRecentPlaybackSessions, DEFAULT_VIDEO_MERGE_WINDOW_MS } = await import("@/lib/pluginEventHelpers");
+        const mergeWindowMs = options?.mergeWindowMs ?? DEFAULT_VIDEO_MERGE_WINDOW_MS;
+        const since = options?.since !== undefined ? options.since : null; // default null = check all history
+
+        const whereClause: any = {
+            userId: { not: null },
+        };
+        if (options?.serverId) {
+            whereClause.serverId = options.serverId;
+        }
+        if (since !== null) {
+            whereClause.OR = [
+                { endedAt: null },
+                { endedAt: { gte: since } },
+                { startedAt: { gte: since } },
+            ];
+        }
+
+        const groups = await (prisma.playbackHistory as any).groupBy({
+            by: ['serverId', 'userId', 'mediaId'],
+            where: whereClause,
+            _count: { id: true },
+            having: {
+                id: {
+                    _count: { gt: 1 },
+                },
+            },
+        });
+
+        let mergedSessions = 0;
+        for (const group of groups) {
+            if (!group.userId || !group.mediaId) continue;
+            const res = await consolidateRecentPlaybackSessions(
+                group.serverId,
+                group.userId,
+                group.mediaId,
+                { mergeWindowMs, since }
+            );
+            if (res.consolidated) {
+                mergedSessions += res.mergedCount;
+            }
+        }
+
+        if (mergedSessions > 0) {
+            await appendHealthEvent({
+                source: 'monitor',
+                kind: 'history-consolidation',
+                message: `Consolidated ${mergedSessions} fragmented playback sessions across ${groups.length} groups.`,
+                details: { examinedGroups: groups.length, mergedSessions }
+            }).catch(() => undefined);
+        }
+
+        return { examinedGroups: groups.length, mergedSessions };
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error("[Cleanup] Error during history consolidation:", msg);
+        return { examinedGroups: 0, mergedSessions: 0 };
+    }
+}
+

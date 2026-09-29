@@ -48,6 +48,8 @@ import {
     handleMediaDownloadedEvent,
     acquirePlaybackLock,
     mergeOpenPlaybacks,
+    consolidateRecentPlaybackSessions,
+    computeMergeWindowMs,
     finalizePlaybackSession,
     readRequestBodyWithLimit,
     CURRENT_PLUGIN_EVENT_SCHEMA_VERSION,
@@ -501,12 +503,10 @@ export async function POST(req: Request) {
                         });
                         
                         let historyId: string | null = null;
-                        
+                        const ingestSettings = await getCachedPluginIngestSettings().catch(() => null);
+                        const recentMergeWindowMs = computeMergeWindowMs(type, ingestSettings?.telemetry?.mergeWindowSeconds);
+
                         if (!existingOpen) {
-                            const recentMergeWindowMs = (type === 'Audio' || type === 'Track') 
-                                ? 5 * 60 * 1000 
-                                : MERGE_WINDOW_MS;
-                            
                             const mergeWindow = new Date(now - recentMergeWindowMs);
                             const recentClosed = await prisma.playbackHistory.findFirst({
                                 where: { serverId: sourceServer.id, userId: dbUser.id, mediaId: dbMedia.id, endedAt: { not: null, gte: mergeWindow } },
@@ -518,6 +518,7 @@ export async function POST(req: Request) {
                                     where: { id: recentClosed.id },
                                     data: {
                                         endedAt: null,
+                                        pauseCount: { increment: 1 },
                                         playMethod,
                                         clientName,
                                         deviceName,
@@ -572,11 +573,18 @@ export async function POST(req: Request) {
                         // Initialize valkey tracking keys for accurate cumulative duration
                         if (historyId) {
                             activePlaybackHistoryId = historyId;
+                            const existingRecord = await prisma.playbackHistory.findUnique({
+                                where: { id: historyId },
+                                select: { durationWatched: true }
+                            });
+                            const seedDuration = existingRecord?.durationWatched || 0;
                             await Promise.all([
+                                valkey.setex(`dur:${historyId}`, 86400, seedDuration.toString()),
                                 valkey.setex(`last_time:${historyId}`, 86400, now.toString()),
                                 valkey.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
                                 valkey.setex(`start_pos:${historyId}`, 86400, positionTicks.toString()),
                             ]);
+                            await consolidateRecentPlaybackSessions(sourceServer.id, dbUser.id, dbMedia.id, recentMergeWindowMs).catch(() => undefined);
                         }
                     } else {
                         // Fallback without lock
@@ -586,12 +594,10 @@ export async function POST(req: Request) {
                         const positionTicks = session.positionTicks != null ? Number(session.positionTicks) : 0;
                         const now = Date.now();
                         let historyId: string | null = null;
-                        
+                        const fallbackIngestSettings = await getCachedPluginIngestSettings().catch(() => null);
+                        const recentMergeWindowMs = computeMergeWindowMs(type, fallbackIngestSettings?.telemetry?.mergeWindowSeconds);
+
                         if (!existingOpen) {
-                            const recentMergeWindowMs = (type === 'Audio' || type === 'Track') 
-                                ? 5 * 60 * 1000 
-                                : MERGE_WINDOW_MS;
-                            
                             const mergeWindow = new Date(now - recentMergeWindowMs);
                             const recentClosed = await prisma.playbackHistory.findFirst({
                                 where: { serverId: sourceServer.id, userId: dbUser.id, mediaId: dbMedia.id, endedAt: { not: null, gte: mergeWindow } },
@@ -601,7 +607,10 @@ export async function POST(req: Request) {
                             if (recentClosed) {
                                 await prisma.playbackHistory.update({
                                     where: { id: recentClosed.id },
-                                    data: { endedAt: null },
+                                    data: { 
+                                        endedAt: null,
+                                        pauseCount: { increment: 1 } 
+                                    },
                                 });
                                 historyId = recentClosed.id;
                             } else {
@@ -628,11 +637,18 @@ export async function POST(req: Request) {
                         
                         if (historyId) {
                             activePlaybackHistoryId = historyId;
+                            const existingRecord = await prisma.playbackHistory.findUnique({
+                                where: { id: historyId },
+                                select: { durationWatched: true }
+                            });
+                            const seedDuration = existingRecord?.durationWatched || 0;
                             await Promise.all([
+                                valkey.setex(`dur:${historyId}`, 86400, seedDuration.toString()),
                                 valkey.setex(`last_time:${historyId}`, 86400, now.toString()),
                                 valkey.setex(`last_tick:${historyId}`, 86400, positionTicks.toString()),
                                 valkey.setex(`start_pos:${historyId}`, 86400, positionTicks.toString()),
                             ]);
+                            await consolidateRecentPlaybackSessions(sourceServer.id, dbUser.id, dbMedia.id, recentMergeWindowMs).catch(() => undefined);
                         }
                     }
                 } finally {
@@ -906,6 +922,24 @@ export async function POST(req: Request) {
 
             if (result.closed) {
                 console.log(`[Plugin] PlaybackStop: Session ${result.playbackId} closed, duration=${result.durationS}s`);
+            }
+
+            // Consolidate any fragmented recent sessions for this user+media
+            if (userCandidates.length > 0 && jellyfinMediaId) {
+                try {
+                    const user = await prisma.user.findFirst({
+                        where: { serverId: sourceServer.id, jellyfinUserId: { in: userCandidates } },
+                        select: { id: true }
+                    });
+                    const media = await prisma.media.findFirst({
+                        where: { serverId: sourceServer.id, jellyfinMediaId: { in: Array.from(new Set([jellyfinMediaId, compactJellyfinId(jellyfinMediaId)])) } },
+                        select: { id: true, type: true }
+                    });
+                    if (user && media) {
+                        const mergeWindowMs = computeMergeWindowMs(media.type);
+                        await consolidateRecentPlaybackSessions(sourceServer.id, user.id, media.id, mergeWindowMs);
+                    }
+                } catch {}
             }
 
             return corsJson({ success: true, message: "PlaybackStop processed." });
@@ -1289,7 +1323,8 @@ export async function POST(req: Request) {
                             activePlayback = recheck;
                         } else {
                             // Try to reopen recent closed session before creating a new one
-                            const mergeWindow = new Date(Date.now() - ingestSettings.telemetry.mergeWindowSeconds * 1000);
+                            const recentMergeWindowMs = computeMergeWindowMs(resolvedType, ingestSettings.telemetry.mergeWindowSeconds);
+                            const mergeWindow = new Date(Date.now() - recentMergeWindowMs);
                             const recentClosed = await prisma.playbackHistory.findFirst({
                                 where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: { not: null, gte: mergeWindow } },
                                 orderBy: { endedAt: "desc" },
@@ -1297,7 +1332,20 @@ export async function POST(req: Request) {
                             if (recentClosed) {
                                 activePlayback = await prisma.playbackHistory.update({
                                     where: { id: recentClosed.id },
-                                    data: { endedAt: null, playMethod: resolvedPlayMethod, clientName: resolvedClientName, deviceName: resolvedDeviceName, ipAddress: resolvedIpAddress, country: geoData.country, city: geoData.city, audioLanguage: resolvedAudioLanguage, audioCodec: resolvedAudioCodec, subtitleLanguage: resolvedSubtitleLanguage, subtitleCodec: resolvedSubtitleCodec },
+                                    data: { 
+                                        endedAt: null, 
+                                        pauseCount: { increment: 1 },
+                                        playMethod: resolvedPlayMethod, 
+                                        clientName: resolvedClientName, 
+                                        deviceName: resolvedDeviceName, 
+                                        ipAddress: resolvedIpAddress, 
+                                        country: geoData.country, 
+                                        city: geoData.city, 
+                                        audioLanguage: resolvedAudioLanguage, 
+                                        audioCodec: resolvedAudioCodec, 
+                                        subtitleLanguage: resolvedSubtitleLanguage, 
+                                        subtitleCodec: resolvedSubtitleCodec 
+                                    },
                                 });
                                 console.log("[Plugin] PlaybackProgress bootstrap: reopened recent session because PlaybackStart was missing", {
                                     jellyfinUserId,
@@ -1305,6 +1353,14 @@ export async function POST(req: Request) {
                                     sessionId: sessionId || null,
                                     reopened: recentClosed.id,
                                 });
+                                const seedDuration = recentClosed.durationWatched || 0;
+                                await Promise.all([
+                                    valkey.setex(`dur:${recentClosed.id}`, 86400, seedDuration.toString()),
+                                    valkey.setex(`last_time:${recentClosed.id}`, 86400, Date.now().toString()),
+                                    valkey.setex(`last_tick:${recentClosed.id}`, 86400, positionTicks.toString()),
+                                    valkey.setex(`start_pos:${recentClosed.id}`, 86400, positionTicks.toString()),
+                                ]);
+                                await consolidateRecentPlaybackSessions(sourceServer.id, user.id, media.id, recentMergeWindowMs).catch(() => undefined);
                             } else {
                                 activePlayback = await prisma.playbackHistory.create({
                                     data: {
@@ -1328,10 +1384,14 @@ export async function POST(req: Request) {
                                     jellyfinUserId,
                                     jellyfinMediaId,
                                     sessionId: sessionId || null,
+                                    createdId: activePlayback.id,
                                 });
                                 // Merge any concurrently-created open sessions and re-resolve the activePlayback
                                 await mergeOpenPlaybacks(user.id, media.id);
                                 activePlayback = await prisma.playbackHistory.findFirst({ where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: null }, orderBy: { startedAt: "desc" } });
+                                if (activePlayback) {
+                                    await consolidateRecentPlaybackSessions(sourceServer.id, user.id, media.id, recentMergeWindowMs).catch(() => undefined);
+                                }
                             }
                         }
                     } else {
@@ -1348,14 +1408,29 @@ export async function POST(req: Request) {
                             }
                         }
                         if (!activePlayback) {
-                            const mergeWindow = new Date(Date.now() - ingestSettings.telemetry.mergeWindowSeconds * 1000);
+                            const recentMergeWindowMs = computeMergeWindowMs(resolvedType, ingestSettings.telemetry.mergeWindowSeconds);
+                            const mergeWindow = new Date(Date.now() - recentMergeWindowMs);
                             const recentClosed = await prisma.playbackHistory.findFirst({
                                 where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: { not: null, gte: mergeWindow } },
                                 orderBy: { endedAt: "desc" },
                             });
                             if (recentClosed) {
-                                activePlayback = await prisma.playbackHistory.update({ where: { id: recentClosed.id }, data: { endedAt: null } });
+                                activePlayback = await prisma.playbackHistory.update({ 
+                                    where: { id: recentClosed.id }, 
+                                    data: { 
+                                        endedAt: null,
+                                        pauseCount: { increment: 1 } 
+                                    } 
+                                });
                                 console.log("[Plugin] PlaybackProgress bootstrap (nolock fallback): reopened recent session", { jellyfinUserId, jellyfinMediaId, reopened: recentClosed.id });
+                                const seedDuration = recentClosed.durationWatched || 0;
+                                await Promise.all([
+                                    valkey.setex(`dur:${recentClosed.id}`, 86400, seedDuration.toString()),
+                                    valkey.setex(`last_time:${recentClosed.id}`, 86400, Date.now().toString()),
+                                    valkey.setex(`last_tick:${recentClosed.id}`, 86400, positionTicks.toString()),
+                                    valkey.setex(`start_pos:${recentClosed.id}`, 86400, positionTicks.toString()),
+                                ]);
+                                await consolidateRecentPlaybackSessions(sourceServer.id, user.id, media.id, recentMergeWindowMs).catch(() => undefined);
                             } else {
                                 activePlayback = await prisma.playbackHistory.create({
                                     data: {
@@ -1383,6 +1458,9 @@ export async function POST(req: Request) {
                                 // Merge any concurrently-created open sessions and re-resolve the activePlayback
                                 await mergeOpenPlaybacks(user.id, media.id);
                                 activePlayback = await prisma.playbackHistory.findFirst({ where: { serverId: sourceServer.id, userId: user.id, mediaId: media.id, endedAt: null }, orderBy: { startedAt: "desc" } });
+                                if (activePlayback) {
+                                    await consolidateRecentPlaybackSessions(sourceServer.id, user.id, media.id, recentMergeWindowMs).catch(() => undefined);
+                                }
                             }
                         }
                     }
@@ -1414,7 +1492,7 @@ export async function POST(req: Request) {
             const prevTimeRaw = await valkey.get(lastTimeKey);
             const prevTickRaw = await valkey.get(lastTickKey);
 
-            let curDur = parseFloat(prevDurRaw || "0");
+            let curDur = prevDurRaw !== null ? parseFloat(prevDurRaw) : (activePlayback.durationWatched || 0);
             const prevTime = prevTimeRaw ? parseInt(prevTimeRaw, 10) : null;
             const prevTick = prevTickRaw ? parseInt(prevTickRaw, 10) : null;
             const observedAtMs = parseObservedAtMs(payload);

@@ -115,7 +115,6 @@ export function resolveOidcConfig(dbSettings?: Partial<OidcConfig> | null): Deta
   const envClientSecret = String(process.env.OIDC_CLIENT_SECRET || "").trim();
   const envUserGroup = String(process.env.OIDC_USER_GROUP || "").trim();
   const envAdminGroup = String(process.env.OIDC_ADMIN_GROUP || "").trim();
-  const envTokenAlg = String(process.env.OIDC_TOKEN_ALG || process.env.OIDC_ALG || "").trim();
 
   const envAutoRedirectRaw = process.env.OIDC_AUTO_REDIRECT || process.env.OIDC_AUTO_LOGIN;
   const hasEnvAutoRedirect = envAutoRedirectRaw !== undefined && envAutoRedirectRaw.trim().length > 0;

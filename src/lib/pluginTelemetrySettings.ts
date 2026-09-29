@@ -22,7 +22,7 @@ export const DEFAULT_PLUGIN_TELEMETRY_SETTINGS: PluginTelemetrySettings = {
     playingIntervalSeconds: 5,
     pausedIntervalSeconds: 30,
     staleSessionTimeoutSeconds: 90,
-    mergeWindowSeconds: 300,
+    mergeWindowSeconds: 1800,
     seekThresholdSeconds: 20,
     trackPauseResume: true,
     trackSeek: true,

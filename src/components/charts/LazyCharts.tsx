@@ -139,12 +139,6 @@ const RawGenreDistributionChart = dynamic(
 );
 export const LazyGenreDistributionChart = withErrorBoundary(RawGenreDistributionChart, "Genre Distribution");
 
-const RawVolumeAreaChart = dynamic(
-    () => import("@/components/charts/VolumeAreaChart").then((m) => ({ default: m.VolumeAreaChart })),
-    { ssr: false, loading: () => <ChartSkeleton height={300} /> }
-);
-export const LazyVolumeAreaChart = withErrorBoundary(RawVolumeAreaChart, "Volume Area Chart");
-
 const RawDrillDownPieChart = dynamic(
     () => import("@/components/charts/DrillDownChart").then((m) => ({ default: m.DrillDownPieChart })),
     { ssr: false, loading: () => <ChartSkeleton height={300} /> }

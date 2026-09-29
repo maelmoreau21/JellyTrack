@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import prisma from "@/lib/prisma";
 import valkey from "@/lib/valkey";
@@ -6,8 +5,6 @@ import { getGeoLocation } from "@/lib/geoip";
 import { inferLibraryKey, isLibraryExcluded } from "@/lib/mediaPolicy";
 import { compactJellyfinId, normalizeJellyfinId } from "@/lib/jellyfinId";
 import { normalizeResolution, clampDuration } from "@/lib/utils";
-import { comparePluginApiKey, getPluginKeySnapshot, isPreviousPluginKeyValid } from "@/lib/pluginKeyManager";
-import { parsePluginApiKeyCandidate, verifyScopedPluginApiKey } from "@/lib/pluginServerKey";
 import { getClientIp, normalizeIp } from "@/lib/requestIp";
 import { getCachedPluginIngestSettings } from "@/lib/pluginTelemetrySettings";
 import {
@@ -44,7 +41,21 @@ export class PayloadTooLargeError extends Error {
     }
 }
 
-export const MERGE_WINDOW_MS = Number(process.env.MERGE_WINDOW_MS) || 60 * 60 * 1000; // 1 hour default
+export const DEFAULT_VIDEO_MERGE_WINDOW_MS = 60 * 60 * 1000; // 1 hour default for video
+export const DEFAULT_AUDIO_MERGE_WINDOW_MS = 5 * 60 * 1000;  // 5 minutes for music/audio
+export const MERGE_WINDOW_MS = Number(process.env.MERGE_WINDOW_MS) || DEFAULT_VIDEO_MERGE_WINDOW_MS;
+
+export function computeMergeWindowMs(mediaType?: string | null, configuredMergeSeconds?: number | null): number {
+    const isAudio = mediaType === 'Audio' || mediaType === 'Track' || mediaType === 'MusicAlbum';
+    const configuredMs = (typeof configuredMergeSeconds === 'number' && Number.isFinite(configuredMergeSeconds) && configuredMergeSeconds > 0)
+        ? configuredMergeSeconds * 1000
+        : null;
+
+    if (isAudio) {
+        return configuredMs ? Math.min(configuredMs, DEFAULT_AUDIO_MERGE_WINDOW_MS) : DEFAULT_AUDIO_MERGE_WINDOW_MS;
+    }
+    return configuredMs ? Math.max(configuredMs, DEFAULT_VIDEO_MERGE_WINDOW_MS) : DEFAULT_VIDEO_MERGE_WINDOW_MS;
+}
 
 import {
     CORS_HEADERS,
@@ -764,6 +775,173 @@ export async function mergeOpenPlaybacks(userId: string, mediaId: string) {
             console.error("[Plugin] mergeOpenPlaybacks valkey merge failed:", err);
         }
     }
+}
+
+export interface ConsolidateOptions {
+    mergeWindowMs?: number;
+    since?: Date | null;
+}
+
+export function clusterSessions<T extends { startedAt: Date; endedAt: Date | null; durationWatched: number }>(
+    sessions: T[],
+    mergeWindowMs: number
+): T[][] {
+    if (sessions.length === 0) return [];
+    if (sessions.length === 1) return [sessions];
+
+    const clusters: T[][] = [];
+    let currentCluster: T[] = [sessions[0]];
+
+    for (let i = 1; i < sessions.length; i++) {
+        const cur = sessions[i];
+        const prev = sessions[i - 1];
+
+        // Reference end time: prefer endedAt, fallback to startedAt + durationWatched
+        const prevRefTime = prev.endedAt
+            ? prev.endedAt.getTime()
+            : prev.startedAt.getTime() + (prev.durationWatched * 1000);
+
+        const gapMs = Math.max(0, cur.startedAt.getTime() - prevRefTime);
+
+        if (gapMs <= mergeWindowMs) {
+            currentCluster.push(cur);
+        } else {
+            clusters.push(currentCluster);
+            currentCluster = [cur];
+        }
+    }
+    clusters.push(currentCluster);
+    return clusters;
+}
+
+/**
+ * Consolidate fragmented playback sessions for the same user and media.
+ * This fixes the issue where client reconnections, transient network cuts,
+ * or pauses create unnecessary duplicate rows in playback history.
+ */
+export async function consolidateRecentPlaybackSessions(
+    serverId: string,
+    userId: string,
+    mediaId: string,
+    optionsOrWindow?: number | ConsolidateOptions
+): Promise<{ consolidated: boolean; primaryId?: string; mergedCount: number }> {
+    const mergeWindowMs = typeof optionsOrWindow === "number"
+        ? optionsOrWindow
+        : (optionsOrWindow?.mergeWindowMs ?? DEFAULT_VIDEO_MERGE_WINDOW_MS);
+
+    const since = typeof optionsOrWindow === "object" && optionsOrWindow.since !== undefined
+        ? optionsOrWindow.since
+        : new Date(Date.now() - (mergeWindowMs * 3));
+
+    const where: any = {
+        serverId,
+        userId,
+        mediaId,
+    };
+
+    if (since !== null) {
+        where.OR = [
+            { endedAt: null },
+            { endedAt: { gte: since } },
+            { startedAt: { gte: since } },
+        ];
+    }
+
+    const sessions = await prisma.playbackHistory.findMany({
+        where,
+        orderBy: { startedAt: "asc" },
+        include: {
+            media: { select: { durationMs: true } },
+        },
+    });
+
+    if (sessions.length <= 1) {
+        return { consolidated: false, mergedCount: 0 };
+    }
+
+    const clusters = clusterSessions(sessions, mergeWindowMs);
+    let totalMerged = 0;
+    let lastLeaderId: string | undefined;
+
+    for (const cluster of clusters) {
+        if (cluster.length <= 1) continue;
+
+        const leader = cluster[0];
+        lastLeaderId = leader.id;
+        const duplicates = cluster.slice(1);
+        const dupIds = duplicates.map((d) => d.id);
+
+        const accumulatedDuration = cluster.reduce((sum, s) => sum + s.durationWatched, 0);
+        const finalDuration = clampDuration(accumulatedDuration, leader.media?.durationMs);
+
+        const accumulatedPauses = cluster.reduce((sum, s) => sum + s.pauseCount, 0) + (cluster.length - 1);
+        const accumulatedSeeks = cluster.reduce((sum, s) => sum + s.seekCount, 0);
+        const accumulatedRewatches = cluster.reduce((sum, s) => sum + s.rewatchCount, 0);
+        const accumulatedSpeedChanges = cluster.reduce((sum, s) => sum + s.speedChangeCount, 0);
+        const accumulatedAudioChanges = cluster.reduce((sum, s) => sum + s.audioChanges, 0);
+        const accumulatedSubtitleChanges = cluster.reduce((sum, s) => sum + s.subtitleChanges, 0);
+
+        const hasOpen = cluster.some((s) => s.endedAt === null);
+        let finalEndedAt: Date | null = null;
+        if (!hasOpen) {
+            const maxEndTime = Math.max(...cluster.map((s) => s.endedAt!.getTime()));
+            finalEndedAt = new Date(maxEndTime);
+        }
+
+        try {
+            await prisma.$transaction(async (tx) => {
+                await tx.telemetryEvent.updateMany({
+                    where: { playbackId: { in: dupIds } },
+                    data: { playbackId: leader.id },
+                });
+                await (tx.activeStream as any).updateMany({
+                    where: { playbackId: { in: dupIds } },
+                    data: { playbackId: leader.id },
+                });
+                await tx.playbackHistory.deleteMany({
+                    where: { id: { in: dupIds } },
+                });
+                await tx.playbackHistory.update({
+                    where: { id: leader.id },
+                    data: {
+                        durationWatched: finalDuration,
+                        endedAt: finalEndedAt,
+                        pauseCount: accumulatedPauses,
+                        seekCount: accumulatedSeeks,
+                        rewatchCount: accumulatedRewatches,
+                        speedChangeCount: accumulatedSpeedChanges,
+                        audioChanges: accumulatedAudioChanges,
+                        subtitleChanges: accumulatedSubtitleChanges,
+                    },
+                });
+            });
+
+            await valkey.setex(`dur:${leader.id}`, 86400, finalDuration.toString());
+            for (const dupId of dupIds) {
+                await valkey.del(
+                    `dur:${dupId}`,
+                    `last_time:${dupId}`,
+                    `last_tick:${dupId}`,
+                    `start_pos:${dupId}`,
+                    `pause:${dupId}`,
+                    `audio:${dupId}`,
+                    `sub:${dupId}`,
+                    `rate:${dupId}`,
+                    `jump:${dupId}`
+                );
+            }
+
+            totalMerged += dupIds.length;
+        } catch (err) {
+            console.error("[Plugin] Cluster consolidation failed:", err);
+        }
+    }
+
+    return {
+        consolidated: totalMerged > 0,
+        primaryId: lastLeaderId,
+        mergedCount: totalMerged,
+    };
 }
 
 export async function cleanupActiveStreamForSession(serverId: string, activeStream: { id: string; sessionId: string } | null) {
