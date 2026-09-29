@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mergeUsers, detectUserDuplicates, normalizeStringLoose } from "./userManagement";
+import {
+  mergeUsers,
+  detectUserDuplicates,
+  normalizeStringLoose,
+  deleteUser,
+  pruneDeletedJellyfinUsers,
+} from "./userManagement";
 import prisma from "@/lib/prisma";
 
 vi.mock("@/lib/prisma", () => {
@@ -7,12 +13,15 @@ vi.mock("@/lib/prisma", () => {
     findFirst: vi.fn(),
     findMany: vi.fn(),
     delete: vi.fn(),
+    deleteMany: vi.fn(),
   };
   const mockPlaybackHistory = {
     updateMany: vi.fn(),
+    deleteMany: vi.fn(),
   };
   const mockActiveStream = {
     updateMany: vi.fn(),
+    deleteMany: vi.fn(),
   };
   const mockDailyStats = {
     findMany: vi.fn(),
@@ -38,6 +47,19 @@ vi.mock("@/lib/prisma", () => {
     },
   };
 });
+
+vi.mock("@/lib/jellyfinServers", () => ({
+  getConfiguredJellyfinServers: vi.fn().mockResolvedValue([
+    {
+      id: "srv-1",
+      name: "Main Server",
+      url: "http://jellyfin.test",
+      apiKey: "test-key",
+      isPrimary: true,
+    },
+  ]),
+  buildJellyfinApiKeyHeaders: vi.fn().mockReturnValue({ "X-Emby-Token": "test-key" }),
+}));
 
 vi.mock("@/lib/adminAudit", () => ({
   writeAdminAuditLog: vi.fn().mockResolvedValue(true),
@@ -136,4 +158,94 @@ describe("userManagement", () => {
       expect(duplicates[0].suggestedTarget?.username).toBe("Maël Moreau");
     });
   });
+
+  describe("deleteUser", () => {
+    it("deletes user and cascades playbackHistory and activeStreams", async () => {
+      const user = {
+        id: "user-to-delete-1",
+        jellyfinUserId: "jf-del-1",
+        username: "deleted_user",
+      };
+
+      const prismaAny = prisma as any;
+      prismaAny.user.findFirst.mockResolvedValue(user);
+      prismaAny.activeStream.deleteMany.mockResolvedValue({ count: 2 });
+      prismaAny.playbackHistory.deleteMany.mockResolvedValue({ count: 15 });
+      prismaAny.user.delete.mockResolvedValue(user);
+
+      const result = await deleteUser({
+        userId: "user-to-delete-1",
+        actorUsername: "AdminTest",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.username).toBe("deleted_user");
+      expect(result.sessionsDeleted).toBe(15);
+      expect(result.streamsDeleted).toBe(2);
+      expect(prismaAny.user.delete).toHaveBeenCalledWith({ where: { id: "user-to-delete-1" } });
+    });
+
+    it("throws error when user is not found", async () => {
+      const prismaAny = prisma as any;
+      prismaAny.user.findFirst.mockResolvedValue(null);
+
+      await expect(deleteUser({ userId: "non-existent" })).rejects.toThrow(
+        "User not found: non-existent"
+      );
+    });
+  });
+
+  describe("pruneDeletedJellyfinUsers", () => {
+    it("prunes users that no longer exist in Jellyfin", async () => {
+      const existingInJt = [
+        { id: "u-1", jellyfinUserId: "jf-active-1", username: "ActiveUser" },
+        { id: "u-2", jellyfinUserId: "jf-deleted-2", username: "DeletedUser" },
+        { id: "u-3", jellyfinUserId: "oidc-sso-orphan", username: "SsoUser" },
+      ];
+
+      const prismaAny = prisma as any;
+      prismaAny.user.findMany.mockResolvedValue(existingInJt);
+
+      // Mock Jellyfin /Users endpoint returning only jf-active-1
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [{ Id: "jf-active-1", Name: "ActiveUser" }],
+      }) as any;
+
+      try {
+        const result = await pruneDeletedJellyfinUsers(undefined, "AdminTest");
+
+        expect(result.totalPruned).toBe(1);
+        expect(result.prunedUsers).toEqual(["DeletedUser"]);
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+
+    it("does nothing when all users exist in Jellyfin", async () => {
+      const existingInJt = [
+        { id: "u-1", jellyfinUserId: "jf-active-1", username: "ActiveUser" },
+      ];
+
+      const prismaAny = prisma as any;
+      prismaAny.user.findMany.mockResolvedValue(existingInJt);
+
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [{ Id: "jf-active-1", Name: "ActiveUser" }],
+      }) as any;
+
+      try {
+        const result = await pruneDeletedJellyfinUsers(undefined, "AdminTest");
+
+        expect(result.totalPruned).toBe(0);
+        expect(result.prunedUsers).toEqual([]);
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+  });
 });
+

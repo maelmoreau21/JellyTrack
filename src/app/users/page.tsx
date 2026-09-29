@@ -60,14 +60,18 @@ export default async function UsersPage() {
             where: {
                 userId: { not: null },
             },
-            _max: { startedAt: true },
+            _max: { startedAt: true, endedAt: true },
         }),
     ]);
 
     const latestSessionByUserId = new Map<string, Date>();
     for (const row of latestSessionRows) {
-        if (row.userId && row._max.startedAt) {
-            latestSessionByUserId.set(row.userId, row._max.startedAt);
+        if (!row.userId) continue;
+        const sEnd = row._max.endedAt;
+        const sStart = row._max.startedAt;
+        const mostRecent = sEnd && sStart ? (sEnd > sStart ? sEnd : sStart) : (sEnd || sStart);
+        if (mostRecent) {
+            latestSessionByUserId.set(row.userId, mostRecent);
         }
     }
 
@@ -121,22 +125,22 @@ export default async function UsersPage() {
             const methods = transcodeStatsByUserId.get(user.id) || { transcode: 0, directPlay: 0 };
             const totalStreams = methods.transcode + methods.directPlay;
             const transcodeRatio = totalStreams > 0 ? Math.round((methods.transcode / totalStreams) * 100) : 0;
+            const sessionsCount = usage?.sessionsCount ?? 0;
 
             const userLastActiveDate = user.lastActive ? new Date(user.lastActive) : null;
             const latestSessionDate = latestSessionByUserId.get(user.id) || null;
-            const effectiveLastActive = (() => {
-                if (userLastActiveDate && latestSessionDate) {
-                    return userLastActiveDate > latestSessionDate ? userLastActiveDate : latestSessionDate;
-                }
-                return userLastActiveDate || latestSessionDate || null;
-            })();
+            
+            // Only consider users active if they have actual playback history
+            const effectiveLastActive = sessionsCount > 0
+                ? (latestSessionDate || userLastActiveDate)
+                : null;
 
             return {
                 id: user.id,
                 jellyfinUserId: user.jellyfinUserId,
                 username: user.username || "Utilisateur inconnu",
                 totalHours: parseFloat(((usage?.totalSeconds ?? 0) / 3600).toFixed(1)),
-                sessionsCount: usage?.sessionsCount ?? 0,
+                sessionsCount,
                 lastActive: effectiveLastActive ? effectiveLastActive.toISOString() : null,
                 favoriteClient: favoriteClientByUserId.get(user.id) || "Inconnu",
                 transcodeCount: methods.transcode,

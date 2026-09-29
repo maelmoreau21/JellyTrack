@@ -22,6 +22,8 @@ import {
     ChevronLeft,
     ChevronRight,
     Loader2,
+    Trash2,
+    RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -71,6 +73,12 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
     const [inviteOpen, setInviteOpen] = useState(false);
     const [copied, setCopied] = useState(false);
     const [now] = useState(() => Date.now());
+
+    const [userToDelete, setUserToDelete] = useState<UserStatsItem | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isPruning, setIsPruning] = useState(false);
+    const [pruneResult, setPruneResult] = useState<{ totalPruned: number; prunedUsers: string[] } | null>(null);
+    const [actionError, setActionError] = useState<string | null>(null);
 
     const filteredUsers = useMemo(() => {
         const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
@@ -178,6 +186,50 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
 
     const inviteLink = ssoUrl ? `${ssoUrl.replace(/\/$/, '')}/if/flow/default-enrollment-flow/` : `${window?.location?.origin || ''}/settings/sso`;
 
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
+        setIsDeleting(true);
+        setActionError(null);
+        try {
+            const res = await fetch(`/api/admin/users/${userToDelete.id}`, {
+                method: "DELETE",
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Échec de la suppression");
+            }
+            setUserToDelete(null);
+            router.refresh();
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Erreur lors de la suppression";
+            setActionError(message);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handlePruneDeleted = async () => {
+        setIsPruning(true);
+        setActionError(null);
+        try {
+            const res = await fetch("/api/admin/users/sync-deleted", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || "Échec de la synchronisation des utilisateurs supprimés");
+            }
+            setPruneResult(data.result);
+            router.refresh();
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Erreur lors de la synchronisation";
+            setActionError(message);
+        } finally {
+            setIsPruning(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Action & Filter Bar */}
@@ -198,6 +250,18 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
 
                 {/* Right Action buttons */}
                 <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePruneDeleted}
+                        disabled={isPruning}
+                        className="flex items-center gap-1.5 text-amber-500 hover:text-amber-400 border-amber-500/30 hover:border-amber-500/50"
+                        title="Détecter et supprimer les utilisateurs qui n'existent plus dans Jellyfin"
+                    >
+                        {isPruning ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                        <span>Purger supprimés</span>
+                    </Button>
+
                     <Button variant="outline" size="sm" onClick={handleExportCsv} className="flex items-center gap-1.5">
                         <Download className="h-4 w-4" />
                         <span>Export CSV</span>
@@ -320,12 +384,13 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
                                 <TableHead className="text-center">Mode de flux</TableHead>
                                 <TableHead>Client favori</TableHead>
                                 <TableHead className="text-right">{t("colLastActive")}</TableHead>
+                                <TableHead className="text-right w-16">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {pagedUsers.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                                         Aucun utilisateur ne correspond à ce filtre.
                                     </TableCell>
                                 </TableRow>
@@ -389,6 +454,20 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
                                             </TableCell>
                                             <TableCell className="text-right text-xs text-muted-foreground font-mono">
                                                 {formatLastActive(user.lastActive)}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                    title="Supprimer cet utilisateur de JellyTrack"
+                                                    onClick={() => {
+                                                        setActionError(null);
+                                                        setUserToDelete(user);
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -479,6 +558,83 @@ export function UsersManagementClient({ users, ssoUrl }: UsersManagementClientPr
 
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setInviteOpen(false)}>
+                            Fermer
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete User Modal */}
+            <Dialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-destructive">
+                            <Trash2 className="h-5 w-5" />
+                            Supprimer l&apos;utilisateur de JellyTrack
+                        </DialogTitle>
+                        <DialogDescription>
+                            Êtes-vous certain de vouloir supprimer <strong>{userToDelete?.username}</strong> de JellyTrack ?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3 py-2 text-sm text-muted-foreground">
+                        <p>
+                            Cette action supprimera définitivement tout l&apos;historique de lecture, les flux en direct et les données associées à cet utilisateur dans JellyTrack.
+                        </p>
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-md text-amber-500 text-xs">
+                            ⚠️ Si cet utilisateur existe encore dans Jellyfin, il sera automatiquement recréé lors de la prochaine synchronisation. Supprimez-le d&apos;abord de Jellyfin si vous souhaitez le retirer définitivement.
+                        </div>
+                        {actionError && (
+                            <p className="text-xs text-destructive font-medium">{actionError}</p>
+                        )}
+                    </div>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => setUserToDelete(null)} disabled={isDeleting}>
+                            Annuler
+                        </Button>
+                        <Button variant="destructive" onClick={handleDeleteUser} disabled={isDeleting} className="gap-1.5">
+                            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            <span>Supprimer définitivement</span>
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Prune Result Modal */}
+            <Dialog open={!!pruneResult} onOpenChange={(open) => !open && setPruneResult(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-primary">
+                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                            Nettoyage des utilisateurs Jellyfin
+                        </DialogTitle>
+                        <DialogDescription>
+                            Synchronisation avec vos serveurs Jellyfin terminée.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3 py-2 text-sm">
+                        {pruneResult && pruneResult.totalPruned > 0 ? (
+                            <>
+                                <p className="text-emerald-500 font-medium">
+                                    {pruneResult.totalPruned} utilisateur{pruneResult.totalPruned > 1 ? "s" : ""} supprimé{pruneResult.totalPruned > 1 ? "s" : ""} de JellyTrack car absent{pruneResult.totalPruned > 1 ? "s" : ""} de Jellyfin :
+                                </p>
+                                <ul className="list-disc list-inside text-xs font-mono bg-muted/40 p-2.5 rounded border border-border space-y-1">
+                                    {pruneResult.prunedUsers.map((u) => (
+                                        <li key={u}>{u}</li>
+                                    ))}
+                                </ul>
+                            </>
+                        ) : (
+                            <p className="text-muted-foreground text-xs">
+                                Aucun utilisateur orphelin trouvé. Tous les utilisateurs présents dans JellyTrack existent bien sur vos serveurs Jellyfin.
+                            </p>
+                        )}
+                    </div>
+
+                    <DialogFooter>
+                        <Button onClick={() => setPruneResult(null)}>
                             Fermer
                         </Button>
                     </DialogFooter>

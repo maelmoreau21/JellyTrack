@@ -339,3 +339,131 @@ export async function cleanupOrphanSsoUsers(actor?: { actorUsername?: string; ac
     results,
   };
 }
+
+export interface DeleteUserInput {
+  userId: string;
+  actorUsername?: string;
+  actorUserId?: string;
+}
+
+export interface DeleteUserResult {
+  success: boolean;
+  userId: string;
+  username: string;
+  jellyfinUserId: string;
+  sessionsDeleted: number;
+  streamsDeleted: number;
+}
+
+export async function deleteUser(input: DeleteUserInput): Promise<DeleteUserResult> {
+  const { userId, actorUsername } = input;
+  const user = await prisma.user.findFirst({
+    where: {
+      OR: [{ id: userId }, { jellyfinUserId: userId }],
+    },
+  });
+
+  if (!user) {
+    throw new Error(`User not found: ${userId}`);
+  }
+
+  const streamsDeleted = await prisma.activeStream.deleteMany({
+    where: { userId: user.id },
+  }).then((r: any) => r.count).catch(() => 0);
+
+  const sessionsDeleted = await prisma.playbackHistory.deleteMany({
+    where: { userId: user.id },
+  }).then((r: any) => r.count).catch(() => 0);
+
+  await prisma.user.delete({
+    where: { id: user.id },
+  });
+
+  await writeAdminAuditLog({
+    action: "USER_DELETE",
+    details: {
+      message: `Deleted user ${user.username} (${user.jellyfinUserId}). Pruned ${sessionsDeleted} sessions and ${streamsDeleted} active streams.`,
+      sessionsDeleted,
+      streamsDeleted,
+    },
+    actorUsername: actorUsername || "Admin",
+    target: user.username,
+  }).catch(() => undefined);
+
+  return {
+    success: true,
+    userId: user.id,
+    username: user.username,
+    jellyfinUserId: user.jellyfinUserId,
+    sessionsDeleted,
+    streamsDeleted,
+  };
+}
+
+export async function pruneDeletedJellyfinUsers(
+  targetServerId?: string,
+  actorUsername?: string
+): Promise<{ totalPruned: number; prunedUsers: string[] }> {
+  const { getConfiguredJellyfinServers, buildJellyfinApiKeyHeaders } = await import("@/lib/jellyfinServers");
+  const { normalizeJellyfinId } = await import("@/lib/jellyfinId");
+  const servers = await getConfiguredJellyfinServers();
+  const relevantServers = targetServerId ? servers.filter((s: { id: string }) => s.id === targetServerId) : servers;
+
+  let totalPruned = 0;
+  const prunedUsernames: string[] = [];
+
+  for (const server of relevantServers) {
+    if (!server.apiKey) continue;
+    try {
+      const res = await fetch(`${server.url}/Users`, {
+        headers: buildJellyfinApiKeyHeaders(server.apiKey),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) continue;
+      const rawUsers: Array<{ Id?: string; Name?: string }> = await res.json();
+      if (!Array.isArray(rawUsers) || rawUsers.length === 0) continue;
+
+      const validJellyfinUserIds = new Set(
+        rawUsers.map((u) => normalizeJellyfinId(u.Id)).filter((id): id is string => Boolean(id))
+      );
+
+      const existingUsers = await prisma.user.findMany({
+        where: { serverId: server.id },
+        select: { id: true, jellyfinUserId: true, username: true },
+      });
+
+      const toPrune = existingUsers.filter(
+        (u) => !u.jellyfinUserId.startsWith("oidc-") && !validJellyfinUserIds.has(u.jellyfinUserId)
+      );
+
+      if (toPrune.length > 0) {
+        const pruneIds = toPrune.map((u) => u.id);
+        await prisma.$transaction(async (tx) => {
+          await tx.activeStream.deleteMany({ where: { userId: { in: pruneIds } } }).catch(() => undefined);
+          await tx.playbackHistory.deleteMany({ where: { userId: { in: pruneIds } } }).catch(() => undefined);
+          await tx.user.deleteMany({ where: { id: { in: pruneIds } } });
+        });
+
+        totalPruned += toPrune.length;
+        prunedUsernames.push(...toPrune.map((u) => u.username));
+      }
+    } catch (err) {
+      console.warn(`[UserManagement] Failed to query Jellyfin server ${server.name} for user pruning:`, err);
+    }
+  }
+
+  if (totalPruned > 0) {
+    await writeAdminAuditLog({
+      action: "USER_PRUNE_SYNC",
+      details: {
+        totalPruned,
+        prunedUsers: prunedUsernames,
+      },
+      actorUsername: actorUsername || "Admin",
+      target: `${totalPruned} users`,
+    }).catch(() => undefined);
+  }
+
+  return { totalPruned, prunedUsers: prunedUsernames };
+}
+

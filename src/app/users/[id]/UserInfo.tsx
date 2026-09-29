@@ -25,6 +25,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
                     clientName: true,
                     deviceName: true,
                     startedAt: true,
+                    endedAt: true,
                     media: {
                         select: { genres: true, type: true, durationMs: true, title: true, jellyfinMediaId: true }
                     }
@@ -62,6 +63,7 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
         clientName?: string | null;
         deviceName?: string | null;
         startedAt: Date;
+        endedAt?: Date | null;
         userId?: string | null;
         mediaId?: string | null;
         media?: { genres?: string[]; type?: string; durationMs?: bigint | null; title?: string; jellyfinMediaId?: string } | null;
@@ -122,18 +124,13 @@ export default async function UserInfo({ userId, userIds = [], userDbIds = [] }:
     }, null);
 
     const maxHistoryDate = mergedHistory.reduce<Date | null>((acc, current) => {
-        if (!current.startedAt) return acc;
-        const d = new Date(current.startedAt);
-        if (!acc || d > acc) return d;
+        const refTime = current.endedAt ? new Date(current.endedAt) : (current.startedAt ? new Date(current.startedAt) : null);
+        if (!refTime) return acc;
+        if (!acc || refTime > acc) return refTime;
         return acc;
     }, null);
 
-    const lastActive = (() => {
-        if (maxDbLastActive && maxHistoryDate) {
-            return maxDbLastActive > maxHistoryDate ? maxDbLastActive : maxHistoryDate;
-        }
-        return maxDbLastActive || maxHistoryDate || null;
-    })();
+    const lastActive = sessionCount > 0 ? (maxHistoryDate || maxDbLastActive) : null;
 
     const getTopItem = (map: Map<string, number>) => {
         if (map.size === 0) return "N/A";

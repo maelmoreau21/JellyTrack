@@ -376,7 +376,7 @@ export async function POST(req: Request) {
                 const jellyfinUserId = normalizeJellyfinId(u.jellyfinUserId || u.JellyfinUserId || u.id || u.Id);
                 const username = u.username || u.Username || u.name || u.Name;
                 if (!jellyfinUserId || !username) continue;
-                await upsertCanonicalUser(sourceServer.id, jellyfinUserId, username, true);
+                await upsertCanonicalUser(sourceServer.id, jellyfinUserId, username, false);
                 syncedUsers++;
             }
 

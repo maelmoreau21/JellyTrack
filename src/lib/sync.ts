@@ -200,13 +200,12 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                         where: { jellyfinUserId_serverId: { jellyfinUserId, serverId: currentServerId } },
                         update: {
                             username,
-                            ...(validLastActive ? { lastActive: validLastActive } : {}),
                         },
                         create: {
                             serverId: currentServerId,
                             jellyfinUserId,
                             username,
-                            ...(validLastActive ? { lastActive: validLastActive } : {}),
+                            ...(validLastActive && validLastActive.getFullYear() > 2000 ? { lastActive: validLastActive } : {}),
                         },
                         select: { id: true, username: true, jellyfinUserId: true },
                     });
@@ -243,6 +242,43 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     }
 
                     usersCount++;
+                }
+
+                // Auto-cleanup users deleted from Jellyfin
+                if (Array.isArray(users) && users.length > 0 && typeof prisma.user?.findMany === "function") {
+                    const validJellyfinUserIds = new Set(
+                        users
+                            .map((u) => normalizeJellyfinId(u.Id))
+                            .filter((id): id is string => Boolean(id))
+                    );
+
+                    const existingDbUsers = await prisma.user.findMany({
+                        where: { serverId: currentServerId },
+                        select: { id: true, jellyfinUserId: true, username: true },
+                    }).catch(() => []);
+
+                    const deletedUsers = existingDbUsers.filter(
+                        (u) => !u.jellyfinUserId.startsWith("oidc-") && !validJellyfinUserIds.has(u.jellyfinUserId)
+                    );
+
+                    if (deletedUsers.length > 0) {
+                        console.log(`[Sync] [${currentServerName}] Removing ${deletedUsers.length} user(s) deleted from Jellyfin:`, deletedUsers.map((u) => u.username));
+                        const deletedIds = deletedUsers.map((u) => u.id);
+
+                        await prisma.$transaction(async (tx) => {
+                            if (typeof tx.activeStream?.deleteMany === "function") {
+                                await tx.activeStream.deleteMany({ where: { userId: { in: deletedIds } } }).catch(() => undefined);
+                            }
+                            if (typeof tx.playbackHistory?.deleteMany === "function") {
+                                await tx.playbackHistory.deleteMany({ where: { userId: { in: deletedIds } } }).catch(() => undefined);
+                            }
+                            if (typeof tx.user?.deleteMany === "function") {
+                                await tx.user.deleteMany({ where: { id: { in: deletedIds } } });
+                            }
+                        }).catch((err) => {
+                            console.error(`[Sync] [${currentServerName}] Error deleting removed users:`, err);
+                        });
+                    }
                 }
 
                 // 2. Build Library Mapping (VirtualFolders + UserViews)
