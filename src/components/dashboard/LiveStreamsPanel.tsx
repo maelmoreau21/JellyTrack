@@ -36,6 +36,8 @@ interface LiveStream {
     seriesName?: string | null;
     seasonName?: string | null;
     posterItemId?: string | null;
+    versionName?: string | null;
+    videoCodec?: string | null;
 }
 
 function getImageUrl(itemId: string, type: string = 'Primary', fallbackId?: string, serverId?: string | null) {
@@ -85,9 +87,16 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                     )}
 
                     <div className="space-y-1 flex-1 min-w-0">
-                        <p className="text-sm font-medium leading-none truncate hover:underline">
-                            {stream.mediaTitle}
-                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-sm font-medium leading-none truncate hover:underline">
+                                {stream.mediaTitle}
+                            </p>
+                            {stream.versionName && (
+                                <span className="px-1.5 py-0.5 text-[10px] rounded font-semibold bg-primary/10 text-primary border border-primary/20 shrink-0" title={`Version / Édition : ${stream.versionName}`}>
+                                    {stream.versionName}
+                                </span>
+                            )}
+                        </div>
                         {detail && (
                             <p className="text-[11px] text-muted-foreground font-medium truncate">{detail}</p>
                         )}
@@ -157,9 +166,16 @@ function StreamCard({ stream }: { stream: LiveStream }) {
                     )}
 
                     <div className="space-y-1 flex-1 min-w-0">
-                        <p className="text-sm font-medium leading-none truncate">
-                            {stream.mediaTitle}
-                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-sm font-medium leading-none truncate">
+                                {stream.mediaTitle}
+                            </p>
+                            {stream.versionName && (
+                                <span className="px-1.5 py-0.5 text-[10px] rounded font-semibold bg-primary/10 text-primary border border-primary/20 shrink-0" title={`Version / Édition : ${stream.versionName}`}>
+                                    {stream.versionName}
+                                </span>
+                            )}
+                        </div>
                         {detail && (
                             <p className="text-[11px] text-muted-foreground font-medium truncate">{detail}</p>
                         )}
@@ -213,6 +229,14 @@ function StreamCard({ stream }: { stream: LiveStream }) {
             )}
             <div className="ml-auto font-medium text-xs shrink-0 flex flex-col items-end gap-1">
                 <div className="flex items-center gap-1.5">
+                    {stream.videoCodec?.toLowerCase() === 'av1' && (
+                        <span
+                            className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30"
+                            title="Codec moderne AV1 (Accélération matérielle FFmpeg 8.1)"
+                        >
+                            AV1
+                        </span>
+                    )}
                     <span
                         className={`px-2 py-1 rounded-full ${
                             stream.playMethod === "Transcode"

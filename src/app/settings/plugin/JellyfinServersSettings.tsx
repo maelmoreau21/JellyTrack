@@ -33,6 +33,8 @@ type JellyfinServerRow = {
   pluginApiKey?: string | null;
   connectionState: "online" | "offline" | "no_api_key";
   connectionMessage: string;
+  version?: string | null;
+  isLegacy?: boolean;
 };
 
 type PluginConnectionState = "connected" | "ready" | "missing";
@@ -363,6 +365,17 @@ export function JellyfinServersSettings() {
                         }`} />
                         {getPluginStateForServer(server) === 'connected' ? t('pluginConnected') : getPluginStateForServer(server) === 'ready' ? t('pluginReady') : t('pluginNotConfigured')}
                       </span>
+
+                      {server.version && (
+                        <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 ${
+                          server.isLegacy
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                            : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 font-mono font-semibold'
+                        }`}>
+                          <span className={`h-2 w-2 rounded-full ${server.isLegacy ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                          Jellyfin {server.version} {server.isLegacy ? '(Non supporté : v12+ requis)' : '(12+ Supporté)'}
+                        </span>
+                      )}
                     </div>
                   </div>
 

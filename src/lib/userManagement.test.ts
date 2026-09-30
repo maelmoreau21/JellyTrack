@@ -58,7 +58,7 @@ vi.mock("@/lib/jellyfinServers", () => ({
       isPrimary: true,
     },
   ]),
-  buildJellyfinApiKeyHeaders: vi.fn().mockReturnValue({ "X-Emby-Token": "test-key" }),
+  buildJellyfinApiKeyHeaders: vi.fn().mockReturnValue({ "X-MediaBrowser-Token": "test-key" }),
 }));
 
 vi.mock("@/lib/adminAudit", () => ({

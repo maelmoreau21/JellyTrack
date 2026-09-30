@@ -38,7 +38,10 @@ const serverDeleteSchema = z.object({
   id: z.string(),
 });
 
-async function probeConnection(url: string, apiKey: string | null): Promise<{ state: ConnectionState; message: string }> {
+async function probeConnection(
+  url: string,
+  apiKey: string | null
+): Promise<{ state: ConnectionState; message: string; version?: string | null; isLegacy?: boolean }> {
   const normalizedUrl = normalizeUrl(url);
   if (!normalizedUrl) {
     return { state: "offline", message: "Server URL missing." };
@@ -65,7 +68,14 @@ async function probeConnection(url: string, apiKey: string | null): Promise<{ st
     });
 
     if (info) {
-      return { state: "online", message: "Connection OK" };
+      const ver = info.version;
+      const isLegacy = Boolean(ver && (ver.startsWith("10.") || ver.startsWith("11.")));
+      const message = ver
+        ? isLegacy
+          ? `Jellyfin ${ver} (Obsolète : Jellyfin 12+ requis)`
+          : `Jellyfin ${ver} (Connecté)`
+        : "Connection OK";
+      return { state: "online", message, version: ver, isLegacy };
     }
 
     const controller = new AbortController();
@@ -154,6 +164,8 @@ export async function GET() {
         pluginApiKey,
         connectionState: connection.state,
         connectionMessage: connection.message,
+        version: connection.version || null,
+        isLegacy: Boolean(connection.isLegacy),
       };
     })
   );

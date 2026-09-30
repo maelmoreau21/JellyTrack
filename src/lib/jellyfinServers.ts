@@ -46,7 +46,6 @@ export function buildJellyfinApiKeyHeaders(apiKey: string): HeadersInit {
   const token = String(apiKey || "").trim();
   return {
     Accept: "application/json",
-    "X-Emby-Token": token,
     "X-MediaBrowser-Token": token,
     Authorization: `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="2.1.0", Token="${token}"`,
   };
@@ -56,7 +55,6 @@ export function buildJellyfinImageHeaders(apiKey: string): HeadersInit {
   const token = String(apiKey || "").trim();
   return {
     Accept: "image/webp,image/avif,image/jpeg,image/png,image/*,*/*;q=0.8",
-    "X-Emby-Token": token,
     "X-MediaBrowser-Token": token,
     Authorization: `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="2.1.0", Token="${token}"`,
   };
@@ -75,15 +73,17 @@ export function resolveServerApiKey(
   return configuredApiKey || normalizeApiKey(primaryEnvApiKey);
 }
 
-function extractSystemInfo(data: unknown, fallbackUrl: string): { serverId: string; serverName: string } | null {
+function extractSystemInfo(data: unknown, fallbackUrl: string): { serverId: string; serverName: string; version: string | null } | null {
   if (!data || typeof data !== "object") return null;
 
   const record = data as Record<string, unknown>;
   const serverId = String(record.Id || record.ServerId || "").trim();
   const serverName = String(record.ServerName || record.LocalAddress || record.WanAddress || fallbackUrl).trim();
+  const rawVersion = String(record.Version || "").trim();
+  const version = rawVersion.length > 0 ? rawVersion : null;
 
   if (!serverId) return null;
-  return { serverId, serverName: serverName || fallbackUrl };
+  return { serverId, serverName: serverName || fallbackUrl, version };
 }
 
 export async function getConfiguredJellyfinServers(): Promise<JellyfinServerConnection[]> {
@@ -255,7 +255,7 @@ export async function authenticateAgainstJellyfinDetailed(input: {
 export async function fetchJellyfinSystemInfo(input: {
   url: string;
   apiKey: string;
-}): Promise<{ serverId: string; serverName: string } | null> {
+}): Promise<{ serverId: string; serverName: string; version: string | null } | null> {
   const baseUrl = normalizeUrl(input.url);
   const apiKey = normalizeApiKey(input.apiKey);
   if (!baseUrl || !apiKey) return null;

@@ -51,23 +51,36 @@ export function pruneJellyfinItem(raw: Record<string, any>): PrunedJellyfinItem 
     let videoStreamWidth: number | null = null;
     let videoStreamHeight: number | null = null;
 
-    if (raw?.MediaSources?.[0]) {
-        const ms = raw.MediaSources[0];
-        if (ms.Size !== undefined && ms.Size !== null) {
-            try {
-                mediaSourceSize = BigInt(ms.Size);
-            } catch {
-                mediaSourceSize = null;
+    if (Array.isArray(raw?.MediaSources) && raw.MediaSources.length > 0) {
+        let totalSize = BigInt(0);
+        let hasValidSize = false;
+
+        for (const ms of raw.MediaSources) {
+            if (ms.Size !== undefined && ms.Size !== null) {
+                try {
+                    totalSize += BigInt(ms.Size);
+                    hasValidSize = true;
+                } catch {
+                    // Ignore non-numeric size
+                }
+            }
+            const vs = Array.isArray(ms.MediaStreams)
+                ? ms.MediaStreams.find((s: any) => s?.Type === 'Video')
+                : undefined;
+            if (vs) {
+                const w = typeof vs.Width === 'number' ? vs.Width : (typeof vs.Width === 'string' && !Number.isNaN(Number(vs.Width)) ? Number(vs.Width) : null);
+                const h = typeof vs.Height === 'number' ? vs.Height : (typeof vs.Height === 'string' && !Number.isNaN(Number(vs.Height)) ? Number(vs.Height) : null);
+                if (w !== null && (videoStreamWidth === null || w > videoStreamWidth)) {
+                    videoStreamWidth = w;
+                }
+                if (h !== null && (videoStreamHeight === null || h > videoStreamHeight)) {
+                    videoStreamHeight = h;
+                }
             }
         }
-        const vs = Array.isArray(ms.MediaStreams)
-            ? ms.MediaStreams.find((s: any) => s?.Type === 'Video')
-            : undefined;
-        if (vs) {
-            const w = vs.Width;
-            const h = vs.Height;
-            videoStreamWidth = typeof w === 'number' ? w : (typeof w === 'string' && !Number.isNaN(Number(w)) ? Number(w) : null);
-            videoStreamHeight = typeof h === 'number' ? h : (typeof h === 'string' && !Number.isNaN(Number(h)) ? Number(h) : null);
+
+        if (hasValidSize) {
+            mediaSourceSize = totalSize;
         }
     }
 

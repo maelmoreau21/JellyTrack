@@ -36,6 +36,8 @@ export type LiveStream = {
   posterItemId?: string | null;
   audioStreamIndex?: number | null;
   subtitleStreamIndex?: number | null;
+  videoCodec?: string | null;
+  versionName?: string | null;
 };
 
 /** A single playback history record as loaded for dashboard calculations. */
@@ -82,6 +84,7 @@ export type ActiveStreamRow = {
   subtitleLanguage?: string | null;
   audioCodec?: string | null;
   subtitleCodec?: string | null;
+  videoCodec?: string | null;
 };
 
 export type DashboardMetrics = {

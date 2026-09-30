@@ -128,6 +128,8 @@ export async function getLiveStreams(selectedServerIds: string[]): Promise<{
       const audioC = typeof payload["audioCodec"] === "string" ? (payload["audioCodec"] as string) : null;
       const subLang = typeof payload["subtitleLanguage"] === "string" ? (payload["subtitleLanguage"] as string) : null;
       const subC = typeof payload["subtitleCodec"] === "string" ? (payload["subtitleCodec"] as string) : null;
+      const videoC = typeof payload["videoCodec"] === "string" ? (payload["videoCodec"] as string) : (dbStream.videoCodec || null);
+      const versionName = typeof payload["versionName"] === "string" ? (payload["versionName"] as string) : null;
 
       return {
         serverId: dbStream.serverId,
@@ -147,6 +149,8 @@ export async function getLiveStreams(selectedServerIds: string[]): Promise<{
         audioCodec: dbStream.audioCodec || audioC || null,
         subtitleLanguage: dbStream.subtitleLanguage || subLang || null,
         subtitleCodec: dbStream.subtitleCodec || subC || null,
+        videoCodec: videoC,
+        versionName: versionName,
         audioStreamIndex:
           typeof payload["audioStreamIndex"] === "number"
             ? (payload["audioStreamIndex"] as number)

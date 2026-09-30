@@ -319,35 +319,30 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                     console.warn(`[Sync] [${currentServerName}] UserViews unavailable, continuing without view mapping.`, viewsError);
                 }
 
-                // 3. Sync Media Items (Jellyfin 10.11.11+ / Jellyfin 12 native query)
-                const baseItemsQuery = `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book,BoxSet&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,DateLastSaved,Genres,MediaSources,ParentId,People,Studios,RunTimeTicks,ProductionYear,Path`;
+                // 3. Sync Media Items (Jellyfin 12+ native query with Bookshelf & Comics support)
+                const baseItemsQuery = `IncludeItemTypes=Movie,Series,Season,Episode,Audio,MusicAlbum,Book,AudioBook,Comic,BoxSet&Recursive=true&Fields=ProviderIds,PremiereDate,DateCreated,DateLastSaved,Genres,MediaSources,ParentId,People,Studios,RunTimeTicks,ProductionYear,Path`;
 
                 let recentFilters: string[] = [''];
                 if (options?.recentOnly) {
                     const sevenDaysAgo = new Date();
                     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
                     const sinceIso = sevenDaysAgo.toISOString();
-                    // Query both newly created and recently saved items natively supported in Jellyfin 10.11+ and 12
+                    // Query both newly created and recently saved items natively supported in Jellyfin 12
                     recentFilters = [
                         `&MinDateCreated=${sinceIso}&SortBy=DateCreated&SortOrder=Descending`,
                         `&MinDateLastSaved=${sinceIso}&SortBy=DateLastSaved&SortOrder=Descending`,
                     ];
                 }
 
-                const DEFAULT_PAGE_SIZE = 200;
-                const SLOW_PAGE_SIZE = 50;
-                const SLOW_START_THRESHOLD = 2000;
+                const PAGE_SIZE = 200;
                 const itemsById = new Map<string, PrunedJellyfinItem>();
 
                 for (const recentFilter of recentFilters) {
                     let startIndex = 0;
                     while (true) {
-                        const currentPageSize = startIndex >= SLOW_START_THRESHOLD ? SLOW_PAGE_SIZE : DEFAULT_PAGE_SIZE;
-                        const pageUrl = `${baseUrl}/Items?${baseItemsQuery}${recentFilter}&StartIndex=${startIndex}&Limit=${currentPageSize}`;
-                        const timeoutMs = startIndex >= SLOW_START_THRESHOLD ? 120000 : 60000;
-                        const retries = startIndex >= SLOW_START_THRESHOLD ? 6 : 4;
-                        console.log(`[Sync] [${currentServerName}] Fetching Items StartIndex=${startIndex} Limit=${currentPageSize} timeout=${timeoutMs} retries=${retries}`);
-                        const pageData = await fetchJsonWithRetry<{ Items?: Record<string, any>[] }>(pageUrl, { headers: jellyfinHeaders }, timeoutMs, retries);
+                        const pageUrl = `${baseUrl}/Items?${baseItemsQuery}${recentFilter}&StartIndex=${startIndex}&Limit=${PAGE_SIZE}`;
+                        console.log(`[Sync] [${currentServerName}] Fetching Items StartIndex=${startIndex} Limit=${PAGE_SIZE}`);
+                        const pageData = await fetchJsonWithRetry<{ Items?: Record<string, any>[] }>(pageUrl, { headers: jellyfinHeaders }, 60000, 4);
                         const pageItems: Record<string, any>[] = pageData.Items || [];
 
                         for (const pageItem of pageItems) {
@@ -355,8 +350,8 @@ export async function syncJellyfinLibrary(options?: { recentOnly?: boolean }) {
                             if (itemId) itemsById.set(itemId, pruneJellyfinItem(pageItem));
                         }
 
-                        if (pageItems.length < currentPageSize) break;
-                        startIndex += currentPageSize;
+                        if (pageItems.length < PAGE_SIZE) break;
+                        startIndex += PAGE_SIZE;
                         if (startIndex >= 50000) break;
                     }
                 }

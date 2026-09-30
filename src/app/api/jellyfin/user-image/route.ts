@@ -1,7 +1,8 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { resolveJellyfinConnection } from "@/lib/jellyfinImageServer";
+import { buildJellyfinImageHeaders } from "@/lib/jellyfinServers";
 
 const UUID_PATTERN = /^(?:[a-f0-9]{32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i;
 
@@ -30,9 +31,7 @@ export async function GET(req: NextRequest) {
 
         const imageUrl = `${conn.baseUrl}/Users/${encodeURIComponent(userId)}/Images/Primary`;
         const response = await fetch(imageUrl, {
-            headers: {
-                "X-Emby-Authorization": `MediaBrowser Token="${conn.apiKey}"`,
-            },
+            headers: buildJellyfinImageHeaders(conn.apiKey),
             signal: AbortSignal.timeout(5000),
         });
 

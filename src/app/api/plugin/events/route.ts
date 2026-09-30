@@ -665,7 +665,10 @@ export async function POST(req: Request) {
                 const playbackPositionTicks = Number(session.positionTicks || 0);
                 const playbackRate = readPlaybackRate(payload, session);
                 const progressPercent = computeProgressPercent(playbackPositionTicks, runTimeTicks);
-                const mediaSubtitle = await buildMediaSubtitle({
+                const mediaSourceId = session.mediaSourceId || session.MediaSourceId || payload.mediaSourceId || payload.MediaSourceId || null;
+                const versionName = session.mediaSourceName || session.MediaSourceName || session.versionTitle || session.VersionTitle || payload.mediaSourceName || payload.MediaSourceName || payload.versionName || payload.VersionName || null;
+                const videoCodec = session.videoCodec || session.VideoCodec || null;
+                let mediaSubtitle = await buildMediaSubtitle({
                     serverId: sourceServer.id,
                     type,
                     seriesName: media.seriesName || media.SeriesName || null,
@@ -675,6 +678,9 @@ export async function POST(req: Request) {
                     artist: media.artist || media.Artist || null,
                     parentItemId,
                 });
+                if (versionName) {
+                    mediaSubtitle = mediaSubtitle ? `${mediaSubtitle} (${versionName})` : versionName;
+                }
                 await (prisma.activeStream as any).upsert({
                     where: { sessionId_serverId: { sessionId, serverId: sourceServer.id } },
                     update: {
@@ -774,6 +780,9 @@ export async function POST(req: Request) {
                     PlaybackRate: playbackRate,
                     subtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
                     SubtitleStreamIndex: session.subtitleStreamIndex ?? session.SubtitleStreamIndex ?? null,
+                    versionName: versionName || null,
+                    mediaSourceId: mediaSourceId || null,
+                    videoCodec: videoCodec || null,
                 });
                 await valkey.setex(buildStreamValkeyKey(sourceServer.id, sessionId), 60, valkeyPayload);
             }
