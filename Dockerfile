@@ -28,7 +28,7 @@ RUN pnpm exec prisma generate
 WORKDIR /app/external-tools
 ENV PRISMA_CLI_BINARY_TARGETS="linux-musl-openssl-3.0.x,linux-musl-arm64-openssl-3.0.x"
 RUN npm init -y && \
-    npm install --no-audit --no-fund --omit=dev prisma@^7.8.0 dotenv@^17.4.2 node-cron@^4.5.0 geoip-country@^5.0.202608182354 && \
+    npm install --no-audit --no-fund --omit=dev prisma@^7.10.0 dotenv@^17.4.2 node-cron@^4.5.0 geoip-country@^5.0.202609260156 && \
     npm cache clean --force && \
     find /app/external-tools/node_modules -name "*query_engine*" -delete 2>/dev/null || true && \
     find /app/external-tools/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \

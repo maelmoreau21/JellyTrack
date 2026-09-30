@@ -753,7 +753,9 @@
     "timeline_replay": "重看片段",
     "timeline_speed_change": "速度变化",
     "timeline_download": "Download",
-    "languageSegments": "Language periods"
+    "languageSegments": "Language periods",
+    "multiVersionsTitle": "可用版本与版本 ({count})",
+    "multiVersionsDesc": "此项目在 Jellyfin 服务器上有多个剪辑或替代版本可用。"
   },
   "nav": {
     "cleanup": "清理",
@@ -1098,7 +1100,10 @@
     "pluginKeyGeneratedSuccess": "已成功生成新插件 API 密钥。",
     "networkErrorGenerateKey": "生成密钥时发生网络错误。",
     "wrappedVisibilityLabel": "Wrapped 总体可见性",
-    "wrappedVisibilityDesc": "在侧边栏和导航中显示或隐藏 Wrapped。"
+    "wrappedVisibilityDesc": "在侧边栏和导航中显示或隐藏 Wrapped。",
+    "consolidateHistoryTask": "播放历史合并与整理",
+    "consolidateHistoryTaskDesc": "自动检测并合并因暂停、缓冲或断开连接导致的碎片化播放记录。",
+    "dailyAtTime": "每天 {time}"
   },
   "timeRange": {
     "allTime": "全部时间",

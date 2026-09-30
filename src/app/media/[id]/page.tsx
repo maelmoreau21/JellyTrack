@@ -5,7 +5,7 @@ import { FallbackImage } from "@/components/FallbackImage";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Clock, Eye, Timer, ArrowLeft, ChevronRight, Pause, Languages, Headphones, Tv, Music, Disc3, Play, Film, ListMusic, Activity, FastForward, RotateCcw, Gauge } from "lucide-react";
+import { Clock, Eye, Timer, ArrowLeft, ChevronRight, Pause, Languages, Headphones, Tv, Music, Disc3, Play, Film, ListMusic, Activity, FastForward, RotateCcw, Gauge, Layers, User2 } from "lucide-react";
 import Link from "next/link";
 import MediaDropoffChart from "./MediaDropoffChart";
 import TelemetryChart from "./TelemetryChart";
@@ -16,7 +16,22 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import { normalizeResolution } from '@/lib/utils';
 import { formatMediaCode } from '@/lib/mediaSubtitle';
 import { isZapped } from "@/lib/statsUtils";
-import { User2 } from "lucide-react";
+
+function formatBytes(value: string | number | null | undefined): string {
+    const raw = Number(value || 0);
+    if (!Number.isFinite(raw) || raw <= 0) return "0 B";
+
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let idx = 0;
+    let size = raw;
+    while (size >= 1024 && idx < units.length - 1) {
+        size /= 1024;
+        idx += 1;
+    }
+
+    const digits = size >= 100 ? 0 : size >= 10 ? 1 : 2;
+    return `${size.toFixed(digits)} ${units[idx]}`;
+}
 
 type Person = {
     Name: string;
@@ -198,13 +213,21 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
     let people: Person[] = [];
     let hasBackdrop = false;
     let hasLogo = false;
+    let mediaVersions: Array<{
+        id: string;
+        name: string;
+        sizeBytes: number | null;
+        container: string | null;
+        videoCodec: string | null;
+        audioCodec: string | null;
+    }> = [];
 
     try {
         const jellyfinUrl = process.env.JELLYFIN_URL;
         const jellyfinApiKey = process.env.JELLYFIN_API_KEY;
         if (jellyfinUrl && jellyfinApiKey) {
             const res = await fetch(
-                `${jellyfinUrl}/Items/${encodeURIComponent(id)}?Fields=Overview,CommunityRating,ProductionYear,IndexNumber,ParentIndexNumber,SeriesId,SeriesName,SeasonId,SeasonName,AlbumId,Album,AlbumArtist,AlbumArtists,IntroStartPositionMs,IntroStartPositionTicks,IntroEndPositionMs,IntroEndPositionTicks,CreditsPositionMs,CreditsStartPositionMs,CreditsPositionTicks,CreditsStartPositionTicks,People,ImageTags`,
+                `${jellyfinUrl}/Items/${encodeURIComponent(id)}?Fields=Overview,CommunityRating,ProductionYear,IndexNumber,ParentIndexNumber,SeriesId,SeriesName,SeasonId,SeasonName,AlbumId,Album,AlbumArtist,AlbumArtists,IntroStartPositionMs,IntroStartPositionTicks,IntroEndPositionMs,IntroEndPositionTicks,CreditsPositionMs,CreditsStartPositionMs,CreditsPositionTicks,CreditsStartPositionTicks,People,ImageTags,MediaSources`,
                 {
                     headers: {
                         Authorization: `MediaBrowser Token="${jellyfinApiKey}"`,
@@ -230,6 +253,22 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                 people = data.People || [];
                 hasBackdrop = !!(data.BackdropImageTags && data.BackdropImageTags.length > 0);
                 hasLogo = !!(data.ImageTags?.Logo);
+
+                if (Array.isArray(data.MediaSources) && data.MediaSources.length > 0) {
+                    mediaVersions = data.MediaSources.map((s: Record<string, unknown>, idx: number) => {
+                        const streams = Array.isArray(s.MediaStreams) ? (s.MediaStreams as Array<Record<string, unknown>>) : [];
+                        const vidStream = streams.find((st) => st.Type === "Video");
+                        const audStream = streams.find((st) => st.Type === "Audio");
+                        return {
+                            id: typeof s.Id === "string" ? s.Id : `source-${idx}`,
+                            name: typeof s.Name === "string" && s.Name.trim() ? s.Name.trim() : (data.MediaSources.length > 1 ? `Version ${idx + 1}` : "Version Principale"),
+                            sizeBytes: typeof s.Size === "number" && s.Size > 0 ? s.Size : null,
+                            container: typeof s.Container === "string" ? s.Container : null,
+                            videoCodec: typeof vidStream?.Codec === "string" ? vidStream.Codec : null,
+                            audioCodec: typeof audStream?.Codec === "string" ? audStream.Codec : null,
+                        };
+                    });
+                }
 
                 introStartMs =
                     parseFinitePositive(data.IntroStartPositionMs) ??
@@ -827,6 +866,11 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                                             {mediaCode}
                                         </Badge>
                                     )}
+                                    {mediaVersions.length > 1 && (
+                                        <Badge variant="secondary" className="bg-purple-500/15 text-purple-600 dark:text-purple-300 border-purple-500/30 backdrop-blur-sm font-medium">
+                                            🎬 {mediaVersions.length} versions
+                                        </Badge>
+                                    )}
                                     {media.resolution && <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">{normalizedMediaResolution}</Badge>}
                                     {mediaDurationSeconds && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-foreground/80 dark:text-slate-300 backdrop-blur-sm">{Math.floor(mediaDurationSeconds / 60)} min</Badge>}
                                     {productionYear && <Badge variant="secondary" className="bg-zinc-200/50 dark:bg-white/5 text-foreground/80 dark:text-slate-300 backdrop-blur-sm">{productionYear}</Badge>}
@@ -885,6 +929,48 @@ export default async function MediaProfilePage({ params }: MediaProfilePageProps
                             ))}
                         </div>
                     </div>
+                )}
+
+                {/* Multi-Versions & Editions Card */}
+                {mediaVersions.length > 1 && (
+                    <Card className="app-surface col-span-full border-purple-500/25 bg-purple-500/5 shadow-sm">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base flex items-center gap-2 text-purple-400">
+                                <Layers className="w-5 h-5 text-purple-400" />
+                                <span>{t('multiVersionsTitle', { count: mediaVersions.length })}</span>
+                            </CardTitle>
+                            <CardDescription>
+                                {t('multiVersionsDesc')}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {mediaVersions.map((ver, idx) => (
+                                    <div key={ver.id || idx} className="rounded-lg border border-purple-500/20 bg-card p-3 flex flex-col justify-between gap-2 shadow-sm">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <span className="font-semibold text-sm text-foreground">{ver.name}</span>
+                                            {ver.container && (
+                                                <Badge variant="outline" className="text-[10px] uppercase font-mono px-1.5 py-0 border-purple-500/30 text-purple-400">
+                                                    {ver.container}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                                            {ver.sizeBytes && (
+                                                <span className="font-medium text-foreground/80">{formatBytes(ver.sizeBytes)}</span>
+                                            )}
+                                            {ver.videoCodec && (
+                                                <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">{ver.videoCodec}</span>
+                                            )}
+                                            {ver.audioCodec && (
+                                                <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">{ver.audioCodec}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
                 )}
 
                 {/* KPI Cards */}

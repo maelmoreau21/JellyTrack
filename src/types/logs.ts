@@ -61,4 +61,5 @@ export type SafeLog = {
   anomalyFlags?: string[];
   ipBurstCount?: number | null;
   isReconnection?: boolean;
+  versionName?: string | null;
 };

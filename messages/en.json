@@ -753,7 +753,9 @@
     "timeline_speed_change": "Speed change",
     "timeline_download": "Download",
     "languageSegments": "Language periods",
-    "posterRotateMissing": "No Poster Rotator pool found, or the pool is empty."
+    "posterRotateMissing": "No Poster Rotator pool found, or the pool is empty.",
+    "multiVersionsTitle": "Available Versions & Editions ({count})",
+    "multiVersionsDesc": "This item has multiple cuts or alternate versions available on your Jellyfin server."
   },
   "nav": {
     "cleanup": "Cleanup",
@@ -1098,7 +1100,10 @@
     "pluginKeyGeneratedSuccess": "New plugin API key generated successfully.",
     "networkErrorGenerateKey": "Network error while generating key.",
     "wrappedVisibilityLabel": "Wrapped General Visibility",
-    "wrappedVisibilityDesc": "Show or hide the Wrapped item in the sidebar and navigation."
+    "wrappedVisibilityDesc": "Show or hide the Wrapped item in the sidebar and navigation.",
+    "consolidateHistoryTask": "Playback History Consolidation",
+    "consolidateHistoryTaskDesc": "Detects and merges fragmented playback sessions caused by pauses, buffers or disconnects.",
+    "dailyAtTime": "Daily at {time}"
   },
   "ssoSettings": {
     "title": "SSO Authentication",

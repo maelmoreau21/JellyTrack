@@ -7,6 +7,7 @@ let fullSyncTask: ScheduledTask | null = null;
 let backupTask: ScheduledTask | null = null;
 let logCleanupTask: ScheduledTask | null = null;
 let integrityCheckTask: ScheduledTask | null = null;
+let historyConsolidationTask: ScheduledTask | null = null;
 
 interface CronSchedule {
     syncCronHour: number;
@@ -151,6 +152,20 @@ export async function initCronJobs(schedule: CronSchedule) {
             logger.error({ err }, "[Cron] System log retention cleanup failed");
         }
     });
+
+    // Nightly playback history consolidation at 03:45 UTC
+    historyConsolidationTask = cron.schedule("45 3 * * *", async () => {
+        logger.info("[Cron] Running scheduled playback history consolidation");
+        systemLog.info("Cron", "Déclenchement automatique de la consolidation d'historique");
+        try {
+            const { consolidatePlaybackHistory } = await import('@/lib/sessionConsolidation');
+            const result = await consolidatePlaybackHistory({ mergeWindowMinutes: 60 });
+            systemLog.info("Cron", `Consolidation d'historique terminée : ${result.clustersMerged} groupe(s) fusionné(s), ${result.sessionsPruned} micro-coupure(s) supprimée(s)`);
+        } catch (err) {
+            logger.error({ err }, "[Cron] Scheduled playback history consolidation failed");
+            systemLog.error("Cron", `Échec de la consolidation d'historique : ${err instanceof Error ? err.message : String(err)}`);
+        }
+    });
 }
 
 export async function rescheduleCronJobs(schedule: CronSchedule) {
@@ -160,6 +175,7 @@ export async function rescheduleCronJobs(schedule: CronSchedule) {
     if (backupTask) { backupTask.stop(); backupTask = null; }
     if (integrityCheckTask) { integrityCheckTask.stop(); integrityCheckTask = null; }
     if (logCleanupTask) { logCleanupTask.stop(); logCleanupTask = null; }
+    if (historyConsolidationTask) { historyConsolidationTask.stop(); historyConsolidationTask = null; }
 
     logger.info("[CronManager] Rescheduling cron jobs...");
     systemLog.info("CronManager", "Reconfiguration des tâches planifiées...");

@@ -58,6 +58,7 @@ type ActiveStreamLogMeta = {
     bitrate: number | null;
     audioCodec: string;
     audioStreamIndex: number | null;
+    versionName?: string | null;
 };
 
 function getMetaKey(serverId: string | null | undefined, itemId: string | null | undefined): string {
@@ -475,11 +476,13 @@ export default async function LogsPage({
         const activeStreamMap = new Map<string, ActiveStreamLogMeta>();
         await Promise.all(activeStreams.map(async (stream) => {
             let audioStreamIndex: number | null = null;
+            let versionName: string | null = null;
             try {
                 const scopedPayload = await valkey.get(buildStreamValkeyKey(stream.serverId, stream.sessionId));
                 if (scopedPayload) {
                     const parsed = JSON.parse(scopedPayload) as Record<string, unknown>;
                     audioStreamIndex = parseAudioStreamIndex(parsed.audioStreamIndex ?? parsed.AudioStreamIndex);
+                    versionName = typeof parsed.versionName === "string" ? parsed.versionName : null;
                 }
             } catch {
             }
@@ -488,6 +491,7 @@ export default async function LogsPage({
                 bitrate: stream.bitrate ?? null,
                 audioCodec: stream.audioCodec ?? "",
                 audioStreamIndex,
+                versionName,
             });
         }));
         const activePairSet = new Set(activeStreams.map(e => `${e.userId}:${e.mediaId}`));
@@ -533,8 +537,34 @@ export default async function LogsPage({
         safeLogs = safeLogs.map((log) => {
             const metadata = log.media?.jellyfinMediaId ? jellyfinMetaMap.get(getMetaKey(log.serverId, log.media.jellyfinMediaId)) || null : null;
             const active = activeStreamMap.get(`${log.userId}:${log.mediaId}`) || null;
+
+            let resolvedVersionName = active?.versionName || null;
+            if (!resolvedVersionName && Array.isArray(log.telemetryEvents)) {
+                for (const ev of log.telemetryEvents) {
+                    if (ev.metadata) {
+                        try {
+                            const md = typeof ev.metadata === "string" ? JSON.parse(ev.metadata) : ev.metadata;
+                            if (md && typeof md === "object") {
+                                const v = (md as Record<string, unknown>).versionName || (md as Record<string, unknown>).edition || (md as Record<string, unknown>).mediaSourceName;
+                                if (typeof v === "string" && v.trim()) {
+                                    resolvedVersionName = v.trim();
+                                    break;
+                                }
+                            }
+                        } catch {}
+                    }
+                }
+            }
+            if (!resolvedVersionName && log.mediaSubtitle) {
+                const match = log.mediaSubtitle.match(/\(([^)]+)\)$/);
+                if (match && match[1]) {
+                    resolvedVersionName = match[1].trim();
+                }
+            }
+
             return {
                 ...log,
+                versionName: resolvedVersionName,
                 fallbackImageParentId: log.media?.type === 'MusicAlbum' ? null : (log.media?.parentId || metadata?.parentId || null),
                 bitrate: resolveAudioBitrateKbps(log, metadata, active),
             };

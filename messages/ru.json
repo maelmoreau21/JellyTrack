@@ -753,7 +753,9 @@
     "timeline_replay": "Пересмотренный фрагмент",
     "timeline_speed_change": "Изменение скорости",
     "timeline_download": "Download",
-    "languageSegments": "Language periods"
+    "languageSegments": "Language periods",
+    "multiVersionsTitle": "Доступные версии и издания ({count})",
+    "multiVersionsDesc": "Для этого элемента на сервере Jellyfin доступно несколько вариантов монтажа или версий."
   },
   "nav": {
     "cleanup": "Очистка",
@@ -1098,7 +1100,10 @@
     "pluginKeyGeneratedSuccess": "Новый ключ API плагина успешно создан.",
     "networkErrorGenerateKey": "Сетевая ошибка при создании ключа.",
     "wrappedVisibilityLabel": "Общая видимость Wrapped",
-    "wrappedVisibilityDesc": "Показать или скрыть Wrapped на боковой панели и в навигации."
+    "wrappedVisibilityDesc": "Показать или скрыть Wrapped на боковой панели и в навигации.",
+    "consolidateHistoryTask": "Консолидация истории воспроизведения",
+    "consolidateHistoryTaskDesc": "Обнаруживает и объединяет фрагментированные сеансы воспроизведения.",
+    "dailyAtTime": "Ежедневно в {time}"
   },
   "timeRange": {
     "allTime": "За всё время",

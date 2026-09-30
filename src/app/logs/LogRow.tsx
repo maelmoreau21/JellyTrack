@@ -248,15 +248,22 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                       )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      {displayTitle && log.media ? (
-                        <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-800 dark:text-zinc-100 hover:underline" title={displayTitle}>
-                          {displayTitle}
-                        </Link>
-                      ) : (
-                        <span className="truncate font-medium text-muted-foreground italic">
-                          {t('unknownMedia')}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {displayTitle && log.media ? (
+                          <Link href={`/media/${log.media.jellyfinMediaId}`} className="truncate font-medium text-zinc-800 dark:text-zinc-100 hover:underline" title={displayTitle}>
+                            {displayTitle}
+                          </Link>
+                        ) : (
+                          <span className="truncate font-medium text-muted-foreground italic">
+                            {t('unknownMedia')}
+                          </span>
+                        )}
+                        {log.versionName && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-300 font-normal shrink-0">
+                            {log.versionName}
+                          </Badge>
+                        )}
+                      </div>
                       
                       {log.mediaSubtitle && 
                        log.mediaSubtitle !== 'Unknown' && 
@@ -264,10 +271,15 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                        log.mediaSubtitle !== displayTitle ? (
                         <div className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5" title={log.mediaSubtitle}>
                           {(() => {
-                            const bulletIdx = log.mediaSubtitle.indexOf(' • ');
+                            let text = log.mediaSubtitle;
+                            if (log.versionName && text.endsWith(`(${log.versionName})`)) {
+                              text = text.slice(0, -`(${log.versionName})`.length).trim();
+                            }
+                            if (!text) return null;
+                            const bulletIdx = text.indexOf(' • ');
                             if (bulletIdx > 0 && bulletIdx <= 20) {
-                              const code = log.mediaSubtitle.slice(0, bulletIdx);
-                              const rest = log.mediaSubtitle.slice(bulletIdx + 3);
+                              const code = text.slice(0, bulletIdx);
+                              const rest = text.slice(bulletIdx + 3);
                               return (
                                 <span className="truncate flex items-center gap-1">
                                   <span className="font-semibold text-primary bg-primary/10 dark:bg-primary/20 px-1 py-0.2 rounded text-[10px] shrink-0 tracking-wide font-mono">
@@ -277,13 +289,18 @@ export default function LogRow({ log, visibleColumns, onOpenDetails }: { log: Sa
                                 </span>
                               );
                             }
-                            return <span className="truncate">{log.mediaSubtitle}</span>;
+                            return <span className="truncate">{text}</span>;
                           })()}
                         </div>
                       ) : null}
 
-                      {/* Mobile compact info strip: Resolution, PlayMethod/Status, Duration, Client */}
+                      {/* Mobile compact info strip: Version, Resolution, PlayMethod/Status, Duration, Client */}
                       <div className="flex lg:hidden items-center gap-1.5 flex-wrap mt-1 text-[10px]">
+                        {log.versionName && (
+                          <span className="px-1.5 py-0.5 rounded border border-purple-500/30 bg-purple-500/10 text-purple-400 font-medium">
+                            {log.versionName}
+                          </span>
+                        )}
                         {!isAudioMedia && normalizedResolution && normalizedResolution !== 'Unknown' && (
                           <span className="px-1.5 py-0.5 rounded app-chip font-medium">
                             {normalizedResolution}

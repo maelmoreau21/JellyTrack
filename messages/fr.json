@@ -753,7 +753,9 @@
     "timeline_speed_change": "Changement de vitesse",
     "timeline_download": "Téléchargement",
     "languageSegments": "Périodes de langue",
-    "posterRotateMissing": "Aucun pool de Poster Rotator trouvé ou le pool est vide."
+    "posterRotateMissing": "Aucun pool de Poster Rotator trouvé ou le pool est vide.",
+    "multiVersionsTitle": "Versions & Éditions disponibles ({count})",
+    "multiVersionsDesc": "Cet élément dispose de plusieurs montages ou versions alternatives sur votre serveur Jellyfin."
   },
   "nav": {
     "cleanup": "Nettoyage",
@@ -1098,7 +1100,10 @@
     "pluginKeyGeneratedSuccess": "Nouvelle clé d'API générée avec succès.",
     "networkErrorGenerateKey": "Erreur réseau lors de la génération de la clé.",
     "wrappedVisibilityLabel": "Visibilité générale du Wrapped",
-    "wrappedVisibilityDesc": "Afficher ou masquer le Wrapped dans la barre latérale et la navigation."
+    "wrappedVisibilityDesc": "Afficher ou masquer le Wrapped dans la barre latérale et la navigation.",
+    "consolidateHistoryTask": "Consolidation de l'historique",
+    "consolidateHistoryTaskDesc": "Détecte et fusionne les micro-coupures et pauses pour assainir l'historique de lecture.",
+    "dailyAtTime": "Tous les jours à {time}"
   },
   "ssoSettings": {
     "title": "Authentification SSO",

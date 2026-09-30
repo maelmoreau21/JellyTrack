@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, Database, Save, Play, Clock3, ShieldCheck } from "lucide-react";
+import { RefreshCw, Database, Save, Play, Clock3, ShieldCheck, History } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
 import { DEFAULT_SCHEDULER_INTERVALS, normalizeSchedulerIntervals, type SchedulerIntervals } from "@/lib/schedulerIntervals";
@@ -16,6 +16,7 @@ export default function SchedulerTasksPage() {
         fullSync: { loading: false, msg: null },
         backup: { loading: false, msg: null },
         integrityCheck: { loading: false, msg: null },
+        consolidateHistory: { loading: false, msg: null },
     });
 
     useEffect(() => {
@@ -174,6 +175,33 @@ export default function SchedulerTasksPage() {
                         >
                             <Play className={`w-3.5 h-3.5 ${taskStatus.backup.loading ? 'animate-spin' : ''}`} />
                             {taskStatus.backup.loading ? tc('running') : tc('run')}
+                        </button>
+                    </div>
+
+                    <div className="app-surface-soft flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border p-4">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                                <History className="w-4 h-4 text-purple-400 shrink-0" />
+                                <span className="font-medium text-sm">{t('consolidateHistoryTask') || "Consolidation de l'historique"}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1 ml-6">{t('consolidateHistoryTaskDesc') || "Détecte et fusionne les micro-coupures et pauses pour assainir l'historique de lecture."}</p>
+                            <div className="mt-2 ml-6 inline-flex items-center gap-1.5 rounded-full border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-[11px] text-purple-300">
+                                <Clock3 className="w-3 h-3" />
+                                {t('dailyAtTime', { time: '03:45 UTC' }) || "Tous les jours à 03:45 UTC"}
+                            </div>
+                            {taskStatus.consolidateHistory?.msg && (
+                                <div className={`mt-2 ml-6 text-xs ${taskStatus.consolidateHistory.msg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    {taskStatus.consolidateHistory.msg.text}
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => runTask('consolidateHistory', '/api/admin/consolidate-history')}
+                            disabled={taskStatus.consolidateHistory?.loading}
+                            className={`w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all border ${taskStatus.consolidateHistory?.loading ? 'bg-muted text-muted-foreground cursor-not-allowed border-border' : 'bg-purple-600 dark:bg-purple-500 text-white hover:bg-purple-500 dark:hover:bg-purple-400 border-white/20 dark:shadow-[0_0_15px_rgba(168,85,247,0.15)] hover:shadow-md active:scale-95'}`}
+                        >
+                            <Play className={`w-3.5 h-3.5 ${taskStatus.consolidateHistory?.loading ? 'animate-spin' : ''}`} />
+                            {taskStatus.consolidateHistory?.loading ? tc('running') : tc('run')}
                         </button>
                     </div>
                 </CardContent>

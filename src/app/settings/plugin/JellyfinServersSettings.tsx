@@ -62,6 +62,7 @@ export function JellyfinServersSettings() {
   const [pluginLoadingServerId, setPluginLoadingServerId] = useState<string | null>(null);
   const [pluginKeyReady, setPluginKeyReady] = useState<boolean>(false);
   const [pluginLastSeen, setPluginLastSeen] = useState<string | null>(null);
+  const [pluginVersion, setPluginVersion] = useState<string | null>(null);
   const [pluginEndpointPath, setPluginEndpointPath] = useState<string>('/api/plugin/events');
   const [pluginConnected, setPluginConnected] = useState<boolean>(false);
 
@@ -103,6 +104,7 @@ export function JellyfinServersSettings() {
       setServers(serverList);
       setPluginKeyReady(Boolean(json.pluginKeyReady));
       setPluginLastSeen(json.pluginLastSeen || null);
+      setPluginVersion(json.pluginVersion || null);
       setPluginEndpointPath(json.pluginEndpointPath || '/api/plugin/events');
       setPluginConnected(Boolean(json.pluginConnected));
       setIsMultiMode(Boolean(json.isMultiMode));
@@ -501,7 +503,16 @@ export function JellyfinServersSettings() {
                 <div className="rounded-lg border border-border p-3 space-y-2 bg-muted/10">
                   <p className="text-xs font-semibold text-foreground">{t('pluginConnectionFor', { name: server.name })}</p>
 
-                  {pluginLastSeen && <p className="text-[11px] text-muted-foreground">{t('lastHeartbeat', { date: new Date(pluginLastSeen).toLocaleString() })}</p>}
+                  {pluginLastSeen && (
+                    <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                      <span className="text-muted-foreground">{t('lastHeartbeat', { date: new Date(pluginLastSeen).toLocaleString() })}</span>
+                      {pluginVersion && (
+                        <span className={`font-semibold px-2 py-0.5 rounded-full border text-[10px] ${pluginVersion.startsWith('2.') ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
+                          Plugin v{pluginVersion} {pluginVersion.startsWith('2.') ? '• À jour' : '• Mise à jour requise'}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-2">
                     <div className="xl:col-span-8">

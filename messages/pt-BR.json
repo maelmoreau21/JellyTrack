@@ -753,7 +753,9 @@
     "timeline_replay": "Trecho revisto",
     "timeline_speed_change": "Mudança de velocidade",
     "timeline_download": "Download",
-    "languageSegments": "Language periods"
+    "languageSegments": "Language periods",
+    "multiVersionsTitle": "Versões e edições disponíveis ({count})",
+    "multiVersionsDesc": "Este item possui múltiplas versões ou edições alternativas disponíveis no seu servidor Jellyfin."
   },
   "nav": {
     "cleanup": "Limpeza",
@@ -1098,7 +1100,10 @@
     "pluginKeyGeneratedSuccess": "Nova chave de API do plugin gerada com sucesso.",
     "networkErrorGenerateKey": "Erro de rede ao gerar chave.",
     "wrappedVisibilityLabel": "Visibilidade geral do Wrapped",
-    "wrappedVisibilityDesc": "Mostrar ou ocultar o Wrapped na barra lateral e navegação."
+    "wrappedVisibilityDesc": "Mostrar ou ocultar o Wrapped na barra lateral e navegação.",
+    "consolidateHistoryTask": "Consolidação do histórico de reprodução",
+    "consolidateHistoryTaskDesc": "Detecta e mescla sessões de reprodução fragmentadas causadas por pausas ou desconexões.",
+    "dailyAtTime": "Diariamente às {time}"
   },
   "timeRange": {
     "allTime": "Todo o período",

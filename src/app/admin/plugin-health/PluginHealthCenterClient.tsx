@@ -416,6 +416,19 @@ export default function PluginHealthCenterClient({ embedded = false }: { embedde
                                 <span className="font-medium">{snapshot?.plugin.jellyfinVersion || "-"}</span>
                             </div>
                             <div className="flex items-center justify-between gap-3 text-muted-foreground">
+                                <span>Plugin</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="font-medium">{snapshot?.plugin.version ? `v${snapshot.plugin.version}` : "-"}</span>
+                                    {snapshot?.plugin.version && (
+                                        snapshot.plugin.version.startsWith("2.") ? (
+                                            <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] py-0 px-1">v2 OK</Badge>
+                                        ) : (
+                                            <Badge className="bg-amber-500/15 text-amber-400 border-amber-500/30 text-[10px] py-0 px-1">Mise à jour requise</Badge>
+                                        )
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 text-muted-foreground">
                                 <span>{t("schemaVersion")}</span>
                                 <span className="font-medium">{snapshot?.plugin.schemaVersion ?? "-"}</span>
                             </div>

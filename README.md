@@ -39,11 +39,14 @@
 
 ## What JellyTrack Tracks
 
-- Live sessions: user, device, client, direct play/transcode, bitrate, IP and GeoIP.
+- Live sessions: user, device, client, direct play/transcode, video codec (including modern AV1 / FFmpeg 8.1), bitrate, IP and GeoIP.
+- Multi-version & Cuts support: identifies and badges specific editions (e.g. Extended cuts, Theatrical cuts, Black & White versions) and aggregates storage footprint across all media sources.
+- Resilient history consolidation: pauses, buffers, and disconnections are automatically merged into clean sessions instead of fragmented clutter.
 - Playback history: completed, partial, and abandoned media using cumulative user + media history.
 - Downloads: a downloaded media item is counted as one complete view and full watched duration.
 - Fine telemetry: pause/resume, seek ranges, replay ranges, playback speed changes, audio language changes, and subtitle language changes.
 - Behavior insights: skipped passages are shown as `from -> to` ranges, and language periods are derived from initial language plus later changes.
+- Jellyfin 12+ native support: native Books, AudioBooks & Comics libraries, server version detection, and automatic deleted-user cleanup.
 
 ## Docker Installation
 
@@ -93,7 +96,7 @@ https://raw.githubusercontent.com/maelmoreau21/Jellyfin.Plugin.JellyTrack/main/m
 3. Install the JellyTrack plugin.
 4. In JellyTrack, open Settings > Jellyfin Connection, generate a plugin key, then copy the plugin endpoint and key into Jellyfin.
 
-For Jellyfin 10.12 / 12 beta and later, configure `JELLYFIN_API_KEY` in `.env`; JellyTrack uses the `Authorization: MediaBrowser Token="..."` header.
+For Jellyfin 12.x / 12.1+, configure `JELLYFIN_API_KEY` in `.env`; JellyTrack uses the native `Authorization: MediaBrowser Token="..."` header (legacy Emby compatibility has been removed).
 
 ## Plugin Event Contract
 

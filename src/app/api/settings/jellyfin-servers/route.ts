@@ -134,6 +134,7 @@ export async function GET() {
     select: {
       pluginLastSeen: true,
       pluginServerName: true,
+      pluginVersion: true,
     },
   });
   const pluginConnected = pluginRuntime?.pluginLastSeen
@@ -180,6 +181,8 @@ export async function GET() {
       pluginConnected,
       pluginServerName: pluginRuntime?.pluginServerName || null,
       pluginLastSeen: pluginRuntime?.pluginLastSeen || null,
+      pluginVersion: pluginRuntime?.pluginVersion || null,
+      targetPluginVersion: "2.0.0.1",
     },
     { status: 200 }
   );
