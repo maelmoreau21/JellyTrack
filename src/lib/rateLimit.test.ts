@@ -75,7 +75,17 @@ describe("isCloudMetadataHost", () => {
         expect(isCloudMetadataHost("169.254.169.254")).toBe(true);
         expect(isCloudMetadataHost("169.254.10.20")).toBe(true);
         expect(isCloudMetadataHost("metadata.google.internal")).toBe(true);
+        expect(isCloudMetadataHost("sub.metadata.google.internal")).toBe(true);
+        expect(isCloudMetadataHost("metadata.azure.com")).toBe(true);
+        expect(isCloudMetadataHost("sub.metadata.azure.com")).toBe(true);
+        expect(isCloudMetadataHost("metadata.internal")).toBe(true);
+        expect(isCloudMetadataHost("instance-data")).toBe(true);
+        expect(isCloudMetadataHost("sub.instance-data")).toBe(true);
         expect(isCloudMetadataHost("100.100.100.200")).toBe(true);
+        expect(isCloudMetadataHost("169.254.169.254.nip.io")).toBe(true);
+        expect(isCloudMetadataHost("169-254-169-254.sslip.io")).toBe(true);
+        expect(isCloudMetadataHost("100.100.100.200.nip.io")).toBe(true);
+        expect(isCloudMetadataHost("::")).toBe(true);
         expect(isCloudMetadataHost("fd00:ec2::254")).toBe(true);
         expect(isCloudMetadataHost("[fd00:ec2::254]")).toBe(true);
     });

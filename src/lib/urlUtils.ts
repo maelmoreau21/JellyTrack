@@ -7,10 +7,13 @@
 const CLOUD_METADATA_HOSTNAMES = new Set([
     "169.254.169.254",
     "metadata.google.internal",
+    "metadata.azure.com",
     "metadata.internal",
+    "instance-data",
     "100.100.100.200", // Alibaba Cloud metadata
     "[fd00:ec2::254]", // AWS IPv6 metadata
     "fd00:ec2::254",
+    "::",
 ]);
 
 /**
@@ -20,6 +23,26 @@ export function isCloudMetadataHost(hostname: string | null | undefined): boolea
     if (!hostname) return false;
     const lower = hostname.toLowerCase().trim().replace(/^\[|\]$/g, "");
     if (CLOUD_METADATA_HOSTNAMES.has(lower)) return true;
+
+    // Subdomains of known cloud metadata endpoints
+    if (
+        lower.endsWith(".metadata.google.internal") ||
+        lower.endsWith(".metadata.azure.com") ||
+        lower.endsWith(".metadata.internal") ||
+        lower.endsWith(".instance-data")
+    ) {
+        return true;
+    }
+
+    // Block embedded cloud metadata IP domains (e.g., 169.254.169.254.nip.io, 169-254-169-254.sslip.io)
+    if (
+        lower.includes("169.254.") ||
+        lower.includes("169-254-") ||
+        lower.includes("100.100.100.200") ||
+        lower.includes("100-100-100-200")
+    ) {
+        return true;
+    }
 
     // IPv4 Link-local / Cloud Metadata range (169.254.0.0/16)
     if (/^169\.254\.\d{1,3}\.\d{1,3}$/.test(lower)) {
