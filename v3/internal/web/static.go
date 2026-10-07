@@ -1,3 +1,4 @@
+// Package web serves the embedded SPA and mounts the HTTP API.
 package web
 
 import (
@@ -26,7 +27,7 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string) http.Handler {
 	mux := http.NewServeMux()
 	authManager := auth.New(db, driver)
 	authManager.Routes(mux)
-	api.New(db, driver).Register(mux, authManager.Middleware)
+	api.New(db, driver).Register(mux, authManager.Middleware, authManager.AdminMiddleware)
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-store")

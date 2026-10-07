@@ -75,3 +75,75 @@ func TestWeakAdminPasswordDisablesLocalLogin(t *testing.T) {
 		t.Fatalf("status=%d expected configuration refusal", w.Code)
 	}
 }
+
+func TestAdminMiddlewareEnforcesRole(t *testing.T) {
+	m, _ := testManager(t)
+
+	// Create user session and admin session
+	userReq := httptest.NewRequest("GET", "/", nil)
+	userRec := httptest.NewRecorder()
+	userCSRF, err := m.createSession(userRec, userReq, "regular_user", "user")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = userCSRF
+	userCookie := userRec.Result().Cookies()[0]
+
+	adminReq := httptest.NewRequest("GET", "/", nil)
+	adminRec := httptest.NewRecorder()
+	adminCSRF, err := m.createSession(adminRec, adminReq, "admin_user", "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = adminCSRF
+	adminCookie := adminRec.Result().Cookies()[0]
+
+	protectedHandler := m.AdminMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("admin-ok"))
+	}))
+
+	// User role access should return 403 Forbidden
+	reqUser := httptest.NewRequest("GET", "/api/admin/test", nil)
+	reqUser.AddCookie(userCookie)
+	wUser := httptest.NewRecorder()
+	protectedHandler.ServeHTTP(wUser, reqUser)
+	if wUser.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for user role, got %d", wUser.Code)
+	}
+
+	// Admin role access should succeed
+	reqAdmin := httptest.NewRequest("GET", "/api/admin/test", nil)
+	reqAdmin.AddCookie(adminCookie)
+	wAdmin := httptest.NewRecorder()
+	protectedHandler.ServeHTTP(wAdmin, reqAdmin)
+	if wAdmin.Code != http.StatusOK {
+		t.Fatalf("expected 200 for admin role, got %d", wAdmin.Code)
+	}
+}
+
+func TestCSRFProtectionRejectsInvalidToken(t *testing.T) {
+	m, _ := testManager(t)
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/", nil)
+	_, err := m.createSession(rec, req, "admin", "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cookie := rec.Result().Cookies()[0]
+
+	postHandler := m.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	// POST without CSRF token should return 403
+	postReq := httptest.NewRequest("POST", "/api/test", nil)
+	postReq.Host = "localhost:3000"
+	postReq.Header.Set("Origin", "http://localhost:3000")
+	postReq.AddCookie(cookie)
+	w := httptest.NewRecorder()
+	postHandler.ServeHTTP(w, postReq)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for missing CSRF token, got %d", w.Code)
+	}
+}

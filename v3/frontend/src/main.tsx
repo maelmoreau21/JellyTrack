@@ -21,8 +21,9 @@ function App() {
   const [error, setError] = useState("");
   const [summary, setSummary] = useState<Summary | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [oidcEnabled, setOidcEnabled] = useState(false);
 
-  useEffect(() => { getJSON<Session>("/api/auth/me").then(setSession).catch(() => setSession(null)).finally(() => setLoading(false)); }, []);
+  useEffect(() => { getJSON<{oidc:boolean}>("/api/auth/options").then(options => setOidcEnabled(options.oidc)).catch(() => undefined); getJSON<Session>("/api/auth/me").then(setSession).catch(() => setSession(null)).finally(() => setLoading(false)); }, []);
   useEffect(() => { if (session) getJSON<Summary>("/api/dashboard").then(setSummary).catch(e => setError(e.message)); }, [session]);
 
   async function login(event: React.FormEvent) {
@@ -54,10 +55,11 @@ function App() {
   if (loading) return <main className="loading">JellyTrack</main>;
   if (!session) return <main className="login-shell"><form className="login-card" onSubmit={login}>
     <div className="brand"><span className="brand-icon"><Fish size={23} /></span><span>JellyTrack</span></div>
-    <p className="eyebrow">VOTRE MÉDIATHÈQUE, EN UN COUP D’ŒIL</p><h1>Bienvenue</h1><p className="muted">Connectez-vous avec le compte administrateur local configuré sur le serveur.</p>
+    <p className="eyebrow">VOTRE MÉDIATHÈQUE, EN UN COUP D’ŒIL</p><h1>Bienvenue</h1><p className="muted">Connectez-vous avec votre compte Jellyfin ou le compte administrateur local.</p>
     <label>Nom d’utilisateur<input autoComplete="username" required value={username} onChange={e => setUsername(e.target.value)} /></label>
     <label>Mot de passe<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
     {error && <p role="alert" className="error">{error}</p>}<button className="primary full" type="submit">Se connecter</button>
+    {oidcEnabled && <a className="secondary full oidc-link" href="/api/auth/oidc/start">Se connecter avec SSO</a>}
   </form></main>;
 
   const hours = summary ? Math.floor(summary.durationMs / 3_600_000) : 0;

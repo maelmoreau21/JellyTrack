@@ -1,6 +1,8 @@
+// Package auth implements local and OpenID Connect sessions.
 package auth
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
@@ -9,25 +11,35 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
-	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/maelmoreau21/jellytrack/v3/internal/database"
+	"github.com/maelmoreau21/jellytrack/v3/internal/jellyfin"
+	"github.com/maelmoreau21/jellytrack/v3/internal/requestip"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
 )
 
 const cookieName = "jellytrack_session"
 
 type Manager struct {
-	db                       *sql.DB
-	driver, secret, username string
-	passwordHash             []byte
-	secure                   bool
+	db                             *sql.DB
+	driver, secret, username       string
+	passwordHash                   []byte
+	secure                         bool
+	oidcIssuer                     string
+	oidcClientID, oidcClientSecret string
+	oidcUserGroup, oidcAdminGroup  string
+	oidcEnabled                    bool
+	oidcTimeout                    time.Duration
 }
 type Principal struct {
 	Username  string `json:"username"`
@@ -38,6 +50,168 @@ type Principal struct {
 type loginBucket struct {
 	count int
 	reset time.Time
+}
+
+const oidcFlowCookie = "jellytrack_oidc_flow"
+
+func (m *Manager) oidcStart(w http.ResponseWriter, r *http.Request) {
+	if !m.oidcEnabled || m.secret == "" {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "Connexion OIDC non configurée."})
+		return
+	}
+	provider, oauth, err := m.oidcConfig(r.Context())
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "Le fournisseur OIDC est inaccessible."})
+		return
+	}
+	_ = provider
+	state, err := randomValue(32)
+	if err != nil {
+		writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
+		return
+	}
+	nonce, err := randomValue(32)
+	if err != nil {
+		writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
+		return
+	}
+	verifier := oauth2.GenerateVerifier()
+	flow := state + "." + nonce + "." + verifier
+	http.SetCookie(w, &http.Cookie{Name: oidcFlowCookie, Value: flow, Path: "/api/auth/oidc", MaxAge: 600, HttpOnly: true, Secure: m.secure, SameSite: http.SameSiteLaxMode})
+	query := oauth2.SetAuthURLParam("nonce", nonce)
+	http.Redirect(w, r, oauth.AuthCodeURL(state, query, oauth2.S256ChallengeOption(verifier)), http.StatusFound)
+}
+
+func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
+	clearFlow := func() {
+		http.SetCookie(w, &http.Cookie{Name: oidcFlowCookie, Value: "", Path: "/api/auth/oidc", MaxAge: -1, HttpOnly: true, Secure: m.secure, SameSite: http.SameSiteLaxMode})
+	}
+	if !m.oidcEnabled || m.secret == "" {
+		writeJSON(w, 503, map[string]string{"error": "Connexion OIDC non configurée."})
+		return
+	}
+	cookie, err := r.Cookie(oidcFlowCookie)
+	if err != nil {
+		writeJSON(w, 400, map[string]string{"error": "État OIDC manquant."})
+		return
+	}
+	parts := strings.Split(cookie.Value, ".")
+	if len(parts) != 3 || !constantStringEqual(parts[0], r.URL.Query().Get("state")) || r.URL.Query().Get("code") == "" {
+		clearFlow()
+		writeJSON(w, 400, map[string]string{"error": "État OIDC invalide."})
+		return
+	}
+	if provider, oauth, e := m.oidcConfig(r.Context()); e == nil {
+		ctx, cancel := context.WithTimeout(r.Context(), m.oidcTimeout)
+		defer cancel()
+		token, e := oauth.Exchange(ctx, r.URL.Query().Get("code"), oauth2.VerifierOption(parts[2]))
+		if e != nil {
+			clearFlow()
+			writeJSON(w, 401, map[string]string{"error": "Échange OIDC refusé."})
+			return
+		}
+		raw, ok := token.Extra("id_token").(string)
+		if !ok {
+			clearFlow()
+			writeJSON(w, 401, map[string]string{"error": "Jeton OIDC manquant."})
+			return
+		}
+		idToken, e := provider.Verifier(&oidc.Config{ClientID: m.oidcClientID}).Verify(ctx, raw)
+		if e != nil {
+			clearFlow()
+			writeJSON(w, 401, map[string]string{"error": "Jeton OIDC invalide."})
+			return
+		}
+		var claims struct {
+			Nonce    string   `json:"nonce"`
+			Subject  string   `json:"sub"`
+			Username string   `json:"preferred_username"`
+			Name     string   `json:"name"`
+			Email    string   `json:"email"`
+			Groups   []string `json:"groups"`
+		}
+		if e = idToken.Claims(&claims); e != nil || !constantStringEqual(claims.Nonce, parts[1]) {
+			clearFlow()
+			writeJSON(w, 401, map[string]string{"error": "Vérification OIDC refusée."})
+			return
+		}
+		username := first(claims.Username, claims.Email, claims.Name, claims.Subject)
+		if username == "" {
+			clearFlow()
+			writeJSON(w, 403, map[string]string{"error": "Le profil OIDC ne fournit pas de nom."})
+			return
+		}
+		role := ""
+		for _, group := range claims.Groups {
+			if m.oidcAdminGroup != "" && group == m.oidcAdminGroup {
+				role = "admin"
+				break
+			}
+			if m.oidcUserGroup != "" && group == m.oidcUserGroup {
+				role = "user"
+			}
+		}
+		if role == "" {
+			clearFlow()
+			writeJSON(w, 403, map[string]string{"error": "Accès refusé : aucun groupe JellyTrack autorisé."})
+			return
+		}
+		if _, e = m.createSession(w, r, username, role); e != nil {
+			clearFlow()
+			writeJSON(w, 500, map[string]string{"error": "Impossible de créer la session."})
+			return
+		}
+		clearFlow()
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+	clearFlow()
+	writeJSON(w, 502, map[string]string{"error": "Le fournisseur OIDC est inaccessible."})
+}
+
+func (m *Manager) oidcConfig(ctx context.Context) (*oidc.Provider, *oauth2.Config, error) {
+	issuer := m.oidcIssuer
+	if issuer == "" {
+		return nil, nil, sql.ErrNoRows
+	}
+	ctx, cancel := context.WithTimeout(ctx, m.oidcTimeout)
+	defer cancel()
+	provider, err := oidc.NewProvider(ctx, issuer)
+	if err != nil {
+		return nil, nil, err
+	}
+	base := strings.TrimRight(strings.TrimSpace(os.Getenv("NEXTAUTH_URL")), "/")
+	parsed, err := url.Parse(base)
+	if err != nil || parsed.Host == "" || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.User != nil {
+		return nil, nil, fmt.Errorf("NEXTAUTH_URL must be an absolute HTTP(S) URL")
+	}
+	config := &oauth2.Config{ClientID: m.oidcClientID, ClientSecret: m.oidcClientSecret, Endpoint: provider.Endpoint(), RedirectURL: base + "/api/auth/oidc/callback", Scopes: []string{oidc.ScopeOpenID, "profile", "email", "groups"}}
+	return provider, config, nil
+}
+
+func (m *Manager) createSession(w http.ResponseWriter, r *http.Request, username, role string) (string, error) {
+	idBytes := make([]byte, 32)
+	if _, err := rand.Read(idBytes); err != nil {
+		return "", err
+	}
+	id := base64.RawURLEncoding.EncodeToString(idBytes)
+	expires := time.Now().UTC().Add(12 * time.Hour)
+	if _, err := m.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "AuthSession" ("id","username","role","expiresAt") VALUES (?,?,?,?)`, m.driver), id, username, role, expires.Format(time.RFC3339Nano)); err != nil {
+		return "", err
+	}
+	http.SetCookie(w, &http.Cookie{Name: cookieName, Value: m.sign(id, expires.Unix()), Path: "/", Expires: expires, HttpOnly: true, Secure: m.secure, SameSite: http.SameSiteLaxMode})
+	return m.csrf(id), nil
+}
+
+func randomValue(n int) (string, error) {
+	value := make([]byte, n)
+	if _, err := rand.Read(value); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(value), nil
+}
+func constantStringEqual(a, b string) bool {
+	return len(a) == len(b) && subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
 }
 
 var loginMu sync.Mutex
@@ -51,20 +225,23 @@ func New(db *sql.DB, driver string) *Manager {
 	if strongPassword(username, password) && len(secret) >= 32 && !strings.HasPrefix(secret, "CHANGE_ME") {
 		hash, _ = bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	}
-	return &Manager{db: db, driver: driver, secret: secret, username: username, passwordHash: hash, secure: true}
+	issuer := first(os.Getenv("OIDC_ISSUER"), os.Getenv("OIDC_URL"), os.Getenv("AUTHENTIK_URL"), os.Getenv("JELLYTRACK_AUTHENTIK_URL"))
+	return &Manager{db: db, driver: driver, secret: secret, username: username, passwordHash: hash, secure: true, oidcIssuer: strings.TrimRight(issuer, "/"), oidcClientID: strings.TrimSpace(os.Getenv("OIDC_CLIENT_ID")), oidcClientSecret: os.Getenv("OIDC_CLIENT_SECRET"), oidcUserGroup: strings.TrimSpace(os.Getenv("OIDC_USER_GROUP")), oidcAdminGroup: strings.TrimSpace(os.Getenv("OIDC_ADMIN_GROUP")), oidcEnabled: strings.EqualFold(os.Getenv("OIDC_ENABLED"), "true") && issuer != "" && os.Getenv("OIDC_CLIENT_ID") != "" && os.Getenv("OIDC_CLIENT_SECRET") != "", oidcTimeout: 15 * time.Second}
 }
 
 func (m *Manager) Routes(mux *http.ServeMux) {
+	mux.HandleFunc("GET /api/auth/options", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]bool{"oidc": m.oidcEnabled})
+	})
 	mux.HandleFunc("POST /api/auth/login", m.login)
 	mux.HandleFunc("GET /api/auth/me", m.me)
 	mux.HandleFunc("POST /api/auth/logout", m.logout)
+	mux.HandleFunc("GET /api/auth/oidc/start", m.oidcStart)
+	mux.HandleFunc("GET /api/auth/oidc/callback", m.oidcCallback)
 }
 
 func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
-	key := r.RemoteAddr
-	if host, _, err := net.SplitHostPort(key); err == nil {
-		key = host
-	}
+	key := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
 	loginMu.Lock()
 	bucket := loginAttempts[key]
 	now := time.Now()
@@ -104,37 +281,54 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]string{"error": "Requête invalide."})
 		return
 	}
-	if len(m.passwordHash) == 0 || m.secret == "" {
-		writeJSON(w, 503, map[string]string{"error": "Connexion locale non configurée. Définissez un secret et un mot de passe administrateur fort."})
-		return
-	}
-	userOK := subtle.ConstantTimeCompare([]byte(input.Username), []byte(m.username)) == 1
-	passErr := bcrypt.CompareHashAndPassword(m.passwordHash, []byte(input.Password))
-	if !userOK || passErr != nil {
-		writeJSON(w, 401, map[string]string{"error": "Identifiants invalides."})
+	if m.secret == "" {
+		writeJSON(w, 503, map[string]string{"error": "Définissez un secret de session d’au moins 32 caractères."})
 		return
 	}
 	if !sameOrigin(r) {
 		writeJSON(w, 403, map[string]string{"error": "Origine refusée."})
 		return
 	}
-	idBytes := make([]byte, 32)
-	if _, err := rand.Read(idBytes); err != nil {
-		writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
+	userOK := subtle.ConstantTimeCompare([]byte(input.Username), []byte(m.username)) == 1
+	if userOK && len(m.passwordHash) > 0 && bcrypt.CompareHashAndPassword(m.passwordHash, []byte(input.Password)) == nil {
+		csrf, err := m.createSession(w, r, m.username, "admin")
+		if err != nil {
+			writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
+			return
+		}
+		loginMu.Lock()
+		delete(loginAttempts, key)
+		loginMu.Unlock()
+		writeJSON(w, 200, Principal{Username: m.username, Role: "admin", CSRFToken: csrf})
 		return
 	}
-	id := base64.RawURLEncoding.EncodeToString(idBytes)
-	expires := time.Now().UTC().Add(12 * time.Hour)
-	loginMu.Lock()
-	delete(loginAttempts, key)
-	loginMu.Unlock()
-	if _, err := m.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "AuthSession" ("id","username","role","expiresAt") VALUES (?,?,?,?)`, m.driver), id, m.username, "admin", expires.Format(time.RFC3339Nano)); err != nil {
-		writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
+	if len(m.passwordHash) == 0 && userOK && strings.TrimSpace(os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD")) != "" {
+		writeJSON(w, 503, map[string]string{"error": "Le mot de passe administrateur local est trop faible. Définissez un mot de passe de 12 caractères minimum, avec au moins trois types de caractères."})
 		return
 	}
-	csrf := m.csrf(id)
-	w.Header().Set("Set-Cookie", (&http.Cookie{Name: cookieName, Value: m.sign(id, expires.Unix()), Path: "/", Expires: expires, HttpOnly: true, Secure: m.secure, SameSite: http.SameSiteLaxMode}).String())
-	writeJSON(w, 200, Principal{Username: m.username, Role: "admin", CSRFToken: csrf})
+	baseURL := first(os.Getenv("JELLYFIN_URL"))
+	if baseURL != "" {
+		ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
+		user, err := jellyfin.Authenticate(ctx, baseURL, input.Username, input.Password)
+		cancel()
+		if err == nil {
+			role := "user"
+			if user.Policy.IsAdministrator {
+				role = "admin"
+			}
+			csrf, e := m.createSession(w, r, user.Name, role)
+			if e != nil {
+				writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
+				return
+			}
+			loginMu.Lock()
+			delete(loginAttempts, key)
+			loginMu.Unlock()
+			writeJSON(w, 200, Principal{Username: user.Name, Role: role, CSRFToken: csrf})
+			return
+		}
+	}
+	writeJSON(w, 401, map[string]string{"error": "Identifiants invalides."})
 }
 
 func (m *Manager) me(w http.ResponseWriter, r *http.Request) {
@@ -174,6 +368,17 @@ func (m *Manager) Middleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (m *Manager) AdminMiddleware(next http.Handler) http.Handler {
+	return m.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		principal, ok := m.authenticate(r)
+		if !ok || principal.Role != "admin" {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "Droits administrateur requis."})
+			return
+		}
+		next.ServeHTTP(w, r)
+	}))
 }
 func (m *Manager) authenticate(r *http.Request) (Principal, bool) {
 	c, err := r.Cookie(cookieName)

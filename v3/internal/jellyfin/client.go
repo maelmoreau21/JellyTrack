@@ -126,6 +126,54 @@ type Session struct {
 	RemoteEndPoint string `json:"RemoteEndPoint"`
 }
 
+type AuthenticatedUser struct {
+	ID     string `json:"Id"`
+	Name   string `json:"Name"`
+	Policy struct {
+		IsAdministrator bool `json:"IsAdministrator"`
+	} `json:"Policy"`
+}
+
+func Authenticate(ctx context.Context, baseURL, username, password string) (AuthenticatedUser, error) {
+	var result struct {
+		User AuthenticatedUser `json:"User"`
+	}
+	u := strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	if u == "" || username == "" || password == "" {
+		return AuthenticatedUser{}, fmt.Errorf("Jellyfin URL, username, and password are required")
+	}
+	body, err := json.Marshal(map[string]string{"Username": username, "Pw": password})
+	if err != nil {
+		return AuthenticatedUser{}, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u+"/Users/AuthenticateByName", strings.NewReader(string(body)))
+	if err != nil {
+		return AuthenticatedUser{}, err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="3.0.0"`)
+	resp, err := (&http.Client{Timeout: 12 * time.Second}).Do(req)
+	if err != nil {
+		return AuthenticatedUser{}, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+		return AuthenticatedUser{}, fmt.Errorf("invalid Jellyfin credentials")
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return AuthenticatedUser{}, fmt.Errorf("Jellyfin returned HTTP %d", resp.StatusCode)
+	}
+	decoder := json.NewDecoder(io.LimitReader(resp.Body, 64<<10))
+	if err := decoder.Decode(&result); err != nil {
+		return AuthenticatedUser{}, fmt.Errorf("invalid Jellyfin login response: %w", err)
+	}
+	if result.User.ID == "" || result.User.Name == "" {
+		return AuthenticatedUser{}, fmt.Errorf("Jellyfin login response has no user")
+	}
+	return result.User, nil
+}
+
 func (c *Client) SystemInfo(ctx context.Context) (SystemInfo, error) {
 	var out SystemInfo
 	err := c.get(ctx, "/System/Info", nil, &out)

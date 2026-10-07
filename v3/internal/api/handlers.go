@@ -1,3 +1,4 @@
+// Package api contains the authenticated application endpoints.
 package api
 
 import (
@@ -21,10 +22,11 @@ type Handler struct {
 }
 
 func New(db *sql.DB, driver string) *Handler { return &Handler{db: db, driver: driver} }
-func (h *Handler) Register(mux *http.ServeMux, protect func(http.Handler) http.Handler) {
-	for path, fn := range map[string]http.HandlerFunc{"GET /api/dashboard": h.dashboard, "GET /api/users": h.users, "GET /api/history": h.history, "POST /api/sync": h.sync, "GET /api/jellyfin/sessions": h.sessions} {
+func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.Handler) http.Handler) {
+	for path, fn := range map[string]http.HandlerFunc{"GET /api/dashboard": h.dashboard, "GET /api/users": h.users, "GET /api/history": h.history, "GET /api/jellyfin/sessions": h.sessions} {
 		mux.Handle(path, protect(fn))
 	}
+	mux.Handle("POST /api/sync", adminProtect(http.HandlerFunc(h.sync)))
 }
 func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
 	days := boundedInt(r.URL.Query().Get("days"), 30, 1, 365)

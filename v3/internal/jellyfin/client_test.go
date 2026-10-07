@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -55,5 +56,25 @@ func TestClientUsesMediaBrowserTokenAndPaginates(t *testing.T) {
 func TestNewRejectsCredentialsInURL(t *testing.T) {
 	if _, err := New("https://user:password@example.test", "key"); err == nil {
 		t.Fatal("expected URL credentials to be rejected")
+	}
+}
+
+func TestAuthenticateByName(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/Users/AuthenticateByName" || r.Method != "POST" {
+			t.Errorf("request=%s %s", r.Method, r.URL.Path)
+		}
+		if !strings.HasPrefix(r.Header.Get("Authorization"), `MediaBrowser Client="JellyTrack"`) {
+			t.Errorf("authorization=%q", r.Header.Get("Authorization"))
+		}
+		fmt.Fprint(w, `{"User":{"Id":"u1","Name":"Mael","Policy":{"IsAdministrator":true}},"AccessToken":"ignored","ServerId":"srv"}`)
+	}))
+	defer server.Close()
+	user, err := Authenticate(context.Background(), server.URL, "Mael", "secret")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if user.ID != "u1" || !user.Policy.IsAdministrator {
+		t.Fatalf("user=%+v", user)
 	}
 }

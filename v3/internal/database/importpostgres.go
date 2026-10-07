@@ -1,3 +1,4 @@
+// Package database provides storage connections, migrations, and data import.
 package database
 
 import (

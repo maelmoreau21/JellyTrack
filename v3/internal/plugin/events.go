@@ -1,3 +1,4 @@
+// Package plugin receives and stores Jellyfin plugin events.
 package plugin
 
 import (
@@ -25,6 +26,7 @@ import (
 	"time"
 
 	"github.com/maelmoreau21/jellytrack/v3/internal/database"
+	"github.com/maelmoreau21/jellytrack/v3/internal/requestip"
 	"golang.org/x/crypto/scrypt"
 )
 
@@ -1699,11 +1701,7 @@ func (l *limiter) consume(key string) (int, bool) {
 	return 0, true
 }
 func clientIP(r *http.Request) string {
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		host = r.RemoteAddr
-	}
-	return host
+	return requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
 }
 func max(a, b int) int {
 	if a > b {
