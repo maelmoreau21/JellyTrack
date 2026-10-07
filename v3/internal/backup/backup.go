@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -359,20 +360,24 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 	if rawServers, ok := dbData["servers"].([]any); ok {
 		for _, s := range rawServers {
 			if m, ok := s.(map[string]any); ok {
-				id, _ := m["id"].(string)
-				jid, _ := m["jellyfinServerId"].(string)
-				name, _ := m["name"].(string)
-				url, _ := m["url"].(string)
+				id := stringVal(m, "id", "")
 				if id == "" {
 					continue
 				}
-				if jid == "" {
-					jid = id
+				jid := stringVal(m, "jellyfinServerId", id)
+				name := stringVal(m, "name", "Imported Server")
+				url := stringVal(m, "url", "")
+				apiKey := nullStringVal(m, "jellyfinApiKey")
+				allowAuth := boolVal(m, "allowAuthFallback", false)
+				isActive := boolVal(m, "isActive", true)
+				createdAt := stringVal(m, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))
+				updatedAt := stringVal(m, "updatedAt", createdAt)
+
+				_, err = tx.ExecContext(ctx, database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","allowAuthFallback","isActive","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?)`, driver),
+					id, jid, name, url, apiKey, allowAuth, isActive, createdAt, updatedAt)
+				if err != nil {
+					return fmt.Errorf("insert server %s: %w", id, err)
 				}
-				if name == "" {
-					name = "Imported Server"
-				}
-				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url") VALUES (?,?,?,?)`, driver), id, jid, name, url)
 			}
 		}
 	}
@@ -381,20 +386,23 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 	if rawUsers, ok := dbData["users"].([]any); ok {
 		for _, u := range rawUsers {
 			if m, ok := u.(map[string]any); ok {
-				id, _ := m["id"].(string)
-				sid, _ := m["serverId"].(string)
-				jid, _ := m["jellyfinUserId"].(string)
-				username, _ := m["username"].(string)
+				id := stringVal(m, "id", "")
+				sid := stringVal(m, "serverId", "")
 				if id == "" || sid == "" {
 					continue
 				}
-				if jid == "" {
-					jid = id
+				jid := stringVal(m, "jellyfinUserId", id)
+				username := stringVal(m, "username", "User")
+				isActive := boolVal(m, "isActive", true)
+				lastActive := nullStringVal(m, "lastActive")
+				createdAt := stringVal(m, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))
+				updatedAt := stringVal(m, "updatedAt", createdAt)
+
+				_, err = tx.ExecContext(ctx, database.Bind(`INSERT INTO "User" ("id","serverId","jellyfinUserId","username","isActive","lastActive","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?)`, driver),
+					id, sid, jid, username, isActive, lastActive, createdAt, updatedAt)
+				if err != nil {
+					return fmt.Errorf("insert user %s: %w", id, err)
 				}
-				if username == "" {
-					username = "User"
-				}
-				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "User" ("id","serverId","jellyfinUserId","username") VALUES (?,?,?,?)`, driver), id, sid, jid, username)
 			}
 		}
 	}
@@ -403,23 +411,34 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 	if rawMedia, ok := dbData["media"].([]any); ok {
 		for _, med := range rawMedia {
 			if m, ok := med.(map[string]any); ok {
-				id, _ := m["id"].(string)
-				sid, _ := m["serverId"].(string)
-				jid, _ := m["jellyfinMediaId"].(string)
-				title, _ := m["title"].(string)
-				mType, _ := m["type"].(string)
-				lib, _ := m["libraryName"].(string)
-				dur, _ := m["durationMs"].(float64)
+				id := stringVal(m, "id", "")
+				sid := stringVal(m, "serverId", "")
 				if id == "" || sid == "" {
 					continue
 				}
-				if jid == "" {
-					jid = id
+				jid := stringVal(m, "jellyfinMediaId", id)
+				title := stringVal(m, "title", "Unknown")
+				mType := stringVal(m, "type", "Unknown")
+				collectionType := nullStringVal(m, "collectionType")
+				libraryName := nullStringVal(m, "libraryName")
+				genres := jsonCol(m, "genres", "[]")
+				resolution := nullStringVal(m, "resolution")
+				durationMs := nullIntVal(m, "durationMs")
+				size := nullIntVal(m, "size")
+				directors := jsonCol(m, "directors", "[]")
+				actors := jsonCol(m, "actors", "[]")
+				studios := jsonCol(m, "studios", "[]")
+				parentId := nullStringVal(m, "parentId")
+				artist := nullStringVal(m, "artist")
+				dateAdded := nullStringVal(m, "dateAdded")
+				createdAt := stringVal(m, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))
+				updatedAt := stringVal(m, "updatedAt", createdAt)
+
+				_, err = tx.ExecContext(ctx, database.Bind(`INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","resolution","durationMs","size","directors","actors","studios","parentId","artist","dateAdded","createdAt","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, driver),
+					id, sid, jid, title, mType, collectionType, libraryName, genres, resolution, durationMs, size, directors, actors, studios, parentId, artist, dateAdded, createdAt, updatedAt)
+				if err != nil {
+					return fmt.Errorf("insert media %s: %w", id, err)
 				}
-				if mType == "" {
-					mType = "Unknown"
-				}
-				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","libraryName","durationMs") VALUES (?,?,?,?,?,?,?)`, driver), id, sid, jid, title, mType, lib, int64(dur))
 			}
 		}
 	}
@@ -428,48 +447,260 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 	if rawHistory, ok := dbData["playbackHistory"].([]any); ok {
 		for _, h := range rawHistory {
 			if m, ok := h.(map[string]any); ok {
-				id, _ := m["id"].(string)
-				sid, _ := m["serverId"].(string)
-				uid, _ := m["userId"].(string)
-				mid, _ := m["mediaId"].(string)
-				playMethod, _ := m["playMethod"].(string)
-				started, _ := m["startedAt"].(string)
-				dur, _ := m["durationWatched"].(float64)
+				id := stringVal(m, "id", "")
+				sid := stringVal(m, "serverId", "")
+				mid := stringVal(m, "mediaId", "")
 				if id == "" || sid == "" || mid == "" {
 					continue
 				}
-				if playMethod == "" {
-					playMethod = "DirectPlay"
+				uid := nullStringVal(m, "userId")
+				playMethod := stringVal(m, "playMethod", "DirectPlay")
+				eventSource := stringVal(m, "eventSource", "playback")
+				sourceEventId := nullStringVal(m, "sourceEventId")
+				clientName := nullStringVal(m, "clientName")
+				deviceName := nullStringVal(m, "deviceName")
+				ipAddress := nullStringVal(m, "ipAddress")
+				country := nullStringVal(m, "country")
+				city := nullStringVal(m, "city")
+				durationWatched := intVal(m, "durationWatched", 0)
+				startedAt := stringVal(m, "startedAt", time.Now().UTC().Format(time.RFC3339Nano))
+				endedAt := nullStringVal(m, "endedAt")
+				audioLang := nullStringVal(m, "audioLanguage")
+				audioCodec := nullStringVal(m, "audioCodec")
+				subLang := nullStringVal(m, "subtitleLanguage")
+				subCodec := nullStringVal(m, "subtitleCodec")
+				bitrate := nullIntVal(m, "bitrate")
+				pauseCount := intVal(m, "pauseCount", 0)
+				audioChg := intVal(m, "audioChanges", 0)
+				subChg := intVal(m, "subtitleChanges", 0)
+				seekCount := intVal(m, "seekCount", 0)
+				rewatchCount := intVal(m, "rewatchCount", 0)
+				speedChg := intVal(m, "speedChangeCount", 0)
+				maxRate := nullFloatVal(m, "maxPlaybackRate")
+
+				_, err = tx.ExecContext(ctx, database.Bind(`INSERT INTO "PlaybackHistory" ("id","serverId","userId","mediaId","playMethod","eventSource","sourceEventId","clientName","deviceName","ipAddress","country","city","durationWatched","startedAt","endedAt","audioLanguage","audioCodec","subtitleLanguage","subtitleCodec","bitrate","pauseCount","audioChanges","subtitleChanges","seekCount","rewatchCount","speedChangeCount","maxPlaybackRate") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, driver),
+					id, sid, uid, mid, playMethod, eventSource, sourceEventId, clientName, deviceName, ipAddress, country, city, durationWatched, startedAt, endedAt, audioLang, audioCodec, subLang, subCodec, bitrate, pauseCount, audioChg, subChg, seekCount, rewatchCount, speedChg, maxRate)
+				if err != nil {
+					return fmt.Errorf("insert playback history %s: %w", id, err)
 				}
-				if started == "" {
-					started = time.Now().UTC().Format(time.RFC3339Nano)
-				}
-				var uVal any
-				if uid != "" {
-					uVal = uid
-				}
-				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "PlaybackHistory" ("id","serverId","userId","mediaId","playMethod","startedAt","durationWatched") VALUES (?,?,?,?,?,?,?)`, driver), id, sid, uVal, mid, playMethod, started, int64(dur))
 			}
 		}
 	}
 
-	// 6. Update Settings if provided
-	if sObj, ok := setData["settings"].(map[string]any); ok && sObj != nil {
-		exclJSON := "[]"
-		if arr, ok := sObj["excludedLibraries"].([]any); ok {
-			var strList []string
-			for _, item := range arr {
-				if s, ok := item.(string); ok && strings.TrimSpace(s) != "" {
-					strList = append(strList, strings.TrimSpace(s))
+	// 6. Insert TelemetryEvents
+	if rawTelemetry, ok := dbData["telemetryEvents"].([]any); ok {
+		for _, te := range rawTelemetry {
+			if m, ok := te.(map[string]any); ok {
+				id := stringVal(m, "id", "")
+				sid := stringVal(m, "serverId", "")
+				pid := stringVal(m, "playbackId", "")
+				if id == "" || sid == "" || pid == "" {
+					continue
 				}
+				evType := stringVal(m, "eventType", "progress")
+				posMs := intVal(m, "positionMs", 0)
+				meta := nullStringVal(m, "metadata")
+				createdAt := stringVal(m, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))
+
+				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "TelemetryEvent" ("id","serverId","playbackId","eventType","positionMs","metadata","createdAt") VALUES (?,?,?,?,?,?,?)`, driver),
+					id, sid, pid, evType, posMs, meta, createdAt)
 			}
-			b, _ := json.Marshal(strList)
-			exclJSON = string(b)
 		}
-		_, _ = tx.ExecContext(ctx, database.Bind(`UPDATE "GlobalSettings" SET "excludedLibraries" = ? WHERE "id" = 'global'`, driver), exclJSON)
+	}
+
+	// 7. Insert DailyStats
+	if rawDaily, ok := dbData["dailyStats"].([]any); ok {
+		for _, ds := range rawDaily {
+			if m, ok := ds.(map[string]any); ok {
+				id := stringVal(m, "id", "")
+				date := stringVal(m, "date", "")
+				if id == "" || date == "" {
+					continue
+				}
+				uid := nullStringVal(m, "userId")
+				lib := nullStringVal(m, "libraryName")
+				mType := nullStringVal(m, "mediaType")
+				plays := intVal(m, "totalPlays", 0)
+				dur := intVal(m, "totalDuration", 0)
+				direct := intVal(m, "directPlays", 0)
+				trans := intVal(m, "transcodes", 0)
+				unique := intVal(m, "uniqueMedia", 0)
+				updatedAt := stringVal(m, "updatedAt", time.Now().UTC().Format(time.RFC3339Nano))
+
+				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "DailyStats" ("id","date","userId","libraryName","mediaType","totalPlays","totalDuration","directPlays","transcodes","uniqueMedia","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,?)`, driver),
+					id, date, uid, lib, mType, plays, dur, direct, trans, unique, updatedAt)
+			}
+		}
+	}
+
+	// 8. Insert AdminAuditLogs
+	if rawLogs, ok := dbData["adminAuditLogs"].([]any); ok {
+		for _, al := range rawLogs {
+			if m, ok := al.(map[string]any); ok {
+				id := stringVal(m, "id", "")
+				action := stringVal(m, "action", "")
+				if id == "" || action == "" {
+					continue
+				}
+				actorUID := nullStringVal(m, "actorUserId")
+				actorUname := nullStringVal(m, "actorUsername")
+				target := nullStringVal(m, "target")
+				ip := nullStringVal(m, "ipAddress")
+				details := jsonCol(m, "details", "{}")
+				createdAt := stringVal(m, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))
+
+				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "AdminAuditLog" ("id","action","actorUserId","actorUsername","target","ipAddress","details","createdAt") VALUES (?,?,?,?,?,?,?,?)`, driver),
+					id, action, actorUID, actorUname, target, ip, details, createdAt)
+			}
+		}
+	}
+
+	// 9. Update GlobalSettings if provided
+	var sObj map[string]any
+	if s, ok := setData["settings"].(map[string]any); ok && s != nil {
+		sObj = s
+	} else if s, ok := dbData["settings"].(map[string]any); ok && s != nil {
+		sObj = s
+	}
+	if sObj != nil {
+		exclJSON := jsonCol(sObj, "excludedLibraries", "[]")
+		webhook := nullStringVal(sObj, "discordWebhookUrl")
+		locale := stringVal(sObj, "defaultLocale", "en")
+		timeFmt := stringVal(sObj, "timeFormat", "24h")
+		pluginKey := nullStringVal(sObj, "pluginApiKey")
+		pluginKeyCreated := nullStringVal(sObj, "pluginKeyCreatedAt")
+
+		var exists bool
+		_ = tx.QueryRowContext(ctx, database.Bind(`SELECT EXISTS(SELECT 1 FROM "GlobalSettings" WHERE "id"='global')`, driver)).Scan(&exists)
+		if !exists {
+			_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "GlobalSettings" ("id","excludedLibraries","discordWebhookUrl","defaultLocale","timeFormat","pluginApiKey","pluginKeyCreatedAt") VALUES ('global',?,?,?,?,?,?)`, driver),
+				exclJSON, webhook, locale, timeFmt, pluginKey, pluginKeyCreated)
+		} else {
+			_, _ = tx.ExecContext(ctx, database.Bind(`UPDATE "GlobalSettings" SET "excludedLibraries" = ?, "discordWebhookUrl" = COALESCE(?, "discordWebhookUrl"), "defaultLocale" = ?, "timeFormat" = ?, "pluginApiKey" = COALESCE(?, "pluginApiKey"), "pluginKeyCreatedAt" = COALESCE(?, "pluginKeyCreatedAt") WHERE "id" = 'global'`, driver),
+				exclJSON, webhook, locale, timeFmt, pluginKey, pluginKeyCreated)
+		}
 	}
 
 	return tx.Commit()
+}
+
+func stringVal(m map[string]any, key, fallback string) string {
+	if val, ok := m[key]; ok && val != nil {
+		if s, ok := val.(string); ok && strings.TrimSpace(s) != "" {
+			return strings.TrimSpace(s)
+		}
+	}
+	return fallback
+}
+
+func nullStringVal(m map[string]any, key string) any {
+	if val, ok := m[key]; ok && val != nil {
+		if s, ok := val.(string); ok && strings.TrimSpace(s) != "" {
+			return strings.TrimSpace(s)
+		}
+	}
+	return nil
+}
+
+func intVal(m map[string]any, key string, fallback int64) int64 {
+	if val, ok := m[key]; ok && val != nil {
+		switch v := val.(type) {
+		case float64:
+			return int64(v)
+		case int64:
+			return v
+		case int:
+			return int64(v)
+		case string:
+			if parsed, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64); err == nil {
+				return parsed
+			}
+		}
+	}
+	return fallback
+}
+
+func nullIntVal(m map[string]any, key string) any {
+	if val, ok := m[key]; ok && val != nil {
+		switch v := val.(type) {
+		case float64:
+			return int64(v)
+		case int64:
+			return v
+		case int:
+			return int64(v)
+		case string:
+			if parsed, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64); err == nil {
+				return parsed
+			}
+		}
+	}
+	return nil
+}
+
+func nullFloatVal(m map[string]any, key string) any {
+	if val, ok := m[key]; ok && val != nil {
+		switch v := val.(type) {
+		case float64:
+			return v
+		case int64:
+			return float64(v)
+		case int:
+			return float64(v)
+		case string:
+			if parsed, err := strconv.ParseFloat(strings.TrimSpace(v), 64); err == nil {
+				return parsed
+			}
+		}
+	}
+	return nil
+}
+
+func boolVal(m map[string]any, key string, fallback bool) int {
+	if val, ok := m[key]; ok && val != nil {
+		switch v := val.(type) {
+		case bool:
+			if v {
+				return 1
+			}
+			return 0
+		case float64:
+			if v == 1 {
+				return 1
+			}
+			return 0
+		case int:
+			if v == 1 {
+				return 1
+			}
+			return 0
+		case string:
+			if strings.EqualFold(v, "true") || v == "1" {
+				return 1
+			}
+			return 0
+		}
+	}
+	if fallback {
+		return 1
+	}
+	return 0
+}
+
+func jsonCol(m map[string]any, key, fallback string) string {
+	if val, ok := m[key]; ok && val != nil {
+		switch v := val.(type) {
+		case string:
+			if strings.TrimSpace(v) != "" {
+				return strings.TrimSpace(v)
+			}
+		case []any, map[string]any:
+			if b, err := json.Marshal(v); err == nil {
+				return string(b)
+			}
+		}
+	}
+	return fallback
 }
 
 // Auto-Backup management functions

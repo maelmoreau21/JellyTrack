@@ -241,7 +241,5 @@ CREATE TABLE "DailyStats" (
 CREATE INDEX "DailyStats_date_idx" ON "DailyStats"("date");
 CREATE INDEX "DailyStats_userId_idx" ON "DailyStats"("userId");
 
-CREATE TABLE IF NOT EXISTS "schema_migrations" (
-  "version" INTEGER PRIMARY KEY,
-  "applied_at" TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
+

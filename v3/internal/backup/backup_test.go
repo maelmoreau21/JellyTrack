@@ -72,6 +72,81 @@ func TestBackupExportAndRestore(t *testing.T) {
 	}
 }
 
+func TestV2BackupZipRestoration(t *testing.T) {
+	ctx := context.Background()
+	db, err := database.Open(ctx, config.Config{DatabaseDriver: "sqlite", DatabasePath: filepath.Join(t.TempDir(), "v2_restore_test.db")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	// Simulate exact v2 export structure
+	dbJSON := []byte(`{
+		"servers": [
+			{"id": "srv-1", "jellyfinServerId": "jf-srv-1", "name": "Mon Serveur Jellyfin", "url": "http://192.168.1.50:8096", "isActive": true}
+		],
+		"users": [
+			{"id": "usr-1", "serverId": "srv-1", "jellyfinUserId": "jf-u-1", "username": "Mael", "isActive": true, "lastActive": "2026-10-07T20:00:00.000Z"}
+		],
+		"media": [
+			{"id": "med-1", "serverId": "srv-1", "jellyfinMediaId": "jf-m-1", "title": "Inception", "type": "Movie", "libraryName": "Films", "durationMs": 8880000, "genres": ["Action", "Sci-Fi"]}
+		],
+		"playbackHistory": [
+			{"id": "pb-1", "serverId": "srv-1", "userId": "usr-1", "mediaId": "med-1", "playMethod": "DirectPlay", "durationWatched": 5400, "startedAt": "2026-10-07T21:00:00.000Z", "clientName": "Jellyfin Web", "deviceName": "Chrome"}
+		],
+		"dailyStats": [
+			{"id": "ds-1", "date": "2026-10-07", "userId": "usr-1", "totalPlays": 1, "totalDuration": 5400, "directPlays": 1}
+		],
+		"adminAuditLogs": [
+			{"id": "log-1", "action": "LOGIN", "actorUsername": "admin", "details": {"ip": "127.0.0.1"}}
+		]
+	}`)
+
+	settingsJSON := []byte(`{
+		"version": "2.0",
+		"settings": {
+			"excludedLibraries": ["Musique"],
+			"discordWebhookUrl": "https://discord.com/webhook/test",
+			"defaultLocale": "fr"
+		}
+	}`)
+
+	buf := new(bytes.Buffer)
+	zw := zip.NewWriter(buf)
+	w, _ := zw.Create("database.json")
+	_, _ = w.Write(dbJSON)
+	w2, _ := zw.Create("settings.json")
+	_, _ = w2.Write(settingsJSON)
+	_ = zw.Close()
+
+	mode, err := RestoreBackupBuffer(ctx, db, "sqlite", buf.Bytes(), 10*1024*1024)
+	if err != nil {
+		t.Fatalf("failed to restore v2 backup zip: %v", err)
+	}
+	if mode != "zip" {
+		t.Fatalf("expected mode 'zip', got %s", mode)
+	}
+
+	// Verify all tables were populated
+	var serverName, userName, mediaTitle, clientName, excludedLibs string
+	var watchDur int64
+	if err := db.QueryRowContext(ctx, `SELECT "name" FROM "Server" WHERE "id"='srv-1'`).Scan(&serverName); err != nil || serverName != "Mon Serveur Jellyfin" {
+		t.Fatalf("server restore failed: %v, got %s", err, serverName)
+	}
+	if err := db.QueryRowContext(ctx, `SELECT "username" FROM "User" WHERE "id"='usr-1'`).Scan(&userName); err != nil || userName != "Mael" {
+		t.Fatalf("user restore failed: %v, got %s", err, userName)
+	}
+	if err := db.QueryRowContext(ctx, `SELECT "title" FROM "Media" WHERE "id"='med-1'`).Scan(&mediaTitle); err != nil || mediaTitle != "Inception" {
+		t.Fatalf("media restore failed: %v, got %s", err, mediaTitle)
+	}
+	if err := db.QueryRowContext(ctx, `SELECT "clientName","durationWatched" FROM "PlaybackHistory" WHERE "id"='pb-1'`).Scan(&clientName, &watchDur); err != nil || clientName != "Jellyfin Web" || watchDur != 5400 {
+		t.Fatalf("playback restore failed: %v, client=%s, dur=%d", err, clientName, watchDur)
+	}
+	if err := db.QueryRowContext(ctx, `SELECT "excludedLibraries" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&excludedLibs); err != nil || excludedLibs != `["Musique"]` {
+		t.Fatalf("settings restore failed: %v, got %s", err, excludedLibs)
+	}
+}
+
 func TestZipSlipRejection(t *testing.T) {
 	ctx := context.Background()
 	db, err := database.Open(ctx, config.Config{DatabaseDriver: "sqlite", DatabasePath: filepath.Join(t.TempDir(), "zipslip_test.db")})
