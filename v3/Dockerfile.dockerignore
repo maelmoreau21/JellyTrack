@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.git
+**/.next
+**/.venv
+**/venv
+**/*.exe
+**/*.log
+*.env
+**/.env
+**/.env.*
