@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     ".github/**",
     "archived/**",
+    "v3/**",
   ]),
   ...fixupConfigRules(nextVitals),
   ...fixupConfigRules(nextTs),
