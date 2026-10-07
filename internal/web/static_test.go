@@ -91,3 +91,55 @@ func TestPprofEndpoints(t *testing.T) {
 		t.Fatalf("expected pprof index when enabled, got %d %q", recEnabled.Code, recEnabled.Body.String())
 	}
 }
+
+func TestApiRoutingAndNextAuthCompatibility(t *testing.T) {
+	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
+
+	// 1. /api/health
+	reqHealth := httptest.NewRequest(http.MethodGet, "/api/health", nil)
+	recHealth := httptest.NewRecorder()
+	handler.ServeHTTP(recHealth, reqHealth)
+	if recHealth.Code != http.StatusOK || strings.TrimSpace(recHealth.Body.String()) != `{"status":"ok"}` {
+		t.Fatalf("expected {\"status\":\"ok\"}, got %d %s", recHealth.Code, recHealth.Body.String())
+	}
+
+	// 2. NextAuth compatibility: /api/auth/session returns {} when unauthenticated
+	reqSess := httptest.NewRequest(http.MethodGet, "/api/auth/session", nil)
+	recSess := httptest.NewRecorder()
+	handler.ServeHTTP(recSess, reqSess)
+	if recSess.Code != http.StatusOK || strings.TrimSpace(recSess.Body.String()) != `{}` {
+		t.Fatalf("expected {} for empty session, got %d %s", recSess.Code, recSess.Body.String())
+	}
+
+	// 3. NextAuth compatibility: /api/auth/csrf
+	reqCSRF := httptest.NewRequest(http.MethodGet, "/api/auth/csrf", nil)
+	recCSRF := httptest.NewRecorder()
+	handler.ServeHTTP(recCSRF, reqCSRF)
+	if recCSRF.Code != http.StatusOK || !strings.Contains(recCSRF.Body.String(), `"csrfToken"`) {
+		t.Fatalf("expected csrfToken in /api/auth/csrf, got %d %s", recCSRF.Code, recCSRF.Body.String())
+	}
+
+	// 4. NextAuth compatibility: /api/auth/providers
+	reqProv := httptest.NewRequest(http.MethodGet, "/api/auth/providers", nil)
+	recProv := httptest.NewRecorder()
+	handler.ServeHTTP(recProv, reqProv)
+	if recProv.Code != http.StatusOK || !strings.Contains(recProv.Body.String(), `"credentials"`) {
+		t.Fatalf("expected credentials in /api/auth/providers, got %d %s", recProv.Code, recProv.Body.String())
+	}
+
+	// 5. Webhook GET delegates to plugin diagnostics
+	reqWebGet := httptest.NewRequest(http.MethodGet, "/api/webhook/jellyfin", nil)
+	recWebGet := httptest.NewRecorder()
+	handler.ServeHTTP(recWebGet, reqWebGet)
+	if recWebGet.Code != http.StatusOK || !strings.Contains(recWebGet.Body.String(), `"endpoint":"/api/plugin/events"`) {
+		t.Fatalf("expected plugin diagnostics on webhook GET, got %d %s", recWebGet.Code, recWebGet.Body.String())
+	}
+
+	// 6. Webhook OPTIONS returns 204 with CORS
+	reqWebOpt := httptest.NewRequest(http.MethodOptions, "/api/webhook/jellyfin", nil)
+	recWebOpt := httptest.NewRecorder()
+	handler.ServeHTTP(recWebOpt, reqWebOpt)
+	if recWebOpt.Code != http.StatusNoContent || recWebOpt.Header().Get("Access-Control-Allow-Origin") == "" {
+		t.Fatalf("expected 204 with CORS on webhook OPTIONS, got %d", recWebOpt.Code)
+	}
+}

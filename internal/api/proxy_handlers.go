@@ -6,15 +6,30 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/maelmoreau21/jellytrack/internal/database"
+	"github.com/maelmoreau21/jellytrack/internal/security"
 )
+
+var allowedImageTypes = map[string]struct{}{
+	"Primary":  {},
+	"Thumb":    {},
+	"Backdrop": {},
+	"Banner":   {},
+	"Logo":     {},
+	"Art":      {},
+}
+
+var proxyHTTPClient = &http.Client{
+	Timeout: 10 * time.Second,
+}
 
 func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 	serverID := strings.TrimSpace(r.URL.Query().Get("serverId"))
 	mediaID := strings.TrimSpace(r.URL.Query().Get("mediaId"))
 	imageType := strings.TrimSpace(r.URL.Query().Get("imageType"))
-	if imageType == "" {
+	if _, ok := allowedImageTypes[imageType]; !ok {
 		imageType = "Primary"
 	}
 
@@ -31,7 +46,13 @@ func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targetURL := strings.TrimRight(srvURL.String, "/") + "/Items/" + url.PathEscape(mediaID) + "/Images/" + url.PathEscape(imageType)
+	safeURL, err := security.ValidateSafeServerURL(srvURL.String)
+	if err != nil {
+		http.Error(w, "Invalid server URL", http.StatusBadGateway)
+		return
+	}
+
+	targetURL := strings.TrimRight(safeURL.String(), "/") + "/Items/" + url.PathEscape(mediaID) + "/Images/" + url.PathEscape(imageType)
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, targetURL, nil)
 	if err != nil {
 		http.Error(w, "Proxy error", http.StatusBadGateway)
@@ -41,7 +62,7 @@ func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 		req.Header.Set("X-Emby-Token", apiKey.String)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := proxyHTTPClient.Do(req)
 	if err != nil {
 		http.Error(w, "Jellyfin unreachable", http.StatusBadGateway)
 		return
@@ -74,7 +95,13 @@ func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	targetURL := strings.TrimRight(srvURL.String, "/") + "/Users/" + url.PathEscape(userID) + "/Images/Primary"
+	safeURL, err := security.ValidateSafeServerURL(srvURL.String)
+	if err != nil {
+		http.Error(w, "Invalid server URL", http.StatusBadGateway)
+		return
+	}
+
+	targetURL := strings.TrimRight(safeURL.String(), "/") + "/Users/" + url.PathEscape(userID) + "/Images/Primary"
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, targetURL, nil)
 	if err != nil {
 		http.Error(w, "Proxy error", http.StatusBadGateway)
@@ -84,7 +111,7 @@ func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request)
 		req.Header.Set("X-Emby-Token", apiKey.String)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := proxyHTTPClient.Do(req)
 	if err != nil {
 		http.Error(w, "Jellyfin unreachable", http.StatusBadGateway)
 		return

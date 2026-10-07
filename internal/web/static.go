@@ -39,14 +39,15 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string, enablePprof ...b
 	}
 	authManager := auth.New(db, driver)
 	authManager.Routes(mux)
-	api.New(db, driver).Register(mux, authManager.Middleware, authManager.AdminMiddleware)
+	pluginH := plugin.NewHandler(db, driver, logger)
+	api.New(db, driver, pluginH).Register(mux, authManager.Middleware, authManager.AdminMiddleware)
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-store")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
-	mux.Handle("/api/plugin/events", plugin.NewHandler(db, driver, logger))
+	mux.Handle("/api/plugin/events", pluginH)
 	privateAPI := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 	})

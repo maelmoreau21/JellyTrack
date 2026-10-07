@@ -10,25 +10,34 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/maelmoreau21/jellytrack/internal/auth"
 	"github.com/maelmoreau21/jellytrack/internal/backup"
 	"github.com/maelmoreau21/jellytrack/internal/cleanup"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/jellyfin"
-	"github.com/maelmoreau21/jellytrack/internal/requestip"
+	"github.com/maelmoreau21/jellytrack/internal/security"
 )
 
 type Handler struct {
-	db     *sql.DB
-	driver string
+	db            *sql.DB
+	driver        string
+	pluginHandler http.Handler
 }
 
-func New(db *sql.DB, driver string) *Handler { return &Handler{db: db, driver: driver} }
+func New(db *sql.DB, driver string, pluginHandler ...http.Handler) *Handler {
+	var ph http.Handler
+	if len(pluginHandler) > 0 {
+		ph = pluginHandler[0]
+	}
+	return &Handler{db: db, driver: driver, pluginHandler: ph}
+}
 
 func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.Handler) http.Handler) {
 	// Standard user session protected routes
@@ -93,6 +102,8 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"POST /api/settings":                             h.updateSettings,
 		"GET /api/settings/jellyfin-servers":             h.listServers,
 		"POST /api/settings/jellyfin-servers":            h.saveServer,
+		"PATCH /api/settings/jellyfin-servers":           h.updateServer,
+		"DELETE /api/settings/jellyfin-servers":          h.deleteServer,
 		"DELETE /api/settings/jellyfin-servers/{id}":     h.deleteServer,
 		"POST /api/settings/jellyfin-servers/plugin-key": h.rotateServerPluginKey,
 		"GET /api/backup/export":                         h.backupExport,
@@ -112,10 +123,18 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 	// Webhook endpoint (protected by allowed hosts check, no cookie session)
 	mux.HandleFunc("POST /api/webhook/jellyfin", h.jellyfinWebhook)
 	mux.HandleFunc("GET /api/webhook/jellyfin", func(w http.ResponseWriter, r *http.Request) {
+		if h.pluginHandler != nil {
+			h.pluginHandler.ServeHTTP(w, r)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 	mux.HandleFunc("OPTIONS /api/webhook/jellyfin", func(w http.ResponseWriter, r *http.Request) {
+		if h.pluginHandler != nil {
+			h.pluginHandler.ServeHTTP(w, r)
+			return
+		}
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Api-Key, Authorization")
@@ -306,6 +325,68 @@ func (h *Handler) geoStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) heatmapDetail(w http.ResponseWriter, r *http.Request) {
+	dayStr := r.URL.Query().Get("day")
+	hourStr := r.URL.Query().Get("hour")
+
+	if dayStr != "" && hourStr != "" {
+		day, errD := strconv.Atoi(dayStr)
+		hour, errH := strconv.Atoi(hourStr)
+		if errD != nil || errH != nil || day < 0 || day > 6 || hour < 0 || hour > 23 {
+			jsonError(w, 400, "Invalid day/hour")
+			return
+		}
+
+		since := time.Now().UTC().AddDate(0, 0, -30).Format(time.RFC3339Nano)
+		rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."startedAt",p."durationWatched",p."playMethod",p."clientName",u."username",m."title",m."type" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND p."durationWatched">=10 ORDER BY p."startedAt" DESC LIMIT 5000`, h.driver), since)
+		if err != nil {
+			jsonError(w, 500, "Erreur de lecture.")
+			return
+		}
+		defer rows.Close()
+
+		sessions := []map[string]any{}
+		for rows.Next() {
+			var started string
+			var dur int64
+			var pm, cn, uname, title, mType sql.NullString
+			if rows.Scan(&started, &dur, &pm, &cn, &uname, &title, &mType) == nil {
+				t, parseErr := time.Parse(time.RFC3339Nano, started)
+				if parseErr != nil {
+					t, parseErr = time.Parse(time.RFC3339, started)
+				}
+				if parseErr == nil {
+					if int(t.Weekday()) == day && t.Hour() == hour {
+						username := uname.String
+						if username == "" {
+							username = "?"
+						}
+						mTitle := title.String
+						if mTitle == "" {
+							mTitle = "?"
+						}
+						sessions = append(sessions, map[string]any{
+							"username":    username,
+							"mediaTitle":  mTitle,
+							"mediaType":   mType.String,
+							"durationMin": int(dur / 60),
+							"playMethod":  pm.String,
+							"clientName":  cn.String,
+							"startedAt":   t.Format(time.RFC3339),
+						})
+						if len(sessions) >= 50 {
+							break
+						}
+					}
+				}
+			}
+		}
+		if sessions == nil {
+			sessions = []map[string]any{}
+		}
+		jsonResponse(w, 200, map[string]any{"sessions": sessions})
+		return
+	}
+
 	rows, err := h.db.QueryContext(r.Context(), `SELECT strftime('%w', "startedAt") AS "dayOfWeek", strftime('%H', "startedAt") AS "hour", COUNT(*) FROM "PlaybackHistory" GROUP BY "dayOfWeek", "hour"`)
 	if err != nil {
 		// Postgres fallback
@@ -401,19 +482,43 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) userActiveStream(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	id := strings.TrimSpace(r.PathValue("id"))
+	if id == "" {
+		jsonError(w, 400, "Identifiant requis.")
+		return
+	}
+
+	principal, ok := auth.PrincipalFromContext(r.Context())
+	if ok && !principal.IsAdmin() {
+		isSelf := false
+		if principal.Username == id {
+			isSelf = true
+		} else {
+			var uname string
+			err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "username" FROM "User" WHERE "id"=? OR "jellyfinUserId"=? OR "username"=? LIMIT 1`, h.driver), id, id, id).Scan(&uname)
+			if err == nil && strings.EqualFold(uname, principal.Username) {
+				isSelf = true
+			}
+		}
+		if !isSelf {
+			jsonError(w, 403, "Forbidden")
+			return
+		}
+	}
+
 	var stream map[string]any
 	var sid, playMethod, started string
 	var title, kind sql.NullString
 	var posTicks sql.NullInt64
-	err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT s."sessionId",s."playMethod",s."startedAt",s."positionTicks",m."title",m."type" FROM "ActiveStream" s LEFT JOIN "Media" m ON m."id"=s."mediaId" WHERE s."userId"=? LIMIT 1`, h.driver), id).Scan(&sid, &playMethod, &started, &posTicks, &title, &kind)
+	query := `SELECT s."sessionId",s."playMethod",s."startedAt",s."positionTicks",m."title",m."type" FROM "ActiveStream" s LEFT JOIN "Media" m ON m."id"=s."mediaId" WHERE s."userId"=? OR s."userId" IN (SELECT "id" FROM "User" WHERE "jellyfinUserId"=? OR "id"=?) LIMIT 1`
+	err := h.db.QueryRowContext(r.Context(), database.Bind(query, h.driver), id, id, id).Scan(&sid, &playMethod, &started, &posTicks, &title, &kind)
 	if err == nil {
 		stream = map[string]any{
 			"sessionId": sid, "playMethod": playMethod, "startedAt": started,
 			"mediaTitle": title.String, "mediaType": kind.String, "positionTicks": posTicks.Int64,
 		}
 	}
-	jsonResponse(w, 200, map[string]any{"stream": stream})
+	jsonResponse(w, 200, map[string]any{"stream": stream, "activeStream": stream})
 }
 
 func (h *Handler) mediaList(w http.ResponseWriter, r *http.Request) {
@@ -519,15 +624,25 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 
 	searchPattern := "%" + q + "%"
 	excluded := excludedLibrariesClause(h.driver, "m")
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT m."id",m."jellyfinMediaId",m."title",m."type",m."libraryName" FROM "Media" m WHERE (m."title" LIKE ? OR m."directors" LIKE ? OR m."actors" LIKE ?) AND `+excluded+` ORDER BY m."title" ASC LIMIT 10`, h.driver), searchPattern, searchPattern, searchPattern)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT m."id",m."jellyfinMediaId",m."title",m."type",m."libraryName",m."parentId",m."artist" FROM "Media" m WHERE (m."title" LIKE ? OR m."directors" LIKE ? OR m."actors" LIKE ?) AND `+excluded+` ORDER BY m."title" ASC LIMIT 10`, h.driver), searchPattern, searchPattern, searchPattern)
 	mediaList := []map[string]any{}
 	if err == nil {
 		for rows.Next() {
 			var id, jid, title, kind string
-			var lib sql.NullString
-			if rows.Scan(&id, &jid, &title, &kind, &lib) == nil {
+			var lib, pid, artist sql.NullString
+			if rows.Scan(&id, &jid, &title, &kind, &lib, &pid, &artist) == nil {
+				subtitle := ""
+				if artist.Valid && artist.String != "" {
+					subtitle = artist.String
+				}
 				mediaList = append(mediaList, map[string]any{
-					"id": id, "jellyfinMediaId": jid, "title": title, "type": kind, "library": nullable(lib),
+					"id":              id,
+					"jellyfinMediaId": jid,
+					"title":           title,
+					"type":            kind,
+					"library":         nullable(lib),
+					"parentId":        nullable(pid),
+					"subtitle":        subtitle,
 				})
 			}
 		}
@@ -535,17 +650,22 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userList := []map[string]any{}
-	uRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT "id","jellyfinUserId","username" FROM "User" WHERE "username" LIKE ? ORDER BY "username" ASC LIMIT 5`, h.driver), searchPattern)
-	if err == nil {
-		for uRows.Next() {
-			var uid, juid, uname string
-			if uRows.Scan(&uid, &juid, &uname) == nil {
-				userList = append(userList, map[string]any{
-					"id": uid, "jellyfinUserId": juid, "username": uname,
-				})
+	principal, ok := auth.PrincipalFromContext(r.Context())
+	if ok && principal.IsAdmin() {
+		uRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT "id","jellyfinUserId","username" FROM "User" WHERE "username" LIKE ? ORDER BY "username" ASC LIMIT 5`, h.driver), searchPattern)
+		if err == nil {
+			for uRows.Next() {
+				var uid, juid, uname string
+				if uRows.Scan(&uid, &juid, &uname) == nil {
+					userList = append(userList, map[string]any{
+						"id":             uid,
+						"jellyfinUserId": juid,
+						"username":       uname,
+					})
+				}
 			}
+			uRows.Close()
 		}
-		uRows.Close()
 	}
 
 	jsonResponse(w, 200, map[string]any{"media": mediaList, "users": userList})
@@ -554,7 +674,33 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 // ---------------------- Streams & Telemetry ----------------------
 
 func (h *Handler) streams(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.db.QueryContext(r.Context(), `SELECT s."id",s."serverId",s."sessionId",s."playMethod",s."clientName",s."deviceName",s."ipAddress",s."country",s."city",s."bitrate",s."positionTicks",s."startedAt",u."username",m."title",m."type",m."durationMs",m."jellyfinMediaId" FROM "ActiveStream" s LEFT JOIN "User" u ON u."id"=s."userId" LEFT JOIN "Media" m ON m."id"=s."mediaId"`)
+	serversParam := strings.TrimSpace(r.URL.Query().Get("servers"))
+	var selectedServers []string
+	if serversParam != "" {
+		for _, s := range strings.Split(serversParam, ",") {
+			if trimmed := strings.TrimSpace(s); trimmed != "" {
+				selectedServers = append(selectedServers, trimmed)
+			}
+		}
+	}
+
+	baseQuery := `SELECT s."id",s."serverId",s."sessionId",s."playMethod",s."clientName",s."deviceName",s."ipAddress",s."country",s."city",s."bitrate",s."positionTicks",s."startedAt",u."username",m."title",m."type",m."durationMs",m."jellyfinMediaId",m."parentId",m."artist" FROM "ActiveStream" s LEFT JOIN "User" u ON u."id"=s."userId" LEFT JOIN "Media" m ON m."id"=s."mediaId"`
+	var rows *sql.Rows
+	var err error
+
+	if len(selectedServers) > 0 {
+		placeholders := make([]string, len(selectedServers))
+		args := make([]any, len(selectedServers))
+		for i, s := range selectedServers {
+			placeholders[i] = "?"
+			args[i] = s
+		}
+		q := baseQuery + ` WHERE s."serverId" IN (` + strings.Join(placeholders, ",") + `)`
+		rows, err = h.db.QueryContext(r.Context(), database.Bind(q, h.driver), args...)
+	} else {
+		rows, err = h.db.QueryContext(r.Context(), baseQuery)
+	}
+
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les flux en direct.")
 		return
@@ -566,10 +712,10 @@ func (h *Handler) streams(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var id, srvId, sessId, playMethod, started string
-		var client, device, ip, country, city, user, title, mType, jmid sql.NullString
+		var client, device, ip, country, city, user, title, mType, jmid, parentId, artist sql.NullString
 		var bitrate, posTicks, durMs sql.NullInt64
 
-		if rows.Scan(&id, &srvId, &sessId, &playMethod, &client, &device, &ip, &country, &city, &bitrate, &posTicks, &started, &user, &title, &mType, &durMs, &jmid) == nil {
+		if rows.Scan(&id, &srvId, &sessId, &playMethod, &client, &device, &ip, &country, &city, &bitrate, &posTicks, &started, &user, &title, &mType, &durMs, &jmid, &parentId, &artist) == nil {
 			var progressPercent int
 			if posTicks.Int64 > 0 && durMs.Int64 > 0 {
 				runTicks := durMs.Int64 * 10000
@@ -588,24 +734,44 @@ func (h *Handler) streams(w http.ResponseWriter, r *http.Request) {
 				totalBandwidthMbps += 6.0
 			}
 
+			posterItemId := jmid.String
+			if (mType.String == "Audio" || mType.String == "Track") && parentId.String != "" {
+				posterItemId = parentId.String
+			}
+
+			mediaSubtitle := ""
+			if (mType.String == "Audio" || mType.String == "Track") && artist.String != "" {
+				mediaSubtitle = artist.String
+			}
+
 			streams = append(streams, map[string]any{
 				"id":              id,
 				"serverId":        srvId,
 				"sessionId":       sessId,
+				"itemId":          jmid.String,
+				"jellyfinMediaId": jmid.String,
+				"parentItemId":    parentId.String,
 				"playMethod":      playMethod,
 				"clientName":      client.String,
 				"deviceName":      device.String,
+				"device":          device.String,
 				"ipAddress":       ip.String,
 				"country":         country.String,
 				"city":            city.String,
 				"user":            user.String,
 				"mediaTitle":      title.String,
+				"mediaSubtitle":   mediaSubtitle,
 				"mediaType":       mType.String,
-				"jellyfinMediaId": jmid.String,
 				"progressPercent": progressPercent,
+				"isPaused":        false,
+				"posterItemId":    posterItemId,
 				"startedAt":       started,
 			})
 		}
+	}
+
+	if streams == nil {
+		streams = []map[string]any{}
 	}
 
 	jsonResponse(w, 200, map[string]any{
@@ -616,30 +782,141 @@ func (h *Handler) streams(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) streamsTelemetry(w http.ResponseWriter, r *http.Request) {
+	mediaId := strings.TrimSpace(r.URL.Query().Get("mediaId"))
+	serverId := strings.TrimSpace(r.URL.Query().Get("serverId"))
 	playbackId := strings.TrimSpace(r.URL.Query().Get("playbackId"))
-	if playbackId == "" {
-		jsonError(w, 400, "playbackId requis.")
-		return
-	}
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT "id","eventType","positionMs","metadata","createdAt" FROM "TelemetryEvent" WHERE "playbackId"=? ORDER BY "positionMs" ASC LIMIT 500`, h.driver), playbackId)
-	if err != nil {
-		jsonError(w, 500, "Erreur de lecture.")
-		return
-	}
-	defer rows.Close()
 
-	events := []map[string]any{}
-	for rows.Next() {
-		var id, kind, created string
-		var pos int64
-		var meta sql.NullString
-		if rows.Scan(&id, &kind, &pos, &meta, &created) == nil {
-			events = append(events, map[string]any{
-				"id": id, "eventType": kind, "positionMs": pos, "metadata": nullable(meta), "createdAt": created,
-			})
+	if mediaId != "" {
+		var internalMediaId, srvId string
+		var durationMs sql.NullInt64
+		var err error
+		if serverId != "" {
+			err = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT m."id",m."serverId",m."durationMs" FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE m."jellyfinMediaId"=? AND (m."serverId"=? OR s."jellyfinServerId"=?) LIMIT 1`, h.driver), mediaId, serverId, serverId).Scan(&internalMediaId, &srvId, &durationMs)
+		} else {
+			err = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT m."id",m."serverId",m."durationMs" FROM "Media" m WHERE m."jellyfinMediaId"=? LIMIT 1`, h.driver), mediaId).Scan(&internalMediaId, &srvId, &durationMs)
 		}
+		if err != nil {
+			jsonError(w, 404, "Media not found")
+			return
+		}
+
+		sRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."userId",p."eventSource",p."sourceEventId",p."durationWatched",p."startedAt",p."endedAt",u."username",u."jellyfinUserId" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" WHERE p."mediaId"=? ORDER BY p."startedAt" DESC`, h.driver), internalMediaId)
+		if err != nil {
+			jsonError(w, 500, "Erreur de lecture.")
+			return
+		}
+		defer sRows.Close()
+
+		type sessionItem struct {
+			ID              string           `json:"id"`
+			UserID          string           `json:"userId"`
+			EventSource     string           `json:"eventSource"`
+			SourceEventID   sql.NullString   `json:"sourceEventId"`
+			DurationWatched int64            `json:"durationWatched"`
+			StartedAt       string           `json:"startedAt"`
+			EndedAt         sql.NullString   `json:"endedAt"`
+			User            map[string]any   `json:"user"`
+			TelemetryEvents []map[string]any `json:"telemetryEvents"`
+		}
+
+		var sessions []sessionItem
+		var pids []string
+		for sRows.Next() {
+			var id, es, started string
+			var uid, seid, ended, uname, juid sql.NullString
+			var dur int64
+			if sRows.Scan(&id, &uid, &es, &seid, &dur, &started, &ended, &uname, &juid) == nil {
+				pids = append(pids, id)
+				sessions = append(sessions, sessionItem{
+					ID:              id,
+					UserID:          uid.String,
+					EventSource:     es,
+					SourceEventID:   seid,
+					DurationWatched: dur,
+					StartedAt:       started,
+					EndedAt:         ended,
+					User: map[string]any{
+						"username":       uname.String,
+						"jellyfinUserId": juid.String,
+					},
+					TelemetryEvents: []map[string]any{},
+				})
+			}
+		}
+
+		if len(pids) > 0 {
+			placeholders := make([]string, len(pids))
+			args := make([]any, len(pids))
+			for i, pid := range pids {
+				placeholders[i] = "?"
+				args[i] = pid
+			}
+			tQuery := `SELECT "id","playbackId","eventType","positionMs","metadata","createdAt" FROM "TelemetryEvent" WHERE "playbackId" IN (` + strings.Join(placeholders, ",") + `) ORDER BY "positionMs" ASC`
+			tRows, tErr := h.db.QueryContext(r.Context(), database.Bind(tQuery, h.driver), args...)
+			if tErr == nil {
+				defer tRows.Close()
+				eventMap := make(map[string][]map[string]any)
+				for tRows.Next() {
+					var tid, pid, kind, created string
+					var pos int64
+					var meta sql.NullString
+					if tRows.Scan(&tid, &pid, &kind, &pos, &meta, &created) == nil {
+						eventMap[pid] = append(eventMap[pid], map[string]any{
+							"id":         tid,
+							"playbackId": pid,
+							"eventType":  kind,
+							"positionMs": pos,
+							"metadata":   nullable(meta),
+							"createdAt":  created,
+						})
+					}
+				}
+				for i := range sessions {
+					if evts, ok := eventMap[sessions[i].ID]; ok {
+						sessions[i].TelemetryEvents = evts
+					}
+				}
+			}
+		}
+
+		var durVal any = nil
+		if durationMs.Valid {
+			durVal = durationMs.Int64
+		}
+
+		jsonResponse(w, 200, map[string]any{
+			"mediaId":    mediaId,
+			"serverId":   srvId,
+			"durationMs": durVal,
+			"sessions":   sessions,
+		})
+		return
 	}
-	jsonResponse(w, 200, map[string]any{"events": events})
+
+	if playbackId != "" {
+		rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT "id","eventType","positionMs","metadata","createdAt" FROM "TelemetryEvent" WHERE "playbackId"=? ORDER BY "positionMs" ASC LIMIT 500`, h.driver), playbackId)
+		if err != nil {
+			jsonError(w, 500, "Erreur de lecture.")
+			return
+		}
+		defer rows.Close()
+
+		events := []map[string]any{}
+		for rows.Next() {
+			var id, kind, created string
+			var pos int64
+			var meta sql.NullString
+			if rows.Scan(&id, &kind, &pos, &meta, &created) == nil {
+				events = append(events, map[string]any{
+					"id": id, "eventType": kind, "positionMs": pos, "metadata": nullable(meta), "createdAt": created,
+				})
+			}
+		}
+		jsonResponse(w, 200, map[string]any{"events": events})
+		return
+	}
+
+	jsonError(w, 400, "mediaId ou playbackId requis.")
 }
 
 func (h *Handler) killStream(w http.ResponseWriter, r *http.Request) {
@@ -792,44 +1069,170 @@ func (h *Handler) listServers(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) saveServer(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		ID             string `json:"id"`
-		Name           string `json:"name"`
-		URL            string `json:"url"`
-		JellyfinApiKey string `json:"jellyfinApiKey"`
-		IsActive       bool   `json:"isActive"`
+		ID                string `json:"id"`
+		Name              string `json:"name"`
+		URL               string `json:"url"`
+		ApiKey            string `json:"apiKey"`
+		JellyfinApiKey    string `json:"jellyfinApiKey"`
+		AllowAuthFallback *bool  `json:"allowAuthFallback"`
+		IsActive          *bool  `json:"isActive"`
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 16384)
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || input.Name == "" || input.URL == "" {
-		jsonError(w, 400, "Nom et URL requis.")
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || strings.TrimSpace(input.URL) == "" {
+		jsonError(w, 400, "URL requise.")
 		return
 	}
 
-	activeInt := 0
-	if input.IsActive {
-		activeInt = 1
+	urlClean := strings.TrimRight(strings.TrimSpace(input.URL), "/")
+	if _, err := security.ValidateSafeServerURL(urlClean); err != nil {
+		jsonError(w, 400, "Jellyfin URL cannot target cloud metadata services.")
+		return
+	}
+
+	rawApiKey := first(input.ApiKey, input.JellyfinApiKey)
+	name := strings.TrimSpace(input.Name)
+	if name == "" {
+		name = "Jellyfin"
+	}
+
+	activeInt := 1
+	if input.IsActive != nil && !*input.IsActive {
+		activeInt = 0
+	}
+
+	allowFallbackInt := 1
+	if input.AllowAuthFallback != nil && !*input.AllowAuthFallback {
+		allowFallbackInt = 0
 	}
 
 	if input.ID == "" {
 		idBytes := make([]byte, 16)
 		rand.Read(idBytes)
 		input.ID = hex.EncodeToString(idBytes)
-		_, err := h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","isActive") VALUES (?,?,?,?,?,?)`, h.driver), input.ID, input.ID, input.Name, input.URL, input.JellyfinApiKey, activeInt)
+		_, err := h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","allowAuthFallback","isActive") VALUES (?,?,?,?,?,?,?)`, h.driver), input.ID, input.ID, name, urlClean, rawApiKey, allowFallbackInt, activeInt)
 		if err != nil {
 			jsonError(w, 500, "Échec de création du serveur.")
 			return
 		}
 	} else {
-		_, err := h.db.ExecContext(r.Context(), database.Bind(`UPDATE "Server" SET "name"=?, "url"=?, "jellyfinApiKey"=?, "isActive"=? WHERE "id"=?`, h.driver), input.Name, input.URL, input.JellyfinApiKey, activeInt, input.ID)
+		_, err := h.db.ExecContext(r.Context(), database.Bind(`UPDATE "Server" SET "name"=?, "url"=?, "jellyfinApiKey"=?, "allowAuthFallback"=?, "isActive"=? WHERE "id"=?`, h.driver), name, urlClean, rawApiKey, allowFallbackInt, activeInt, input.ID)
 		if err != nil {
 			jsonError(w, 500, "Échec de mise à jour du serveur.")
 			return
 		}
 	}
-	jsonResponse(w, 200, map[string]any{"id": input.ID, "ok": true})
+
+	jsonResponse(w, 200, map[string]any{
+		"id": input.ID,
+		"ok": true,
+		"server": map[string]any{
+			"id":                input.ID,
+			"jellyfinServerId":  input.ID,
+			"name":              name,
+			"url":               urlClean,
+			"allowAuthFallback": allowFallbackInt == 1,
+			"isActive":          activeInt == 1,
+		},
+	})
+}
+
+func (h *Handler) updateServer(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		ID                string  `json:"id"`
+		Name              *string `json:"name"`
+		URL               *string `json:"url"`
+		ApiKey            *string `json:"apiKey"`
+		JellyfinApiKey    *string `json:"jellyfinApiKey"`
+		AllowAuthFallback *bool   `json:"allowAuthFallback"`
+		IsActive          *bool   `json:"isActive"`
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 16384)
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || strings.TrimSpace(input.ID) == "" {
+		jsonError(w, 400, "Identifiant requis.")
+		return
+	}
+
+	var curName, curURL, curKey string
+	var curFallback, curActive int
+	err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "name","url",COALESCE("jellyfinApiKey",''),"allowAuthFallback","isActive" FROM "Server" WHERE "id"=?`, h.driver), input.ID).Scan(&curName, &curURL, &curKey, &curFallback, &curActive)
+	if err != nil {
+		jsonError(w, 404, "Serveur introuvable.")
+		return
+	}
+
+	nextName := curName
+	if input.Name != nil && strings.TrimSpace(*input.Name) != "" {
+		nextName = strings.TrimSpace(*input.Name)
+	}
+
+	nextURL := curURL
+	if input.URL != nil {
+		cleaned := strings.TrimRight(strings.TrimSpace(*input.URL), "/")
+		if cleaned == "" {
+			jsonError(w, 400, "URL requise.")
+			return
+		}
+		if _, err := security.ValidateSafeServerURL(cleaned); err != nil {
+			jsonError(w, 400, "Jellyfin URL cannot target cloud metadata services.")
+			return
+		}
+		nextURL = cleaned
+	}
+
+	nextKey := curKey
+	effectiveApiKey := input.ApiKey
+	if effectiveApiKey == nil {
+		effectiveApiKey = input.JellyfinApiKey
+	}
+	if effectiveApiKey != nil && strings.TrimSpace(*effectiveApiKey) != "" {
+		nextKey = strings.TrimSpace(*effectiveApiKey)
+	}
+
+	nextFallback := curFallback
+	if input.AllowAuthFallback != nil {
+		if *input.AllowAuthFallback {
+			nextFallback = 1
+		} else {
+			nextFallback = 0
+		}
+	}
+
+	nextActive := curActive
+	if input.IsActive != nil {
+		if *input.IsActive {
+			nextActive = 1
+		} else {
+			nextActive = 0
+		}
+	}
+
+	_, err = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "Server" SET "name"=?, "url"=?, "jellyfinApiKey"=?, "allowAuthFallback"=?, "isActive"=? WHERE "id"=?`, h.driver), nextName, nextURL, nextKey, nextFallback, nextActive, input.ID)
+	if err != nil {
+		jsonError(w, 500, "Impossible de mettre à jour le serveur.")
+		return
+	}
+
+	jsonResponse(w, 200, map[string]any{
+		"ok": true,
+		"server": map[string]any{
+			"id":                input.ID,
+			"name":              nextName,
+			"url":               nextURL,
+			"allowAuthFallback": nextFallback == 1,
+			"isActive":          nextActive == 1,
+		},
+	})
 }
 
 func (h *Handler) deleteServer(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	id := strings.TrimSpace(r.PathValue("id"))
+	if id == "" {
+		var body struct {
+			ID string `json:"id"`
+		}
+		_ = json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&body)
+		id = strings.TrimSpace(body.ID)
+	}
 	if id == "" {
 		jsonError(w, 400, "Identifiant requis.")
 		return
@@ -839,7 +1242,7 @@ func (h *Handler) deleteServer(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 500, "Impossible de supprimer le serveur.")
 		return
 	}
-	jsonResponse(w, 200, map[string]bool{"ok": true})
+	jsonResponse(w, 200, map[string]any{"ok": true, "server": map[string]any{"id": id}})
 }
 
 func (h *Handler) rotateServerPluginKey(w http.ResponseWriter, r *http.Request) {
@@ -857,26 +1260,84 @@ func (h *Handler) rotateServerPluginKey(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) jellyfinWebhook(w http.ResponseWriter, r *http.Request) {
-	allowedHosts := os.Getenv("ALLOWED_JELLYFIN_HOSTS")
-	if allowedHosts != "" {
-		clientHost := requestip.ClientIP(r.RemoteAddr, map[string]string{
-			"X-Forwarded-For": r.Header.Get("X-Forwarded-For"),
-			"X-Real-IP":       r.Header.Get("X-Real-IP"),
-		})
-		matched := false
-		for _, hStr := range strings.Split(allowedHosts, ",") {
-			if strings.EqualFold(strings.TrimSpace(hStr), clientHost) {
-				matched = true
-				break
-			}
-		}
-		if !matched {
-			jsonError(w, 403, "Hôte Jellyfin non autorisé.")
-			return
+	allowedHostsEnv := strings.TrimSpace(os.Getenv("ALLOWED_JELLYFIN_HOSTS"))
+	if allowedHostsEnv == "" {
+		jsonError(w, 503, "Webhook disabled: ALLOWED_JELLYFIN_HOSTS is empty.")
+		return
+	}
+
+	ct := strings.ToLower(r.Header.Get("Content-Type"))
+	if !strings.Contains(ct, "application/json") {
+		jsonError(w, 415, "Unsupported content type. Expected application/json.")
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	rawBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		jsonError(w, 413, "Payload too large.")
+		return
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(rawBytes, &payload); err != nil || payload == nil {
+		jsonError(w, 400, "Invalid JSON payload.")
+		return
+	}
+
+	serverUrlCandidate := resolveWebhookServerURL(payload)
+	if serverUrlCandidate == "" {
+		jsonError(w, 403, "Forbidden webhook source: missing or invalid payload server URL.")
+		return
+	}
+
+	parsedU, err := url.Parse(serverUrlCandidate)
+	if err != nil || parsedU.Hostname() == "" {
+		jsonError(w, 403, "Forbidden webhook source: missing or invalid payload server URL.")
+		return
+	}
+
+	host := strings.ToLower(parsedU.Hostname())
+	allowed := false
+	for _, entry := range strings.Split(allowedHostsEnv, ",") {
+		if strings.ToLower(strings.TrimSpace(entry)) == host {
+			allowed = true
+			break
 		}
 	}
-	// Acknowledge webhook
+	if !allowed {
+		jsonError(w, 403, "Forbidden webhook source host.")
+		return
+	}
+
+	if h.pluginHandler != nil {
+		req := r.Clone(r.Context())
+		req.Body = io.NopCloser(strings.NewReader(string(rawBytes)))
+		req.ContentLength = int64(len(rawBytes))
+		h.pluginHandler.ServeHTTP(w, req)
+		return
+	}
+
 	jsonResponse(w, 200, map[string]string{"status": "received"})
+}
+
+func resolveWebhookServerURL(p map[string]any) string {
+	keys := []string{"serverUrl", "ServerUrl", "url", "Url"}
+	for _, k := range keys {
+		if val, ok := p[k].(string); ok && strings.TrimSpace(val) != "" {
+			return strings.TrimSpace(val)
+		}
+	}
+	for _, parentKey := range []string{"server", "Server"} {
+		if obj, ok := p[parentKey].(map[string]any); ok {
+			for _, k := range keys {
+				if val, ok := obj[k].(string); ok && strings.TrimSpace(val) != "" {
+					return strings.TrimSpace(val)
+				}
+			}
+		}
+	}
+	return ""
 }
 
 // ---------------------- Backups & Maintenance ----------------------
@@ -1017,12 +1478,28 @@ func (h *Handler) backupAutoDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) adminConsolidateHistory(w http.ResponseWriter, r *http.Request) {
-	merged, pruned, err := cleanup.ConsolidatePlaybackHistory(r.Context(), h.db, h.driver, 60)
+	var body struct {
+		MergeWindowMinutes int `json:"mergeWindowMinutes"`
+	}
+	_ = json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&body)
+	mergeWindow := 60
+	if body.MergeWindowMinutes > 0 {
+		mergeWindow = body.MergeWindowMinutes
+	}
+
+	merged, pruned, err := cleanup.ConsolidatePlaybackHistory(r.Context(), h.db, h.driver, mergeWindow)
 	if err != nil {
 		jsonError(w, 500, "Échec de consolidation.")
 		return
 	}
-	jsonResponse(w, 200, map[string]any{"clustersMerged": merged, "sessionsPruned": pruned})
+	resMap := map[string]any{"clustersMerged": merged, "sessionsPruned": pruned}
+	jsonResponse(w, 200, map[string]any{
+		"success":        true,
+		"message":        fmt.Sprintf("Consolidation terminée : %d groupe(s) fusionné(s), %d micro-coupure(s) supprimée(s).", merged, pruned),
+		"result":         resMap,
+		"clustersMerged": merged,
+		"sessionsPruned": pruned,
+	})
 }
 
 func (h *Handler) adminIntegrityCleanup(w http.ResponseWriter, r *http.Request) {
@@ -1031,25 +1508,31 @@ func (h *Handler) adminIntegrityCleanup(w http.ResponseWriter, r *http.Request) 
 		jsonError(w, 500, "Échec du nettoyage.")
 		return
 	}
-	jsonResponse(w, 200, map[string]any{"staleStreamsDeleted": delStreams, "sessionsClosed": closedSessions})
+	merged, pruned, _ := cleanup.ConsolidatePlaybackHistory(r.Context(), h.db, h.driver, 60)
+	jsonResponse(w, 200, map[string]any{
+		"success":             true,
+		"message":             "Integrity check, stale sessions cleanup, and playback history consolidation completed successfully.",
+		"staleStreamsDeleted": delStreams,
+		"sessionsClosed":      closedSessions,
+		"consolidation": map[string]any{
+			"clustersMerged": merged,
+			"sessionsPruned": pruned,
+		},
+		"clustersMerged": merged,
+		"sessionsPruned": pruned,
+	})
 }
 
 func (h *Handler) sync(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		RecentOnly bool `json:"recentOnly"`
+		Mode       string `json:"mode"`
+		RecentOnly bool   `json:"recentOnly"`
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, 1024)
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&input); err != nil {
-		jsonError(w, 400, "Corps JSON invalide.")
-		return
-	}
-	var extra any
-	if err := decoder.Decode(&extra); err != io.EOF {
-		jsonError(w, 400, "Corps JSON invalide.")
-		return
-	}
+	r.Body = http.MaxBytesReader(w, r.Body, 4096)
+	_ = json.NewDecoder(r.Body).Decode(&input)
+
+	recentOnly := input.Mode == "recent" || input.RecentOnly
+
 	if !sameOrigin(r) {
 		jsonError(w, 403, "Origine refusée.")
 		return
@@ -1062,12 +1545,18 @@ func (h *Handler) sync(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Minute)
 	defer cancel()
-	result, err := jellyfin.SyncOne(ctx, h.db, h.driver, "", os.Getenv("JELLYFIN_SERVER_ID"), first(os.Getenv("JELLYFIN_SERVER_NAME"), "Jellyfin"), base, key, input.RecentOnly)
+	result, err := jellyfin.SyncOne(ctx, h.db, h.driver, "", os.Getenv("JELLYFIN_SERVER_ID"), first(os.Getenv("JELLYFIN_SERVER_NAME"), "Jellyfin"), base, key, recentOnly)
 	if err != nil {
 		jsonError(w, 502, "La synchronisation Jellyfin a échoué.")
 		return
 	}
-	jsonResponse(w, 200, result)
+	jsonResponse(w, 200, map[string]any{
+		"status":  "success",
+		"success": true,
+		"message": fmt.Sprintf("Synchronisation terminée (%d utilisateurs, %d médias)", result.Users, result.Media),
+		"users":   result.Users,
+		"media":   result.Media,
+	})
 }
 
 func (h *Handler) sessions(w http.ResponseWriter, r *http.Request) {
@@ -1127,11 +1616,46 @@ func jsonError(w http.ResponseWriter, status int, msg string) {
 }
 
 func sameOrigin(r *http.Request) bool {
-	o := r.Header.Get("Origin")
-	if o == "" {
+	origin := strings.TrimSpace(r.Header.Get("Origin"))
+	if origin == "" {
+		referer := strings.TrimSpace(r.Header.Get("Referer"))
+		if referer != "" {
+			if u, err := url.Parse(referer); err == nil {
+				origin = fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+			}
+		}
+	}
+	if origin == "" {
+		if os.Getenv("ALLOW_MISSING_ORIGIN_FOR_MUTATIONS") == "1" || os.Getenv("ALLOW_MISSING_ORIGIN_FOR_MUTATIONS") == "true" {
+			return true
+		}
 		return false
 	}
-	return strings.EqualFold(o, "https://"+r.Host) || strings.EqualFold(o, "http://"+r.Host)
+
+	trusted := map[string]struct{}{}
+	if host := r.Host; host != "" {
+		trusted["http://"+strings.ToLower(host)] = struct{}{}
+		trusted["https://"+strings.ToLower(host)] = struct{}{}
+	}
+	if xfh := strings.TrimSpace(r.Header.Get("X-Forwarded-Host")); xfh != "" {
+		trusted["http://"+strings.ToLower(xfh)] = struct{}{}
+		trusted["https://"+strings.ToLower(xfh)] = struct{}{}
+	}
+	for _, envKey := range []string{"NEXTAUTH_URL", "AUTH_TRUSTED_ORIGIN", "AUTH_TRUSTED_ORIGINS"} {
+		val := os.Getenv(envKey)
+		if val == "" {
+			continue
+		}
+		for _, part := range strings.Split(val, ",") {
+			part = strings.TrimRight(strings.TrimSpace(part), "/")
+			if part != "" {
+				trusted[strings.ToLower(part)] = struct{}{}
+			}
+		}
+	}
+
+	_, ok := trusted[strings.ToLower(strings.TrimRight(origin, "/"))]
+	return ok
 }
 
 func first(values ...string) string {

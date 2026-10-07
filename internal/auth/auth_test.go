@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/maelmoreau21/jellytrack/internal/config"
 	"github.com/maelmoreau21/jellytrack/internal/database"
@@ -147,3 +148,109 @@ func TestCSRFProtectionRejectsInvalidToken(t *testing.T) {
 		t.Fatalf("expected 403 for missing CSRF token, got %d", w.Code)
 	}
 }
+
+func TestNextAuthCompatibilityEndpoints(t *testing.T) {
+	m, _ := testManager(t)
+	mux := http.NewServeMux()
+	m.Routes(mux)
+
+	// GET /api/auth/csrf without session
+	reqCSRF := httptest.NewRequest("GET", "/api/auth/csrf", nil)
+	wCSRF := httptest.NewRecorder()
+	mux.ServeHTTP(wCSRF, reqCSRF)
+	if wCSRF.Code != 200 {
+		t.Fatalf("expected 200 for csrf, got %d", wCSRF.Code)
+	}
+
+	// GET /api/auth/providers
+	reqProv := httptest.NewRequest("GET", "/api/auth/providers", nil)
+	wProv := httptest.NewRecorder()
+	mux.ServeHTTP(wProv, reqProv)
+	if wProv.Code != 200 {
+		t.Fatalf("expected 200 for providers, got %d", wProv.Code)
+	}
+
+	// GET /api/auth/session without session should return 200 with empty json
+	reqSess := httptest.NewRequest("GET", "/api/auth/session", nil)
+	wSess := httptest.NewRecorder()
+	mux.ServeHTTP(wSess, reqSess)
+	if wSess.Code != 200 {
+		t.Fatalf("expected 200 for empty session, got %d", wSess.Code)
+	}
+
+	// Login and test session with cookie
+	rec := httptest.NewRecorder()
+	loginReq := httptest.NewRequest("GET", "/", nil)
+	_, err := m.createSession(rec, loginReq, "testuser", "user")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cookie := rec.Result().Cookies()[0]
+
+	reqSessAuth := httptest.NewRequest("GET", "/api/auth/session", nil)
+	reqSessAuth.AddCookie(cookie)
+	wSessAuth := httptest.NewRecorder()
+	mux.ServeHTTP(wSessAuth, reqSessAuth)
+	if wSessAuth.Code != 200 {
+		t.Fatalf("expected 200 for authenticated session, got %d", wSessAuth.Code)
+	}
+	var sessData struct {
+		User struct {
+			Name    string `json:"name"`
+			Role    string `json:"role"`
+			IsAdmin bool   `json:"isAdmin"`
+		} `json:"user"`
+	}
+	if err := json.Unmarshal(wSessAuth.Body.Bytes(), &sessData); err != nil {
+		t.Fatal(err)
+	}
+	if sessData.User.Name != "testuser" || sessData.User.Role != "user" || sessData.User.IsAdmin {
+		t.Fatalf("unexpected session data: %+v", sessData)
+	}
+}
+
+func TestRevokedSessionRejected(t *testing.T) {
+	m, db := testManager(t)
+
+	// Create session
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/", nil)
+	_, err := m.createSession(rec, req, "revoked_user", "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cookie := rec.Result().Cookies()[0]
+
+	// Verify session works before revocation
+	authReq := httptest.NewRequest("GET", "/api/auth/me", nil)
+	authReq.AddCookie(cookie)
+	p, ok := m.authenticate(authReq)
+	if !ok || p.Username != "revoked_user" {
+		t.Fatal("expected valid authentication before revocation")
+	}
+
+	// Revoke sessions via GlobalSettings
+	futureRevoke := time.Now().UTC().Add(1 * time.Second).Format(time.RFC3339Nano)
+	_, err = db.Exec(`INSERT INTO "GlobalSettings" ("id","authSessionsRevokedAt") VALUES ('global',?) ON CONFLICT("id") DO UPDATE SET "authSessionsRevokedAt"=excluded."authSessionsRevokedAt"`, futureRevoke)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Now authenticate should reject
+	_, ok = m.authenticate(authReq)
+	if ok {
+		t.Fatal("expected session to be rejected after revocation")
+	}
+}
+
+func TestReverseProxyOrigin(t *testing.T) {
+	req := httptest.NewRequest("POST", "/api/test", nil)
+	req.Host = "internal-go:8080"
+	req.Header.Set("X-Forwarded-Host", "jellytrack.mydomain.com")
+	req.Header.Set("Origin", "https://jellytrack.mydomain.com")
+
+	if !sameOrigin(req) {
+		t.Fatal("expected sameOrigin to return true for matching X-Forwarded-Host origin")
+	}
+}
+
