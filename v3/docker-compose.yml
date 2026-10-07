@@ -14,7 +14,7 @@ services:
       TZ: ${TZ:-Europe/Paris}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       GOMEMLIMIT: ${GOMEMLIMIT:-32MiB}
-      DATABASE_DRIVER: ${DATABASE_DRIVER:-sqlite}
+      DATABASE_DRIVER: ${DATABASE_DRIVER:-}
       DATABASE_PATH: ${DATABASE_PATH:-/data/jellytrack.db}
       DATABASE_URL: ${DATABASE_URL:-}
       BACKUP_DIR: ${BACKUP_DIR:-/data/backups}

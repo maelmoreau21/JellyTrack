@@ -23,7 +23,7 @@ FROM gcr.io/distroless/static-debian13:nonroot@sha256:e2e927ec666bae08560abb3c55
 WORKDIR /
 COPY --from=server-build --chown=65532:65532 /tmp/data /data
 COPY --from=server-build --chown=65532:65532 /out/jellytrack /jellytrack
-ENV PORT=3000 DATABASE_DRIVER=sqlite DATABASE_PATH=/data/jellytrack.db GOMEMLIMIT=32MiB
+ENV PORT=3000 DATABASE_PATH=/data/jellytrack.db GOMEMLIMIT=32MiB
 EXPOSE 3000
 VOLUME ["/data"]
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD ["/jellytrack", "healthcheck"]

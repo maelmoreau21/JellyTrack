@@ -61,9 +61,48 @@ func TestLoadRejectsInvalidConfiguration(t *testing.T) {
 			t.Setenv("JELLYTRACK_PORT", "")
 			t.Setenv("DATABASE_DRIVER", tt.driver)
 			t.Setenv("DATABASE_URL", tt.dbURL)
+			t.Setenv("POSTGRES_PASSWORD", "")
+			t.Setenv("POSTGRES_USER", "")
+			t.Setenv("POSTGRES_IP", "")
+			t.Setenv("DB_PASSWORD", "")
 			if _, err := Load(); err == nil {
 				t.Fatal("expected configuration error")
 			}
 		})
 	}
 }
+
+func TestLoadAutoDetectsPostgresFromURLOrLegacyEnv(t *testing.T) {
+	t.Run("auto-detect from DATABASE_URL", func(t *testing.T) {
+		t.Setenv("DATABASE_DRIVER", "")
+		t.Setenv("DATABASE_URL", "postgres://user:pass@localhost:5432/jellytrack")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if cfg.DatabaseDriver != "postgres" || cfg.DatabaseURL != "postgres://user:pass@localhost:5432/jellytrack" {
+			t.Fatalf("expected auto-detected postgres, got %+v", cfg)
+		}
+	})
+
+	t.Run("auto-detect from POSTGRES_* environment variables", func(t *testing.T) {
+		t.Setenv("DATABASE_DRIVER", "")
+		t.Setenv("DATABASE_URL", "")
+		t.Setenv("POSTGRES_USER", "custom_user")
+		t.Setenv("POSTGRES_PASSWORD", "secret123")
+		t.Setenv("POSTGRES_IP", "10.0.0.5")
+		t.Setenv("POSTGRES_PORT", "5433")
+		t.Setenv("POSTGRES_DB", "custom_db")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if cfg.DatabaseDriver != "postgres" {
+			t.Fatalf("expected postgres driver, got %s", cfg.DatabaseDriver)
+		}
+		if cfg.DatabaseURL != "postgres://custom_user:secret123@10.0.0.5:5433/custom_db?sslmode=disable" {
+			t.Fatalf("unexpected constructed postgres URL: %s", cfg.DatabaseURL)
+		}
+	})
+}
+

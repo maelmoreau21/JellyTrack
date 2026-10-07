@@ -4,6 +4,7 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -44,16 +45,9 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("LOG_LEVEL must be debug, info, warn, or error")
 	}
 
-	driver := strings.ToLower(strings.TrimSpace(os.Getenv("DATABASE_DRIVER")))
-	if driver == "" {
-		driver = "sqlite"
-	}
-	if driver != "sqlite" && driver != "postgres" {
-		return Config{}, fmt.Errorf("DATABASE_DRIVER must be sqlite or postgres")
-	}
-	dbURL := strings.TrimSpace(os.Getenv("DATABASE_URL"))
-	if driver == "postgres" && dbURL == "" {
-		return Config{}, fmt.Errorf("DATABASE_URL is required when DATABASE_DRIVER=postgres")
+	driver, dbURL, dbPath, err := resolveDatabase()
+	if err != nil {
+		return Config{}, err
 	}
 
 	return Config{
@@ -62,7 +56,7 @@ func Load() (Config, error) {
 		LogLevel:           level,
 		DatabaseDriver:     driver,
 		DatabaseURL:        dbURL,
-		DatabasePath:       firstNonEmpty(os.Getenv("DATABASE_PATH"), "/data/jellytrack.db"),
+		DatabasePath:       dbPath,
 		JellyfinURL:        firstNonEmpty(os.Getenv("JELLYFIN_URL")),
 		JellyfinAPIKey:     firstNonEmpty(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY")),
 		JellyfinServerID:   firstNonEmpty(os.Getenv("JELLYFIN_SERVER_ID"), "master"),
@@ -70,6 +64,86 @@ func Load() (Config, error) {
 		GeoIPDatabasePath:  firstNonEmpty(os.Getenv("GEOIP_DATABASE_PATH"), "/data/GeoLite2-Country.mmdb"),
 		EnablePprof:        strings.EqualFold(os.Getenv("ENABLE_PPROF"), "true") || strings.EqualFold(os.Getenv("JELLYTRACK_PPROF"), "true"),
 	}, nil
+}
+
+func resolveDatabase() (driver, dbURL, dbPath string, err error) {
+	explicitDriver := strings.ToLower(strings.TrimSpace(os.Getenv("DATABASE_DRIVER")))
+	rawURL := strings.TrimSpace(os.Getenv("DATABASE_URL"))
+	dbPath = firstNonEmpty(os.Getenv("DATABASE_PATH"), "/data/jellytrack.db")
+
+	pgURL := ResolvePostgresURL()
+	urlIsPG := strings.HasPrefix(rawURL, "postgres://") || strings.HasPrefix(rawURL, "postgresql://")
+
+	switch explicitDriver {
+	case "sqlite":
+		driver = "sqlite"
+		dbURL = rawURL
+	case "postgres":
+		driver = "postgres"
+		if rawURL != "" {
+			dbURL = rawURL
+		} else if pgURL != "" {
+			dbURL = pgURL
+		} else {
+			return "", "", "", fmt.Errorf("DATABASE_URL is required when DATABASE_DRIVER=postgres")
+		}
+	case "":
+		if urlIsPG {
+			driver = "postgres"
+			dbURL = rawURL
+		} else if pgURL != "" && strings.TrimSpace(os.Getenv("POSTGRES_PASSWORD")) != "" {
+			driver = "postgres"
+			dbURL = pgURL
+		} else {
+			driver = "sqlite"
+			dbURL = rawURL
+		}
+	default:
+		return "", "", "", fmt.Errorf("DATABASE_DRIVER must be sqlite or postgres")
+	}
+
+	return driver, dbURL, dbPath, nil
+}
+
+// ResolvePostgresURL extracts or constructs a PostgreSQL DSN from legacy and standard environment variables.
+func ResolvePostgresURL() string {
+	raw := strings.TrimSpace(os.Getenv("DATABASE_URL"))
+	if strings.HasPrefix(raw, "postgres://") || strings.HasPrefix(raw, "postgresql://") {
+		return raw
+	}
+	user := firstNonEmpty(os.Getenv("JELLYTRACK_DB_USER"), os.Getenv("DB_USER"), os.Getenv("POSTGRES_USER"))
+	pass := firstNonEmpty(os.Getenv("JELLYTRACK_DB_PASSWORD"), os.Getenv("DB_PASSWORD"), os.Getenv("POSTGRES_PASSWORD"))
+	host := firstNonEmpty(os.Getenv("DB_HOST"), os.Getenv("POSTGRES_IP"))
+	port := firstNonEmpty(os.Getenv("DB_PORT"), os.Getenv("POSTGRES_PORT"), "5432")
+	dbName := firstNonEmpty(os.Getenv("JELLYTRACK_DB_NAME"), os.Getenv("DB_NAME"), os.Getenv("POSTGRES_DB"))
+
+	if user == "" && pass == "" && host == "" && (dbName == "" || dbName == "JellyTrack") {
+		return ""
+	}
+	if user == "" {
+		user = "JellyTrack"
+	}
+	if host == "" {
+		host = "postgres"
+	}
+	if dbName == "" {
+		dbName = "JellyTrack"
+	}
+
+	var userInfo *url.Userinfo
+	if pass != "" {
+		userInfo = url.UserPassword(user, pass)
+	} else {
+		userInfo = url.User(user)
+	}
+	u := url.URL{
+		Scheme:   "postgres",
+		User:     userInfo,
+		Host:     fmt.Sprintf("%s:%s", host, port),
+		Path:     "/" + dbName,
+		RawQuery: "sslmode=disable",
+	}
+	return u.String()
 }
 
 func firstNonEmpty(values ...string) string {

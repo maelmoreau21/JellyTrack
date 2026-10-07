@@ -219,8 +219,8 @@ var loginAttempts = map[string]loginBucket{}
 
 func New(db *sql.DB, driver string) *Manager {
 	secret := secretValue(os.Getenv("NEXTAUTH_SECRET"), os.Getenv("AUTH_SECRET"), os.Getenv("JELLYTRACK_SECRET"))
-	username := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_USER"), "admin")
-	password := os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD")
+	username := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_USER"), os.Getenv("JELLYGATE_LOCAL_ADMIN_USER"), "admin")
+	password := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD"), os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD"))
 	var hash []byte
 	if strongPassword(username, password) && len(secret) >= 32 && !strings.HasPrefix(secret, "CHANGE_ME") {
 		hash, _ = bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

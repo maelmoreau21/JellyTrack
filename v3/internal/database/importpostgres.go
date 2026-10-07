@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/maelmoreau21/jellytrack/v3/internal/config"
 )
 
 type ImportCount struct {
@@ -54,7 +56,10 @@ func RunPostgresImport(args []string) error {
 	}
 	sourceURL := strings.TrimSpace(os.Getenv("DATABASE_URL"))
 	if sourceURL == "" {
-		return fmt.Errorf("DATABASE_URL must contain the source PostgreSQL connection URL")
+		sourceURL = config.ResolvePostgresURL()
+	}
+	if sourceURL == "" {
+		return fmt.Errorf("DATABASE_URL (or POSTGRES_* environment variables) must be configured to connect to PostgreSQL")
 	}
 	ctx := context.Background()
 	counts, err := ImportPostgres(ctx, sourceURL, *targetPath)
