@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/maelmoreau21/jellytrack/v3/internal/auth"
 	"github.com/maelmoreau21/jellytrack/v3/internal/plugin"
 )
 
@@ -22,6 +23,8 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string) http.Handler {
 	fileServer := http.FileServer(http.FS(staticFiles))
 
 	mux := http.NewServeMux()
+	authManager := auth.New(db, driver)
+	authManager.Routes(mux)
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-store")
@@ -29,9 +32,10 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string) http.Handler {
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
 	mux.Handle("/api/plugin/events", plugin.NewHandler(db, driver, logger))
-	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
+	privateAPI := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 	})
+	mux.Handle("/api/", authManager.Middleware(privateAPI))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		path := strings.TrimPrefix(r.URL.Path, "/")
 		if path != "" {

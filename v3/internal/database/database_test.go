@@ -27,8 +27,8 @@ func TestSQLiteMigrationsAreRepeatableAndEnableWAL(t *testing.T) {
 	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`).Scan(&tableCount); err != nil {
 		t.Fatal(err)
 	}
-	if tableCount != 12 { // 11 application tables and migration history.
-		t.Fatalf("got %d tables, want 12", tableCount)
+	if tableCount != 13 { // 12 application tables and migration history.
+		t.Fatalf("got %d tables, want 13", tableCount)
 	}
 	var journalMode string
 	if err := db.QueryRowContext(ctx, "PRAGMA journal_mode").Scan(&journalMode); err != nil {
