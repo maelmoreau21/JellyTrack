@@ -19,6 +19,8 @@
 
 # production
 /build
+/jellytrack
+/jellytrack.exe
 
 # misc
 .DS_Store
