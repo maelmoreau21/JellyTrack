@@ -9,12 +9,17 @@ import (
 )
 
 type Config struct {
-	Port           string
-	Timezone       string
-	LogLevel       slog.Level
-	DatabaseDriver string
-	DatabaseURL    string
-	DatabasePath   string
+	Port               string
+	Timezone           string
+	LogLevel           slog.Level
+	DatabaseDriver     string
+	DatabaseURL        string
+	DatabasePath       string
+	JellyfinURL        string
+	JellyfinAPIKey     string
+	JellyfinServerID   string
+	JellyfinServerName string
+	GeoIPDatabasePath  string
 }
 
 func Load() (Config, error) {
@@ -50,12 +55,17 @@ func Load() (Config, error) {
 	}
 
 	return Config{
-		Port:           strconv.Itoa(portNumber),
-		Timezone:       firstNonEmpty(os.Getenv("TZ"), "UTC"),
-		LogLevel:       level,
-		DatabaseDriver: driver,
-		DatabaseURL:    dbURL,
-		DatabasePath:   firstNonEmpty(os.Getenv("DATABASE_PATH"), "/data/jellytrack.db"),
+		Port:               strconv.Itoa(portNumber),
+		Timezone:           firstNonEmpty(os.Getenv("TZ"), "UTC"),
+		LogLevel:           level,
+		DatabaseDriver:     driver,
+		DatabaseURL:        dbURL,
+		DatabasePath:       firstNonEmpty(os.Getenv("DATABASE_PATH"), "/data/jellytrack.db"),
+		JellyfinURL:        firstNonEmpty(os.Getenv("JELLYFIN_URL")),
+		JellyfinAPIKey:     firstNonEmpty(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY")),
+		JellyfinServerID:   firstNonEmpty(os.Getenv("JELLYFIN_SERVER_ID"), "master"),
+		JellyfinServerName: firstNonEmpty(os.Getenv("JELLYFIN_SERVER_NAME"), "Master Jellyfin"),
+		GeoIPDatabasePath:  firstNonEmpty(os.Getenv("GEOIP_DATABASE_PATH"), "/data/GeoLite2-Country.mmdb"),
 	}, nil
 }
 
