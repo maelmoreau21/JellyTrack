@@ -157,8 +157,17 @@ func (c *Client) Sessions(ctx context.Context) ([]Session, error) {
 
 // Items iterates pages without retaining the entire Jellyfin library in memory.
 func (c *Client) Items(ctx context.Context, visit func(Item) error) error {
+	return c.ItemsSince(ctx, "", visit)
+}
+
+func (c *Client) ItemsSince(ctx context.Context, since string, visit func(Item) error) error {
 	for start := 0; start < 50000; start += pageSize {
 		q := url.Values{"IncludeItemTypes": {"Movie,Series,Season,Episode,Audio,MusicAlbum,Book,AudioBook,Comic,BoxSet"}, "Recursive": {"true"}, "Fields": {"Genres,People,Studios,MediaSources,ParentId,RunTimeTicks,DateCreated,SeriesId,SeasonId,AlbumId"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
+		if since != "" {
+			q.Set("MinDateCreated", since)
+			q.Set("SortBy", "DateCreated")
+			q.Set("SortOrder", "Descending")
+		}
 		var page itemPage
 		if err := c.get(ctx, "/Items", q, &page); err != nil {
 			return err

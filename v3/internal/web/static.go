@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/maelmoreau21/jellytrack/v3/internal/api"
 	"github.com/maelmoreau21/jellytrack/v3/internal/auth"
 	"github.com/maelmoreau21/jellytrack/v3/internal/plugin"
 )
@@ -25,6 +26,7 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string) http.Handler {
 	mux := http.NewServeMux()
 	authManager := auth.New(db, driver)
 	authManager.Routes(mux)
+	api.New(db, driver).Register(mux, authManager.Middleware)
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-store")

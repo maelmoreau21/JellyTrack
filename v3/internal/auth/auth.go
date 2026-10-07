@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -43,7 +44,7 @@ var loginMu sync.Mutex
 var loginAttempts = map[string]loginBucket{}
 
 func New(db *sql.DB, driver string) *Manager {
-	secret := first(os.Getenv("NEXTAUTH_SECRET"), os.Getenv("AUTH_SECRET"), os.Getenv("JELLYTRACK_SECRET"))
+	secret := secretValue(os.Getenv("NEXTAUTH_SECRET"), os.Getenv("AUTH_SECRET"), os.Getenv("JELLYTRACK_SECRET"))
 	username := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_USER"), "admin")
 	password := os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD")
 	var hash []byte
@@ -61,6 +62,9 @@ func (m *Manager) Routes(mux *http.ServeMux) {
 
 func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 	key := r.RemoteAddr
+	if host, _, err := net.SplitHostPort(key); err == nil {
+		key = host
+	}
 	loginMu.Lock()
 	bucket := loginAttempts[key]
 	now := time.Now()
@@ -252,6 +256,15 @@ func first(values ...string) string {
 	for _, v := range values {
 		if strings.TrimSpace(v) != "" {
 			return strings.TrimSpace(v)
+		}
+	}
+	return ""
+}
+func secretValue(values ...string) string {
+	for _, v := range values {
+		v = strings.TrimSpace(v)
+		if len(v) >= 32 && !strings.HasPrefix(v, "CHANGE_ME") {
+			return v
 		}
 	}
 	return ""
