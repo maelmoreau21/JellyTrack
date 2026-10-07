@@ -1,4 +1,4 @@
-# JellyTrack v3 — phases 1 et 2
+# JellyTrack v3 — phases 1 à 3
 
 La v3 est isolée de l’application Next.js dans ce dossier. Pour lancer le premier squelette depuis la racine du dépôt sous PowerShell :
 
@@ -29,6 +29,15 @@ docker run --rm --entrypoint /jellytrack -v "${PWD}:/import" -e DATABASE_URL ghc
 La commande nécessite une image v3 déjà construite ou publiée. Le fichier cible doit ne pas exister. L’import copie progressivement les 11 tables, compare les nombres de lignes, puis crée le fichier cible seulement si les contrôles réussissent. Il ne modifie pas la base source. Protège le fichier SQLite et l’URL PostgreSQL comme des données sensibles.
 
 La page visible est un écran temporaire de portage. Les fonctions de JellyTrack seront transférées dans les phases suivantes. Les traductions d’origine sont copiées sans modification sous `frontend/messages/`.
+
+L’endpoint plugin reste `POST /api/plugin/events`, avec schéma d’événement v3, les alias `ItemDownloaded`/`DownloadCompleted`, clés existantes stockées sous forme scrypt avec `PLUGIN_KEY_PEPPER`, et déduplication des téléchargements par serveur et `sourceEventId`. Un téléchargement est enregistré comme une vue terminée.
+
+Pour lancer les vérifications Go depuis `v3` :
+
+```powershell
+go test ./...
+go vet ./...
+```
 
 Pour reconstruire uniquement le frontend en développement :
 

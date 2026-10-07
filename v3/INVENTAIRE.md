@@ -4,8 +4,8 @@
 
 ## Points à valider avant la phase 1
 
-- **Base externe :** choix confirmé pour la v3: SQLite reste le mode autonome par défaut; un PostgreSQL géré séparément sera une option de connexion, sans service PostgreSQL ajouté au compose v3. La phase 2 devra implémenter et documenter ce mode avec `DATABASE_DRIVER=postgres` et `DATABASE_URL`. Le mode SQLite restera disponible sans serveur externe. La limite à respecter est que PostgreSQL externe exige qu’un service PostgreSQL soit fourni et administré séparément.
-- **Versions stables :** aucune dépendance Go/Vite de la v3 n’est sélectionnée en phase 0. Avant de les figer, consulter les versions stables publiées à ce moment et inscrire les versions retenues dans les fichiers de verrouillage. Le dépôt actuel n’est pas une source fiable pour la « dernière stable » de la future stack.
+- **Base externe :** choix confirmé et implémenté en phase 2 : SQLite est le mode autonome par défaut; une PostgreSQL externe reste disponible avec `DATABASE_DRIVER=postgres` et `DATABASE_URL`, sans service ajouté au compose. Elle doit être fournie et administrée séparément.
+- **Versions stables :** les versions stables retenues à la phase 1 sont inscrites dans les fichiers de verrouillage de `/v3`; elles ont été vérifiées le 7 octobre 2026.
 - Le futur contrat de sécurité décrit dans ta demande (notamment `/api/health` strictement minimal) est une exigence cible; l’implémentation actuelle expose un contrôle de santé détaillé réservé à l’administrateur.
 
 ## Données Prisma

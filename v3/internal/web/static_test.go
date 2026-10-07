@@ -10,7 +10,7 @@ import (
 )
 
 func TestHealthEndpointReturnsOnlyStatus(t *testing.T) {
-	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
 	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
 	resp := httptest.NewRecorder()
 	handler.ServeHTTP(resp, req)
@@ -20,7 +20,7 @@ func TestHealthEndpointReturnsOnlyStatus(t *testing.T) {
 }
 
 func TestFrontendAndFallbackAreServed(t *testing.T) {
-	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
 	for _, path := range []string{"/", "/users/123", "/media/artist/Daft.Punk"} {
 		req := httptest.NewRequest(http.MethodGet, path, nil)
 		resp := httptest.NewRecorder()
@@ -32,7 +32,7 @@ func TestFrontendAndFallbackAreServed(t *testing.T) {
 }
 
 func TestMissingAssetDoesNotReturnApplicationHTML(t *testing.T) {
-	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
 	req := httptest.NewRequest(http.MethodGet, "/assets/not-found.js", nil)
 	resp := httptest.NewRecorder()
 	handler.ServeHTTP(resp, req)
@@ -42,7 +42,7 @@ func TestMissingAssetDoesNotReturnApplicationHTML(t *testing.T) {
 }
 
 func TestSecurityHeadersArePresent(t *testing.T) {
-	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
 	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
 	resp := httptest.NewRecorder()
 	handler.ServeHTTP(resp, req)
@@ -51,5 +51,20 @@ func TestSecurityHeadersArePresent(t *testing.T) {
 	}
 	if resp.Header().Get("X-Content-Type-Options") != "nosniff" || resp.Header().Get("Referrer-Policy") == "" {
 		t.Fatal("required security headers are missing")
+	}
+}
+
+func TestPluginDiagnosticsAreMountedAtContractPath(t *testing.T) {
+	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
+	req := httptest.NewRequest(http.MethodGet, "/api/plugin/events", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"method":"POST"`) {
+		t.Fatalf("unexpected plugin diagnostics response: status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	preflight := httptest.NewRecorder()
+	handler.ServeHTTP(preflight, httptest.NewRequest(http.MethodOptions, "/api/plugin/events", nil))
+	if preflight.Code != http.StatusNoContent || preflight.Header().Get("Access-Control-Allow-Headers") == "" {
+		t.Fatalf("unexpected preflight response: status=%d", preflight.Code)
 	}
 }

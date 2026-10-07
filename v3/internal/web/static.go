@@ -1,17 +1,20 @@
 package web
 
 import (
+	"database/sql"
 	"embed"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"strings"
+
+	"github.com/maelmoreau21/jellytrack/v3/internal/plugin"
 )
 
 //go:embed all:dist
 var frontend embed.FS
 
-func NewHandler(logger *slog.Logger) http.Handler {
+func NewHandler(logger *slog.Logger, db *sql.DB, driver string) http.Handler {
 	staticFiles, err := fs.Sub(frontend, "dist")
 	if err != nil {
 		panic(err)
@@ -25,6 +28,7 @@ func NewHandler(logger *slog.Logger) http.Handler {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
+	mux.Handle("/api/plugin/events", plugin.NewHandler(db, driver, logger))
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 	})

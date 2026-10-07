@@ -1,5 +1,5 @@
-/frontend/node_modules/
-/frontend/dist/
-/internal/web/dist/assets/
-/jellytrack
-/jellytrack.exe
+# Local Go executables produced while compiling or exercising the v3 server.
+*.exe
+frontend/node_modules/
+frontend/dist/
+internal/web/dist/assets/
