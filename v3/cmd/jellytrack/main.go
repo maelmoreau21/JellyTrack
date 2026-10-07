@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/maelmoreau21/jellytrack/v3/internal/config"
+	"github.com/maelmoreau21/jellytrack/v3/internal/database"
 	"github.com/maelmoreau21/jellytrack/v3/internal/web"
 )
 
@@ -19,6 +20,13 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		if err := healthcheck(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == "import-postgres" {
+		if err := database.RunPostgresImport(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, "import failed:", err)
 			os.Exit(1)
 		}
 		return
@@ -31,6 +39,15 @@ func main() {
 	}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: cfg.LogLevel}))
 	slog.SetDefault(logger)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	db, err := database.Open(ctx, cfg)
+	if err != nil {
+		logger.Error("database startup failed", "error", err)
+		os.Exit(1)
+	}
+	defer db.Close()
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
@@ -48,8 +65,6 @@ func main() {
 		serverErrors <- server.ListenAndServe()
 	}()
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 	select {
 	case err := <-serverErrors:
 		if !errors.Is(err, http.ErrServerClosed) {
