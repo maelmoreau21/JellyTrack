@@ -1,82 +1,220 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Activity, Clock3, Film, Fish, LogOut, RefreshCw, Users, type LucideIcon } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Fish } from "lucide-react";
 import "./style.css";
+import { getJSON, mutateJSON } from "./api.ts";
+import { subscribeLocale } from "./i18n.ts";
+import type { Session } from "./types.ts";
 
-type Session = { username: string; role: string; csrfToken: string };
-type Summary = { periodDays: number; views: number; durationMs: number; users: number; media: number; activity: { day: string; views: number }[] };
+import { Sidebar, type NavTab } from "./components/Sidebar.tsx";
+import { TopHeader } from "./components/TopHeader.tsx";
+import { SearchModal } from "./components/SearchModal.tsx";
 
-async function getJSON<T>(path: string): Promise<T> {
-  const response = await fetch(path, { credentials: "same-origin", headers: { Accept: "application/json" } });
-  if (!response.ok) throw new Error(response.status === 401 ? "unauthorized" : "La demande n’a pas abouti.");
-  return response.json() as Promise<T>;
-}
+import { DashboardView } from "./components/views/DashboardView.tsx";
+import { StreamsView } from "./components/views/StreamsView.tsx";
+import { MediaView } from "./components/views/MediaView.tsx";
+import { UsersView } from "./components/views/UsersView.tsx";
+import { HistoryView } from "./components/views/HistoryView.tsx";
+import { AnalyticsView } from "./components/views/AnalyticsView.tsx";
+import { SettingsView } from "./components/views/SettingsView.tsx";
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentTab, setCurrentTab] = useState<NavTab>("dashboard");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [, setLocaleTick] = useState(0);
+
+  // Login form state
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [syncing, setSyncing] = useState(false);
   const [oidcEnabled, setOidcEnabled] = useState(false);
 
-  useEffect(() => { getJSON<{oidc:boolean}>("/api/auth/options").then(options => setOidcEnabled(options.oidc)).catch(() => undefined); getJSON<Session>("/api/auth/me").then(setSession).catch(() => setSession(null)).finally(() => setLoading(false)); }, []);
-  useEffect(() => { if (session) getJSON<Summary>("/api/dashboard").then(setSummary).catch(e => setError(e.message)); }, [session]);
+  useEffect(() => {
+    // Check saved theme
+    const savedTheme = (localStorage.getItem("jellytrack_theme") as "dark" | "light") || "dark";
+    setTheme(savedTheme);
+    document.documentElement.setAttribute("data-theme", savedTheme);
 
-  async function login(event: React.FormEvent) {
-    event.preventDefault(); setError("");
+    // Subscribe to locale changes
+    const unsubLocale = subscribeLocale(() => setLocaleTick((t) => t + 1));
+
+    // Check OIDC options and active session
+    getJSON<{ oidc: boolean }>("/api/auth/options")
+      .then((opts) => setOidcEnabled(opts.oidc))
+      .catch(() => undefined);
+
+    getJSON<Session>("/api/auth/me")
+      .then(setSession)
+      .catch(() => setSession(null))
+      .finally(() => setLoading(false));
+
+    return () => unsubLocale();
+  }, []);
+
+  const handleToggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
     try {
-      const response = await fetch("/api/auth/login", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", Origin: window.location.origin }, body: JSON.stringify({ username, password }) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Connexion impossible.");
-      setSession(result); setPassword("");
-    } catch (e) { setError(e instanceof Error ? e.message : "Connexion impossible."); }
-  }
+      localStorage.setItem("jellytrack_theme", next);
+    } catch {}
+  };
 
-  async function sync() {
-    if (!session) return; setSyncing(true); setError("");
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
     try {
-      const response = await fetch("/api/sync", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-CSRF-Token": session.csrfToken, Origin: window.location.origin }, body: JSON.stringify({}) });
-      const result = await response.json(); if (!response.ok) throw new Error(result.error || "Synchronisation impossible.");
-      setSummary(await getJSON<Summary>("/api/dashboard"));
-    } catch (e) { setError(e instanceof Error ? e.message : "Synchronisation impossible."); }
-    finally { setSyncing(false); }
-  }
+      const res = await mutateJSON<Session>("/api/auth/login", "POST", { username, password });
+      setSession(res);
+      setPassword("");
+    } catch (err: any) {
+      setError(err.message || "Identifiants invalides.");
+    }
+  };
 
-  async function logout() {
+  const handleLogout = async () => {
     if (!session) return;
-    await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin", headers: { "X-CSRF-Token": session.csrfToken, Origin: window.location.origin } });
+    try {
+      await mutateJSON("/api/auth/logout", "POST", {}, session.csrfToken);
+    } catch {}
     setSession(null);
+  };
+
+  const handleSync = async () => {
+    if (!session || syncing) return;
+    setSyncing(true);
+    try {
+      await mutateJSON("/api/sync", "POST", {}, session.csrfToken);
+      // Trigger refresh on views by a subtle state change if needed
+    } catch (err: any) {
+      alert(`Synchronisation : ${err.message}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <main className="loading">
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <div className="sidebar-brand-icon" style={{ width: 48, height: 48 }}>
+            <Fish size={28} />
+          </div>
+          <span style={{ fontSize: 18, fontWeight: 750 }}>JellyTrack</span>
+        </div>
+      </main>
+    );
   }
 
-  if (loading) return <main className="loading">JellyTrack</main>;
-  if (!session) return <main className="login-shell"><form className="login-card" onSubmit={login}>
-    <div className="brand"><span className="brand-icon"><Fish size={23} /></span><span>JellyTrack</span></div>
-    <p className="eyebrow">VOTRE MÉDIATHÈQUE, EN UN COUP D’ŒIL</p><h1>Bienvenue</h1><p className="muted">Connectez-vous avec votre compte Jellyfin ou le compte administrateur local.</p>
-    <label>Nom d’utilisateur<input autoComplete="username" required value={username} onChange={e => setUsername(e.target.value)} /></label>
-    <label>Mot de passe<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>
-    {error && <p role="alert" className="error">{error}</p>}<button className="primary full" type="submit">Se connecter</button>
-    {oidcEnabled && <a className="secondary full oidc-link" href="/api/auth/oidc/start">Se connecter avec SSO</a>}
-  </form></main>;
+  // Login view
+  if (!session) {
+    return (
+      <main className="login-shell">
+        <form className="login-card" onSubmit={handleLogin}>
+          <div className="brand" style={{ marginBottom: 12 }}>
+            <span className="brand-icon">
+              <Fish size={24} />
+            </span>
+            <span>JellyTrack</span>
+          </div>
+          <p className="eyebrow">VOTRE MÉDIATHÈQUE, EN UN COUP D’ŒIL</p>
+          <h1>Bienvenue</h1>
+          <p className="muted">
+            Connectez-vous avec votre compte Jellyfin ou les identifiants d'administration locale.
+          </p>
 
-  const hours = summary ? Math.floor(summary.durationMs / 3_600_000) : 0;
-  const stats: { Icon: LucideIcon; label: string; value: string | number }[] = [
-    { Icon: Activity, label: "Vues", value: summary?.views ?? "—" },
-    { Icon: Clock3, label: "Temps regardé", value: `${hours} h` },
-    { Icon: Users, label: "Utilisateurs", value: summary?.users ?? "—" },
-    { Icon: Film, label: "Médias", value: summary?.media ?? "—" },
-  ];
-  return <main className="app-shell"><header className="topbar"><div className="brand"><span className="brand-icon"><Fish size={23} /></span><span>JellyTrack</span></div><div className="top-actions"><span className="user-badge">{session.username}</span><button className="icon-button" onClick={logout} aria-label="Se déconnecter"><LogOut size={18} /></button></div></header>
-    <section className="content"><div className="heading-row"><div><p className="eyebrow">APERÇU</p><h1>Tableau de bord</h1><p className="muted">L’activité de votre serveur Jellyfin sur les 30 derniers jours.</p></div><button className="primary" onClick={sync} disabled={syncing}><RefreshCw size={17} className={syncing ? "spin" : ""} />{syncing ? "Synchronisation…" : "Synchroniser Jellyfin"}</button></div>
-      {error && <p className="error" role="alert">{error}</p>}
-      <div className="stat-grid">{stats.map(({ Icon, label, value }) => <article className="stat-card" key={label}><div className="stat-label"><span className="stat-icon"><Icon size={18}/></span>{label}</div><strong>{value}</strong><span className="stat-foot">30 derniers jours</span></article>)}</div>
-      <div className="panel-grid"><section className="panel chart-panel"><div className="panel-heading"><div><h2>Activité de lecture</h2><p className="muted">Vues enregistrées par période</p></div><span className="live-indicator"><i/>Données locales</span></div><div className="chart"><ResponsiveContainer width="100%" height="100%"><AreaChart data={summary?.activity ?? []}><defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6658d9" stopOpacity={0.22}/><stop offset="100%" stopColor="#6658d9" stopOpacity={0}/></linearGradient></defs><CartesianGrid stroke="#edf0f5" vertical={false}/><XAxis dataKey="day" axisLine={false} tickLine={false}/><YAxis axisLine={false} tickLine={false}/><Tooltip/><Area type="monotone" dataKey="views" stroke="#6658d9" strokeWidth={3} fill="url(#fill)"/></AreaChart></ResponsiveContainer></div></section>
-      <section className="panel quick-panel"><div className="panel-heading"><div><h2>Premiers pas</h2><p className="muted">Reliez votre bibliothèque à JellyTrack.</p></div></div><div className="step"><span>1</span><div><strong>Connecter Jellyfin</strong><p>Configurez l’URL du serveur et une clé API dans les variables d’environnement.</p></div></div><div className="step"><span>2</span><div><strong>Synchroniser les médias</strong><p>La synchronisation importe vos utilisateurs et le catalogue par petites pages.</p></div></div><button className="secondary full" onClick={sync} disabled={syncing}>Lancer la synchronisation</button></section></div>
-      <footer className="footer">JellyTrack v3 · Open source · <a href="https://db-ip.com" target="_blank" rel="noreferrer">IP Geolocation by DB-IP</a></footer>
-    </section></main>;
+          <label>
+            Nom d’utilisateur
+            <input
+              autoComplete="username"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </label>
+
+          <label>
+            Mot de passe
+            <input
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+
+          {error && <p role="alert" className="error" style={{ marginTop: 16 }}>{error}</p>}
+
+          <button className="primary full" type="submit">
+            Se connecter
+          </button>
+
+          {oidcEnabled && (
+            <a className="secondary full oidc-link" href="/api/auth/oidc/start" style={{ textAlign: "center", display: "block" }}>
+              Se connecter avec SSO
+            </a>
+          )}
+        </form>
+      </main>
+    );
+  }
+
+  return (
+    <div className="app-container">
+      <Sidebar
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        isAdmin={session.role === "admin"}
+      />
+
+      <div className="main-wrapper">
+        <TopHeader
+          session={session}
+          onLogout={handleLogout}
+          onOpenSearch={() => setSearchOpen(true)}
+          onSync={handleSync}
+          syncing={syncing}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+        />
+
+        <main className="main-content">
+          {currentTab === "dashboard" && (
+            <DashboardView onSync={handleSync} syncing={syncing} isAdmin={session.role === "admin"} />
+          )}
+          {currentTab === "streams" && (
+            <StreamsView csrfToken={session.csrfToken} isAdmin={session.role === "admin"} />
+          )}
+          {currentTab === "media" && <MediaView />}
+          {currentTab === "users" && <UsersView />}
+          {currentTab === "history" && <HistoryView />}
+          {currentTab === "analytics" && <AnalyticsView />}
+          {currentTab === "settings" && session.role === "admin" && (
+            <SettingsView csrfToken={session.csrfToken} />
+          )}
+        </main>
+      </div>
+
+      <SearchModal
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelectMedia={() => setCurrentTab("media")}
+        onSelectUser={() => setCurrentTab("users")}
+      />
+    </div>
+  );
 }
 
-createRoot(document.getElementById("root")!).render(<React.StrictMode><App /></React.StrictMode>);
+createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
