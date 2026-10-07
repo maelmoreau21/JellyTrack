@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"net/http/pprof"
 	"strings"
 
 	"github.com/maelmoreau21/jellytrack/v3/internal/api"
@@ -17,7 +18,7 @@ import (
 //go:embed all:dist
 var frontend embed.FS
 
-func NewHandler(logger *slog.Logger, db *sql.DB, driver string) http.Handler {
+func NewHandler(logger *slog.Logger, db *sql.DB, driver string, enablePprof ...bool) http.Handler {
 	staticFiles, err := fs.Sub(frontend, "dist")
 	if err != nil {
 		panic(err)
@@ -25,6 +26,17 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string) http.Handler {
 	fileServer := http.FileServer(http.FS(staticFiles))
 
 	mux := http.NewServeMux()
+	if len(enablePprof) > 0 && enablePprof[0] {
+		mux.HandleFunc("GET /debug/pprof/", pprof.Index)
+		mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
+		mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
+		mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
+		mux.Handle("GET /debug/pprof/goroutine", pprof.Handler("goroutine"))
+		mux.Handle("GET /debug/pprof/heap", pprof.Handler("heap"))
+		mux.Handle("GET /debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+		mux.Handle("GET /debug/pprof/block", pprof.Handler("block"))
+	}
 	authManager := auth.New(db, driver)
 	authManager.Routes(mux)
 	api.New(db, driver).Register(mux, authManager.Middleware, authManager.AdminMiddleware)

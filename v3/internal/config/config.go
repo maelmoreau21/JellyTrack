@@ -21,6 +21,7 @@ type Config struct {
 	JellyfinServerID   string
 	JellyfinServerName string
 	GeoIPDatabasePath  string
+	EnablePprof        bool
 }
 
 func Load() (Config, error) {
@@ -67,6 +68,7 @@ func Load() (Config, error) {
 		JellyfinServerID:   firstNonEmpty(os.Getenv("JELLYFIN_SERVER_ID"), "master"),
 		JellyfinServerName: firstNonEmpty(os.Getenv("JELLYFIN_SERVER_NAME"), "Master Jellyfin"),
 		GeoIPDatabasePath:  firstNonEmpty(os.Getenv("GEOIP_DATABASE_PATH"), "/data/GeoLite2-Country.mmdb"),
+		EnablePprof:        strings.EqualFold(os.Getenv("ENABLE_PPROF"), "true") || strings.EqualFold(os.Getenv("JELLYTRACK_PPROF"), "true"),
 	}, nil
 }
 

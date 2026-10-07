@@ -18,6 +18,7 @@ services:
       DATABASE_PATH: ${DATABASE_PATH:-/data/jellytrack.db}
       DATABASE_URL: ${DATABASE_URL:-}
       BACKUP_DIR: ${BACKUP_DIR:-/data/backups}
+      ENABLE_PPROF: ${ENABLE_PPROF:-false}
     ports:
       - "${APP_PORT:-3000}:${JELLYTRACK_PORT:-${PORT:-3000}}"
     volumes:

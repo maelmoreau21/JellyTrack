@@ -48,13 +48,14 @@ func main() {
 		logger.Error("database startup failed", "error", err)
 		os.Exit(1)
 	}
+	defer db.Close()
 	sched := scheduler.New(db, cfg.DatabaseDriver, logger, scheduler.DefaultConfig())
 	sched.Start(ctx)
 	defer sched.Stop()
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           web.NewHandler(logger, db, cfg.DatabaseDriver),
+		Handler:           web.NewHandler(logger, db, cfg.DatabaseDriver, cfg.EnablePprof),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,

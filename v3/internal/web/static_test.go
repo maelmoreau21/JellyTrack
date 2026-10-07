@@ -68,3 +68,26 @@ func TestPluginDiagnosticsAreMountedAtContractPath(t *testing.T) {
 		t.Fatalf("unexpected preflight response: status=%d", preflight.Code)
 	}
 }
+
+func TestPprofEndpoints(t *testing.T) {
+	// Disabled by default
+	disabledHandler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite", false)
+	reqDisabled := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
+	recDisabled := httptest.NewRecorder()
+	disabledHandler.ServeHTTP(recDisabled, reqDisabled)
+	if recDisabled.Code != http.StatusOK || strings.Contains(recDisabled.Body.String(), "Types of profiles available") {
+		// When disabled, it gets caught by the SPA fallback and serves index.html, not pprof!
+		if !strings.Contains(recDisabled.Body.String(), "JellyTrack") {
+			t.Fatalf("expected SPA fallback when pprof is disabled, got %d %q", recDisabled.Code, recDisabled.Body.String())
+		}
+	}
+
+	// Enabled
+	enabledHandler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite", true)
+	reqEnabled := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
+	recEnabled := httptest.NewRecorder()
+	enabledHandler.ServeHTTP(recEnabled, reqEnabled)
+	if recEnabled.Code != http.StatusOK || !strings.Contains(recEnabled.Body.String(), "Types of profiles available") {
+		t.Fatalf("expected pprof index when enabled, got %d %q", recEnabled.Code, recEnabled.Body.String())
+	}
+}

@@ -33,6 +33,15 @@ func TestLoadSupportsPortAndDatabaseOverrides(t *testing.T) {
 	if cfg.Port != "8080" || cfg.DatabaseDriver != "postgres" || cfg.DatabaseURL != "postgresql://db.example/jellytrack" {
 		t.Fatalf("unexpected overrides: %+v", cfg)
 	}
+
+	t.Setenv("ENABLE_PPROF", "true")
+	cfgPprof, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cfgPprof.EnablePprof {
+		t.Fatal("expected EnablePprof to be true")
+	}
 }
 
 func TestLoadRejectsInvalidConfiguration(t *testing.T) {
