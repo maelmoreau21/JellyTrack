@@ -56,3 +56,40 @@ func TestPaginationBoundsAreEnforced(t *testing.T) {
 		t.Fatalf("page = %d,%d", limit, offset)
 	}
 }
+
+func TestDeepStatsAndGeoStats(t *testing.T) {
+	db := apiDB(t)
+	_, _ = db.Exec(`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s1','jf1','S1','http://j1')`)
+	_, _ = db.Exec(`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","directors","actors","studios") VALUES('m1','s1','jm1','Film 1','Movie','["Christopher Nolan"]','["Leonardo DiCaprio"]','["Warner Bros"]')`)
+	_, _ = db.Exec(`INSERT INTO "PlaybackHistory"("id","serverId","mediaId","playMethod","country","city","durationWatched") VALUES('p1','s1','m1','DirectPlay','France','Paris',3600)`)
+
+	h := New(db, "sqlite")
+
+	// 1. deep stats
+	w := httptest.NewRecorder()
+	h.deepStats(w, httptest.NewRequest("GET", "/api/stats/deep", nil))
+	if w.Code != 200 {
+		t.Fatalf("deep stats status=%d", w.Code)
+	}
+
+	// 2. geo stats
+	wGeo := httptest.NewRecorder()
+	h.geoStats(wGeo, httptest.NewRequest("GET", "/api/geo-stats", nil))
+	if wGeo.Code != 200 {
+		t.Fatalf("geo stats status=%d", wGeo.Code)
+	}
+
+	// 3. search
+	wSearch := httptest.NewRecorder()
+	h.search(wSearch, httptest.NewRequest("GET", "/api/search?q=Film", nil))
+	if wSearch.Code != 200 {
+		t.Fatalf("search status=%d", wSearch.Code)
+	}
+
+	// 4. media list
+	wMedia := httptest.NewRecorder()
+	h.mediaList(wMedia, httptest.NewRequest("GET", "/api/media", nil))
+	if wMedia.Code != 200 {
+		t.Fatalf("media list status=%d", wMedia.Code)
+	}
+}

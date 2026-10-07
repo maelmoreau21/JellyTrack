@@ -13,6 +13,7 @@ import (
 
 	"github.com/maelmoreau21/jellytrack/v3/internal/config"
 	"github.com/maelmoreau21/jellytrack/v3/internal/database"
+	"github.com/maelmoreau21/jellytrack/v3/internal/scheduler"
 	"github.com/maelmoreau21/jellytrack/v3/internal/web"
 )
 
@@ -47,7 +48,9 @@ func main() {
 		logger.Error("database startup failed", "error", err)
 		os.Exit(1)
 	}
-	defer db.Close()
+	sched := scheduler.New(db, cfg.DatabaseDriver, logger, scheduler.DefaultConfig())
+	sched.Start(ctx)
+	defer sched.Stop()
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,
