@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/pprof"
+	"os"
 	"strings"
 
 	"github.com/maelmoreau21/jellytrack/internal/api"
@@ -19,9 +20,17 @@ import (
 var frontend embed.FS
 
 func NewHandler(logger *slog.Logger, db *sql.DB, driver string, enablePprof ...bool) http.Handler {
-	staticFiles, err := fs.Sub(frontend, "dist")
-	if err != nil {
-		panic(err)
+	var staticFiles fs.FS
+	if fi, err := os.Stat("web/dist"); err == nil && fi.IsDir() {
+		staticFiles = os.DirFS("web/dist")
+	} else if fi, err := os.Stat("dist"); err == nil && fi.IsDir() {
+		staticFiles = os.DirFS("dist")
+	} else {
+		sub, err := fs.Sub(frontend, "dist")
+		if err != nil {
+			panic(err)
+		}
+		staticFiles = sub
 	}
 	fileServer := http.FileServer(http.FS(staticFiles))
 
@@ -81,7 +90,7 @@ func requestLogger(logger *slog.Logger, next http.Handler) http.Handler {
 func securityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := w.Header()
-		header.Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'")
+		header.Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'")
 		header.Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		header.Set("X-Content-Type-Options", "nosniff")
 		header.Set("Referrer-Policy", "strict-origin-when-cross-origin")

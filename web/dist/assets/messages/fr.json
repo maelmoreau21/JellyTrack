@@ -468,7 +468,14 @@
     "autoRedirectHint": "Connexion automatique via OpenID Connect...",
     "loggedOutNotice": "Vous avez été déconnecté avec succès.",
     "continueManually": "Continuer vers le SSO",
-    "cancelAutoRedirect": "Annuler la redirection"
+    "cancelAutoRedirect": "Annuler la redirection",
+    "signInToContinue": "Connectez-vous pour accéder au tableau de bord",
+    "redirectingSSO": "Redirection vers votre fournisseur SSO...",
+    "stayOnLogin": "Rester sur la page de connexion",
+    "ssoLogin": "Se connecter avec SSO",
+    "orContinueWith": "OU",
+    "usernamePlaceholder": "Jellyfin User",
+    "loginSuccess": "Connecté avec succès !"
   },
   "logs": {
     "activeFilter": "Filtre Actif :",

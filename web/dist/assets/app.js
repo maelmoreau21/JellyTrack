@@ -161,15 +161,14 @@
       }
     },
 
-    t(path, params = {}) {
+    t(path, params = {}, defaultVal = '') {
       const resolve = (obj, p) => p.split('.').reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : undefined), obj);
       let val = resolve(State.translations, path);
       if (val === undefined) {
         val = resolve(State.fallbackTranslations, path);
       }
       if (val === undefined) {
-        const parts = path.split('.');
-        val = parts[parts.length - 1]; // Fallback to last key
+        return defaultVal || '';
       }
       if (typeof val === 'string') {
         for (const [k, v] of Object.entries(params)) {
@@ -207,23 +206,24 @@
       this.set(saved);
       const btn = document.getElementById('btn-theme-toggle');
       if (btn) {
-        btn.addEventListener('click', () => {
-          const isDark = document.documentElement.classList.contains('dark');
-          this.set(isDark ? 'light' : 'dark');
-        });
+        btn.addEventListener('click', () => this.toggle());
       }
+    },
+    toggle() {
+      const isDark = document.documentElement.classList.contains('dark');
+      this.set(isDark ? 'light' : 'dark');
     },
     set(theme) {
       const sun = document.getElementById('theme-icon-sun');
       const moon = document.getElementById('theme-icon-moon');
       if (theme === 'dark') {
         document.documentElement.classList.add('dark');
-        if (sun) sun.style.display = 'block';
-        if (moon) moon.style.display = 'none';
+        if (sun) sun.classList.remove('hidden');
+        if (moon) moon.classList.add('hidden');
       } else {
         document.documentElement.classList.remove('dark');
-        if (sun) sun.style.display = 'none';
-        if (moon) moon.style.display = 'block';
+        if (sun) sun.classList.add('hidden');
+        if (moon) moon.classList.remove('hidden');
       }
       localStorage.setItem('jt_theme', theme);
     },
@@ -729,36 +729,42 @@
     async dashboard() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div class="page-header">
           <div>
-            <h1 style="font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em;">${I18n.t('dashboard.title') || 'Tableau de bord'}</h1>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem;">${I18n.t('dashboard.subtitle') || 'Activité, tendances et surveillance en temps réel.'}</p>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+              ${I18n.t('dashboard.title') || 'Tableau de bord'}
+            </h1>
+            <p class="page-subtitle">${I18n.t('dashboard.subtitle') || 'Activité, tendances et surveillance en temps réel.'}</p>
           </div>
-          <div class="segmented-control" id="dash-time-range">
-            <button class="segment-btn" data-days="1">24h</button>
-            <button class="segment-btn active" data-days="7">7j</button>
-            <button class="segment-btn" data-days="30">30j</button>
-            <button class="segment-btn" data-days="90">90j</button>
-            <button class="segment-btn" data-days="365">1 an</button>
+          <div class="page-actions">
+            <div class="segmented-control" id="dash-time-range">
+              <button class="segment-btn" data-days="1">24h</button>
+              <button class="segment-btn active" data-days="7">7j</button>
+              <button class="segment-btn" data-days="30">30j</button>
+              <button class="segment-btn" data-days="90">90j</button>
+              <button class="segment-btn" data-days="365">1 an</button>
+            </div>
           </div>
         </div>
 
         <!-- Metric Stat Cards -->
-        <div class="metric-grid" id="dash-metrics">
-          <div class="metric-card skeleton" style="height: 110px;"></div>
-          <div class="metric-card skeleton" style="height: 110px;"></div>
-          <div class="metric-card skeleton" style="height: 110px;"></div>
-          <div class="metric-card skeleton" style="height: 110px;"></div>
+        <div class="stat-grid" id="dash-metrics">
+          <div class="stat-card skeleton" style="height: 125px;"></div>
+          <div class="stat-card skeleton" style="height: 125px;"></div>
+          <div class="stat-card skeleton" style="height: 125px;"></div>
+          <div class="stat-card skeleton" style="height: 125px;"></div>
         </div>
 
         <!-- Live Streams Panel -->
         <div class="card" id="dash-live-panel">
           <div class="card-header">
             <div class="card-title-group">
-              <div class="card-title">
+              <div class="card-title" style="display:flex;align-items:center;gap:0.6rem;">
                 <span class="pulse-dot"></span>
                 ${I18n.t('dashboard.liveStreams') || 'Flux en direct'}
               </div>
+              <div class="card-subtitle">Surveillance active des lectures en cours</div>
             </div>
           </div>
           <div id="dashboard-live-streams-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -770,7 +776,10 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem;">
           <div class="card" style="min-height: 350px; display: flex; flex-direction: column;">
             <div class="card-header">
-              <div class="card-title">${I18n.t('charts.activity') || 'Activité de lecture'}</div>
+              <div class="card-title-group">
+                <div class="card-title">${I18n.t('charts.activity') || 'Activité de lecture'}</div>
+                <div class="card-subtitle">Nombre de sessions démarrées par jour</div>
+              </div>
             </div>
             <div style="flex: 1; min-height: 260px; position: relative;">
               <canvas id="chart-activity"></canvas>
@@ -779,7 +788,10 @@
 
           <div class="card" style="min-height: 350px; display: flex; flex-direction: column;">
             <div class="card-header">
-              <div class="card-title">${I18n.t('charts.hours') || 'Heures de pointe'}</div>
+              <div class="card-title-group">
+                <div class="card-title">${I18n.t('charts.hours') || 'Heures de pointe'}</div>
+                <div class="card-subtitle">Distribution horaire des lectures (0h - 23h)</div>
+              </div>
             </div>
             <div style="flex: 1; min-height: 260px; position: relative;">
               <canvas id="chart-hours"></canvas>
@@ -809,40 +821,48 @@
           const metricsEl = document.getElementById('dash-metrics');
           if (metricsEl) {
             metricsEl.innerHTML = `
-              <div class="metric-card">
-                <div class="metric-header">
-                  <span class="metric-label">${I18n.t('dashboard.views') || 'Lectures'}</span>
-                  <div class="metric-icon-box">▶</div>
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">${I18n.t('dashboard.views') || 'Lectures'}</span>
+                  <div class="stat-icon stat-icon-indigo">
+                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </div>
                 </div>
-                <div class="metric-value">${Utils.formatNumber(dash.views)}</div>
-                <div class="metric-trend">${days} ${I18n.t('common.days') || 'derniers jours'}</div>
+                <div class="stat-card-value">${Utils.formatNumber(dash.views)}</div>
+                <div class="stat-card-footer">${days} ${I18n.t('common.days') || 'derniers jours'}</div>
               </div>
 
-              <div class="metric-card">
-                <div class="metric-header">
-                  <span class="metric-label">${I18n.t('dashboard.watchTime') || 'Temps de lecture'}</span>
-                  <div class="metric-icon-box">⏱</div>
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">${I18n.t('dashboard.watchTime') || 'Temps de lecture'}</span>
+                  <div class="stat-icon stat-icon-cyan">
+                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
                 </div>
-                <div class="metric-value">${Utils.formatMs(dash.durationMs)}</div>
-                <div class="metric-trend">Total cumulé</div>
+                <div class="stat-card-value">${Utils.formatMs(dash.durationMs)}</div>
+                <div class="stat-card-footer">Total cumulé</div>
               </div>
 
-              <div class="metric-card">
-                <div class="metric-header">
-                  <span class="metric-label">${I18n.t('dashboard.users') || 'Utilisateurs actifs'}</span>
-                  <div class="metric-icon-box">👥</div>
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">${I18n.t('dashboard.users') || 'Utilisateurs actifs'}</span>
+                  <div class="stat-icon stat-icon-green">
+                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </div>
                 </div>
-                <div class="metric-value">${Utils.formatNumber(dash.users)}</div>
-                <div class="metric-trend"><a href="/users" data-link style="color:var(--primary);">Voir les profils →</a></div>
+                <div class="stat-card-value">${Utils.formatNumber(dash.users)}</div>
+                <div class="stat-card-footer"><a href="/users" data-link>Voir les profils →</a></div>
               </div>
 
-              <div class="metric-card">
-                <div class="metric-header">
-                  <span class="metric-label">${I18n.t('dashboard.media') || 'Titres multimédia'}</span>
-                  <div class="metric-icon-box">🎬</div>
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">${I18n.t('dashboard.media') || 'Titres multimédia'}</span>
+                  <div class="stat-icon stat-icon-amber">
+                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+                  </div>
                 </div>
-                <div class="metric-value">${Utils.formatNumber(dash.media)}</div>
-                <div class="metric-trend"><a href="/media" data-link style="color:var(--primary);">Explorer le catalogue →</a></div>
+                <div class="stat-card-value">${Utils.formatNumber(dash.media)}</div>
+                <div class="stat-card-footer"><a href="/media" data-link>Explorer le catalogue →</a></div>
               </div>
             `;
           }
@@ -926,67 +946,245 @@
     // 2. Login Page
     async login() {
       StreamsPoller.stop();
+      document.body.classList.add('is-auth-page');
       const main = document.getElementById('app-main');
+
       main.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; min-height: 75vh;">
-          <div class="card" style="width: 100%; max-width: 420px; padding: 2.25rem; border-radius: var(--radius-xl);">
-            <div style="text-align: center; margin-bottom: 2rem;">
-              <img src="/assets/logo.svg" alt="JellyTrack" style="width: 52px; height: 52px; margin-bottom: 0.75rem; border-radius: 12px; box-shadow: 0 0 25px var(--primary-glow);">
-              <h1 style="font-size: 1.5rem; font-weight: 800;">JellyTrack</h1>
-              <p style="color: var(--muted-foreground); font-size: 0.85rem; margin-top: 0.25rem;">${I18n.t('login.signInToContinue') || 'Connectez-vous pour accéder au tableau de bord'}</p>
-            </div>
+        <div class="auth-wrapper">
+          <div class="auth-glow-blob-1"></div>
+          <div class="auth-glow-blob-2"></div>
 
-            <form id="form-login" style="display: flex; flex-direction: column; gap: 1rem;">
-              <div id="login-error" style="display:none; padding: 0.65rem 0.85rem; background: rgba(239, 68, 68, 0.15); border: 1px solid var(--destructive); border-radius: var(--radius-md); font-size: 0.82rem; color: var(--destructive);"></div>
-
-              <div class="form-group" style="margin: 0;">
-                <label class="form-label">${I18n.t('login.username') || 'Nom d’utilisateur'}</label>
-                <input type="text" class="form-input" id="login-username" required autofocus placeholder="admin">
+          <div class="auth-card-container">
+            <div class="auth-card">
+              <div class="auth-card-header">
+                <div class="auth-logo-box">
+                  <svg class="auth-logo-svg" width="52" height="52" viewBox="18 23 64 69" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="jellyGradLogin" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#AA5CC3"/>
+                        <stop offset="100%" stop-color="#00A4DC"/>
+                      </linearGradient>
+                      <mask id="holeMaskLogin">
+                        <rect x="0" y="0" width="100" height="100" fill="#ffffff"/>
+                        <circle cx="50" cy="39" r="10" fill="black"/>
+                      </mask>
+                    </defs>
+                    <path d="M 20 55 A 30 30 0 0 1 80 55 Z" fill="url(#jellyGradLogin)" mask="url(#holeMaskLogin)"/>
+                    <polygon points="46,32 46,46 58,39" fill="#00A4DC"/>
+                    <rect x="30" y="60" width="8" height="20" rx="4" fill="url(#jellyGradLogin)"/>
+                    <rect x="46" y="60" width="8" height="30" rx="4" fill="url(#jellyGradLogin)"/>
+                    <rect x="62" y="60" width="8" height="15" rx="4" fill="url(#jellyGradLogin)"/>
+                  </svg>
+                </div>
+                <div>
+                  <h1 class="auth-card-title">${I18n.t('login.title') || 'Connexion JellyTrack'}</h1>
+                  <p id="login-subtitle" class="auth-card-subtitle">
+                    ${I18n.t('login.subtitle') || 'Authentification via Jellyfin'}
+                  </p>
+                </div>
               </div>
 
-              <div class="form-group" style="margin: 0;">
-                <label class="form-label">${I18n.t('login.password') || 'Mot de passe'}</label>
-                <input type="password" class="form-input" id="login-password" required placeholder="••••••••">
-              </div>
-
-              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--muted-foreground); cursor: pointer;">
-                <input type="checkbox" id="login-remember">
-                ${I18n.t('login.rememberMe') || 'Se souvenir de moi (30 jours)'}
-              </label>
-
-              <button type="submit" class="btn btn-primary" id="btn-login-submit" style="margin-top: 0.5rem;">
-                ${I18n.t('login.signIn') || 'Se connecter'}
-              </button>
-
-              <div id="oidc-login-wrapper" style="display: none; margin-top: 0.5rem;">
-                <div style="text-align: center; font-size: 0.75rem; color: var(--muted-foreground); margin: 0.5rem 0;">OU</div>
-                <a href="/api/auth/oidc/start" class="btn btn-secondary" style="width: 100%;">
-                  🔐 ${I18n.t('login.ssoLogin') || 'Connexion SSO / OpenID'}
+              <!-- SSO Auto-redirect Spinner (when OIDC enabled + auto-redirect) -->
+              <div id="login-sso-auto" class="auth-sso-spinner-wrap hidden">
+                <div class="auth-sso-spinner"></div>
+                <div style="display:flex; flex-direction:column; gap:0.25rem;">
+                  <span style="font-size:0.88rem; font-weight:600; color:var(--foreground);">${I18n.t('login.autoRedirecting') || 'Redirection vers votre fournisseur SSO...'}</span>
+                  <span style="font-size:0.75rem; color:var(--muted-foreground);">${I18n.t('login.autoRedirectHint') || 'Connexion automatique via OpenID Connect...'}</span>
+                </div>
+                <a id="login-sso-manual-link" href="#" style="margin-top:0.5rem; font-size:0.78rem; color:#6366f1; text-decoration:underline;">
+                  ${I18n.t('login.cancelAutoRedirect') || 'Annuler la redirection'}
                 </a>
               </div>
-            </form>
+
+              <div id="login-form-wrapper" class="auth-card-body">
+                <!-- Error Banner -->
+                <div id="login-error" class="auth-alert-error hidden">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span id="login-error-text"></span>
+                </div>
+
+                <!-- Logged Out Notice -->
+                <div id="login-logout-notice" class="auth-alert-success hidden">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>${I18n.t('login.loggedOutNotice') || 'Vous avez été déconnecté avec succès.'}</span>
+                </div>
+
+                <form id="form-login" class="auth-form">
+                  <!-- Username Field -->
+                  <div class="auth-input-group">
+                    <label class="auth-label">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
+                    <div class="auth-input-wrapper">
+                      <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <input type="text" class="auth-input-field" id="login-username" required autofocus placeholder="${I18n.t('login.usernamePlaceholder') || 'Jellyfin User'}">
+                    </div>
+                  </div>
+
+                  <!-- Password Field -->
+                  <div class="auth-input-group">
+                    <label class="auth-label">${I18n.t('login.password') || 'Mot de passe'}</label>
+                    <div class="auth-input-wrapper">
+                      <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      <input type="password" class="auth-input-field" id="login-password" required placeholder="••••••••">
+                    </div>
+                  </div>
+
+                  <!-- Remember Me -->
+                  <div class="auth-checkbox-card">
+                    <input type="checkbox" id="login-remember" class="auth-checkbox">
+                    <div>
+                      <label for="login-remember" class="auth-checkbox-label">
+                        ${I18n.t('login.rememberMe') || 'Se souvenir de moi'}
+                      </label>
+                      <span class="auth-checkbox-hint">
+                        ${I18n.t('login.rememberMeHint') || 'Rester connecté 30 jours sur cet appareil.'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Submit Button -->
+                  <button type="submit" id="btn-login-submit" class="auth-submit-btn">
+                    <span id="btn-login-text">${I18n.t('login.signIn') || 'Se connecter'}</span>
+                    <svg id="btn-login-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </button>
+
+                  <!-- SSO Option (when enabled) -->
+                  <div id="oidc-login-wrapper" class="hidden" style="flex-direction: column; gap: 0.75rem;">
+                    <div class="auth-divider">
+                      <div class="auth-divider-line"></div>
+                      <span class="auth-divider-text">
+                        ${I18n.t('login.orContinueWith') || 'OU'}
+                      </span>
+                      <div class="auth-divider-line"></div>
+                    </div>
+
+                    <a href="/api/auth/oidc/start" id="btn-sso" class="auth-sso-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      <span>${I18n.t('login.signInSso') || 'Se connecter avec SSO'}</span>
+                    </a>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Language Switcher & Theme Toggle Row (matching main branch) -->
+            <div class="auth-controls-bottom">
+              <select id="login-language-select" aria-label="Langue">
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="es">Español</option>
+                <option value="it">Italiano</option>
+                <option value="nl">Nederlands</option>
+                <option value="pl">Polski</option>
+                <option value="pt-BR">Português</option>
+                <option value="ru">Русский</option>
+                <option value="zh">中文</option>
+              </select>
+
+              <button type="button" id="login-theme-toggle" title="Basculer le thème">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              </button>
+            </div>
           </div>
         </div>
       `;
 
-      // Check OIDC options
+      // Check OIDC options & handle auto-redirect
+      let oidcEnabled = false;
+      let oidcAutoRedirect = false;
       try {
         const opts = await API.getJSON('/api/auth/options');
-        if (opts.oidc) {
-          const oidcWrapper = document.getElementById('oidc-login-wrapper');
-          if (oidcWrapper) oidcWrapper.style.display = 'block';
-        }
+        oidcEnabled = !!opts.oidc;
+        oidcAutoRedirect = !!(opts.oidcAutoRedirect || opts.autoRedirect);
       } catch (e) {}
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const isManual = urlParams.get('manual') === '1';
+      const hasError = urlParams.get('error');
+      const isLogout = urlParams.get('logout') === '1';
+
+      if (isLogout) {
+        const logoutEl = document.getElementById('login-logout-notice');
+        if (logoutEl) logoutEl.classList.remove('hidden');
+      }
+
+      if (oidcEnabled) {
+        const oidcWrapper = document.getElementById('oidc-login-wrapper');
+        const subtitle = document.getElementById('login-subtitle');
+        if (oidcWrapper) oidcWrapper.classList.remove('hidden');
+        if (subtitle) subtitle.textContent = I18n.t('login.ssoSubtitle') || 'Authentification unique sécurisée (SSO / OIDC)';
+
+        if (oidcAutoRedirect && !isManual && !hasError && !isLogout) {
+          const autoSection = document.getElementById('login-sso-auto');
+          const formWrapper = document.getElementById('login-form-wrapper');
+          if (autoSection) autoSection.classList.remove('hidden');
+          if (formWrapper) formWrapper.classList.add('hidden');
+
+          const manualLink = document.getElementById('login-sso-manual-link');
+          if (manualLink) {
+            manualLink.addEventListener('click', (e) => {
+              e.preventDefault();
+              if (autoSection) autoSection.classList.add('hidden');
+              if (formWrapper) formWrapper.classList.remove('hidden');
+            });
+          }
+
+          setTimeout(() => {
+            window.location.href = '/api/auth/oidc/start';
+          }, 600);
+          return;
+        }
+      }
+
+      // Handle query errors
+      if (hasError) {
+        const errEl = document.getElementById('login-error');
+        const errText = document.getElementById('login-error-text');
+        if (errEl && errText) {
+          const msgs = {
+            'AccessDeniedGroup': I18n.t('login.unauthorizedGroup') || 'Accès refusé : groupe non autorisé.',
+            'AccessDenied': I18n.t('login.unauthorizedGroup') || 'Accès refusé.',
+            'OAuthSignin': I18n.t('login.ssoError') || 'Erreur lors de la connexion SSO.',
+            'OAuthCallback': I18n.t('login.ssoError') || 'Erreur lors du retour SSO.',
+            'CredentialsSignin': I18n.t('login.invalidCredentials') || 'Identifiants incorrects.',
+          };
+          errText.textContent = msgs[hasError] || I18n.t('login.unexpectedError') || 'Une erreur inattendue s\'est produite.';
+          errEl.classList.remove('hidden');
+        }
+      }
+
+      // Bottom Language Selector
+      const loginLang = document.getElementById('login-language-select');
+      if (loginLang) {
+        loginLang.value = State.locale;
+        loginLang.addEventListener('change', async (e) => {
+          await I18n.changeLocale(e.target.value);
+        });
+      }
+
+      // Bottom Theme Toggle
+      const loginThemeBtn = document.getElementById('login-theme-toggle');
+      if (loginThemeBtn) {
+        loginThemeBtn.addEventListener('click', () => {
+          Theme.toggle();
+        });
+      }
 
       const form = document.getElementById('form-login');
       const errEl = document.getElementById('login-error');
+      const errText = document.getElementById('login-error-text');
       const submitBtn = document.getElementById('btn-login-submit');
+      const btnText = document.getElementById('btn-login-text');
+      const btnArrow = document.getElementById('btn-login-arrow');
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        errEl.style.display = 'none';
+        errEl.classList.add('hidden');
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Connexion...';
+        submitBtn.style.opacity = '0.6';
+        submitBtn.style.cursor = 'not-allowed';
+        if (btnText) btnText.textContent = I18n.t('login.verifying') || 'Vérification…';
+        if (btnArrow) btnArrow.style.display = 'none';
 
         const u = document.getElementById('login-username').value.trim();
         const p = document.getElementById('login-password').value;
@@ -994,13 +1192,17 @@
 
         try {
           await Auth.login(u, p, rem);
-          Toast.success('Connecté avec succès !');
+          Toast.success(I18n.t('login.loginSuccess') || 'Connecté avec succès !');
+          document.body.classList.remove('is-auth-page');
           Router.navigate('/');
         } catch (err) {
-          errEl.textContent = err.message;
-          errEl.style.display = 'block';
+          if (errText) errText.textContent = err.message;
+          errEl.classList.remove('hidden');
           submitBtn.disabled = false;
-          submitBtn.textContent = I18n.t('login.signIn') || 'Se connecter';
+          submitBtn.style.opacity = '1';
+          submitBtn.style.cursor = 'pointer';
+          if (btnText) btnText.textContent = I18n.t('login.signIn') || 'Se connecter';
+          if (btnArrow) btnArrow.style.display = '';
         }
       });
     },
@@ -1009,40 +1211,66 @@
     async setup() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; min-height: 75vh;">
-          <div class="card" style="width: 100%; max-width: 580px; padding: 2.5rem; border-radius: var(--radius-xl);">
-            <h1 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">Configuration Initiale JellyTrack</h1>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem; margin-bottom: 1.5rem;">Connectez votre serveur Jellyfin pour démarrer l’analyse et la surveillance.</p>
-
-            <form id="form-setup">
-              <div class="form-group">
-                <label class="form-label">Nom du serveur</label>
-                <input type="text" class="form-input" id="setup-name" required value="Serveur Principal">
+        <div class="setup-container">
+          <div class="setup-card">
+            <div class="setup-card-header">
+              <div class="setup-icon-box">🔌</div>
+              <div>
+                <h1 style="font-size: 1.4rem; font-weight: 800; margin: 0;">Configuration Initiale</h1>
+                <p style="font-size: 0.84rem; color: var(--muted-foreground); margin: 0.3rem 0 0;">Connectez votre serveur Jellyfin pour démarrer.</p>
               </div>
+            </div>
 
-              <div class="form-group">
-                <label class="form-label">URL Jellyfin</label>
-                <input type="url" class="form-input" id="setup-url" required placeholder="http://192.168.1.50:8096">
-              </div>
+            <div class="setup-card-body">
+              <div id="setup-error" style="display:none; padding: 0.65rem 0.85rem; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 0.5rem; font-size: 0.82rem; color: #f87171;"></div>
 
-              <div class="form-group">
-                <label class="form-label">Clé API Jellyfin</label>
-                <input type="text" class="form-input" id="setup-api-key" required placeholder="Générée dans Jellyfin > Tableau de bord > Clés API">
-              </div>
+              <form id="form-setup" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label">Nom du serveur</label>
+                  <input type="text" class="form-input" id="setup-name" required value="Serveur Principal">
+                </div>
 
-              <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button type="submit" class="btn btn-primary">Enregistrer et Synchroniser</button>
-              </div>
-            </form>
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label">URL Jellyfin</label>
+                  <input type="url" class="form-input" id="setup-url" required placeholder="http://192.168.1.50:8096">
+                  <div style="font-size: 0.74rem; color: var(--muted-foreground); margin-top: 0.3rem;">URL complète avec le port (ex: 8096)</div>
+                </div>
+
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label">Clé API Jellyfin</label>
+                  <input type="text" class="form-input" id="setup-api-key" required placeholder="Jellyfin > Tableau de bord > Clés API">
+                  <div style="font-size: 0.74rem; color: var(--muted-foreground); margin-top: 0.3rem;">Génération : <b>Tableau de bord Jellyfin → Avancé → Clés API</b></div>
+                </div>
+              </form>
+            </div>
+
+            <div class="setup-card-footer">
+              <button type="button" class="btn btn-primary" id="btn-setup-submit" style="display: flex; align-items: center; gap: 0.4rem;">
+                <span id="setup-btn-text">Enregistrer et Synchroniser</span>
+                <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
           </div>
         </div>
       `;
 
-      document.getElementById('form-setup').addEventListener('submit', async (e) => {
-        e.preventDefault();
+      document.getElementById('btn-setup-submit').addEventListener('click', async () => {
         const name = document.getElementById('setup-name').value.trim();
         const url = document.getElementById('setup-url').value.trim();
         const apiKey = document.getElementById('setup-api-key').value.trim();
+        const errEl = document.getElementById('setup-error');
+        const btn = document.getElementById('btn-setup-submit');
+        const btnText = document.getElementById('setup-btn-text');
+
+        if (!name || !url || !apiKey) {
+          errEl.textContent = 'Tous les champs sont obligatoires.';
+          errEl.style.display = 'block';
+          return;
+        }
+
+        btn.disabled = true;
+        if (btnText) btnText.textContent = 'Connexion en cours…';
+        errEl.style.display = 'none';
 
         try {
           await API.postJSON('/api/settings/jellyfin-servers', { name, url, apiKey, isActive: true });
@@ -1050,7 +1278,10 @@
           await API.postJSON('/api/sync', { recentOnly: false });
           Router.navigate('/');
         } catch (err) {
-          Toast.error(err.message);
+          errEl.textContent = err.message;
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          if (btnText) btnText.textContent = 'Enregistrer et Synchroniser';
         }
       });
     },
@@ -1059,40 +1290,89 @@
     async about() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
-          <div class="card" style="text-align: center; padding: 3rem 2rem;">
-            <img src="/assets/logo.svg" alt="JellyTrack" style="width: 72px; height: 72px; margin-bottom: 1rem; border-radius: 16px; box-shadow: 0 0 30px var(--primary-glow);">
-            <h1 style="font-size: 2rem; font-weight: 800;">JellyTrack</h1>
-            <p style="font-size: 0.95rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem;">Version 3.0.0 (Go Native Engine)</p>
-            <p style="color: var(--muted-foreground); max-width: 600px; margin: 0 auto; line-height: 1.6;">
-              ${I18n.t('about.description') || 'Tableau de bord d’analyse et de surveillance complet pour serveurs Jellyfin. Propulsé par un binaire Go autonome ultra-rapide sans dépendance Node.js.'}
+        <div class="about-wrapper">
+          <div class="about-hero">
+            <div class="about-logo-box">
+              <img src="/assets/logo.svg" alt="JellyTrack" style="width: 44px; height: 44px;">
+            </div>
+            <span class="about-version-pill">v3.0.0 • Go Native Engine</span>
+            <h1 class="about-hero-title">JellyTrack</h1>
+            <p class="about-hero-desc">
+              ${I18n.t('about.description') || 'Tableau de bord d’analyse, de statistiques et de surveillance en temps réel pour serveurs Jellyfin. Propulsé par un binaire Go autonome ultra-rapide sans dépendance Node.js.'}
             </p>
           </div>
 
           <div class="card">
             <div class="card-header">
-              <div class="card-title">🚀 Fonctionnalités Clés</div>
+              <div class="card-title">
+                <svg style="width:20px;height:20px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                Fonctionnalités Clés
+              </div>
             </div>
-            <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem; color: var(--foreground);">
-              <li>⚡ <b>Architecture Go 100% autonome</b> : zéro Node.js, zéro React, zéro npm au runtime.</li>
-              <li>📊 <b>Graphiques haute performance</b> : suivi de lecture en temps réel, analyses par genre et client.</li>
-              <li>📅 <b>Carte thermique annuelle</b> : style GitHub interactive avec zoom sur chaque tranche horaire.</li>
-              <li>🎬 <b>Catalogue multimédia</b> : films, séries, musique et livres avec métadonnées enrichies.</li>
-              <li>🎉 <b>JellyTrack Wrapped</b> : rétrospective annuelle utilisateur interactive avec partage.</li>
-              <li>🔒 <b>Sécurité d’entreprise</b> : sessions signées, protection CSRF/SSRF, OpenID Connect / SSO.</li>
-              <li>🌍 <b>Internationalisation complète</b> : 11 langues supportées (FR, EN, DE, ES, IT, NL, PL, PT, RU, ZH).</li>
+            <ul class="feature-list">
+              <li class="feature-item"><div class="feature-dot"></div><span><b>Architecture Go 100% autonome</b> : zéro Node.js, zéro React, zéro npm au runtime.</span></li>
+              <li class="feature-item"><div class="feature-dot"></div><span><b>Graphiques haute performance</b> : suivi de lecture en direct, analyse par format et client.</span></li>
+              <li class="feature-item"><div class="feature-dot"></div><span><b>Carte thermique annuelle</b> : style GitHub interactive avec zoom par session.</span></li>
+              <li class="feature-item"><div class="feature-dot"></div><span><b>Catalogue multimédia enrichi</b> : films, séries, musique et livres avec métadonnées.</span></li>
+              <li class="feature-item"><div class="feature-dot"></div><span><b>JellyTrack Wrapped</b> : rétrospective annuelle interactive style Spotify avec partage.</span></li>
+              <li class="feature-item"><div class="feature-dot"></div><span><b>Sécurité d’entreprise</b> : sessions chiffrées, CSRF/SSRF guard, OpenID Connect / SSO.</span></li>
+              <li class="feature-item"><div class="feature-dot"></div><span><b>Internationalisation</b> : 11 langues traduites (FR, EN, DE, ES, IT, NL, PL, PT, RU, ZH).</span></li>
             </ul>
           </div>
 
           <div class="card">
             <div class="card-header">
-              <div class="card-title">🔗 Liens & Communauté</div>
+              <div class="card-title">
+                <svg style="width:20px;height:20px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                Stack Technique
+              </div>
+            </div>
+            <div class="tech-grid">
+              <div class="tech-item">
+                <span class="tech-icon">🐹</span>
+                <div>
+                  <div class="tech-name">Go 1.23+</div>
+                  <div class="tech-desc">Backend ultra-rapide & serveur HTTP natif</div>
+                </div>
+              </div>
+              <div class="tech-item">
+                <span class="tech-icon">🗄️</span>
+                <div>
+                  <div class="tech-name">SQLite / PostgreSQL</div>
+                  <div class="tech-desc">Stockage persistant & migrations automatiques</div>
+                </div>
+              </div>
+              <div class="tech-item">
+                <span class="tech-icon">📊</span>
+                <div>
+                  <div class="tech-name">Chart.js</div>
+                  <div class="tech-desc">Visualisations fluides et interactives</div>
+                </div>
+              </div>
+              <div class="tech-item">
+                <span class="tech-icon">🔑</span>
+                <div>
+                  <div class="tech-name">OIDC & SSO</div>
+                  <div class="tech-desc">Authentification unique unifiée</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <svg style="width:20px;height:20px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                Liens & Communauté
+              </div>
             </div>
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-              <a href="https://github.com/maelmoreau21/JellyTrack" target="_blank" class="btn btn-secondary">
+              <a href="https://github.com/maelmoreau21/JellyTrack" target="_blank" rel="noopener" class="btn btn-secondary" style="display:flex;align-items:center;gap:0.5rem;">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
                 GitHub Repository
               </a>
-              <a href="https://jellyfin.org" target="_blank" class="btn btn-secondary">
+              <a href="https://jellyfin.org" target="_blank" rel="noopener" class="btn btn-secondary" style="display:flex;align-items:center;gap:0.5rem;">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
                 Projet Jellyfin
               </a>
             </div>
@@ -1105,56 +1385,85 @@
     async recent() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div>
-          <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.recent') || 'Historique Récent'}</h1>
-          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Dernières lectures enregistrées sur vos serveurs.</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              ${I18n.t('nav.recent') || 'Historique Récent'}
+            </h1>
+            <p class="page-subtitle">${I18n.t('recent.subtitle') || 'Dernières lectures enregistrées sur vos serveurs.'}</p>
+          </div>
+          <span class="chip" id="recent-count">Chargement…</span>
         </div>
 
-        <div class="table-wrapper">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Média</th>
-                <th>Type</th>
-                <th>Utilisateur</th>
-                <th>Durée</th>
-                <th>Méthode</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody id="recent-table-body">
-              <tr><td colspan="6" class="skeleton" style="height: 60px;"></td></tr>
-            </tbody>
-          </table>
+        <div class="card" style="padding: 0;">
+          <div class="table-wrapper" style="border: none; border-radius: var(--radius-lg);">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Média</th>
+                  <th>Type</th>
+                  <th>Utilisateur</th>
+                  <th>Durée</th>
+                  <th>Méthode</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="recent-table-body">
+                <tr><td colspan="6" style="padding: 0;"><div class="skeleton" style="height: 56px; border-radius: 0;"></div></td></tr>
+                <tr><td colspan="6" style="padding: 0;"><div class="skeleton" style="height: 56px; border-radius: 0;"></div></td></tr>
+                <tr><td colspan="6" style="padding: 0;"><div class="skeleton" style="height: 56px; border-radius: 0;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       `;
 
       try {
         const data = await API.getJSON('/api/history?limit=50&days=30');
         const tbody = document.getElementById('recent-table-body');
+        const countEl = document.getElementById('recent-count');
         if (!data.items || data.items.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Aucun historique disponible.</td></tr>`;
+          if (countEl) countEl.textContent = '0 lecture';
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span class="empty-state-title">Aucun historique disponible</span>
+                  <span>Les lectures apparaîtront ici après synchronisation.</span>
+                </div>
+              </td>
+            </tr>`;
           return;
         }
+        if (countEl) countEl.textContent = `${data.items.length} lecture${data.items.length > 1 ? 's' : ''}`;
 
         tbody.innerHTML = data.items.map((it) => `
           <tr>
             <td>
               <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <div style="width: 32px; height: 48px; background: var(--surface-nested); border-radius: 4px; overflow: hidden; flex-shrink: 0;">
-                  ${it.jellyfinMediaId ? `<img src="/api/jellyfin/image?id=${it.jellyfinMediaId}&type=Primary&maxWidth=100" style="width:100%; height:100%; object-fit:cover;">` : ''}
+                <div style="width: 30px; height: 44px; background: var(--surface-nested); border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0;">
+                  ${it.jellyfinMediaId ? `<img src="/api/jellyfin/image?id=${it.jellyfinMediaId}&type=Primary&maxWidth=100" style="width:100%;height:100%;object-fit:cover;">` : '<div style="width:100%;height:100%;background:var(--surface-nested);"></div>'}
                 </div>
-                <div>
-                  <b><a href="/media/${it.mediaId || it.id}" data-link>${Utils.escapeHtml(it.title)}</a></b>
-                  ${it.library ? `<div style="font-size:0.75rem; color:var(--muted-foreground);">${Utils.escapeHtml(it.library)}</div>` : ''}
+                <div style="min-width:0;">
+                  <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">
+                    <a href="/media/${it.mediaId || it.id}" data-link style="color:inherit;">${Utils.escapeHtml(it.title)}</a>
+                  </div>
+                  ${it.library ? `<div style="font-size:0.72rem;color:var(--muted-foreground);">${Utils.escapeHtml(it.library)}</div>` : ''}
                 </div>
               </div>
             </td>
-            <td><span class="badge badge-secondary">${Utils.escapeHtml(it.type)}</span></td>
-            <td><a href="/users/${it.userId || it.username}" data-link>${Utils.escapeHtml(it.username || 'Inconnu')}</a></td>
-            <td>${Utils.formatMs(it.durationMs)}</td>
+            <td><span class="badge badge-secondary">${Utils.escapeHtml(it.type || '—')}</span></td>
+            <td>
+              <a href="/users/${it.userId || it.username}" data-link style="font-weight:500;">${Utils.escapeHtml(it.username || 'Inconnu')}</a>
+            </td>
+            <td style="white-space:nowrap;">${Utils.formatMs(it.durationMs)}</td>
             <td><span class="badge ${it.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}">${Utils.escapeHtml(it.playMethod || 'Stream')}</span></td>
-            <td>${Utils.formatDateTime(it.startedAt)} <span style="color:var(--muted-foreground); font-size:0.75rem;">(${Utils.timeAgo(it.startedAt)})</span></td>
+            <td style="white-space:nowrap;">
+              <div style="font-size:0.85rem;">${Utils.formatDateTime(it.startedAt)}</div>
+              <div style="font-size:0.72rem;color:var(--muted-foreground);">${Utils.timeAgo(it.startedAt)}</div>
+            </td>
           </tr>
         `).join('');
       } catch (e) {
@@ -1166,20 +1475,25 @@
     async newsletter() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div style="max-width: 840px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
-          <div>
-            <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('newsletter.title') || 'Newsletter & Récapitulatif'}</h1>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem;">Générez et publiez le résumé mensuel sur Discord.</p>
+        <div style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">
+                <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                ${I18n.t('newsletter.title') || 'Newsletter & Récapitulatif'}
+              </h1>
+              <p class="page-subtitle">Générez et publiez le résumé mensuel automatisé sur votre canal Discord.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn btn-primary" id="btn-post-discord" style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028z"/></svg>
+                ${I18n.t('newsletter.sendDiscord') || 'Publier sur Discord'}
+              </button>
+            </div>
           </div>
 
-          <div class="card" id="newsletter-preview-card">
+          <div class="card" id="newsletter-preview-card" style="padding: 1.75rem;">
             <div class="skeleton" style="height: 250px;"></div>
-          </div>
-
-          <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-            <button class="btn btn-primary" id="btn-post-discord">
-              🚀 ${I18n.t('newsletter.sendDiscord') || 'Publier sur Discord'}
-            </button>
           </div>
         </div>
       `;
@@ -1188,43 +1502,70 @@
         const data = await API.getJSON('/api/newsletter');
         const card = document.getElementById('newsletter-preview-card');
         card.innerHTML = `
-          <div class="card-header">
-            <div class="card-title">📢 Récapitulatif des 30 derniers jours (${data.dateRange})</div>
+          <div class="card-header" style="padding:0 0 1.25rem 0; border-bottom: 1px solid var(--border-subtle);">
+            <div class="card-title-group">
+              <div class="card-title" style="display:flex;align-items:center;gap:0.5rem;">
+                <span>📢</span>
+                Récapitulatif des 30 derniers jours
+              </div>
+              <div class="card-subtitle">Période : ${Utils.escapeHtml(data.dateRange || 'Derniers 30 jours')}</div>
+            </div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-            <div class="metric-grid" style="grid-template-columns: repeat(2, 1fr);">
-              <div class="metric-card" style="padding:1rem;">
-                <div class="metric-label">Lectures totales</div>
-                <div class="metric-value">${Utils.formatNumber(data.totalPlays)}</div>
+
+          <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1.25rem;">
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">Lectures totales</span>
+                  <div class="stat-icon stat-icon-indigo">
+                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </div>
+                </div>
+                <div class="stat-card-value">${Utils.formatNumber(data.totalPlays)}</div>
+                <div class="stat-card-footer">Sessions enregistrées</div>
               </div>
-              <div class="metric-card" style="padding:1rem;">
-                <div class="metric-label">Heures visionnées</div>
-                <div class="metric-value">${Math.round(data.totalHours || 0)} h</div>
+
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">Heures visionnées</span>
+                  <div class="stat-icon stat-icon-cyan">
+                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  </div>
+                </div>
+                <div class="stat-card-value">${Math.round(data.totalHours || 0)} h</div>
+                <div class="stat-card-footer">Temps cumulé</div>
               </div>
             </div>
 
             <div>
-              <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem;">🏆 Top Médias</h3>
-              <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
+              <div class="card-title" style="font-size: 1.05rem; margin-bottom: 0.75rem;">🏆 Top Médias du mois</div>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 ${(data.topMedia || []).map((m, idx) => `
-                  <li style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--surface-soft); border-radius: var(--radius-sm); font-size: 0.88rem;">
-                    <span><b>#${idx + 1}</b> ${Utils.escapeHtml(m.title)} (${Utils.escapeHtml(m.type)})</span>
-                    <span style="color: var(--primary); font-weight: 600;">${m.hours.toFixed(1)} h • ${m.plays} lectures</span>
-                  </li>
+                  <div class="newsletter-top-item">
+                    <div style="display:flex;align-items:center;gap:0.6rem;">
+                      <span class="user-card-avatar" style="width:24px;height:24px;font-size:0.7rem;border:none;background:${idx === 0 ? 'var(--primary)' : 'var(--surface-nested)'};color:${idx === 0 ? 'white' : 'var(--muted-foreground)'};">#${idx + 1}</span>
+                      <span style="font-weight:600;">${Utils.escapeHtml(m.title)}</span>
+                      <span class="badge badge-secondary" style="font-size:0.7rem;">${Utils.escapeHtml(m.type)}</span>
+                    </div>
+                    <span style="color: var(--primary); font-weight: 700; font-size: 0.85rem;">${m.hours.toFixed(1)} h • ${m.plays} lectures</span>
+                  </div>
                 `).join('')}
-              </ul>
+              </div>
             </div>
 
             <div>
-              <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem;">👑 Top Utilisateurs</h3>
-              <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.4rem;">
+              <div class="card-title" style="font-size: 1.05rem; margin-bottom: 0.75rem;">👑 Top Utilisateurs les plus actifs</div>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 ${(data.topUsers || []).map((u, idx) => `
-                  <li style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--surface-soft); border-radius: var(--radius-sm); font-size: 0.88rem;">
-                    <span><b>#${idx + 1}</b> ${Utils.escapeHtml(u.username)}</span>
-                    <span style="color: var(--accent); font-weight: 600;">${u.hours.toFixed(1)} h</span>
-                  </li>
+                  <div class="newsletter-top-item">
+                    <div style="display:flex;align-items:center;gap:0.6rem;">
+                      <span class="user-card-avatar" style="width:24px;height:24px;font-size:0.7rem;border:none;background:${idx === 0 ? '#a855f7' : 'var(--surface-nested)'};color:${idx === 0 ? 'white' : 'var(--muted-foreground)'};">#${idx + 1}</span>
+                      <span style="font-weight:600;">${Utils.escapeHtml(u.username)}</span>
+                    </div>
+                    <span style="color: var(--accent); font-weight: 700; font-size: 0.85rem;">${u.hours.toFixed(1)} h</span>
+                  </div>
                 `).join('')}
-              </ul>
+              </div>
             </div>
           </div>
         `;
@@ -1253,17 +1594,21 @@
     async users() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div class="page-header">
           <div>
-            <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.users') || 'Utilisateurs'}</h1>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem;">Comptes Jellyfin et profils d’écoute.</p>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              ${I18n.t('nav.users') || 'Utilisateurs'}
+            </h1>
+            <p class="page-subtitle">Comptes Jellyfin et profils d'écoute.</p>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem;" id="users-grid">
-          <div class="card skeleton" style="height: 160px;"></div>
-          <div class="card skeleton" style="height: 160px;"></div>
-          <div class="card skeleton" style="height: 160px;"></div>
+        <div class="users-grid" id="users-grid">
+          <div class="user-card skeleton" style="height: 160px;"></div>
+          <div class="user-card skeleton" style="height: 160px;"></div>
+          <div class="user-card skeleton" style="height: 160px;"></div>
+          <div class="user-card skeleton" style="height: 160px;"></div>
         </div>
       `;
 
@@ -1271,31 +1616,39 @@
         const data = await API.getJSON('/api/users?limit=100');
         const grid = document.getElementById('users-grid');
         if (!data.items || data.items.length === 0) {
-          grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">Aucun utilisateur trouvé.</div>';
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1;">
+              <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <span class="empty-state-title">Aucun utilisateur trouvé</span>
+              <span>Synchronisez votre serveur Jellyfin pour importer les utilisateurs.</span>
+            </div>`;
           return;
         }
 
         grid.innerHTML = data.items.map((u) => `
-          <div class="card" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <div class="user-avatar-mini" style="width: 44px; height: 44px; font-size: 1rem;">
-                ${Utils.escapeHtml(u.username.slice(0, 2).toUpperCase())}
-              </div>
-              <div>
-                <div style="font-weight: 700; font-size: 1rem;">
-                  <a href="/users/${u.id}" data-link>${Utils.escapeHtml(u.username)}</a>
+          <div class="user-card">
+            <div class="user-card-header">
+              <div class="user-card-avatar">${Utils.escapeHtml(u.username.slice(0, 2).toUpperCase())}</div>
+              <div style="min-width:0;">
+                <div class="user-card-name">
+                  <a href="/users/${u.id}" data-link style="color:inherit;">${Utils.escapeHtml(u.username)}</a>
                 </div>
-                <div style="font-size: 0.78rem; color: var(--muted-foreground);">${Utils.escapeHtml(u.server || 'Jellyfin')}</div>
+                <div class="user-card-server">${Utils.escapeHtml(u.server || 'Jellyfin')}</div>
               </div>
             </div>
 
-            <div style="font-size: 0.8rem; color: var(--muted-foreground);">
+            <div class="user-card-last-active">
               Dernière activité : <b>${u.lastActive ? Utils.timeAgo(u.lastActive) : 'Inconnue'}</b>
             </div>
 
-            <div style="display: flex; gap: 0.5rem; margin-top: auto; padding-top: 0.5rem; border-top: 1px solid var(--border-subtle);">
-              <a href="/users/${u.id}" data-link class="btn btn-secondary btn-sm" style="flex: 1;">Profil</a>
-              <a href="/wrapped/${u.id}" data-link class="btn btn-outline btn-sm" title="JellyTrack Wrapped">🎉 Wrapped</a>
+            <div class="user-card-actions">
+              <a href="/users/${u.id}" data-link class="btn btn-secondary btn-sm" style="flex: 1; text-align: center;">
+                <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Profil
+              </a>
+              <a href="/wrapped/${u.id}" data-link class="btn btn-outline btn-sm" title="JellyTrack Wrapped">
+                🎉 Wrapped
+              </a>
             </div>
           </div>
         `).join('');
@@ -1308,59 +1661,73 @@
     async userDetail(userId) {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div class="skeleton" style="height: 80px; margin-bottom: 1rem;"></div>
-        <div class="metric-grid" style="margin-bottom: 1.5rem;">
-          <div class="metric-card skeleton" style="height: 100px;"></div>
-          <div class="metric-card skeleton" style="height: 100px;"></div>
+        <div class="skeleton" style="height: 80px; margin-bottom: 1.25rem;"></div>
+        <div class="stat-grid" style="margin-bottom: 1.5rem;">
+          <div class="stat-card skeleton" style="height: 120px;"></div>
+          <div class="stat-card skeleton" style="height: 120px;"></div>
         </div>
       `;
 
       try {
         const u = await API.getJSON(`/api/users/${encodeURIComponent(userId)}`);
         main.innerHTML = `
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <div class="page-header">
             <div style="display: flex; align-items: center; gap: 1rem;">
-              <div class="user-avatar-mini" style="width: 60px; height: 60px; font-size: 1.4rem;">
+              <div class="user-card-avatar" style="width: 56px; height: 56px; font-size: 1.3rem;">
                 ${Utils.escapeHtml(u.username.slice(0, 2).toUpperCase())}
               </div>
               <div>
-                <h1 style="font-size: 1.6rem; font-weight: 800;">${Utils.escapeHtml(u.username)}</h1>
-                <p style="color: var(--muted-foreground); font-size: 0.88rem;">${Utils.escapeHtml(u.server || 'Jellyfin')} • Dernière activité : ${u.lastActive ? Utils.formatDateTime(u.lastActive) : 'Jamais'}</p>
+                <h1 class="page-title">${Utils.escapeHtml(u.username)}</h1>
+                <p class="page-subtitle">${Utils.escapeHtml(u.server || 'Jellyfin')} • Dernière activité : <b>${u.lastActive ? Utils.formatDateTime(u.lastActive) : 'Jamais'}</b></p>
               </div>
             </div>
 
-            <div style="display: flex; gap: 0.75rem;">
-              <a href="/wrapped/${u.id}" data-link class="btn btn-primary">
+            <div class="page-actions">
+              <a href="/wrapped/${u.id}" data-link class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #6366f1, #a855f7); border: none;">
                 🎉 Voir le Wrapped ${new Date().getFullYear()}
               </a>
             </div>
           </div>
 
           <!-- Active stream indicator if watching right now -->
-          <div id="user-active-stream-banner" style="display:none; padding: 0.85rem 1.25rem; background: var(--surface-card); border: 1px solid var(--accent); border-radius: var(--radius-lg); margin-top: 1rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span class="pulse-dot"></span>
-              <span id="user-active-stream-text">Lecture en cours...</span>
-            </div>
+          <div id="user-active-stream-banner" class="stream-banner" style="display:none; margin-top: 1rem;">
+            <span class="pulse-dot"></span>
+            <span id="user-active-stream-text">Lecture en cours...</span>
           </div>
 
-          <div class="metric-grid" style="margin-top: 1.5rem;">
-            <div class="metric-card">
-              <div class="metric-label">Lectures totales</div>
-              <div class="metric-value">${Utils.formatNumber(u.totalPlays)}</div>
+          <div class="stat-grid" style="margin-top: 1.5rem;">
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <span class="stat-card-label">Lectures totales</span>
+                <div class="stat-icon stat-icon-indigo">
+                  <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value">${Utils.formatNumber(u.totalPlays)}</div>
+              <div class="stat-card-footer">Sessions enregistrées</div>
             </div>
-            <div class="metric-card">
-              <div class="metric-label">Temps visionné</div>
-              <div class="metric-value">${Utils.formatMs(u.totalDurationMs)}</div>
+
+            <div class="stat-card">
+              <div class="stat-card-header">
+                <span class="stat-card-label">Temps visionné</span>
+                <div class="stat-icon stat-icon-cyan">
+                  <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+              </div>
+              <div class="stat-card-value">${Utils.formatMs(u.totalDurationMs)}</div>
+              <div class="stat-card-footer">Durée cumulée</div>
             </div>
           </div>
 
           <!-- Recent sessions -->
-          <div class="card" style="margin-top: 1.5rem;">
-            <div class="card-header">
-              <div class="card-title">Dernières lectures de ${Utils.escapeHtml(u.username)}</div>
+          <div class="card" style="margin-top: 1.5rem; padding: 0;">
+            <div class="card-header" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-subtle);">
+              <div class="card-title-group">
+                <div class="card-title">Dernières lectures de ${Utils.escapeHtml(u.username)}</div>
+                <div class="card-subtitle">Historique récent des flux et médias démarrés</div>
+              </div>
             </div>
-            <div class="table-wrapper">
+            <div class="table-wrapper" style="border: none;">
               <table class="table">
                 <thead>
                   <tr>
@@ -1372,13 +1739,17 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${(u.recentActivity || []).map((a) => `
+                  ${(u.recentActivity || []).length === 0 ? `
+                    <tr><td colspan="5" class="empty-state" style="padding: 2rem;">Aucune activité récente pour cet utilisateur.</td></tr>
+                  ` : (u.recentActivity || []).map((a) => `
                     <tr>
-                      <td><b>${Utils.escapeHtml(a.title)}</b></td>
-                      <td><span class="badge badge-secondary">${Utils.escapeHtml(a.type)}</span></td>
-                      <td>${Utils.formatMs(a.durationMs)}</td>
+                      <td>
+                        <div style="font-weight: 600;">${Utils.escapeHtml(a.title)}</div>
+                      </td>
+                      <td><span class="badge badge-secondary">${Utils.escapeHtml(a.type || '—')}</span></td>
+                      <td style="white-space: nowrap;">${Utils.formatMs(a.durationMs)}</td>
                       <td><span class="badge ${a.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}">${Utils.escapeHtml(a.playMethod || 'Stream')}</span></td>
-                      <td>${Utils.formatDateTime(a.startedAt)}</td>
+                      <td style="white-space: nowrap; font-size: 0.85rem; color: var(--muted-foreground);">${Utils.formatDateTime(a.startedAt)}</td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -1394,8 +1765,8 @@
             const banner = document.getElementById('user-active-stream-banner');
             const text = document.getElementById('user-active-stream-text');
             if (banner && text) {
-              text.textContent = `En train de regarder : ${s.stream.mediaTitle} (${s.stream.playMethod})`;
-              banner.style.display = 'block';
+              text.textContent = `En train de regarder : ${s.stream.mediaTitle || 'Média'} (${s.stream.playMethod || 'Stream'})`;
+              banner.style.display = 'flex';
             }
           }
         } catch (e) {}
@@ -1537,31 +1908,36 @@
       let { type = '', sort = 'title', artist = '', q = '' } = typeof options === 'string' ? { type: options } : (options || {});
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div class="page-header">
           <div>
-            <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.media') || 'Catalogue Multimédia'}</h1>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem;">Films, séries, albums et livres synchronisés.</p>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>
+              ${I18n.t('nav.media') || 'Catalogue Multimédia'}
+            </h1>
+            <p class="page-subtitle">Films, séries, albums et livres synchronisés depuis vos serveurs.</p>
           </div>
 
-          <div class="segmented-control" id="media-type-filter">
-            <button class="segment-btn ${!type ? 'active' : ''}" data-type="">Tout</button>
-            <button class="segment-btn ${type === 'Movie' ? 'active' : ''}" data-type="Movie">Films</button>
-            <button class="segment-btn ${type === 'Series' ? 'active' : ''}" data-type="Series">Séries</button>
-            <button class="segment-btn ${type === 'Audio' ? 'active' : ''}" data-type="Audio">Musique</button>
-            <button class="segment-btn ${type === 'Book' ? 'active' : ''}" data-type="Book">Livres</button>
+          <div class="page-actions">
+            <div class="segmented-control" id="media-type-filter">
+              <button class="segment-btn ${!type ? 'active' : ''}" data-type="">Tout</button>
+              <button class="segment-btn ${type === 'Movie' ? 'active' : ''}" data-type="Movie">Films</button>
+              <button class="segment-btn ${type === 'Series' ? 'active' : ''}" data-type="Series">Séries</button>
+              <button class="segment-btn ${type === 'Audio' ? 'active' : ''}" data-type="Audio">Musique</button>
+              <button class="segment-btn ${type === 'Book' ? 'active' : ''}" data-type="Book">Livres</button>
+            </div>
           </div>
         </div>
 
         ${artist ? `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 1rem; background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-md); margin-top: 0.75rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.25rem; background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-top: 1rem;">
             <span>🎵 Filtré par artiste : <b>${Utils.escapeHtml(artist)}</b></span>
             <button class="btn btn-secondary btn-sm" id="btn-clear-artist">✕ Effacer le filtre</button>
           </div>
         ` : ''}
 
-        <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem; flex-wrap: wrap;">
-          <input type="text" class="form-input" id="media-search-input" value="${Utils.escapeHtml(q)}" placeholder="Filtrer par titre, acteur, réalisateur..." style="max-width: 380px;">
-          <select class="form-select" id="media-sort-select" style="max-width: 180px;">
+        <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
+          <input type="text" class="form-input" id="media-search-input" value="${Utils.escapeHtml(q)}" placeholder="Filtrer par titre, réalisateur..." style="max-width: 380px;">
+          <select class="form-select" id="media-sort-select" style="max-width: 200px;">
             <option value="title" ${sort === 'title' ? 'selected' : ''}>Titre (A-Z)</option>
             <option value="popular" ${sort === 'popular' ? 'selected' : ''}>Les plus vus</option>
             <option value="recent" ${sort === 'recent' ? 'selected' : ''}>Récemment lus</option>
@@ -1569,16 +1945,18 @@
           </select>
         </div>
 
-        <div class="poster-grid" id="media-grid" style="margin-top: 1.25rem;">
+        <div class="poster-grid" id="media-grid" style="margin-top: 1.5rem;">
+          <div class="poster-card skeleton" style="height: 280px;"></div>
+          <div class="poster-card skeleton" style="height: 280px;"></div>
           <div class="poster-card skeleton" style="height: 280px;"></div>
           <div class="poster-card skeleton" style="height: 280px;"></div>
           <div class="poster-card skeleton" style="height: 280px;"></div>
           <div class="poster-card skeleton" style="height: 280px;"></div>
         </div>
 
-        <div class="pagination" id="media-pagination">
+        <div class="pager" id="media-pagination" style="margin-top: 2rem;">
           <button class="btn btn-secondary btn-sm" id="media-page-prev" disabled>← Précédent</button>
-          <span id="media-page-info">Page 1</span>
+          <span class="pager-info" id="media-page-info">Page 1</span>
           <button class="btn btn-secondary btn-sm" id="media-page-next">Suivant →</button>
         </div>
       `;
@@ -1600,33 +1978,50 @@
         try {
           const res = await API.getJSON(url);
           if (!res.items || res.items.length === 0) {
-            grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">Aucun média trouvé.</div>';
+            grid.innerHTML = `
+              <div class="empty-state" style="grid-column: 1/-1;">
+                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+                <span class="empty-state-title">Aucun média trouvé</span>
+                <span>Essayez de modifier vos filtres ou vos critères de recherche.</span>
+              </div>`;
             return;
           }
 
-          grid.innerHTML = res.items.map((m) => `
-            <a href="/media/${m.id}" data-link class="poster-card">
-              <div class="poster-image-box">
-                ${m.jellyfinMediaId
-                  ? `<img src="/api/jellyfin/image?id=${m.jellyfinMediaId}&type=Primary&maxWidth=300" loading="lazy" alt="${Utils.escapeHtml(m.title)}">`
-                  : `<div class="poster-fallback">🎬 ${Utils.escapeHtml(m.type)}</div>`}
-              </div>
-              <div class="poster-meta">
-                <div class="poster-title" title="${Utils.escapeHtml(m.title)}">${Utils.escapeHtml(m.title)}</div>
-                <div class="poster-sub">
-                  <span>${Utils.escapeHtml(m.type)}</span>
-                  <span>${m.durationMs ? Utils.formatMs(m.durationMs) : ''}</span>
+          grid.innerHTML = res.items.map((m) => {
+            const typeClass = m.type ? `poster-type-${m.type}` : 'poster-type-default';
+            return `
+              <a href="/media/${m.id}" data-link class="poster-card-link">
+                <div class="poster-image-wrap">
+                  ${m.jellyfinMediaId
+                    ? `<img src="/api/jellyfin/image?id=${m.jellyfinMediaId}&type=Primary&maxWidth=340" loading="lazy" alt="${Utils.escapeHtml(m.title)}">`
+                    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--surface-nested);color:var(--muted-foreground);font-size:1.8rem;">🎬</div>`}
+                  <div class="poster-badge-tr">
+                    <span class="poster-type-badge ${typeClass}">${Utils.escapeHtml(m.type || 'Média')}</span>
+                  </div>
+                  <div class="poster-overlay">
+                    <div class="poster-overlay-title">${Utils.escapeHtml(m.title)}</div>
+                    <div class="poster-overlay-sub">${m.durationMs ? Utils.formatMs(m.durationMs) : (m.library || '')}</div>
+                  </div>
+                  <div class="poster-bottom-gradient"></div>
                 </div>
-              </div>
-            </a>
-          `).join('');
+                <div class="poster-title-below">${Utils.escapeHtml(m.title)}</div>
+                <div class="poster-meta-below">
+                  ${m.library ? Utils.escapeHtml(m.library) : ''}
+                  ${m.durationMs ? ` • ${Utils.formatMs(m.durationMs)}` : ''}
+                </div>
+              </a>
+            `;
+          }).join('');
 
           // Pagination update
           const pageNum = Math.floor(currentOffset / limit) + 1;
           const totalPages = Math.ceil((res.total || 1) / limit) || 1;
-          document.getElementById('media-page-info').textContent = `Page ${pageNum} / ${totalPages} (${res.total || 0} éléments)`;
-          document.getElementById('media-page-prev').disabled = currentOffset === 0;
-          document.getElementById('media-page-next').disabled = currentOffset + limit >= (res.total || 0);
+          const pageInfo = document.getElementById('media-page-info');
+          if (pageInfo) pageInfo.textContent = `Page ${pageNum} sur ${totalPages} (${res.total || 0} titres)`;
+          const prevBtn = document.getElementById('media-page-prev');
+          const nextBtn = document.getElementById('media-page-next');
+          if (prevBtn) prevBtn.disabled = currentOffset === 0;
+          if (nextBtn) nextBtn.disabled = currentOffset + limit >= (res.total || 0);
         } catch (e) {
           Toast.error(e.message);
         }
@@ -1674,61 +2069,69 @@
     // 11. Media Detail Page
     async mediaDetail(mediaId) {
       const main = document.getElementById('app-main');
-      main.innerHTML = `<div class="skeleton" style="height: 350px;"></div>`;
+      main.innerHTML = `<div class="skeleton" style="height: 380px; border-radius: var(--radius-xl);"></div>`;
 
       try {
         const m = await API.getJSON(`/api/media/${encodeURIComponent(mediaId)}`);
         main.innerHTML = `
-          <div class="card" style="display: flex; gap: 2rem; flex-wrap: wrap;">
-            <div style="width: 220px; aspect-ratio: 2/3; border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-nested); flex-shrink: 0;">
-              ${m.jellyfinMediaId ? `<img src="/api/jellyfin/image?id=${m.jellyfinMediaId}&type=Primary&maxWidth=400" style="width:100%; height:100%; object-fit:cover;">` : ''}
+          <div class="card" style="display: flex; gap: 2.25rem; flex-wrap: wrap; padding: 2rem;">
+            <div style="width: 240px; aspect-ratio: 2/3; border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-nested); flex-shrink: 0; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+              ${m.jellyfinMediaId
+                ? `<img src="/api/jellyfin/image?id=${m.jellyfinMediaId}&type=Primary&maxWidth=480" style="width:100%; height:100%; object-fit:cover;">`
+                : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:2.5rem; background:var(--surface-nested);">🎬</div>`}
             </div>
 
-            <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 0.85rem;">
               <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                <span class="badge badge-primary">${Utils.escapeHtml(m.type)}</span>
+                <span class="badge badge-primary">${Utils.escapeHtml(m.type || 'Média')}</span>
                 ${m.resolution ? `<span class="badge badge-secondary">${Utils.escapeHtml(m.resolution)}</span>` : ''}
-                ${m.library ? `<span class="badge badge-secondary">${Utils.escapeHtml(m.library)}</span>` : ''}
+                ${m.library ? `<span class="chip">📁 ${Utils.escapeHtml(m.library)}</span>` : ''}
               </div>
 
-              <h1 style="font-size: 1.8rem; font-weight: 800;">${Utils.escapeHtml(m.title)}</h1>
+              <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; line-height: 1.2;">
+                ${Utils.escapeHtml(m.title)}
+              </h1>
 
-              <div style="display: flex; gap: 1.5rem; font-size: 0.88rem; color: var(--muted-foreground);">
-                <span>⏱️ ${Utils.formatMs(m.durationMs)}</span>
+              <div style="display: flex; gap: 1.5rem; font-size: 0.88rem; color: var(--muted-foreground); flex-wrap: wrap; padding: 0.5rem 0;">
+                <span>⏱️ <b>${Utils.formatMs(m.durationMs)}</b></span>
                 <span>▶️ <b>${m.totalPlays || 0}</b> lectures</span>
                 <span>⌛ <b>${Utils.formatMs(m.totalDurationMs)}</b> visionnés au total</span>
               </div>
 
               ${m.genres && m.genres.length > 0 ? `
-                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem;">
-                  ${m.genres.map((g) => `<span class="badge" style="background:var(--surface-soft);">${Utils.escapeHtml(g)}</span>`).join('')}
+                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                  ${m.genres.map((g) => `<span class="chip" style="font-size:0.75rem;">${Utils.escapeHtml(g)}</span>`).join('')}
                 </div>
               ` : ''}
 
               ${m.directors && m.directors.length > 0 ? `
-                <div style="font-size: 0.85rem; color: var(--muted-foreground); margin-top: 0.5rem;">
-                  <b>Réalisation :</b> ${m.directors.map(Utils.escapeHtml).join(', ')}
+                <div style="font-size: 0.85rem; color: var(--muted-foreground); margin-top: 0.5rem; line-height: 1.5;">
+                  <b style="color:var(--foreground);">Réalisation :</b> ${m.directors.map(Utils.escapeHtml).join(', ')}
                 </div>
               ` : ''}
 
               ${m.actors && m.actors.length > 0 ? `
-                <div style="font-size: 0.85rem; color: var(--muted-foreground);">
-                  <b>Acteurs :</b> ${m.actors.slice(0, 8).map(Utils.escapeHtml).join(', ')}
+                <div style="font-size: 0.85rem; color: var(--muted-foreground); line-height: 1.5;">
+                  <b style="color:var(--foreground);">Distribution :</b> ${m.actors.slice(0, 8).map(Utils.escapeHtml).join(', ')}
                 </div>
               ` : ''}
 
               ${State.user && State.user.isAdmin ? `
-                <div style="margin-top: auto; padding-top: 1rem;">
-                  <button class="btn btn-secondary btn-sm" id="btn-rotate-poster">
-                    🔄 Faire pivoter la jaquette
+                <div style="margin-top: auto; padding-top: 1.25rem;">
+                  <button class="btn btn-secondary btn-sm" id="btn-rotate-poster" style="display:flex;align-items:center;gap:0.4rem;">
+                    <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                    Faire pivoter la jaquette
                   </button>
                 </div>
               ` : ''}
             </div>
 
             ${m.recentActivity && m.recentActivity.length > 0 ? `
-              <div style="margin-top: 1.5rem; width: 100%;">
-                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem;">Dernières lectures de ce titre</h3>
+              <div style="margin-top: 1.75rem; width: 100%;">
+                <div class="card-title-group" style="margin-bottom: 0.85rem;">
+                  <div class="card-title">Dernières lectures de ce titre</div>
+                  <div class="card-subtitle">Historique des utilisateurs ayant regardé ce média</div>
+                </div>
                 <div class="table-wrapper">
                   <table class="table">
                     <thead>
@@ -1742,10 +2145,12 @@
                     <tbody>
                       ${m.recentActivity.map((r) => `
                         <tr>
-                          <td><a href="/users/${r.userId || r.username}" data-link>${Utils.escapeHtml(r.username || 'Inconnu')}</a></td>
-                          <td>${Utils.formatMs(r.durationMs)}</td>
+                          <td><a href="/users/${r.userId || r.username}" data-link style="font-weight:600;">${Utils.escapeHtml(r.username || 'Inconnu')}</a></td>
+                          <td style="white-space: nowrap;">${Utils.formatMs(r.durationMs)}</td>
                           <td><span class="badge ${r.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}">${Utils.escapeHtml(r.playMethod || 'Stream')}</span></td>
-                          <td>${Utils.formatDateTime(r.startedAt)} <span style="color:var(--muted-foreground); font-size:0.75rem;">(${Utils.timeAgo(r.startedAt)})</span></td>
+                          <td style="white-space: nowrap; font-size: 0.85rem; color: var(--muted-foreground);">
+                            ${Utils.formatDateTime(r.startedAt)} <span style="font-size:0.75rem;">(${Utils.timeAgo(r.startedAt)})</span>
+                          </td>
                         </tr>
                       `).join('')}
                     </tbody>
@@ -1774,12 +2179,18 @@
     async collections() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div>
-          <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.collections') || 'Collections & Bibliothèques'}</h1>
-          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Volumes et proportions par bibliothèque Jellyfin.</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"/></svg>
+              ${I18n.t('nav.collections') || 'Collections & Bibliothèques'}
+            </h1>
+            <p class="page-subtitle">Volumes et proportions par bibliothèque Jellyfin.</p>
+          </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem;" id="collections-grid">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;" id="collections-grid">
+          <div class="card skeleton" style="height: 180px;"></div>
           <div class="card skeleton" style="height: 180px;"></div>
           <div class="card skeleton" style="height: 180px;"></div>
         </div>
@@ -1789,22 +2200,31 @@
         const data = await API.getJSON('/api/media/collections');
         const grid = document.getElementById('collections-grid');
         if (!data.collections || data.collections.length === 0) {
-          grid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">Aucune collection trouvée.</div>';
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1;">
+              <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"/></svg>
+              <span class="empty-state-title">Aucune collection trouvée</span>
+              <span>Vérifiez la synchronisation de vos serveurs multimédias.</span>
+            </div>`;
           return;
         }
 
         grid.innerHTML = data.collections.map((c) => `
-          <div class="card" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div class="card-header">
-              <div class="card-title">📁 ${Utils.escapeHtml(c.name)}</div>
+          <div class="card" style="display: flex; flex-direction: column; gap: 0.9rem;">
+            <div class="card-header" style="padding-bottom: 0;">
+              <div class="card-title" style="display:flex;align-items:center;gap:0.5rem;font-size:1.15rem;">
+                <span style="font-size:1.3rem;">📁</span>
+                ${Utils.escapeHtml(c.name)}
+              </div>
               <span class="badge badge-primary">${Utils.formatNumber(c.totalItems)} titres</span>
             </div>
-            <div style="font-size: 0.85rem; color: var(--muted-foreground);">
-              Durée totale : <b>${Math.round(c.totalHours || 0)} heures</b>
+            <div style="font-size: 0.88rem; color: var(--muted-foreground); display:flex; align-items:center; gap:0.4rem;">
+              <span>⏱️</span>
+              <span>Durée totale : <b style="color:var(--foreground);">${Math.round(c.totalHours || 0)} heures</b></span>
             </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: auto;">
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: auto; padding-top: 0.6rem; border-top: 1px solid var(--border-subtle);">
               ${(c.types || []).map((t) => `
-                <span class="badge badge-secondary">${Utils.escapeHtml(t.type)}: ${t.count}</span>
+                <span class="chip" style="font-size:0.74rem;">${Utils.escapeHtml(t.type)}: <b>${t.count}</b></span>
               `).join('')}
             </div>
           </div>
@@ -1818,36 +2238,50 @@
     async analysis() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div>
-          <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.analysis') || 'Analyses Approfondies'}</h1>
-          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Réalisateurs, acteurs, studios et prédictions.</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              ${I18n.t('nav.analysis') || 'Analyses Approfondies'}
+            </h1>
+            <p class="page-subtitle">Réalisateurs, acteurs, studios et tendances de consommation.</p>
+          </div>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
           <div class="card">
             <div class="card-header">
-              <div class="card-title">🎬 Top Réalisateurs</div>
+              <div class="card-title-group">
+                <div class="card-title">🎬 Top Réalisateurs</div>
+                <div class="card-subtitle">Cinéastes les plus présents dans vos lectures</div>
+              </div>
             </div>
             <div id="analysis-directors" style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <div class="skeleton" style="height: 100px;"></div>
+              <div class="skeleton" style="height: 120px;"></div>
             </div>
           </div>
 
           <div class="card">
             <div class="card-header">
-              <div class="card-title">⭐ Top Acteurs & Actrices</div>
+              <div class="card-title-group">
+                <div class="card-title">⭐ Top Acteurs & Actrices</div>
+                <div class="card-subtitle">Interprètes les plus regardés</div>
+              </div>
             </div>
             <div id="analysis-actors" style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <div class="skeleton" style="height: 100px;"></div>
+              <div class="skeleton" style="height: 120px;"></div>
             </div>
           </div>
 
           <div class="card">
             <div class="card-header">
-              <div class="card-title">🏢 Top Studios</div>
+              <div class="card-title-group">
+                <div class="card-title">🏢 Top Studios</div>
+                <div class="card-subtitle">Maisons de production favorites</div>
+              </div>
             </div>
             <div id="analysis-studios" style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <div class="skeleton" style="height: 100px;"></div>
+              <div class="skeleton" style="height: 120px;"></div>
             </div>
           </div>
         </div>
@@ -1859,12 +2293,15 @@
           const el = document.getElementById(containerId);
           if (!el) return;
           if (!items || items.length === 0) {
-            el.innerHTML = '<p class="empty-state" style="padding:1rem;">Données insuffisantes.</p>';
+            el.innerHTML = '<p class="empty-state" style="padding:1.5rem;">Données insuffisantes.</p>';
             return;
           }
           el.innerHTML = items.map((it, idx) => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0.65rem; background: var(--surface-soft); border-radius: var(--radius-sm); font-size: 0.85rem;">
-              <span><b>#${idx + 1}</b> ${Utils.escapeHtml(it.name)}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.85rem; background: var(--surface-soft); border-radius: var(--radius-md); font-size: 0.86rem; border: 1px solid var(--border-subtle); transition: border-color 0.15s;">
+              <div style="display:flex; align-items:center; gap:0.6rem;">
+                <span class="user-card-avatar" style="width:26px; height:26px; font-size:0.75rem; background:${idx === 0 ? 'var(--primary)' : 'var(--surface-nested)'}; color:${idx === 0 ? 'white' : 'var(--muted-foreground)'}; border:none;">#${idx + 1}</span>
+                <span style="font-weight:600;">${Utils.escapeHtml(it.name)}</span>
+              </div>
               <span class="badge badge-primary">${it.count} titres</span>
             </div>
           `).join('');
@@ -1882,27 +2319,41 @@
     async logs() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div class="page-header">
           <div>
-            <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.logs') || 'Journaux Système'}</h1>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem;">Événements, erreurs et synchronisations JellyTrack.</p>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              ${I18n.t('nav.logs') || 'Journaux Système'}
+            </h1>
+            <p class="page-subtitle">Événements internes, erreurs, diagnostics et synchronisations JellyTrack.</p>
           </div>
 
-          <div style="display: flex; gap: 0.5rem;">
-            <a href="/api/logs/system/download" class="btn btn-secondary btn-sm" download>📥 Télécharger</a>
-            <a href="/api/logs/export" class="btn btn-secondary btn-sm">📊 Export CSV</a>
-            ${State.user && State.user.isAdmin ? `<button class="btn btn-danger btn-sm" id="btn-clear-logs">🗑️ Vider</button>` : ''}
+          <div class="page-actions">
+            <a href="/api/logs/system/download" class="btn btn-secondary btn-sm" download style="display:flex;align-items:center;gap:0.4rem;">
+              <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Télécharger
+            </a>
+            <a href="/api/logs/export" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:0.4rem;">
+              <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><line x1="18" y1="8" x2="23" y2="8"/></svg>
+              Export CSV
+            </a>
+            ${State.user && State.user.isAdmin ? `
+              <button class="btn btn-danger btn-sm" id="btn-clear-logs" style="display:flex;align-items:center;gap:0.4rem;">
+                <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Purger
+              </button>
+            ` : ''}
           </div>
         </div>
 
-        <div class="card" style="padding: 0;">
+        <div class="card" style="padding: 0; margin-top: 1.25rem;">
           <div class="table-wrapper" style="border: none;">
             <table class="table">
               <thead>
                 <tr>
-                  <th>Niveau</th>
+                  <th style="width: 100px;">Niveau</th>
                   <th>Message</th>
-                  <th>Horodatage</th>
+                  <th style="width: 180px;">Horodatage</th>
                 </tr>
               </thead>
               <tbody id="logs-table-body">
@@ -1917,7 +2368,16 @@
         const data = await API.getJSON('/api/logs/system');
         const tbody = document.getElementById('logs-table-body');
         if (!data.logs || data.logs.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Aucun log enregistré.</td></tr>';
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="3">
+                <div class="empty-state">
+                  <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                  <span class="empty-state-title">Aucun log enregistré</span>
+                  <span>Les événements système récents apparaîtront ici.</span>
+                </div>
+              </td>
+            </tr>`;
           return;
         }
 
@@ -1928,20 +2388,24 @@
                 ${Utils.escapeHtml(l.level || 'INFO')}
               </span>
             </td>
-            <td style="font-family: monospace; font-size: 0.82rem;">${Utils.escapeHtml(l.message || l.msg || '')}</td>
-            <td style="white-space: nowrap; font-size: 0.78rem; color: var(--muted-foreground);">${Utils.formatDateTime(l.time || l.timestamp)}</td>
+            <td style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.82rem; word-break: break-all;">
+              ${Utils.escapeHtml(l.message || l.msg || '')}
+            </td>
+            <td style="white-space: nowrap; font-size: 0.8rem; color: var(--muted-foreground);">
+              ${Utils.formatDateTime(l.time || l.timestamp)}
+            </td>
           </tr>
         `).join('');
 
         document.getElementById('btn-clear-logs')?.addEventListener('click', () => {
           Modal.showAction({
             title: 'Vider les journaux',
-            bodyHtml: '<p>Êtes-vous certain de vouloir purger les journaux système ?</p>',
-            confirmText: 'Purger',
+            bodyHtml: '<p>Êtes-vous certain de vouloir purger l’historique des journaux système ? Cette action est irréversible.</p>',
+            confirmText: 'Purger les journaux',
             onConfirm: async () => {
               try {
                 await API.delete('/api/logs/system');
-                Toast.success('Journaux vidés.');
+                Toast.success('Journaux vidés avec succès.');
                 Router.renderCurrent();
               } catch (e) {
                 Toast.error(e.message);
@@ -1960,12 +2424,17 @@
       const activeTab = subpage.startsWith('scheduler') ? 'scheduler' : (subpage.startsWith('plugin/security') ? 'plugin/security' : subpage);
 
       main.innerHTML = `
-        <div>
-          <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.settings') || 'Paramètres'}</h1>
-          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Administration, serveurs, médias, sauvegardes et planificateur.</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              ${I18n.t('nav.settings') || 'Paramètres'}
+            </h1>
+            <p class="page-subtitle">Administration, serveurs, médias, sauvegardes et planificateur.</p>
+          </div>
         </div>
 
-        <div class="segmented-control" id="settings-tabs" style="flex-wrap: wrap; margin-top: 0.75rem; gap: 0.25rem;">
+        <div class="segmented-control" id="settings-tabs" style="flex-wrap: wrap; margin-top: 1rem; gap: 0.25rem;">
           <button class="segment-btn ${activeTab === 'overview' ? 'active' : ''}" data-sub="overview">Vue d’ensemble</button>
           <button class="segment-btn ${activeTab === 'jellyfin' ? 'active' : ''}" data-sub="jellyfin">Serveurs Jellyfin</button>
           <button class="segment-btn ${activeTab === 'media' ? 'active' : ''}" data-sub="media">Médias & Règles</button>
@@ -2000,30 +2469,52 @@
             API.getJSON('/api/settings/jellyfin-servers').catch(() => []),
           ]);
           container.innerHTML = `
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title">⚙️ Configuration Globale JellyTrack</div>
+            <div class="card" style="padding: 1.75rem;">
+              <div class="card-header" style="padding:0 0 1.25rem 0; border-bottom: 1px solid var(--border-subtle);">
+                <div class="card-title-group">
+                  <div class="card-title" style="display:flex;align-items:center;gap:0.5rem;">
+                    <span>⚙️</span>
+                    Configuration Globale JellyTrack
+                  </div>
+                  <div class="card-subtitle">État général du système et des fonctionnalités activées</div>
+                </div>
               </div>
-              <div class="metric-grid">
-                <div class="metric-card">
-                  <div class="metric-label">Langue par défaut</div>
-                  <div class="metric-value" style="font-size:1.4rem;">${Utils.escapeHtml(s.defaultLocale || 'fr').toUpperCase()}</div>
+              <div class="stat-grid" style="margin-top: 1.5rem;">
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-card-label">Langue par défaut</span>
+                    <div class="stat-icon stat-icon-indigo">🌍</div>
+                  </div>
+                  <div class="stat-card-value">${Utils.escapeHtml(s.defaultLocale || 'fr').toUpperCase()}</div>
+                  <div class="stat-card-footer">Interface utilisateur</div>
                 </div>
-                <div class="metric-card">
-                  <div class="metric-label">Serveurs connectés</div>
-                  <div class="metric-value" style="font-size:1.4rem;">${Array.isArray(servers) ? servers.length : 0}</div>
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-card-label">Serveurs connectés</span>
+                    <div class="stat-icon stat-icon-cyan">🖥️</div>
+                  </div>
+                  <div class="stat-card-value">${Array.isArray(servers) ? servers.length : 0}</div>
+                  <div class="stat-card-footer"><a href="/settings/jellyfin" data-link>Gérer les instances →</a></div>
                 </div>
-                <div class="metric-card">
-                  <div class="metric-label">Wrapped activé</div>
-                  <div class="metric-value" style="font-size:1.4rem; color: ${s.wrappedVisible !== false ? 'var(--accent)' : 'var(--muted-foreground)'};">
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-card-label">Wrapped activé</span>
+                    <div class="stat-icon stat-icon-purple">🎉</div>
+                  </div>
+                  <div class="stat-card-value" style="color: ${s.wrappedVisible !== false ? 'var(--accent)' : 'var(--muted-foreground)'};">
                     ${s.wrappedVisible !== false ? 'Oui' : 'Non'}
                   </div>
+                  <div class="stat-card-footer">Rétrospective annuelle</div>
                 </div>
-                <div class="metric-card">
-                  <div class="metric-label">Alertes Discord</div>
-                  <div class="metric-value" style="font-size:1.4rem; color: ${s.discordAlertsEnabled ? 'var(--accent)' : 'var(--muted-foreground)'};">
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="stat-card-label">Alertes Discord</span>
+                    <div class="stat-icon stat-icon-amber">🔔</div>
+                  </div>
+                  <div class="stat-card-value" style="color: ${s.discordAlertsEnabled ? 'var(--accent)' : 'var(--muted-foreground)'};">
                     ${s.discordAlertsEnabled ? 'Actives' : 'Inactives'}
                   </div>
+                  <div class="stat-card-footer"><a href="/settings/notifications" data-link>Webhooks Discord →</a></div>
                 </div>
               </div>
             </div>
@@ -2871,12 +3362,17 @@
     async health(sub = 'system') {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div>
-          <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.health') || 'Santé Système & Diagnostics'}</h1>
-          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Surveillance de la base de données, des processus, du plugin et des alertes de sécurité.</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              ${I18n.t('nav.health') || 'Santé Système & Diagnostics'}
+            </h1>
+            <p class="page-subtitle">Surveillance de la base de données, des processus, du plugin et des alertes de sécurité.</p>
+          </div>
         </div>
 
-        <div class="segmented-control" id="health-tabs" style="margin-top: 0.75rem; flex-wrap: wrap;">
+        <div class="segmented-control" id="health-tabs" style="margin-top: 1rem; flex-wrap: wrap;">
           <button class="segment-btn ${sub === 'system' ? 'active' : ''}" data-route="/admin/health">Base & Système</button>
           <button class="segment-btn ${sub === 'plugin' ? 'active' : ''}" data-route="/admin/plugin-health">Santé Plugin</button>
           <button class="segment-btn ${sub === 'logs' ? 'active' : ''}" data-route="/admin/log-health">Journaux & Sécurité</button>
@@ -2904,54 +3400,60 @@
           ]);
 
           container.innerHTML = `
-            <div class="metric-grid" style="margin-bottom: 1.5rem;">
-              <div class="metric-card">
-                <div class="metric-header">
-                  <span class="metric-label">Base de données</span>
-                  <div class="metric-icon-box">🗄️</div>
+            <div class="stat-grid" style="margin-bottom: 1.5rem;">
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">Base de données</span>
+                  <div class="stat-icon stat-icon-green">🗄️</div>
                 </div>
-                <div class="metric-value" style="font-size:1.6rem; color: ${h.database === 'healthy' ? 'var(--accent)' : 'var(--destructive)'};">
+                <div class="stat-card-value" style="font-size:1.6rem; color: ${h.database === 'healthy' ? 'var(--accent)' : 'var(--destructive)'};">
                   ${Utils.escapeHtml(h.database === 'healthy' ? 'Opérationnelle' : h.database || 'OK')}
                 </div>
-                <div class="metric-trend">Moteur : ${Utils.escapeHtml(h.driver || 'SQLite')}</div>
+                <div class="stat-card-footer">Moteur : <b>${Utils.escapeHtml(h.driver || 'SQLite')}</b></div>
               </div>
 
-              <div class="metric-card">
-                <div class="metric-header">
-                  <span class="metric-label">Sessions Orphelines</span>
-                  <div class="metric-icon-box">🧹</div>
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">Sessions Orphelines</span>
+                  <div class="stat-icon stat-icon-amber">🧹</div>
                 </div>
-                <div class="metric-value">${h.counts ? (h.counts.openPlaybackOrphans || 0) : 0}</div>
-                <div class="metric-trend">Lectures sans fermeture propre</div>
+                <div class="stat-card-value">${h.counts ? (h.counts.openPlaybackOrphans || 0) : 0}</div>
+                <div class="stat-card-footer">Lectures sans fermeture propre</div>
               </div>
 
-              <div class="metric-card">
-                <div class="metric-header">
-                  <span class="metric-label">Mémoire allouée</span>
-                  <div class="metric-icon-box">🧠</div>
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">Mémoire allouée</span>
+                  <div class="stat-icon stat-icon-cyan">🧠</div>
                 </div>
-                <div class="metric-value">${hw.memory ? hw.memory.allocMb.toFixed(1) + ' MB' : '-'}</div>
-                <div class="metric-trend">Cœurs CPU : ${hw.cpu ? hw.cpu.cores : '-'}</div>
+                <div class="stat-card-value">${hw.memory ? hw.memory.allocMb.toFixed(1) + ' MB' : '-'}</div>
+                <div class="stat-card-footer">Cœurs CPU : <b>${hw.cpu ? hw.cpu.cores : '-'}</b></div>
               </div>
 
-              <div class="metric-card">
-                <div class="metric-header">
-                  <span class="metric-label">Goroutines actives</span>
-                  <div class="metric-icon-box">⚙️</div>
+              <div class="stat-card">
+                <div class="stat-card-header">
+                  <span class="stat-card-label">Goroutines actives</span>
+                  <div class="stat-icon stat-icon-indigo">⚙️</div>
                 </div>
-                <div class="metric-value">${hw.runtime ? (hw.runtime.goroutines || '-') : '-'}</div>
-                <div class="metric-trend">Processus Go léger</div>
+                <div class="stat-card-value">${hw.runtime ? (hw.runtime.goroutines || '-') : '-'}</div>
+                <div class="stat-card-footer">Processus Go léger</div>
               </div>
             </div>
 
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title">🧹 Maintenance Rapide de la Base</div>
+            <div class="card" style="padding: 1.75rem;">
+              <div class="card-header" style="padding: 0 0 1rem 0; border-bottom: 1px solid var(--border-subtle);">
+                <div class="card-title-group">
+                  <div class="card-title">🧹 Maintenance Rapide de la Base</div>
+                  <div class="card-subtitle">Purge immédiate des sessions en suspens sans événement d’arrêt</div>
+                </div>
               </div>
-              <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
-                Si des coupures réseau empêchent la réception des événements "playback stopped", vous pouvez purger les sessions orphelines.
+              <p style="font-size:0.88rem; color:var(--muted-foreground); margin: 1rem 0 1.25rem 0; line-height: 1.5;">
+                Si des coupures réseau empêchent la réception des événements "playback stopped", vous pouvez purger les sessions orphelines pour recalculer les statistiques proprement.
               </p>
-              <button class="btn btn-secondary btn-sm" id="btn-fix-orphans">Clôturer les sessions orphelines maintenant</button>
+              <button class="btn btn-secondary btn-sm" id="btn-fix-orphans" style="display:flex;align-items:center;gap:0.4rem;">
+                <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Clôturer les sessions orphelines maintenant
+              </button>
             </div>
           `;
 
@@ -3130,27 +3632,34 @@
     async serverCompare() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div>
-          <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.serverCompare') || 'Comparateur de Serveurs'}</h1>
-          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Analyse comparative entre vos serveurs Jellyfin connectés.</p>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">
+              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              ${I18n.t('nav.serverCompare') || 'Comparateur de Serveurs'}
+            </h1>
+            <p class="page-subtitle">Analyse comparative et statistiques croisées entre vos serveurs Jellyfin connectés.</p>
+          </div>
         </div>
 
-        <div class="table-wrapper" style="margin-top: 1.5rem;">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Serveur</th>
-                <th>Statut</th>
-                <th>Médias</th>
-                <th>Utilisateurs</th>
-                <th>Lectures</th>
-                <th>Flux Actifs</th>
-              </tr>
-            </thead>
-            <tbody id="compare-table-body">
-              <tr><td colspan="6" class="skeleton" style="height: 80px;"></td></tr>
-            </tbody>
-          </table>
+        <div class="card" style="padding: 0; margin-top: 1.5rem;">
+          <div class="table-wrapper" style="border: none;">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Serveur</th>
+                  <th>Statut</th>
+                  <th>Médias</th>
+                  <th>Utilisateurs</th>
+                  <th>Lectures</th>
+                  <th>Flux Actifs</th>
+                </tr>
+              </thead>
+              <tbody id="compare-table-body">
+                <tr><td colspan="6" class="skeleton" style="height: 80px;"></td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       `;
 
@@ -3158,17 +3667,26 @@
         const data = await API.getJSON('/api/admin/server-compare');
         const tbody = document.getElementById('compare-table-body');
         if (!data.servers || data.servers.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aucun serveur configuré.</td></tr>';
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                  <span class="empty-state-title">Aucun serveur configuré</span>
+                  <span>Ajoutez au moins deux serveurs pour comparer leurs données.</span>
+                </div>
+              </td>
+            </tr>`;
           return;
         }
 
         tbody.innerHTML = data.servers.map((s) => `
           <tr>
             <td>
-              <b>${Utils.escapeHtml(s.name)}</b>
-              <div style="font-size: 0.75rem; color: var(--muted-foreground);">${Utils.escapeHtml(s.url)}</div>
+              <div style="font-weight: 700; font-size: 0.95rem;">${Utils.escapeHtml(s.name)}</div>
+              <div style="font-size: 0.76rem; color: var(--muted-foreground);">${Utils.escapeHtml(s.url)}</div>
             </td>
-            <td><span class="badge ${s.isActive ? 'badge-success' : 'badge-secondary'}">${s.isActive ? 'Actif' : 'Inactif'}</span></td>
+            <td><span class="badge ${s.isActive ? 'badge-success' : 'badge-secondary'}">${s.isActive ? '● En ligne' : '○ Inactif'}</span></td>
             <td><b>${Utils.formatNumber(s.mediaCount)}</b></td>
             <td><b>${Utils.formatNumber(s.userCount)}</b></td>
             <td><b>${Utils.formatNumber(s.playsCount)}</b></td>
@@ -3184,15 +3702,26 @@
     async cleanup() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div style="max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
-          <div>
-            <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.cleanup') || 'Outils de Nettoyage & Hygiène'}</h1>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem;">Maintenez une base de données saine, compacte et exempte d'enregistrements obsolètes.</p>
+        <div style="max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+          <div class="page-header">
+            <div>
+              <h1 class="page-title">
+                <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                ${I18n.t('nav.cleanup') || 'Outils de Nettoyage & Hygiène'}
+              </h1>
+              <p class="page-subtitle">Maintenez une base de données saine, compacte et exempte d'enregistrements obsolètes.</p>
+            </div>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">🗑️ Supprimer les films orphelins / obsolètes</div>
+          <div class="card" style="padding: 1.75rem;">
+            <div class="card-header" style="padding: 0 0 1rem 0; border-bottom: 1px solid var(--border-subtle);">
+              <div class="card-title-group">
+                <div class="card-title" style="display:flex;align-items:center;gap:0.5rem;">
+                  <span>🗑️</span>
+                  Supprimer les films orphelins & obsolètes
+                </div>
+                <div class="card-subtitle">Purge des métadonnées de fichiers supprimés du disque</div>
+              </div>
             </div>
             <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
               Supprime les entrées de films qui ne figurent plus sur vos serveurs Jellyfin après des suppressions de fichiers.
@@ -3367,6 +3896,10 @@
       if (!State.user && path !== '/login' && path !== '/setup') {
         Pages.login();
         return;
+      }
+
+      if (path !== '/login') {
+        document.body.classList.remove('is-auth-page');
       }
 
       // Route Dispatcher

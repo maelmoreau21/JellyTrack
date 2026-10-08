@@ -73,23 +73,23 @@ const oidcFlowCookie = "jellytrack_oidc_flow"
 func (m *Manager) oidcStart(w http.ResponseWriter, r *http.Request) {
 	cfg := m.resolveOIDC(r.Context())
 	if !cfg.enabled || m.secret == "" {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "Connexion OIDC non configurée."})
+		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
 	provider, oauth, err := m.oidcConfigWith(r.Context(), cfg)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": "Le fournisseur OIDC est inaccessible."})
+		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
 	_ = provider
 	state, err := randomValue(32)
 	if err != nil {
-		writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
+		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
 	nonce, err := randomValue(32)
 	if err != nil {
-		writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
+		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
 	verifier := oauth2.GenerateVerifier()
@@ -105,18 +105,20 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	cfg := m.resolveOIDC(r.Context())
 	if !cfg.enabled || m.secret == "" {
-		writeJSON(w, 503, map[string]string{"error": "Connexion OIDC non configurée."})
+		clearFlow()
+		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
 	cookie, err := r.Cookie(oidcFlowCookie)
 	if err != nil {
-		writeJSON(w, 400, map[string]string{"error": "État OIDC manquant."})
+		clearFlow()
+		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
 		return
 	}
 	parts := strings.Split(cookie.Value, ".")
 	if len(parts) != 3 || !constantStringEqual(parts[0], r.URL.Query().Get("state")) || r.URL.Query().Get("code") == "" {
 		clearFlow()
-		writeJSON(w, 400, map[string]string{"error": "État OIDC invalide."})
+		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
 		return
 	}
 	if provider, oauth, e := m.oidcConfigWith(r.Context(), cfg); e == nil {
@@ -125,19 +127,19 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		token, e := oauth.Exchange(ctx, r.URL.Query().Get("code"), oauth2.VerifierOption(parts[2]))
 		if e != nil {
 			clearFlow()
-			writeJSON(w, 401, map[string]string{"error": "Échange OIDC refusé."})
+			http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 			return
 		}
 		raw, ok := token.Extra("id_token").(string)
 		if !ok {
 			clearFlow()
-			writeJSON(w, 401, map[string]string{"error": "Jeton OIDC manquant."})
+			http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
 			return
 		}
 		idToken, e := provider.Verifier(&oidc.Config{ClientID: cfg.clientID}).Verify(ctx, raw)
 		if e != nil {
 			clearFlow()
-			writeJSON(w, 401, map[string]string{"error": "Jeton OIDC invalide."})
+			http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
 			return
 		}
 		var claims struct {
@@ -150,13 +152,13 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		}
 		if e = idToken.Claims(&claims); e != nil || !constantStringEqual(claims.Nonce, parts[1]) {
 			clearFlow()
-			writeJSON(w, 401, map[string]string{"error": "Vérification OIDC refusée."})
+			http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
 			return
 		}
 		username := first(claims.Username, claims.Email, claims.Name, claims.Subject)
 		if username == "" {
 			clearFlow()
-			writeJSON(w, 403, map[string]string{"error": "Le profil OIDC ne fournit pas de nom."})
+			http.Redirect(w, r, "/login?error=AccessDenied", http.StatusSeeOther)
 			return
 		}
 		role := ""
@@ -171,12 +173,12 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		}
 		if role == "" {
 			clearFlow()
-			writeJSON(w, 403, map[string]string{"error": "Accès refusé : aucun groupe JellyTrack autorisé."})
+			http.Redirect(w, r, "/login?error=AccessDeniedGroup", http.StatusSeeOther)
 			return
 		}
 		if _, e = m.createSession(w, r, username, role, false); e != nil {
 			clearFlow()
-			writeJSON(w, 500, map[string]string{"error": "Impossible de créer la session."})
+			http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 			return
 		}
 		clearFlow()
@@ -184,7 +186,7 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	clearFlow()
-	writeJSON(w, 502, map[string]string{"error": "Le fournisseur OIDC est inaccessible."})
+	http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 }
 
 type resolvedOIDCConfig struct {
@@ -352,6 +354,28 @@ func (m *Manager) Routes(mux *http.ServeMux) {
 			"autoRedirect": cfg.autoRedirect,
 			"localAdmin":   len(m.passwordHash) > 0,
 		})
+	})
+	mux.HandleFunc("GET /api/auth/sso/config", func(w http.ResponseWriter, r *http.Request) {
+		cfg := m.resolveOIDC(r.Context())
+		writeJSON(w, http.StatusOK, map[string]any{
+			"enabled":      cfg.enabled,
+			"autoRedirect": cfg.autoRedirect,
+			"issuer":       cfg.issuer,
+			"clientId":     cfg.clientID,
+		})
+	})
+	mux.HandleFunc("GET /api/auth/status", func(w http.ResponseWriter, r *http.Request) {
+		p, ok := m.authenticate(r)
+		if ok {
+			writeJSON(w, http.StatusOK, map[string]any{
+				"authenticated": true,
+				"username":      p.Username,
+				"role":          p.Role,
+				"isAdmin":       p.IsAdmin(),
+			})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"authenticated": false})
 	})
 	mux.HandleFunc("POST /api/auth/login", m.login)
 	mux.HandleFunc("GET /api/auth/me", m.me)
