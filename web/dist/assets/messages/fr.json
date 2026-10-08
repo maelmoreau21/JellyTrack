@@ -481,7 +481,7 @@
     "rememberMeHint": "Rester connecté 30 jours sur cet appareil.",
     "signIn": "Se connecter",
     "signInSso": "Se connecter avec SSO",
-    "localLogin": "Connexion locale",
+    "localLogin": "Utilisateur local",
     "localAdminTitle": "Connexion locale (Admin)",
     "ssoSubtitle": "Authentification unique sécurisée (SSO / OIDC)",
     "subtitle": "Authentification via Jellyfin",

@@ -481,7 +481,7 @@
     "rememberMeHint": "Stay signed in for 30 days on this device.",
     "signIn": "Sign in",
     "signInSso": "Sign in with SSO",
-    "localLogin": "Local sign in",
+    "localLogin": "Local user",
     "localAdminTitle": "Local Admin Sign in",
     "ssoSubtitle": "Single Sign-On (OpenID Connect)",
     "subtitle": "Authenticate via Jellyfin",
