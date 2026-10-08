@@ -19,11 +19,13 @@
     activeStreamsCount: 0,
     streamPollInterval: null,
     currentPath: window.location.pathname || '/',
+    pageController: null,
+    pageCleanups: [],
   };
 
   const Utils = {
     escapeHtml(str) {
-      if (!str) return '';
+      if (str === undefined || str === null) return '';
       return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -50,7 +52,7 @@
       try {
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
-        return d.toLocaleDateString(State.locale === 'fr' ? 'fr-FR' : 'en-US', {
+        return d.toLocaleDateString(State.locale, {
           year: 'numeric',
           month: 'short',
           day: 'numeric',
@@ -65,7 +67,7 @@
       try {
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
-        return d.toLocaleString(State.locale === 'fr' ? 'fr-FR' : 'en-US', {
+        return d.toLocaleString(State.locale, {
           year: 'numeric',
           month: 'short',
           day: 'numeric',
@@ -79,7 +81,7 @@
 
     formatNumber(num) {
       if (num === undefined || num === null) return '0';
-      return new Intl.NumberFormat(State.locale === 'fr' ? 'fr-FR' : 'en-US').format(num);
+      return new Intl.NumberFormat(State.locale).format(num);
     },
 
     timeAgo(dateStr) {
@@ -138,22 +140,22 @@
 
   const I18n = {
     async init() {
+      try {
+        const res = await fetch('/assets/messages/fr.json');
+        if (res.ok) State.fallbackTranslations = await res.json();
+      } catch (e) {}
       await this.loadLocale(State.locale);
-      if (State.locale !== 'fr') {
-        try {
-          const res = await fetch('/assets/messages/fr.json');
-          if (res.ok) State.fallbackTranslations = await res.json();
-        } catch (e) {}
-      }
       this.applyTranslationsToDOM();
     },
 
     async loadLocale(loc) {
+      if (!['fr', 'en', 'de', 'es', 'it', 'nl', 'pl', 'pt-BR', 'ru', 'zh'].includes(loc)) loc = 'fr';
       try {
         const res = await fetch(`/assets/messages/${loc}.json`);
         if (res.ok) {
           State.translations = await res.json();
           State.locale = loc;
+          document.documentElement.lang = loc;
           localStorage.setItem('jt_locale', loc);
         }
       } catch (e) {
@@ -221,9 +223,7 @@
     toggle() {
       const isDark = this.isDark();
       this.set(isDark ? 'light' : 'dark');
-      if (window.location.pathname === '/' || window.location.pathname === '/dashboard') {
-        Router.renderCurrent();
-      }
+      Router.renderCurrent();
     },
     set(theme) {
       if (theme === 'dark') {
@@ -242,6 +242,9 @@
   const API = {
     async request(url, options = {}) {
       const opts = { ...options };
+      if (!opts.signal && State.pageController && (!opts.method || opts.method.toUpperCase() === 'GET')) {
+        opts.signal = State.pageController.signal;
+      }
       opts.headers = { ...opts.headers };
 
       if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
@@ -256,6 +259,7 @@
       const res = await fetch(url, opts);
       if (res.status === 401 && !url.includes('/api/auth/me') && !url.includes('/api/auth/login')) {
         State.user = null;
+        Auth.updateUserUI();
         Router.navigate('/login');
         throw new Error('Session expirée');
       }
@@ -336,11 +340,11 @@
         if (avatarEl) avatarEl.textContent = uname.slice(0, 2).toUpperCase();
         if (nameEl) nameEl.textContent = uname;
 
-        const currentUid = State.user.jellyfinUserId || State.user.id;
+        const currentUid = State.user.jellyfinUserId === 'local-admin' ? null : (State.user.jellyfinUserId || State.user.id);
 
         // User account & Wrapped links
         if (userSection) {
-          userSection.style.display = 'block';
+          userSection.style.display = currentUid ? 'block' : 'none';
           if (currentUid) {
             if (myProfileItem) {
               myProfileItem.setAttribute('data-route', `/users/${currentUid}`);
@@ -444,7 +448,7 @@
       document.getElementById('action-modal-cancel').onclick = cleanup;
       document.getElementById('action-modal-close').onclick = cleanup;
       document.getElementById('action-modal-confirm').onclick = async () => {
-        if (onConfirm) await onConfirm();
+        if (onConfirm && await onConfirm() === false) return;
         cleanup();
       };
 
@@ -485,6 +489,9 @@
 
       modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.classList.remove('open');
+      });
+      resultsEl.addEventListener('click', e => {
+        if (e.target.closest('a[data-link]')) modal.classList.remove('open');
       });
 
       window.addEventListener('keydown', (e) => {
@@ -1191,14 +1198,54 @@
   const Pages = {
     // 1. Dashboard
     async dashboard() {
-      StreamsPoller.start();
       document.body.classList.remove('is-auth-page');
       const main = document.getElementById('app-main');
 
       // Default state
-      let currentTimeRange = '7d';
-      let currentMediaType = '';
-      let currentServerId = '';
+      const pageSignal = State.pageController.signal;
+      let hwInterval, healthInterval, streamsInterval;
+      State.pageCleanups.push(() => {
+        clearInterval(hwInterval);
+        clearInterval(healthInterval);
+        clearInterval(streamsInterval);
+        delete window.openSendMessageModal;
+        delete window.confirmKillStream;
+        delete window.openAttendanceDrilldown;
+        delete window._setMsgTimeout;
+      });
+      const initialParams = new URLSearchParams(window.location.search);
+      let currentTimeRange = initialParams.get('timeRange') || '7d';
+      if (!['1d', '24h', '7d', '30d', '90d', '365d', 'all', 'custom'].includes(currentTimeRange)) currentTimeRange = '7d';
+      if (currentTimeRange === '24h') currentTimeRange = '1d';
+      let customFrom = initialParams.get('from') || '', customTo = initialParams.get('to') || '';
+      const appendDateFilters = params => {
+        params.set('timeRange', currentTimeRange);
+        if (currentTimeRange === 'custom') {
+          params.set('from', customFrom);
+          params.set('to', customTo);
+        }
+      };
+      let currentMediaType = initialParams.get('type') || '';
+      let currentServerId = initialParams.get('servers') || '';
+      const historyURL = (extra = '') => {
+        const params = new URLSearchParams(extra);
+        params.set('days', currentTimeRange === 'all' || currentTimeRange === 'custom' || params.has('dateFrom') ? 'all' : String(parseInt(currentTimeRange, 10) || 7));
+        if (currentMediaType && !params.has('type')) params.set('type', currentMediaType);
+        if (currentServerId) params.set('servers', currentServerId);
+        if (currentTimeRange === 'custom' && !params.has('dateFrom')) {
+          params.set('dateFrom', customFrom);
+          params.set('dateTo', customTo);
+        }
+        return '/logs?' + params.toString();
+      };
+      const heatmapURL = (extra, annual = false) => {
+        const params = new URLSearchParams(extra);
+        if (!annual) appendDateFilters(params);
+        if (currentMediaType) params.set('type', currentMediaType);
+        if (currentServerId) params.set('servers', currentServerId);
+        if (annual && selectedHeatmapLib !== '_total') params.set('type', selectedHeatmapLib);
+        return '/api/heatmap-detail?' + params.toString();
+      };
       let isDraggableEditing = false;
       let activeTab = 'overview';
       let liveStreamsData = [];
@@ -1213,7 +1260,7 @@
       let dashboardOrder = [...DEFAULT_ORDER];
       try {
         const savedOrder = JSON.parse(localStorage.getItem('JellyTrack-dashboard-order') || 'null');
-        if (Array.isArray(savedOrder) && savedOrder.length === DEFAULT_ORDER.length) {
+        if (Array.isArray(savedOrder) && savedOrder.length === DEFAULT_ORDER.length && new Set(savedOrder).size === DEFAULT_ORDER.length && savedOrder.every(id => DEFAULT_ORDER.includes(id))) {
           dashboardOrder = savedOrder;
         }
       } catch (e) {}
@@ -1255,6 +1302,7 @@
               <button class="time-pill-btn" data-range="90d">90j</button>
               <button class="time-pill-btn" data-range="365d">1 an</button>
               <button class="time-pill-btn" data-range="all">${I18n.t('common.all') || 'Tout'}</button>
+              <button class="time-pill-btn" data-range="custom">${I18n.t('timeRange.custom') || 'Dates personnalisées'}</button>
             </div>
             <button class="btn btn-secondary btn-sm" id="btn-refresh-dashboard" title="Rafraîchir les données">
               <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
@@ -1346,7 +1394,7 @@
             <div style="margin-bottom:0.75rem;">
               <span style="font-size:0.75rem; font-weight:600; color:var(--muted-foreground); display:block; margin-bottom:0.35rem;">Messages prédéfinis :</span>
               <div class="canned-pills">
-                ${cannedList.map(c => `<button type="button" class="canned-btn" onclick="document.getElementById('send-msg-text').value = '${c.replace(/'/g, "\\'")}';">${c}</button>`).join('')}
+                ${cannedList.map(c => `<button type="button" class="canned-btn" data-canned-message="${Utils.escapeHtml(c)}">${c}</button>`).join('')}
               </div>
             </div>
             <div style="margin-bottom:0.75rem;">
@@ -1360,9 +1408,9 @@
             <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.75rem; color:var(--muted-foreground);">
               <span>Durée d'affichage :</span>
               <div style="display:flex; gap:0.3rem;">
-                <button type="button" class="time-pill-btn active" id="btn-sec-5" onclick="window._setMsgTimeout(5)">5s</button>
-                <button type="button" class="time-pill-btn" id="btn-sec-10" onclick="window._setMsgTimeout(10)">10s</button>
-                <button type="button" class="time-pill-btn" id="btn-sec-30" onclick="window._setMsgTimeout(30)">30s</button>
+                <button type="button" class="time-pill-btn" id="btn-sec-5" data-message-timeout="5">5s</button>
+                <button type="button" class="time-pill-btn active" id="btn-sec-10" data-message-timeout="10">10s</button>
+                <button type="button" class="time-pill-btn" id="btn-sec-30" data-message-timeout="30">30s</button>
               </div>
             </div>
           `,
@@ -1447,9 +1495,8 @@
                 srvContainer.querySelectorAll('.header-filter-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentServerId = btn.getAttribute('data-server-id') || '';
-                loadAllDashboard();
-                if (activeTab === 'analytics') loadGranularAndDeep();
-                if (activeTab === 'network') loadNetworkTab();
+                refreshFilteredDashboard();
+                refreshLiveStreams();
               });
             });
           }
@@ -1460,6 +1507,7 @@
       const loadSystemHealth = async () => {
         try {
           const health = await API.getJSON('/api/admin/health');
+          if (pageSignal.aborted) return;
           const container = document.getElementById('dash-system-health-container');
           if (!container) return;
 
@@ -1536,6 +1584,7 @@
       const loadHardware = async () => {
         try {
           const hw = await API.getJSON('/api/hardware');
+          if (pageSignal.aborted) return;
           const container = document.getElementById('dash-hardware-container');
           if (!container || !hw || !hw.cpu) return;
 
@@ -1547,7 +1596,7 @@
                 </div>
                 <div>
                   <div style="font-size:0.75rem; color:var(--muted-foreground);">Processeur (CPU)</div>
-                  <div class="metric-glow-blue" style="font-size:1.35rem; font-weight:800;">${hw.cpu.usagePercent || 0}%</div>
+                  <div class="metric-glow-blue" style="font-size:1.35rem; font-weight:800;">${hw.cpu.usagePercent == null ? 'N/A' : `${hw.cpu.usagePercent}%`}</div>
                 </div>
               </div>
               <div class="hardware-card">
@@ -1555,8 +1604,8 @@
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 19v-3M10 19v-3M14 19v-3M18 19v-3M6 8V5M10 8V5M14 8V5M18 8V5"/><rect width="20" height="8" x="2" y="8" rx="2"/></svg>
                 </div>
                 <div>
-                  <div style="font-size:0.75rem; color:var(--muted-foreground);">Mémoire RAM (${hw.memory ? hw.memory.totalGb : 0} Go)</div>
-                  <div class="metric-glow-violet" style="font-size:1.35rem; font-weight:800;">${hw.memory ? hw.memory.usagePercent : 0}%</div>
+                  <div style="font-size:0.75rem; color:var(--muted-foreground);">Mémoire Go (tas alloué)</div>
+                  <div class="metric-glow-violet" style="font-size:1.35rem; font-weight:800;">${Number(hw.memory?.allocMb || 0).toFixed(1)} MiB</div>
                 </div>
               </div>
               <div class="hardware-card">
@@ -1576,7 +1625,8 @@
       // 4. Live Streams Poller & Renderer
       const refreshLiveStreams = async () => {
         try {
-          const res = await API.getJSON(`/api/streams${currentServerId ? `?servers=${currentServerId}` : ''}`);
+          const res = await API.getJSON(`/api/streams${currentServerId ? `?servers=${encodeURIComponent(currentServerId)}` : ''}`);
+          if (pageSignal.aborted) return;
           liveStreamsData = res.streams || [];
           liveBandwidth = res.totalBandwidthMbps || 0;
           State.activeStreamsCount = liveStreamsData.length;
@@ -1628,9 +1678,9 @@
                           <span class="badge ${s.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}" style="font-size:0.68rem; padding:0.15rem 0.45rem;">${s.playMethod === 'DirectPlay' ? 'DP' : 'Transcode'}</span>
                           ${s.isPaused ? '<span style="font-size:0.75rem; color:#f59e0b;">⏸</span>' : ''}
                           <span style="font-size:0.75rem; color:var(--muted-foreground);">${pct}%</span>
-                          <button class="btn btn-secondary btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" onclick="window.openSendMessageModal('${s.sessionId}', '${Utils.escapeHtml(s.user || s.username || '')}', '${Utils.escapeHtml(s.mediaTitle || '')}')" title="Envoyer un message">💬</button>
+                          <button class="btn btn-secondary btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" data-stream-action="message" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-user-name="${Utils.escapeHtml(s.user || s.username || '')}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Envoyer un message">💬</button>
                           ${State.user && State.user.isAdmin ? `
-                            <button class="btn btn-danger btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" onclick="window.confirmKillStream('${s.sessionId}', '${Utils.escapeHtml(s.mediaTitle || '')}')" title="Couper le flux">✕</button>
+                            <button class="btn btn-danger btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" data-stream-action="kill" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Couper le flux">✕</button>
                           ` : ''}
                         </div>
                       </div>
@@ -1657,7 +1707,7 @@
                 return `
                   <div class="stream-card">
                     <div class="stream-poster-thumb">
-                      ${posterId ? `<img src="/api/jellyfin/image?itemId=${posterId}&type=Primary&maxWidth=140" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;" onerror="this.style.display='none'">` : ''}
+                      ${posterId ? `<img src="/api/jellyfin/image?itemId=${posterId}&type=Primary&maxWidth=140" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;" data-hide-on-error>` : ''}
                     </div>
                     <div class="stream-info">
                       <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
@@ -1678,11 +1728,11 @@
                       </div>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:0.35rem; align-items:flex-end;">
-                      <button class="btn btn-secondary btn-sm" onclick="window.openSendMessageModal('${s.sessionId}', '${Utils.escapeHtml(s.user || s.username || '')}', '${Utils.escapeHtml(s.mediaTitle || '')}')" title="Envoyer un pop-up à l'écran">
+                      <button class="btn btn-secondary btn-sm" data-stream-action="message" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-user-name="${Utils.escapeHtml(s.user || s.username || '')}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Envoyer un pop-up à l'écran">
                         💬 Message
                       </button>
                       ${State.user && State.user.isAdmin ? `
-                        <button class="btn btn-danger btn-sm" onclick="window.confirmKillStream('${s.sessionId}', '${Utils.escapeHtml(s.mediaTitle || '')}')" title="Couper la session">
+                        <button class="btn btn-danger btn-sm" data-stream-action="kill" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Couper la session">
                           ${I18n.t('dashboard.killStream') || 'Arrêter'}
                         </button>
                       ` : ''}
@@ -1697,16 +1747,22 @@
 
       // 5. Main Dashboard Data Loader
       let dashboardData = null;
+      let dashboardRequest = 0, analyticsRequest = 0, networkRequest = 0;
 
       const loadAllDashboard = async () => {
         try {
           const queryDays = currentTimeRange === 'all' ? 'all' : (parseInt(currentTimeRange, 10) || 7);
           const params = new URLSearchParams();
           params.set('days', String(queryDays));
+          appendDateFilters(params);
           if (currentMediaType) params.set('type', currentMediaType);
           if (currentServerId) params.set('servers', currentServerId);
 
-          dashboardData = await API.getJSON(`/api/dashboard?${params.toString()}`);
+          const requestNumber = ++dashboardRequest;
+          const result = await API.getJSON(`/api/dashboard?${params.toString()}`);
+          if (requestNumber !== dashboardRequest) return;
+          dashboardData = result;
+          if (pageSignal.aborted) return;
 
           // Update Today Stats Banner
           const todayPlaysEl = document.getElementById('today-plays-val');
@@ -1719,7 +1775,7 @@
           renderDraggableDashboardBlocks();
           loadPredictions();
         } catch (e) {
-          Toast.error(e.message || "Erreur de chargement du tableau de bord");
+          if (!pageSignal.aborted) Toast.error(e.message || "Erreur de chargement du tableau de bord");
         }
       };
 
@@ -1770,7 +1826,7 @@
                 <div class="stat-desc">${I18n.t('dashboard.directPlayDesc') || 'Taux de lecture native sans ré-encodage'}</div>
               </div>
 
-              <a href="/logs" class="stat-card-modern" style="text-decoration:none; color:inherit;">
+              <a href="${historyURL()}" data-link class="stat-card-modern" style="text-decoration:none; color:inherit;">
                 <div class="stat-header">
                   <span class="stat-title">${I18n.t('dashboard.globalTime') || 'Temps de visionnage'}</span>
                   <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -1807,7 +1863,7 @@
           // Block 1: breadcrumb (4 Breakdown cards)
           1: () => `
             <div class="stat-grid-4">
-              <a href="/logs?type=Movie" class="breadcrumb-card">
+              <a href="${historyURL(`type=Movie`)}" data-link class="breadcrumb-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-size:0.82rem; font-weight:600; opacity:0.8;">Films</span>
                   <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
@@ -1816,7 +1872,7 @@
                 <div style="font-size:0.75rem; color:#3b82f6; font-weight:600;">${b.movieHours || 0}h regardées</div>
               </a>
 
-              <a href="/logs?type=Episode" class="breadcrumb-card">
+              <a href="${historyURL(`type=Episode`)}" data-link class="breadcrumb-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-size:0.82rem; font-weight:600; opacity:0.8;">Séries</span>
                   <svg class="nav-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="15" x="2" y="7" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
@@ -1825,7 +1881,7 @@
                 <div style="font-size:0.75rem; color:#10b981; font-weight:600;">${b.seriesHours || 0}h regardées</div>
               </a>
 
-              <a href="/logs?type=Audio" class="breadcrumb-card">
+              <a href="${historyURL(`type=Audio`)}" data-link class="breadcrumb-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-size:0.82rem; font-weight:600; opacity:0.8;">Musique</span>
                   <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
@@ -1834,7 +1890,7 @@
                 <div style="font-size:0.75rem; color:#f59e0b; font-weight:600;">${b.musicHours || 0}h écoutées</div>
               </a>
 
-              <a href="/logs?type=AudioBook" class="breadcrumb-card">
+              <a href="${historyURL(`type=AudioBook`)}" data-link class="breadcrumb-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <span style="font-size:0.82rem; font-weight:600; opacity:0.8;">Livres</span>
                   <svg class="nav-icon text-violet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
@@ -1985,7 +2041,7 @@
                 <div class="card-header">
                   <div class="card-title-group">
                     <div class="card-title">🕒 Heures de pointe</div>
-                    <div class="card-subtitle">Distribution des sessions sur les 24 heures de la journée</div>
+                    <div class="card-subtitle">Distribution des sessions sur les 24 heures de la journée (UTC)</div>
                   </div>
                 </div>
                 <div id="chart-hourly-active-banner" style="display:none; padding: 0 1.25rem 0.5rem;"></div>
@@ -2010,8 +2066,8 @@
 
           // Block 8: new-stats (MonthlyWatchTimeChart + CompletionRatioChart + ClientCategoryChart)
           8: () => `
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1.25rem;">
-              <div class="chart-card" style="grid-column:span 1; min-width:320px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap:1.25rem;">
+              <div class="chart-card" style="grid-column:span 1; min-width:0;">
                 <div class="card-header">
                   <div class="card-title-group" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                     <div>
@@ -2168,7 +2224,7 @@
                 const item = d.categoryPieData[idx];
                 const raw = item ? item.name : '';
                 const logType = rawToLogType[raw] || 'Movie';
-                Router.navigate(`/logs?type=${logType}`);
+                Router.navigate(historyURL(`type=${logType}`));
               },
             });
           } else {
@@ -2203,7 +2259,7 @@
             const values = d.platformChartData.map(p => p.value);
             ChartHelper.renderDoughnut('chart-platform-dist', labels, values, {
               isHours: false,
-              onClick: (idx, label) => Router.navigate(`/logs?client=${encodeURIComponent(label)}`),
+              onClick: (idx, label) => Router.navigate(historyURL(`client=${encodeURIComponent(label)}`)),
             });
           } else {
             ChartHelper.showEmpty('chart-platform-dist', 'Aucune plateforme détectée');
@@ -2231,7 +2287,7 @@
                 const sign = diff >= 0 ? '+' : '';
                 const hourNum = label.split(':')[0];
                 if (!bannerEl) {
-                  Router.navigate(`/logs?hour=${hourNum}`);
+                  Router.navigate(historyURL(`hour=${hourNum}`));
                   return;
                 }
                 bannerEl.style.display = 'block';
@@ -2243,10 +2299,10 @@
                       <span style="color:var(--muted-foreground); font-size:0.75rem;">(${sign}${diff} vs moy. ${avg})</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:0.5rem; margin-left:auto;">
-                      <a href="/logs?hour=${hourNum}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.6rem; font-size:0.75rem; text-decoration:none;">
+                      <a href="${historyURL(`hour=${hourNum}`)}" data-link class="btn btn-secondary btn-sm" style="padding:0.2rem 0.6rem; font-size:0.75rem; text-decoration:none;">
                         Voir les logs ↗
                       </a>
-                      <button type="button" class="btn btn-secondary btn-sm" style="padding:0.15rem 0.45rem; font-size:0.75rem;" onclick="document.getElementById('chart-hourly-active-banner').style.display='none'">×</button>
+                      <button type="button" class="btn btn-secondary btn-sm" style="padding:0.15rem 0.45rem; font-size:0.75rem;" data-dismiss="chart-hourly-active-banner">×</button>
                     </div>
                   </div>
                 `;
@@ -2362,7 +2418,8 @@
           isHours: true,
           onClick: (idx) => {
             const m = String(idx + 1).padStart(2, '0');
-            Router.navigate(`/logs?dateFrom=${selectedMonthlyYear}-${m}-01`);
+            const end = new Date(Date.UTC(selectedMonthlyYear, idx + 1, 0)).toISOString().slice(0, 10);
+            Router.navigate(historyURL(`dateFrom=${selectedMonthlyYear}-${m}-01&dateTo=${end}`));
           },
         });
       };
@@ -2373,7 +2430,7 @@
         if (!container || !dashboardData || !dashboardData.yearlyHeatmap) return;
 
         const hm = dashboardData.yearlyHeatmap;
-        const dataByType = hm.heatmapDataByType || {};
+        const dataByType = hm.dataByType || hm.heatmapDataByType || {};
         const entries = dataByType[selectedHeatmapLib] || dataByType['_total'] || [];
 
         // Build date map
@@ -2403,20 +2460,22 @@
         };
 
         // Construct 53 weeks x 7 days calendar
-        const jan1 = new Date(selectedHeatmapYear, 0, 1);
+        const jan1 = new Date(Date.UTC(selectedHeatmapYear, 0, 1));
         let curr = new Date(jan1);
-        const dayOfWeek = (curr.getDay() + 6) % 7; // Monday = 0
-        curr.setDate(curr.getDate() - dayOfWeek); // align to Monday
+        const dayOfWeek = (curr.getUTCDay() + 6) % 7; // Monday = 0
+        curr.setUTCDate(curr.getUTCDate() - dayOfWeek); // align to Monday
 
+        const daysInYear = (Date.UTC(selectedHeatmapYear + 1, 0, 1) - Date.UTC(selectedHeatmapYear, 0, 1)) / 86400000;
+        const weekCount = Math.ceil((daysInYear + dayOfWeek) / 7);
         // Month labels along the top (53 columns)
         const monthShortNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
         let lastMonth = -1;
         const weekMonths = [];
-        for (let col = 0; col < 53; col++) {
+        for (let col = 0; col < weekCount; col++) {
           let weekStart = new Date(curr);
-          weekStart.setDate(weekStart.getDate() + (col * 7));
-          const m = weekStart.getMonth();
-          if (weekStart.getFullYear() === selectedHeatmapYear && m !== lastMonth) {
+          weekStart.setUTCDate(weekStart.getUTCDate() + (col * 7));
+          const m = weekStart.getUTCMonth();
+          if (weekStart.getUTCFullYear() === selectedHeatmapYear && m !== lastMonth) {
             weekMonths.push({ col, name: monthShortNames[m] });
             lastMonth = m;
           }
@@ -2424,9 +2483,9 @@
 
         let tableHtml = '<table class="activity-calendar-table"><thead><tr><th style="width:18px;"></th>';
         let curMonthIdx = 0;
-        for (let col = 0; col < 53; col++) {
+        for (let col = 0; col < weekCount; col++) {
           if (curMonthIdx < weekMonths.length && weekMonths[curMonthIdx].col === col) {
-            const nextCol = (curMonthIdx + 1 < weekMonths.length) ? weekMonths[curMonthIdx + 1].col : 53;
+            const nextCol = (curMonthIdx + 1 < weekMonths.length) ? weekMonths[curMonthIdx + 1].col : weekCount;
             const span = nextCol - col;
             tableHtml += `<th colspan="${span}" style="font-size:0.65rem; color:var(--muted-foreground); text-align:left; font-weight:600; padding-bottom:3px;">${weekMonths[curMonthIdx].name}</th>`;
             col += span - 1;
@@ -2443,25 +2502,25 @@
           tableHtml += '<tr>';
           tableHtml += `<td style="font-size:0.68rem; color:var(--muted-foreground); padding-right:6px; font-weight:600;">${dayNames[row]}</td>`;
           let dayPtr = new Date(curr);
-          dayPtr.setDate(dayPtr.getDate() + row);
+          dayPtr.setUTCDate(dayPtr.getUTCDate() + row);
 
-          for (let col = 0; col < 53; col++) {
+          for (let col = 0; col < weekCount; col++) {
             const dateStr = dayPtr.toISOString().split('T')[0];
-            const isCurYear = dayPtr.getFullYear() === selectedHeatmapYear;
+            const isCurYear = dayPtr.getUTCFullYear() === selectedHeatmapYear;
             const count = isCurYear ? (dateMap.get(dateStr) || 0) : 0;
             const lvl = isCurYear ? getLvl(count) : 0;
 
             tableHtml += `
               <td>
-                <div class="activity-calendar-cell cal-lvl-${lvl}" 
-                     title="${dateStr}: ${count} sessions" 
-                     data-date="${dateStr}" 
+                <div class="activity-calendar-cell cal-lvl-${lvl}" role="button" tabindex="0"
+                     title="${dateStr}: ${count} sessions"
+                     data-date="${dateStr}"
                      data-count="${count}"
                      style="${!isCurYear ? 'opacity:0.2;' : ''}">
                 </div>
               </td>
             `;
-            dayPtr.setDate(dayPtr.getDate() + 7);
+            dayPtr.setUTCDate(dayPtr.getUTCDate() + 7);
           }
           tableHtml += '</tr>';
         }
@@ -2483,13 +2542,14 @@
 
         // Drill-down modal on cell click
         container.querySelectorAll('.activity-calendar-cell').forEach(cell => {
+          cell.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cell.click(); } });
           cell.addEventListener('click', async () => {
             const date = cell.getAttribute('data-date');
             const count = parseInt(cell.getAttribute('data-count'), 10) || 0;
             if (count === 0) return;
 
             try {
-              const detail = await API.getJSON(`/api/heatmap-detail?date=${date}`);
+              const detail = await API.getJSON(heatmapURL(`date=${date}`, true));
               const sessions = detail.sessions || [];
 
               Modal.showAction({
@@ -2509,7 +2569,7 @@
                 ` : '<p class="text-muted-foreground">Aucun détail disponible pour cette date.</p>',
                 cancelText: 'Fermer',
                 confirmText: 'Voir les logs complets',
-                onConfirm: () => Router.navigate(`/logs?dateFrom=${date}&dateTo=${date}`),
+                onConfirm: () => Router.navigate(historyURL(`dateFrom=${date}&dateTo=${date}`)),
               });
             } catch (err) {}
           });
@@ -2673,17 +2733,19 @@
 
       // 12. Load Tab 2: Granular Analysis & Deep Insights
       const loadGranularAndDeep = async () => {
+        const requestNumber = ++analyticsRequest;
         try {
           const params = new URLSearchParams();
-          params.set('timeRange', currentTimeRange);
+          appendDateFilters(params);
           if (currentMediaType) params.set('type', currentMediaType);
           if (currentServerId) params.set('servers', currentServerId);
 
           const [gran, deep] = await Promise.all([
-            API.getJSON(`/api/stats/granular?${params.toString()}`).catch(() => ({})),
-            API.getJSON(`/api/stats/deep?${params.toString()}`).catch(() => ({})),
+            API.getJSON(`/api/stats/granular?${params.toString()}`),
+            API.getJSON(`/api/stats/deep?${params.toString()}`),
           ]);
 
+          if (pageSignal.aborted || requestNumber !== analyticsRequest) return;
           const granContainer = document.getElementById('dash-granular-container');
           if (granContainer) {
             // Process Heatmap 7x24 Matrix
@@ -2737,10 +2799,10 @@
             window.openAttendanceDrilldown = async (day, hour, dayName, count) => {
               if (count === 0) return;
               try {
-                const detail = await API.getJSON(`/api/heatmap-detail?day=${day}&hour=${hour}`);
+                const detail = await API.getJSON(heatmapURL(`day=${day}&hour=${hour}`));
                 const sessions = detail.sessions || [];
                 Modal.showAction({
-                  title: `${dayName} — ${hour}h00 (${count} ${count > 1 ? 'sessions' : 'session'})`,
+                  title: `${dayName} — ${hour}h00 UTC (${count} ${count > 1 ? 'sessions' : 'session'})`,
                   bodyHtml: sessions.length > 0 ? `
                     <div class="ranking-list" style="max-height:360px; overflow-y:auto;">
                       ${sessions.map(s => `
@@ -2766,7 +2828,7 @@
                   ` : '<p class="text-muted-foreground text-sm">Aucune session trouvée pour ce créneau.</p>',
                   confirmText: 'Voir les logs',
                   cancelText: 'Fermer',
-                  onConfirm: () => Router.navigate(`/logs?hour=${hour}`),
+                  onConfirm: () => Router.navigate(historyURL(`hour=${hour}`)),
                 });
               } catch (err) {
                 Toast.error('Erreur lors du chargement des détails');
@@ -2833,8 +2895,8 @@
                 <div class="chart-card">
                   <div class="card-header">
                     <div class="card-title-group">
-                      <div class="card-title">Moyenne horaire des lectures</div>
-                      <div class="card-subtitle">Volume moyen de flux démarrés par heure de la journée</div>
+                      <div class="card-title">Lectures par heure</div>
+                      <div class="card-subtitle">Nombre de lectures démarrées par heure (UTC)</div>
                     </div>
                   </div>
                   <div class="chart-wrap" style="height:280px;">
@@ -2845,8 +2907,8 @@
                 <div class="chart-card">
                   <div class="card-header">
                     <div class="card-title-group">
-                      <div class="card-title">Moyenne horaire de la durée</div>
-                      <div class="card-subtitle">Temps moyen visionné par heure de la journée</div>
+                      <div class="card-title">Durée par heure</div>
+                      <div class="card-subtitle">Temps total visionné par heure (UTC)</div>
                     </div>
                   </div>
                   <div class="chart-wrap" style="height:280px;">
@@ -2859,8 +2921,8 @@
               <div class="card">
                 <div class="card-header">
                   <div class="card-title-group">
-                    <div class="card-title">Matrice d'affluence horaire (7j × 24h)</div>
-                    <div class="card-subtitle">Intensité moyenne de fréquentation selon le jour et l'heure (cliquez pour filtrer)</div>
+                    <div class="card-title">Matrice d'affluence horaire (7j × 24h, UTC)</div>
+                    <div class="card-subtitle">Fréquentation selon le jour et l'heure (UTC) (cliquez pour filtrer)</div>
                   </div>
                 </div>
                 <div class="attendance-heatmap-container" style="padding:1rem;">
@@ -2878,7 +2940,7 @@
                           ${Array.from({ length: 24 }, (_, h) => {
                             const count = cellMap.get(`${fd.dow}-${h}`) || 0;
                             const bg = getHeatmapColor(count);
-                            return `<td class="attendance-cell" style="background:${bg};" title="${fd.name} à ${h}h : ${count} session(s)" onclick="window.openAttendanceDrilldown(${fd.dow}, ${h}, '${fd.name}', ${count})"></td>`;
+                            return `<td class="attendance-cell" style="background:${bg};" title="${fd.name} à ${h}h : ${count} session(s)" tabindex="0" role="button" data-attendance-day="${fd.dow}" data-attendance-hour="${h}" data-attendance-name="${Utils.escapeHtml(fd.name)}" data-attendance-count="${count}"></td>`;
                           }).join('')}
                         </tr>
                       `).join('')}
@@ -2937,7 +2999,7 @@
               </div>
 
               <!-- Row 6: Worst Completion & Audio & Subtitles -->
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.25rem;">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap:1.25rem;">
                 <div class="card">
                   <div class="card-header">
                     <div class="card-title-group">
@@ -3038,7 +3100,7 @@
             if (hourlyData.length > 0) {
               const labels = hourlyData.map(h => h.time);
               const data = hourlyData.map(h => Number(h.plays || 0));
-              ChartHelper.renderBar('chart-plays-hourly-avg', labels, data, { label: 'Lectures moyennes', backgroundColors: '#eab308' });
+              ChartHelper.renderBar('chart-plays-hourly-avg', labels, data, { label: 'Lectures', backgroundColors: '#eab308' });
             } else {
               ChartHelper.showEmpty('chart-plays-hourly-avg', 'Aucune donnée horaire');
             }
@@ -3047,7 +3109,7 @@
             if (hourlyData.length > 0) {
               const labels = hourlyData.map(h => h.time);
               const data = hourlyData.map(h => Number(h.duration || 0));
-              ChartHelper.renderArea('chart-duration-hourly-avg', labels, data, { label: 'Durée moyenne (h)', color: '#22c55e', isHours: true });
+              ChartHelper.renderArea('chart-duration-hourly-avg', labels, data, { label: 'Durée totale (h)', color: '#22c55e', isHours: true });
             } else {
               ChartHelper.showEmpty('chart-duration-hourly-avg', 'Aucune donnée horaire');
             }
@@ -3116,7 +3178,7 @@
 
             deepContainer.innerHTML = `
               <!-- Categorized Top Media Cards (4 cards) -->
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap:1rem; margin-bottom:1.25rem;">
                 ${renderMediaCategoryCard('Top Films', movies, 'Aucun film regardé')}
                 ${renderMediaCategoryCard('Top Séries', series, 'Aucune série regardée')}
                 ${renderMediaCategoryCard('Top Musique', albums, 'Aucun album écouté')}
@@ -3133,7 +3195,7 @@
                     </div>
                   </div>
                   <div style="padding:1rem;">
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap:1rem;">
                       ${deep.topGenres.map((g, i) => {
                         const maxP = deep.topGenres[0]?.plays || 1;
                         const pct = Math.round((g.plays / maxP) * 100);
@@ -3227,7 +3289,7 @@
                     <div class="card-subtitle">Figures clés les plus regardées sur votre serveur</div>
                   </div>
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; padding:1rem;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap:1rem; padding:1rem;">
                   <div class="app-surface-soft p-4 rounded-lg">
                     <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">Top Acteurs</h4>
                     <div class="ranking-list">
@@ -3302,23 +3364,28 @@
             }
           }
         } catch (e) {
-          console.error('[GranularAndDeep] Error loading analytics:', e);
+          if (!pageSignal.aborted && requestNumber === analyticsRequest) {
+            document.getElementById('dash-granular-container').innerHTML = `<div class="empty-state">${Utils.escapeHtml(e.message)}</div>`;
+            Toast.error(e.message);
+          }
         }
       };
 
       // 13. Load Tab 3: Network Analysis & Coupables Table
       const loadNetworkTab = async () => {
+        const requestNumber = ++networkRequest;
         try {
           const params = new URLSearchParams();
-          params.set('timeRange', currentTimeRange);
+          appendDateFilters(params);
           if (currentMediaType) params.set('type', currentMediaType);
           if (currentServerId) params.set('servers', currentServerId);
 
           const [net, geo] = await Promise.all([
-            API.getJSON(`/api/stats/network?${params.toString()}`).catch(() => ({})),
-            API.getJSON('/api/geo-stats').catch(() => ({})),
+            API.getJSON(`/api/stats/network?${params.toString()}`),
+            API.getJSON('/api/geo-stats'),
           ]);
 
+          if (pageSignal.aborted || requestNumber !== networkRequest) return;
           const container = document.getElementById('dash-network-container');
           if (!container) return;
 
@@ -3371,7 +3438,7 @@
                 <div class="card-header">
                   <div class="card-title-group">
                     <div class="card-title">DirectPlay vs Transcode par heure</div>
-                    <div class="card-subtitle">Répartition temporelle des méthodes de flux</div>
+                    <div class="card-subtitle">Répartition temporelle des méthodes de flux (UTC)</div>
                   </div>
                 </div>
                 <div class="chart-wrap" style="height:280px;">
@@ -3446,7 +3513,7 @@
               <div class="card-header">
                 <div class="card-title-group">
                   <div class="card-title">🌍 Origine géographique des connexions</div>
-                  <div class="card-subtitle">Localisation des adresses IP clientes enregistrées</div>
+                  <div class="card-subtitle">Localisation des adresses IP clientes enregistrées, toutes périodes et tous serveurs</div>
                 </div>
               </div>
               <div style="padding:1rem;">
@@ -3455,7 +3522,7 @@
                     <div class="ranking-item">
                       <span class="ranking-badge">🌍</span>
                       <span class="ranking-name">${Utils.escapeHtml(loc.city || 'Inconnu')}, ${Utils.escapeHtml(loc.country || '')}</span>
-                      <span class="ranking-value">${loc.count || 0} sessions</span>
+                      <span class="ranking-value">${loc.sessions || 0} sessions</span>
                     </div>
                   `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée géographique enregistrée.</div>'}
                 </div>
@@ -3488,7 +3555,11 @@
             ChartHelper.showEmpty('chart-net-client-transcode', 'Aucun transcodage client');
           }
         } catch (e) {
-          console.error('[NetworkTab] Error loading network analytics:', e);
+          if (!pageSignal.aborted && requestNumber === networkRequest) {
+            const container = document.getElementById('dash-network-container');
+            if (container) container.innerHTML = `<div class="empty-state">${Utils.escapeHtml(e.message)}</div>`;
+            Toast.error(e.message);
+          }
         }
       };
 
@@ -3513,15 +3584,44 @@
         });
       });
 
+      const refreshFilteredDashboard = () => {
+        const params = new URLSearchParams();
+        appendDateFilters(params);
+        if (currentMediaType) params.set('type', currentMediaType);
+        if (currentServerId) params.set('servers', currentServerId);
+        window.history.replaceState({}, '', window.location.pathname + '?' + params.toString());
+        loadAllDashboard();
+        if (activeTab === 'analytics') loadGranularAndDeep();
+        if (activeTab === 'network') loadNetworkTab();
+      };
       // 15. Time range pills click handlers
       document.querySelectorAll('#dash-time-range .time-pill-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+          if (btn.dataset.range === 'custom') {
+            Modal.showAction({
+              title: I18n.t('timeRange.custom') || 'Dates personnalisées',
+              bodyHtml: `<div class="form-group"><label for="dash-custom-from">${I18n.t('common.from') || 'Du'}</label><input id="dash-custom-from" class="form-input" type="date" value="${Utils.escapeHtml(customFrom)}"></div><div class="form-group"><label for="dash-custom-to">${I18n.t('common.to') || 'Au'}</label><input id="dash-custom-to" class="form-input" type="date" value="${Utils.escapeHtml(customTo)}"></div>`,
+              confirmText: I18n.t('common.apply') || 'Appliquer',
+              onConfirm: () => {
+                const from = document.getElementById('dash-custom-from').value;
+                const to = document.getElementById('dash-custom-to').value;
+                if (!from || !to || from > to) {
+                  Toast.error('Choisissez une date de début et une date de fin dans l’ordre.');
+                  return false;
+                }
+                customFrom = from;
+                customTo = to;
+                currentTimeRange = 'custom';
+                document.querySelectorAll('#dash-time-range .time-pill-btn').forEach(b => b.classList.toggle('active', b === btn));
+                refreshFilteredDashboard();
+              },
+            });
+            return;
+          }
           document.querySelectorAll('#dash-time-range .time-pill-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           currentTimeRange = btn.getAttribute('data-range') || '7d';
-          loadAllDashboard();
-          if (activeTab === 'analytics') loadGranularAndDeep();
-          if (activeTab === 'network') loadNetworkTab();
+          refreshFilteredDashboard();
         });
       });
 
@@ -3531,9 +3631,7 @@
           document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           currentMediaType = btn.getAttribute('data-type') || '';
-          loadAllDashboard();
-          if (activeTab === 'analytics') loadGranularAndDeep();
-          if (activeTab === 'network') loadNetworkTab();
+          refreshFilteredDashboard();
         });
       });
 
@@ -3544,13 +3642,14 @@
           loadSystemHealth();
           loadHardware();
           refreshLiveStreams();
-          loadAllDashboard();
-          if (activeTab === 'analytics') loadGranularAndDeep();
-          if (activeTab === 'network') loadNetworkTab();
+          refreshFilteredDashboard();
           Toast.info('Données rafraîchies');
         });
       }
 
+      document.querySelectorAll('#dash-time-range .time-pill-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.range === currentTimeRange));
+      document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.type === currentMediaType));
+      document.querySelectorAll('#dash-server-filter-container .header-filter-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.serverId === currentServerId));
       // Initial loaders
       await Promise.all([
         loadSystemHealth(),
@@ -3559,20 +3658,10 @@
         loadAllDashboard(),
       ]);
 
-      // Polling for live streams & hardware
-      const hwInterval = setInterval(loadHardware, 10000);
-      const healthInterval = setInterval(loadSystemHealth, 30000);
-      const streamsInterval = setInterval(refreshLiveStreams, 4000);
-
-      // Cleanup on page navigate
-      const originalNavigate = Router.navigate;
-      const cleanup = () => {
-        clearInterval(hwInterval);
-        clearInterval(healthInterval);
-        clearInterval(streamsInterval);
-        window.removeEventListener('popstate', cleanup);
-      };
-      window.addEventListener('popstate', cleanup, { once: true });
+      if (pageSignal.aborted) return;
+      hwInterval = setInterval(loadHardware, 10000);
+      healthInterval = setInterval(loadSystemHealth, 30000);
+      streamsInterval = setInterval(refreshLiveStreams, 5000);
     },
 
     // 2. Login Page
@@ -3599,7 +3688,7 @@
       const isManual = urlParams.get('manual') === '1' || urlParams.get('manual') === 'true';
       const isLocalParam = urlParams.get('local') === '1' || urlParams.get('local') === 'true';
 
-      let isLocalLogin = isLocalParam;
+      let isLocalLogin = isLocalParam || !oidcEnabled;
       let isAutoRedirecting = false;
       let autoRedirectAttempted = false;
       let error = null;
@@ -3622,7 +3711,7 @@
       }
 
       const render = () => {
-        const isSsoView = !isLocalLogin;
+        const isSsoView = oidcEnabled && !isLocalLogin;
         const headerClass = isSsoView ? 'auth-card-header auth-header-sso' : 'auth-card-header';
         const showSubtitle = false;
 
@@ -3687,7 +3776,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3M17.5 5.5l3 3"/></svg>
                     <span>${I18n.t('login.localAdminTitle') || 'Connexion locale (Admin)'}</span>
                   </span>
-                  <button type="button" id="btn-back-sso" class="auth-back-sso-btn">
+                  <button type="button" id="btn-back-sso" class="auth-back-sso-btn" ${!oidcEnabled ? 'hidden' : ''}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7M5 12h14"/></svg>
                     <span>${I18n.t('login.backToSso') || 'Retour au SSO'}</span>
                   </button>
@@ -3878,7 +3967,7 @@
               await Auth.login(u, p, rem);
               Toast.success(I18n.t('login.loginSuccess') || 'Connecté avec succès !');
               document.body.classList.remove('is-auth-page');
-              Router.navigate('/');
+              Router.navigate('/', true, true);
             } catch (err) {
               error = err.message || (I18n.t('login.invalidCredentials') || 'Identifiants incorrects.');
               render();
@@ -4610,7 +4699,7 @@
 
     // 10. Media Catalog & Overview
     async media(options = {}) {
-      let { type = '', sort = 'title', artist = '', q = '' } = typeof options === 'string' ? { type: options } : (options || {});
+      let { type = '', sort = 'title', artist = '', q = new URLSearchParams(window.location.search).get('q') || '' } = typeof options === 'string' ? { type: options } : (options || {});
       const activeNav = sort === 'popular' ? 'popular' : 'media';
       const main = document.getElementById('app-main');
       main.innerHTML = `
@@ -4619,7 +4708,7 @@
           <div>
             <h1 class="page-title">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
-              ${activeNav === 'popular' ? (I18n.t('media.popularTab') || 'Top Contenus') : (I18n.t('nav.media') || 'Catalogue Multimédia')}
+              ${activeNav === 'popular' ? (I18n.t('media.popularTab') || 'Top Contenus') : (sort === 'added' ? (I18n.t('nav.recentlyAdded') || 'Ajouts récents') : (I18n.t('nav.media') || 'Catalogue Multimédia'))}
             </h1>
             <p class="page-subtitle">Films, séries, albums et livres synchronisés depuis vos serveurs.</p>
           </div>
@@ -4647,6 +4736,7 @@
           <select class="form-select" id="media-sort-select" style="max-width: 200px;">
             <option value="title" ${sort === 'title' ? 'selected' : ''}>Titre (A-Z)</option>
             <option value="popular" ${sort === 'popular' ? 'selected' : ''}>Les plus vus</option>
+            <option value="added" ${sort === 'added' ? 'selected' : ''}>Ajouts récents</option>
             <option value="recent" ${sort === 'recent' ? 'selected' : ''}>Récemment lus</option>
             <option value="duration" ${sort === 'duration' ? 'selected' : ''}>Plus longs</option>
           </select>
@@ -4897,7 +4987,7 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;" id="collections-grid">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 1.25rem;" id="collections-grid">
           <div class="card skeleton" style="height: 180px;"></div>
           <div class="card skeleton" style="height: 180px;"></div>
           <div class="card skeleton" style="height: 180px;"></div>
@@ -4957,7 +5047,7 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem;">
           <div class="card">
             <div class="card-header">
               <div class="card-title-group">
@@ -5025,7 +5115,7 @@
     },
 
     // 14. Logs
-    async logs() {
+    async systemLogs() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
         <div class="page-header">
@@ -5202,7 +5292,7 @@
                     <span class="stat-card-label">Serveurs connectés</span>
                     <div class="stat-icon stat-icon-cyan">🖥️</div>
                   </div>
-                  <div class="stat-card-value">${Array.isArray(servers) ? servers.length : 0}</div>
+                  <div class="stat-card-value">${(servers.servers || []).length}</div>
                   <div class="stat-card-footer"><a href="/settings/jellyfin" data-link>Gérer les instances →</a></div>
                 </div>
                 <div class="stat-card">
@@ -5236,7 +5326,7 @@
       // Subpage 2: Jellyfin Servers
       else if (subpage === 'jellyfin') {
         try {
-          const servers = await API.getJSON('/api/settings/jellyfin-servers');
+          const { servers = [] } = await API.getJSON('/api/settings/jellyfin-servers');
           container.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
               <h2 style="font-size: 1.15rem; font-weight: 700;">Serveurs Jellyfin Connectés</h2>
@@ -5363,7 +5453,7 @@
                 <div class="card-header">
                   <div class="card-title">📺 Seuils de Résolution (Largeur × Hauteur max)</div>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 1rem;">
                   <div class="form-group">
                     <label class="form-label">480p SD (maxW / maxH)</label>
                     <div style="display:flex; gap:0.4rem;">
@@ -5400,7 +5490,7 @@
                 <div class="card-header">
                   <div class="card-title">⏱️ Règles de Complétion de Lecture (%)</div>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 1rem;">
                   <div class="form-group">
                     <label class="form-label">Abandonné si inférieur à (%)</label>
                     <input type="number" min="1" max="100" class="form-input" id="comp-abandoned" value="${defRules.abandonedThreshold || 10}">
@@ -5549,13 +5639,13 @@
                 ${(autoList.backups || []).map((b) => `
                   <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background: var(--surface-soft); border-radius: var(--radius-md); flex-wrap: wrap; gap: 0.5rem;">
                     <div>
-                      <b>${Utils.escapeHtml(b.filename || b.id)}</b>
-                      <div style="font-size: 0.78rem; color: var(--muted-foreground);">${Utils.formatDate(b.createdAt)} • ${(b.sizeBytes / 1024).toFixed(1)} KB</div>
+                      <b>${Utils.escapeHtml(b.name)}</b>
+                      <div style="font-size: 0.78rem; color: var(--muted-foreground);">${Utils.formatDate(b.date)} • ${(b.size / 1024).toFixed(1)} KB</div>
                     </div>
                     <div style="display: flex; gap: 0.4rem;">
-                      <a href="/api/backup/auto/download?id=${encodeURIComponent(b.id)}" class="btn btn-secondary btn-sm" download>Télécharger</a>
-                      <button class="btn btn-outline btn-sm btn-restore-backup" data-id="${b.id}">Restaurer</button>
-                      <button class="btn btn-danger btn-sm btn-del-backup" data-id="${b.id}">Supprimer</button>
+                      <a href="/api/backup/auto/download?fileName=${encodeURIComponent(b.name)}" class="btn btn-secondary btn-sm" download>Télécharger</a>
+                      <button class="btn btn-outline btn-sm btn-restore-backup" data-id="${Utils.escapeHtml(b.name)}">Restaurer</button>
+                      <button class="btn btn-danger btn-sm btn-del-backup" data-id="${Utils.escapeHtml(b.name)}">Supprimer</button>
                     </div>
                   </div>
                 `).join('')}
@@ -5596,7 +5686,7 @@
                 confirmText: 'Restaurer',
                 onConfirm: async () => {
                   try {
-                    await API.postJSON('/api/backup/auto/restore', { id });
+                    await API.postJSON('/api/backup/auto/restore', { fileName: id });
                     Toast.success('Restauration terminée avec succès.');
                   } catch (e) {
                     Toast.error(e.message);
@@ -5610,7 +5700,7 @@
             btn.addEventListener('click', async () => {
               const id = btn.getAttribute('data-id');
               try {
-                await API.postJSON('/api/backup/auto/delete', { id });
+                await API.postJSON('/api/backup/auto/delete', { fileName: id });
                 Toast.success('Sauvegarde supprimée.');
                 Pages.settings('dataBackups');
               } catch (e) {
@@ -5815,7 +5905,7 @@
                   <div class="card-title">🛡️ Seuils de Sécurité Intelligents</div>
                 </div>
                 <form id="form-smart-thresholds" style="display:flex; flex-direction:column; gap:1rem;">
-                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap:1rem;">
                     <div class="form-group">
                       <label class="form-label">Tentatives d’accès IP max</label>
                       <input type="number" min="1" class="form-input" id="sec-ip-threshold" value="${thresholds.ipAttemptThreshold || 50}">
@@ -5839,7 +5929,7 @@
                   <div class="card-title">⚡ Paramètres de Télémétrie & Précision</div>
                 </div>
                 <form id="form-telemetry-settings" style="display:flex; flex-direction:column; gap:1rem;">
-                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap:1rem;">
                     <div class="form-group">
                       <label class="form-label">Intervalle en lecture (secondes)</label>
                       <input type="number" min="1" class="form-input" id="telem-playing" value="${telem.playingIntervalSeconds || 5}">
@@ -6569,8 +6659,9 @@
     init() {
       // Global click handler for client routing: <a href="..." data-link>
       document.body.addEventListener('click', (e) => {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         const link = e.target.closest('a[data-link]');
-        if (link && link.href && link.target !== '_blank') {
+        if (link && link.href && link.target !== '_blank' && !link.hasAttribute('download')) {
           const url = new URL(link.href);
           if (url.origin === window.location.origin) {
             e.preventDefault();
@@ -6578,6 +6669,36 @@
           }
         }
       });
+
+      // Delegate dynamic actions without inline scripts or code evaluation.
+      document.body.addEventListener('click', e => {
+        const button = e.target.closest('[data-stream-action], [data-canned-message], [data-message-timeout], [data-dismiss], [data-attendance-day]');
+        if (!button) return;
+        const data = button.dataset;
+        if (data.streamAction && State.user?.isAdmin) {
+          if (data.streamAction === 'message') window.openSendMessageModal?.(data.sessionId, data.userName, data.mediaTitle);
+          if (data.streamAction === 'kill') window.confirmKillStream?.(data.sessionId, data.mediaTitle);
+        }
+        if (data.cannedMessage !== undefined) {
+          const input = document.getElementById('send-msg-text');
+          if (input) input.value = data.cannedMessage;
+        }
+        if (data.messageTimeout) window._setMsgTimeout?.(Number(data.messageTimeout));
+        if (data.dismiss) {
+          const target = document.getElementById(data.dismiss);
+          if (target) target.style.display = 'none';
+        }
+        if (data.attendanceDay !== undefined) window.openAttendanceDrilldown?.(Number(data.attendanceDay), Number(data.attendanceHour), data.attendanceName, Number(data.attendanceCount));
+      });
+      document.body.addEventListener('keydown', e => {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-attendance-day]')) {
+          e.preventDefault();
+          e.target.click();
+        }
+      });
+      document.body.addEventListener('error', e => {
+        if (e.target.matches?.('img[data-hide-on-error]')) e.target.style.display = 'none';
+      }, true);
 
       window.addEventListener('popstate', () => {
         this.renderCurrent();
@@ -6587,7 +6708,7 @@
     },
 
     navigate(path, replace = false, force = false) {
-      if (!force && window.location.pathname === path) return;
+      if (!force && window.location.pathname + window.location.search === path) return;
       if (replace) {
         window.history.replaceState({}, '', path);
       } else {
@@ -6597,6 +6718,15 @@
     },
 
     renderCurrent() {
+      State.pageController?.abort();
+      State.pageCleanups.splice(0).forEach(cleanup => cleanup());
+      StreamsPoller.stop();
+      Object.keys(ChartHelper.instances).forEach(id => ChartHelper.destroy(id));
+      Modal.closeAction();
+      State.pageController = new AbortController();
+      // Pending pages keep a detached container and cannot replace the next page.
+      const oldMain = document.getElementById('app-main');
+      if (oldMain) oldMain.replaceWith(oldMain.cloneNode(false));
       const path = window.location.pathname || '/';
       State.currentPath = path;
 
@@ -6672,12 +6802,19 @@
 
       // Auth protection guard
       if (!State.user && path !== '/login' && path !== '/setup') {
-        Pages.login();
+        this.navigate('/login', true);
         return;
       }
 
       if (path !== '/login') {
         document.body.classList.remove('is-auth-page');
+      }
+
+      if (State.user && !State.user.isAdmin && (path === '/' || path === '/dashboard' || path === '/users' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
+        const uid = State.user.jellyfinUserId || State.user.id;
+        if (uid) this.navigate('/users/' + encodeURIComponent(uid), true);
+        else document.getElementById('app-main').innerHTML = '<div class="empty-state">Accès réservé à l’administration.</div>';
+        return;
       }
 
       // Route Dispatcher
@@ -6690,7 +6827,7 @@
       } else if (path === '/about') {
         Pages.about();
       } else if (path === '/recent') {
-        Pages.recent();
+        Pages.media({ sort: 'added' });
       } else if (path === '/newsletter') {
         Pages.newsletter();
       } else if (path === '/users') {
@@ -6716,7 +6853,7 @@
         const id = path.split('/')[2];
         Pages.mediaDetail(id);
       } else if (path === '/logs') {
-        Pages.logs();
+        window.JellyTrackHistory.mount({ main: document.getElementById('app-main'), api: API, utils: Utils, i18n: I18n, signal: State.pageController.signal, user: State.user, openSystemLogs: () => Pages.systemLogs() });
       } else if (path.startsWith('/settings')) {
         const rest = path.slice('/settings'.length).replace(/^\//, '');
         const sub = rest || 'overview';

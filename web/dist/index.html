@@ -114,7 +114,7 @@
                 </ul>
               </li>
 
-              <li class="nav-item" data-route="/users">
+              <li class="nav-item nav-admin-only" data-route="/users">
                 <a href="/users" data-link title="Utilisateurs">
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                   <span data-i18n="nav.users">Utilisateurs</span>
@@ -365,6 +365,7 @@
   <div id="toast-container" aria-live="polite"></div>
 
   <!-- Main Vanilla JS Client Application -->
+  <script src="/assets/history.js"></script>
   <script src="/assets/app.js"></script>
 </body>
 </html>
