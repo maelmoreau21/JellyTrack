@@ -35,3 +35,8 @@ data/
 
 
 !/.claude/rules/instructions.md
+
+# Authentication cookie jars
+cookies*.txt
+*.cookie
+*.cookies

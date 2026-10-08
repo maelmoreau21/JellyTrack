@@ -15,3 +15,14 @@ venv
 Dockerfile*
 .env*
 !.env.example
+cookies*.txt
+*.cookie
+*.cookies
+data
+logs
+*.db
+*.db-shm
+*.db-wal
+*.sqlite*
+*.exe
+*.exe~
