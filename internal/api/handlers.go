@@ -23,6 +23,7 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/jellyfin"
 	"github.com/maelmoreau21/jellytrack/internal/security"
+	"github.com/maelmoreau21/jellytrack/internal/stats"
 )
 
 type Handler struct {
@@ -94,6 +95,8 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"POST /api/admin/plugin/health":                  h.adminPluginHealth,
 		"POST /api/sync":                                 h.sync,
 		"GET /api/stats/deep":                            h.deepStats,
+		"GET /api/stats/granular":                        h.granularStats,
+		"GET /api/stats/network":                         h.networkStats,
 		"GET /api/geo-stats":                             h.geoStats,
 		"GET /api/heatmap-detail":                        h.heatmapDetail,
 		"GET /api/streams":                               h.streams,
@@ -149,114 +152,132 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 // ---------------------- Dashboard & Analytics ----------------------
 
 func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
-	days := boundedInt(r.URL.Query().Get("days"), 30, 1, 365)
-	since := time.Now().UTC().AddDate(0, 0, -days).Format(time.RFC3339Nano)
-	excluded := excludedLibrariesClause(h.driver, "m")
-	var views, duration, users, media int64
+	q := r.URL.Query()
+	days := boundedInt(q.Get("days"), 7, 1, 365)
+	timeRange := q.Get("timeRange")
+	if timeRange == "" {
+		timeRange = q.Get("range")
+	}
+	mediaType := q.Get("type")
+	from := q.Get("from")
+	to := q.Get("to")
+	serversParam := q.Get("servers")
+	var serverIDs []string
+	if serversParam != "" {
+		for _, s := range strings.Split(serversParam, ",") {
+			if trimmed := strings.TrimSpace(s); trimmed != "" {
+				serverIDs = append(serverIDs, trimmed)
+			}
+		}
+	}
 
-	if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM(p."durationWatched"),0) FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND `+excluded, h.driver), since).Scan(&views, &duration); err != nil {
-		jsonError(w, 500, "Impossible de charger les statistiques.")
-		return
+	filter := stats.DashboardFilter{
+		TimeRange: timeRange,
+		Days:      days,
+		From:      from,
+		To:        to,
+		MediaType: mediaType,
+		ServerIDs: serverIDs,
 	}
-	if err := h.db.QueryRowContext(r.Context(), `SELECT COUNT(*) FROM "User" WHERE "isActive"=1`).Scan(&users); err != nil {
-		jsonError(w, 500, "Impossible de charger les statistiques.")
-		return
-	}
-	if err := h.db.QueryRowContext(r.Context(), `SELECT COUNT(*) FROM "Media"`).Scan(&media); err != nil {
-		jsonError(w, 500, "Impossible de charger les statistiques.")
-		return
-	}
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT substr(CAST(p."startedAt" AS TEXT),1,10) AS "day",COUNT(*) FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND `+excluded+` GROUP BY "day" ORDER BY "day"`, h.driver), since)
+
+	res, err := stats.GetFullDashboard(r.Context(), h.db, h.driver, filter)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les statistiques.")
 		return
 	}
-	defer rows.Close()
-	activity := []map[string]any{}
-	for rows.Next() {
-		var day string
-		var count int64
-		if rows.Scan(&day, &count) != nil {
-			jsonError(w, 500, "Erreur de lecture.")
-			return
-		}
-		activity = append(activity, map[string]any{"day": day, "views": count})
-	}
 
-	todaySince := time.Now().UTC().Truncate(24 * time.Hour).Format(time.RFC3339Nano)
-	var todayPlays, todayDuration, todayActiveUsers int64
-	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM(p."durationWatched"),0),COUNT(DISTINCT p."userId") FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND `+excluded, h.driver), todaySince).Scan(&todayPlays, &todayDuration, &todayActiveUsers)
-
-	todayHours := float64(todayDuration) / 3600000.0
-	if todayHours < 0.1 && todayDuration > 0 {
-		todayHours = 0.1
-	}
-
-	jsonResponse(w, 200, map[string]any{
-		"periodDays":       days,
-		"views":            views,
-		"durationMs":       duration,
-		"users":            users,
-		"media":            media,
-		"activity":         activity,
-		"todayPlays":       todayPlays,
-		"todayHours":       fmt.Sprintf("%.1f", todayHours),
-		"todayActiveUsers": todayActiveUsers,
-	})
+	jsonResponse(w, 200, res)
 }
 
 func (h *Handler) deepStats(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.db.QueryContext(r.Context(), `SELECT "directors","actors","studios" FROM "Media" WHERE "type" IN ('Movie','Series')`)
+	q := r.URL.Query()
+	days := boundedInt(q.Get("days"), 30, 1, 365)
+	timeRange := q.Get("timeRange")
+	mediaType := q.Get("type")
+	serversParam := q.Get("servers")
+	var serverIDs []string
+	if serversParam != "" {
+		for _, s := range strings.Split(serversParam, ",") {
+			if trimmed := strings.TrimSpace(s); trimmed != "" {
+				serverIDs = append(serverIDs, trimmed)
+			}
+		}
+	}
+
+	filter := stats.DashboardFilter{
+		TimeRange: timeRange,
+		Days:      days,
+		MediaType: mediaType,
+		ServerIDs: serverIDs,
+	}
+
+	res, err := stats.GetDetailedDeepInsights(r.Context(), h.db, h.driver, filter)
 	if err != nil {
 		jsonError(w, 500, "Erreur de lecture.")
 		return
 	}
-	defer rows.Close()
 
-	dirMap := make(map[string]int)
-	actMap := make(map[string]int)
-	stuMap := make(map[string]int)
+	jsonResponse(w, 200, res)
+}
 
-	for rows.Next() {
-		var dStr, aStr, sStr string
-		if rows.Scan(&dStr, &aStr, &sStr) == nil {
-			for _, d := range parseStringList(dStr) {
-				dirMap[d]++
-			}
-			for _, a := range parseStringList(aStr) {
-				actMap[a]++
-			}
-			for _, s := range parseStringList(sStr) {
-				stuMap[s]++
+func (h *Handler) granularStats(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	days := boundedInt(q.Get("days"), 30, 1, 365)
+	timeRange := q.Get("timeRange")
+	mediaType := q.Get("type")
+	serversParam := q.Get("servers")
+	var serverIDs []string
+	if serversParam != "" {
+		for _, s := range strings.Split(serversParam, ",") {
+			if trimmed := strings.TrimSpace(s); trimmed != "" {
+				serverIDs = append(serverIDs, trimmed)
 			}
 		}
 	}
 
-	sortLimit := func(m map[string]int) []map[string]any {
-		type pair struct {
-			k string
-			v int
-		}
-		var list []pair
-		for k, v := range m {
-			list = append(list, pair{k, v})
-		}
-		sort.Slice(list, func(i, j int) bool { return list[i].v > list[j].v })
-		if len(list) > 10 {
-			list = list[:10]
-		}
-		res := []map[string]any{}
-		for _, p := range list {
-			res = append(res, map[string]any{"name": p.k, "count": p.v})
-		}
-		return res
+	filter := stats.DashboardFilter{
+		TimeRange: timeRange,
+		Days:      days,
+		MediaType: mediaType,
+		ServerIDs: serverIDs,
 	}
 
-	jsonResponse(w, 200, map[string]any{
-		"topDirectors": sortLimit(dirMap),
-		"topActors":    sortLimit(actMap),
-		"topStudios":   sortLimit(stuMap),
-	})
+	res, err := stats.GetGranularAnalysis(r.Context(), h.db, h.driver, filter)
+	if err != nil {
+		jsonError(w, 500, "Erreur de lecture.")
+		return
+	}
+
+	jsonResponse(w, 200, res)
+}
+
+func (h *Handler) networkStats(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	days := boundedInt(q.Get("days"), 30, 1, 365)
+	timeRange := q.Get("timeRange")
+	serversParam := q.Get("servers")
+	var serverIDs []string
+	if serversParam != "" {
+		for _, s := range strings.Split(serversParam, ",") {
+			if trimmed := strings.TrimSpace(s); trimmed != "" {
+				serverIDs = append(serverIDs, trimmed)
+			}
+		}
+	}
+
+	filter := stats.DashboardFilter{
+		TimeRange: timeRange,
+		Days:      days,
+		ServerIDs: serverIDs,
+	}
+
+	res, err := stats.GetNetworkAnalysis(r.Context(), h.db, h.driver, filter)
+	if err != nil {
+		jsonError(w, 500, "Erreur de lecture.")
+		return
+	}
+
+	jsonResponse(w, 200, res)
 }
 
 func (h *Handler) geoStats(w http.ResponseWriter, r *http.Request) {
@@ -1025,11 +1046,19 @@ func (h *Handler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		SessionID string `json:"sessionId"`
 		Text      string `json:"text"`
+		Message   string `json:"message"`
 		Header    string `json:"header"`
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 8192)
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.SessionID == "" || body.Text == "" {
-		jsonError(w, 400, "sessionId et text requis.")
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, 400, "Corps de requête invalide.")
+		return
+	}
+	if body.Text == "" && body.Message != "" {
+		body.Text = body.Message
+	}
+	if body.SessionID == "" || body.Text == "" {
+		jsonError(w, 400, "sessionId et text (ou message) requis.")
 		return
 	}
 	baseURL := os.Getenv("JELLYFIN_URL")

@@ -374,7 +374,11 @@ func (h *Handler) predictions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pred["trendingMedia"] = trending
-	pred["peakPredictions"] = []any{}
+	peaks, _ := stats.GetPeakPredictions(r.Context(), h.db, h.driver)
+	if peaks == nil {
+		peaks = []stats.PeakPrediction{}
+	}
+	pred["peakPredictions"] = peaks
 
 	jsonResponse(w, 200, pred)
 }

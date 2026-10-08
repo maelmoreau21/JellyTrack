@@ -507,7 +507,7 @@
 
     destroy(id) {
       if (this.instances[id]) {
-        this.instances[id].destroy();
+        try { this.instances[id].destroy(); } catch (e) {}
         delete this.instances[id];
       }
     },
@@ -517,17 +517,33 @@
       return {
         text: isDark ? '#94A3B8' : '#64748B',
         grid: isDark ? 'rgba(148, 163, 184, 0.12)' : 'rgba(15, 23, 42, 0.08)',
+        tooltipBg: isDark ? '#0F172A' : '#FFFFFF',
+        tooltipTitle: isDark ? '#F1F5F9' : '#0F172A',
+        tooltipText: isDark ? '#94A3B8' : '#64748B',
+        tooltipBorder: isDark ? 'rgba(34, 211, 238, 0.3)' : 'rgba(79, 70, 229, 0.25)',
         primary: isDark ? '#22D3EE' : '#4F46E5',
         primaryGlow: isDark ? 'rgba(34, 211, 238, 0.2)' : 'rgba(79, 70, 229, 0.15)',
         secondary: isDark ? '#A855F7' : '#7C3AED',
       };
     },
 
-    renderLine(canvasId, labels, data, label = 'Lectures') {
+    formatCompactHours(val) {
+      const v = Number(val);
+      if (!Number.isFinite(v) || v === 0) return '0h';
+      const abs = Math.abs(v);
+      const sign = v < 0 ? '-' : '';
+      if (abs < 1 / 60) return `${sign}${Math.max(1, Math.round(abs * 3600))}s`;
+      if (abs < 1) return `${sign}${Math.round(abs * 60)}m`;
+      if (abs < 10) return `${sign}${abs.toFixed(1).replace(/\.0$/, '')}h`;
+      return `${sign}${Math.round(abs)}h`;
+    },
+
+    renderLine(canvasId, labels, data, label = 'Lectures', color = null) {
       this.destroy(canvasId);
       const ctx = document.getElementById(canvasId);
       if (!ctx || !window.Chart) return;
       const tc = this.getThemeColors();
+      const col = color || tc.primary;
 
       this.instances[canvasId] = new Chart(ctx, {
         type: 'line',
@@ -536,8 +552,8 @@
           datasets: [{
             label,
             data,
-            borderColor: tc.primary,
-            backgroundColor: tc.primaryGlow,
+            borderColor: col,
+            backgroundColor: col + '22',
             fill: true,
             tension: 0.35,
             borderWidth: 2.5,
@@ -551,10 +567,10 @@
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: document.documentElement.classList.contains('dark') ? '#0F172A' : '#FFFFFF',
-              titleColor: document.documentElement.classList.contains('dark') ? '#F1F5F9' : '#0F172A',
-              bodyColor: document.documentElement.classList.contains('dark') ? '#94A3B8' : '#64748B',
-              borderColor: tc.primary,
+              backgroundColor: tc.tooltipBg,
+              titleColor: tc.tooltipTitle,
+              bodyColor: tc.tooltipText,
+              borderColor: tc.tooltipBorder,
               borderWidth: 1,
               padding: 10,
               displayColors: false,
@@ -575,7 +591,137 @@
       });
     },
 
-    renderBar(canvasId, labels, data, label = 'Sessions') {
+    renderMultiLine(canvasId, labels, datasets, options = {}) {
+      this.destroy(canvasId);
+      const ctx = document.getElementById(canvasId);
+      if (!ctx || !window.Chart) return;
+      const tc = this.getThemeColors();
+
+      const formattedDatasets = datasets.map(d => ({
+        label: d.label,
+        data: d.data,
+        borderColor: d.color,
+        backgroundColor: d.fill ? (d.color + '22') : 'transparent',
+        fill: !!d.fill,
+        tension: 0.35,
+        borderWidth: 2.2,
+        pointRadius: 2,
+        pointHoverRadius: 5,
+        yAxisID: d.yAxisID || 'y',
+      }));
+
+      this.instances[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: formattedDatasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              display: options.showLegend !== false,
+              position: 'top',
+              align: 'end',
+              labels: {
+                color: tc.text,
+                font: { size: 11, weight: '500' },
+                boxWidth: 12,
+                boxHeight: 12,
+                usePointStyle: true,
+              },
+            },
+            tooltip: {
+              backgroundColor: tc.tooltipBg,
+              titleColor: tc.tooltipTitle,
+              bodyColor: tc.tooltipText,
+              borderColor: tc.tooltipBorder,
+              borderWidth: 1,
+              padding: 10,
+              callbacks: options.tooltipCallbacks || (options.isHours ? {
+                label: (ctx) => `${ctx.dataset.label}: ${ChartHelper.formatCompactHours(ctx.parsed.y)}`
+              } : {}),
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: tc.grid },
+              ticks: { color: tc.text, font: { size: 10 }, maxRotation: 0, autoSkip: true },
+            },
+            y: {
+              grid: { color: tc.grid },
+              ticks: {
+                color: tc.text,
+                font: { size: 10 },
+                callback: options.isHours ? (v) => ChartHelper.formatCompactHours(v) : (v) => v,
+              },
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    },
+
+    renderBar(canvasId, labels, data, options = {}) {
+      this.destroy(canvasId);
+      const ctx = document.getElementById(canvasId);
+      if (!ctx || !window.Chart) return;
+      const tc = this.getThemeColors();
+
+      const bgColors = options.backgroundColors || tc.primary;
+
+      this.instances[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: options.label || 'Sessions',
+            data,
+            backgroundColor: bgColors,
+            borderRadius: 4,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          onClick: options.onClick ? (evt, elements) => {
+            if (elements && elements.length > 0) {
+              const idx = elements[0].index;
+              options.onClick(idx, labels[idx], data[idx]);
+            }
+          } : undefined,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: tc.tooltipBg,
+              titleColor: tc.tooltipTitle,
+              bodyColor: tc.tooltipText,
+              borderColor: tc.tooltipBorder,
+              borderWidth: 1,
+              padding: 8,
+              callbacks: options.tooltipCallbacks || {},
+            },
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: tc.text, font: { size: 10 } },
+            },
+            y: {
+              grid: { color: tc.grid },
+              ticks: {
+                color: tc.text,
+                font: { size: 10 },
+                precision: 0,
+                callback: options.isHours ? (v) => `${v}h` : (v) => v,
+              },
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    },
+
+    renderHorizontalBar(canvasId, labels, data, options = {}) {
       this.destroy(canvasId);
       const ctx = document.getElementById(canvasId);
       if (!ctx || !window.Chart) return;
@@ -586,35 +732,50 @@
         data: {
           labels,
           datasets: [{
-            label,
+            label: options.label || 'Valeur',
             data,
-            backgroundColor: tc.primary,
+            backgroundColor: options.backgroundColors || tc.primary,
             borderRadius: 4,
           }],
         },
         options: {
+          indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: tc.tooltipBg,
+              titleColor: tc.tooltipTitle,
+              bodyColor: tc.tooltipText,
+              borderColor: tc.tooltipBorder,
+              borderWidth: 1,
+              padding: 8,
+              callbacks: options.tooltipCallbacks || {},
+            },
+          },
           scales: {
             x: {
-              grid: { display: false },
-              ticks: { color: tc.text, font: { size: 10 } },
-            },
-            y: {
               grid: { color: tc.grid },
               ticks: { color: tc.text, font: { size: 10 }, precision: 0 },
               beginAtZero: true,
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: tc.text, font: { size: 11, weight: '600' } },
             },
           },
         },
       });
     },
 
-    renderDoughnut(canvasId, labels, data) {
+    renderDoughnut(canvasId, labels, data, options = {}) {
       this.destroy(canvasId);
       const ctx = document.getElementById(canvasId);
       if (!ctx || !window.Chart) return;
+      const tc = this.getThemeColors();
+
+      const defaultColors = ['#38BDF8', '#22C55E', '#F59E0B', '#A855F7', '#EC4899', '#6366F1'];
 
       this.instances[canvasId] = new Chart(ctx, {
         type: 'doughnut',
@@ -622,22 +783,104 @@
           labels,
           datasets: [{
             data,
-            backgroundColor: ['#22D3EE', '#A855F7', '#EC4899', '#10B981', '#F59E0B'],
+            backgroundColor: options.colors || defaultColors,
             borderWidth: 0,
           }],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: '70%',
+          cutout: options.cutout || '68%',
+          onClick: options.onClick ? (evt, elements) => {
+            if (elements && elements.length > 0) {
+              const idx = elements[0].index;
+              options.onClick(idx, labels[idx], data[idx]);
+            }
+          } : undefined,
           plugins: {
             legend: {
-              position: 'bottom',
+              display: options.showLegend !== false,
+              position: options.legendPosition || 'bottom',
               labels: {
-                color: document.documentElement.classList.contains('dark') ? '#F1F5F9' : '#0F172A',
-                font: { size: 11, weight: '600' },
-                boxWidth: 12,
+                color: tc.text,
+                font: { size: 11, weight: '500' },
+                boxWidth: 10,
+                boxHeight: 10,
+                usePointStyle: true,
               },
+            },
+            tooltip: {
+              backgroundColor: tc.tooltipBg,
+              titleColor: tc.tooltipTitle,
+              bodyColor: tc.tooltipText,
+              borderColor: tc.tooltipBorder,
+              borderWidth: 1,
+              padding: 10,
+              callbacks: options.tooltipCallbacks || {
+                label: (ctx) => {
+                  const val = ctx.parsed;
+                  const total = ctx.dataset.data.reduce((a, b) => a + Number(b || 0), 0);
+                  const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                  return ` ${ctx.label}: ${options.isHours ? ChartHelper.formatCompactHours(val) : val} (${pct}%)`;
+                },
+              },
+            },
+          },
+        },
+      });
+    },
+
+    renderStackedArea(canvasId, labels, datasets, options = {}) {
+      this.destroy(canvasId);
+      const ctx = document.getElementById(canvasId);
+      if (!ctx || !window.Chart) return;
+      const tc = this.getThemeColors();
+
+      this.instances[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: datasets.map(d => ({
+            label: d.label,
+            data: d.data,
+            borderColor: d.color,
+            backgroundColor: d.color + '44',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          })),
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: { color: tc.text, font: { size: 11 }, boxWidth: 10, usePointStyle: true },
+            },
+            tooltip: {
+              backgroundColor: tc.tooltipBg,
+              titleColor: tc.tooltipTitle,
+              bodyColor: tc.tooltipText,
+              borderColor: tc.tooltipBorder,
+              borderWidth: 1,
+              padding: 8,
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: tc.grid },
+              ticks: { color: tc.text, font: { size: 10 } },
+            },
+            y: {
+              stacked: true,
+              grid: { color: tc.grid },
+              ticks: { color: tc.text, font: { size: 10 }, precision: 0 },
+              beginAtZero: true,
             },
           },
         },
@@ -744,6 +987,30 @@
       document.body.classList.remove('is-auth-page');
       const main = document.getElementById('app-main');
 
+      // Default state
+      let currentTimeRange = '7d';
+      let currentMediaType = '';
+      let currentServerId = '';
+      let isDraggableEditing = false;
+      let activeTab = 'overview';
+      let liveStreamsData = [];
+      let liveBandwidth = 0;
+      let forceCardsView = false;
+      let selectedHeatmapYear = new Date().getFullYear();
+      let selectedHeatmapLib = '_total';
+      let selectedMonthlyYear = new Date().getFullYear();
+
+      // Read saved dashboard order (0..9)
+      const DEFAULT_ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+      let dashboardOrder = [...DEFAULT_ORDER];
+      try {
+        const savedOrder = JSON.parse(localStorage.getItem('JellyTrack-dashboard-order') || 'null');
+        if (Array.isArray(savedOrder) && savedOrder.length === DEFAULT_ORDER.length) {
+          dashboardOrder = savedOrder;
+        }
+      } catch (e) {}
+
+      // Render base dashboard skeleton
       main.innerHTML = `
         <div class="page-header">
           <div class="page-header-left">
@@ -755,19 +1022,34 @@
               <button class="header-filter-btn" data-type="Audio">${I18n.t('media.music') || 'Musique'}</button>
               <button class="header-filter-btn" data-type="Book">${I18n.t('media.books') || 'Livres'}</button>
             </div>
+            <div id="dash-server-filter-container" style="display:none; margin-left:0.5rem;">
+              <select id="dash-server-filter" class="form-input text-xs" style="padding:0.3rem 0.6rem; border-radius:var(--radius-sm);">
+                <option value="">${I18n.t('dashboard.allServers') || 'Tous les serveurs'}</option>
+              </select>
+            </div>
           </div>
           <div class="page-header-right">
             <div class="time-pills-bar" id="dash-time-range">
-              <button class="time-pill-btn" data-days="1">24h</button>
-              <button class="time-pill-btn active" data-days="7">7j</button>
-              <button class="time-pill-btn" data-days="30">30j</button>
-              <button class="time-pill-btn" data-days="90">90j</button>
-              <button class="time-pill-btn" data-days="365">1 an</button>
+              <button class="time-pill-btn" data-range="1d">24h</button>
+              <button class="time-pill-btn active" data-range="7d">7j</button>
+              <button class="time-pill-btn" data-range="30d">30j</button>
+              <button class="time-pill-btn" data-range="90d">90j</button>
+              <button class="time-pill-btn" data-range="365d">1 an</button>
+              <button class="time-pill-btn" data-range="all">${I18n.t('common.all') || 'Tout'}</button>
             </div>
+            <button class="btn btn-secondary btn-sm" id="btn-refresh-dashboard" title="Rafraîchir les données">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            </button>
           </div>
         </div>
 
-        <!-- Today Stats Banner (matching main branch parity) -->
+        <!-- System Health Widgets -->
+        <div id="dash-system-health-container"></div>
+
+        <!-- Hardware Monitor Bar -->
+        <div id="dash-hardware-container"></div>
+
+        <!-- Today Stats Banner -->
         <div class="dashboard-banner">
           <div class="banner-title-group">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -801,331 +1083,1652 @@
 
         <!-- Tab 1: Overview Tab Content -->
         <div id="tab-content-overview">
-          <!-- 5 Metric Cards Grid -->
-          <div class="stat-grid-5" id="dash-metrics">
-            <div class="stat-card-modern">
-              <div class="stat-header">
-                <span class="stat-title">${I18n.t('dashboard.activeStreams') || 'Flux actifs'}</span>
-                <span class="pulse-dot"></span>
-              </div>
-              <div class="stat-num metric-glow-emerald" id="dash-active-streams">0</div>
-              <div class="stat-desc">${I18n.t('dashboard.managedByServer') || 'Géré par le serveur'}</div>
-            </div>
-
-            <div class="stat-card-modern">
-              <div class="stat-header">
-                <span class="stat-title">${I18n.t('dashboard.totalPlays') || 'Lectures totales'}</span>
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </div>
-              <div class="stat-num metric-glow-cyan" id="dash-total-plays">0</div>
-              <div class="stat-desc">Période sélectionnée</div>
-            </div>
-
-            <div class="stat-card-modern">
-              <div class="stat-header">
-                <span class="stat-title">${I18n.t('dashboard.watchTime') || 'Temps de lecture'}</span>
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
-              <div class="stat-num metric-glow-amber" id="dash-total-hours">0h</div>
-              <div class="stat-desc">Total cumulé</div>
-            </div>
-
-            <div class="stat-card-modern">
-              <div class="stat-header">
-                <span class="stat-title">${I18n.t('dashboard.media') || 'Titres multimédia'}</span>
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
-              </div>
-              <div class="stat-num metric-glow-violet" id="dash-unique-media">0</div>
-              <div class="stat-desc">Dans le catalogue</div>
-            </div>
-
-            <div class="stat-card-modern">
-              <div class="stat-header">
-                <span class="stat-title">${I18n.t('dashboard.users') || 'Utilisateurs actifs'}</span>
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-              <div class="stat-num metric-glow-emerald" id="dash-active-users">0</div>
-              <div class="stat-desc">Comptes enregistrés</div>
-            </div>
+          <div class="draggable-toolbar">
+            <button class="btn btn-secondary btn-sm" id="btn-toggle-draggable-edit">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+              <span id="draggable-edit-label">${I18n.t('draggable.editOrder') || "Modifier l'ordre"}</span>
+            </button>
           </div>
 
-          <!-- Live Streams Panel -->
-          <div class="card" id="dash-live-panel">
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="card-title">
-                  <span class="pulse-dot"></span>
-                  ${I18n.t('dashboard.liveStreams') || 'Flux en direct'}
-                </div>
-                <div class="card-subtitle">Surveillance active des lectures en cours</div>
-              </div>
-            </div>
-            <div id="dashboard-live-streams-list">
-              <div class="empty-state text-muted-foreground">Aucun flux actif pour le moment.</div>
-            </div>
-          </div>
+          <div class="draggable-dashboard" id="dash-draggable-container"></div>
 
-          <!-- Trend Chart & Hourly Chart (2 Columns) -->
-          <div class="dash-grid-2">
-            <div class="chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <div class="card-title">${I18n.t('charts.activity') || 'Activité de lecture'}</div>
-                  <div class="card-subtitle">Nombre de sessions démarrées par jour</div>
-                </div>
-              </div>
-              <div class="chart-wrap">
-                <canvas id="chart-activity"></canvas>
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <div class="card-title">${I18n.t('charts.hours') || 'Heures de pointe'}</div>
-                  <div class="card-subtitle">Distribution horaire des lectures (0h - 23h)</div>
-                </div>
-              </div>
-              <div class="chart-wrap">
-                <canvas id="chart-hours"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <!-- Yearly Activity Heatmap -->
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="card-title">📅 ${I18n.t('charts.yearlyActivity') || 'Carte thermique d’activité'}</div>
-                <div class="card-subtitle">${I18n.t('charts.clickToViewDetail') || 'Cliquez sur une case pour explorer les sessions.'}</div>
-              </div>
-            </div>
-            <div class="heatmap-container" id="dash-heatmap-container">
-              <div class="skeleton"></div>
-            </div>
-          </div>
+          <!-- Predictions Panel at the bottom of Overview -->
+          <div id="dash-predictions-container" style="margin-top: 1.5rem;"></div>
         </div>
 
-        <!-- Tab 2: Analytics Tab Content (Deep Insights) -->
+        <!-- Tab 2: Analytics Tab Content -->
         <div id="tab-content-analytics" class="hidden">
-          <div id="dash-deep-insights-container">
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title-group">
-                  <div class="card-title">${I18n.t('media.deepAnalysisTitle') || 'Analyses approfondies'}</div>
-                  <div class="card-subtitle">Acteurs, réalisateurs et studios les plus regardés</div>
-                </div>
-              </div>
-              <div id="dash-deep-insights-body">
-                <div class="skeleton"></div>
-              </div>
-            </div>
-          </div>
+          <div id="dash-granular-container" style="display:flex; flex-direction:column; gap:1.5rem; margin-bottom:1.5rem;"></div>
+          <div id="dash-deep-insights-container"></div>
         </div>
 
         <!-- Tab 3: Network Tab Content -->
         <div id="tab-content-network" class="hidden">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="card-title">${I18n.t('dashboard.networkTab') || 'Analyse réseau & Géographie'}</div>
-                <div class="card-subtitle">Origine géographique des connexions et débits</div>
-              </div>
-            </div>
-            <div id="dash-geo-body">
-              <div class="skeleton"></div>
-            </div>
-          </div>
+          <div id="dash-network-container" style="display:flex; flex-direction:column; gap:1.5rem;"></div>
         </div>
       `;
 
-      let currentDays = 7;
-      let currentMediaType = '';
+      // Helper: Send message to user live playback
+      window.openSendMessageModal = (sessionId, userName, mediaTitle) => {
+        let selectedSec = 10;
+        const cannedList = [
+          "Redémarrage du serveur dans 5 minutes.",
+          "Merci de passer en lecture directe ou réduire la qualité.",
+          "Maintenance technique en cours sur le serveur.",
+          "Bonne séance cinéma !",
+        ];
 
-      const loadDashData = async () => {
+        Modal.showAction({
+          title: `Envoyer un message à ${userName}`,
+          bodyHtml: `
+            <div style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:0.75rem;">
+              Ce message apparaîtra immédiatement en pop-up sur l'écran du lecteur (${Utils.escapeHtml(mediaTitle)}).
+            </div>
+            <div style="margin-bottom:0.75rem;">
+              <span style="font-size:0.75rem; font-weight:600; color:var(--muted-foreground); display:block; margin-bottom:0.35rem;">Messages prédéfinis :</span>
+              <div class="canned-pills">
+                ${cannedList.map(c => `<button type="button" class="canned-btn" onclick="document.getElementById('send-msg-text').value = '${c.replace(/'/g, "\\'")}';">${c}</button>`).join('')}
+              </div>
+            </div>
+            <div style="margin-bottom:0.75rem;">
+              <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:0.25rem;">Titre du pop-up</label>
+              <input type="text" id="send-msg-header" class="form-input w-full" value="Message de l'administrateur" />
+            </div>
+            <div style="margin-bottom:0.75rem;">
+              <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:0.25rem;">Texte du message</label>
+              <textarea id="send-msg-text" class="form-input w-full" rows="3" placeholder="Écrivez votre message..." style="resize:none;"></textarea>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.75rem; color:var(--muted-foreground);">
+              <span>Durée d'affichage :</span>
+              <div style="display:flex; gap:0.3rem;">
+                <button type="button" class="time-pill-btn active" id="btn-sec-5" onclick="window._setMsgTimeout(5)">5s</button>
+                <button type="button" class="time-pill-btn" id="btn-sec-10" onclick="window._setMsgTimeout(10)">10s</button>
+                <button type="button" class="time-pill-btn" id="btn-sec-30" onclick="window._setMsgTimeout(30)">30s</button>
+              </div>
+            </div>
+          `,
+          confirmText: 'Envoyer à Jellyfin',
+          cancelText: 'Annuler',
+          onConfirm: async () => {
+            const header = document.getElementById('send-msg-header')?.value || "Message de l'administrateur";
+            const text = document.getElementById('send-msg-text')?.value?.trim();
+            if (!text) {
+              Toast.error('Veuillez saisir un message.');
+              return;
+            }
+            try {
+              await API.postJSON('/api/jellyfin/send-message', {
+                sessionId,
+                header,
+                message: text,
+                text,
+                timeoutMs: selectedSec * 1000,
+              });
+              Toast.success('Message transmis avec succès à Jellyfin !');
+            } catch (e) {
+              Toast.error(e.message || "Erreur lors de l'envoi");
+            }
+          },
+        });
+
+        window._setMsgTimeout = (sec) => {
+          selectedSec = sec;
+          ['5', '10', '30'].forEach(s => {
+            const b = document.getElementById(`btn-sec-${s}`);
+            if (b) b.classList.toggle('active', s === String(sec));
+          });
+        };
+      };
+
+      // Helper: Kill stream
+      window.confirmKillStream = (sessionId, mediaTitle) => {
+        Modal.showAction({
+          title: I18n.t('dashboard.killStream') || 'Arrêter le flux',
+          bodyHtml: `<p>Voulez-vous forcer l'arrêt de la lecture : <b>${Utils.escapeHtml(mediaTitle || 'Session')}</b> ?</p>`,
+          confirmText: 'Arrêter la lecture',
+          cancelText: 'Annuler',
+          onConfirm: async () => {
+            try {
+              await API.postJSON('/api/jellyfin/kill-stream', { sessionId });
+              Toast.success('Flux arrêté avec succès.');
+              refreshLiveStreams();
+            } catch (e) {
+              Toast.error(e.message || "Erreur lors de l'arrêt du flux");
+            }
+          },
+        });
+      };
+
+      // 1. Fetch Servers for ServerFilter
+      try {
+        const srvRes = await API.getJSON('/api/settings/jellyfin-servers').catch(() => null);
+        const servers = (srvRes && srvRes.servers) ? srvRes.servers : [];
+        if (servers.length > 1) {
+          const srvContainer = document.getElementById('dash-server-filter-container');
+          const srvSelect = document.getElementById('dash-server-filter');
+          if (srvContainer && srvSelect) {
+            srvContainer.style.display = 'block';
+            servers.forEach(s => {
+              const opt = document.createElement('option');
+              opt.value = s.id || s.jellyfinServerId || '';
+              opt.textContent = s.name || s.url || opt.value;
+              srvSelect.appendChild(opt);
+            });
+            srvSelect.addEventListener('change', () => {
+              currentServerId = srvSelect.value;
+              loadAllDashboard();
+            });
+          }
+        }
+      } catch (e) {}
+
+      // 2. Load System Health Widgets
+      const loadSystemHealth = async () => {
         try {
-          const dash = await API.getJSON(`/api/dashboard?days=${currentDays}`);
-          
+          const health = await API.getJSON('/api/admin/health');
+          const container = document.getElementById('dash-system-health-container');
+          if (!container) return;
+
+          const isErr = health.status && health.status.monitor && health.status.monitor.status === 'error';
+          const lastPoll = health.status && health.status.monitor ? Utils.timeAgo(health.status.monitor.lastPollAt) : '-';
+          const lastSync = health.status && health.status.sync ? Utils.timeAgo(health.status.sync.lastSuccessAt) : '-';
+          const lastBackup = health.status && health.status.backup ? Utils.timeAgo(health.status.backup.lastSuccessAt) : '-';
+          const counts = health.counts || { activeStreams: 0, openPlaybackOrphans: 0, dbStreamsWithoutValkey: 0 };
+          const excludedCount = (health.excludedLibraries || []).length;
+
+          container.innerHTML = `
+            <div class="system-health-bar">
+              <div class="app-chip ${isErr ? 'app-chip-error' : 'app-chip-success'}">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span>Moniteur : ${isErr ? 'Erreur' : 'Actif'}</span>
+              </div>
+              <div class="app-chip">
+                <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Dernier sondage : ${lastPoll}</span>
+              </div>
+              <div class="app-chip">
+                <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <span>Synchro : ${lastSync}</span>
+              </div>
+              <div class="app-chip">
+                <svg class="nav-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                <span>Sauvegarde : ${lastBackup}</span>
+              </div>
+              <a href="/admin/health" class="btn btn-secondary btn-sm" style="margin-left:auto; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
+                <svg class="nav-icon text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                <span>Santé du système</span>
+              </a>
+            </div>
+
+            <div class="stat-grid-4" style="margin-bottom:1rem;">
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">Flux actifs</span>
+                  <span class="pulse-dot"></span>
+                </div>
+                <div class="stat-num metric-glow-emerald">${counts.activeStreams}</div>
+                <div class="stat-desc">Sessions suivies</div>
+              </div>
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">Lectures orphelines</span>
+                  <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div class="stat-num metric-glow-amber">${counts.openPlaybackOrphans}</div>
+                <div class="stat-desc">Playback sans fermeture</div>
+              </div>
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">Flux DB sans cache</span>
+                  <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <div class="stat-num metric-glow-cyan">${counts.dbStreamsWithoutValkey}</div>
+                <div class="stat-desc">Fallback base de données</div>
+              </div>
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">Bibliothèques exclues</span>
+                  <svg class="nav-icon text-violet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 3 18 18M4 7h3m4 0h9M4 12h16M4 17h11"/></svg>
+                </div>
+                <div class="stat-num metric-glow-violet">${excludedCount}</div>
+                <div class="stat-desc">Filtres actifs</div>
+              </div>
+            </div>
+          `;
+        } catch (e) {}
+      };
+
+      // 3. Load Hardware Monitor
+      const loadHardware = async () => {
+        try {
+          const hw = await API.getJSON('/api/hardware');
+          const container = document.getElementById('dash-hardware-container');
+          if (!container || !hw || !hw.cpu) return;
+
+          container.innerHTML = `
+            <div class="hardware-bar">
+              <div class="hardware-card">
+                <div class="hardware-icon-box" style="background:rgba(59, 130, 246, 0.1); color:#3b82f6;">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9"/><path d="M15 2v2M9 2v2M20 15h2M20 9h2M9 20v2M15 20v2M2 9h2M2 15h2"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem; color:var(--muted-foreground);">Processeur (CPU)</div>
+                  <div class="metric-glow-blue" style="font-size:1.35rem; font-weight:800;">${hw.cpu.usagePercent || 0}%</div>
+                </div>
+              </div>
+              <div class="hardware-card">
+                <div class="hardware-icon-box" style="background:rgba(168, 85, 247, 0.1); color:#a855f7;">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 19v-3M10 19v-3M14 19v-3M18 19v-3M6 8V5M10 8V5M14 8V5M18 8V5"/><rect width="20" height="8" x="2" y="8" rx="2"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem; color:var(--muted-foreground);">Mémoire RAM (${hw.memory ? hw.memory.totalGb : 0} Go)</div>
+                  <div class="metric-glow-violet" style="font-size:1.35rem; font-weight:800;">${hw.memory ? hw.memory.usagePercent : 0}%</div>
+                </div>
+              </div>
+              <div class="hardware-card">
+                <div class="hardware-icon-box" style="background:rgba(244, 63, 94, 0.1); color:#f43f5e;">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:0.75rem; color:var(--muted-foreground);">Température Système</div>
+                  <div class="metric-glow-amber" style="font-size:1.35rem; font-weight:800;">${hw.temperature && hw.temperature.main > 0 ? `${hw.temperature.main}°C` : 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        } catch (e) {}
+      };
+
+      // 4. Live Streams Poller & Renderer
+      const refreshLiveStreams = async () => {
+        try {
+          const res = await API.getJSON(`/api/streams${currentServerId ? `?servers=${currentServerId}` : ''}`);
+          liveStreamsData = res.streams || [];
+          liveBandwidth = res.totalBandwidthMbps || 0;
+          State.activeStreamsCount = liveStreamsData.length;
+
+          const topbarBadge = document.getElementById('topbar-live-streams-count');
+          if (topbarBadge) topbarBadge.textContent = liveStreamsData.length;
+
+          renderLiveStreamsBlock();
+        } catch (e) {}
+      };
+
+      const renderLiveStreamsBlock = () => {
+        const container = document.getElementById('dash-live-streams-body');
+        if (!container) return;
+
+        const countEl = document.getElementById('dash-live-header-info');
+        if (countEl) {
+          countEl.textContent = `${liveStreamsData.length} ${I18n.t('dashboard.activeStreams') || 'flux actifs'}${liveBandwidth > 0 ? ` (~${liveBandwidth} Mbps)` : ''}`;
+        }
+
+        if (liveStreamsData.length === 0) {
+          container.innerHTML = `<div class="empty-state text-muted-foreground" style="padding:1.5rem;">${I18n.t('dashboard.noLiveStreams') || 'Aucun flux actif pour le moment.'}</div>`;
+          return;
+        }
+
+        const useTimeline = liveStreamsData.length >= 3 && !forceCardsView;
+        const GANTT_COLORS = ['#a855f7', '#3b82f6', '#10b981', '#f97316', '#ec4899', '#06b6d4', '#eab308'];
+
+        if (useTimeline) {
+          container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:0.6rem;">
+              ${liveStreamsData.map((s, idx) => {
+                const c = GANTT_COLORS[idx % GANTT_COLORS.length];
+                const pct = Math.min(100, Math.max(3, s.progressPercent || 0));
+                return `
+                  <div class="live-stream-timeline-row">
+                    <div class="gantt-avatar" style="background:${c}22; color:${c};">${(s.user || s.username || '?').charAt(0).toUpperCase()}</div>
+                    <div style="flex:1; min-width:0;">
+                      <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+                        <div style="display:flex; align-items:center; gap:0.5rem; min-width:0;">
+                          <span style="font-size:0.82rem; font-weight:700; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${Utils.escapeHtml(s.user || s.username || 'Utilisateur')}</span>
+                          ${s.itemId ? `
+                            <a href="/media/${s.itemId}" style="font-size:0.75rem; color:var(--muted-foreground); text-decoration:none; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" class="hover:underline">
+                              ${Utils.escapeHtml(s.mediaTitle || 'Média')}
+                            </a>
+                          ` : `<span style="font-size:0.75rem; color:var(--muted-foreground); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${Utils.escapeHtml(s.mediaTitle || 'Média')}</span>`}
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0;">
+                          <span class="badge ${s.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}" style="font-size:0.68rem; padding:0.15rem 0.45rem;">${s.playMethod === 'DirectPlay' ? 'DP' : 'Transcode'}</span>
+                          ${s.isPaused ? '<span style="font-size:0.75rem; color:#f59e0b;">⏸</span>' : ''}
+                          <span style="font-size:0.75rem; color:var(--muted-foreground);">${pct}%</span>
+                          <button class="btn btn-secondary btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" onclick="window.openSendMessageModal('${s.sessionId}', '${Utils.escapeHtml(s.user || s.username || '')}', '${Utils.escapeHtml(s.mediaTitle || '')}')" title="Envoyer un message">💬</button>
+                          ${State.user && State.user.isAdmin ? `
+                            <button class="btn btn-danger btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" onclick="window.confirmKillStream('${s.sessionId}', '${Utils.escapeHtml(s.mediaTitle || '')}')" title="Couper le flux">✕</button>
+                          ` : ''}
+                        </div>
+                      </div>
+                      <div class="gantt-track">
+                        <div class="gantt-fill" style="width:${pct}%; background:${s.isPaused ? '#f59e0b' : c};"></div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+              ${liveStreamsData.map(s => {
+                const posterId = s.posterItemId || s.itemId;
+                const pct = Math.min(100, Math.max(3, s.progressPercent || 0));
+                const audioSub = [
+                  s.audioCodec ? `🔊 ${s.audioCodec.toUpperCase()}${s.audioLanguage ? ` (${s.audioLanguage})` : ''}` : '',
+                  s.subtitleCodec ? `💬 ${s.subtitleCodec.toUpperCase()}${s.subtitleLanguage ? ` (${s.subtitleLanguage})` : ''}` : '',
+                ].filter(Boolean).join(' • ');
+
+                return `
+                  <div class="stream-card">
+                    <div class="stream-poster-thumb">
+                      ${posterId ? `<img src="/api/jellyfin/image?itemId=${posterId}&type=Primary&maxWidth=140" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;" onerror="this.style.display='none'">` : ''}
+                    </div>
+                    <div class="stream-info">
+                      <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                        <span class="stream-title">${Utils.escapeHtml(s.mediaTitle || 'Titre inconnu')}</span>
+                        ${s.versionName ? `<span class="badge badge-info" style="font-size:0.65rem;">${Utils.escapeHtml(s.versionName)}</span>` : ''}
+                        ${s.isPaused ? '<span class="badge badge-warning" style="font-size:0.65rem;">⏸ En pause</span>' : ''}
+                      </div>
+                      ${s.seriesName || s.seasonName ? `<div style="font-size:0.75rem; color:var(--muted-foreground);">${Utils.escapeHtml(s.seriesName || '')} ${Utils.escapeHtml(s.seasonName || '')}</div>` : ''}
+                      <div class="stream-details">
+                        <span>👤 ${Utils.escapeHtml(s.user || s.username || 'Utilisateur')}</span>
+                        <span>📱 ${Utils.escapeHtml(s.device || s.clientName || 'Lecteur')}</span>
+                        ${s.city || s.country ? `<span>📍 ${Utils.escapeHtml(s.city || '')}${s.country ? `, ${Utils.escapeHtml(s.country)}` : ''}</span>` : ''}
+                        <span class="badge ${s.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}">${Utils.escapeHtml(s.playMethod || 'Stream')}</span>
+                      </div>
+                      ${audioSub ? `<div style="font-size:0.72rem; color:var(--muted-foreground); margin-top:0.15rem;">${Utils.escapeHtml(audioSub)}</div>` : ''}
+                      <div class="stream-progress-bar">
+                        <div class="stream-progress-fill" style="width: ${pct}%;"></div>
+                      </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.35rem; align-items:flex-end;">
+                      <button class="btn btn-secondary btn-sm" onclick="window.openSendMessageModal('${s.sessionId}', '${Utils.escapeHtml(s.user || s.username || '')}', '${Utils.escapeHtml(s.mediaTitle || '')}')" title="Envoyer un pop-up à l'écran">
+                        💬 Message
+                      </button>
+                      ${State.user && State.user.isAdmin ? `
+                        <button class="btn btn-danger btn-sm" onclick="window.confirmKillStream('${s.sessionId}', '${Utils.escapeHtml(s.mediaTitle || '')}')" title="Couper la session">
+                          ${I18n.t('dashboard.killStream') || 'Arrêter'}
+                        </button>
+                      ` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }
+      };
+
+      // 5. Main Dashboard Data Loader
+      let dashboardData = null;
+
+      const loadAllDashboard = async () => {
+        try {
+          const queryDays = currentTimeRange === 'all' ? 'all' : (parseInt(currentTimeRange, 10) || 7);
+          const params = new URLSearchParams();
+          params.set('days', String(queryDays));
+          if (currentMediaType) params.set('type', currentMediaType);
+          if (currentServerId) params.set('servers', currentServerId);
+
+          dashboardData = await API.getJSON(`/api/dashboard?${params.toString()}`);
+
           // Update Today Stats Banner
           const todayPlaysEl = document.getElementById('today-plays-val');
           const todayHoursEl = document.getElementById('today-hours-val');
           const todayUsersEl = document.getElementById('today-users-val');
-          if (todayPlaysEl) todayPlaysEl.textContent = Utils.formatNumber(dash.todayPlays || 0);
-          if (todayHoursEl) todayHoursEl.textContent = (dash.todayHours !== undefined) ? `${dash.todayHours}h` : '0h';
-          if (todayUsersEl) todayUsersEl.textContent = Utils.formatNumber(dash.todayActiveUsers || 0);
+          if (todayPlaysEl) todayPlaysEl.textContent = Utils.formatNumber(dashboardData.todayPlays || 0);
+          if (todayHoursEl) todayHoursEl.textContent = `${dashboardData.todayHours !== undefined ? dashboardData.todayHours : 0}h`;
+          if (todayUsersEl) todayUsersEl.textContent = Utils.formatNumber(dashboardData.todayActiveUsers || 0);
 
-          // Update 5 Stat Cards
-          const totalPlaysEl = document.getElementById('dash-total-plays');
-          const totalHoursEl = document.getElementById('dash-total-hours');
-          const uniqueMediaEl = document.getElementById('dash-unique-media');
-          const activeUsersEl = document.getElementById('dash-active-users');
-          if (totalPlaysEl) totalPlaysEl.textContent = Utils.formatNumber(dash.views || 0);
-          if (totalHoursEl) totalHoursEl.textContent = Utils.formatMs(dash.durationMs || 0);
-          if (uniqueMediaEl) uniqueMediaEl.textContent = Utils.formatNumber(dash.media || 0);
-          if (activeUsersEl) activeUsersEl.textContent = Utils.formatNumber(dash.users || 0);
-
-          // Update Active Streams count if element exists
-          const activeStreamsEl = document.getElementById('dash-active-streams');
-          if (activeStreamsEl && State.activeStreamsCount !== undefined) {
-            activeStreamsEl.textContent = State.activeStreamsCount;
-          }
-
-          // Activity Line Chart
-          if (dash.activity && dash.activity.length > 0) {
-            const labels = dash.activity.map((a) => a.day);
-            const data = dash.activity.map((a) => a.views);
-            ChartHelper.renderLine('chart-activity', labels, data, I18n.t('dashboard.views') || 'Lectures');
-          } else {
-            ChartHelper.renderLine('chart-activity', ['Aujourd’hui'], [0]);
-          }
-
-          // Load Heatmap & Hours
-          const hmData = await API.getJSON('/api/heatmap-detail');
-          const hoursMap = new Array(24).fill(0);
-          if (hmData.heatmap) {
-            hmData.heatmap.forEach((item) => {
-              hoursMap[item.hour] = (hoursMap[item.hour] || 0) + item.count;
-            });
-          }
-          const hourLabels = Array.from({ length: 24 }, (_, i) => `${i}h`);
-          ChartHelper.renderBar('chart-hours', hourLabels, hoursMap, I18n.t('dashboard.views') || 'Lectures');
-
-          // Render Heatmap Matrix
-          const hmContainer = document.getElementById('dash-heatmap-container');
-          if (hmContainer && hmData.heatmap) {
-            let cellsHtml = '<div class="heatmap-grid">';
-            for (let w = 0; w < 52; w++) {
-              for (let d = 0; d < 7; d++) {
-                const match = hmData.heatmap.find((h) => h.dayOfWeek === d);
-                const count = match ? match.count : 0;
-                let lvl = 0;
-                if (count > 0) lvl = count > 10 ? 4 : count > 5 ? 3 : count > 2 ? 2 : 1;
-                cellsHtml += `<div class="heatmap-cell level-${lvl}" title="Jour ${d}: ${count} sessions" data-day="${d}" data-count="${count}"></div>`;
-              }
-            }
-            cellsHtml += '</div>';
-            hmContainer.innerHTML = cellsHtml;
-
-            // Drilldown modal on heatmap click
-            hmContainer.querySelectorAll('.heatmap-cell').forEach((cell) => {
-              cell.addEventListener('click', async () => {
-                const day = cell.getAttribute('data-day');
-                const dd = await API.getJSON(`/api/heatmap-detail?day=${day}&hour=20`);
-                Modal.showAction({
-                  title: `Sessions du jour`,
-                  bodyHtml: dd.sessions && dd.sessions.length > 0
-                    ? `<div class="ranking-list">
-                        ${dd.sessions.map((s) => `
-                          <div class="ranking-item">
-                            <span class="ranking-badge">▶</span>
-                            <div class="ranking-name">
-                              <b>${Utils.escapeHtml(s.username)}</b> — ${Utils.escapeHtml(s.mediaTitle)}
-                              <div class="text-xs text-muted-foreground">${s.durationMin} min • ${Utils.escapeHtml(s.clientName)}</div>
-                            </div>
-                          </div>
-                        `).join('')}
-                       </div>`
-                    : '<p class="text-muted-foreground">Aucune session enregistrée pour ce créneau.</p>',
-                  cancelText: 'Fermer',
-                  confirmText: 'OK',
-                });
-              });
-            });
-          }
+          renderDraggableDashboardBlocks();
+          loadPredictions();
         } catch (e) {
-          Toast.error(e.message);
+          Toast.error(e.message || "Erreur de chargement du tableau de bord");
         }
       };
 
-      // Tab switcher handlers
-      document.querySelectorAll('#dashboard-tablist .dash-tab-btn').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          document.querySelectorAll('#dashboard-tablist .dash-tab-btn').forEach((b) => b.classList.remove('active'));
-          btn.classList.add('active');
-          const tab = btn.getAttribute('data-tab');
-          
-          document.getElementById('tab-content-overview').classList.toggle('hidden', tab !== 'overview');
-          document.getElementById('tab-content-analytics').classList.toggle('hidden', tab !== 'analytics');
-          document.getElementById('tab-content-network').classList.toggle('hidden', tab !== 'network');
+      // 6. Render Draggable Dashboard (10 Blocks)
+      const renderDraggableDashboardBlocks = () => {
+        const container = document.getElementById('dash-draggable-container');
+        if (!container || !dashboardData) return;
 
-          if (tab === 'analytics') {
-            try {
-              const deep = await API.getJSON('/api/stats/deep');
-              const bodyEl = document.getElementById('dash-deep-insights-body');
-              if (bodyEl) {
-                bodyEl.innerHTML = `
-                  <div class="dash-grid-2">
-                    <div class="app-surface-soft p-4 rounded-lg">
-                      <h4 class="font-bold text-sm mb-3">Top Acteurs</h4>
-                      <div class="ranking-list">
-                        ${(deep.topActors || []).slice(0, 5).map((a, i) => `
-                          <div class="ranking-item">
-                            <span class="ranking-badge">#${i + 1}</span>
-                            <span class="ranking-name">${Utils.escapeHtml(a.name)}</span>
-                            <span class="ranking-value">${a.count} films</span>
-                          </div>
-                        `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée</div>'}
+        const d = dashboardData;
+        const b = d.breakdown || { movieViews: 0, movieHours: 0, seriesViews: 0, seriesHours: 0, musicViews: 0, musicHours: 0, booksViews: 0, booksHours: 0 };
+
+        // Define Block Generators
+        const blockGenerators = {
+          // Block 0: metrics (5 KPI cards)
+          0: () => `
+            <div class="stat-grid-5">
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">${I18n.t('dashboard.activeStreams') || 'Flux actifs'}</span>
+                  <span class="pulse-dot"></span>
+                </div>
+                <div class="stat-num metric-glow-emerald" id="dash-active-streams">${State.activeStreamsCount || 0}</div>
+                <div class="stat-desc">${I18n.t('dashboard.managedByServer') || 'Géré par le serveur'}</div>
+              </div>
+
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">${I18n.t('dashboard.totalPlays') || 'Lectures totales'}</span>
+                  <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <div class="stat-num metric-glow-cyan">${Utils.formatNumber(d.totalPlays || d.views || 0)}</div>
+                  ${d.playsGrowth !== undefined && d.playsGrowth !== 0 ? `
+                    <span class="badge ${d.playsGrowth >= 0 ? 'badge-success' : 'badge-danger'}" style="font-size:0.7rem;">
+                      ${d.playsGrowth > 0 ? '+' : ''}${d.playsGrowth.toFixed(1)}%
+                    </span>
+                  ` : ''}
+                </div>
+                <div class="stat-desc">${d.previousPlays > 0 ? `vs ${d.previousPlays} période préc.` : 'Période sélectionnée'}</div>
+              </div>
+
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">${I18n.t('dashboard.directPlay') || 'Direct Play'}</span>
+                  <svg class="nav-icon text-violet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="15" x="2" y="3" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="18" x2="12" y2="21"/></svg>
+                </div>
+                <div class="stat-num metric-glow-violet">${d.directPlayPercent || 0}%<span style="font-size:0.8rem; font-weight:400; margin-left:0.25rem;">DP</span></div>
+                <div class="stat-desc">${I18n.t('dashboard.directPlayDesc') || 'Taux de lecture native sans ré-encodage'}</div>
+              </div>
+
+              <a href="/logs" class="stat-card-modern" style="text-decoration:none; color:inherit;">
+                <div class="stat-header">
+                  <span class="stat-title">${I18n.t('dashboard.globalTime') || 'Temps de visionnage'}</span>
+                  <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <div class="stat-num metric-glow-amber">${Utils.formatNumber(d.hoursWatched || Math.round((d.durationMs || 0) / 3600000))}h</div>
+                  ${d.hoursGrowth !== undefined && d.hoursGrowth !== 0 ? `
+                    <span class="badge ${d.hoursGrowth >= 0 ? 'badge-success' : 'badge-danger'}" style="font-size:0.7rem;">
+                      ${d.hoursGrowth > 0 ? '+' : ''}${d.hoursGrowth.toFixed(1)}%
+                    </span>
+                  ` : ''}
+                </div>
+                <div class="stat-desc">${d.previousHoursWatched > 0 ? `vs ${d.previousHoursWatched}h période préc.` : 'Total cumulé'}</div>
+              </a>
+
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">${I18n.t('dashboard.users') || 'Utilisateurs actifs'}</span>
+                  <svg class="nav-icon text-pink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <div class="stat-num metric-glow-emerald">${Utils.formatNumber(d.currentActiveUsers || d.users || 0)}</div>
+                  ${d.activeUsersGrowth !== undefined && d.activeUsersGrowth !== 0 ? `
+                    <span class="badge ${d.activeUsersGrowth >= 0 ? 'badge-success' : 'badge-danger'}" style="font-size:0.7rem;">
+                      ${d.activeUsersGrowth > 0 ? '+' : ''}${d.activeUsersGrowth.toFixed(1)}%
+                    </span>
+                  ` : ''}
+                </div>
+                <div class="stat-desc">Comptes actifs</div>
+              </div>
+            </div>
+          `,
+
+          // Block 1: breadcrumb (4 Breakdown cards)
+          1: () => `
+            <div class="stat-grid-4">
+              <a href="/logs?type=Movie" class="breadcrumb-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:0.82rem; font-weight:600; opacity:0.8;">Films</span>
+                  <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
+                </div>
+                <div class="metric-glow-blue" style="font-size:1.6rem; font-weight:800;">${b.movieViews || 0} <span style="font-size:0.8rem; font-weight:400; color:var(--muted-foreground);">vues</span></div>
+                <div style="font-size:0.75rem; color:#3b82f6; font-weight:600;">${b.movieHours || 0}h regardées</div>
+              </a>
+
+              <a href="/logs?type=Episode" class="breadcrumb-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:0.82rem; font-weight:600; opacity:0.8;">Séries</span>
+                  <svg class="nav-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="15" x="2" y="7" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+                </div>
+                <div class="metric-glow-emerald" style="font-size:1.6rem; font-weight:800;">${b.seriesViews || 0} <span style="font-size:0.8rem; font-weight:400; color:var(--muted-foreground);">lectures</span></div>
+                <div style="font-size:0.75rem; color:#10b981; font-weight:600;">${b.seriesHours || 0}h regardées</div>
+              </a>
+
+              <a href="/logs?type=Audio" class="breadcrumb-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:0.82rem; font-weight:600; opacity:0.8;">Musique</span>
+                  <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                </div>
+                <div class="metric-glow-amber" style="font-size:1.6rem; font-weight:800;">${b.musicViews || 0} <span style="font-size:0.8rem; font-weight:400; color:var(--muted-foreground);">titres</span></div>
+                <div style="font-size:0.75rem; color:#f59e0b; font-weight:600;">${b.musicHours || 0}h écoutées</div>
+              </a>
+
+              <a href="/logs?type=AudioBook" class="breadcrumb-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:0.82rem; font-weight:600; opacity:0.8;">Livres</span>
+                  <svg class="nav-icon text-violet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+                </div>
+                <div class="metric-glow-violet" style="font-size:1.6rem; font-weight:800;">${b.booksViews || 0} <span style="font-size:0.8rem; font-weight:400; color:var(--muted-foreground);">ouverts</span></div>
+                <div style="font-size:0.75rem; color:#a855f7; font-weight:600;">${b.booksHours || 0}h passées</div>
+              </a>
+            </div>
+          `,
+
+          // Block 2: volumes (Bento Hero: ComposedTrendChart + CategoryPieChart)
+          2: () => `
+            <div class="bento-volumes-grid">
+              <div class="chart-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">Volume d'écoute & Activité</div>
+                    <div class="card-subtitle">Évolution temporelle des heures regardées par type de média</div>
+                  </div>
+                </div>
+                <div class="chart-wrap" style="height:350px;">
+                  <canvas id="chart-composed-trend"></canvas>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">Répartition par catégorie</div>
+                    <div class="card-subtitle">Volume global d'écoute par catégorie</div>
+                  </div>
+                </div>
+                <div class="chart-wrap" style="height:350px;">
+                  <canvas id="chart-category-pie"></canvas>
+                </div>
+              </div>
+            </div>
+          `,
+
+          // Block 3: libraryPlays (LibraryDailyPlaysChart)
+          3: () => `
+            <div class="chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <div class="card-title">Lectures quotidiennes par bibliothèque</div>
+                  <div class="card-subtitle">Sessions journalières initiées par type de contenu</div>
+                </div>
+              </div>
+              <div class="chart-wrap" style="height:320px;">
+                <canvas id="chart-library-plays"></canvas>
+              </div>
+            </div>
+          `,
+
+          // Block 4: heatmap (YearlyHeatmap)
+          4: () => `
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group" style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:0.5rem;">
+                  <div>
+                    <div class="card-title">📅 Carte thermique d'activité annuelle</div>
+                    <div class="card-subtitle" id="dash-heatmap-summary">Sessions enregistrées sur l'année</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <button class="btn btn-secondary btn-sm" id="btn-heatmap-prev-year">◀</button>
+                    <span class="app-chip font-bold" id="heatmap-current-year" style="min-width:60px; text-align:center;">${selectedHeatmapYear}</span>
+                    <button class="btn btn-secondary btn-sm" id="btn-heatmap-next-year">▶</button>
+                  </div>
+                </div>
+                <div style="display:flex; gap:0.4rem; margin-top:0.6rem; flex-wrap:wrap;" id="dash-heatmap-lib-filters">
+                  <button class="time-pill-btn active" data-lib="_total">Tous</button>
+                  <button class="time-pill-btn" data-lib="Movie">Films</button>
+                  <button class="time-pill-btn" data-lib="Series">Séries</button>
+                  <button class="time-pill-btn" data-lib="Audio">Musique</button>
+                  <button class="time-pill-btn" data-lib="Book">Livres</button>
+                </div>
+              </div>
+              <div class="yearly-heatmap-wrapper" id="dash-heatmap-grid-container" style="padding:1rem;">
+                <div class="skeleton" style="height:140px;"></div>
+              </div>
+            </div>
+          `,
+
+          // Block 5: users-platforms (Top Users + PlatformDistributionChart)
+          5: () => `
+            <div class="dash-grid-2">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">👥 Utilisateurs les plus fidèles</div>
+                    <div class="card-subtitle">Classement par heures de visionnage sur la période</div>
+                  </div>
+                </div>
+                <div class="ranking-list" id="dash-top-users-list">
+                  ${(d.topUsers || []).length > 0 ? (d.topUsers || []).slice(0, 5).map((u, i) => `
+                    <a href="/users/${u.jellyfinUserId || ''}" class="ranking-item">
+                      <span class="ranking-badge">#${i + 1}</span>
+                      <div class="ranking-name">
+                        <span style="font-weight:700;">${Utils.escapeHtml(u.username)}</span>
                       </div>
+                      <span class="ranking-value">${u.hours || 0}h</span>
+                    </a>
+                  `).join('') : '<div class="text-muted-foreground text-sm" style="padding:1rem;">Aucune activité enregistrée.</div>'}
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">📱 Écosystème des clients</div>
+                    <div class="card-subtitle">Applications et appareils utilisés pour la lecture</div>
+                  </div>
+                </div>
+                <div class="chart-wrap" style="height:280px;">
+                  <canvas id="chart-platform-dist"></canvas>
+                </div>
+              </div>
+            </div>
+          `,
+
+          // Block 6: live-streams (LiveStreamsPanel)
+          6: () => `
+            <div class="card" id="dash-live-panel">
+              <div class="card-header">
+                <div class="card-title-group" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                  <div>
+                    <div class="card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                      <span class="pulse-dot"></span>
+                      ${I18n.t('dashboard.liveStreams') || 'Flux en direct'}
                     </div>
-                    <div class="app-surface-soft p-4 rounded-lg">
-                      <h4 class="font-bold text-sm mb-3">Top Réalisateurs</h4>
-                      <div class="ranking-list">
-                        ${(deep.topDirectors || []).slice(0, 5).map((d, i) => `
-                          <div class="ranking-item">
-                            <span class="ranking-badge">#${i + 1}</span>
-                            <span class="ranking-name">${Utils.escapeHtml(d.name)}</span>
-                            <span class="ranking-value">${d.count} films</span>
-                          </div>
-                        `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée</div>'}
-                      </div>
+                    <div class="card-subtitle" id="dash-live-header-info">Surveillance active des lectures en cours</div>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" id="btn-toggle-live-view" title="Basculer vue Cartes / Chronologie">
+                    ${forceCardsView ? '📊 Chronologie Gantt' : '🗂️ Vue Cartes'}
+                  </button>
+                </div>
+              </div>
+              <div id="dash-live-streams-body">
+                <div class="empty-state text-muted-foreground" style="padding:1.5rem;">Chargement des flux...</div>
+              </div>
+            </div>
+          `,
+
+          // Block 7: hourly (ActivityByHourChart + DayOfWeekChart)
+          7: () => `
+            <div class="dash-grid-2">
+              <div class="chart-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">🕒 Heures de pointe</div>
+                    <div class="card-subtitle">Distribution des sessions sur les 24 heures de la journée</div>
+                  </div>
+                </div>
+                <div class="chart-wrap" style="height:260px;">
+                  <canvas id="chart-activity-by-hour"></canvas>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">📅 Activité par jour de la semaine</div>
+                    <div class="card-subtitle">Comparatif du lundi au dimanche</div>
+                  </div>
+                </div>
+                <div class="chart-wrap" style="height:260px;">
+                  <canvas id="chart-day-of-week"></canvas>
+                </div>
+              </div>
+            </div>
+          `,
+
+          // Block 8: new-stats (MonthlyWatchTimeChart + CompletionRatioChart + ClientCategoryChart)
+          8: () => `
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1.25rem;">
+              <div class="chart-card" style="grid-column:span 1; min-width:320px;">
+                <div class="card-header">
+                  <div class="card-title-group" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <div>
+                      <div class="card-title">📈 Visionnage mensuel</div>
+                      <div class="card-subtitle">Total d'heures par mois</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.4rem;">
+                      <button class="btn btn-secondary btn-sm" id="btn-monthly-prev-year">◀</button>
+                      <span class="app-chip font-bold" id="monthly-current-year">${selectedMonthlyYear}</span>
+                      <button class="btn btn-secondary btn-sm" id="btn-monthly-next-year">▶</button>
                     </div>
                   </div>
-                `;
+                </div>
+                <div class="chart-wrap" style="height:260px;">
+                  <canvas id="chart-monthly-watch"></canvas>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">🎯 Taux de complétion</div>
+                    <div class="card-subtitle">Terminé (>90%), Partiel, Abandonné (<15%)</div>
+                  </div>
+                </div>
+                <div class="chart-wrap" style="height:260px;">
+                  <canvas id="chart-completion-ratio"></canvas>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">🖥️ Familles d'appareils</div>
+                    <div class="card-subtitle">TV, Web, Mobile, Desktop, Autre</div>
+                  </div>
+                </div>
+                <div class="chart-wrap" style="height:260px;">
+                  <canvas id="chart-client-category"></canvas>
+                </div>
+              </div>
+            </div>
+          `,
+
+          // Block 9: server-load (Server Load Timeline)
+          9: () => `
+            <div class="chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <div class="card-title">⚡ Charge simultanée du serveur</div>
+                  <div class="card-subtitle">Pics de flux simultanés calculés par balayage temporel</div>
+                </div>
+              </div>
+              <div class="chart-wrap" style="height:280px;">
+                <canvas id="chart-server-load"></canvas>
+              </div>
+            </div>
+          `,
+        };
+
+        // Render blocks in current dashboardOrder
+        container.innerHTML = dashboardOrder.map((blockId, visualIndex) => `
+          <div class="draggable-block-wrapper ${isDraggableEditing ? 'is-editing' : ''}" data-block-id="${blockId}">
+            ${isDraggableEditing ? `
+              <div class="draggable-block-controls">
+                <button class="draggable-move-btn" data-action="up" data-index="${visualIndex}" ${visualIndex === 0 ? 'disabled' : ''} title="Monter">▲</button>
+                <button class="draggable-move-btn" data-action="down" data-index="${visualIndex}" ${visualIndex === dashboardOrder.length - 1 ? 'disabled' : ''} title="Descendre">▼</button>
+              </div>
+            ` : ''}
+            ${blockGenerators[blockId] ? blockGenerators[blockId]() : ''}
+          </div>
+        `).join('');
+
+        // Wire Draggable Move Buttons
+        if (isDraggableEditing) {
+          container.querySelectorAll('.draggable-move-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const action = btn.getAttribute('data-action');
+              const idx = parseInt(btn.getAttribute('data-index'), 10);
+              const targetIdx = action === 'up' ? idx - 1 : idx + 1;
+              if (targetIdx >= 0 && targetIdx < dashboardOrder.length) {
+                const temp = dashboardOrder[idx];
+                dashboardOrder[idx] = dashboardOrder[targetIdx];
+                dashboardOrder[targetIdx] = temp;
+                localStorage.setItem('JellyTrack-dashboard-order', JSON.stringify(dashboardOrder));
+                renderDraggableDashboardBlocks();
               }
-            } catch (err) {}
-          } else if (tab === 'network') {
+            });
+          });
+        }
+
+        // Render Charts inside the instantiated blocks
+        renderChartsForOverview();
+        renderLiveStreamsBlock();
+        renderHeatmapGrid();
+        wireBlockControls();
+      };
+
+      // 7. Render Charts inside Overview Blocks
+      const renderChartsForOverview = () => {
+        if (!dashboardData) return;
+        const d = dashboardData;
+
+        // Composed Trend Chart (Volume History)
+        const trendEl = document.getElementById('chart-composed-trend');
+        if (trendEl && d.trendData && d.trendData.length > 0) {
+          const labels = d.trendData.map(t => t.time);
+          const datasets = [
+            { label: 'Films (h)', data: d.trendData.map(t => t.movieVolume || 0), color: '#38bdf8' },
+            { label: 'Séries (h)', data: d.trendData.map(t => t.seriesVolume || 0), color: '#22c55e' },
+            { label: 'Musique (h)', data: d.trendData.map(t => t.musicVolume || 0), color: '#f59e0b' },
+            { label: 'Livres (h)', data: d.trendData.map(t => t.booksVolume || 0), color: '#a855f7' },
+          ];
+          ChartHelper.renderMultiLine('chart-composed-trend', labels, datasets, { isHours: true });
+        }
+
+        // Category Pie Chart
+        const pieEl = document.getElementById('chart-category-pie');
+        if (pieEl && d.categoryPieData && d.categoryPieData.length > 0) {
+          const labels = d.categoryPieData.map(c => c.name);
+          const values = d.categoryPieData.map(c => c.value);
+          ChartHelper.renderDoughnut('chart-category-pie', labels, values, {
+            isHours: true,
+            colors: ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7'],
+            onClick: (idx, label) => {
+              const typeMap = { 'Films': 'Movie', 'Séries': 'Episode', 'Musique': 'Audio', 'Livres': 'AudioBook' };
+              Router.navigate(`/logs?type=${typeMap[label] || label}`);
+            },
+          });
+        }
+
+        // Library Daily Plays Chart
+        const libEl = document.getElementById('chart-library-plays');
+        if (libEl && d.trendData && d.trendData.length > 0) {
+          const labels = d.trendData.map(t => t.time);
+          const datasets = [
+            { label: 'Films', data: d.trendData.map(t => t.moviePlays || 0), color: '#3b82f6' },
+            { label: 'Séries', data: d.trendData.map(t => t.seriesPlays || 0), color: '#22c55e' },
+            { label: 'Musique', data: d.trendData.map(t => t.musicPlays || 0), color: '#eab308' },
+            { label: 'Livres', data: d.trendData.map(t => t.booksPlays || 0), color: '#a855f7' },
+            { label: 'Total lectures', data: d.trendData.map(t => t.totalViews || 0), color: '#94a3b8' },
+          ];
+          ChartHelper.renderMultiLine('chart-library-plays', labels, datasets, { isHours: false });
+        }
+
+        // Platform Distribution Chart
+        const platEl = document.getElementById('chart-platform-dist');
+        if (platEl && d.platformChartData && d.platformChartData.length > 0) {
+          const labels = d.platformChartData.map(p => p.name);
+          const values = d.platformChartData.map(p => p.value);
+          ChartHelper.renderDoughnut('chart-platform-dist', labels, values, {
+            isHours: false,
+            onClick: (idx, label) => Router.navigate(`/logs?client=${encodeURIComponent(label)}`),
+          });
+        }
+
+        // Activity By Hour Chart (0..23h)
+        const hourEl = document.getElementById('chart-activity-by-hour');
+        if (hourEl && d.hourlyChartData && d.hourlyChartData.length > 0) {
+          const labels = d.hourlyChartData.map(h => h.hour);
+          const values = d.hourlyChartData.map(h => Number(h.count || h.value || 0));
+          const maxVal = Math.max(...values, 1);
+          const bgColors = values.map(v => v === maxVal && maxVal > 0 ? '#f97316' : '#38bdf8');
+          ChartHelper.renderBar('chart-activity-by-hour', labels, values, {
+            backgroundColors: bgColors,
+            label: 'Sessions',
+            onClick: (idx, label) => Router.navigate(`/logs?hour=${label.split(':')[0]}`),
+          });
+        }
+
+        // Day Of Week Chart (Lun..Dim)
+        const dayEl = document.getElementById('chart-day-of-week');
+        if (dayEl && d.dayOfWeekChartData && d.dayOfWeekChartData.length > 0) {
+          const labels = d.dayOfWeekChartData.map(day => day.day);
+          const values = d.dayOfWeekChartData.map(day => Number(day.count || 0));
+          const maxVal = Math.max(...values, 1);
+          const bgColors = values.map(v => v === maxVal && maxVal > 0 ? '#ea580c' : '#059669');
+          ChartHelper.renderBar('chart-day-of-week', labels, values, {
+            backgroundColors: bgColors,
+            label: 'Sessions',
+          });
+        }
+
+        // Monthly Watch Time Chart
+        renderMonthlyWatchChart();
+
+        // Completion Ratio Chart
+        const compEl = document.getElementById('chart-completion-ratio');
+        if (compEl && d.completionData && d.completionData.length > 0) {
+          const labels = d.completionData.map(c => c.name);
+          const values = d.completionData.map(c => c.value);
+          const colorMap = { 'Terminé': '#22c55e', 'Partiel': '#f59e0b', 'Abandonné': '#ef4444' };
+          const colors = labels.map(l => colorMap[l] || '#94a3b8');
+          ChartHelper.renderDoughnut('chart-completion-ratio', labels, values, { colors, isHours: false });
+        }
+
+        // Client Category Chart (TV, Mobile, Web, Desktop, Autre)
+        const clientEl = document.getElementById('chart-client-category');
+        if (clientEl && d.clientCategoryData && d.clientCategoryData.length > 0) {
+          const labels = d.clientCategoryData.map(c => c.category);
+          const values = d.clientCategoryData.map(c => c.count);
+          const catColors = { 'TV': '#6366f1', 'Web': '#3b82f6', 'Mobile': '#22c55e', 'Desktop': '#f59e0b', 'Autre': '#71717a' };
+          const bgColors = labels.map(l => catColors[l] || '#71717a');
+          ChartHelper.renderHorizontalBar('chart-client-category', labels, values, { backgroundColors: bgColors, label: 'Sessions' });
+        }
+
+        // Server Load Timeline (Peak Concurrent Streams)
+        const loadEl = document.getElementById('chart-server-load');
+        if (loadEl && d.serverLoadData && d.serverLoadData.length > 0) {
+          const labels = d.serverLoadData.map(s => s.time);
+          const datasets = [{
+            label: 'Flux simultanés max',
+            data: d.serverLoadData.map(s => s.peakStreams || 0),
+            color: '#ec4899',
+            fill: true,
+          }];
+          ChartHelper.renderMultiLine('chart-server-load', labels, datasets, { isHours: false });
+        }
+      };
+
+      // 8. Render Monthly Watch Chart
+      const renderMonthlyWatchChart = () => {
+        const monthlyEl = document.getElementById('chart-monthly-watch');
+        if (!monthlyEl || !dashboardData || !dashboardData.monthlyWatchData) return;
+
+        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const dataMap = new Map();
+        dashboardData.monthlyWatchData.forEach(m => dataMap.set(m.month, m.hours));
+
+        const values = [];
+        for (let i = 0; i < 12; i++) {
+          values.push(dataMap.get(`${selectedMonthlyYear}_${i}`) || 0);
+        }
+        const maxVal = Math.max(...values, 1);
+        const bgColors = values.map(v => v === maxVal && maxVal > 0 ? '#f97316' : '#38bdf8');
+
+        ChartHelper.renderBar('chart-monthly-watch', monthNames, values, {
+          backgroundColors: bgColors,
+          isHours: true,
+          onClick: (idx) => {
+            const firstDay = new Date(selectedMonthlyYear, idx, 1).toISOString().split('T')[0];
+            const lastDay = new Date(selectedMonthlyYear, idx + 1, 0).toISOString().split('T')[0];
+            Router.navigate(`/logs?dateFrom=${firstDay}&dateTo=${lastDay}`);
+          },
+        });
+      };
+
+      // 9. Render Yearly Heatmap Grid
+      const renderHeatmapGrid = () => {
+        const container = document.getElementById('dash-heatmap-grid-container');
+        if (!container || !dashboardData || !dashboardData.yearlyHeatmap) return;
+
+        const hm = dashboardData.yearlyHeatmap;
+        const dataByType = hm.heatmapDataByType || {};
+        const entries = dataByType[selectedHeatmapLib] || dataByType['_total'] || [];
+
+        // Build date map
+        const dateMap = new Map();
+        let totalYearCount = 0;
+        entries.forEach(e => {
+          dateMap.set(e.date, e.count);
+          if (e.date.startsWith(String(selectedHeatmapYear))) {
+            totalYearCount += e.count;
+          }
+        });
+
+        const summaryEl = document.getElementById('dash-heatmap-summary');
+        if (summaryEl) summaryEl.textContent = `${totalYearCount} sessions enregistrées en ${selectedHeatmapYear}`;
+
+        // Compute mean and levels
+        const counts = Array.from(dateMap.values()).filter(c => c > 0);
+        const mean = counts.length > 0 ? counts.reduce((a, b) => a + b, 0) / counts.length : 0;
+        const maxCount = counts.length > 0 ? Math.max(...counts) : 0;
+
+        const getLvl = (c) => {
+          if (!c || c <= 0) return 0;
+          if (mean <= 0) return 1;
+          if (c <= mean) return (c / mean < 0.5) ? 1 : 2;
+          if (maxCount <= mean) return 3;
+          return ((c - mean) / (maxCount - mean) < 0.45) ? 3 : 4;
+        };
+
+        // Construct 53 weeks x 7 days calendar
+        const jan1 = new Date(selectedHeatmapYear, 0, 1);
+        let curr = new Date(jan1);
+        const dayOfWeek = (curr.getDay() + 6) % 7; // Monday = 0
+        curr.setDate(curr.getDate() - dayOfWeek); // align to Monday
+
+        let tableHtml = '<table class="activity-calendar-table"><tbody>';
+        const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+        for (let row = 0; row < 7; row++) {
+          tableHtml += '<tr>';
+          tableHtml += `<td style="font-size:0.68rem; color:var(--muted-foreground); padding-right:6px; font-weight:600;">${dayNames[row]}</td>`;
+          let dayPtr = new Date(curr);
+          dayPtr.setDate(dayPtr.getDate() + row);
+
+          for (let col = 0; col < 53; col++) {
+            const dateStr = dayPtr.toISOString().split('T')[0];
+            const isCurYear = dayPtr.getFullYear() === selectedHeatmapYear;
+            const count = isCurYear ? (dateMap.get(dateStr) || 0) : 0;
+            const lvl = isCurYear ? getLvl(count) : 0;
+
+            tableHtml += `
+              <td>
+                <div class="activity-calendar-cell cal-lvl-${lvl}" 
+                     title="${dateStr}: ${count} sessions" 
+                     data-date="${dateStr}" 
+                     data-count="${count}"
+                     style="${!isCurYear ? 'opacity:0.2;' : ''}">
+                </div>
+              </td>
+            `;
+            dayPtr.setDate(dayPtr.getDate() + 7);
+          }
+          tableHtml += '</tr>';
+        }
+        tableHtml += '</tbody></table>';
+
+        container.innerHTML = tableHtml;
+
+        // Drill-down modal on cell click
+        container.querySelectorAll('.activity-calendar-cell').forEach(cell => {
+          cell.addEventListener('click', async () => {
+            const date = cell.getAttribute('data-date');
+            const count = parseInt(cell.getAttribute('data-count'), 10) || 0;
+            if (count === 0) return;
+
             try {
-              const geo = await API.getJSON('/api/geo-stats');
-              const bodyEl = document.getElementById('dash-geo-body');
-              if (bodyEl) {
-                bodyEl.innerHTML = `
-                  <div class="ranking-list">
-                    ${(geo.locations || []).slice(0, 10).map((loc) => `
+              const detail = await API.getJSON(`/api/heatmap-detail?date=${date}`);
+              const sessions = detail.sessions || [];
+
+              Modal.showAction({
+                title: `Sessions du ${date} (${count} lectures)`,
+                bodyHtml: sessions.length > 0 ? `
+                  <div class="ranking-list" style="max-height:360px; overflow-y:auto;">
+                    ${sessions.map(s => `
                       <div class="ranking-item">
-                        <span class="ranking-badge">🌍</span>
-                        <span class="ranking-name">${Utils.escapeHtml(loc.city || 'Inconnu')}, ${Utils.escapeHtml(loc.country || '')}</span>
-                        <span class="ranking-value">${loc.count || 0} sessions</span>
+                        <span class="ranking-badge">▶</span>
+                        <div class="ranking-name">
+                          <b>${Utils.escapeHtml(s.username)}</b> — ${Utils.escapeHtml(s.mediaTitle)}
+                          <div class="text-xs text-muted-foreground">${s.durationMin || 0} min • ${Utils.escapeHtml(s.clientName || 'Client')}</div>
+                        </div>
                       </div>
-                    `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée géographique enregistrée</div>'}
+                    `).join('')}
                   </div>
-                `;
-              }
+                ` : '<p class="text-muted-foreground">Aucun détail disponible pour cette date.</p>',
+                cancelText: 'Fermer',
+                confirmText: 'Voir les logs complets',
+                onConfirm: () => Router.navigate(`/logs?dateFrom=${date}&dateTo=${date}`),
+              });
             } catch (err) {}
+          });
+        });
+      };
+
+      // 10. Wire block controls (Year switchers, view toggles)
+      const wireBlockControls = () => {
+        // Draggable edit toggle
+        const btnToggleEdit = document.getElementById('btn-toggle-draggable-edit');
+        const editLabel = document.getElementById('draggable-edit-label');
+        if (btnToggleEdit) {
+          btnToggleEdit.onclick = () => {
+            isDraggableEditing = !isDraggableEditing;
+            if (editLabel) editLabel.textContent = isDraggableEditing ? (I18n.t('draggable.finishEdit') || 'Terminer') : (I18n.t('draggable.editOrder') || "Modifier l'ordre");
+            btnToggleEdit.classList.toggle('btn-primary', isDraggableEditing);
+            btnToggleEdit.classList.toggle('btn-secondary', !isDraggableEditing);
+            renderDraggableDashboardBlocks();
+          };
+        }
+
+        // Live view toggle (Gantt vs Cards)
+        const btnLiveView = document.getElementById('btn-toggle-live-view');
+        if (btnLiveView) {
+          btnLiveView.onclick = () => {
+            forceCardsView = !forceCardsView;
+            renderLiveStreamsBlock();
+          };
+        }
+
+        // Heatmap Year Switch
+        const btnHmPrev = document.getElementById('btn-heatmap-prev-year');
+        const btnHmNext = document.getElementById('btn-heatmap-next-year');
+        const hmYearEl = document.getElementById('heatmap-current-year');
+        if (btnHmPrev) {
+          btnHmPrev.onclick = () => {
+            selectedHeatmapYear--;
+            if (hmYearEl) hmYearEl.textContent = selectedHeatmapYear;
+            renderHeatmapGrid();
+          };
+        }
+        if (btnHmNext) {
+          btnHmNext.onclick = () => {
+            selectedHeatmapYear++;
+            if (hmYearEl) hmYearEl.textContent = selectedHeatmapYear;
+            renderHeatmapGrid();
+          };
+        }
+
+        // Heatmap Library filter buttons
+        document.querySelectorAll('#dash-heatmap-lib-filters .time-pill-btn').forEach(btn => {
+          btn.onclick = () => {
+            document.querySelectorAll('#dash-heatmap-lib-filters .time-pill-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedHeatmapLib = btn.getAttribute('data-lib') || '_total';
+            renderHeatmapGrid();
+          };
+        });
+
+        // Monthly Watch Year Switch
+        const btnMonPrev = document.getElementById('btn-monthly-prev-year');
+        const btnMonNext = document.getElementById('btn-monthly-next-year');
+        const monYearEl = document.getElementById('monthly-current-year');
+        if (btnMonPrev) {
+          btnMonPrev.onclick = () => {
+            selectedMonthlyYear--;
+            if (monYearEl) monYearEl.textContent = selectedMonthlyYear;
+            renderMonthlyWatchChart();
+          };
+        }
+        if (btnMonNext) {
+          btnMonNext.onclick = () => {
+            selectedMonthlyYear++;
+            if (monYearEl) monYearEl.textContent = selectedMonthlyYear;
+            renderMonthlyWatchChart();
+          };
+        }
+      };
+
+      // 11. Load AI Predictions Panel
+      const loadPredictions = async () => {
+        const container = document.getElementById('dash-predictions-container');
+        if (!container) return;
+
+        try {
+          const preds = await API.getJSON('/api/predictions');
+          const trending = preds.trendingMedia || [];
+          const topPeaks = (preds.peakPredictions || []).slice(0, 10);
+          const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
+          if (trending.length === 0 && topPeaks.length === 0) {
+            container.innerHTML = '';
+            return;
+          }
+
+          container.innerHTML = `
+            <div class="dash-grid-2">
+              ${trending.length > 0 ? `
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title" style="display:flex; align-items:center; gap:0.4rem;">
+                        <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                        Tendances émergentes
+                      </div>
+                      <div class="card-subtitle">Titres en forte accélération de visionnage</div>
+                    </div>
+                  </div>
+                  <div class="ranking-list">
+                    ${trending.slice(0, 6).map((item, i) => `
+                      <a href="/media/${item.jellyfinMediaId || ''}" class="ranking-item">
+                        <span class="ranking-badge">#${i + 1}</span>
+                        <div class="ranking-name">
+                          <span style="font-weight:700;">${Utils.escapeHtml(item.title)}</span>
+                          <div style="font-size:0.72rem; color:var(--muted-foreground);">${item.currentWeekPlays || 0} lectures cette semaine</div>
+                        </div>
+                        <span class="badge ${item.growthPercent > 0 ? 'badge-success' : 'badge-info'}" style="font-size:0.72rem;">
+                          ${item.growthPercent > 0 ? `+${item.growthPercent}%` : 'Nouveau'}
+                        </span>
+                      </a>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+
+              ${topPeaks.length > 0 ? `
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title" style="display:flex; align-items:center; gap:0.4rem;">
+                        <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        Prévisions des pics d'affluence
+                      </div>
+                      <div class="card-subtitle">Créneaux horaires de pointe anticipés par analyse EMA</div>
+                    </div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:0.6rem; padding:0.5rem 0;">
+                    ${topPeaks.map(peak => {
+                      const maxPred = topPeaks[0]?.predictedSessions || 1;
+                      const barW = Math.round((peak.predictedSessions / maxPred) * 100);
+                      const isHighConf = peak.confidence >= 70;
+                      return `
+                        <div style="display:flex; align-items:center; gap:0.6rem; font-size:0.75rem;">
+                          <span style="width:40px; font-weight:700; color:var(--muted-foreground);">${dayNames[peak.dayOfWeek] || '?'}</span>
+                          <span style="width:35px; color:var(--muted-foreground);">${String(peak.hour).padStart(2, '0')}h</span>
+                          <div style="flex:1; height:18px; border-radius:999px; background:rgba(148, 163, 184, 0.15); overflow:hidden; position:relative;">
+                            <div style="height:100%; width:${barW}%; border-radius:999px; background:${isHighConf ? '#f59e0b' : 'rgba(245, 158, 11, 0.5)'}; transition:width 0.4s ease;"></div>
+                            <span style="position:absolute; right:8px; top:1px; font-size:0.68rem; font-weight:700;">~${Math.round(peak.predictedSessions)} flux</span>
+                          </div>
+                          <span class="badge ${isHighConf ? 'badge-success' : 'badge-info'}" style="font-size:0.68rem; width:45px; text-align:center;">${peak.confidence}%</span>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        } catch (e) {}
+      };
+
+      // 12. Load Tab 2: Granular Analysis & Deep Insights
+      const loadGranularAndDeep = async () => {
+        try {
+          const params = new URLSearchParams();
+          params.set('timeRange', currentTimeRange);
+          if (currentMediaType) params.set('type', currentMediaType);
+          if (currentServerId) params.set('servers', currentServerId);
+
+          const [gran, deep] = await Promise.all([
+            API.getJSON(`/api/stats/granular?${params.toString()}`).catch(() => ({})),
+            API.getJSON(`/api/stats/deep?${params.toString()}`).catch(() => ({})),
+          ]);
+
+          const granContainer = document.getElementById('dash-granular-container');
+          if (granContainer) {
+            granContainer.innerHTML = `
+              <!-- Attendance Heatmap 7x24 -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">Matrice d'affluence horaire (7j × 24h)</div>
+                    <div class="card-subtitle">Intensité moyenne de fréquentation selon le jour et l'heure</div>
+                  </div>
+                </div>
+                <div style="padding:1rem; overflow-x:auto;">
+                  <div class="attendance-grid">
+                    <div></div>
+                    ${Array.from({ length: 24 }, (_, h) => `<div class="attendance-hour-hdr">${h}h</div>`).join('')}
+                    ${['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((dName, dayIdx) => `
+                      <div class="attendance-day-lbl">${dName}</div>
+                      ${Array.from({ length: 24 }, (_, h) => {
+                        const cell = (gran.attendanceHeatmap || []).find(c => c.day === dayIdx && c.hour === h) || { count: 0, level: 0 };
+                        const lvlColors = ['rgba(148, 163, 184, 0.1)', '#0e4429', '#006d32', '#26a641', '#39d353'];
+                        return `<div class="attendance-cell" style="background:${lvlColors[cell.level || 0]};" title="${dName} ${h}h: ${cell.count} sessions"></div>`;
+                      }).join('')}
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Completion & Abandonment Analysis -->
+              <div class="dash-grid-2">
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Taux de complétion par bibliothèque</div>
+                      <div class="card-subtitle">Pourcentage moyen du contenu visionné avant arrêt</div>
+                    </div>
+                  </div>
+                  <div style="padding:1rem; display:flex; flex-direction:column; gap:0.75rem;">
+                    ${(gran.dropOffData || []).map(item => `
+                      <div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
+                          <span style="font-weight:600;">${Utils.escapeHtml(item.time || 'Bibliothèque')}</span>
+                          <span style="font-weight:700; color:#10b981;">${item.completion || 0}%</span>
+                        </div>
+                        <div class="gantt-track">
+                          <div class="gantt-fill" style="width:${item.completion || 0}%; background:#10b981;"></div>
+                        </div>
+                      </div>
+                    `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée</div>'}
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Titres les plus abandonnés</div>
+                      <div class="card-subtitle">Contenus arrêtés prématurément par les spectateurs</div>
+                    </div>
+                  </div>
+                  <div class="ranking-list">
+                    ${(gran.topAbandoned || []).map((m, i) => `
+                      <a href="/media/${m.mediaId || ''}" class="ranking-item">
+                        <span class="ranking-badge" style="background:rgba(239, 68, 68, 0.15); color:#ef4444;">#${i + 1}</span>
+                        <div class="ranking-name">
+                          <span style="font-weight:700;">${Utils.escapeHtml(m.fullTitle || m.title)}</span>
+                          <div style="font-size:0.72rem; color:var(--muted-foreground);">${m.count || 0} abandons</div>
+                        </div>
+                        <span class="badge badge-danger" style="font-size:0.72rem;">${m.completion || 0}% vu</span>
+                      </a>
+                    `).join('') || '<div class="text-muted-foreground text-sm" style="padding:1rem;">Aucun abandon prématuré recensé.</div>'}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Audio & Subtitles Ecosystem -->
+              <div class="dash-grid-2">
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Pistes audio les plus écoutées</div>
+                      <div class="card-subtitle">Codecs et langues des flux audio</div>
+                    </div>
+                  </div>
+                  <div class="ranking-list">
+                    ${(gran.audioData || []).map((a, i) => `
+                      <div class="ranking-item">
+                        <span class="ranking-badge">🔊</span>
+                        <span class="ranking-name">${Utils.escapeHtml(a.name || 'Inconnu')}</span>
+                        <span class="ranking-value">${a.value || 0} sessions</span>
+                      </div>
+                    `).join('') || '<div class="text-muted-foreground text-sm" style="padding:1rem;">Aucune donnée</div>'}
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Sous-titres utilisés</div>
+                      <div class="card-subtitle">Langues et formats de sous-titrage</div>
+                    </div>
+                  </div>
+                  <div class="ranking-list">
+                    ${(gran.subtitleData || []).map((s, i) => `
+                      <div class="ranking-item">
+                        <span class="ranking-badge">💬</span>
+                        <span class="ranking-name">${Utils.escapeHtml(s.name || 'Désactivé')}</span>
+                        <span class="ranking-value">${s.value || 0} sessions</span>
+                      </div>
+                    `).join('') || '<div class="text-muted-foreground text-sm" style="padding:1rem;">Aucune donnée</div>'}
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          const deepContainer = document.getElementById('dash-deep-insights-container');
+          if (deepContainer) {
+            deepContainer.innerHTML = `
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">Acteurs, réalisateurs et studios phares</div>
+                    <div class="card-subtitle">Figures clés les plus regardées sur votre serveur</div>
+                  </div>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; padding:1rem;">
+                  <div class="app-surface-soft p-4 rounded-lg">
+                    <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">Top Acteurs</h4>
+                    <div class="ranking-list">
+                      ${(deep.topActors || []).slice(0, 5).map((a, i) => `
+                        <div class="ranking-item">
+                          <span class="ranking-badge">#${i + 1}</span>
+                          <span class="ranking-name">${Utils.escapeHtml(a.name)}</span>
+                          <span class="ranking-value">${a.count} films</span>
+                        </div>
+                      `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée</div>'}
+                    </div>
+                  </div>
+                  <div class="app-surface-soft p-4 rounded-lg">
+                    <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">Top Réalisateurs</h4>
+                    <div class="ranking-list">
+                      ${(deep.topDirectors || []).slice(0, 5).map((d, i) => `
+                        <div class="ranking-item">
+                          <span class="ranking-badge">#${i + 1}</span>
+                          <span class="ranking-name">${Utils.escapeHtml(d.name)}</span>
+                          <span class="ranking-value">${d.count} films</span>
+                        </div>
+                      `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée</div>'}
+                    </div>
+                  </div>
+                  <div class="app-surface-soft p-4 rounded-lg">
+                    <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">Top Studios</h4>
+                    <div class="ranking-list">
+                      ${(deep.topStudios || []).slice(0, 5).map((s, i) => `
+                        <div class="ranking-item">
+                          <span class="ranking-badge">#${i + 1}</span>
+                          <span class="ranking-name">${Utils.escapeHtml(s.name)}</span>
+                          <span class="ranking-value">${s.count} titres</span>
+                        </div>
+                      `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée</div>'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        } catch (e) {}
+      };
+
+      // 13. Load Tab 3: Network Analysis & Coupables Table
+      const loadNetworkTab = async () => {
+        try {
+          const params = new URLSearchParams();
+          params.set('timeRange', currentTimeRange);
+          if (currentMediaType) params.set('type', currentMediaType);
+          if (currentServerId) params.set('servers', currentServerId);
+
+          const [net, geo] = await Promise.all([
+            API.getJSON(`/api/stats/network?${params.toString()}`).catch(() => ({})),
+            API.getJSON('/api/geo-stats').catch(() => ({})),
+          ]);
+
+          const container = document.getElementById('dash-network-container');
+          if (!container) return;
+
+          const stats = net.stats || { totalSessions: 0, directPlaySessions: 0, transcodeSessions: 0, directStreamSessions: 0, transcodePercent: 0, totalTranscodeDuration: 0 };
+          const coupable = net.coupableTable || [];
+
+          container.innerHTML = `
+            <!-- 4 Network KPI Cards -->
+            <div class="stat-grid-4">
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">Sessions totales</span>
+                  <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+                </div>
+                <div class="stat-num metric-glow-cyan">${stats.totalSessions}</div>
+                <div class="stat-desc text-emerald" style="font-weight:600;">${stats.directPlaySessions} DirectPlay</div>
+              </div>
+
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">Taux de transcodage</span>
+                  <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                </div>
+                <div class="stat-num metric-glow-amber">${stats.transcodePercent}%</div>
+                <div class="stat-desc">${stats.transcodeSessions} lectures transcodées</div>
+              </div>
+
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">DirectStream (Remux)</span>
+                  <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="15" x="2" y="3" rx="2"/></svg>
+                </div>
+                <div class="stat-num metric-glow-blue">${stats.directStreamSessions}</div>
+                <div class="stat-desc">Conteneur modifié sans ré-encodage vidéo</div>
+              </div>
+
+              <div class="stat-card-modern">
+                <div class="stat-header">
+                  <span class="stat-title">Durée de transcodage</span>
+                  <svg class="nav-icon text-rose" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="stat-num metric-glow-rose">${Math.round((stats.totalTranscodeDuration || 0) / 3600)}h</div>
+                <div class="stat-desc">Temps machine cumulé</div>
+              </div>
+            </div>
+
+            <!-- 2 Network Charts -->
+            <div class="dash-grid-2">
+              <div class="chart-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">DirectPlay vs Transcode par heure</div>
+                    <div class="card-subtitle">Répartition temporelle des méthodes de flux</div>
+                  </div>
+                </div>
+                <div class="chart-wrap" style="height:280px;">
+                  <canvas id="chart-net-transcode-hourly"></canvas>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">Transcodage par client</div>
+                    <div class="card-subtitle">Pourcentage de sessions transcodées par application</div>
+                  </div>
+                </div>
+                <div class="chart-wrap" style="height:280px;">
+                  <canvas id="chart-net-client-transcode"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tableau des Coupables -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <div class="card-title">🚨 Tableau des Coupables (Titres les plus transcodés)</div>
+                  <div class="card-subtitle">Fichiers consommant le plus de ressources CPU/GPU avec motif identifié</div>
+                </div>
+              </div>
+              <div style="padding:1rem; overflow-x:auto;">
+                ${coupable.length > 0 ? `
+                  <table class="table-modern">
+                    <thead>
+                      <tr>
+                        <th>Média</th>
+                        <th>Résolution</th>
+                        <th style="text-align:center;">Sessions</th>
+                        <th style="text-align:center;">Durée</th>
+                        <th>Cause principale</th>
+                        <th>Client principal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${coupable.map((row, i) => `
+                        <tr>
+                          <td>
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                              <span style="font-size:0.75rem; color:var(--muted-foreground);">${i + 1}.</span>
+                              <span style="font-weight:600;" title="${Utils.escapeHtml(row.fullTitle || row.title)}">${Utils.escapeHtml(row.title)}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <span class="badge ${row.resolution === '4K' ? 'badge-warning' : 'badge-info'}" style="font-size:0.7rem;">${row.resolution || 'HD'}</span>
+                          </td>
+                          <td style="text-align:center; font-weight:700;" class="metric-glow-amber">${row.count}</td>
+                          <td style="text-align:center; font-size:0.8rem;">${row.durationMin} min</td>
+                          <td>
+                            <span class="badge badge-danger" style="font-size:0.72rem;">${Utils.escapeHtml(row.mainReason || 'Transcode')}</span>
+                          </td>
+                          <td>
+                            <span style="font-size:0.8rem; color:var(--muted-foreground);">${Utils.escapeHtml(row.topClient || 'Inconnu')}</span>
+                          </td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                ` : '<div class="text-muted-foreground text-sm" style="padding:1.5rem; text-align:center;">Aucune session transcodée enregistrée sur cette période. Bravo pour votre bande passante !</div>'}
+              </div>
+            </div>
+
+            <!-- Geographic Distribution -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <div class="card-title">🌍 Origine géographique des connexions</div>
+                  <div class="card-subtitle">Localisation des adresses IP clientes enregistrées</div>
+                </div>
+              </div>
+              <div style="padding:1rem;">
+                <div class="ranking-list">
+                  ${(geo.locations || []).slice(0, 10).map((loc, i) => `
+                    <div class="ranking-item">
+                      <span class="ranking-badge">🌍</span>
+                      <span class="ranking-name">${Utils.escapeHtml(loc.city || 'Inconnu')}, ${Utils.escapeHtml(loc.country || '')}</span>
+                      <span class="ranking-value">${loc.count || 0} sessions</span>
+                    </div>
+                  `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée géographique enregistrée.</div>'}
+                </div>
+              </div>
+            </div>
+          `;
+
+          // Render Network Charts
+          if (net.hourlyData && net.hourlyData.length > 0) {
+            const labels = net.hourlyData.map(h => h.hour);
+            const datasets = [
+              { label: 'DirectPlay', data: net.hourlyData.map(h => h.directPlay || 0), color: '#10b981' },
+              { label: 'Transcode', data: net.hourlyData.map(h => h.transcode || 0), color: '#f59e0b' },
+              { label: 'DirectStream', data: net.hourlyData.map(h => h.directStream || 0), color: '#3b82f6' },
+            ];
+            ChartHelper.renderStackedArea('chart-net-transcode-hourly', labels, datasets);
+          }
+
+          if (net.clientTranscodeData && net.clientTranscodeData.length > 0) {
+            const labels = net.clientTranscodeData.map(c => c.name);
+            const values = net.clientTranscodeData.map(c => c.transcodePercent || 0);
+            ChartHelper.renderHorizontalBar('chart-net-client-transcode', labels, values, {
+              backgroundColors: '#f97316',
+              label: '% Transcodé',
+            });
+          }
+        } catch (e) {}
+      };
+
+      // 14. Tab switcher click handlers
+      document.querySelectorAll('#dashboard-tablist .dash-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#dashboard-tablist .dash-tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeTab = btn.getAttribute('data-tab');
+
+          document.getElementById('tab-content-overview')?.classList.toggle('hidden', activeTab !== 'overview');
+          document.getElementById('tab-content-analytics')?.classList.toggle('hidden', activeTab !== 'analytics');
+          document.getElementById('tab-content-network')?.classList.toggle('hidden', activeTab !== 'network');
+
+          if (activeTab === 'overview') {
+            renderChartsForOverview();
+          } else if (activeTab === 'analytics') {
+            loadGranularAndDeep();
+          } else if (activeTab === 'network') {
+            loadNetworkTab();
           }
         });
       });
 
-      // Time range pills click
-      document.querySelectorAll('#dash-time-range .time-pill-btn').forEach((btn) => {
+      // 15. Time range pills click handlers
+      document.querySelectorAll('#dash-time-range .time-pill-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('#dash-time-range .time-pill-btn').forEach((b) => b.classList.remove('active'));
+          document.querySelectorAll('#dash-time-range .time-pill-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          currentDays = parseInt(btn.getAttribute('data-days'), 10) || 7;
-          loadDashData();
+          currentTimeRange = btn.getAttribute('data-range') || '7d';
+          loadAllDashboard();
+          if (activeTab === 'analytics') loadGranularAndDeep();
+          if (activeTab === 'network') loadNetworkTab();
         });
       });
 
-      // Media filter pills click
-      document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach((btn) => {
+      // 16. Media filter buttons click handlers
+      document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach((b) => b.classList.remove('active'));
+          document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           currentMediaType = btn.getAttribute('data-type') || '';
-          loadDashData();
+          loadAllDashboard();
+          if (activeTab === 'analytics') loadGranularAndDeep();
+          if (activeTab === 'network') loadNetworkTab();
         });
       });
 
-      await loadDashData();
+      // 17. Refresh button click handler
+      const btnRefresh = document.getElementById('btn-refresh-dashboard');
+      if (btnRefresh) {
+        btnRefresh.addEventListener('click', () => {
+          loadSystemHealth();
+          loadHardware();
+          refreshLiveStreams();
+          loadAllDashboard();
+          if (activeTab === 'analytics') loadGranularAndDeep();
+          if (activeTab === 'network') loadNetworkTab();
+          Toast.info('Données rafraîchies');
+        });
+      }
+
+      // Initial loaders
+      await Promise.all([
+        loadSystemHealth(),
+        loadHardware(),
+        refreshLiveStreams(),
+        loadAllDashboard(),
+      ]);
+
+      // Polling for live streams & hardware
+      const hwInterval = setInterval(loadHardware, 10000);
+      const healthInterval = setInterval(loadSystemHealth, 30000);
+      const streamsInterval = setInterval(refreshLiveStreams, 4000);
+
+      // Cleanup on page navigate
+      const originalNavigate = Router.navigate;
+      const cleanup = () => {
+        clearInterval(hwInterval);
+        clearInterval(healthInterval);
+        clearInterval(streamsInterval);
+        window.removeEventListener('popstate', cleanup);
+      };
+      window.addEventListener('popstate', cleanup, { once: true });
     },
 
     // 2. Login Page
