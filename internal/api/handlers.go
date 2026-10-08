@@ -1317,6 +1317,13 @@ func (h *Handler) rotateServerPluginKey(w http.ResponseWriter, r *http.Request) 
 func (h *Handler) jellyfinWebhook(w http.ResponseWriter, r *http.Request) {
 	allowedHostsEnv := strings.TrimSpace(os.Getenv("ALLOWED_JELLYFIN_HOSTS"))
 	if allowedHostsEnv == "" {
+		if jfURL := strings.TrimSpace(os.Getenv("JELLYFIN_URL")); jfURL != "" {
+			if u, err := url.Parse(jfURL); err == nil && u.Hostname() != "" {
+				allowedHostsEnv = u.Hostname()
+			}
+		}
+	}
+	if allowedHostsEnv == "" {
 		jsonError(w, 503, "Webhook disabled: ALLOWED_JELLYFIN_HOSTS is empty.")
 		return
 	}

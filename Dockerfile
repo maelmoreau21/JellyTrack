@@ -30,14 +30,14 @@ RUN apk add --no-cache ca-certificates tzdata \
     && addgroup -g 1000 jellytrack \
     && adduser -u 1000 -G jellytrack -s /bin/sh -D jellytrack \
     && mkdir -p /data/backups /data/logs /tmp \
-    && chown -R 1000:1000 /data /tmp \
-    && chmod -R 775 /data
+    && chmod -R 777 /data /tmp
 
 WORKDIR /app
 
 # Copy executable and initial data directory
 COPY --from=builder /out/jellytrack /app/jellytrack
-COPY --from=builder --chown=1000:1000 /tmp/data /data
+COPY --from=builder /tmp/data /data
+RUN chmod -R 777 /data /tmp
 
 ENV PORT=3000 \
     DATABASE_PATH=/data/jellytrack.db \

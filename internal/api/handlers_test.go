@@ -214,6 +214,17 @@ func TestJellyfinWebhookEnforcementAndForwarding(t *testing.T) {
 	if !strings.Contains(forwardedBody, "PlaybackStart") {
 		t.Fatalf("expected forwarded payload to contain PlaybackStart, got: %s", forwardedBody)
 	}
+
+	// 5. Fallback to JELLYFIN_URL host when ALLOWED_JELLYFIN_HOSTS is empty
+	t.Setenv("ALLOWED_JELLYFIN_HOSTS", "")
+	t.Setenv("JELLYFIN_URL", "http://jf-url.internal:8096")
+	wFallback := httptest.NewRecorder()
+	rFallback := httptest.NewRequest("POST", "/api/webhook/jellyfin", strings.NewReader(`{"serverUrl":"http://jf-url.internal:8096","NotificationType":"PlaybackProgress"}`))
+	rFallback.Header.Set("Content-Type", "application/json")
+	h.jellyfinWebhook(wFallback, rFallback)
+	if wFallback.Code != 200 {
+		t.Fatalf("expected 200 when falling back to JELLYFIN_URL host, got %d", wFallback.Code)
+	}
 }
 
 func TestUserActiveStreamRBAC(t *testing.T) {

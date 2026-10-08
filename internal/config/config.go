@@ -4,6 +4,7 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
 	"strconv"
@@ -91,7 +92,7 @@ func resolveDatabase() (driver, dbURL, dbPath string, err error) {
 		if urlIsPG {
 			driver = "postgres"
 			dbURL = rawURL
-		} else if pgURL != "" && strings.TrimSpace(os.Getenv("POSTGRES_PASSWORD")) != "" {
+		} else if pgURL != "" && hasPostgresConfig() {
 			driver = "postgres"
 			dbURL = pgURL
 		} else {
@@ -105,6 +106,20 @@ func resolveDatabase() (driver, dbURL, dbPath string, err error) {
 	return driver, dbURL, dbPath, nil
 }
 
+func hasPostgresConfig() bool {
+	return firstNonEmpty(
+		os.Getenv("JELLYTRACK_DB_HOST"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("POSTGRES_IP"),
+		os.Getenv("JELLYTRACK_DB_PASSWORD"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("JELLYTRACK_DB_USER"),
+		os.Getenv("DB_USER"),
+		os.Getenv("POSTGRES_USER"),
+	) != ""
+}
+
 // ResolvePostgresURL extracts or constructs a PostgreSQL DSN from legacy and standard environment variables.
 func ResolvePostgresURL() string {
 	raw := strings.TrimSpace(os.Getenv("DATABASE_URL"))
@@ -113,8 +128,8 @@ func ResolvePostgresURL() string {
 	}
 	user := firstNonEmpty(os.Getenv("JELLYTRACK_DB_USER"), os.Getenv("DB_USER"), os.Getenv("POSTGRES_USER"))
 	pass := firstNonEmpty(os.Getenv("JELLYTRACK_DB_PASSWORD"), os.Getenv("DB_PASSWORD"), os.Getenv("POSTGRES_PASSWORD"))
-	host := firstNonEmpty(os.Getenv("DB_HOST"), os.Getenv("POSTGRES_IP"))
-	port := firstNonEmpty(os.Getenv("DB_PORT"), os.Getenv("POSTGRES_PORT"), "5432")
+	host := firstNonEmpty(os.Getenv("JELLYTRACK_DB_HOST"), os.Getenv("DB_HOST"), os.Getenv("POSTGRES_IP"))
+	port := firstNonEmpty(os.Getenv("JELLYTRACK_DB_PORT"), os.Getenv("DB_PORT"), os.Getenv("POSTGRES_PORT"), "5432")
 	dbName := firstNonEmpty(os.Getenv("JELLYTRACK_DB_NAME"), os.Getenv("DB_NAME"), os.Getenv("POSTGRES_DB"))
 
 	if user == "" && pass == "" && host == "" && (dbName == "" || dbName == "JellyTrack") {
@@ -130,18 +145,26 @@ func ResolvePostgresURL() string {
 		dbName = "JellyTrack"
 	}
 
+	if h, p, err := net.SplitHostPort(host); err == nil && h != "" {
+		host = h
+		if port == "5432" || port == "" {
+			port = p
+		}
+	}
+
 	var userInfo *url.Userinfo
 	if pass != "" {
 		userInfo = url.UserPassword(user, pass)
 	} else {
 		userInfo = url.User(user)
 	}
+	sslMode := firstNonEmpty(os.Getenv("DB_SSLMODE"), os.Getenv("POSTGRES_SSLMODE"), "disable")
 	u := url.URL{
 		Scheme:   "postgres",
 		User:     userInfo,
-		Host:     fmt.Sprintf("%s:%s", host, port),
-		Path:     "/" + dbName,
-		RawQuery: "sslmode=disable",
+		Host:     net.JoinHostPort(host, port),
+		Path:     "/" + strings.TrimPrefix(dbName, "/"),
+		RawQuery: "sslmode=" + sslMode,
 	}
 	return u.String()
 }
