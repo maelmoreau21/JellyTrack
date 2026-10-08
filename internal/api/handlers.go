@@ -723,6 +723,42 @@ func (h *Handler) geoStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) heatmapDetail(w http.ResponseWriter, r *http.Request) {
+	dateStr := r.URL.Query().Get("date")
+	if dateStr != "" {
+		tDate, err := time.Parse("2006-01-02", dateStr)
+		if err == nil {
+			start := tDate.UTC()
+			end := start.Add(24 * time.Hour)
+			rows, qErr := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."startedAt",p."durationWatched",p."playMethod",p."clientName",u."username",m."title",m."type" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND p."startedAt"<? AND p."durationWatched">=10 ORDER BY p."startedAt" DESC LIMIT 100`, h.driver), start.Format(time.RFC3339Nano), end.Format(time.RFC3339Nano))
+			if qErr == nil {
+				defer rows.Close()
+				sessions := []map[string]any{}
+				for rows.Next() {
+					var started string
+					var dur int64
+					var pm, cn, uname, title, mType sql.NullString
+					if rows.Scan(&started, &dur, &pm, &cn, &uname, &title, &mType) == nil {
+						t, _ := time.Parse(time.RFC3339Nano, started)
+						if t.IsZero() {
+							t, _ = time.Parse(time.RFC3339, started)
+						}
+						sessions = append(sessions, map[string]any{
+							"username":    uname.String,
+							"mediaTitle":  title.String,
+							"mediaType":   mType.String,
+							"durationMin": int(dur / 60),
+							"playMethod":  pm.String,
+							"clientName":  cn.String,
+							"startedAt":   t.Format(time.RFC3339),
+						})
+					}
+				}
+				jsonResponse(w, 200, map[string]any{"sessions": sessions, "date": dateStr})
+				return
+			}
+		}
+	}
+
 	dayStr := r.URL.Query().Get("day")
 	hourStr := r.URL.Query().Get("hour")
 

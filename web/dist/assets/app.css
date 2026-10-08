@@ -4327,3 +4327,44 @@ html.dark .cal-lvl-0 {
 .category-media-item:hover {
   background: var(--surface-nested);
 }
+
+/* Active hour selection banner */
+.active-hour-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-md);
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  font-size: 0.8rem;
+}
+
+html.dark .active-hour-banner {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+/* Heatmap Legend */
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  margin-top: 0.75rem;
+}
+
+.header-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.header-filter-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}

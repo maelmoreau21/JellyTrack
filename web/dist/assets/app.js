@@ -1224,17 +1224,28 @@
           <div class="page-header-left">
             <h1 class="page-title">${I18n.t('dashboard.title') || 'Tableau de bord'}</h1>
             <div class="header-filter-bar" id="dash-media-filter">
-              <button class="header-filter-btn active" data-type="">${I18n.t('media.allMedia') || 'Tous'}</button>
-              <button class="header-filter-btn" data-type="Movie">${I18n.t('media.movies') || 'Films'}</button>
-              <button class="header-filter-btn" data-type="Series">${I18n.t('media.series') || 'Séries'}</button>
-              <button class="header-filter-btn" data-type="Audio">${I18n.t('media.music') || 'Musique'}</button>
-              <button class="header-filter-btn" data-type="Book">${I18n.t('media.books') || 'Livres'}</button>
+              <button class="header-filter-btn active" data-type="">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <span>${I18n.t('media.allMedia') || 'Tous'}</span>
+              </button>
+              <button class="header-filter-btn" data-type="Movie">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
+                <span>${I18n.t('media.movies') || 'Films'}</span>
+              </button>
+              <button class="header-filter-btn" data-type="Series">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="15" x="2" y="7" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+                <span>${I18n.t('media.series') || 'Séries'}</span>
+              </button>
+              <button class="header-filter-btn" data-type="Audio">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <span>${I18n.t('media.music') || 'Musique'}</span>
+              </button>
+              <button class="header-filter-btn" data-type="Book">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                <span>${I18n.t('media.books') || 'Livres'}</span>
+              </button>
             </div>
-            <div id="dash-server-filter-container" style="display:none; margin-left:0.5rem;">
-              <select id="dash-server-filter" class="form-input text-xs" style="padding:0.3rem 0.6rem; border-radius:var(--radius-sm);">
-                <option value="">${I18n.t('dashboard.allServers') || 'Tous les serveurs'}</option>
-              </select>
-            </div>
+            <div id="dash-server-filter-container" class="header-filter-bar" style="display:none; margin-left:0.5rem;"></div>
           </div>
           <div class="page-header-right">
             <div class="time-pills-bar" id="dash-time-range">
@@ -1413,18 +1424,33 @@
         const servers = (srvRes && srvRes.servers) ? srvRes.servers : [];
         if (servers.length > 1) {
           const srvContainer = document.getElementById('dash-server-filter-container');
-          const srvSelect = document.getElementById('dash-server-filter');
-          if (srvContainer && srvSelect) {
-            srvContainer.style.display = 'block';
-            servers.forEach(s => {
-              const opt = document.createElement('option');
-              opt.value = s.id || s.jellyfinServerId || '';
-              opt.textContent = s.name || s.url || opt.value;
-              srvSelect.appendChild(opt);
-            });
-            srvSelect.addEventListener('change', () => {
-              currentServerId = srvSelect.value;
-              loadAllDashboard();
+          if (srvContainer) {
+            srvContainer.style.display = 'inline-flex';
+            srvContainer.innerHTML = `
+              <button class="header-filter-btn active" data-server-id="">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <span>${I18n.t('dashboard.allServers') || 'Tous les serveurs'}</span>
+              </button>
+              ${servers.map(s => {
+                const sId = s.id || s.jellyfinServerId || '';
+                const sName = s.name || s.url || sId;
+                return `
+                  <button class="header-filter-btn" data-server-id="${sId}">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                    <span>${Utils.escapeHtml(sName)}</span>
+                  </button>
+                `;
+              }).join('')}
+            `;
+            srvContainer.querySelectorAll('.header-filter-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                srvContainer.querySelectorAll('.header-filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentServerId = btn.getAttribute('data-server-id') || '';
+                loadAllDashboard();
+                if (activeTab === 'analytics') loadGranularAndDeep();
+                if (activeTab === 'network') loadNetworkTab();
+              });
             });
           }
         }
@@ -1962,6 +1988,7 @@
                     <div class="card-subtitle">Distribution des sessions sur les 24 heures de la journée</div>
                   </div>
                 </div>
+                <div id="chart-hourly-active-banner" style="display:none; padding: 0 1.25rem 0.5rem;"></div>
                 <div class="chart-wrap" style="height:260px;">
                   <canvas id="chart-activity-by-hour"></canvas>
                 </div>
@@ -2110,14 +2137,38 @@
         if (pieEl) {
           const hasPieData = d.categoryPieData && d.categoryPieData.some(c => (c.value || 0) > 0);
           if (hasPieData) {
-            const labels = d.categoryPieData.map(c => c.name);
+            const rawToLocalized = {
+              'movies': I18n.t('media.movies') || 'Films',
+              'series': I18n.t('media.series') || 'Séries',
+              'music': I18n.t('media.music') || 'Musique',
+              'books': I18n.t('media.books') || 'Livres',
+              'Movie': I18n.t('media.movies') || 'Films',
+              'Series': I18n.t('media.series') || 'Séries',
+              'Audio': I18n.t('media.music') || 'Musique',
+              'Book': I18n.t('media.books') || 'Livres',
+            };
+            const rawToLogType = {
+              'movies': 'Movie',
+              'series': 'Episode',
+              'music': 'Audio',
+              'books': 'AudioBook',
+              'Movie': 'Movie',
+              'Series': 'Episode',
+              'Audio': 'Audio',
+              'Book': 'AudioBook',
+            };
+            const labels = d.categoryPieData.map(c => rawToLocalized[c.name] || c.name);
             const values = d.categoryPieData.map(c => c.value);
+            const colors = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7'];
+
             ChartHelper.renderDoughnut('chart-category-pie', labels, values, {
               isHours: true,
-              colors: ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7'],
-              onClick: (idx, label) => {
-                const typeMap = { 'Films': 'Movie', 'Séries': 'Episode', 'Musique': 'Audio', 'Livres': 'AudioBook' };
-                Router.navigate(`/logs?type=${typeMap[label] || label}`);
+              colors,
+              onClick: (idx) => {
+                const item = d.categoryPieData[idx];
+                const raw = item ? item.name : '';
+                const logType = rawToLogType[raw] || 'Movie';
+                Router.navigate(`/logs?type=${logType}`);
               },
             });
           } else {
@@ -2166,11 +2217,40 @@
             const labels = d.hourlyChartData.map(h => h.hour);
             const values = d.hourlyChartData.map(h => Number(h.count || h.value || 0));
             const maxVal = Math.max(...values, 0);
+            const validCounts = values.filter(v => Number.isFinite(v));
+            const avg = validCounts.length > 0 ? Math.round(validCounts.reduce((s, v) => s + v, 0) / validCounts.length) : 0;
             const bgColors = values.map(v => v === maxVal && maxVal > 0 ? '#f97316' : '#38bdf8');
+            const bannerEl = document.getElementById('chart-hourly-active-banner');
+
             ChartHelper.renderBar('chart-activity-by-hour', labels, values, {
               backgroundColors: bgColors,
               label: 'Sessions',
-              onClick: (idx, label) => Router.navigate(`/logs?hour=${label.split(':')[0]}`),
+              onClick: (idx, label, val) => {
+                const count = val !== undefined ? val : values[idx];
+                const diff = count - avg;
+                const sign = diff >= 0 ? '+' : '';
+                const hourNum = label.split(':')[0];
+                if (!bannerEl) {
+                  Router.navigate(`/logs?hour=${hourNum}`);
+                  return;
+                }
+                bannerEl.style.display = 'block';
+                bannerEl.innerHTML = `
+                  <div class="active-hour-banner">
+                    <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                      <span style="font-weight:700; color:#22d3ee;">${label}</span>
+                      <span>${count} ${I18n.t('charts.sessions') || 'sessions'}</span>
+                      <span style="color:var(--muted-foreground); font-size:0.75rem;">(${sign}${diff} vs moy. ${avg})</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-left:auto;">
+                      <a href="/logs?hour=${hourNum}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.6rem; font-size:0.75rem; text-decoration:none;">
+                        Voir les logs ↗
+                      </a>
+                      <button type="button" class="btn btn-secondary btn-sm" style="padding:0.15rem 0.45rem; font-size:0.75rem;" onclick="document.getElementById('chart-hourly-active-banner').style.display='none'">×</button>
+                    </div>
+                  </div>
+                `;
+              },
             });
           } else {
             ChartHelper.showEmpty('chart-activity-by-hour', 'Aucune activité horaire');
@@ -2207,10 +2287,19 @@
         if (compEl) {
           const hasCompData = d.completionData && d.completionData.some(c => (c.value || 0) > 0);
           if (hasCompData) {
-            const labels = d.completionData.map(c => c.name);
+            const rawToLabel = {
+              'completed': I18n.t('dashboard.completed') || 'Terminé',
+              'partial': I18n.t('dashboard.partial') || 'Partiel',
+              'abandoned': I18n.t('dashboard.abandoned') || 'Abandonné',
+            };
+            const rawColors = {
+              'completed': '#22c55e',
+              'partial': '#f59e0b',
+              'abandoned': '#ef4444',
+            };
+            const labels = d.completionData.map(c => rawToLabel[c.name] || c.name);
             const values = d.completionData.map(c => c.value);
-            const colorMap = { 'Terminé': '#22c55e', 'Partiel': '#f59e0b', 'Abandonné': '#ef4444' };
-            const colors = labels.map(l => colorMap[l] || '#94a3b8');
+            const colors = d.completionData.map(c => rawColors[c.name] || '#94a3b8');
             ChartHelper.renderDoughnut('chart-completion-ratio', labels, values, { colors, isHours: false });
           } else {
             ChartHelper.showEmpty('chart-completion-ratio', 'Aucune donnée de complétion');
@@ -2319,7 +2408,35 @@
         const dayOfWeek = (curr.getDay() + 6) % 7; // Monday = 0
         curr.setDate(curr.getDate() - dayOfWeek); // align to Monday
 
-        let tableHtml = '<table class="activity-calendar-table"><tbody>';
+        // Month labels along the top (53 columns)
+        const monthShortNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+        let lastMonth = -1;
+        const weekMonths = [];
+        for (let col = 0; col < 53; col++) {
+          let weekStart = new Date(curr);
+          weekStart.setDate(weekStart.getDate() + (col * 7));
+          const m = weekStart.getMonth();
+          if (weekStart.getFullYear() === selectedHeatmapYear && m !== lastMonth) {
+            weekMonths.push({ col, name: monthShortNames[m] });
+            lastMonth = m;
+          }
+        }
+
+        let tableHtml = '<table class="activity-calendar-table"><thead><tr><th style="width:18px;"></th>';
+        let curMonthIdx = 0;
+        for (let col = 0; col < 53; col++) {
+          if (curMonthIdx < weekMonths.length && weekMonths[curMonthIdx].col === col) {
+            const nextCol = (curMonthIdx + 1 < weekMonths.length) ? weekMonths[curMonthIdx + 1].col : 53;
+            const span = nextCol - col;
+            tableHtml += `<th colspan="${span}" style="font-size:0.65rem; color:var(--muted-foreground); text-align:left; font-weight:600; padding-bottom:3px;">${weekMonths[curMonthIdx].name}</th>`;
+            col += span - 1;
+            curMonthIdx++;
+          } else {
+            tableHtml += '<th></th>';
+          }
+        }
+        tableHtml += '</tr></thead><tbody>';
+
         const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
         for (let row = 0; row < 7; row++) {
@@ -2349,6 +2466,18 @@
           tableHtml += '</tr>';
         }
         tableHtml += '</tbody></table>';
+
+        tableHtml += `
+          <div class="heatmap-legend">
+            <span>${I18n.t('charts.less') || 'Moins'}</span>
+            <span class="activity-calendar-cell cal-lvl-0" style="display:inline-block;"></span>
+            <span class="activity-calendar-cell cal-lvl-1" style="display:inline-block;"></span>
+            <span class="activity-calendar-cell cal-lvl-2" style="display:inline-block;"></span>
+            <span class="activity-calendar-cell cal-lvl-3" style="display:inline-block;"></span>
+            <span class="activity-calendar-cell cal-lvl-4" style="display:inline-block;"></span>
+            <span>${I18n.t('charts.more') || 'Plus'}</span>
+          </div>
+        `;
 
         container.innerHTML = tableHtml;
 
@@ -2605,6 +2734,45 @@
             });
             const totalDrop = Object.values(segMap).reduce((acc, s) => acc + s.val, 0);
 
+            window.openAttendanceDrilldown = async (day, hour, dayName, count) => {
+              if (count === 0) return;
+              try {
+                const detail = await API.getJSON(`/api/heatmap-detail?day=${day}&hour=${hour}`);
+                const sessions = detail.sessions || [];
+                Modal.showAction({
+                  title: `${dayName} — ${hour}h00 (${count} ${count > 1 ? 'sessions' : 'session'})`,
+                  bodyHtml: sessions.length > 0 ? `
+                    <div class="ranking-list" style="max-height:360px; overflow-y:auto;">
+                      ${sessions.map(s => `
+                        <div class="ranking-item" style="padding:0.6rem 0.75rem; border-radius:var(--radius-sm); background:var(--surface-nested); margin-bottom:0.4rem;">
+                          <div style="width:28px; height:28px; border-radius:999px; background:rgba(99, 102, 241, 0.15); color:#6366f1; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem; flex-shrink:0;">
+                            ${(s.username || '?').charAt(0).toUpperCase()}
+                          </div>
+                          <div class="ranking-name" style="flex:1; min-width:0;">
+                            <div style="display:flex; align-items:center; gap:0.4rem;">
+                              <span style="font-weight:700;">${Utils.escapeHtml(s.username || 'Utilisateur')}</span>
+                              <span class="badge ${s.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}" style="font-size:0.65rem;">${Utils.escapeHtml(s.playMethod || 'Stream')}</span>
+                            </div>
+                            <div style="font-size:0.8rem; color:var(--foreground); margin-top:0.15rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                              ${Utils.escapeHtml(s.mediaTitle || 'Média')}
+                            </div>
+                            <div style="font-size:0.7rem; color:var(--muted-foreground); margin-top:0.1rem;">
+                              ${s.durationMin || 0} min • ${Utils.escapeHtml(s.clientName || 'Client')} • ${s.startedAt ? new Date(s.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </div>
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : '<p class="text-muted-foreground text-sm">Aucune session trouvée pour ce créneau.</p>',
+                  confirmText: 'Voir les logs',
+                  cancelText: 'Fermer',
+                  onConfirm: () => Router.navigate(`/logs?hour=${hour}`),
+                });
+              } catch (err) {
+                Toast.error('Erreur lors du chargement des détails');
+              }
+            };
+
             granContainer.innerHTML = `
               <!-- Row 1: Daily Plays & Plays by Library -->
               <div class="dash-grid-2">
@@ -2710,12 +2878,21 @@
                           ${Array.from({ length: 24 }, (_, h) => {
                             const count = cellMap.get(`${fd.dow}-${h}`) || 0;
                             const bg = getHeatmapColor(count);
-                            return `<td class="attendance-cell" style="background:${bg};" title="${fd.name} à ${h}h : ${count} session(s)" onclick="Router.navigate('/logs?hour=${h}')"></td>`;
+                            return `<td class="attendance-cell" style="background:${bg};" title="${fd.name} à ${h}h : ${count} session(s)" onclick="window.openAttendanceDrilldown(${fd.dow}, ${h}, '${fd.name}', ${count})"></td>`;
                           }).join('')}
                         </tr>
                       `).join('')}
                     </tbody>
                   </table>
+                  <div class="heatmap-legend" style="padding-top:0.5rem;">
+                    <span>Moins</span>
+                    <span style="display:inline-block; width:12px; height:12px; border-radius:2px; background:rgba(148, 163, 184, 0.1);"></span>
+                    <span style="display:inline-block; width:12px; height:12px; border-radius:2px; background:#0e4429;"></span>
+                    <span style="display:inline-block; width:12px; height:12px; border-radius:2px; background:#006d32;"></span>
+                    <span style="display:inline-block; width:12px; height:12px; border-radius:2px; background:#26a641;"></span>
+                    <span style="display:inline-block; width:12px; height:12px; border-radius:2px; background:#39d353;"></span>
+                    <span>Plus</span>
+                  </div>
                 </div>
               </div>
 
