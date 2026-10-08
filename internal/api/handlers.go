@@ -1696,7 +1696,7 @@ func sameOrigin(r *http.Request) bool {
 		trusted["http://"+strings.ToLower(xfh)] = struct{}{}
 		trusted["https://"+strings.ToLower(xfh)] = struct{}{}
 	}
-	for _, envKey := range []string{"NEXTAUTH_URL", "AUTH_TRUSTED_ORIGIN", "AUTH_TRUSTED_ORIGINS"} {
+	for _, envKey := range []string{"JELLYTRACK_URL", "AUTH_URL", "AUTH_TRUSTED_ORIGIN", "AUTH_TRUSTED_ORIGINS"} {
 		val := os.Getenv(envKey)
 		if val == "" {
 			continue

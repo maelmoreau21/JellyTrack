@@ -255,13 +255,13 @@ func (m *Manager) oidcConfigWith(ctx context.Context, cfg resolvedOIDCConfig) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	base := strings.TrimRight(strings.TrimSpace(os.Getenv("NEXTAUTH_URL")), "/")
+	base := strings.TrimRight(strings.TrimSpace(first(os.Getenv("JELLYTRACK_URL"), os.Getenv("AUTH_URL"))), "/")
 	if base == "" {
 		base = "http://localhost:3000"
 	}
 	parsed, err := url.Parse(base)
 	if err != nil || parsed.Host == "" || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.User != nil {
-		return nil, nil, fmt.Errorf("NEXTAUTH_URL must be an absolute HTTP(S) URL")
+		return nil, nil, fmt.Errorf("JELLYTRACK_URL must be an absolute HTTP(S) URL")
 	}
 	redirectURL := base + "/api/auth/oidc/callback"
 	config := &oauth2.Config{
@@ -315,7 +315,7 @@ var loginMu sync.Mutex
 var loginAttempts = map[string]loginBucket{}
 
 func New(db *sql.DB, driver string) *Manager {
-	secret := secretValue(os.Getenv("NEXTAUTH_SECRET"), os.Getenv("AUTH_SECRET"), os.Getenv("JELLYTRACK_SECRET"))
+	secret := secretValue(os.Getenv("JELLYTRACK_SECRET"), os.Getenv("AUTH_SECRET"))
 	username := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_USER"), os.Getenv("JELLYGATE_LOCAL_ADMIN_USER"), "admin")
 	password := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD"), os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD"))
 	var hash []byte
@@ -362,13 +362,13 @@ func (m *Manager) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/auth/callback/oidc", m.oidcCallback)
 	mux.HandleFunc("GET /api/auth/callback/sso", m.oidcCallback)
 
-	// NextAuth compatibility endpoints
-	mux.HandleFunc("GET /api/auth/session", m.nextAuthSession)
-	mux.HandleFunc("GET /api/auth/csrf", m.nextAuthCSRF)
-	mux.HandleFunc("GET /api/auth/providers", m.nextAuthProviders)
+	// Session, CSRF, and provider metadata endpoints
+	mux.HandleFunc("GET /api/auth/session", m.authSession)
+	mux.HandleFunc("GET /api/auth/csrf", m.authCSRF)
+	mux.HandleFunc("GET /api/auth/providers", m.authProviders)
 }
 
-func (m *Manager) nextAuthSession(w http.ResponseWriter, r *http.Request) {
+func (m *Manager) authSession(w http.ResponseWriter, r *http.Request) {
 	p, ok := m.authenticate(r)
 	if !ok {
 		writeJSON(w, 200, map[string]any{})
@@ -388,7 +388,7 @@ func (m *Manager) nextAuthSession(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (m *Manager) nextAuthCSRF(w http.ResponseWriter, r *http.Request) {
+func (m *Manager) authCSRF(w http.ResponseWriter, r *http.Request) {
 	p, ok := m.authenticate(r)
 	token := ""
 	if ok {
@@ -399,7 +399,7 @@ func (m *Manager) nextAuthCSRF(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]string{"csrfToken": token})
 }
 
-func (m *Manager) nextAuthProviders(w http.ResponseWriter, r *http.Request) {
+func (m *Manager) authProviders(w http.ResponseWriter, r *http.Request) {
 	cfg := m.resolveOIDC(r.Context())
 	providers := map[string]any{
 		"local-credentials": map[string]any{
@@ -718,7 +718,7 @@ func sameOrigin(r *http.Request) bool {
 		return false
 	}
 
-	if checkEnv("NEXTAUTH_URL") || checkEnv("AUTH_TRUSTED_ORIGIN") || checkEnv("AUTH_TRUSTED_ORIGINS") || checkEnv("JELLYTRACK_URL") || checkEnv("JELLYGATE_URL") {
+	if checkEnv("JELLYTRACK_URL") || checkEnv("AUTH_URL") || checkEnv("AUTH_TRUSTED_ORIGIN") || checkEnv("AUTH_TRUSTED_ORIGINS") || checkEnv("JELLYGATE_URL") {
 		return true
 	}
 

@@ -64,7 +64,7 @@ func NewHandler(db *sql.DB, driver string, logger *slog.Logger) *Handler {
 			maxBytes = n
 		}
 	}
-	pepper := firstEnv("PLUGIN_KEY_PEPPER", "JELLYTRACK_SECRET", "NEXTAUTH_SECRET")
+	pepper := firstEnv("PLUGIN_KEY_PEPPER", "JELLYTRACK_SECRET", "AUTH_SECRET")
 	legacy := strings.Split(os.Getenv("PLUGIN_KEY_PREVIOUS_PEPPERS"), ",")
 	return &Handler{
 		db: db, driver: driver, logger: logger, rate: newLimiter(), pepper: pepper,

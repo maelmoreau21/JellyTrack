@@ -14,10 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get version from package.json
+      - name: Get version from VERSION file
         id: get_version
         run: |
-          VERSION=$(node -p "require('./package.json').version")
+          VERSION=$(cat VERSION | tr -d '[:space:]')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Create or Update GitHub Release

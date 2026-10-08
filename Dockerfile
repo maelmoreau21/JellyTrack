@@ -1,133 +1,61 @@
-# Declare BUILDPLATFORM argument
-ARG BUILDPLATFORM
+# ── STAGE 1: Build static Go executable ──
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS builder
 
-# ── STAGE 1: Install dependencies & generate Prisma client ──
-FROM --platform=$BUILDPLATFORM node:22-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl python3 build-base git ca-certificates binutils
-RUN npm install -g pnpm@10.2.0
+RUN apk add --no-cache ca-certificates tzdata
 
-WORKDIR /app
+WORKDIR /src
 
-# Copy lockfile, package configuration and npmrc
-COPY package.json pnpm-lock.yaml .npmrc* ./
+# Download Go modules
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Install all dependencies (including devDependencies for building)
-RUN pnpm install --frozen-lockfile
+# Copy the entire Go source tree (including web/dist and migrations)
+COPY . .
 
-# Copy Prisma schema to generate the client
-COPY prisma ./prisma
+# Target architecture provided by Docker Buildx
+ARG TARGETOS
+ARG TARGETARCH
 
-# Provide dummy variable so Prisma generate doesn't check for real DB connection
-ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
-ENV DATABASE_URL=${DATABASE_URL}
+# Build static binary with optimizations
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
+    go build -trimpath -ldflags="-s -w -buildid=" -o /out/jellytrack ./cmd/jellytrack
 
-# Generate Prisma Client
-RUN pnpm exec prisma generate
+# Prepare data directories
+RUN mkdir -p /tmp/data/backups /tmp/data/logs
 
-# Install production CLI and external tools with self-contained flat node_modules
-WORKDIR /app/external-tools
-ENV PRISMA_CLI_BINARY_TARGETS="linux-musl-openssl-3.0.x,linux-musl-arm64-openssl-3.0.x"
-RUN npm init -y && \
-    npm install --no-audit --no-fund --omit=dev prisma@^7.10.0 dotenv@^17.4.2 node-cron@^4.5.0 geoip-country@^5.0.202609260156 && \
-    npm cache clean --force && \
-    find /app/external-tools/node_modules -name "*query_engine*" -delete 2>/dev/null || true && \
-    find /app/external-tools/node_modules -name "schema-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    find /app/external-tools/node_modules -name "migration-engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    find /app/external-tools/node_modules -name "*schema-engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
-    find /app/external-tools/node_modules -type f \( -name "*.map" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true && \
-    find /app/external-tools/node_modules -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "docs" -o -name "examples" \) -exec rm -rf {} + 2>/dev/null || true
+# ── STAGE 2: Minimal non-root runner image ──
+FROM alpine:3.21 AS runner
 
-
-# ── STAGE 2: Build Next.js application & assemble runtime ──
-FROM --platform=$BUILDPLATFORM node:22-alpine AS builder
-RUN apk add --no-cache libc6-compat binutils openssl
-RUN npm install -g pnpm@10.2.0
+RUN apk add --no-cache ca-certificates tzdata \
+    && addgroup -g 1000 jellytrack \
+    && adduser -u 1000 -G jellytrack -s /bin/sh -D jellytrack \
+    && mkdir -p /data/backups /data/logs /tmp \
+    && chown -R 1000:1000 /data /tmp \
+    && chmod -R 775 /data
 
 WORKDIR /app
 
-# Copy main node_modules from deps
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/package.json ./package.json
-COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=deps /app/.npmrc* ./
-COPY --from=deps /app/prisma ./prisma
+# Copy executable and initial data directory
+COPY --from=builder /out/jellytrack /app/jellytrack
+COPY --from=builder --chown=1000:1000 /tmp/data /data
 
-# Copy external tools outside /app to /tmp/external-tools so Next.js TypeScript check does not scan it
-COPY --from=deps /app/external-tools/node_modules /tmp/external-tools-modules
-
-# Copy only source files needed for build
-COPY src ./src
-COPY public ./public
-COPY messages ./messages
-COPY next.config.ts ./
-COPY tsconfig.json ./
-COPY postcss.config.mjs ./
-COPY prisma.config.ts ./
-COPY docker-entrypoint.sh ./
-
-# Build variables
-ENV NEXT_TELEMETRY_DISABLED=1
-ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
-ENV DATABASE_URL=${DATABASE_URL}
-
-# Build Next.js standalone package
-RUN NEXTAUTH_SECRET=build-placeholder pnpm run build
-
-# ── Clean standalone output: remove source maps, docs, tests, non-musl sharp/prisma prebuilts ──
-RUN find /app/.next/standalone -type f \( -name "*.map" -o -name "*.d.ts" -o -name "*.ts" -o -name "*.tsx" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true && \
-    find /app/.next/standalone -type d \( -name "test" -o -name "tests" -o -name "__tests__" -o -name "docs" -o -name "examples" -o -name ".github" \) -exec rm -rf {} + 2>/dev/null || true && \
-    find /app/.next/standalone/node_modules -name "libquery_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    find /app/.next/standalone/node_modules -name "query_engine-*" ! -name "*linux-musl*" -delete 2>/dev/null || true && \
-    find /app/.next/standalone/node_modules -name "*query_engine*linux-musl*" -exec strip {} \; 2>/dev/null || true && \
-    find /app/.next/standalone/node_modules -name "*.node" -exec strip {} \; 2>/dev/null || true && \
-    find /app/.next/standalone/node_modules/@img -mindepth 1 -maxdepth 1 ! -name "*linuxmusl*" ! -name "sharp" ! -name "colour" -exec rm -rf {} + 2>/dev/null || true
-
-# ── Assemble single clean runtime directory with final permissions ──
-RUN mkdir -p /app/runtime/.next /app/runtime/node_modules /app/runtime/.next/cache/images /app/runtime/.next/cache/fetch-cache && \
-    cp -r /app/.next/standalone/* /app/runtime/ && \
-    cp -r /app/.next/standalone/.next/* /app/runtime/.next/ && \
-    rm -rf /app/runtime/prisma /app/runtime/public /app/runtime/.next/static && \
-    cp -r /app/.next/static /app/runtime/.next/static && \
-    cp -r /app/public /app/runtime/public && \
-    cp -r /tmp/external-tools-modules/. /app/runtime/node_modules/ && \
-    cp -r /app/prisma /app/runtime/prisma && \
-    cp /app/prisma.config.ts /app/runtime/prisma.config.ts && \
-    cp /app/docker-entrypoint.sh /app/runtime/docker-entrypoint.sh && \
-    sed -i 's/\r$//' /app/runtime/docker-entrypoint.sh && \
-    chmod 755 /app/runtime/docker-entrypoint.sh && \
-    chmod -R 777 /app/runtime/node_modules /app/runtime/.next/cache && \
-    find /app/runtime -type f \( -name "*.map" -o -name "*.md" -o -name "LICENSE*" -o -name "CHANGELOG*" \) -delete 2>/dev/null || true && \
-    test -f /app/runtime/prisma/schema.prisma && \
-    test -f /app/runtime/prisma.config.ts && \
-    test -f /app/runtime/docker-entrypoint.sh && \
-    echo "Runtime assembly verified successfully: /app/prisma/schema.prisma confirmed."
-
-
-# ── STAGE 3: Final lightweight & rock-solid single-layer runner image ──
-FROM node:22-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl && \
-    mkdir -p /data/backups /data/logs /tmp/.cache && \
-    chown -R node:node /data /tmp/.cache && \
-    chmod -R 777 /data /tmp/.cache
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV TZ=UTC
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-# Copy entire pre-built runtime with exact ownership in ONE single layer
-COPY --from=builder --chown=node:node /app/runtime /app
+ENV PORT=3000 \
+    DATABASE_PATH=/data/jellytrack.db \
+    BACKUP_DIR=/data/backups \
+    TZ=UTC
 
 # OCI labels
-LABEL org.opencontainers.image.source="https://github.com/MaelMoreau21/JellyTrack"
-LABEL org.opencontainers.image.description="JellyTrack — Dashboard analytique pour Jellyfin"
-LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.source="https://github.com/maelmoreau21/JellyTrack" \
+      org.opencontainers.image.description="JellyTrack — Observability & Analytics for Jellyfin (100% Go)" \
+      org.opencontainers.image.licenses="MIT"
+
+USER 1000:1000
 
 EXPOSE 3000
 
-USER node
+VOLUME ["/data"]
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["/app/jellytrack", "healthcheck"]
+
+ENTRYPOINT ["/app/jellytrack"]

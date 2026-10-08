@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Observability and analytics for Jellyfin: live sessions, enriched history, downloads, and fine playback telemetry.</strong>
+  <strong>High-performance observability and analytics dashboard for Jellyfin: live sessions, unified history, downloads, and fine playback telemetry.</strong>
 </p>
 
 ## Preview
@@ -37,20 +37,53 @@
 >
 > Plugin repository: [Jellyfin.Plugin.JellyTrack](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
 
+## Architecture
+
+JellyTrack is built as a **100% autonomous Go application**:
+- **Single Self-Contained Binary**: All web assets, styles, scripts, graphics, and SQL migrations are embedded directly via Go `embed.FS`.
+- **Zero Runtime Dependencies**: No Node.js runtime, no package managers, and no external tool chains required at runtime.
+- **Dual Database Support**: Native PostgreSQL (`pgx`) and standalone embedded SQLite (`modernc.org/sqlite`) with automatic schema migrations.
+- **Ultra-Low Resource Footprint**: Consumes under 20–30 MB of RAM under load and compiles to a minimal ~25 MB container image.
+
+```text
+JellyTrack/
+├── cmd/
+│   └── jellytrack/            # Production CLI entry point
+├── internal/
+│   ├── api/                   # REST API routes and business handlers
+│   ├── auth/                  # Local auth & OIDC SSO sessions (PKCE)
+│   ├── backup/                # Backup engine (SQL dumps & restoration)
+│   ├── cleanup/               # Data retention & scheduled cleanup
+│   ├── config/                # Environment configuration loader
+│   ├── database/              # Dual database drivers & migration runner
+│   ├── history/               # History aggregation & playback consolidation
+│   ├── jellyfin/              # Jellyfin client & server synchronizer
+│   ├── plugin/                # Plugin webhook ingestion & event processing
+│   ├── scheduler/             # Periodic background task worker
+│   └── web/                   # Embedded web SPA handler
+├── web/
+│   ├── static.go              # HTTP file server and SPA router (embed.FS)
+│   └── dist/                  # Native HTML5, CSS, and Vanilla JS assets
+├── migrations/                # Embedded SQL migration scripts (PostgreSQL & SQLite)
+├── Dockerfile                 # Multi-stage lightweight Alpine build
+├── docker-compose.yml         # Ready-to-use Compose configuration
+└── main.go                    # Application root entry point
+```
+
 ## What JellyTrack Tracks
 
-- Live sessions: user, device, client, direct play/transcode, video codec (including modern AV1 / FFmpeg 8.1), bitrate, IP and GeoIP.
-- Multi-version & Cuts support: identifies and badges specific editions (e.g. Extended cuts, Theatrical cuts, Black & White versions) and aggregates storage footprint across all media sources.
-- Resilient history consolidation: pauses, buffers, and disconnections are automatically merged into clean sessions instead of fragmented clutter.
-- Playback history: completed, partial, and abandoned media using cumulative user + media history.
-- Downloads: a downloaded media item is counted as one complete view and full watched duration.
-- Fine telemetry: pause/resume, seek ranges, replay ranges, playback speed changes, audio language changes, and subtitle language changes.
-- Behavior insights: skipped passages are shown as `from -> to` ranges, and language periods are derived from initial language plus later changes.
-- Jellyfin 12+ native support: native Books, AudioBooks & Comics libraries, server version detection, and automatic deleted-user cleanup.
+- **Live sessions**: user, device, client, direct play / transcode, video codec (including AV1 / FFmpeg 8.1), bitrate, IP and GeoIP.
+- **Multi-version & Cuts support**: identifies and badges specific editions (Extended cuts, Theatrical cuts, Black & White versions) and aggregates storage footprint across all media sources.
+- **Resilient history consolidation**: pauses, buffers, and disconnections are automatically merged into clean sessions instead of fragmented clutter.
+- **Playback history**: completed, partial, and abandoned media using cumulative user + media history.
+- **Downloads**: a downloaded media item is counted as one complete view and full watched duration.
+- **Fine telemetry**: pause/resume, seek ranges, replay ranges, playback speed changes, audio language changes, and subtitle language changes.
+- **Behavior insights**: skipped passages are shown as `from -> to` ranges, and language periods are derived from initial language plus later changes.
+- **Jellyfin 12+ native support**: native Books, AudioBooks & Comics libraries, server version detection, and automatic deleted-user cleanup.
 
 ## Docker Installation
 
-The canonical install mode is Docker Compose.
+The canonical deployment method is Docker Compose.
 
 1. Copy the example environment:
 
@@ -58,55 +91,46 @@ The canonical install mode is Docker Compose.
 cp .env.example .env
 ```
 
-2. Edit `.env` and replace every `CHANGE_ME_*` value.
+2. Edit `.env` and configure your credentials and Jellyfin server URL.
 
-3. Start or update JellyTrack:
+3. Start JellyTrack:
 
 ```bash
-docker compose pull
 docker compose up -d
 ```
 
-To test local code before publishing an image:
+To build and run locally:
 
 ```bash
-docker build -t ghcr.io/maelmoreau21/jellytrack:latest .
+docker compose build
 docker compose up -d
 ```
 
 JellyTrack runs on `http://localhost:3000` by default.
 
-## Runtime Notes
-
-- Docker uses Node 24.
-- Prisma 7 stores its CLI datasource URL in `prisma.config.ts`.
-- Runtime database access uses `@prisma/adapter-pg` with `DATABASE_URL`.
-- `pnpm exec prisma generate` must be run after schema changes.
-- Migrations live in `prisma/migrations`.
-
 ## Jellyfin Plugin Configuration
 
-1. In Jellyfin, open Dashboard > Plugins > Repositories.
+1. In Jellyfin, navigate to **Dashboard > Plugins > Repositories**.
 2. Add this repository URL:
 
 ```text
 https://raw.githubusercontent.com/maelmoreau21/Jellyfin.Plugin.JellyTrack/main/manifest.json
 ```
 
-3. Install the JellyTrack plugin.
-4. In JellyTrack, open Settings > Jellyfin Connection, generate a plugin key, then copy the plugin endpoint and key into Jellyfin.
+3. Install the **JellyTrack** plugin and restart Jellyfin.
+4. In JellyTrack, open **Settings > Jellyfin Connection**, generate a plugin key, then configure the endpoint and key in the Jellyfin plugin settings.
 
-For Jellyfin 12.x / 12.1+, configure `JELLYFIN_API_KEY` in `.env`; JellyTrack uses the native `Authorization: MediaBrowser Token="..."` header (legacy Emby compatibility has been removed).
+For Jellyfin 12.x / 12.1+, configure `JELLYFIN_API_KEY` in `.env`; JellyTrack uses the native `Authorization: MediaBrowser Token="..."` header.
 
 ## Plugin Event Contract
 
-The plugin posts JSON to:
+The plugin posts JSON events to:
 
 ```text
 POST /api/plugin/events
 ```
 
-The canonical download event is:
+The canonical download event format:
 
 ```json
 {
@@ -124,21 +148,15 @@ The canonical download event is:
 }
 ```
 
-Accepted download aliases are `ItemDownloaded` and `DownloadCompleted`. JellyTrack stores downloads with `PlaybackHistory.eventSource = "download"`, `playMethod = "Download"`, full `durationWatched`, and a `TelemetryEvent` of type `download`. `sourceEventId` deduplicates plugin retries per server.
+Accepted download aliases are `ItemDownloaded` and `DownloadCompleted`. JellyTrack stores downloads with `eventSource = "download"`, `playMethod = "Download"`, full `durationWatched`, and a `TelemetryEvent` of type `download`. `sourceEventId` deduplicates plugin retries per server.
 
-## Completion And Abandon Rules
+## Authentication & SSO
 
-JellyTrack classifies completion cumulatively by user + media. If someone starts a movie today and finishes it tomorrow, or several days later, the media becomes completed and should not remain abandoned. Period filters still limit views and duration for the selected period, but abandonment considers later resume history.
+JellyTrack includes hardened **OpenID Connect (OIDC)** Single Sign-On (SSO) with **PKCE (Proof Key for Code Exchange — RFC 7636)** supporting **Authentik**, **Keycloak**, **Authelia**, etc.
 
-Downloads always count as complete views, including audio and short media, unless the media belongs to an excluded library.
+### SSO Environment Variables
 
-## Authentication & SSO (v2.0.0+)
-
-JellyTrack v2.0.0+ includes hardened OpenID Connect (OIDC) Single Sign-On (SSO), enabling multi-factor authentication (2FA/MFA), centralized directory management, and **PKCE (Proof Key for Code Exchange — RFC 7636)** through providers like **Authentik**, **Keycloak**, **Authelia**, etc.
-
-### SSO Configuration
-
-Configure the following environment variables in `.env`:
+Configure the following variables in `.env`:
 
 ```bash
 # Enable SSO OIDC
@@ -151,46 +169,44 @@ OIDC_CLIENT_SECRET=your_oidc_client_secret
 OIDC_USER_GROUP=jellyfin-users
 OIDC_ADMIN_GROUP=jellyfin-admins
 
-# Reverse proxy support (recommended in production behind Nginx/Caddy/Traefik)
-TRUST_PROXY_HEADERS=true
-
-# Security: strict matching by default (canonical preferred_username/username).
-# Set to true only if you explicitly require legacy fuzzy matching on partial names.
-# OIDC_ALLOW_FUZZY_USER_MATCHING=false
+# Auto-redirect to IdP when visiting login page
+OIDC_AUTO_REDIRECT=true
 
 # Emergency Local Administrator Access (optional)
 JELLYTRACK_LOCAL_ADMIN_USER=admin
-JELLYTRACK_LOCAL_ADMIN_PASSWORD=your_emergency_password
+JELLYTRACK_LOCAL_ADMIN_PASSWORD=your_emergency_strong_password
 ```
 
 ### Identity Provider (IdP) Setup
 
-1. **Redirect URI** : Register the exact callback URL in your provider:
-   `https://<your-jellytrack-domain>/api/auth/callback/oidc`
-2. **Scopes** : Ensure the client requests and accepts the following scopes:
-   `openid email profile groups`
-3. **PKCE Support** :
-   - JellyTrack automatically enforces PKCE using SHA-256 (`code_challenge_method=S256`).
-   - Modern providers (Authentik, Keycloak, Authelia) support S256 automatically without extra configuration.
-   - In Keycloak (optional hardening): under *Clients > [client] > Advanced*, you can set *Proof Key for Code Exchange Code Challenge Method* to `S256`.
-4. **User Reconciliation (Strict Mode)** :
-   - JellyTrack links the OIDC session to the Jellyfin user matching the canonical username (`preferred_username` or `username` claim).
-   - Ensure your SSO directory username matches the Jellyfin user name.
-5. **Fallback** : If `OIDC_ENABLED=false`, JellyTrack falls back to direct Jellyfin credentials authentication.
+1. **Redirect URI**: Register `https://<your-jellytrack-domain>/api/auth/oidc/callback` in your IdP client.
+2. **Scopes**: Ensure `openid`, `profile`, `email`, and `groups` are requested.
+3. **PKCE**: JellyTrack automatically enforces SHA-256 PKCE (`code_challenge_method=S256`).
+4. **User Reconciliation**: JellyTrack matches the canonical username (`preferred_username` or `username` claim) to the Jellyfin user.
 
-## Development
+## Local Development (Go)
+
+Prerequisites: Go 1.26 or later.
 
 ```bash
-pnpm install
-pnpm exec prisma generate
-pnpm test
-pnpm check:i18n
-pnpm lint
-pnpm build
-pnpm outdated --json
+# Run unit and integration tests
+go test ./...
+
+# Run static analysis
+go vet ./...
+
+# Build binary
+go build -o jellytrack .
+
+# Run application locally (defaults to SQLite if no POSTGRES_PASSWORD set)
+go run .
 ```
 
-`pnpm outdated --json` is expected to return `{}` after dependency updates.
+To run against PostgreSQL:
+
+```bash
+DATABASE_DRIVER=postgres DATABASE_URL="postgres://JellyTrack:password@localhost:5432/JellyTrack?sslmode=disable" go run .
+```
 
 ## License
 

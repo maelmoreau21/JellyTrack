@@ -17,7 +17,7 @@ import (
 
 func testManager(t *testing.T) (*Manager, *sql.DB) {
 	t.Helper()
-	t.Setenv("NEXTAUTH_SECRET", "0123456789abcdef0123456789abcdef")
+	t.Setenv("JELLYTRACK_SECRET", "0123456789abcdef0123456789abcdef")
 	t.Setenv("JELLYTRACK_LOCAL_ADMIN_USER", "admin")
 	t.Setenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD", "A-strong-passphrase-2026!")
 	db, err := database.Open(context.Background(), config.Config{DatabaseDriver: "sqlite", DatabasePath: filepath.Join(t.TempDir(), "auth.db")})
@@ -58,7 +58,7 @@ func TestLoginAndCSRFProtectedLogout(t *testing.T) {
 	}
 }
 func TestWeakAdminPasswordDisablesLocalLogin(t *testing.T) {
-	t.Setenv("NEXTAUTH_SECRET", "0123456789abcdef0123456789abcdef")
+	t.Setenv("JELLYTRACK_SECRET", "0123456789abcdef0123456789abcdef")
 	t.Setenv("JELLYTRACK_LOCAL_ADMIN_USER", "admin")
 	t.Setenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD", "password")
 	db, err := database.Open(context.Background(), config.Config{DatabaseDriver: "sqlite", DatabasePath: filepath.Join(t.TempDir(), "auth.db")})
@@ -149,7 +149,7 @@ func TestCSRFProtectionRejectsInvalidToken(t *testing.T) {
 	}
 }
 
-func TestNextAuthCompatibilityEndpoints(t *testing.T) {
+func TestAuthEndpoints(t *testing.T) {
 	m, _ := testManager(t)
 	mux := http.NewServeMux()
 	m.Routes(mux)

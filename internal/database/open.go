@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"embed"
 	"fmt"
 	"io/fs"
 	"net/url"
@@ -16,11 +15,9 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/maelmoreau21/jellytrack/internal/config"
+	"github.com/maelmoreau21/jellytrack/migrations"
 	_ "modernc.org/sqlite"
 )
-
-//go:embed migrations/sqlite/*.sql migrations/postgres/*.sql
-var migrationFiles embed.FS
 
 const (
 	driverSQLite   = "sqlite"
@@ -96,8 +93,8 @@ func Migrate(ctx context.Context, db *sql.DB, driver string) error {
 		return fmt.Errorf("prepare migration history: %w", err)
 	}
 
-	directory := "migrations/" + driver
-	files, err := fs.Glob(migrationFiles, directory+"/*.sql")
+	directory := driver
+	files, err := fs.Glob(migrations.Files, directory+"/*.sql")
 	if err != nil {
 		return fmt.Errorf("list migrations: %w", err)
 	}
@@ -117,7 +114,7 @@ func Migrate(ctx context.Context, db *sql.DB, driver string) error {
 		if applied {
 			continue
 		}
-		source, err := migrationFiles.ReadFile(name)
+		source, err := migrations.Files.ReadFile(name)
 		if err != nil {
 			return fmt.Errorf("read migration %s: %w", base, err)
 		}
