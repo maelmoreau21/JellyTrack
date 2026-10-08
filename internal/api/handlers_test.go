@@ -479,3 +479,54 @@ func TestNewHandlersWrappedCollectionsNewsletterServerCompare(t *testing.T) {
 	}
 }
 
+func TestDashboardParityAndEmptyDB(t *testing.T) {
+	db := apiDB(t)
+	h := New(db, "sqlite")
+
+	// 1. Verify empty DB does not crash or error on any dashboard endpoint
+	for _, endpoint := range []struct {
+		name    string
+		handler func(http.ResponseWriter, *http.Request)
+		url     string
+	}{
+		{"dashboard", h.dashboard, "/api/dashboard?days=7"},
+		{"granular", h.granularStats, "/api/stats/granular?timeRange=7d"},
+		{"deep", h.deepStats, "/api/stats/deep?timeRange=7d"},
+		{"network", h.networkStats, "/api/stats/network?timeRange=7d"},
+		{"heatmap-date", h.heatmapDetail, "/api/heatmap-detail?date=2026-10-08"},
+		{"heatmap-dayhour", h.heatmapDetail, "/api/heatmap-detail?day=1&hour=12"},
+		{"predictions", h.predictions, "/api/predictions"},
+	} {
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", endpoint.url, nil)
+		endpoint.handler(w, req)
+		if w.Code != http.StatusOK {
+			t.Errorf("endpoint %s failed on empty DB: status=%d, body=%s", endpoint.name, w.Code, w.Body.String())
+		}
+	}
+
+	// 2. Populate DB and verify all dashboard data structures and charts data
+	nowStr := time.Now().UTC().Format(time.RFC3339)
+	_, _ = db.Exec(`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s1','jf1','Server 1','http://jf1')`)
+	_, _ = db.Exec(`INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u1','s1','jfu1','Alice')`)
+	_, _ = db.Exec(`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName","durationMs","clientName","device") VALUES('m1','s1','jfm1','Inception','Movie','Films',7200000,'Jellyfin Web','Firefox')`)
+	_, _ = db.Exec(`INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","durationWatched","startedAt","playMethod","clientName","device","resolution","playDuration") VALUES('p1','s1','u1','m1',3600,'` + nowStr + `','DirectPlay','Jellyfin Web','Firefox','1080p',3600)`)
+
+	wDash := httptest.NewRecorder()
+	h.dashboard(wDash, httptest.NewRequest("GET", "/api/dashboard?days=7", nil))
+	if wDash.Code != 200 {
+		t.Fatalf("dashboard status=%d: %s", wDash.Code, wDash.Body.String())
+	}
+
+	var dMap map[string]any
+	if err := json.Unmarshal(wDash.Body.Bytes(), &dMap); err != nil {
+		t.Fatalf("unmarshal dashboard: %v", err)
+	}
+
+	for _, key := range []string{"totalPlays", "todayPlays", "trendData", "hourlyChartData", "dayOfWeekChartData", "categoryPieData", "completionData", "clientCategoryData", "serverLoadData", "yearlyHeatmap"} {
+		if _, ok := dMap[key]; !ok {
+			t.Errorf("missing key in dashboard response: %s", key)
+		}
+	}
+}
+
