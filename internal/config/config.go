@@ -26,9 +26,10 @@ type Config struct {
 	EnablePprof        bool
 }
 
-// LoadDotEnv loads .env and .env.local files into the process environment if present.
+// LoadDotEnv loads .env.local and .env files into the process environment if present.
+// Values in .env.local take precedence over .env, while existing process environment variables are preserved.
 func LoadDotEnv() {
-	for _, name := range []string{".env", ".env.local"} {
+	for _, name := range []string{".env.local", ".env"} {
 		data, err := os.ReadFile(name)
 		if err != nil {
 			continue

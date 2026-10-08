@@ -25,8 +25,13 @@ temp/
 
 # Local SQLite databases
 *.db
+*.db-*
 *.db-journal
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
+data/
+
 
 !/.claude/rules/instructions.md

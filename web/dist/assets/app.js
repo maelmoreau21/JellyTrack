@@ -564,6 +564,37 @@
         try { this.instances[id].destroy(); } catch (e) {}
         delete this.instances[id];
       }
+      const canvas = document.getElementById(id);
+      if (canvas) {
+        canvas.style.display = '';
+        const parent = canvas.parentElement;
+        if (parent) {
+          const emptyEl = parent.querySelector('.chart-empty-state');
+          if (emptyEl) emptyEl.style.display = 'none';
+        }
+      }
+    },
+
+    showEmpty(id, message = 'Aucune donnée disponible') {
+      this.destroy(id);
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      const parent = canvas.parentElement;
+      if (!parent) return;
+      let emptyEl = parent.querySelector('.chart-empty-state');
+      if (!emptyEl) {
+        emptyEl = document.createElement('div');
+        emptyEl.className = 'chart-empty-state';
+        parent.appendChild(emptyEl);
+      }
+      emptyEl.innerHTML = `
+        <svg class="chart-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+          <path d="M3 3v18h18" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" />
+        </svg>
+        <span>${message}</span>
+      `;
+      canvas.style.display = 'none';
+      emptyEl.style.display = 'flex';
     },
 
     getThemeColors() {
@@ -934,6 +965,129 @@
               stacked: true,
               grid: { color: tc.grid },
               ticks: { color: tc.text, font: { size: 10 }, precision: 0 },
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    },
+
+    renderArea(canvasId, labels, data, options = {}) {
+      this.destroy(canvasId);
+      const ctx = document.getElementById(canvasId);
+      if (!ctx || !window.Chart) return;
+      const tc = this.getThemeColors();
+      const col = options.color || tc.primary;
+
+      this.instances[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: options.label || 'Valeur',
+            data,
+            borderColor: col,
+            backgroundColor: col + '33',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2,
+            pointRadius: 2,
+            pointHoverRadius: 5,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: tc.tooltipBg,
+              titleColor: tc.tooltipTitle,
+              bodyColor: tc.tooltipText,
+              borderColor: tc.tooltipBorder,
+              borderWidth: 1,
+              padding: 8,
+              callbacks: options.tooltipCallbacks || (options.isHours ? {
+                label: (ctx) => `${ctx.dataset.label}: ${ChartHelper.formatCompactHours(ctx.parsed.y)}`
+              } : {}),
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: tc.grid },
+              ticks: { color: tc.text, font: { size: 10 } },
+            },
+            y: {
+              grid: { color: tc.grid },
+              ticks: {
+                color: tc.text,
+                font: { size: 10 },
+                precision: 0,
+                callback: options.isHours ? (v) => `${v}h` : (v) => v,
+              },
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    },
+
+    renderStackedBar(canvasId, labels, datasets, options = {}) {
+      this.destroy(canvasId);
+      const ctx = document.getElementById(canvasId);
+      if (!ctx || !window.Chart) return;
+      const tc = this.getThemeColors();
+
+      this.instances[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: datasets.map(d => ({
+            label: d.label,
+            data: d.data,
+            backgroundColor: d.color,
+            borderRadius: options.borderRadius || 2,
+            stack: 'stack0',
+          })),
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              display: options.showLegend !== false,
+              position: 'top',
+              align: 'end',
+              labels: { color: tc.text, font: { size: 11 }, boxWidth: 10, usePointStyle: true },
+            },
+            tooltip: {
+              backgroundColor: tc.tooltipBg,
+              titleColor: tc.tooltipTitle,
+              bodyColor: tc.tooltipText,
+              borderColor: tc.tooltipBorder,
+              borderWidth: 1,
+              padding: 8,
+              callbacks: options.tooltipCallbacks || (options.isHours ? {
+                label: (ctx) => `${ctx.dataset.label}: ${ChartHelper.formatCompactHours(ctx.parsed.y)}`
+              } : {}),
+            },
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false },
+              ticks: { color: tc.text, font: { size: 10 } },
+            },
+            y: {
+              stacked: true,
+              grid: { color: tc.grid },
+              ticks: {
+                color: tc.text,
+                font: { size: 10 },
+                precision: 0,
+                callback: options.isHours ? (v) => `${v}h` : (v) => v,
+              },
               beginAtZero: true,
             },
           },
@@ -1936,79 +2090,110 @@
 
         // Composed Trend Chart (Volume History)
         const trendEl = document.getElementById('chart-composed-trend');
-        if (trendEl && d.trendData && d.trendData.length > 0) {
-          const labels = d.trendData.map(t => t.time);
-          const datasets = [
-            { label: 'Films (h)', data: d.trendData.map(t => t.movieVolume || 0), color: '#38bdf8' },
-            { label: 'Séries (h)', data: d.trendData.map(t => t.seriesVolume || 0), color: '#22c55e' },
-            { label: 'Musique (h)', data: d.trendData.map(t => t.musicVolume || 0), color: '#f59e0b' },
-            { label: 'Livres (h)', data: d.trendData.map(t => t.booksVolume || 0), color: '#a855f7' },
-          ];
-          ChartHelper.renderMultiLine('chart-composed-trend', labels, datasets, { isHours: true });
+        if (trendEl) {
+          if (d.trendData && d.trendData.length > 0) {
+            const labels = d.trendData.map(t => t.time);
+            const datasets = [
+              { label: 'Films (h)', data: d.trendData.map(t => t.movieVolume || 0), color: '#38bdf8' },
+              { label: 'Séries (h)', data: d.trendData.map(t => t.seriesVolume || 0), color: '#22c55e' },
+              { label: 'Musique (h)', data: d.trendData.map(t => t.musicVolume || 0), color: '#f59e0b' },
+              { label: 'Livres (h)', data: d.trendData.map(t => t.booksVolume || 0), color: '#a855f7' },
+            ];
+            ChartHelper.renderMultiLine('chart-composed-trend', labels, datasets, { isHours: true });
+          } else {
+            ChartHelper.showEmpty('chart-composed-trend', 'Aucune tendance disponible');
+          }
         }
 
         // Category Pie Chart
         const pieEl = document.getElementById('chart-category-pie');
-        if (pieEl && d.categoryPieData && d.categoryPieData.length > 0) {
-          const labels = d.categoryPieData.map(c => c.name);
-          const values = d.categoryPieData.map(c => c.value);
-          ChartHelper.renderDoughnut('chart-category-pie', labels, values, {
-            isHours: true,
-            colors: ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7'],
-            onClick: (idx, label) => {
-              const typeMap = { 'Films': 'Movie', 'Séries': 'Episode', 'Musique': 'Audio', 'Livres': 'AudioBook' };
-              Router.navigate(`/logs?type=${typeMap[label] || label}`);
-            },
-          });
+        if (pieEl) {
+          const hasPieData = d.categoryPieData && d.categoryPieData.some(c => (c.value || 0) > 0);
+          if (hasPieData) {
+            const labels = d.categoryPieData.map(c => c.name);
+            const values = d.categoryPieData.map(c => c.value);
+            ChartHelper.renderDoughnut('chart-category-pie', labels, values, {
+              isHours: true,
+              colors: ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7'],
+              onClick: (idx, label) => {
+                const typeMap = { 'Films': 'Movie', 'Séries': 'Episode', 'Musique': 'Audio', 'Livres': 'AudioBook' };
+                Router.navigate(`/logs?type=${typeMap[label] || label}`);
+              },
+            });
+          } else {
+            ChartHelper.showEmpty('chart-category-pie', 'Aucune lecture sur la période');
+          }
         }
 
         // Library Daily Plays Chart
         const libEl = document.getElementById('chart-library-plays');
-        if (libEl && d.trendData && d.trendData.length > 0) {
-          const labels = d.trendData.map(t => t.time);
-          const datasets = [
-            { label: 'Films', data: d.trendData.map(t => t.moviePlays || 0), color: '#3b82f6' },
-            { label: 'Séries', data: d.trendData.map(t => t.seriesPlays || 0), color: '#22c55e' },
-            { label: 'Musique', data: d.trendData.map(t => t.musicPlays || 0), color: '#eab308' },
-            { label: 'Livres', data: d.trendData.map(t => t.booksPlays || 0), color: '#a855f7' },
-            { label: 'Total lectures', data: d.trendData.map(t => t.totalViews || 0), color: '#94a3b8' },
-          ];
-          ChartHelper.renderMultiLine('chart-library-plays', labels, datasets, { isHours: false });
+        if (libEl) {
+          if (d.trendData && d.trendData.length > 0) {
+            const labels = d.trendData.map(t => t.time);
+            const datasets = [
+              { label: 'Films', data: d.trendData.map(t => t.moviePlays || 0), color: '#3b82f6' },
+              { label: 'Séries', data: d.trendData.map(t => t.seriesPlays || 0), color: '#22c55e' },
+              { label: 'Musique', data: d.trendData.map(t => t.musicPlays || 0), color: '#eab308' },
+              { label: 'Livres', data: d.trendData.map(t => t.booksPlays || 0), color: '#a855f7' },
+              { label: 'Total lectures', data: d.trendData.map(t => t.totalViews || 0), color: '#94a3b8' },
+            ];
+            ChartHelper.renderMultiLine('chart-library-plays', labels, datasets, { isHours: false });
+          } else {
+            ChartHelper.showEmpty('chart-library-plays', 'Aucune lecture enregistrée');
+          }
         }
 
         // Platform Distribution Chart
         const platEl = document.getElementById('chart-platform-dist');
-        if (platEl && d.platformChartData && d.platformChartData.length > 0) {
-          const labels = d.platformChartData.map(p => p.name);
-          const values = d.platformChartData.map(p => p.value);
-          ChartHelper.renderDoughnut('chart-platform-dist', labels, values, {
-            isHours: false,
-            onClick: (idx, label) => Router.navigate(`/logs?client=${encodeURIComponent(label)}`),
-          });
+        if (platEl) {
+          const hasPlatData = d.platformChartData && d.platformChartData.some(p => (p.value || 0) > 0);
+          if (hasPlatData) {
+            const labels = d.platformChartData.map(p => p.name);
+            const values = d.platformChartData.map(p => p.value);
+            ChartHelper.renderDoughnut('chart-platform-dist', labels, values, {
+              isHours: false,
+              onClick: (idx, label) => Router.navigate(`/logs?client=${encodeURIComponent(label)}`),
+            });
+          } else {
+            ChartHelper.showEmpty('chart-platform-dist', 'Aucune plateforme détectée');
+          }
         }
 
         // Activity By Hour Chart (0..23h)
         const hourEl = document.getElementById('chart-activity-by-hour');
-        if (hourEl && d.hourlyChartData && d.hourlyChartData.length > 0) {
-          const labels = d.hourlyChartData.map(h => h.hour);
-          const values = d.hourlyChartData.map(h => Number(h.count || h.value || 0));
-          const maxVal = Math.max(...values, 1);
-          const bgColors = values.map(v => v === maxVal && maxVal > 0 ? '#f97316' : '#38bdf8');
-          ChartHelper.renderBar('chart-activity-by-hour', labels, values, {
-            backgroundColors: bgColors,
-            label: 'Sessions',
-            onClick: (idx, label) => Router.navigate(`/logs?hour=${label.split(':')[0]}`),
-          });
+        if (hourEl) {
+          if (d.hourlyChartData && d.hourlyChartData.length > 0) {
+            const labels = d.hourlyChartData.map(h => h.hour);
+            const values = d.hourlyChartData.map(h => Number(h.count || h.value || 0));
+            const maxVal = Math.max(...values, 0);
+            const bgColors = values.map(v => v === maxVal && maxVal > 0 ? '#f97316' : '#38bdf8');
+            ChartHelper.renderBar('chart-activity-by-hour', labels, values, {
+              backgroundColors: bgColors,
+              label: 'Sessions',
+              onClick: (idx, label) => Router.navigate(`/logs?hour=${label.split(':')[0]}`),
+            });
+          } else {
+            ChartHelper.showEmpty('chart-activity-by-hour', 'Aucune activité horaire');
+          }
         }
 
         // Day Of Week Chart (Lun..Dim)
         const dayEl = document.getElementById('chart-day-of-week');
-        if (dayEl && d.dayOfWeekChartData && d.dayOfWeekChartData.length > 0) {
-          const labels = d.dayOfWeekChartData.map(day => day.day);
-          const values = d.dayOfWeekChartData.map(day => Number(day.count || 0));
-          const maxVal = Math.max(...values, 1);
+        if (dayEl) {
+          const standardDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+          const dayMap = new Map();
+          if (d.dayOfWeekChartData && d.dayOfWeekChartData.length > 0) {
+            d.dayOfWeekChartData.forEach(item => {
+              const raw = (item.day || '').trim();
+              const prefix = raw.substring(0, 3);
+              dayMap.set(prefix, Number(item.count || 0));
+              dayMap.set(raw, Number(item.count || 0));
+            });
+          }
+          const values = standardDays.map(sd => dayMap.get(sd) || 0);
+          const maxVal = Math.max(...values, 0);
           const bgColors = values.map(v => v === maxVal && maxVal > 0 ? '#ea580c' : '#059669');
-          ChartHelper.renderBar('chart-day-of-week', labels, values, {
+          ChartHelper.renderBar('chart-day-of-week', standardDays, values, {
             backgroundColors: bgColors,
             label: 'Sessions',
           });
@@ -2019,61 +2204,76 @@
 
         // Completion Ratio Chart
         const compEl = document.getElementById('chart-completion-ratio');
-        if (compEl && d.completionData && d.completionData.length > 0) {
-          const labels = d.completionData.map(c => c.name);
-          const values = d.completionData.map(c => c.value);
-          const colorMap = { 'Terminé': '#22c55e', 'Partiel': '#f59e0b', 'Abandonné': '#ef4444' };
-          const colors = labels.map(l => colorMap[l] || '#94a3b8');
-          ChartHelper.renderDoughnut('chart-completion-ratio', labels, values, { colors, isHours: false });
+        if (compEl) {
+          const hasCompData = d.completionData && d.completionData.some(c => (c.value || 0) > 0);
+          if (hasCompData) {
+            const labels = d.completionData.map(c => c.name);
+            const values = d.completionData.map(c => c.value);
+            const colorMap = { 'Terminé': '#22c55e', 'Partiel': '#f59e0b', 'Abandonné': '#ef4444' };
+            const colors = labels.map(l => colorMap[l] || '#94a3b8');
+            ChartHelper.renderDoughnut('chart-completion-ratio', labels, values, { colors, isHours: false });
+          } else {
+            ChartHelper.showEmpty('chart-completion-ratio', 'Aucune donnée de complétion');
+          }
         }
 
         // Client Category Chart (TV, Mobile, Web, Desktop, Autre)
         const clientEl = document.getElementById('chart-client-category');
-        if (clientEl && d.clientCategoryData && d.clientCategoryData.length > 0) {
-          const labels = d.clientCategoryData.map(c => c.category);
-          const values = d.clientCategoryData.map(c => c.count);
-          const catColors = { 'TV': '#6366f1', 'Web': '#3b82f6', 'Mobile': '#22c55e', 'Desktop': '#f59e0b', 'Autre': '#71717a' };
-          const bgColors = labels.map(l => catColors[l] || '#71717a');
-          ChartHelper.renderHorizontalBar('chart-client-category', labels, values, { backgroundColors: bgColors, label: 'Sessions' });
+        if (clientEl) {
+          const hasClientData = d.clientCategoryData && d.clientCategoryData.some(c => (c.count || 0) > 0);
+          if (hasClientData) {
+            const labels = d.clientCategoryData.map(c => c.category);
+            const values = d.clientCategoryData.map(c => c.count);
+            const catColors = { 'TV': '#6366f1', 'Web': '#3b82f6', 'Mobile': '#22c55e', 'Desktop': '#f59e0b', 'Autre': '#71717a' };
+            const bgColors = labels.map(l => catColors[l] || '#71717a');
+            ChartHelper.renderHorizontalBar('chart-client-category', labels, values, { backgroundColors: bgColors, label: 'Sessions' });
+          } else {
+            ChartHelper.showEmpty('chart-client-category', 'Aucun type d\'appareil');
+          }
         }
 
         // Server Load Timeline (Peak Concurrent Streams)
         const loadEl = document.getElementById('chart-server-load');
-        if (loadEl && d.serverLoadData && d.serverLoadData.length > 0) {
-          const labels = d.serverLoadData.map(s => s.time);
-          const datasets = [{
-            label: 'Flux simultanés max',
-            data: d.serverLoadData.map(s => s.peakStreams || 0),
-            color: '#ec4899',
-            fill: true,
-          }];
-          ChartHelper.renderMultiLine('chart-server-load', labels, datasets, { isHours: false });
+        if (loadEl) {
+          if (d.serverLoadData && d.serverLoadData.length > 0) {
+            const labels = d.serverLoadData.map(s => s.time);
+            const datasets = [{
+              label: 'Flux simultanés max',
+              data: d.serverLoadData.map(s => s.peakStreams || 0),
+              color: '#ec4899',
+              fill: true,
+            }];
+            ChartHelper.renderMultiLine('chart-server-load', labels, datasets, { isHours: false });
+          } else {
+            ChartHelper.showEmpty('chart-server-load', 'Aucun pic simultané');
+          }
         }
       };
 
       // 8. Render Monthly Watch Chart
       const renderMonthlyWatchChart = () => {
         const monthlyEl = document.getElementById('chart-monthly-watch');
-        if (!monthlyEl || !dashboardData || !dashboardData.monthlyWatchData) return;
+        if (!monthlyEl) return;
 
         const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
         const dataMap = new Map();
-        dashboardData.monthlyWatchData.forEach(m => dataMap.set(m.month, m.hours));
+        if (dashboardData && dashboardData.monthlyWatchData) {
+          dashboardData.monthlyWatchData.forEach(m => dataMap.set(m.month, m.hours));
+        }
 
         const values = [];
         for (let i = 0; i < 12; i++) {
           values.push(dataMap.get(`${selectedMonthlyYear}_${i}`) || 0);
         }
-        const maxVal = Math.max(...values, 1);
+        const maxVal = Math.max(...values, 0);
         const bgColors = values.map(v => v === maxVal && maxVal > 0 ? '#f97316' : '#38bdf8');
 
         ChartHelper.renderBar('chart-monthly-watch', monthNames, values, {
           backgroundColors: bgColors,
           isHours: true,
           onClick: (idx) => {
-            const firstDay = new Date(selectedMonthlyYear, idx, 1).toISOString().split('T')[0];
-            const lastDay = new Date(selectedMonthlyYear, idx + 1, 0).toISOString().split('T')[0];
-            Router.navigate(`/logs?dateFrom=${firstDay}&dateTo=${lastDay}`);
+            const m = String(idx + 1).padStart(2, '0');
+            Router.navigate(`/logs?dateFrom=${selectedMonthlyYear}-${m}-01`);
           },
         });
       };
@@ -2357,55 +2557,210 @@
 
           const granContainer = document.getElementById('dash-granular-container');
           if (granContainer) {
+            // Process Heatmap 7x24 Matrix
+            const hmData = gran.heatmapData || [];
+            let maxCellVal = 0;
+            hmData.forEach(c => {
+              const v = Number(c.views || c.value || c.Views || c.Value || 0);
+              if (v > maxCellVal) maxCellVal = v;
+            });
+
+            const cellMap = new Map();
+            hmData.forEach(c => {
+              const d = c.DayOfWeek != null ? c.DayOfWeek : (c.day != null ? c.day : c.Day);
+              const h = c.Hour != null ? c.Hour : c.hour;
+              const v = Number(c.views || c.value || c.Views || c.Value || 0);
+              cellMap.set(`${d}-${h}`, v);
+            });
+
+            const frenchDays = [
+              { name: 'Lun', dow: 1 },
+              { name: 'Mar', dow: 2 },
+              { name: 'Mer', dow: 3 },
+              { name: 'Jeu', dow: 4 },
+              { name: 'Ven', dow: 5 },
+              { name: 'Sam', dow: 6 },
+              { name: 'Dim', dow: 0 },
+            ];
+
+            const getHeatmapColor = (count) => {
+              if (!count || count <= 0) return 'rgba(148, 163, 184, 0.1)';
+              const ratio = maxCellVal > 0 ? count / maxCellVal : 0;
+              if (ratio <= 0.25) return '#0e4429';
+              if (ratio <= 0.5) return '#006d32';
+              if (ratio <= 0.75) return '#26a641';
+              return '#39d353';
+            };
+
+            // Process Abandonment Segments
+            const rawSegments = gran.dropSegments || [];
+            const segMap = {
+              skipped: { label: 'Zappé (<10%)', color: '#ef4444', val: 0 },
+              abandoned: { label: 'Abandonné (10-50%)', color: '#f97316', val: 0 },
+              almost: { label: 'Presque vu (50-80%)', color: '#eab308', val: 0 },
+              finished: { label: 'Terminé (≥80%)', color: '#22c55e', val: 0 },
+            };
+            rawSegments.forEach(s => {
+              if (segMap[s.name]) segMap[s.name].val = Number(s.value || 0);
+            });
+            const totalDrop = Object.values(segMap).reduce((acc, s) => acc + s.val, 0);
+
             granContainer.innerHTML = `
-              <!-- Attendance Heatmap 7x24 -->
-              <div class="card">
-                <div class="card-header">
-                  <div class="card-title-group">
-                    <div class="card-title">Matrice d'affluence horaire (7j × 24h)</div>
-                    <div class="card-subtitle">Intensité moyenne de fréquentation selon le jour et l'heure</div>
+              <!-- Row 1: Daily Plays & Plays by Library -->
+              <div class="dash-grid-2">
+                <div class="chart-card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Lectures par jour</div>
+                      <div class="card-subtitle">Volume quotidien total de démarrages de lecture</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap" style="height:280px;">
+                    <canvas id="chart-plays-per-day"></canvas>
                   </div>
                 </div>
-                <div style="padding:1rem; overflow-x:auto;">
-                  <div class="attendance-grid">
-                    <div></div>
-                    ${Array.from({ length: 24 }, (_, h) => `<div class="attendance-hour-hdr">${h}h</div>`).join('')}
-                    ${['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((dName, dayIdx) => `
-                      <div class="attendance-day-lbl">${dName}</div>
-                      ${Array.from({ length: 24 }, (_, h) => {
-                        const cell = (gran.attendanceHeatmap || []).find(c => c.day === dayIdx && c.hour === h) || { count: 0, level: 0 };
-                        const lvlColors = ['rgba(148, 163, 184, 0.1)', '#0e4429', '#006d32', '#26a641', '#39d353'];
-                        return `<div class="attendance-cell" style="background:${lvlColors[cell.level || 0]};" title="${dName} ${h}h: ${cell.count} sessions"></div>`;
-                      }).join('')}
-                    `).join('')}
+
+                <div class="chart-card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Lectures par bibliothèque</div>
+                      <div class="card-subtitle">Répartition quotidienne cumulée par catégorie de média</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap" style="height:280px;">
+                    <canvas id="chart-plays-by-lib"></canvas>
                   </div>
                 </div>
               </div>
 
-              <!-- Completion & Abandonment Analysis -->
+              <!-- Row 2: Daily Duration & Duration by Library -->
+              <div class="dash-grid-2">
+                <div class="chart-card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Durée de visionnage par jour</div>
+                      <div class="card-subtitle">Temps total cumulé consommé par jour (heures)</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap" style="height:280px;">
+                    <canvas id="chart-duration-per-day"></canvas>
+                  </div>
+                </div>
+
+                <div class="chart-card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Durée par bibliothèque</div>
+                      <div class="card-subtitle">Temps cumulé par bibliothèque au fil des jours</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap" style="height:280px;">
+                    <canvas id="chart-duration-by-lib"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 3: Hourly Averages -->
+              <div class="dash-grid-2">
+                <div class="chart-card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Moyenne horaire des lectures</div>
+                      <div class="card-subtitle">Volume moyen de flux démarrés par heure de la journée</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap" style="height:280px;">
+                    <canvas id="chart-plays-hourly-avg"></canvas>
+                  </div>
+                </div>
+
+                <div class="chart-card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Moyenne horaire de la durée</div>
+                      <div class="card-subtitle">Temps moyen visionné par heure de la journée</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap" style="height:280px;">
+                    <canvas id="chart-duration-hourly-avg"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 4: Attendance Heatmap 7x24 -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <div class="card-title">Matrice d'affluence horaire (7j × 24h)</div>
+                    <div class="card-subtitle">Intensité moyenne de fréquentation selon le jour et l'heure (cliquez pour filtrer)</div>
+                  </div>
+                </div>
+                <div class="attendance-heatmap-container" style="padding:1rem;">
+                  <table class="attendance-table">
+                    <thead>
+                      <tr>
+                        <th class="attendance-row-lbl"></th>
+                        ${Array.from({ length: 24 }, (_, h) => `<th class="attendance-th">${h}h</th>`).join('')}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${frenchDays.map(fd => `
+                        <tr>
+                          <td class="attendance-row-lbl">${fd.name}</td>
+                          ${Array.from({ length: 24 }, (_, h) => {
+                            const count = cellMap.get(`${fd.dow}-${h}`) || 0;
+                            const bg = getHeatmapColor(count);
+                            return `<td class="attendance-cell" style="background:${bg};" title="${fd.name} à ${h}h : ${count} session(s)" onclick="Router.navigate('/logs?hour=${h}')"></td>`;
+                          }).join('')}
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Row 5: Completion & Abandon Segments -->
               <div class="dash-grid-2">
                 <div class="card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Segments d'abandon</div>
+                      <div class="card-subtitle">Répartition des sessions par tranche de complétion</div>
+                    </div>
+                  </div>
+                  <div style="padding:1.25rem; display:flex; flex-direction:column; gap:0.9rem;">
+                    ${Object.values(segMap).map(seg => {
+                      const pct = totalDrop > 0 ? Math.round((seg.val / totalDrop) * 100) : 0;
+                      return `
+                        <div>
+                          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;">
+                            <span style="font-weight:600;">${seg.label}</span>
+                            <span style="color:var(--muted-foreground); font-family:monospace;">${seg.val} (${pct}%)</span>
+                          </div>
+                          <div style="height:8px; background:var(--surface-nested, rgba(148,163,184,0.2)); border-radius:999px; overflow:hidden;">
+                            <div style="height:100%; border-radius:999px; width:${pct}%; background:${seg.color}; transition:width 0.4s ease;"></div>
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+
+                <div class="chart-card">
                   <div class="card-header">
                     <div class="card-title-group">
                       <div class="card-title">Taux de complétion par bibliothèque</div>
                       <div class="card-subtitle">Pourcentage moyen du contenu visionné avant arrêt</div>
                     </div>
                   </div>
-                  <div style="padding:1rem; display:flex; flex-direction:column; gap:0.75rem;">
-                    ${(gran.dropOffData || []).map(item => `
-                      <div>
-                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
-                          <span style="font-weight:600;">${Utils.escapeHtml(item.time || 'Bibliothèque')}</span>
-                          <span style="font-weight:700; color:#10b981;">${item.completion || 0}%</span>
-                        </div>
-                        <div class="gantt-track">
-                          <div class="gantt-fill" style="width:${item.completion || 0}%; background:#10b981;"></div>
-                        </div>
-                      </div>
-                    `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée</div>'}
+                  <div class="chart-wrap" style="height:260px;">
+                    <canvas id="chart-avg-completion-lib"></canvas>
                   </div>
                 </div>
+              </div>
 
+              <!-- Row 6: Worst Completion & Audio & Subtitles -->
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.25rem;">
                 <div class="card">
                   <div class="card-header">
                     <div class="card-title-group">
@@ -2413,65 +2768,281 @@
                       <div class="card-subtitle">Contenus arrêtés prématurément par les spectateurs</div>
                     </div>
                   </div>
-                  <div class="ranking-list">
+                  <div class="ranking-list" style="padding:0.5rem 1rem 1rem;">
                     ${(gran.topAbandoned || []).map((m, i) => `
-                      <a href="/media/${m.mediaId || ''}" class="ranking-item">
+                      <a href="${m.mediaId ? `/media/${m.mediaId}` : '#'}" class="ranking-item">
                         <span class="ranking-badge" style="background:rgba(239, 68, 68, 0.15); color:#ef4444;">#${i + 1}</span>
                         <div class="ranking-name">
-                          <span style="font-weight:700;">${Utils.escapeHtml(m.fullTitle || m.title)}</span>
-                          <div style="font-size:0.72rem; color:var(--muted-foreground);">${m.count || 0} abandons</div>
+                          <span style="font-weight:700;" title="${Utils.escapeHtml(m.fullTitle || m.title)}">${Utils.escapeHtml(m.title)}</span>
+                          <div style="font-size:0.72rem; color:var(--muted-foreground);">${m.count || 0} abandons · ${m.completion || 0}% vu</div>
                         </div>
-                        <span class="badge badge-danger" style="font-size:0.72rem;">${m.completion || 0}% vu</span>
+                        <span class="badge badge-danger" style="font-size:0.72rem;">${m.completion || 0}%</span>
                       </a>
                     `).join('') || '<div class="text-muted-foreground text-sm" style="padding:1rem;">Aucun abandon prématuré recensé.</div>'}
                   </div>
                 </div>
-              </div>
 
-              <!-- Audio & Subtitles Ecosystem -->
-              <div class="dash-grid-2">
-                <div class="card">
+                <div class="chart-card">
                   <div class="card-header">
                     <div class="card-title-group">
                       <div class="card-title">Pistes audio les plus écoutées</div>
                       <div class="card-subtitle">Codecs et langues des flux audio</div>
                     </div>
                   </div>
-                  <div class="ranking-list">
-                    ${(gran.audioData || []).map((a, i) => `
-                      <div class="ranking-item">
-                        <span class="ranking-badge">🔊</span>
-                        <span class="ranking-name">${Utils.escapeHtml(a.name || 'Inconnu')}</span>
-                        <span class="ranking-value">${a.value || 0} sessions</span>
-                      </div>
-                    `).join('') || '<div class="text-muted-foreground text-sm" style="padding:1rem;">Aucune donnée</div>'}
+                  <div class="chart-wrap" style="height:260px;">
+                    <canvas id="chart-audio-breakdown"></canvas>
                   </div>
                 </div>
 
-                <div class="card">
+                <div class="chart-card">
                   <div class="card-header">
                     <div class="card-title-group">
                       <div class="card-title">Sous-titres utilisés</div>
                       <div class="card-subtitle">Langues et formats de sous-titrage</div>
                     </div>
                   </div>
-                  <div class="ranking-list">
-                    ${(gran.subtitleData || []).map((s, i) => `
-                      <div class="ranking-item">
-                        <span class="ranking-badge">💬</span>
-                        <span class="ranking-name">${Utils.escapeHtml(s.name || 'Désactivé')}</span>
-                        <span class="ranking-value">${s.value || 0} sessions</span>
-                      </div>
-                    `).join('') || '<div class="text-muted-foreground text-sm" style="padding:1rem;">Aucune donnée</div>'}
+                  <div class="chart-wrap" style="height:260px;">
+                    <canvas id="chart-subtitles-breakdown"></canvas>
                   </div>
                 </div>
               </div>
             `;
+
+            // Palette for multi-series
+            const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ec4899', '#6366f1', '#14b8a6', '#f43f5e'];
+
+            // 1. Chart: Plays per day
+            const dailyData = gran.dailyData || [];
+            if (dailyData.length > 0) {
+              const labels = dailyData.map(d => d.time);
+              const data = dailyData.map(d => Number(d.totalPlays || 0));
+              ChartHelper.renderArea('chart-plays-per-day', labels, data, { label: 'Lectures', color: '#38bdf8' });
+            } else {
+              ChartHelper.showEmpty('chart-plays-per-day', 'Aucune lecture quotidienne');
+            }
+
+            // 2. Chart: Plays by library
+            if (dailyData.length > 0 && gran.collections && gran.collections.length > 0) {
+              const labels = dailyData.map(d => d.time);
+              const datasets = gran.collections.map((col, idx) => ({
+                label: col,
+                data: dailyData.map(d => Number(d[`${col}_plays`] || 0)),
+                color: palette[idx % palette.length],
+              }));
+              ChartHelper.renderStackedBar('chart-plays-by-lib', labels, datasets);
+            } else {
+              ChartHelper.showEmpty('chart-plays-by-lib', 'Aucune donnée par bibliothèque');
+            }
+
+            // 3. Chart: Duration per day
+            if (dailyData.length > 0) {
+              const labels = dailyData.map(d => d.time);
+              const data = dailyData.map(d => Number(d.totalDuration || 0));
+              ChartHelper.renderArea('chart-duration-per-day', labels, data, { label: 'Durée (h)', color: '#a855f7', isHours: true });
+            } else {
+              ChartHelper.showEmpty('chart-duration-per-day', 'Aucune durée enregistrée');
+            }
+
+            // 4. Chart: Duration by library
+            if (dailyData.length > 0 && gran.collections && gran.collections.length > 0) {
+              const labels = dailyData.map(d => d.time);
+              const datasets = gran.collections.map((col, idx) => ({
+                label: col,
+                data: dailyData.map(d => Number(d[`${col}_duration`] || 0)),
+                color: palette[idx % palette.length],
+              }));
+              ChartHelper.renderStackedArea('chart-duration-by-lib', labels, datasets);
+            } else {
+              ChartHelper.showEmpty('chart-duration-by-lib', 'Aucune donnée par bibliothèque');
+            }
+
+            // 5. Chart: Plays hourly avg
+            const hourlyData = gran.hourlyData || [];
+            if (hourlyData.length > 0) {
+              const labels = hourlyData.map(h => h.time);
+              const data = hourlyData.map(h => Number(h.plays || 0));
+              ChartHelper.renderBar('chart-plays-hourly-avg', labels, data, { label: 'Lectures moyennes', backgroundColors: '#eab308' });
+            } else {
+              ChartHelper.showEmpty('chart-plays-hourly-avg', 'Aucune donnée horaire');
+            }
+
+            // 6. Chart: Duration hourly avg
+            if (hourlyData.length > 0) {
+              const labels = hourlyData.map(h => h.time);
+              const data = hourlyData.map(h => Number(h.duration || 0));
+              ChartHelper.renderArea('chart-duration-hourly-avg', labels, data, { label: 'Durée moyenne (h)', color: '#22c55e', isHours: true });
+            } else {
+              ChartHelper.showEmpty('chart-duration-hourly-avg', 'Aucune donnée horaire');
+            }
+
+            // 7. Chart: Average completion by lib
+            const dropOff = gran.dropOffData || [];
+            if (dropOff.length > 0) {
+              const labels = dropOff.map(d => d.time || 'Bibliothèque');
+              const values = dropOff.map(d => Number(d.completion || 0));
+              ChartHelper.renderHorizontalBar('chart-avg-completion-lib', labels, values, {
+                backgroundColors: '#8b5cf6',
+                label: '% Moyen vu',
+              });
+            } else {
+              ChartHelper.showEmpty('chart-avg-completion-lib', 'Aucune donnée de complétion');
+            }
+
+            // 8. Chart: Audio breakdown
+            const audio = gran.audioData || deep.audioChartData || [];
+            if (audio.length > 0 && audio.some(a => (a.value || 0) > 0)) {
+              const labels = audio.map(a => a.name || 'Inconnu');
+              const values = audio.map(a => Number(a.value || 0));
+              ChartHelper.renderDoughnut('chart-audio-breakdown', labels, values, { isHours: false });
+            } else {
+              ChartHelper.showEmpty('chart-audio-breakdown', 'Aucune piste audio enregistrée');
+            }
+
+            // 9. Chart: Subtitles breakdown
+            const subs = gran.subtitleData || deep.subtitleChartData || [];
+            if (subs.length > 0 && subs.some(s => (s.value || 0) > 0)) {
+              const labels = subs.map(s => s.name || 'Désactivé');
+              const values = subs.map(s => Number(s.value || 0));
+              ChartHelper.renderDoughnut('chart-subtitles-breakdown', labels, values, { isHours: false });
+            } else {
+              ChartHelper.showEmpty('chart-subtitles-breakdown', 'Aucun sous-titre utilisé');
+            }
           }
 
           const deepContainer = document.getElementById('dash-deep-insights-container');
           if (deepContainer) {
+            const cat = deep.categorized || {};
+            const movies = cat.movie || [];
+            const series = cat.series || [];
+            const albums = cat.album || [];
+            const books = cat.book || [];
+
+            const renderMediaCategoryCard = (title, items, emptyText) => `
+              <div class="card">
+                <div class="card-header" style="padding-bottom:0.5rem;">
+                  <div class="card-title" style="font-size:0.95rem;">${title}</div>
+                </div>
+                <div style="padding:0.5rem 0.75rem 0.75rem; display:flex; flex-direction:column; gap:0.4rem;">
+                  ${items.length === 0 ? `<div class="text-muted-foreground text-xs" style="padding:0.5rem;">${emptyText}</div>` : ''}
+                  ${items.map((m, i) => `
+                    <div class="category-media-item">
+                      <div style="display:flex; align-items:center; gap:0.4rem; overflow:hidden;">
+                        <span style="font-size:0.75rem; color:var(--muted-foreground); width:16px;">${i + 1}.</span>
+                        <span style="font-size:0.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${Utils.escapeHtml(m.title)}">${Utils.escapeHtml(m.title)}</span>
+                      </div>
+                      <span class="badge badge-secondary" style="font-size:0.7rem; font-family:monospace; shrink-0;">${m.plays} v. · ${m.duration}h</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+
             deepContainer.innerHTML = `
+              <!-- Categorized Top Media Cards (4 cards) -->
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+                ${renderMediaCategoryCard('Top Films', movies, 'Aucun film regardé')}
+                ${renderMediaCategoryCard('Top Séries', series, 'Aucune série regardée')}
+                ${renderMediaCategoryCard('Top Musique', albums, 'Aucun album écouté')}
+                ${renderMediaCategoryCard('Top Livres', books, 'Aucun livre lu')}
+              </div>
+
+              <!-- Top Genres -->
+              ${(deep.topGenres || []).length > 0 ? `
+                <div class="card" style="margin-bottom:1.25rem;">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Top Genres</div>
+                      <div class="card-subtitle">Styles et catégories les plus visionnés</div>
+                    </div>
+                  </div>
+                  <div style="padding:1rem;">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
+                      ${deep.topGenres.map((g, i) => {
+                        const maxP = deep.topGenres[0]?.plays || 1;
+                        const pct = Math.round((g.plays / maxP) * 100);
+                        const genreColors = ['#38bdf8', '#22c55e', '#a855f7', '#f59e0b', '#ec4899', '#06b6d4', '#eab308', '#ef4444', '#6366f1', '#14b8a6'];
+                        const col = genreColors[i % genreColors.length];
+                        return `
+                          <div style="display:flex; align-items:center; gap:0.6rem; font-size:0.8rem;">
+                            <span style="width:20px; text-align:right; color:var(--muted-foreground);">${i + 1}.</span>
+                            <div style="flex:1; min-width:0;">
+                              <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                                <span style="font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${Utils.escapeHtml(g.name)}</span>
+                                <span style="font-size:0.75rem; color:var(--muted-foreground); margin-left:0.5rem; font-family:monospace;">${g.plays} v. · ${g.duration}h</span>
+                              </div>
+                              <div style="height:6px; background:var(--surface-nested, rgba(148,163,184,0.2)); border-radius:999px; overflow:hidden;">
+                                <div style="height:100%; border-radius:999px; width:${pct}%; background:${col}; transition:width 0.4s ease;"></div>
+                              </div>
+                            </div>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Top Clients & Stream Methods -->
+              <div class="dash-grid-2" style="margin-bottom:1.25rem;">
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Top Clients</div>
+                      <div class="card-subtitle">Applications de lecture les plus sollicitées</div>
+                    </div>
+                  </div>
+                  <div class="ranking-list" style="padding:0.75rem 1rem 1rem;">
+                    ${(deep.topClients || []).map((c, i) => `
+                      <div class="ranking-item">
+                        <span class="ranking-badge">#${i + 1}</span>
+                        <span class="ranking-name">${Utils.escapeHtml(c.clientName || '?')}</span>
+                        <span class="ranking-value font-mono">${c.count} sessions</span>
+                      </div>
+                    `).join('') || '<div class="text-muted-foreground text-sm" style="padding:1rem;">Aucun client enregistré</div>'}
+                  </div>
+                </div>
+
+                <div class="chart-card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Méthodes de lecture</div>
+                      <div class="card-subtitle">DirectPlay vs DirectStream vs Transcode</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap" style="height:260px;">
+                    <canvas id="chart-stream-methods"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pro Telemetry: Resolution & Devices -->
+              <div class="dash-grid-2" style="margin-bottom:1.25rem;">
+                <div class="chart-card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Matrice de résolutions</div>
+                      <div class="card-subtitle">Qualités vidéo diffusées (4K, 1080p, 720p...)</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap" style="height:260px;">
+                    <canvas id="chart-resolution-matrix"></canvas>
+                  </div>
+                </div>
+
+                <div class="chart-card">
+                  <div class="card-header">
+                    <div class="card-title-group">
+                      <div class="card-title">Écosystème d'appareils</div>
+                      <div class="card-subtitle">Modèles d'équipements récepteurs</div>
+                    </div>
+                  </div>
+                  <div class="chart-wrap" style="height:260px;">
+                    <canvas id="chart-device-ecosystem"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Key Figures (Acteurs, Réalisateurs, Studios) -->
               <div class="card">
                 <div class="card-header">
                   <div class="card-title-group">
@@ -2519,8 +3090,43 @@
                 </div>
               </div>
             `;
+
+            // Stream methods chart
+            const streamMethods = deep.streamMethodsChartData || [];
+            if (streamMethods.length > 0 && streamMethods.some(s => (s.value || 0) > 0)) {
+              const labels = streamMethods.map(s => s.name || '?');
+              const values = streamMethods.map(s => Number(s.value || 0));
+              ChartHelper.renderDoughnut('chart-stream-methods', labels, values, {
+                colors: ['#10b981', '#f59e0b', '#3b82f6', '#a855f7'],
+                isHours: false,
+              });
+            } else {
+              ChartHelper.showEmpty('chart-stream-methods', 'Aucune méthode de flux');
+            }
+
+            // Resolution matrix chart
+            const resolutions = deep.resolutionChartData || [];
+            if (resolutions.length > 0 && resolutions.some(r => (r.value || 0) > 0)) {
+              const labels = resolutions.map(r => r.name || '?');
+              const values = resolutions.map(r => Number(r.value || 0));
+              ChartHelper.renderDoughnut('chart-resolution-matrix', labels, values, { isHours: false });
+            } else {
+              ChartHelper.showEmpty('chart-resolution-matrix', 'Aucune résolution enregistrée');
+            }
+
+            // Device ecosystem chart
+            const devices = deep.deviceChartData || [];
+            if (devices.length > 0 && devices.some(d => (d.value || 0) > 0)) {
+              const labels = devices.map(d => d.name || '?');
+              const values = devices.map(d => Number(d.value || 0));
+              ChartHelper.renderDoughnut('chart-device-ecosystem', labels, values, { isHours: false });
+            } else {
+              ChartHelper.showEmpty('chart-device-ecosystem', 'Aucun appareil enregistré');
+            }
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error('[GranularAndDeep] Error loading analytics:', e);
+        }
       };
 
       // 13. Load Tab 3: Network Analysis & Coupables Table
@@ -2681,14 +3287,17 @@
           `;
 
           // Render Network Charts
-          if (net.hourlyData && net.hourlyData.length > 0) {
-            const labels = net.hourlyData.map(h => h.hour);
+          const hourly = net.hourlyData || [];
+          if (hourly.length > 0) {
+            const labels = hourly.map(h => h.hour || h.time || h.Hour || h.Time);
             const datasets = [
-              { label: 'DirectPlay', data: net.hourlyData.map(h => h.directPlay || 0), color: '#10b981' },
-              { label: 'Transcode', data: net.hourlyData.map(h => h.transcode || 0), color: '#f59e0b' },
-              { label: 'DirectStream', data: net.hourlyData.map(h => h.directStream || 0), color: '#3b82f6' },
+              { label: 'DirectPlay', data: hourly.map(h => h.DirectPlay != null ? h.DirectPlay : (h.directPlay || 0)), color: '#10b981' },
+              { label: 'Transcode', data: hourly.map(h => h.Transcode != null ? h.Transcode : (h.transcode || 0)), color: '#f59e0b' },
+              { label: 'DirectStream', data: hourly.map(h => h.DirectStream != null ? h.DirectStream : (h.directStream || 0)), color: '#3b82f6' },
             ];
             ChartHelper.renderStackedArea('chart-net-transcode-hourly', labels, datasets);
+          } else {
+            ChartHelper.showEmpty('chart-net-transcode-hourly', 'Aucune donnée horaire réseau');
           }
 
           if (net.clientTranscodeData && net.clientTranscodeData.length > 0) {
@@ -2698,8 +3307,12 @@
               backgroundColors: '#f97316',
               label: '% Transcodé',
             });
+          } else {
+            ChartHelper.showEmpty('chart-net-client-transcode', 'Aucun transcodage client');
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error('[NetworkTab] Error loading network analytics:', e);
+        }
       };
 
       // 14. Tab switcher click handlers
