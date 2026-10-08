@@ -807,6 +807,18 @@ func TriggerAutoBackup(ctx context.Context, db *sql.DB, driver, backupDir, mode 
 		}
 	}
 
+	if db != nil {
+		finishIso := now.Format(time.RFC3339Nano)
+		bState := map[string]any{
+			"status":         "ok",
+			"lastSuccessAt":  finishIso,
+			"lastFinishedAt": finishIso,
+			"lastFileName":   fileName,
+		}
+		bBytes, _ := json.Marshal(bState)
+		_, _ = db.ExecContext(ctx, database.Bind(`INSERT INTO "SystemHealthState" ("id", "backup", "updatedAt") VALUES ('global', ?, ?) ON CONFLICT("id") DO UPDATE SET "backup"=excluded."backup", "updatedAt"=excluded."updatedAt"`, driver), string(bBytes), finishIso)
+	}
+
 	return fileName, nil
 }
 

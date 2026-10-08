@@ -153,6 +153,25 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 
 // ---------------------- Dashboard & Analytics ----------------------
 
+func getServerScope(r *http.Request) []string {
+	serversParam := strings.TrimSpace(r.URL.Query().Get("servers"))
+	if serversParam == "" {
+		if c, err := r.Cookie("jellytrack_server_scope"); err == nil {
+			serversParam = strings.TrimSpace(c.Value)
+		}
+	}
+	if serversParam == "" || strings.EqualFold(serversParam, "all") {
+		return nil
+	}
+	var serverIDs []string
+	for _, s := range strings.Split(serversParam, ",") {
+		if trimmed := strings.TrimSpace(s); trimmed != "" {
+			serverIDs = append(serverIDs, trimmed)
+		}
+	}
+	return serverIDs
+}
+
 func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	days := boundedInt(q.Get("days"), 7, 1, 365)
@@ -163,15 +182,7 @@ func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
 	mediaType := q.Get("type")
 	from := q.Get("from")
 	to := q.Get("to")
-	serversParam := q.Get("servers")
-	var serverIDs []string
-	if serversParam != "" {
-		for _, s := range strings.Split(serversParam, ",") {
-			if trimmed := strings.TrimSpace(s); trimmed != "" {
-				serverIDs = append(serverIDs, trimmed)
-			}
-		}
-	}
+	serverIDs := getServerScope(r)
 
 	filter := stats.DashboardFilter{
 		TimeRange: timeRange,
@@ -196,15 +207,7 @@ func (h *Handler) deepStats(w http.ResponseWriter, r *http.Request) {
 	days := boundedInt(q.Get("days"), 30, 1, 365)
 	timeRange := q.Get("timeRange")
 	mediaType := q.Get("type")
-	serversParam := q.Get("servers")
-	var serverIDs []string
-	if serversParam != "" {
-		for _, s := range strings.Split(serversParam, ",") {
-			if trimmed := strings.TrimSpace(s); trimmed != "" {
-				serverIDs = append(serverIDs, trimmed)
-			}
-		}
-	}
+	serverIDs := getServerScope(r)
 
 	filter := stats.DashboardFilter{
 		TimeRange: timeRange,
@@ -949,24 +952,33 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	id := strings.TrimSpace(r.PathValue("id"))
 	if id == "" {
 		jsonError(w, 400, "Identifiant requis.")
 		return
 	}
-	var username, jid string
+	if id == "me" || id == "@me" {
+		if p, ok := auth.PrincipalFromContext(r.Context()); ok {
+			if p.JellyfinUserID != "" {
+				id = p.JellyfinUserID
+			} else {
+				id = p.Username
+			}
+		}
+	}
+	var dbUID, username, jid string
 	var lastActive, server sql.NullString
-	err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT u."username",u."jellyfinUserId",u."lastActive",s."name" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" WHERE u."id"=?`, h.driver), id).Scan(&username, &jid, &lastActive, &server)
+	err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT u."id",u."username",u."jellyfinUserId",u."lastActive",s."name" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" WHERE u."id"=? OR u."jellyfinUserId"=? OR LOWER(u."username")=LOWER(?) LIMIT 1`, h.driver), id, id, id).Scan(&dbUID, &username, &jid, &lastActive, &server)
 	if err != nil {
 		jsonError(w, 404, "Utilisateur introuvable.")
 		return
 	}
 
 	var totalPlays, totalDuration int64
-	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM("durationWatched"),0) FROM "PlaybackHistory" WHERE "userId"=?`, h.driver), id).Scan(&totalPlays, &totalDuration)
+	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM("durationWatched"),0) FROM "PlaybackHistory" WHERE "userId"=? OR "userId"=?`, h.driver), dbUID, jid).Scan(&totalPlays, &totalDuration)
 
 	// Recent activity
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",m."title",m."type",m."libraryName" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."userId"=? ORDER BY p."startedAt" DESC LIMIT 20`, h.driver), id)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",m."title",m."type",m."libraryName" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."userId"=? OR p."userId"=? ORDER BY p."startedAt" DESC LIMIT 20`, h.driver), dbUID, jid)
 	recent := []map[string]any{}
 	if err == nil {
 		for rows.Next() {
@@ -984,7 +996,7 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, 200, map[string]any{
-		"id": id, "username": username, "jellyfinUserId": jid,
+		"id": dbUID, "username": username, "jellyfinUserId": jid,
 		"lastActive": nullable(lastActive), "server": nullable(server),
 		"totalPlays": totalPlays, "totalDurationMs": totalDuration * 1000,
 		"recentActivity": recent,
@@ -997,11 +1009,20 @@ func (h *Handler) userActiveStream(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 400, "Identifiant requis.")
 		return
 	}
+	if id == "me" || id == "@me" {
+		if p, ok := auth.PrincipalFromContext(r.Context()); ok {
+			if p.JellyfinUserID != "" {
+				id = p.JellyfinUserID
+			} else {
+				id = p.Username
+			}
+		}
+	}
 
 	principal, ok := auth.PrincipalFromContext(r.Context())
 	if ok && !principal.IsAdmin() {
 		isSelf := false
-		if principal.Username == id {
+		if strings.EqualFold(principal.Username, id) || (principal.JellyfinUserID != "" && principal.JellyfinUserID == id) {
 			isSelf = true
 		} else {
 			var uname string
@@ -1118,7 +1139,9 @@ func (h *Handler) mediaDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var watchCount, totalDuration int64
-	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM("durationWatched"),0) FROM "PlaybackHistory" WHERE "mediaId"=(SELECT "id" FROM "Media" WHERE "id"=? OR "jellyfinMediaId"=? LIMIT 1)`, h.driver), id, id).Scan(&watchCount, &totalDuration)
+	var pauseCount, seekCount, rewatchCount, speedChangeCount int64
+	var maxRate sql.NullFloat64
+	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM("durationWatched"),0),COALESCE(SUM("pauseCount"),0),COALESCE(SUM("seekCount"),0),COALESCE(SUM("rewatchCount"),0),COALESCE(SUM("speedChangeCount"),0),MAX("maxPlaybackRate") FROM "PlaybackHistory" WHERE "mediaId"=(SELECT "id" FROM "Media" WHERE "id"=? OR "jellyfinMediaId"=? LIMIT 1)`, h.driver), id, id).Scan(&watchCount, &totalDuration, &pauseCount, &seekCount, &rewatchCount, &speedChangeCount, &maxRate)
 
 	recentRows, errRecent := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",u."username",u."id" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" WHERE p."mediaId"=(SELECT "id" FROM "Media" WHERE "id"=? OR "jellyfinMediaId"=? LIMIT 1) ORDER BY p."startedAt" DESC LIMIT 10`, h.driver), id, id)
 	recentActivity := []map[string]any{}
@@ -1137,12 +1160,19 @@ func (h *Handler) mediaDetail(w http.ResponseWriter, r *http.Request) {
 		recentRows.Close()
 	}
 
+	var maxRateVal any
+	if maxRate.Valid {
+		maxRateVal = maxRate.Float64
+	}
+
 	jsonResponse(w, 200, map[string]any{
 		"id": id, "jellyfinMediaId": jid, "title": title, "type": mType,
 		"library": nullable(lib), "genres": parseStringList(genres), "resolution": nullable(res),
 		"durationMs": dur.Int64, "sizeBytes": size.Int64, "directors": parseStringList(directors),
 		"actors": parseStringList(actors), "server": nullable(server),
 		"totalPlays": watchCount, "totalDurationMs": totalDuration * 1000,
+		"pauseCount": pauseCount, "seekCount": seekCount, "rewatchCount": rewatchCount,
+		"speedChangeCount": speedChangeCount, "maxPlaybackRate": maxRateVal,
 		"recentActivity": recentActivity,
 	})
 }
@@ -1241,15 +1271,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 // ---------------------- Streams & Telemetry ----------------------
 
 func (h *Handler) streams(w http.ResponseWriter, r *http.Request) {
-	serversParam := strings.TrimSpace(r.URL.Query().Get("servers"))
-	var selectedServers []string
-	if serversParam != "" {
-		for _, s := range strings.Split(serversParam, ",") {
-			if trimmed := strings.TrimSpace(s); trimmed != "" {
-				selectedServers = append(selectedServers, trimmed)
-			}
-		}
-	}
+	selectedServers := getServerScope(r)
 
 	baseQuery := `SELECT s."id",s."serverId",s."sessionId",s."playMethod",s."clientName",s."deviceName",s."ipAddress",s."country",s."city",s."bitrate",s."positionTicks",s."startedAt",u."username",m."title",m."type",m."durationMs",m."jellyfinMediaId",m."parentId",m."artist" FROM "ActiveStream" s LEFT JOIN "User" u ON u."id"=s."userId" LEFT JOIN "Media" m ON m."id"=s."mediaId"`
 	var rows *sql.Rows
@@ -1495,12 +1517,26 @@ func (h *Handler) killStream(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 400, "sessionId requis.")
 		return
 	}
+
+	var srvURL, srvKey sql.NullString
+	_ = h.db.QueryRowContext(r.Context(), database.Bind(`
+		SELECT s."url", s."jellyfinApiKey"
+		FROM "ActiveStream" a
+		JOIN "Server" s ON s."id" = a."serverId"
+		WHERE a."sessionId" = ?
+		LIMIT 1
+	`, h.driver), body.SessionID).Scan(&srvURL, &srvKey)
+
 	// Delete from local ActiveStream table
 	_, _ = h.db.ExecContext(r.Context(), database.Bind(`DELETE FROM "ActiveStream" WHERE "sessionId"=?`, h.driver), body.SessionID)
 
-	// Instruct Jellyfin to terminate the session if credentials exist
-	baseURL := os.Getenv("JELLYFIN_URL")
-	apiKey := first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"))
+	baseURL := srvURL.String
+	apiKey := srvKey.String
+	if baseURL == "" {
+		baseURL = os.Getenv("JELLYFIN_URL")
+		apiKey = first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"))
+	}
+
 	if baseURL != "" && apiKey != "" {
 		reqURL := fmt.Sprintf("%s/Sessions/%s/Playing/Stop", strings.TrimRight(baseURL, "/"), body.SessionID)
 		req, _ := http.NewRequestWithContext(r.Context(), http.MethodPost, reqURL, nil)
@@ -1532,8 +1568,23 @@ func (h *Handler) sendMessage(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 400, "sessionId et text (ou message) requis.")
 		return
 	}
-	baseURL := os.Getenv("JELLYFIN_URL")
-	apiKey := first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"))
+
+	var srvURL, srvKey sql.NullString
+	_ = h.db.QueryRowContext(r.Context(), database.Bind(`
+		SELECT s."url", s."jellyfinApiKey"
+		FROM "ActiveStream" a
+		JOIN "Server" s ON s."id" = a."serverId"
+		WHERE a."sessionId" = ?
+		LIMIT 1
+	`, h.driver), body.SessionID).Scan(&srvURL, &srvKey)
+
+	baseURL := srvURL.String
+	apiKey := srvKey.String
+	if baseURL == "" {
+		baseURL = os.Getenv("JELLYFIN_URL")
+		apiKey = first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"))
+	}
+
 	if baseURL == "" || apiKey == "" {
 		jsonError(w, 503, "Jellyfin non configuré.")
 		return
@@ -1556,55 +1607,125 @@ func (h *Handler) sendMessage(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) getSettings(w http.ResponseWriter, r *http.Request) {
 	var discordUrl, discordCond, defLocale, timeFmt, exclLibs sql.NullString
+	var resThresholds, plugTelemetry sql.NullString
 	var alertsEnabled, maxTranscodes, syncH, syncM, bH, bM, wrapVis, wrapPer, wrapSM, wrapSD, wrapEM, wrapED int
-	err := h.db.QueryRowContext(r.Context(), `SELECT "discordWebhookUrl","discordAlertCondition","discordAlertsEnabled","maxConcurrentTranscodes","excludedLibraries","syncCronHour","syncCronMinute","backupCronHour","backupCronMinute","defaultLocale","timeFormat","wrappedVisible","wrappedPeriodEnabled","wrappedStartMonth","wrappedStartDay","wrappedEndMonth","wrappedEndDay" FROM "GlobalSettings" WHERE "id"='global'`).Scan(
-		&discordUrl, &discordCond, &alertsEnabled, &maxTranscodes, &exclLibs, &syncH, &syncM, &bH, &bM, &defLocale, &timeFmt, &wrapVis, &wrapPer, &wrapSM, &wrapSD, &wrapEM, &wrapED)
+	var rememberThirty int
+	err := h.db.QueryRowContext(r.Context(), `SELECT "discordWebhookUrl","discordAlertCondition","discordAlertsEnabled","maxConcurrentTranscodes","excludedLibraries","syncCronHour","syncCronMinute","backupCronHour","backupCronMinute","defaultLocale","timeFormat","wrappedVisible","wrappedPeriodEnabled","wrappedStartMonth","wrappedStartDay","wrappedEndMonth","wrappedEndDay","authRememberThirtyDaysEnabled","resolutionThresholds","pluginTelemetrySettings" FROM "GlobalSettings" WHERE "id"='global'`).Scan(
+		&discordUrl, &discordCond, &alertsEnabled, &maxTranscodes, &exclLibs, &syncH, &syncM, &bH, &bM, &defLocale, &timeFmt, &wrapVis, &wrapPer, &wrapSM, &wrapSD, &wrapEM, &wrapED, &rememberThirty, &resThresholds, &plugTelemetry)
 	if err != nil && err != sql.ErrNoRows {
 		jsonError(w, 500, "Impossible de lire les réglages.")
 		return
 	}
 
+	availLibs := []string{}
+	type libScope struct {
+		ServerID    string `json:"serverId"`
+		LibraryName string `json:"libraryName"`
+	}
+	availScopes := []libScope{}
+
+	libRows, lErr := h.db.QueryContext(r.Context(), `SELECT DISTINCT "libraryName" FROM "Media" WHERE "libraryName" IS NOT NULL AND "libraryName" != '' ORDER BY "libraryName" ASC`)
+	if lErr == nil {
+		defer libRows.Close()
+		for libRows.Next() {
+			var ln string
+			if libRows.Scan(&ln) == nil {
+				availLibs = append(availLibs, ln)
+			}
+		}
+	}
+
+	scopeRows, sErr := h.db.QueryContext(r.Context(), `SELECT DISTINCT "serverId", "libraryName" FROM "Media" WHERE "libraryName" IS NOT NULL AND "libraryName" != '' ORDER BY "libraryName" ASC`)
+	if sErr == nil {
+		defer scopeRows.Close()
+		for scopeRows.Next() {
+			var sid, ln string
+			if scopeRows.Scan(&sid, &ln) == nil {
+				availScopes = append(availScopes, libScope{ServerID: sid, LibraryName: ln})
+			}
+		}
+	}
+
+	schedulerIntervals := map[string]any{
+		"recentSyncEveryHours": 6,
+		"fullSyncEveryHours":   48,
+		"backupEveryHours":     24,
+		"logRetentionDays":     30,
+	}
+	var resObj map[string]any
+	if resThresholds.Valid && resThresholds.String != "" {
+		if json.Unmarshal([]byte(resThresholds.String), &resObj) == nil {
+			if si, ok := resObj["schedulerIntervals"].(map[string]any); ok {
+				for k, v := range si {
+					schedulerIntervals[k] = v
+				}
+			}
+		}
+	}
+
+	var plugObj any
+	if plugTelemetry.Valid && plugTelemetry.String != "" {
+		_ = json.Unmarshal([]byte(plugTelemetry.String), &plugObj)
+	}
+
 	jsonResponse(w, 200, map[string]any{
-		"discordWebhookUrl":       discordUrl.String,
-		"discordAlertCondition":   discordCond.String,
-		"discordAlertsEnabled":    alertsEnabled == 1,
-		"maxConcurrentTranscodes": maxTranscodes,
-		"excludedLibraries":       parseStringList(exclLibs.String),
-		"syncCronHour":            syncH,
-		"syncCronMinute":          syncM,
-		"backupCronHour":          bH,
-		"backupCronMinute":        bM,
-		"defaultLocale":           defLocale.String,
-		"timeFormat":              timeFmt.String,
-		"wrappedVisible":          wrapVis == 1,
-		"wrappedPeriodEnabled":    wrapPer == 1,
-		"wrappedStartMonth":       wrapSM,
-		"wrappedStartDay":         wrapSD,
-		"wrappedEndMonth":         wrapEM,
-		"wrappedEndDay":           wrapED,
+		"discordWebhookUrl":             discordUrl.String,
+		"discordAlertCondition":         discordCond.String,
+		"discordAlertsEnabled":          alertsEnabled == 1,
+		"maxConcurrentTranscodes":       maxTranscodes,
+		"excludedLibraries":             parseStringList(exclLibs.String),
+		"syncCronHour":                  syncH,
+		"syncCronMinute":                syncM,
+		"backupCronHour":                bH,
+		"backupCronMinute":              bM,
+		"defaultLocale":                 defLocale.String,
+		"timeFormat":                    timeFmt.String,
+		"wrappedVisible":                wrapVis == 1,
+		"wrappedPeriodEnabled":          wrapPer == 1,
+		"wrappedStartMonth":             wrapSM,
+		"wrappedStartDay":               wrapSD,
+		"wrappedEndMonth":               wrapEM,
+		"wrappedEndDay":                 wrapED,
+		"authRememberThirtyDaysEnabled": rememberThirty == 1,
+		"resolutionThresholds":          resObj,
+		"schedulerIntervals":            schedulerIntervals,
+		"pluginTelemetrySettings":       plugObj,
+		"availableLibraries":            availLibs,
+		"availableLibraryScopes":        availScopes,
 	})
 }
 
 func (h *Handler) updateSettings(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		DiscordWebhookUrl       *string   `json:"discordWebhookUrl"`
-		DiscordAlertCondition   *string   `json:"discordAlertCondition"`
-		DiscordAlertsEnabled    *bool     `json:"discordAlertsEnabled"`
-		MaxConcurrentTranscodes *int      `json:"maxConcurrentTranscodes"`
-		ExcludedLibraries       *[]string `json:"excludedLibraries"`
-		SyncCronHour            *int      `json:"syncCronHour"`
-		SyncCronMinute          *int      `json:"syncCronMinute"`
-		BackupCronHour          *int      `json:"backupCronHour"`
-		BackupCronMinute        *int      `json:"backupCronMinute"`
-		DefaultLocale           *string   `json:"defaultLocale"`
-		TimeFormat              *string   `json:"timeFormat"`
-		WrappedVisible          *bool     `json:"wrappedVisible"`
+		DiscordWebhookUrl             *string   `json:"discordWebhookUrl"`
+		DiscordAlertCondition         *string   `json:"discordAlertCondition"`
+		DiscordAlertsEnabled          *bool     `json:"discordAlertsEnabled"`
+		MaxConcurrentTranscodes       *int      `json:"maxConcurrentTranscodes"`
+		ExcludedLibraries             *[]string `json:"excludedLibraries"`
+		SyncCronHour                  *int      `json:"syncCronHour"`
+		SyncCronMinute                *int      `json:"syncCronMinute"`
+		BackupCronHour                *int      `json:"backupCronHour"`
+		BackupCronMinute              *int      `json:"backupCronMinute"`
+		DefaultLocale                 *string   `json:"defaultLocale"`
+		TimeFormat                    *string   `json:"timeFormat"`
+		WrappedVisible                *bool     `json:"wrappedVisible"`
+		WrappedPeriodEnabled          *bool     `json:"wrappedPeriodEnabled"`
+		WrappedStartMonth             *int      `json:"wrappedStartMonth"`
+		WrappedStartDay               *int      `json:"wrappedStartDay"`
+		WrappedEndMonth               *int      `json:"wrappedEndMonth"`
+		WrappedEndDay                 *int      `json:"wrappedEndDay"`
+		ResolutionThresholds          any       `json:"resolutionThresholds"`
+		SchedulerIntervals            any       `json:"schedulerIntervals"`
+		PluginTelemetrySettings       any       `json:"pluginTelemetrySettings"`
+		AuthRememberThirtyDaysEnabled *bool     `json:"authRememberThirtyDaysEnabled"`
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, 65536)
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		jsonError(w, 400, "Payload JSON invalide.")
 		return
 	}
+
+	_, _ = h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "GlobalSettings"("id") VALUES('global') ON CONFLICT DO NOTHING`, h.driver))
 
 	if input.ExcludedLibraries != nil {
 		b, _ := json.Marshal(*input.ExcludedLibraries)
@@ -1613,8 +1734,91 @@ func (h *Handler) updateSettings(w http.ResponseWriter, r *http.Request) {
 	if input.DiscordWebhookUrl != nil {
 		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "discordWebhookUrl"=? WHERE "id"='global'`, h.driver), *input.DiscordWebhookUrl)
 	}
+	if input.DiscordAlertCondition != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "discordAlertCondition"=? WHERE "id"='global'`, h.driver), *input.DiscordAlertCondition)
+	}
+	if input.DiscordAlertsEnabled != nil {
+		val := 0
+		if *input.DiscordAlertsEnabled {
+			val = 1
+		}
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "discordAlertsEnabled"=? WHERE "id"='global'`, h.driver), val)
+	}
+	if input.MaxConcurrentTranscodes != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "maxConcurrentTranscodes"=? WHERE "id"='global'`, h.driver), *input.MaxConcurrentTranscodes)
+	}
+	if input.SyncCronHour != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "syncCronHour"=? WHERE "id"='global'`, h.driver), *input.SyncCronHour)
+	}
+	if input.SyncCronMinute != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "syncCronMinute"=? WHERE "id"='global'`, h.driver), *input.SyncCronMinute)
+	}
+	if input.BackupCronHour != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "backupCronHour"=? WHERE "id"='global'`, h.driver), *input.BackupCronHour)
+	}
+	if input.BackupCronMinute != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "backupCronMinute"=? WHERE "id"='global'`, h.driver), *input.BackupCronMinute)
+	}
 	if input.DefaultLocale != nil {
 		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "defaultLocale"=? WHERE "id"='global'`, h.driver), *input.DefaultLocale)
+	}
+	if input.TimeFormat != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "timeFormat"=? WHERE "id"='global'`, h.driver), *input.TimeFormat)
+	}
+	if input.WrappedVisible != nil {
+		val := 0
+		if *input.WrappedVisible {
+			val = 1
+		}
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedVisible"=? WHERE "id"='global'`, h.driver), val)
+	}
+	if input.WrappedPeriodEnabled != nil {
+		val := 0
+		if *input.WrappedPeriodEnabled {
+			val = 1
+		}
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedPeriodEnabled"=? WHERE "id"='global'`, h.driver), val)
+	}
+	if input.WrappedStartMonth != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedStartMonth"=? WHERE "id"='global'`, h.driver), *input.WrappedStartMonth)
+	}
+	if input.WrappedStartDay != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedStartDay"=? WHERE "id"='global'`, h.driver), *input.WrappedStartDay)
+	}
+	if input.WrappedEndMonth != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedEndMonth"=? WHERE "id"='global'`, h.driver), *input.WrappedEndMonth)
+	}
+	if input.WrappedEndDay != nil {
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedEndDay"=? WHERE "id"='global'`, h.driver), *input.WrappedEndDay)
+	}
+	if input.AuthRememberThirtyDaysEnabled != nil {
+		val := 0
+		if *input.AuthRememberThirtyDaysEnabled {
+			val = 1
+		}
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "authRememberThirtyDaysEnabled"=? WHERE "id"='global'`, h.driver), val)
+	}
+	if input.ResolutionThresholds != nil || input.SchedulerIntervals != nil {
+		var curRes sql.NullString
+		_ = h.db.QueryRowContext(r.Context(), `SELECT "resolutionThresholds" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&curRes)
+		m := map[string]any{}
+		if curRes.Valid && curRes.String != "" {
+			_ = json.Unmarshal([]byte(curRes.String), &m)
+		}
+		if rtMap, ok := input.ResolutionThresholds.(map[string]any); ok {
+			for k, v := range rtMap {
+				m[k] = v
+			}
+		}
+		if input.SchedulerIntervals != nil {
+			m["schedulerIntervals"] = input.SchedulerIntervals
+		}
+		b, _ := json.Marshal(m)
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "resolutionThresholds"=? WHERE "id"='global'`, h.driver), string(b))
+	}
+	if input.PluginTelemetrySettings != nil {
+		b, _ := json.Marshal(input.PluginTelemetrySettings)
+		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "pluginTelemetrySettings"=? WHERE "id"='global'`, h.driver), string(b))
 	}
 
 	jsonResponse(w, 200, map[string]bool{"ok": true})
@@ -2119,17 +2323,12 @@ func (h *Handler) sync(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 403, "Origine refusée.")
 		return
 	}
-	base := strings.TrimRight(strings.TrimSpace(os.Getenv("JELLYFIN_URL")), "/")
-	key := first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"))
-	if base == "" || key == "" {
-		jsonError(w, 503, "Configurez JELLYFIN_URL et JELLYFIN_API_KEY.")
-		return
-	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Minute)
 	defer cancel()
-	result, err := jellyfin.SyncOne(ctx, h.db, h.driver, "", os.Getenv("JELLYFIN_SERVER_ID"), first(os.Getenv("JELLYFIN_SERVER_NAME"), "Jellyfin"), base, key, recentOnly)
+	result, err := jellyfin.SyncAllServers(ctx, h.db, h.driver, recentOnly)
 	if err != nil {
-		jsonError(w, 502, "La synchronisation Jellyfin a échoué.")
+		jsonError(w, 502, fmt.Sprintf("La synchronisation Jellyfin a échoué: %v", err))
 		return
 	}
 	jsonResponse(w, 200, map[string]any{
@@ -2422,6 +2621,14 @@ func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if id == "me" || id == "@me" {
+		if principal.JellyfinUserID != "" {
+			id = principal.JellyfinUserID
+		} else {
+			id = principal.Username
+		}
+	}
+
 	// Verify permissions
 	isAdmin := principal.IsAdmin()
 	if !isAdmin {
@@ -2473,8 +2680,8 @@ func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
 	startDate := fmt.Sprintf("%04d-01-01T00:00:00Z", targetYear)
 	endDate := fmt.Sprintf("%04d-01-01T00:00:00Z", targetYear+1)
 
-	historyQ := `SELECT p."durationWatched", p."startedAt", p."clientName", m."id", m."jellyfinMediaId", m."title", m."type", m."genres", m."artist" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."userId"=? AND p."startedAt" >= ? AND p."startedAt" < ? AND p."durationWatched" >= 10`
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(historyQ, h.driver), uid, startDate, endDate)
+	historyQ := `SELECT p."durationWatched", p."startedAt", p."clientName", m."id", m."jellyfinMediaId", m."title", m."type", m."genres", m."artist" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE (p."userId"=? OR p."userId"=?) AND p."startedAt" >= ? AND p."startedAt" < ? AND p."durationWatched" >= 10`
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(historyQ, h.driver), uid, jid, startDate, endDate)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les données.")
 		return

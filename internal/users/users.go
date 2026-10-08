@@ -324,7 +324,7 @@ func MergeUsers(ctx context.Context, db *sql.DB, driver, sourceUserID, targetUse
 
 // DeleteUser removes a user and their cascades.
 func DeleteUser(ctx context.Context, db *sql.DB, driver, userID string) error {
-	_, err := db.ExecContext(ctx, database.Bind(`DELETE FROM "User" WHERE "id"=?`, driver), userID)
+	_, err := db.ExecContext(ctx, database.Bind(`DELETE FROM "User" WHERE "id"=? OR "jellyfinUserId"=?`, driver), userID, userID)
 	return err
 }
 

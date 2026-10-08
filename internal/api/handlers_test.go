@@ -530,3 +530,171 @@ func TestDashboardParityAndEmptyDB(t *testing.T) {
 	}
 }
 
+func TestImageProxyFallbackAndAliases(t *testing.T) {
+	db := apiDB(t)
+	h := New(db, "sqlite")
+
+	// 1. Image proxy fallback SVG when server/image not reachable
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/api/jellyfin/image?id=missing-id&type=Primary", nil)
+	h.jellyfinImageProxy(w, req)
+	if w.Code != 200 {
+		t.Fatalf("expected 200 for fallback image, got %d", w.Code)
+	}
+	if !strings.Contains(w.Header().Get("Content-Type"), "image/svg+xml") {
+		t.Fatalf("expected image/svg+xml, got %s", w.Header().Get("Content-Type"))
+	}
+	if !strings.Contains(w.Body.String(), "<svg") {
+		t.Fatalf("expected svg body, got %s", w.Body.String())
+	}
+
+	// 2. User image proxy fallback SVG
+	wUser := httptest.NewRecorder()
+	reqUser := httptest.NewRequest("GET", "/api/jellyfin/user-image?id=missing-user", nil)
+	h.jellyfinUserImageProxy(wUser, reqUser)
+	if wUser.Code != 200 {
+		t.Fatalf("expected 200 for fallback avatar, got %d", wUser.Code)
+	}
+	if !strings.Contains(wUser.Header().Get("Content-Type"), "image/svg+xml") {
+		t.Fatalf("expected image/svg+xml, got %s", wUser.Header().Get("Content-Type"))
+	}
+}
+
+func TestUserDetailAndWrappedMeResolution(t *testing.T) {
+	db := apiDB(t)
+	h := New(db, "sqlite")
+
+	_, _ = db.Exec(`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s1','jf1','Primary','http://jf1')`)
+	_, _ = db.Exec(`INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u1','s1','jfu1','Bob')`)
+	_, _ = db.Exec(`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type") VALUES('m1','s1','jfm1','Movie 1','Movie')`)
+	if _, err := db.Exec(`INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched","pauseCount","seekCount") VALUES('p1','s1','u1','m1','DirectPlay',1800,2,1)`); err != nil {
+		t.Fatal(err)
+	}
+
+	principal := auth.Principal{
+		Username:       "Bob",
+		Role:           "user",
+		JellyfinUserID: "jfu1",
+	}
+
+	// 1. userDetail with "me"
+	wMe := httptest.NewRecorder()
+	reqMe := httptest.NewRequest("GET", "/api/users/me", nil)
+	reqMe.SetPathValue("id", "me")
+	ctxMe := context.WithValue(reqMe.Context(), auth.PrincipalContextKey, principal)
+	h.userDetail(wMe, reqMe.WithContext(ctxMe))
+	if wMe.Code != 200 {
+		t.Fatalf("userDetail 'me' failed: status=%d, body=%s", wMe.Code, wMe.Body.String())
+	}
+	var uRes map[string]any
+	if err := json.Unmarshal(wMe.Body.Bytes(), &uRes); err != nil {
+		t.Fatal(err)
+	}
+	if uRes["username"] != "Bob" || uRes["jellyfinUserId"] != "jfu1" {
+		t.Fatalf("unexpected userDetail response: %+v", uRes)
+	}
+
+	// 2. mediaDetail telemetry stats
+	wMed := httptest.NewRecorder()
+	reqMed := httptest.NewRequest("GET", "/api/media/m1", nil)
+	reqMed.SetPathValue("id", "m1")
+	h.mediaDetail(wMed, reqMed)
+	if wMed.Code != 200 {
+		t.Fatalf("mediaDetail failed: status=%d, body=%s", wMed.Code, wMed.Body.String())
+	}
+	var mRes map[string]any
+	if err := json.Unmarshal(wMed.Body.Bytes(), &mRes); err != nil {
+		t.Fatal(err)
+	}
+	if int(mRes["pauseCount"].(float64)) != 2 || int(mRes["seekCount"].(float64)) != 1 {
+		t.Fatalf("expected telemetry counts in mediaDetail, got: %+v", mRes)
+	}
+}
+
+func TestAdminHealthAndPluginKey(t *testing.T) {
+	db := apiDB(t)
+	h := New(db, "sqlite")
+
+	// Set health state in SystemHealthState
+	now := time.Now().UTC().Format(time.RFC3339)
+	syncJSON := `{"status":"ok","lastSuccessAt":"` + now + `","lastUsers":5,"lastMedia":100}`
+	backupJSON := `{"status":"ok","lastSuccessAt":"` + now + `","lastFileName":"test.zip"}`
+	_, _ = db.Exec(`INSERT INTO "SystemHealthState"("id","sync","backup") VALUES('global', ?, ?)`, syncJSON, backupJSON)
+
+	wHealth := httptest.NewRecorder()
+	h.adminHealth(wHealth, httptest.NewRequest("GET", "/api/admin/health", nil))
+	if wHealth.Code != 200 {
+		t.Fatalf("adminHealth failed: status=%d, body=%s", wHealth.Code, wHealth.Body.String())
+	}
+	var hRes map[string]any
+	if err := json.Unmarshal(wHealth.Body.Bytes(), &hRes); err != nil {
+		t.Fatal(err)
+	}
+	st := hRes["status"].(map[string]any)
+	syncMap := st["sync"].(map[string]any)
+	if syncMap["lastSuccessAt"] != now {
+		t.Fatalf("expected sync lastSuccessAt=%s, got: %+v", now, syncMap)
+	}
+
+	// Test rotate and get plugin api key
+	wRotate := httptest.NewRecorder()
+	reqRotate := httptest.NewRequest("POST", "/api/admin/plugin-api-key/rotate", nil)
+	h.rotatePluginApiKey(wRotate, reqRotate)
+	if wRotate.Code != 200 {
+		t.Fatalf("rotatePluginApiKey failed: status=%d, body=%s", wRotate.Code, wRotate.Body.String())
+	}
+	var rotRes map[string]any
+	_ = json.Unmarshal(wRotate.Body.Bytes(), &rotRes)
+	if rotRes["apiKey"] == "" || rotRes["pluginApiKey"] == "" {
+		t.Fatalf("expected apiKey and pluginApiKey in rotate response, got: %+v", rotRes)
+	}
+
+	wGet := httptest.NewRecorder()
+	h.getPluginApiKey(wGet, httptest.NewRequest("GET", "/api/admin/plugin-api-key", nil))
+	if wGet.Code != 200 {
+		t.Fatalf("getPluginApiKey failed: status=%d", wGet.Code)
+	}
+	var getRes map[string]any
+	_ = json.Unmarshal(wGet.Body.Bytes(), &getRes)
+	if getRes["apiKey"] != rotRes["apiKey"] {
+		t.Fatalf("expected matching apiKey, got: %+v", getRes)
+	}
+}
+
+func TestSettingsFullCoverage(t *testing.T) {
+	db := apiDB(t)
+	h := New(db, "sqlite")
+
+	_, _ = db.Exec(`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s1','jf1','Primary','http://jf1')`)
+	_, _ = db.Exec(`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName") VALUES('m1','s1','j1','Movie 1','Movie','Films'), ('m2','s1','j2','Show 1','Series','Series')`)
+
+	wGet := httptest.NewRecorder()
+	h.getSettings(wGet, httptest.NewRequest("GET", "/api/settings", nil))
+	if wGet.Code != 200 {
+		t.Fatalf("getSettings failed: status=%d", wGet.Code)
+	}
+	var sMap map[string]any
+	_ = json.Unmarshal(wGet.Body.Bytes(), &sMap)
+	libs := sMap["availableLibraries"].([]any)
+	if len(libs) < 2 {
+		t.Fatalf("expected at least 2 availableLibraries, got: %+v", libs)
+	}
+
+	// Update settings
+	updateBody := `{"maxConcurrentTranscodes": 4, "discordAlertsEnabled": true, "syncCronHour": 5}`
+	wUp := httptest.NewRecorder()
+	h.updateSettings(wUp, httptest.NewRequest("POST", "/api/settings", strings.NewReader(updateBody)))
+	if wUp.Code != 200 {
+		t.Fatalf("updateSettings failed: status=%d", wUp.Code)
+	}
+
+	wGet2 := httptest.NewRecorder()
+	h.getSettings(wGet2, httptest.NewRequest("GET", "/api/settings", nil))
+	var sMap2 map[string]any
+	_ = json.Unmarshal(wGet2.Body.Bytes(), &sMap2)
+	if int(sMap2["maxConcurrentTranscodes"].(float64)) != 4 || sMap2["discordAlertsEnabled"] != true || int(sMap2["syncCronHour"].(float64)) != 5 {
+		t.Fatalf("expected updated settings, got: %+v", sMap2)
+	}
+}
+
+

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -193,3 +194,89 @@ func resolutionLabel(w, h int) any {
 	}
 	return "SD"
 }
+
+// SyncAllServers synchronizes all active servers configured in the database,
+// falling back to environment variables if no active server exists in the DB.
+// It also records the result in SystemHealthState.
+func SyncAllServers(ctx context.Context, db *sql.DB, driver string, recentOnly ...bool) (SyncResult, error) {
+	type targetServer struct {
+		id, jfID, name, url, apiKey string
+	}
+	var targets []targetServer
+
+	if db != nil {
+		rows, err := db.QueryContext(ctx, `SELECT "id", "jellyfinServerId", "name", "url", COALESCE("jellyfinApiKey",'') FROM "Server" WHERE "isActive" = 1`)
+		if err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var s targetServer
+				if err := rows.Scan(&s.id, &s.jfID, &s.name, &s.url, &s.apiKey); err == nil && s.url != "" && s.apiKey != "" {
+					targets = append(targets, s)
+				}
+			}
+		}
+	}
+
+	if len(targets) == 0 {
+		envURL := strings.TrimRight(strings.TrimSpace(os.Getenv("JELLYFIN_URL")), "/")
+		envKey := strings.TrimSpace(firstNonEmpty(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY")))
+		if envURL != "" && envKey != "" {
+			targets = append(targets, targetServer{
+				id:     "",
+				jfID:   os.Getenv("JELLYFIN_SERVER_ID"),
+				name:   firstNonEmpty(os.Getenv("JELLYFIN_SERVER_NAME"), "Jellyfin"),
+				url:    envURL,
+				apiKey: envKey,
+			})
+		}
+	}
+
+	if len(targets) == 0 {
+		return SyncResult{}, fmt.Errorf("no configured Jellyfin servers found")
+	}
+
+	var combined SyncResult
+	var lastErr error
+	started := time.Now().UTC().Format(time.RFC3339Nano)
+
+	for _, t := range targets {
+		res, err := SyncOne(ctx, db, driver, t.id, t.jfID, t.name, t.url, t.apiKey, recentOnly...)
+		if err != nil {
+			lastErr = err
+		} else {
+			combined.Users += res.Users
+			combined.Media += res.Media
+		}
+	}
+
+	if db != nil {
+		finished := time.Now().UTC().Format(time.RFC3339Nano)
+		syncStatus := "ok"
+		errStr := ""
+		if lastErr != nil && combined.Users == 0 && combined.Media == 0 {
+			syncStatus = "error"
+			errStr = lastErr.Error()
+		}
+		syncState := map[string]any{
+			"status":         syncStatus,
+			"lastStartedAt":  started,
+			"lastFinishedAt": finished,
+			"lastUsers":      combined.Users,
+			"lastMedia":      combined.Media,
+		}
+		if syncStatus == "ok" {
+			syncState["lastSuccessAt"] = finished
+		}
+		if errStr != "" {
+			syncState["lastError"] = errStr
+		}
+		syncBytes, _ := json.Marshal(syncState)
+		_, _ = db.ExecContext(ctx, database.Bind(`INSERT INTO "SystemHealthState" ("id", "sync", "updatedAt") VALUES ('global', ?, ?) ON CONFLICT("id") DO UPDATE SET "sync"=excluded."sync", "updatedAt"=excluded."updatedAt"`, driver), string(syncBytes), finished)
+	}
+
+	if lastErr != nil && combined.Users == 0 && combined.Media == 0 {
+		return combined, lastErr
+	}
+	return combined, nil
+}
+

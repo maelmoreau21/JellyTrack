@@ -61,28 +61,45 @@ func (h *Handler) adminHealth(w http.ResponseWriter, r *http.Request) {
 	checkOrphansQ := `SELECT COUNT(*) FROM "PlaybackHistory" WHERE "endedAt" IS NULL AND ("userId" || ':' || "mediaId") NOT IN (SELECT ("userId" || ':' || "mediaId") FROM "ActiveStream")`
 	_ = h.db.QueryRowContext(r.Context(), checkOrphansQ).Scan(&openPlaybackOrphans)
 
-	var syncLast, backupLast sql.NullString
-	_ = h.db.QueryRowContext(r.Context(), `SELECT "syncLastSuccessAt", "backupLastSuccessAt" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&syncLast, &backupLast)
+	var monRaw, syncRaw, backupRaw sql.NullString
+	_ = h.db.QueryRowContext(r.Context(), `SELECT "monitor", "sync", "backup" FROM "SystemHealthState" WHERE "id"='global'`).Scan(&monRaw, &syncRaw, &backupRaw)
 
-	var lastPollAt = time.Now().UTC().Format(time.RFC3339)
+	monitorState := map[string]any{
+		"status":     "ok",
+		"lastPollAt": time.Now().UTC().Format(time.RFC3339),
+	}
+	if monRaw.Valid && monRaw.String != "" {
+		_ = json.Unmarshal([]byte(monRaw.String), &monitorState)
+	}
+
+	syncState := map[string]any{
+		"status": "ok",
+	}
+	if syncRaw.Valid && syncRaw.String != "" {
+		_ = json.Unmarshal([]byte(syncRaw.String), &syncState)
+	}
+
+	backupState := map[string]any{
+		"status": "ok",
+	}
+	if backupRaw.Valid && backupRaw.String != "" {
+		_ = json.Unmarshal([]byte(backupRaw.String), &backupState)
+	}
+
+	var exclLibs sql.NullString
+	_ = h.db.QueryRowContext(r.Context(), `SELECT "excludedLibraries" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&exclLibs)
 
 	jsonResponse(w, 200, map[string]any{
 		"status": map[string]any{
-			"monitor": map[string]any{
-				"status":     "ok",
-				"lastPollAt": lastPollAt,
-			},
-			"sync": map[string]any{
-				"lastSuccessAt": nullable(syncLast),
-			},
-			"backup": map[string]any{
-				"lastSuccessAt": nullable(backupLast),
-			},
+			"monitor": monitorState,
+			"sync":    syncState,
+			"backup":  backupState,
 		},
-		"database":        dbStatus,
-		"driver":          h.driver,
-		"timestamp":       time.Now().UTC().Format(time.RFC3339),
-		"isValkeyEnabled": false,
+		"database":          dbStatus,
+		"driver":            h.driver,
+		"timestamp":         time.Now().UTC().Format(time.RFC3339),
+		"isValkeyEnabled":   false,
+		"excludedLibraries": parseStringList(exclLibs.String),
 		"counts": map[string]any{
 			"activeStreams":          activeStreams,
 			"openPlaybackOrphans":    openPlaybackOrphans,
@@ -666,11 +683,19 @@ func (h *Handler) getPluginApiKey(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 500, "Erreur de lecture.")
 		return
 	}
+	hasKey := gs.PluginAPIKey != nil && *gs.PluginAPIKey != ""
+	keyVal := ""
+	if hasKey {
+		keyVal = *gs.PluginAPIKey
+	}
 	jsonResponse(w, 200, map[string]any{
-		"hasKey":            gs.PluginAPIKey != nil && *gs.PluginAPIKey != "",
+		"apiKey":            keyVal,
+		"pluginApiKey":      keyVal,
+		"pluginKey":         keyVal,
+		"hasKey":            hasKey,
+		"hasApiKey":         hasKey,
 		"expiresAt":         gs.PluginKeyExpiresAt,
 		"status":            "active",
-		"pluginKey":         gs.PluginAPIKey,
 		"keyVersion":        1,
 		"previousKeyActive": gs.PluginPreviousAPIKey != nil && *gs.PluginPreviousAPIKey != "",
 	})
@@ -682,6 +707,7 @@ func (h *Handler) rotatePluginApiKey(w http.ResponseWriter, r *http.Request) {
 	newKey := hex.EncodeToString(tokenBytes)
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 
+	_, _ = h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "GlobalSettings"("id") VALUES('global') ON CONFLICT DO NOTHING`, h.driver))
 	_, err := h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "pluginPreviousApiKey"="pluginApiKey", "pluginApiKey"=?, "pluginKeyCreatedAt"=? WHERE "id"='global'`, h.driver), newKey, now)
 	if err != nil {
 		jsonError(w, 500, "Impossible de renouveler la clé plugin.")
@@ -691,12 +717,17 @@ func (h *Handler) rotatePluginApiKey(w http.ResponseWriter, r *http.Request) {
 	_ = security.LogAudit(r.Context(), h.db, h.driver, "plugin.key.rotated", nil, nil, nil, nil, nil)
 	jsonResponse(w, 200, map[string]any{
 		"success":      true,
+		"apiKey":       newKey,
 		"pluginApiKey": newKey,
+		"pluginKey":    newKey,
+		"hasKey":       true,
+		"hasApiKey":    true,
 		"createdAt":    now,
 	})
 }
 
 func (h *Handler) revokePluginApiKey(w http.ResponseWriter, r *http.Request) {
+	_, _ = h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "GlobalSettings"("id") VALUES('global') ON CONFLICT DO NOTHING`, h.driver))
 	_, err := h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "pluginApiKey"=NULL, "pluginPreviousApiKey"=NULL WHERE "id"='global'`, h.driver))
 	if err != nil {
 		jsonError(w, 500, "Impossible de révoquer la clé plugin.")

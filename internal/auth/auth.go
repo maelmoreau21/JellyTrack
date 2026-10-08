@@ -25,6 +25,7 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/jellyfin"
 	"github.com/maelmoreau21/jellytrack/internal/requestip"
+	"github.com/maelmoreau21/jellytrack/internal/security"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
 )
@@ -177,6 +178,12 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		}
 		if role == "" {
 			clearFlow()
+			ip := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
+			_ = security.LogAudit(r.Context(), m.db, m.driver, "SSO Login Denied (Unauthorized Group)", nil, &username, nil, &ip, map[string]any{
+				"userGroups":          claims.Groups,
+				"requiredUserGroup":  cfg.userGroup,
+				"requiredAdminGroup": cfg.adminGroup,
+			})
 			http.Redirect(w, r, "/login?error=AccessDeniedGroup", http.StatusSeeOther)
 			return
 		}
@@ -185,6 +192,33 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 			return
 		}
+
+		var resolvedJfID string
+		if m.db != nil {
+			_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "jellyfinUserId" FROM "User" WHERE LOWER("username") = LOWER(?) AND "jellyfinUserId" NOT LIKE 'oidc-%' LIMIT 1`, m.driver), username).Scan(&resolvedJfID)
+			if resolvedJfID == "" {
+				_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), username).Scan(&resolvedJfID)
+			}
+			if resolvedJfID == "" {
+				resolvedJfID = "oidc-" + username
+			}
+
+			var sID string
+			_ = m.db.QueryRowContext(r.Context(), `SELECT "id" FROM "Server" WHERE "isActive" = 1 LIMIT 1`).Scan(&sID)
+			if sID != "" {
+				nowIso := time.Now().UTC().Format(time.RFC3339Nano)
+				stableUID := "usr_" + hex.EncodeToString([]byte(sID+":"+resolvedJfID))[:16]
+				_ = m.upsertUser(r.Context(), stableUID, sID, resolvedJfID, username, nowIso)
+			}
+		}
+
+		ip := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
+		_ = security.LogAudit(r.Context(), m.db, m.driver, "SSO Login successful", &resolvedJfID, &username, nil, &ip, map[string]any{
+			"isAdmin":  role == "admin",
+			"groups":   claims.Groups,
+			"provider": "oidc",
+		})
+
 		clearFlow()
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
@@ -413,9 +447,16 @@ func (m *Manager) authSession(w http.ResponseWriter, r *http.Request) {
 	var expiresStr string
 	_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "expiresAt" FROM "AuthSession" WHERE "id"=?`, m.driver), p.sessionID).Scan(&expiresStr)
 
-	var jfID string
+	var jfID, dbUID string
 	if m.db != nil {
-		_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), p.Username).Scan(&jfID)
+		_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "jellyfinUserId", "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), p.Username).Scan(&jfID, &dbUID)
+	}
+	resolvedJfID := jfID
+	if resolvedJfID == "" {
+		resolvedJfID = dbUID
+	}
+	if resolvedJfID == "" && p.JellyfinUserID != "" {
+		resolvedJfID = p.JellyfinUserID
 	}
 
 	writeJSON(w, 200, map[string]any{
@@ -424,7 +465,7 @@ func (m *Manager) authSession(w http.ResponseWriter, r *http.Request) {
 			"username":       p.Username,
 			"role":           p.Role,
 			"isAdmin":        p.Role == "admin",
-			"jellyfinUserId": jfID,
+			"jellyfinUserId": resolvedJfID,
 		},
 		"expires": expiresStr,
 	})
@@ -541,7 +582,17 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 		loginMu.Lock()
 		delete(loginAttempts, key)
 		loginMu.Unlock()
-		writeJSON(w, 200, Principal{Username: m.username, Role: "admin", CSRFToken: csrf})
+		localAdminID := "local-admin"
+		_ = security.LogAudit(r.Context(), m.db, m.driver, "Local Admin login successful", &localAdminID, &m.username, nil, &key, map[string]any{"authType": "local-admin"})
+		isPrim := true
+		writeJSON(w, 200, Principal{
+			Username:            m.username,
+			Role:                "admin",
+			CSRFToken:           csrf,
+			JellyfinUserID:      "local-admin",
+			AuthServerName:      "Local Admin",
+			AuthServerIsPrimary: &isPrim,
+		})
 		return
 	}
 	localPassEnv := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD"), os.Getenv("LOCAL_ADMIN_PASSWORD"), os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD"))
@@ -549,28 +600,141 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 503, map[string]string{"error": "Le mot de passe administrateur local est trop faible. Définissez un mot de passe de 12 caractères minimum, avec au moins trois types de caractères."})
 		return
 	}
-	baseURL := first(os.Getenv("JELLYFIN_URL"))
-	if baseURL != "" {
-		ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
-		user, err := jellyfin.Authenticate(ctx, baseURL, input.Username, input.Password)
-		cancel()
+
+	type serverCandidate struct {
+		id                string
+		name              string
+		url               string
+		isPrimary         bool
+		allowAuthFallback bool
+	}
+	var candidates []serverCandidate
+	seenURLs := make(map[string]bool)
+
+	primaryURL := strings.TrimRight(strings.TrimSpace(first(os.Getenv("JELLYFIN_URL"))), "/")
+	primaryName := strings.TrimSpace(os.Getenv("JELLYFIN_SERVER_NAME"))
+	if primaryName == "" {
+		primaryName = "Primary Jellyfin"
+	}
+	if primaryURL != "" {
+		candidates = append(candidates, serverCandidate{
+			name:      primaryName,
+			url:       primaryURL,
+			isPrimary: true,
+		})
+		seenURLs[strings.ToLower(primaryURL)] = true
+	}
+
+	if m.db != nil {
+		rows, err := m.db.QueryContext(r.Context(), `SELECT "id", "name", "url", "allowAuthFallback" FROM "Server" WHERE "isActive" = 1`)
 		if err == nil {
-			role := "user"
-			if user.Policy.IsAdministrator {
-				role = "admin"
+			defer rows.Close()
+			for rows.Next() {
+				var sID, sName, sURL string
+				var allowFallback int
+				if err := rows.Scan(&sID, &sName, &sURL, &allowFallback); err == nil {
+					norm := strings.ToLower(strings.TrimRight(strings.TrimSpace(sURL), "/"))
+					if norm == "" {
+						continue
+					}
+					if !seenURLs[norm] {
+						seenURLs[norm] = true
+						candidates = append(candidates, serverCandidate{
+							id:                sID,
+							name:              sName,
+							url:               strings.TrimRight(strings.TrimSpace(sURL), "/"),
+							isPrimary:         len(candidates) == 0,
+							allowAuthFallback: allowFallback == 1,
+						})
+					} else {
+						for i := range candidates {
+							if strings.EqualFold(candidates[i].url, sURL) && candidates[i].id == "" {
+								candidates[i].id = sID
+							}
+						}
+					}
+				}
 			}
-			csrf, e := m.createSession(w, r, user.Name, role, rememberBool)
-			if e != nil {
-				writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
-				return
-			}
-			loginMu.Lock()
-			delete(loginAttempts, key)
-			loginMu.Unlock()
-			writeJSON(w, 200, Principal{Username: user.Name, Role: role, CSRFToken: csrf})
-			return
 		}
 	}
+
+	var authUser *jellyfin.AuthenticatedUser
+	var authCandidate *serverCandidate
+
+	for i := range candidates {
+		c := &candidates[i]
+		if !c.isPrimary {
+			continue
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		u, err := jellyfin.Authenticate(ctx, c.url, input.Username, input.Password)
+		cancel()
+		if err == nil {
+			authUser = &u
+			authCandidate = c
+			break
+		}
+	}
+
+	if authUser == nil {
+		for i := range candidates {
+			c := &candidates[i]
+			if c.isPrimary || !c.allowAuthFallback {
+				continue
+			}
+			ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+			u, err := jellyfin.Authenticate(ctx, c.url, input.Username, input.Password)
+			cancel()
+			if err == nil {
+				authUser = &u
+				authCandidate = c
+				break
+			}
+		}
+	}
+
+	if authUser != nil && authCandidate != nil {
+		role := "user"
+		if authUser.Policy.IsAdministrator {
+			role = "admin"
+		}
+		csrf, e := m.createSession(w, r, authUser.Name, role, rememberBool)
+		if e != nil {
+			writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
+			return
+		}
+		loginMu.Lock()
+		delete(loginAttempts, key)
+		loginMu.Unlock()
+
+		srvID := authCandidate.id
+		if srvID == "" && m.db != nil {
+			_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id" FROM "Server" WHERE "isActive" = 1 LIMIT 1`, m.driver)).Scan(&srvID)
+		}
+		if srvID != "" && m.db != nil {
+			nowIso := time.Now().UTC().Format(time.RFC3339Nano)
+			stableUID := "usr_" + hex.EncodeToString([]byte(srvID+":"+authUser.ID))[:16]
+			_ = m.upsertUser(r.Context(), stableUID, srvID, authUser.ID, authUser.Name, nowIso)
+		}
+
+		_ = security.LogAudit(r.Context(), m.db, m.driver, "Login successful", &authUser.ID, &authUser.Name, nil, &key, map[string]any{
+			"server":    authCandidate.name,
+			"isPrimary": authCandidate.isPrimary,
+		})
+
+		isPrim := authCandidate.isPrimary
+		writeJSON(w, 200, Principal{
+			Username:            authUser.Name,
+			Role:                role,
+			CSRFToken:           csrf,
+			JellyfinUserID:      authUser.ID,
+			AuthServerName:      authCandidate.name,
+			AuthServerIsPrimary: &isPrim,
+		})
+		return
+	}
+
+	_ = security.LogAudit(r.Context(), m.db, m.driver, "Login failed", nil, &input.Username, nil, &key, map[string]any{"reason": "bad_credentials"})
 	writeJSON(w, 401, map[string]string{"error": "Identifiants invalides."})
 }
 
@@ -582,12 +746,36 @@ func (m *Manager) me(w http.ResponseWriter, r *http.Request) {
 	}
 	p.CSRFToken = m.csrf(p.sessionID)
 	if p.JellyfinUserID == "" && m.db != nil {
-		var jfID string
-		if err := m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), p.Username).Scan(&jfID); err == nil {
-			p.JellyfinUserID = jfID
+		var jfID, dbUID string
+		if err := m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "jellyfinUserId", "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), p.Username).Scan(&jfID, &dbUID); err == nil {
+			if jfID != "" {
+				p.JellyfinUserID = jfID
+			} else {
+				p.JellyfinUserID = dbUID
+			}
+		}
+	}
+	if p.AuthServerName == "" && m.db != nil {
+		var sName string
+		if err := m.db.QueryRowContext(r.Context(), `SELECT "name" FROM "Server" WHERE "isActive"=1 LIMIT 1`).Scan(&sName); err == nil {
+			p.AuthServerName = sName
+			t := true
+			p.AuthServerIsPrimary = &t
 		}
 	}
 	writeJSON(w, 200, p)
+}
+
+func (m *Manager) upsertUser(ctx context.Context, id, serverID, jfUserID, username, lastActive string) error {
+	query := `INSERT INTO "User" ("id", "serverId", "jellyfinUserId", "username", "lastActive", "isActive", "updatedAt")
+VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+ON CONFLICT("jellyfinUserId", "serverId") DO UPDATE SET
+  "username" = excluded."username",
+  "lastActive" = COALESCE(excluded."lastActive", "User"."lastActive"),
+  "isActive" = 1,
+  "updatedAt" = CURRENT_TIMESTAMP`
+	_, err := m.db.ExecContext(ctx, database.Bind(query, m.driver), id, serverID, jfUserID, username, lastActive)
+	return err
 }
 
 func (m *Manager) logout(w http.ResponseWriter, r *http.Request) {

@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
-	"os"
 	"sync"
 	"time"
 
@@ -154,15 +153,10 @@ func (r *Runner) startTask(ctx context.Context, interval time.Duration, name str
 }
 
 func (r *Runner) runSync(ctx context.Context, recentOnly bool) {
-	baseURL := os.Getenv("JELLYFIN_URL")
-	apiKey := os.Getenv("JELLYFIN_API_KEY")
-	if baseURL == "" || apiKey == "" {
-		return
-	}
 	syncCtx, cancel := context.WithTimeout(ctx, 30*time.Minute)
 	defer cancel()
 
-	res, err := jellyfin.SyncOne(syncCtx, r.db, r.driver, "", os.Getenv("JELLYFIN_SERVER_ID"), "Jellyfin", baseURL, apiKey, recentOnly)
+	res, err := jellyfin.SyncAllServers(syncCtx, r.db, r.driver, recentOnly)
 	if err != nil {
 		r.logger.Error("scheduled sync failed", "recent_only", recentOnly, "error", err)
 	} else {
