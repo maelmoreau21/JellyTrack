@@ -182,7 +182,27 @@ func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
 		}
 		activity = append(activity, map[string]any{"day": day, "views": count})
 	}
-	jsonResponse(w, 200, map[string]any{"periodDays": days, "views": views, "durationMs": duration, "users": users, "media": media, "activity": activity})
+
+	todaySince := time.Now().UTC().Truncate(24 * time.Hour).Format(time.RFC3339Nano)
+	var todayPlays, todayDuration, todayActiveUsers int64
+	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM(p."durationWatched"),0),COUNT(DISTINCT p."userId") FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND `+excluded, h.driver), todaySince).Scan(&todayPlays, &todayDuration, &todayActiveUsers)
+
+	todayHours := float64(todayDuration) / 3600000.0
+	if todayHours < 0.1 && todayDuration > 0 {
+		todayHours = 0.1
+	}
+
+	jsonResponse(w, 200, map[string]any{
+		"periodDays":       days,
+		"views":            views,
+		"durationMs":       duration,
+		"users":            users,
+		"media":            media,
+		"activity":         activity,
+		"todayPlays":       todayPlays,
+		"todayHours":       fmt.Sprintf("%.1f", todayHours),
+		"todayActiveUsers": todayActiveUsers,
+	})
 }
 
 func (h *Handler) deepStats(w http.ResponseWriter, r *http.Request) {

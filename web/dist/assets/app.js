@@ -181,11 +181,17 @@
     applyTranslationsToDOM() {
       document.querySelectorAll('[data-i18n]').forEach((el) => {
         const key = el.getAttribute('data-i18n');
-        el.textContent = this.t(key);
+        const val = this.t(key);
+        if (val && typeof val === 'string' && val.trim() !== '') {
+          el.textContent = val;
+        }
       });
       document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
         const key = el.getAttribute('data-i18n-placeholder');
-        el.setAttribute('placeholder', this.t(key));
+        const val = this.t(key);
+        if (val && typeof val === 'string' && val.trim() !== '') {
+          el.setAttribute('placeholder', val);
+        }
       });
     },
 
@@ -209,21 +215,21 @@
         btn.addEventListener('click', () => this.toggle());
       }
     },
+    isDark() {
+      return document.documentElement.classList.contains('dark');
+    },
     toggle() {
-      const isDark = document.documentElement.classList.contains('dark');
+      const isDark = this.isDark();
       this.set(isDark ? 'light' : 'dark');
+      if (window.location.pathname === '/' || window.location.pathname === '/dashboard') {
+        Router.renderCurrent();
+      }
     },
     set(theme) {
-      const sun = document.getElementById('theme-icon-sun');
-      const moon = document.getElementById('theme-icon-moon');
       if (theme === 'dark') {
         document.documentElement.classList.add('dark');
-        if (sun) sun.classList.remove('hidden');
-        if (moon) moon.classList.add('hidden');
       } else {
         document.documentElement.classList.remove('dark');
-        if (sun) sun.classList.add('hidden');
-        if (moon) moon.classList.remove('hidden');
       }
       localStorage.setItem('jt_theme', theme);
     },
@@ -400,16 +406,23 @@
   const SearchDialog = {
     init() {
       const trigger = document.getElementById('search-trigger-btn');
+      const sidebarTrigger = document.getElementById('sidebar-search-trigger');
       const modal = document.getElementById('search-modal');
       const closeBtn = document.getElementById('search-modal-close');
       const input = document.getElementById('search-modal-input');
       const resultsEl = document.getElementById('search-modal-results');
 
+      const openSearch = () => {
+        if (!modal) return;
+        modal.classList.add('open');
+        setTimeout(() => input && input.focus(), 100);
+      };
+
       if (trigger) {
-        trigger.addEventListener('click', () => {
-          modal.classList.add('open');
-          setTimeout(() => input.focus(), 100);
-        });
+        trigger.addEventListener('click', openSearch);
+      }
+      if (sidebarTrigger) {
+        sidebarTrigger.addEventListener('click', openSearch);
       }
 
       if (closeBtn) {
@@ -727,144 +740,234 @@
   const Pages = {
     // 1. Dashboard
     async dashboard() {
+      StreamsPoller.start();
+      document.body.classList.remove('is-auth-page');
       const main = document.getElementById('app-main');
+
       main.innerHTML = `
         <div class="page-header">
-          <div>
-            <h1 class="page-title">
-              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-              ${I18n.t('dashboard.title') || 'Tableau de bord'}
-            </h1>
-            <p class="page-subtitle">${I18n.t('dashboard.subtitle') || 'Activité, tendances et surveillance en temps réel.'}</p>
+          <div class="page-header-left">
+            <h1 class="page-title">${I18n.t('dashboard.title') || 'Tableau de bord'}</h1>
+            <div class="header-filter-bar" id="dash-media-filter">
+              <button class="header-filter-btn active" data-type="">${I18n.t('media.allMedia') || 'Tous'}</button>
+              <button class="header-filter-btn" data-type="Movie">${I18n.t('media.movies') || 'Films'}</button>
+              <button class="header-filter-btn" data-type="Series">${I18n.t('media.series') || 'Séries'}</button>
+              <button class="header-filter-btn" data-type="Audio">${I18n.t('media.music') || 'Musique'}</button>
+              <button class="header-filter-btn" data-type="Book">${I18n.t('media.books') || 'Livres'}</button>
+            </div>
           </div>
-          <div class="page-actions">
-            <div class="segmented-control" id="dash-time-range">
-              <button class="segment-btn" data-days="1">24h</button>
-              <button class="segment-btn active" data-days="7">7j</button>
-              <button class="segment-btn" data-days="30">30j</button>
-              <button class="segment-btn" data-days="90">90j</button>
-              <button class="segment-btn" data-days="365">1 an</button>
+          <div class="page-header-right">
+            <div class="time-pills-bar" id="dash-time-range">
+              <button class="time-pill-btn" data-days="1">24h</button>
+              <button class="time-pill-btn active" data-days="7">7j</button>
+              <button class="time-pill-btn" data-days="30">30j</button>
+              <button class="time-pill-btn" data-days="90">90j</button>
+              <button class="time-pill-btn" data-days="365">1 an</button>
             </div>
           </div>
         </div>
 
-        <!-- Metric Stat Cards -->
-        <div class="stat-grid" id="dash-metrics">
-          <div class="stat-card skeleton" style="height: 125px;"></div>
-          <div class="stat-card skeleton" style="height: 125px;"></div>
-          <div class="stat-card skeleton" style="height: 125px;"></div>
-          <div class="stat-card skeleton" style="height: 125px;"></div>
+        <!-- Today Stats Banner (matching main branch parity) -->
+        <div class="dashboard-banner">
+          <div class="banner-title-group">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>${I18n.t('dashboard.today') || "Aujourd'hui"}</span>
+          </div>
+          <div class="banner-metrics-group">
+            <div class="banner-metric-item">
+              <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+              <span class="banner-metric-val metric-glow-blue" id="today-plays-val">0</span>
+              <span class="banner-metric-label">${I18n.t('dashboard.readings') || 'lectures'}</span>
+            </div>
+            <div class="banner-metric-item">
+              <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="banner-metric-val metric-glow-amber" id="today-hours-val">0h</span>
+              <span class="banner-metric-label">${I18n.t('dashboard.watched') || 'regardées'}</span>
+            </div>
+            <div class="banner-metric-item">
+              <svg class="nav-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span class="banner-metric-val metric-glow-emerald" id="today-users-val">0</span>
+              <span class="banner-metric-label">${I18n.t('dashboard.activeUsers') || 'utilisateurs actifs'}</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Live Streams Panel -->
-        <div class="card" id="dash-live-panel">
-          <div class="card-header">
-            <div class="card-title-group">
-              <div class="card-title" style="display:flex;align-items:center;gap:0.6rem;">
+        <!-- Dashboard Navigation Tabs -->
+        <div class="dashboard-tablist" id="dashboard-tablist">
+          <button class="dash-tab-btn active" data-tab="overview">${I18n.t('dashboard.overviewTab') || "Vue d'ensemble"}</button>
+          <button class="dash-tab-btn" data-tab="analytics">${I18n.t('dashboard.detailedTab') || "Analyses approfondies"}</button>
+          <button class="dash-tab-btn" data-tab="network">${I18n.t('dashboard.networkTab') || "Réseau"}</button>
+        </div>
+
+        <!-- Tab 1: Overview Tab Content -->
+        <div id="tab-content-overview">
+          <!-- 5 Metric Cards Grid -->
+          <div class="stat-grid-5" id="dash-metrics">
+            <div class="stat-card-modern">
+              <div class="stat-header">
+                <span class="stat-title">${I18n.t('dashboard.activeStreams') || 'Flux actifs'}</span>
                 <span class="pulse-dot"></span>
-                ${I18n.t('dashboard.liveStreams') || 'Flux en direct'}
               </div>
-              <div class="card-subtitle">Surveillance active des lectures en cours</div>
+              <div class="stat-num metric-glow-emerald" id="dash-active-streams">0</div>
+              <div class="stat-desc">${I18n.t('dashboard.managedByServer') || 'Géré par le serveur'}</div>
+            </div>
+
+            <div class="stat-card-modern">
+              <div class="stat-header">
+                <span class="stat-title">${I18n.t('dashboard.totalPlays') || 'Lectures totales'}</span>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+              <div class="stat-num metric-glow-cyan" id="dash-total-plays">0</div>
+              <div class="stat-desc">Période sélectionnée</div>
+            </div>
+
+            <div class="stat-card-modern">
+              <div class="stat-header">
+                <span class="stat-title">${I18n.t('dashboard.watchTime') || 'Temps de lecture'}</span>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="stat-num metric-glow-amber" id="dash-total-hours">0h</div>
+              <div class="stat-desc">Total cumulé</div>
+            </div>
+
+            <div class="stat-card-modern">
+              <div class="stat-header">
+                <span class="stat-title">${I18n.t('dashboard.media') || 'Titres multimédia'}</span>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
+              </div>
+              <div class="stat-num metric-glow-violet" id="dash-unique-media">0</div>
+              <div class="stat-desc">Dans le catalogue</div>
+            </div>
+
+            <div class="stat-card-modern">
+              <div class="stat-header">
+                <span class="stat-title">${I18n.t('dashboard.users') || 'Utilisateurs actifs'}</span>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div class="stat-num metric-glow-emerald" id="dash-active-users">0</div>
+              <div class="stat-desc">Comptes enregistrés</div>
             </div>
           </div>
-          <div id="dashboard-live-streams-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div class="skeleton" style="height: 80px;"></div>
+
+          <!-- Live Streams Panel -->
+          <div class="card" id="dash-live-panel">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-title">
+                  <span class="pulse-dot"></span>
+                  ${I18n.t('dashboard.liveStreams') || 'Flux en direct'}
+                </div>
+                <div class="card-subtitle">Surveillance active des lectures en cours</div>
+              </div>
+            </div>
+            <div id="dashboard-live-streams-list">
+              <div class="empty-state text-muted-foreground">Aucun flux actif pour le moment.</div>
+            </div>
+          </div>
+
+          <!-- Trend Chart & Hourly Chart (2 Columns) -->
+          <div class="dash-grid-2">
+            <div class="chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <div class="card-title">${I18n.t('charts.activity') || 'Activité de lecture'}</div>
+                  <div class="card-subtitle">Nombre de sessions démarrées par jour</div>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chart-activity"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <div class="card-title">${I18n.t('charts.hours') || 'Heures de pointe'}</div>
+                  <div class="card-subtitle">Distribution horaire des lectures (0h - 23h)</div>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chart-hours"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Yearly Activity Heatmap -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-title">📅 ${I18n.t('charts.yearlyActivity') || 'Carte thermique d’activité'}</div>
+                <div class="card-subtitle">${I18n.t('charts.clickToViewDetail') || 'Cliquez sur une case pour explorer les sessions.'}</div>
+              </div>
+            </div>
+            <div class="heatmap-container" id="dash-heatmap-container">
+              <div class="skeleton"></div>
+            </div>
           </div>
         </div>
 
-        <!-- Trend Chart & Hourly Chart -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem;">
-          <div class="card" style="min-height: 350px; display: flex; flex-direction: column;">
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="card-title">${I18n.t('charts.activity') || 'Activité de lecture'}</div>
-                <div class="card-subtitle">Nombre de sessions démarrées par jour</div>
+        <!-- Tab 2: Analytics Tab Content (Deep Insights) -->
+        <div id="tab-content-analytics" class="hidden">
+          <div id="dash-deep-insights-container">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <div class="card-title">${I18n.t('media.deepAnalysisTitle') || 'Analyses approfondies'}</div>
+                  <div class="card-subtitle">Acteurs, réalisateurs et studios les plus regardés</div>
+                </div>
               </div>
-            </div>
-            <div style="flex: 1; min-height: 260px; position: relative;">
-              <canvas id="chart-activity"></canvas>
-            </div>
-          </div>
-
-          <div class="card" style="min-height: 350px; display: flex; flex-direction: column;">
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="card-title">${I18n.t('charts.hours') || 'Heures de pointe'}</div>
-                <div class="card-subtitle">Distribution horaire des lectures (0h - 23h)</div>
+              <div id="dash-deep-insights-body">
+                <div class="skeleton"></div>
               </div>
-            </div>
-            <div style="flex: 1; min-height: 260px; position: relative;">
-              <canvas id="chart-hours"></canvas>
             </div>
           </div>
         </div>
 
-        <!-- Heatmap Calendar & Deep Stats -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title-group">
-              <div class="card-title">📅 ${I18n.t('charts.yearlyActivity') || 'Carte thermique d’activité'}</div>
-              <div class="card-subtitle">${I18n.t('charts.clickToViewDetail') || 'Cliquez sur une case pour explorer les sessions.'}</div>
+        <!-- Tab 3: Network Tab Content -->
+        <div id="tab-content-network" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-title">${I18n.t('dashboard.networkTab') || 'Analyse réseau & Géographie'}</div>
+                <div class="card-subtitle">Origine géographique des connexions et débits</div>
+              </div>
             </div>
-          </div>
-          <div class="heatmap-container" id="dash-heatmap-container">
-            <div class="skeleton" style="height: 110px; width: 100%;"></div>
+            <div id="dash-geo-body">
+              <div class="skeleton"></div>
+            </div>
           </div>
         </div>
       `;
 
-      StreamsPoller.start();
+      let currentDays = 7;
+      let currentMediaType = '';
 
-      const loadDashData = async (days = 7) => {
+      const loadDashData = async () => {
         try {
-          const dash = await API.getJSON(`/api/dashboard?days=${days}`);
-          const metricsEl = document.getElementById('dash-metrics');
-          if (metricsEl) {
-            metricsEl.innerHTML = `
-              <div class="stat-card">
-                <div class="stat-card-header">
-                  <span class="stat-card-label">${I18n.t('dashboard.views') || 'Lectures'}</span>
-                  <div class="stat-icon stat-icon-indigo">
-                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                  </div>
-                </div>
-                <div class="stat-card-value">${Utils.formatNumber(dash.views)}</div>
-                <div class="stat-card-footer">${days} ${I18n.t('common.days') || 'derniers jours'}</div>
-              </div>
+          const dash = await API.getJSON(`/api/dashboard?days=${currentDays}`);
+          
+          // Update Today Stats Banner
+          const todayPlaysEl = document.getElementById('today-plays-val');
+          const todayHoursEl = document.getElementById('today-hours-val');
+          const todayUsersEl = document.getElementById('today-users-val');
+          if (todayPlaysEl) todayPlaysEl.textContent = Utils.formatNumber(dash.todayPlays || 0);
+          if (todayHoursEl) todayHoursEl.textContent = (dash.todayHours !== undefined) ? `${dash.todayHours}h` : '0h';
+          if (todayUsersEl) todayUsersEl.textContent = Utils.formatNumber(dash.todayActiveUsers || 0);
 
-              <div class="stat-card">
-                <div class="stat-card-header">
-                  <span class="stat-card-label">${I18n.t('dashboard.watchTime') || 'Temps de lecture'}</span>
-                  <div class="stat-icon stat-icon-cyan">
-                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  </div>
-                </div>
-                <div class="stat-card-value">${Utils.formatMs(dash.durationMs)}</div>
-                <div class="stat-card-footer">Total cumulé</div>
-              </div>
+          // Update 5 Stat Cards
+          const totalPlaysEl = document.getElementById('dash-total-plays');
+          const totalHoursEl = document.getElementById('dash-total-hours');
+          const uniqueMediaEl = document.getElementById('dash-unique-media');
+          const activeUsersEl = document.getElementById('dash-active-users');
+          if (totalPlaysEl) totalPlaysEl.textContent = Utils.formatNumber(dash.views || 0);
+          if (totalHoursEl) totalHoursEl.textContent = Utils.formatMs(dash.durationMs || 0);
+          if (uniqueMediaEl) uniqueMediaEl.textContent = Utils.formatNumber(dash.media || 0);
+          if (activeUsersEl) activeUsersEl.textContent = Utils.formatNumber(dash.users || 0);
 
-              <div class="stat-card">
-                <div class="stat-card-header">
-                  <span class="stat-card-label">${I18n.t('dashboard.users') || 'Utilisateurs actifs'}</span>
-                  <div class="stat-icon stat-icon-green">
-                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  </div>
-                </div>
-                <div class="stat-card-value">${Utils.formatNumber(dash.users)}</div>
-                <div class="stat-card-footer"><a href="/users" data-link>Voir les profils →</a></div>
-              </div>
-
-              <div class="stat-card">
-                <div class="stat-card-header">
-                  <span class="stat-card-label">${I18n.t('dashboard.media') || 'Titres multimédia'}</span>
-                  <div class="stat-icon stat-icon-amber">
-                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
-                  </div>
-                </div>
-                <div class="stat-card-value">${Utils.formatNumber(dash.media)}</div>
-                <div class="stat-card-footer"><a href="/media" data-link>Explorer le catalogue →</a></div>
-              </div>
-            `;
+          // Update Active Streams count if element exists
+          const activeStreamsEl = document.getElementById('dash-active-streams');
+          if (activeStreamsEl && State.activeStreamsCount !== undefined) {
+            activeStreamsEl.textContent = State.activeStreamsCount;
           }
 
           // Activity Line Chart
@@ -903,7 +1006,7 @@
             cellsHtml += '</div>';
             hmContainer.innerHTML = cellsHtml;
 
-            // Drilldown click
+            // Drilldown modal on heatmap click
             hmContainer.querySelectorAll('.heatmap-cell').forEach((cell) => {
               cell.addEventListener('click', async () => {
                 const day = cell.getAttribute('data-day');
@@ -911,15 +1014,18 @@
                 Modal.showAction({
                   title: `Sessions du jour`,
                   bodyHtml: dd.sessions && dd.sessions.length > 0
-                    ? `<div style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem;">
+                    ? `<div class="ranking-list">
                         ${dd.sessions.map((s) => `
-                          <div class="card" style="padding:0.6rem;">
-                            <b>${Utils.escapeHtml(s.username)}</b> — ${Utils.escapeHtml(s.mediaTitle)}
-                            <div style="font-size:0.75rem; color:var(--muted-foreground);">${s.durationMin} min • ${Utils.escapeHtml(s.clientName)}</div>
+                          <div class="ranking-item">
+                            <span class="ranking-badge">▶</span>
+                            <div class="ranking-name">
+                              <b>${Utils.escapeHtml(s.username)}</b> — ${Utils.escapeHtml(s.mediaTitle)}
+                              <div class="text-xs text-muted-foreground">${s.durationMin} min • ${Utils.escapeHtml(s.clientName)}</div>
+                            </div>
                           </div>
                         `).join('')}
                        </div>`
-                    : '<p>Aucune session enregistrée pour ce créneau.</p>',
+                    : '<p class="text-muted-foreground">Aucune session enregistrée pour ce créneau.</p>',
                   cancelText: 'Fermer',
                   confirmText: 'OK',
                 });
@@ -931,16 +1037,95 @@
         }
       };
 
-      // Segmented control click
-      document.querySelectorAll('#dash-time-range .segment-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('#dash-time-range .segment-btn').forEach((b) => b.classList.remove('active'));
+      // Tab switcher handlers
+      document.querySelectorAll('#dashboard-tablist .dash-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          document.querySelectorAll('#dashboard-tablist .dash-tab-btn').forEach((b) => b.classList.remove('active'));
           btn.classList.add('active');
-          loadDashData(btn.getAttribute('data-days'));
+          const tab = btn.getAttribute('data-tab');
+          
+          document.getElementById('tab-content-overview').classList.toggle('hidden', tab !== 'overview');
+          document.getElementById('tab-content-analytics').classList.toggle('hidden', tab !== 'analytics');
+          document.getElementById('tab-content-network').classList.toggle('hidden', tab !== 'network');
+
+          if (tab === 'analytics') {
+            try {
+              const deep = await API.getJSON('/api/stats/deep');
+              const bodyEl = document.getElementById('dash-deep-insights-body');
+              if (bodyEl) {
+                bodyEl.innerHTML = `
+                  <div class="dash-grid-2">
+                    <div class="app-surface-soft p-4 rounded-lg">
+                      <h4 class="font-bold text-sm mb-3">Top Acteurs</h4>
+                      <div class="ranking-list">
+                        ${(deep.topActors || []).slice(0, 5).map((a, i) => `
+                          <div class="ranking-item">
+                            <span class="ranking-badge">#${i + 1}</span>
+                            <span class="ranking-name">${Utils.escapeHtml(a.name)}</span>
+                            <span class="ranking-value">${a.count} films</span>
+                          </div>
+                        `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée</div>'}
+                      </div>
+                    </div>
+                    <div class="app-surface-soft p-4 rounded-lg">
+                      <h4 class="font-bold text-sm mb-3">Top Réalisateurs</h4>
+                      <div class="ranking-list">
+                        ${(deep.topDirectors || []).slice(0, 5).map((d, i) => `
+                          <div class="ranking-item">
+                            <span class="ranking-badge">#${i + 1}</span>
+                            <span class="ranking-name">${Utils.escapeHtml(d.name)}</span>
+                            <span class="ranking-value">${d.count} films</span>
+                          </div>
+                        `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée</div>'}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }
+            } catch (err) {}
+          } else if (tab === 'network') {
+            try {
+              const geo = await API.getJSON('/api/geo-stats');
+              const bodyEl = document.getElementById('dash-geo-body');
+              if (bodyEl) {
+                bodyEl.innerHTML = `
+                  <div class="ranking-list">
+                    ${(geo.locations || []).slice(0, 10).map((loc) => `
+                      <div class="ranking-item">
+                        <span class="ranking-badge">🌍</span>
+                        <span class="ranking-name">${Utils.escapeHtml(loc.city || 'Inconnu')}, ${Utils.escapeHtml(loc.country || '')}</span>
+                        <span class="ranking-value">${loc.count || 0} sessions</span>
+                      </div>
+                    `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée géographique enregistrée</div>'}
+                  </div>
+                `;
+              }
+            } catch (err) {}
+          }
         });
       });
 
-      await loadDashData(7);
+      // Time range pills click
+      document.querySelectorAll('#dash-time-range .time-pill-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#dash-time-range .time-pill-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentDays = parseInt(btn.getAttribute('data-days'), 10) || 7;
+          loadDashData();
+        });
+      });
+
+      // Media filter pills click
+      document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentMediaType = btn.getAttribute('data-type') || '';
+          loadDashData();
+        });
+      });
+
+      await loadDashData();
     },
 
     // 2. Login Page
@@ -949,262 +1134,379 @@
       document.body.classList.add('is-auth-page');
       const main = document.getElementById('app-main');
 
-      main.innerHTML = `
-        <div class="auth-wrapper">
-          <div class="auth-glow-blob-1"></div>
-          <div class="auth-glow-blob-2"></div>
-
-          <div class="auth-card-container">
-            <div class="auth-card">
-              <div class="auth-card-header">
-                <div class="auth-logo-box">
-                  <svg class="auth-logo-svg" width="52" height="52" viewBox="18 23 64 69" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <linearGradient id="jellyGradLogin" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#AA5CC3"/>
-                        <stop offset="100%" stop-color="#00A4DC"/>
-                      </linearGradient>
-                      <mask id="holeMaskLogin">
-                        <rect x="0" y="0" width="100" height="100" fill="#ffffff"/>
-                        <circle cx="50" cy="39" r="10" fill="black"/>
-                      </mask>
-                    </defs>
-                    <path d="M 20 55 A 30 30 0 0 1 80 55 Z" fill="url(#jellyGradLogin)" mask="url(#holeMaskLogin)"/>
-                    <polygon points="46,32 46,46 58,39" fill="#00A4DC"/>
-                    <rect x="30" y="60" width="8" height="20" rx="4" fill="url(#jellyGradLogin)"/>
-                    <rect x="46" y="60" width="8" height="30" rx="4" fill="url(#jellyGradLogin)"/>
-                    <rect x="62" y="60" width="8" height="15" rx="4" fill="url(#jellyGradLogin)"/>
-                  </svg>
-                </div>
-                <div>
-                  <h1 class="auth-card-title">${I18n.t('login.title') || 'Connexion JellyTrack'}</h1>
-                  <p id="login-subtitle" class="auth-card-subtitle">
-                    ${I18n.t('login.subtitle') || 'Authentification via Jellyfin'}
-                  </p>
-                </div>
-              </div>
-
-              <!-- SSO Auto-redirect Spinner (when OIDC enabled + auto-redirect) -->
-              <div id="login-sso-auto" class="auth-sso-spinner-wrap hidden">
-                <div class="auth-sso-spinner"></div>
-                <div style="display:flex; flex-direction:column; gap:0.25rem;">
-                  <span style="font-size:0.88rem; font-weight:600; color:var(--foreground);">${I18n.t('login.autoRedirecting') || 'Redirection vers votre fournisseur SSO...'}</span>
-                  <span style="font-size:0.75rem; color:var(--muted-foreground);">${I18n.t('login.autoRedirectHint') || 'Connexion automatique via OpenID Connect...'}</span>
-                </div>
-                <a id="login-sso-manual-link" href="#" style="margin-top:0.5rem; font-size:0.78rem; color:#6366f1; text-decoration:underline;">
-                  ${I18n.t('login.cancelAutoRedirect') || 'Annuler la redirection'}
-                </a>
-              </div>
-
-              <div id="login-form-wrapper" class="auth-card-body">
-                <!-- Error Banner -->
-                <div id="login-error" class="auth-alert-error hidden">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  <span id="login-error-text"></span>
-                </div>
-
-                <!-- Logged Out Notice -->
-                <div id="login-logout-notice" class="auth-alert-success hidden">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <span>${I18n.t('login.loggedOutNotice') || 'Vous avez été déconnecté avec succès.'}</span>
-                </div>
-
-                <form id="form-login" class="auth-form">
-                  <!-- Username Field -->
-                  <div class="auth-input-group">
-                    <label class="auth-label">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
-                    <div class="auth-input-wrapper">
-                      <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      <input type="text" class="auth-input-field" id="login-username" required autofocus placeholder="${I18n.t('login.usernamePlaceholder') || 'Jellyfin User'}">
-                    </div>
-                  </div>
-
-                  <!-- Password Field -->
-                  <div class="auth-input-group">
-                    <label class="auth-label">${I18n.t('login.password') || 'Mot de passe'}</label>
-                    <div class="auth-input-wrapper">
-                      <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                      <input type="password" class="auth-input-field" id="login-password" required placeholder="••••••••">
-                    </div>
-                  </div>
-
-                  <!-- Remember Me -->
-                  <div class="auth-checkbox-card">
-                    <input type="checkbox" id="login-remember" class="auth-checkbox">
-                    <div>
-                      <label for="login-remember" class="auth-checkbox-label">
-                        ${I18n.t('login.rememberMe') || 'Se souvenir de moi'}
-                      </label>
-                      <span class="auth-checkbox-hint">
-                        ${I18n.t('login.rememberMeHint') || 'Rester connecté 30 jours sur cet appareil.'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- Submit Button -->
-                  <button type="submit" id="btn-login-submit" class="auth-submit-btn">
-                    <span id="btn-login-text">${I18n.t('login.signIn') || 'Se connecter'}</span>
-                    <svg id="btn-login-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  </button>
-
-                  <!-- SSO Option (when enabled) -->
-                  <div id="oidc-login-wrapper" class="hidden" style="flex-direction: column; gap: 0.75rem;">
-                    <div class="auth-divider">
-                      <div class="auth-divider-line"></div>
-                      <span class="auth-divider-text">
-                        ${I18n.t('login.orContinueWith') || 'OU'}
-                      </span>
-                      <div class="auth-divider-line"></div>
-                    </div>
-
-                    <a href="/api/auth/oidc/start" id="btn-sso" class="auth-sso-btn">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                      <span>${I18n.t('login.signInSso') || 'Se connecter avec SSO'}</span>
-                    </a>
-                  </div>
-                </form>
-              </div>
-            </div>
-
-            <!-- Language Switcher & Theme Toggle Row (matching main branch) -->
-            <div class="auth-controls-bottom">
-              <select id="login-language-select" aria-label="Langue">
-                <option value="fr">Français</option>
-                <option value="en">English</option>
-                <option value="de">Deutsch</option>
-                <option value="es">Español</option>
-                <option value="it">Italiano</option>
-                <option value="nl">Nederlands</option>
-                <option value="pl">Polski</option>
-                <option value="pt-BR">Português</option>
-                <option value="ru">Русский</option>
-                <option value="zh">中文</option>
-              </select>
-
-              <button type="button" id="login-theme-toggle" title="Basculer le thème">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Check OIDC options & handle auto-redirect
+      // 1. Fetch Auth Options
       let oidcEnabled = false;
-      let oidcAutoRedirect = false;
+      let oidcAutoRedirect = true;
+      let localAdminEnabled = false;
       try {
         const opts = await API.getJSON('/api/auth/options');
         oidcEnabled = !!opts.oidc;
-        oidcAutoRedirect = !!(opts.oidcAutoRedirect || opts.autoRedirect);
+        oidcAutoRedirect = (opts.autoRedirect !== undefined) ? !!opts.autoRedirect : true;
+        localAdminEnabled = !!opts.localAdmin;
       } catch (e) {}
 
+      // 2. Query Parameters
       const urlParams = new URLSearchParams(window.location.search);
-      const isManual = urlParams.get('manual') === '1';
-      const hasError = urlParams.get('error');
-      const isLogout = urlParams.get('logout') === '1';
+      const queryError = urlParams.get('error');
+      const isLogout = urlParams.get('logout') === '1' || urlParams.get('logout') === 'true';
+      const isManual = urlParams.get('manual') === '1' || urlParams.get('manual') === 'true';
+      const isLocalParam = urlParams.get('local') === '1' || urlParams.get('local') === 'true';
 
-      if (isLogout) {
-        const logoutEl = document.getElementById('login-logout-notice');
-        if (logoutEl) logoutEl.classList.remove('hidden');
+      let isLocalLogin = isLocalParam;
+      let isAutoRedirecting = false;
+      let autoRedirectAttempted = false;
+      let error = null;
+
+      if (queryError) {
+        const msgs = {
+          'AccessDeniedGroup': I18n.t('login.unauthorizedGroup') || 'Accès refusé : groupe non autorisé.',
+          'AccessDenied': I18n.t('login.unauthorizedGroup') || 'Accès refusé.',
+          'OAuthSignin': I18n.t('login.ssoError') || 'Erreur lors de la connexion SSO.',
+          'OAuthCallback': I18n.t('login.ssoError') || 'Erreur lors du retour SSO.',
+          'OAuthCreateAccount': I18n.t('login.ssoError') || 'Erreur lors du compte SSO.',
+          'CredentialsSignin': I18n.t('login.invalidCredentials') || 'Identifiants incorrects.',
+        };
+        error = msgs[queryError] || I18n.t('login.unexpectedError') || 'Une erreur inattendue s\'est produite.';
       }
 
-      if (oidcEnabled) {
-        const oidcWrapper = document.getElementById('oidc-login-wrapper');
-        const subtitle = document.getElementById('login-subtitle');
-        if (oidcWrapper) oidcWrapper.classList.remove('hidden');
-        if (subtitle) subtitle.textContent = I18n.t('login.ssoSubtitle') || 'Authentification unique sécurisée (SSO / OIDC)';
+      // Auto-redirect condition (matching main branch)
+      if (oidcEnabled && !isLocalLogin && oidcAutoRedirect && !queryError && !isLogout && !isManual && !isLocalParam) {
+        isAutoRedirecting = true;
+      }
 
-        if (oidcAutoRedirect && !isManual && !hasError && !isLogout) {
-          const autoSection = document.getElementById('login-sso-auto');
-          const formWrapper = document.getElementById('login-form-wrapper');
-          if (autoSection) autoSection.classList.remove('hidden');
-          if (formWrapper) formWrapper.classList.add('hidden');
+      const render = () => {
+        const isSsoView = oidcEnabled && !isLocalLogin;
+        const headerClass = isSsoView ? 'auth-card-header auth-header-sso' : 'auth-card-header';
+        const showSubtitle = !oidcEnabled && !isLocalLogin;
 
-          const manualLink = document.getElementById('login-sso-manual-link');
-          if (manualLink) {
-            manualLink.addEventListener('click', (e) => {
-              e.preventDefault();
-              if (autoSection) autoSection.classList.add('hidden');
-              if (formWrapper) formWrapper.classList.remove('hidden');
-            });
-          }
+        let contentHtml = '';
 
+        if (isSsoView) {
+          // --- MODE 1: SSO / OIDC Mode (matching main branch) ---
+          contentHtml = `
+            <div class="auth-sso-container">
+              ${error ? `
+                <div class="auth-alert-error">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>${Utils.escapeHtml(error)}</span>
+                </div>
+              ` : ''}
+
+              ${isLogout && !error ? `
+                <div class="auth-alert-success">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>${I18n.t('login.loggedOutNotice') || 'Vous avez été déconnecté avec succès.'}</span>
+                </div>
+              ` : ''}
+
+              ${isAutoRedirecting && !error ? `
+                <div class="auth-sso-auto-box">
+                  <div class="auth-sso-auto-icon-wrap">
+                    <div class="auth-sso-ping"></div>
+                    <div class="auth-sso-icon-box">
+                      <svg class="auth-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="auth-sso-auto-title">${I18n.t('login.autoRedirecting') || 'Redirection vers votre fournisseur SSO...'}</div>
+                    <div class="auth-sso-auto-subtitle">${I18n.t('login.autoRedirectHint') || 'Connexion automatique via OpenID Connect...'}</div>
+                  </div>
+                  <a href="/api/auth/oidc/start" class="auth-sso-manual-link">${I18n.t('login.continueManually') || 'Continuer vers le SSO'}</a>
+                </div>
+              ` : `
+                <a href="/api/auth/oidc/start" class="auth-sso-primary-btn" id="btn-sso-start">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                  <span>${I18n.t('login.signInSso') || 'Se connecter avec SSO'}</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+              `}
+
+              ${localAdminEnabled ? `
+                <div class="auth-toggle-local-wrap">
+                  <button type="button" id="btn-toggle-local" class="auth-toggle-local-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3M17.5 5.5l3 3"/></svg>
+                    <span>${I18n.t('login.localLogin') || 'Connexion locale'}</span>
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        } else if (isLocalLogin) {
+          // --- MODE 2: Emergency Local Admin Mode (matching main branch) ---
+          contentHtml = `
+            <div class="auth-card-body">
+              <form id="form-login-local" class="auth-form">
+                <div class="auth-local-header">
+                  <span class="auth-local-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3M17.5 5.5l3 3"/></svg>
+                    <span>${I18n.t('login.localAdminTitle') || 'Connexion locale (Admin)'}</span>
+                  </span>
+                  ${oidcEnabled ? `
+                    <button type="button" id="btn-back-sso" class="auth-back-sso-btn">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7M5 12h14"/></svg>
+                      <span>${I18n.t('login.backToSso') || 'Retour au SSO'}</span>
+                    </button>
+                  ` : ''}
+                </div>
+
+                ${error ? `
+                  <div class="auth-alert-error">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>${Utils.escapeHtml(error)}</span>
+                  </div>
+                ` : ''}
+
+                <div class="auth-input-group">
+                  <label class="auth-label">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
+                  <div class="auth-input-wrapper">
+                    <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <input type="text" class="auth-input-field" id="login-username" required value="admin" placeholder="admin">
+                  </div>
+                </div>
+
+                <div class="auth-input-group">
+                  <label class="auth-label">${I18n.t('login.password') || 'Mot de passe'}</label>
+                  <div class="auth-input-wrapper">
+                    <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <input type="password" class="auth-input-field" id="login-password" required autofocus placeholder="••••••••">
+                  </div>
+                </div>
+
+                <button type="submit" id="btn-login-submit" class="auth-submit-btn auth-submit-btn-amber">
+                  <span id="btn-login-text">${I18n.t('login.signIn') || 'Se connecter'}</span>
+                  <svg id="btn-login-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </form>
+            </div>
+          `;
+        } else {
+          // --- MODE 3: Fallback Jellyfin Direct Authentication (OIDC Disabled) ---
+          contentHtml = `
+            <div class="auth-card-body">
+              <form id="form-login-jellyfin" class="auth-form">
+                ${error ? `
+                  <div class="auth-alert-error">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>${Utils.escapeHtml(error)}</span>
+                  </div>
+                ` : ''}
+
+                ${isLogout && !error ? `
+                  <div class="auth-alert-success">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span>${I18n.t('login.loggedOutNotice') || 'Vous avez été déconnecté avec succès.'}</span>
+                  </div>
+                ` : ''}
+
+                <div class="auth-input-group">
+                  <label class="auth-label">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
+                  <div class="auth-input-wrapper">
+                    <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <input type="text" class="auth-input-field" id="login-username" required autofocus placeholder="${I18n.t('login.usernamePlaceholder') || 'Jellyfin User'}">
+                  </div>
+                </div>
+
+                <div class="auth-input-group">
+                  <label class="auth-label">${I18n.t('login.password') || 'Mot de passe'}</label>
+                  <div class="auth-input-wrapper">
+                    <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <input type="password" class="auth-input-field" id="login-password" required placeholder="••••••••">
+                  </div>
+                </div>
+
+                <div class="auth-checkbox-card">
+                  <input type="checkbox" id="login-remember" class="auth-checkbox">
+                  <div>
+                    <label for="login-remember" class="auth-checkbox-label">
+                      ${I18n.t('login.rememberMe') || 'Se souvenir de moi'}
+                    </label>
+                    <span class="auth-checkbox-hint">
+                      ${I18n.t('login.rememberMeHint') || 'Rester connecté 30 jours sur cet appareil.'}
+                    </span>
+                  </div>
+                </div>
+
+                <button type="submit" id="btn-login-submit" class="auth-submit-btn">
+                  <span id="btn-login-text">${I18n.t('login.signIn') || 'Se connecter'}</span>
+                  <svg id="btn-login-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+
+                ${localAdminEnabled ? `
+                  <div class="auth-toggle-local-wrap">
+                    <button type="button" id="btn-toggle-local" class="auth-toggle-local-btn">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3M17.5 5.5l3 3"/></svg>
+                      <span>${I18n.t('login.localLogin') || 'Connexion locale'}</span>
+                    </button>
+                  </div>
+                ` : ''}
+              </form>
+            </div>
+          `;
+        }
+
+        const isDark = Theme.isDark();
+
+        main.innerHTML = `
+          <div class="auth-wrapper">
+            <div class="auth-glow-blob-1"></div>
+            <div class="auth-glow-blob-2"></div>
+
+            <div class="auth-card-container">
+              <div class="auth-card">
+                <div class="${headerClass}">
+                  <div class="auth-logo-box">
+                    <svg class="auth-logo-svg" width="52" height="52" viewBox="18 23 64 69" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="jellyGradLogin" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stop-color="#AA5CC3"/>
+                          <stop offset="100%" stop-color="#00A4DC"/>
+                        </linearGradient>
+                        <mask id="holeMaskLogin">
+                          <rect x="0" y="0" width="100" height="100" fill="#ffffff"/>
+                          <circle cx="50" cy="39" r="10" fill="black"/>
+                        </mask>
+                      </defs>
+                      <path d="M 20 55 A 30 30 0 0 1 80 55 Z" fill="url(#jellyGradLogin)" mask="url(#holeMaskLogin)"/>
+                      <polygon points="46,32 46,46 58,39" fill="#00A4DC"/>
+                      <rect x="30" y="60" width="8" height="20" rx="4" fill="url(#jellyGradLogin)"/>
+                      <rect x="46" y="60" width="8" height="30" rx="4" fill="url(#jellyGradLogin)"/>
+                      <rect x="62" y="60" width="8" height="15" rx="4" fill="url(#jellyGradLogin)"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 class="auth-card-title">${I18n.t('login.title') || 'Connexion JellyTrack'}</h1>
+                    ${showSubtitle ? `
+                      <p class="auth-card-subtitle">${I18n.t('login.subtitle') || 'Authentification via Jellyfin'}</p>
+                    ` : ''}
+                  </div>
+                </div>
+
+                ${contentHtml}
+              </div>
+
+              <!-- Bottom Language Switcher & Theme Card (matching main branch) -->
+              <div class="auth-controls-container">
+                <div class="auth-controls-bottom">
+                  <select id="login-language-select" aria-label="Langue">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                    <option value="de">Deutsch</option>
+                    <option value="es">Español</option>
+                    <option value="it">Italiano</option>
+                    <option value="nl">Nederlands</option>
+                    <option value="pl">Polski</option>
+                    <option value="pt-BR">Português</option>
+                    <option value="ru">Русский</option>
+                    <option value="zh">中文</option>
+                  </select>
+                </div>
+
+                <button type="button" id="login-theme-card" class="auth-theme-card" aria-label="${isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}">
+                  <div class="auth-theme-icon-box">
+                    ${isDark ? `
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    ` : `
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    `}
+                  </div>
+                  <div class="auth-theme-text">
+                    <div class="auth-theme-label">${I18n.t('common.theme') || 'THÈME'}</div>
+                    <div class="auth-theme-value">${isDark ? (I18n.t('common.themeDark') || 'Sombre') : (I18n.t('common.themeLight') || 'Clair')}</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Wire Event Listeners
+        const langSelect = document.getElementById('login-language-select');
+        if (langSelect) {
+          langSelect.value = State.locale;
+          langSelect.addEventListener('change', async (e) => {
+            await I18n.changeLocale(e.target.value);
+            render();
+          });
+        }
+
+        const themeCard = document.getElementById('login-theme-card');
+        if (themeCard) {
+          themeCard.addEventListener('click', () => {
+            Theme.toggle();
+            render();
+          });
+        }
+
+        const toggleLocalBtn = document.getElementById('btn-toggle-local');
+        if (toggleLocalBtn) {
+          toggleLocalBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            error = null;
+            isAutoRedirecting = false;
+            isLocalLogin = true;
+            render();
+          });
+        }
+
+        const backSsoBtn = document.getElementById('btn-back-sso');
+        if (backSsoBtn) {
+          backSsoBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            error = null;
+            isLocalLogin = false;
+            render();
+          });
+        }
+
+        // Handle Auto-Redirect timer
+        if (isSsoView && isAutoRedirecting && !autoRedirectAttempted) {
+          autoRedirectAttempted = true;
           setTimeout(() => {
-            window.location.href = '/api/auth/oidc/start';
-          }, 600);
-          return;
+            if (isAutoRedirecting) {
+              window.location.href = '/api/auth/oidc/start';
+            }
+          }, 400);
         }
-      }
 
-      // Handle query errors
-      if (hasError) {
-        const errEl = document.getElementById('login-error');
-        const errText = document.getElementById('login-error-text');
-        if (errEl && errText) {
-          const msgs = {
-            'AccessDeniedGroup': I18n.t('login.unauthorizedGroup') || 'Accès refusé : groupe non autorisé.',
-            'AccessDenied': I18n.t('login.unauthorizedGroup') || 'Accès refusé.',
-            'OAuthSignin': I18n.t('login.ssoError') || 'Erreur lors de la connexion SSO.',
-            'OAuthCallback': I18n.t('login.ssoError') || 'Erreur lors du retour SSO.',
-            'CredentialsSignin': I18n.t('login.invalidCredentials') || 'Identifiants incorrects.',
-          };
-          errText.textContent = msgs[hasError] || I18n.t('login.unexpectedError') || 'Une erreur inattendue s\'est produite.';
-          errEl.classList.remove('hidden');
+        // Form submission (Local Admin or Jellyfin)
+        const formLocal = document.getElementById('form-login-local');
+        const formJellyfin = document.getElementById('form-login-jellyfin');
+        const activeForm = formLocal || formJellyfin;
+
+        if (activeForm) {
+          activeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('btn-login-submit');
+            const btnText = document.getElementById('btn-login-text');
+            const btnArrow = document.getElementById('btn-login-arrow');
+
+            if (submitBtn) {
+              submitBtn.disabled = true;
+              submitBtn.style.opacity = '0.6';
+              submitBtn.style.cursor = 'not-allowed';
+            }
+            if (btnText) btnText.textContent = I18n.t('login.verifying') || 'Vérification…';
+            if (btnArrow) btnArrow.style.display = 'none';
+
+            const u = document.getElementById('login-username')?.value.trim() || '';
+            const p = document.getElementById('login-password')?.value || '';
+            const remEl = document.getElementById('login-remember');
+            const rem = remEl ? remEl.checked : false;
+
+            try {
+              await Auth.login(u, p, rem);
+              Toast.success(I18n.t('login.loginSuccess') || 'Connecté avec succès !');
+              document.body.classList.remove('is-auth-page');
+              Router.navigate('/');
+            } catch (err) {
+              error = err.message || (I18n.t('login.invalidCredentials') || 'Identifiants incorrects.');
+              render();
+            }
+          });
         }
-      }
+      };
 
-      // Bottom Language Selector
-      const loginLang = document.getElementById('login-language-select');
-      if (loginLang) {
-        loginLang.value = State.locale;
-        loginLang.addEventListener('change', async (e) => {
-          await I18n.changeLocale(e.target.value);
-        });
-      }
-
-      // Bottom Theme Toggle
-      const loginThemeBtn = document.getElementById('login-theme-toggle');
-      if (loginThemeBtn) {
-        loginThemeBtn.addEventListener('click', () => {
-          Theme.toggle();
-        });
-      }
-
-      const form = document.getElementById('form-login');
-      const errEl = document.getElementById('login-error');
-      const errText = document.getElementById('login-error-text');
-      const submitBtn = document.getElementById('btn-login-submit');
-      const btnText = document.getElementById('btn-login-text');
-      const btnArrow = document.getElementById('btn-login-arrow');
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        errEl.classList.add('hidden');
-        submitBtn.disabled = true;
-        submitBtn.style.opacity = '0.6';
-        submitBtn.style.cursor = 'not-allowed';
-        if (btnText) btnText.textContent = I18n.t('login.verifying') || 'Vérification…';
-        if (btnArrow) btnArrow.style.display = 'none';
-
-        const u = document.getElementById('login-username').value.trim();
-        const p = document.getElementById('login-password').value;
-        const rem = document.getElementById('login-remember').checked;
-
-        try {
-          await Auth.login(u, p, rem);
-          Toast.success(I18n.t('login.loginSuccess') || 'Connecté avec succès !');
-          document.body.classList.remove('is-auth-page');
-          Router.navigate('/');
-        } catch (err) {
-          if (errText) errText.textContent = err.message;
-          errEl.classList.remove('hidden');
-          submitBtn.disabled = false;
-          submitBtn.style.opacity = '1';
-          submitBtn.style.cursor = 'pointer';
-          if (btnText) btnText.textContent = I18n.t('login.signIn') || 'Se connecter';
-          if (btnArrow) btnArrow.style.display = '';
-        }
-      });
+      render();
     },
 
     // 3. Setup Wizard
@@ -1388,8 +1690,8 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">
-              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              ${I18n.t('nav.recent') || 'Historique Récent'}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+              ${I18n.t('nav.recentlyAdded') || I18n.t('nav.recent') || 'Ajouts Récents'}
             </h1>
             <p class="page-subtitle">${I18n.t('recent.subtitle') || 'Dernières lectures enregistrées sur vos serveurs.'}</p>
           </div>
@@ -1597,7 +1899,6 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">
-              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               ${I18n.t('nav.users') || 'Utilisateurs'}
             </h1>
             <p class="page-subtitle">Comptes Jellyfin et profils d'écoute.</p>
@@ -1903,16 +2204,41 @@
       }
     },
 
+    mediaNav(active) {
+      return `
+        <nav class="media-tabs-nav">
+          <a href="/media" data-link class="media-tab-link ${active === 'media' ? 'active' : ''}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
+            <span>${I18n.t('media.allMedia') || 'Tout le catalogue'}</span>
+          </a>
+          <a href="/media/popular" data-link class="media-tab-link ${active === 'popular' ? 'active' : ''}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            <span>${I18n.t('media.popularTab') || 'Top Contenus'}</span>
+          </a>
+          <a href="/media/analysis" data-link class="media-tab-link ${active === 'analysis' ? 'active' : ''}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            <span>${I18n.t('media.deepAnalysisTitle') || 'Analyses Approfondies'}</span>
+          </a>
+          <a href="/media/collections" data-link class="media-tab-link ${active === 'collections' ? 'active' : ''}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+            <span>${I18n.t('media.libraries') || 'Bibliothèques'}</span>
+          </a>
+        </nav>
+      `;
+    },
+
     // 10. Media Catalog & Overview
     async media(options = {}) {
       let { type = '', sort = 'title', artist = '', q = '' } = typeof options === 'string' ? { type: options } : (options || {});
+      const activeNav = sort === 'popular' ? 'popular' : 'media';
       const main = document.getElementById('app-main');
       main.innerHTML = `
+        ${Pages.mediaNav(activeNav)}
         <div class="page-header">
           <div>
             <h1 class="page-title">
-              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>
-              ${I18n.t('nav.media') || 'Catalogue Multimédia'}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
+              ${activeNav === 'popular' ? (I18n.t('media.popularTab') || 'Top Contenus') : (I18n.t('nav.media') || 'Catalogue Multimédia')}
             </h1>
             <p class="page-subtitle">Films, séries, albums et livres synchronisés depuis vos serveurs.</p>
           </div>
@@ -2179,10 +2505,11 @@
     async collections() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
+        ${Pages.mediaNav('collections')}
         <div class="page-header">
           <div>
             <h1 class="page-title">
-              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
               ${I18n.t('nav.collections') || 'Collections & Bibliothèques'}
             </h1>
             <p class="page-subtitle">Volumes et proportions par bibliothèque Jellyfin.</p>
@@ -2238,10 +2565,11 @@
     async analysis() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
+        ${Pages.mediaNav('analysis')}
         <div class="page-header">
           <div>
             <h1 class="page-title">
-              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
               ${I18n.t('nav.analysis') || 'Analyses Approfondies'}
             </h1>
             <p class="page-subtitle">Réalisateurs, acteurs, studios et tendances de consommation.</p>

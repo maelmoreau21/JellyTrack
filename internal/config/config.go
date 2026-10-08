@@ -26,6 +26,37 @@ type Config struct {
 	EnablePprof        bool
 }
 
+// LoadDotEnv loads .env and .env.local files into the process environment if present.
+func LoadDotEnv() {
+	for _, name := range []string{".env", ".env.local"} {
+		data, err := os.ReadFile(name)
+		if err != nil {
+			continue
+		}
+		for _, line := range strings.Split(string(data), "\n") {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			if strings.HasPrefix(line, "export ") {
+				line = strings.TrimSpace(strings.TrimPrefix(line, "export "))
+			}
+			idx := strings.Index(line, "=")
+			if idx <= 0 {
+				continue
+			}
+			key := strings.TrimSpace(line[:idx])
+			val := strings.TrimSpace(line[idx+1:])
+			if len(val) >= 2 && ((val[0] == '"' && val[len(val)-1] == '"') || (val[0] == '\'' && val[len(val)-1] == '\'')) {
+				val = val[1 : len(val)-1]
+			}
+			if os.Getenv(key) == "" {
+				_ = os.Setenv(key, val)
+			}
+		}
+	}
+}
+
 func Load() (Config, error) {
 	port := firstNonEmpty(os.Getenv("JELLYTRACK_PORT"), os.Getenv("PORT"), "3000")
 	portNumber, err := strconv.Atoi(port)

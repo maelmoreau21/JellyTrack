@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/maelmoreau21/jellytrack/internal/config"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/jellyfin"
 	"github.com/maelmoreau21/jellytrack/internal/requestip"
@@ -317,6 +318,7 @@ var loginMu sync.Mutex
 var loginAttempts = map[string]loginBucket{}
 
 func New(db *sql.DB, driver string) *Manager {
+	config.LoadDotEnv()
 	secret := secretValue(os.Getenv("JELLYTRACK_SECRET"), os.Getenv("AUTH_SECRET"))
 	username := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_USER"), os.Getenv("JELLYGATE_LOCAL_ADMIN_USER"), "admin")
 	password := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD"), os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD"))
@@ -325,6 +327,8 @@ func New(db *sql.DB, driver string) *Manager {
 		hash, _ = bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	}
 	issuer := first(os.Getenv("OIDC_ISSUER"), os.Getenv("OIDC_URL"), os.Getenv("AUTHENTIK_URL"), os.Getenv("JELLYTRACK_AUTHENTIK_URL"))
+	oidcEnvRaw := strings.TrimSpace(os.Getenv("OIDC_ENABLED"))
+	oidcEnv := strings.EqualFold(oidcEnvRaw, "true") || oidcEnvRaw == "1" || strings.EqualFold(oidcEnvRaw, "yes") || strings.EqualFold(oidcEnvRaw, "on")
 	autoRedirRaw := first(os.Getenv("OIDC_AUTO_REDIRECT"), os.Getenv("OIDC_AUTO_LOGIN"))
 	autoRedir := autoRedirRaw == "" || strings.EqualFold(autoRedirRaw, "true") || autoRedirRaw == "1"
 
@@ -340,7 +344,7 @@ func New(db *sql.DB, driver string) *Manager {
 		oidcClientSecret: os.Getenv("OIDC_CLIENT_SECRET"),
 		oidcUserGroup:    strings.TrimSpace(os.Getenv("OIDC_USER_GROUP")),
 		oidcAdminGroup:   strings.TrimSpace(os.Getenv("OIDC_ADMIN_GROUP")),
-		oidcEnabled:      strings.EqualFold(os.Getenv("OIDC_ENABLED"), "true") && issuer != "" && os.Getenv("OIDC_CLIENT_ID") != "",
+		oidcEnabled:      oidcEnv || (issuer != "" && os.Getenv("OIDC_CLIENT_ID") != ""),
 		oidcAutoRedirect: autoRedir,
 		oidcTimeout:      15 * time.Second,
 	}
@@ -349,10 +353,13 @@ func New(db *sql.DB, driver string) *Manager {
 func (m *Manager) Routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/auth/options", func(w http.ResponseWriter, r *http.Request) {
 		cfg := m.resolveOIDC(r.Context())
+		hasLocal := len(m.passwordHash) > 0 ||
+			strings.TrimSpace(os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD")) != "" ||
+			strings.TrimSpace(os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD")) != ""
 		writeJSON(w, http.StatusOK, map[string]any{
 			"oidc":         cfg.enabled,
 			"autoRedirect": cfg.autoRedirect,
-			"localAdmin":   len(m.passwordHash) > 0,
+			"localAdmin":   hasLocal,
 		})
 	})
 	mux.HandleFunc("GET /api/auth/sso/config", func(w http.ResponseWriter, r *http.Request) {
