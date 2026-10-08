@@ -13,18 +13,18 @@ L'application fonctionne en tant que **binaire Go unique et autonome** intégran
 | Composant | Technologie | Description |
 |---|---|---|
 | **Serveur & Routage** | Go (`net/http`, `embed.FS`) | Embarque et sert l'ensemble du frontend via `embed.FS`. Fallback automatique sur `index.html` pour le routage SPA. |
-| **Structure** | HTML5 sémantique | `internal/web/dist/index.html` avec navigation accessible, modales et conteneurs d'alertes. |
-| **Style & Design** | CSS Vanilla Moderne | `internal/web/dist/assets/app.css` : glassmorphism, variables CSS pour thèmes sombre/clair, responsive mobile/desktop. |
-| **Logique Client** | JavaScript Vanilla ES6+ | `internal/web/dist/assets/app.js` : routeur d'historique HTML5, moteur i18n, client API avec CSRF, gestionnaire de thème. |
-| **Graphiques** | Chart.js 4 (UMD autonome) | `internal/web/dist/assets/chart.min.js` : courbe d'activité, histogramme horaire, proportions par type, thermocarte annuelle SVG. |
-| **Traductions** | JSON natif | 11 langues intégrées dans `internal/web/dist/assets/messages/*.json` (FR, EN, DE, ES, IT, NL, PL, PT-BR, RU, ZH). |
+| **Structure** | HTML5 sémantique | `web/dist/index.html` avec navigation accessible, modales et conteneurs d'alertes. |
+| **Style & Design** | CSS Vanilla Moderne | `web/dist/assets/app.css` : glassmorphism, variables CSS pour thèmes sombre/clair, responsive mobile/desktop. |
+| **Logique Client** | JavaScript Vanilla ES6+ | `web/dist/assets/app.js` : routeur d'historique HTML5, moteur i18n, client API avec CSRF, gestionnaire de thème. |
+| **Graphiques** | Chart.js 4 (UMD autonome) | `web/dist/assets/chart.min.js` : courbe d'activité, histogramme horaire, proportions par type, thermocarte annuelle SVG. |
+| **Traductions** | JSON natif | 11 langues intégrées dans `web/dist/assets/messages/*.json` (FR, EN, DE, ES, IT, NL, PL, PT-BR, RU, ZH). |
 
 ---
 
 ## 2. Structure des Fichiers
 
 ```text
-internal/web/
+web/
 ├── static.go                  # Serveur HTTP Go + //go:embed all:dist
 ├── static_test.go             # Tests Go vérifiant les routes frontend et headers CSP
 └── dist/                      # Fichiers statiques embarqués dans le binaire Go

@@ -2,6 +2,7 @@
 /jellytrack
 /jellytrack.exe
 *.exe
+*.exe~
 
 # Testing & coverage
 /coverage

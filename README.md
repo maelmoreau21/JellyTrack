@@ -58,9 +58,17 @@ JellyTrack/
 │   ├── database/              # Dual database drivers & migration runner
 │   ├── history/               # History aggregation & playback consolidation
 │   ├── jellyfin/              # Jellyfin client & server synchronizer
+│   ├── logging/               # System event logging & exports
+│   ├── media/                 # Media library queries & metadata
+│   ├── models/                # Shared domain types & structs
 │   ├── plugin/                # Plugin webhook ingestion & event processing
+│   ├── requestip/             # Trusted proxy & client IP extraction
 │   ├── scheduler/             # Periodic background task worker
-│   └── web/                   # Embedded web SPA handler
+│   ├── security/              # SSRF protection, URL safety & audit logs
+│   ├── settings/              # Settings & multi-server registry
+│   ├── stats/                 # Aggregated telemetry & dashboard metrics
+│   ├── telemetry/             # Active streams & fine telemetry
+│   └── users/                 # User management & duplicate merging
 ├── web/
 │   ├── static.go              # HTTP file server and SPA router (embed.FS)
 │   └── dist/                  # Native HTML5, CSS, and Vanilla JS assets

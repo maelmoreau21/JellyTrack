@@ -65,7 +65,7 @@ func main() {
 
 	serverErrors := make(chan error, 1)
 	go func() {
-		logger.Info("starting JellyTrack v3", "address", server.Addr, "database_mode", cfg.DatabaseDriver)
+		logger.Info("starting JellyTrack", "address", server.Addr, "database_mode", cfg.DatabaseDriver)
 		serverErrors <- server.ListenAndServe()
 	}()
 
