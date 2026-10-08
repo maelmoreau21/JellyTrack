@@ -46,7 +46,9 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"GET /api/users":                   h.users,
 		"GET /api/users/{id}":              h.userDetail,
 		"GET /api/users/{id}/active-stream": h.userActiveStream,
+		"GET /api/wrapped/{id}":            h.userWrapped,
 		"GET /api/media":                   h.mediaList,
+		"GET /api/media/collections":       h.mediaCollections,
 		"GET /api/media/{id}":              h.mediaDetail,
 		"GET /api/history":                 h.history,
 		"GET /api/search":                  h.search,
@@ -113,6 +115,8 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"GET /api/backup/auto/download":                  h.backupAutoDownload,
 		"POST /api/backup/auto/restore":                  h.backupAutoRestore,
 		"POST /api/backup/auto/delete":                   h.backupAutoDelete,
+		"GET /api/newsletter":                            h.newsletterData,
+		"GET /api/admin/server-compare":                  h.serverCompare,
 		"POST /api/admin/consolidate-history":            h.adminConsolidateHistory,
 		"POST /api/admin/integrity-cleanup":              h.adminIntegrityCleanup,
 	}
@@ -526,13 +530,15 @@ func (h *Handler) mediaList(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	mType := strings.TrimSpace(r.URL.Query().Get("type"))
 	library := strings.TrimSpace(r.URL.Query().Get("library"))
+	artist := strings.TrimSpace(r.URL.Query().Get("artist"))
+	sortParam := strings.TrimSpace(r.URL.Query().Get("sort"))
 
 	whereClauses := []string{excludedLibrariesClause(h.driver, "m")}
 	var args []any
 
 	if q != "" {
-		whereClauses = append(whereClauses, `m."title" LIKE ?`)
-		args = append(args, "%"+q+"%")
+		whereClauses = append(whereClauses, `(m."title" LIKE ? OR m."directors" LIKE ? OR m."actors" LIKE ?)`)
+		args = append(args, "%"+q+"%", "%"+q+"%", "%"+q+"%")
 	}
 	if mType != "" {
 		whereClauses = append(whereClauses, `m."type" = ?`)
@@ -542,11 +548,29 @@ func (h *Handler) mediaList(w http.ResponseWriter, r *http.Request) {
 		whereClauses = append(whereClauses, `m."libraryName" = ?`)
 		args = append(args, library)
 	}
+	if artist != "" {
+		whereClauses = append(whereClauses, `(m."artist" LIKE ? OR m."directors" LIKE ? OR m."title" LIKE ?)`)
+		args = append(args, "%"+artist+"%", "%"+artist+"%", "%"+artist+"%")
+	}
 
-	query := fmt.Sprintf(`SELECT m."id",m."jellyfinMediaId",m."title",m."type",m."libraryName",m."resolution",m."durationMs",s."name" FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE %s ORDER BY m."title" ASC LIMIT ? OFFSET ?`, strings.Join(whereClauses, " AND "))
-	args = append(args, limit, offset)
+	var total int64
+	countQ := fmt.Sprintf(`SELECT COUNT(*) FROM "Media" m WHERE %s`, strings.Join(whereClauses, " AND "))
+	_ = h.db.QueryRowContext(r.Context(), database.Bind(countQ, h.driver), args...).Scan(&total)
 
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(query, h.driver), args...)
+	orderBy := `m."title" ASC`
+	switch sortParam {
+	case "popular":
+		orderBy = `(SELECT COUNT(*) FROM "PlaybackHistory" WHERE "mediaId"=m."id") DESC, m."title" ASC`
+	case "duration":
+		orderBy = `m."durationMs" DESC`
+	case "recent":
+		orderBy = `(SELECT MAX("startedAt") FROM "PlaybackHistory" WHERE "mediaId"=m."id") DESC, m."title" ASC`
+	}
+
+	query := fmt.Sprintf(`SELECT m."id",m."jellyfinMediaId",m."title",m."type",m."libraryName",m."resolution",m."durationMs",s."name" FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE %s ORDER BY %s LIMIT ? OFFSET ?`, strings.Join(whereClauses, " AND "), orderBy)
+	queryArgs := append(append([]any{}, args...), limit, offset)
+
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(query, h.driver), queryArgs...)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les médias.")
 		return
@@ -566,7 +590,7 @@ func (h *Handler) mediaList(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	}
-	jsonResponse(w, 200, map[string]any{"items": out, "limit": limit, "offset": offset})
+	jsonResponse(w, 200, map[string]any{"items": out, "total": total, "limit": limit, "offset": offset})
 }
 
 func (h *Handler) mediaDetail(w http.ResponseWriter, r *http.Request) {
@@ -1683,4 +1707,418 @@ func parseStringList(s string) []string {
 		list = []string{}
 	}
 	return list
+}
+
+func (h *Handler) mediaCollections(w http.ResponseWriter, r *http.Request) {
+	excluded := excludedLibrariesClause(h.driver, "m")
+	rows, err := h.db.QueryContext(r.Context(), `SELECT COALESCE(m."libraryName", 'Uncategorized') AS "lib", m."type", COUNT(*), COALESCE(SUM(m."durationMs"), 0) FROM "Media" m WHERE `+excluded+` GROUP BY "lib", m."type" ORDER BY "lib", m."type"`)
+	if err != nil {
+		jsonError(w, 500, "Impossible de charger les collections.")
+		return
+	}
+	defer rows.Close()
+
+	type libType struct {
+		Type       string `json:"type"`
+		Count      int64  `json:"count"`
+		DurationMs int64  `json:"durationMs"`
+	}
+	libMap := make(map[string]*struct {
+		name       string
+		types      []libType
+		totalItems int64
+		totalMs    int64
+	})
+	var order []string
+
+	for rows.Next() {
+		var lib, kind string
+		var count, dur int64
+		if rows.Scan(&lib, &kind, &count, &dur) == nil {
+			entry, ok := libMap[lib]
+			if !ok {
+				entry = &struct {
+					name       string
+					types      []libType
+					totalItems int64
+					totalMs    int64
+				}{name: lib}
+				libMap[lib] = entry
+				order = append(order, lib)
+			}
+			entry.types = append(entry.types, libType{Type: kind, Count: count, DurationMs: dur})
+			entry.totalItems += count
+			entry.totalMs += dur
+		}
+	}
+
+	result := []map[string]any{}
+	for _, name := range order {
+		item := libMap[name]
+		result = append(result, map[string]any{
+			"name":       item.name,
+			"types":      item.types,
+			"totalItems": item.totalItems,
+			"totalHours": float64(item.totalMs) / 3600000.0,
+		})
+	}
+
+	jsonResponse(w, 200, map[string]any{"collections": result})
+}
+
+func (h *Handler) newsletterData(w http.ResponseWriter, r *http.Request) {
+	today := time.Now().UTC()
+	thirtyDaysAgo := today.AddDate(0, 0, -30).Format(time.RFC3339Nano)
+
+	var totalDuration, totalPlays int64
+	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COALESCE(SUM("durationWatched"),0), COUNT(*) FROM "PlaybackHistory" WHERE "startedAt" >= ?`, h.driver), thirtyDaysAgo).Scan(&totalDuration, &totalPlays)
+
+	rowsM, errM := h.db.QueryContext(r.Context(), database.Bind(`SELECT m."title", m."type", m."jellyfinMediaId", COALESCE(SUM(p."durationWatched"),0), COUNT(p."id") FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt" >= ? GROUP BY m."id", m."title", m."type", m."jellyfinMediaId" ORDER BY SUM(p."durationWatched") DESC LIMIT 5`, h.driver), thirtyDaysAgo)
+	topMedia := []map[string]any{}
+	if errM == nil {
+		for rowsM.Next() {
+			var title, kind, jid string
+			var dur, plays int64
+			if rowsM.Scan(&title, &kind, &jid, &dur, &plays) == nil {
+				topMedia = append(topMedia, map[string]any{
+					"title": title, "type": kind, "jellyfinMediaId": jid,
+					"hours": float64(dur) / 3600.0, "plays": plays,
+				})
+			}
+		}
+		rowsM.Close()
+	}
+
+	rowsU, errU := h.db.QueryContext(r.Context(), database.Bind(`SELECT u."username", COALESCE(SUM(p."durationWatched"),0), COUNT(p."id") FROM "PlaybackHistory" p JOIN "User" u ON u."id"=p."userId" WHERE p."startedAt" >= ? GROUP BY u."username" ORDER BY SUM(p."durationWatched") DESC LIMIT 5`, h.driver), thirtyDaysAgo)
+	topUsers := []map[string]any{}
+	if errU == nil {
+		for rowsU.Next() {
+			var uname string
+			var dur, plays int64
+			if rowsU.Scan(&uname, &dur, &plays) == nil {
+				topUsers = append(topUsers, map[string]any{
+					"username": uname, "hours": float64(dur) / 3600.0, "plays": plays,
+				})
+			}
+		}
+		rowsU.Close()
+	}
+
+	dateRange := fmt.Sprintf("%s - %s", today.AddDate(0, 0, -30).Format("02 Jan 2006"), today.Format("02 Jan 2006"))
+
+	jsonResponse(w, 200, map[string]any{
+		"totalPlays":    totalPlays,
+		"totalDuration": totalDuration,
+		"totalHours":    float64(totalDuration) / 3600.0,
+		"topMedia":      topMedia,
+		"topUsers":      topUsers,
+		"dateRange":     dateRange,
+	})
+}
+
+func (h *Handler) serverCompare(w http.ResponseWriter, r *http.Request) {
+	rows, err := h.db.QueryContext(r.Context(), `SELECT "id", "name", "url", "isActive" FROM "Server" ORDER BY "name" ASC`)
+	if err != nil {
+		jsonError(w, 500, "Impossible de charger les serveurs.")
+		return
+	}
+	defer rows.Close()
+
+	servers := []map[string]any{}
+	for rows.Next() {
+		var id, name, url string
+		var active int
+		if rows.Scan(&id, &name, &url, &active) == nil {
+			var mediaCount, userCount, playsCount, streamCount int64
+			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*) FROM "Media" WHERE "serverId"=?`, h.driver), id).Scan(&mediaCount)
+			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*) FROM "User" WHERE "serverId"=?`, h.driver), id).Scan(&userCount)
+			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*) FROM "PlaybackHistory" WHERE "serverId"=?`, h.driver), id).Scan(&playsCount)
+			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*) FROM "ActiveStream" WHERE "serverId"=?`, h.driver), id).Scan(&streamCount)
+
+			servers = append(servers, map[string]any{
+				"id":            id,
+				"name":          name,
+				"url":           url,
+				"isActive":      active == 1,
+				"mediaCount":    mediaCount,
+				"userCount":     userCount,
+				"playsCount":    playsCount,
+				"activeStreams": streamCount,
+			})
+		}
+	}
+
+	jsonResponse(w, 200, map[string]any{"servers": servers})
+}
+
+func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimSpace(r.PathValue("id"))
+	if id == "" {
+		jsonError(w, 400, "Identifiant requis.")
+		return
+	}
+
+	principal, ok := auth.PrincipalFromContext(r.Context())
+	if !ok {
+		jsonError(w, 401, "Authentification requise.")
+		return
+	}
+
+	// Verify permissions
+	isAdmin := principal.IsAdmin()
+	if !isAdmin {
+		var selfUsername string
+		_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "username" FROM "User" WHERE "id"=? OR "jellyfinUserId"=? OR "username"=? LIMIT 1`, h.driver), id, id, id).Scan(&selfUsername)
+		if !strings.EqualFold(selfUsername, principal.Username) && !strings.EqualFold(id, principal.Username) {
+			jsonError(w, 403, "Accès refusé.")
+			return
+		}
+
+		var wrapVis, wrapPer int
+		var wrapSM, wrapSD, wrapEM, wrapED int
+		err := h.db.QueryRowContext(r.Context(), `SELECT "wrappedVisible","wrappedPeriodEnabled","wrappedStartMonth","wrappedStartDay","wrappedEndMonth","wrappedEndDay" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&wrapVis, &wrapPer, &wrapSM, &wrapSD, &wrapEM, &wrapED)
+		if err == nil {
+			if wrapVis == 0 {
+				jsonError(w, 404, "Le Wrapped n'est pas activé.")
+				return
+			}
+			if wrapPer == 1 {
+				now := time.Now().UTC()
+				start := time.Date(now.Year(), time.Month(wrapSM), wrapSD, 0, 0, 0, 0, time.UTC)
+				endYear := now.Year()
+				if wrapEM < wrapSM {
+					endYear++
+				}
+				end := time.Date(endYear, time.Month(wrapEM), wrapED, 23, 59, 59, 0, time.UTC)
+				if now.Before(start) || now.After(end) {
+					jsonError(w, 404, "Le Wrapped n'est pas disponible actuellement.")
+					return
+				}
+			}
+		}
+	}
+
+	var uid, uname, jid string
+	err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id","username","jellyfinUserId" FROM "User" WHERE "id"=? OR "jellyfinUserId"=? OR "username"=? LIMIT 1`, h.driver), id, id, id).Scan(&uid, &uname, &jid)
+	if err != nil {
+		jsonError(w, 404, "Utilisateur introuvable.")
+		return
+	}
+
+	targetYear := time.Now().UTC().Year()
+	if yStr := r.URL.Query().Get("year"); yStr != "" {
+		if y, errY := strconv.Atoi(yStr); errY == nil && y >= 2000 && y <= 2100 {
+			targetYear = y
+		}
+	}
+
+	startDate := fmt.Sprintf("%04d-01-01T00:00:00Z", targetYear)
+	endDate := fmt.Sprintf("%04d-01-01T00:00:00Z", targetYear+1)
+
+	historyQ := `SELECT p."durationWatched", p."startedAt", p."clientName", m."id", m."jellyfinMediaId", m."title", m."type", m."genres", m."artist" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."userId"=? AND p."startedAt" >= ? AND p."startedAt" < ? AND p."durationWatched" >= 10`
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(historyQ, h.driver), uid, startDate, endDate)
+	if err != nil {
+		jsonError(w, 500, "Impossible de charger les données.")
+		return
+	}
+	defer rows.Close()
+
+	var totalSeconds int64
+	var totalPlays int64
+
+	moviesMap := make(map[string]*struct {
+		title   string
+		jid     string
+		seconds int64
+		plays   int64
+	})
+	seriesMap := make(map[string]*struct {
+		title   string
+		seconds int64
+		plays   int64
+	})
+	musicMap := make(map[string]*struct {
+		title   string
+		artist  string
+		seconds int64
+		plays   int64
+	})
+	genreMap := make(map[string]int64)
+	clientMap := make(map[string]int64)
+	dayCounts := make([]int64, 7)
+	hourCounts := make([]int64, 24)
+	monthCounts := make([]int64, 12)
+
+	for rows.Next() {
+		var dur int64
+		var started string
+		var client, mid, mJid, title, mType, genresStr, artistStr sql.NullString
+		if rows.Scan(&dur, &started, &client, &mid, &mJid, &title, &mType, &genresStr, &artistStr) == nil {
+			totalSeconds += dur
+			totalPlays++
+
+			t, errT := time.Parse(time.RFC3339Nano, started)
+			if errT != nil {
+				t, errT = time.Parse(time.RFC3339, started)
+			}
+			if errT == nil {
+				dayCounts[int(t.Weekday())]++
+				hourCounts[t.Hour()]++
+				monthCounts[int(t.Month())-1]++
+			}
+
+			cName := client.String
+			if cName == "" {
+				cName = "Web"
+			}
+			clientMap[cName]++
+
+			for _, g := range parseStringList(genresStr.String) {
+				genreMap[g]++
+			}
+
+			tName := title.String
+			kind := mType.String
+			switch kind {
+			case "Movie":
+				item, ok := moviesMap[tName]
+				if !ok {
+					item = &struct {
+						title   string
+						jid     string
+						seconds int64
+						plays   int64
+					}{title: tName, jid: mJid.String}
+					moviesMap[tName] = item
+				}
+				item.seconds += dur
+				item.plays++
+			case "Episode", "Series":
+				item, ok := seriesMap[tName]
+				if !ok {
+					item = &struct {
+						title   string
+						seconds int64
+						plays   int64
+					}{title: tName}
+					seriesMap[tName] = item
+				}
+				item.seconds += dur
+				item.plays++
+			case "Audio", "Track":
+				item, ok := musicMap[tName]
+				if !ok {
+					item = &struct {
+						title   string
+						artist  string
+						seconds int64
+						plays   int64
+					}{title: tName, artist: artistStr.String}
+					musicMap[tName] = item
+				}
+				item.seconds += dur
+				item.plays++
+			}
+		}
+	}
+
+	type mediaRank struct {
+		Title      string  `json:"title"`
+		JellyfinId string  `json:"jellyfinId,omitempty"`
+		Artist     string  `json:"artist,omitempty"`
+		Seconds    int64   `json:"seconds"`
+		Hours      float64 `json:"hours"`
+		Plays      int64   `json:"plays"`
+	}
+
+	var topMovies []mediaRank
+	for _, m := range moviesMap {
+		topMovies = append(topMovies, mediaRank{Title: m.title, JellyfinId: m.jid, Seconds: m.seconds, Hours: float64(m.seconds) / 3600.0, Plays: m.plays})
+	}
+	sort.Slice(topMovies, func(i, j int) bool { return topMovies[i].Seconds > topMovies[j].Seconds })
+	if len(topMovies) > 5 {
+		topMovies = topMovies[:5]
+	}
+
+	var topSeries []mediaRank
+	for _, s := range seriesMap {
+		topSeries = append(topSeries, mediaRank{Title: s.title, Seconds: s.seconds, Hours: float64(s.seconds) / 3600.0, Plays: s.plays})
+	}
+	sort.Slice(topSeries, func(i, j int) bool { return topSeries[i].Seconds > topSeries[j].Seconds })
+	if len(topSeries) > 5 {
+		topSeries = topSeries[:5]
+	}
+
+	var topMusic []mediaRank
+	for _, mu := range musicMap {
+		topMusic = append(topMusic, mediaRank{Title: mu.title, Artist: mu.artist, Seconds: mu.seconds, Hours: float64(mu.seconds) / 3600.0, Plays: mu.plays})
+	}
+	sort.Slice(topMusic, func(i, j int) bool { return topMusic[i].Seconds > topMusic[j].Seconds })
+	if len(topMusic) > 5 {
+		topMusic = topMusic[:5]
+	}
+
+	type nameCount struct {
+		Name  string `json:"name"`
+		Count int64  `json:"count"`
+	}
+	var topGenres []nameCount
+	for g, c := range genreMap {
+		topGenres = append(topGenres, nameCount{Name: g, Count: c})
+	}
+	sort.Slice(topGenres, func(i, j int) bool { return topGenres[i].Count > topGenres[j].Count })
+	if len(topGenres) > 5 {
+		topGenres = topGenres[:5]
+	}
+
+	var topClients []nameCount
+	for cl, c := range clientMap {
+		topClients = append(topClients, nameCount{Name: cl, Count: c})
+	}
+	sort.Slice(topClients, func(i, j int) bool { return topClients[i].Count > topClients[j].Count })
+	if len(topClients) > 5 {
+		topClients = topClients[:5]
+	}
+
+	var peakDay, peakHour, peakMonth int
+	var maxD, maxH, maxM int64
+	for d, c := range dayCounts {
+		if c > maxD {
+			maxD = c
+			peakDay = d
+		}
+	}
+	for h, c := range hourCounts {
+		if c > maxH {
+			maxH = c
+			peakHour = h
+		}
+	}
+	for m, c := range monthCounts {
+		if c > maxM {
+			maxM = c
+			peakMonth = m
+		}
+	}
+
+	jsonResponse(w, 200, map[string]any{
+		"userId":        uid,
+		"username":      uname,
+		"jellyfinUserId": jid,
+		"year":          targetYear,
+		"totalSeconds":  totalSeconds,
+		"totalHours":    float64(totalSeconds) / 3600.0,
+		"totalPlays":    totalPlays,
+		"topMovies":     topMovies,
+		"topSeries":     topSeries,
+		"topMusic":      topMusic,
+		"topGenres":     topGenres,
+		"topClients":    topClients,
+		"dayCounts":     dayCounts,
+		"hourCounts":    hourCounts,
+		"monthCounts":   monthCounts,
+		"peakDay":       peakDay,
+		"peakHour":      peakHour,
+		"peakMonth":     peakMonth,
+	})
 }

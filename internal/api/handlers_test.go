@@ -414,3 +414,57 @@ func TestAdminEndpoints(t *testing.T) {
 		t.Fatalf("integrity status=%d", wClean.Code)
 	}
 }
+
+func TestNewHandlersWrappedCollectionsNewsletterServerCompare(t *testing.T) {
+	db := apiDB(t)
+	_, _ = db.Exec(`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s1','jf1','Server 1','http://jf1')`)
+	_, _ = db.Exec(`INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u1','s1','jfu1','Alice')`)
+	_, _ = db.Exec(`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName","durationMs") VALUES('m1','s1','jfm1','Movie 1','Movie','Films',7200000)`)
+	_, _ = db.Exec(`INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","durationWatched","startedAt","playMethod") VALUES('p1','s1','u1','m1',3600,'` + time.Now().UTC().Format(time.RFC3339) + `','DirectPlay')`)
+
+	h := New(db, "sqlite")
+
+	// 1. Collections
+	wCol := httptest.NewRecorder()
+	h.mediaCollections(wCol, httptest.NewRequest("GET", "/api/media/collections", nil))
+	if wCol.Code != 200 {
+		t.Fatalf("collections status=%d", wCol.Code)
+	}
+	if !strings.Contains(wCol.Body.String(), "Films") {
+		t.Fatalf("expected Films in collections, got: %s", wCol.Body.String())
+	}
+
+	// 2. Newsletter data
+	wNews := httptest.NewRecorder()
+	h.newsletterData(wNews, httptest.NewRequest("GET", "/api/newsletter", nil))
+	if wNews.Code != 200 {
+		t.Fatalf("newsletter status=%d", wNews.Code)
+	}
+	if !strings.Contains(wNews.Body.String(), "topMedia") {
+		t.Fatalf("expected topMedia in newsletter, got: %s", wNews.Body.String())
+	}
+
+	// 3. Server compare
+	wComp := httptest.NewRecorder()
+	h.serverCompare(wComp, httptest.NewRequest("GET", "/api/admin/server-compare", nil))
+	if wComp.Code != 200 {
+		t.Fatalf("server compare status=%d", wComp.Code)
+	}
+	if !strings.Contains(wComp.Body.String(), "Server 1") {
+		t.Fatalf("expected Server 1 in serverCompare, got: %s", wComp.Body.String())
+	}
+
+	// 4. User Wrapped
+	reqWrap := httptest.NewRequest("GET", "/api/wrapped/u1", nil)
+	reqWrap.SetPathValue("id", "u1")
+	reqWrap = reqWrap.WithContext(context.WithValue(reqWrap.Context(), auth.PrincipalContextKey, auth.Principal{Username: "Alice", Role: "user"}))
+	wWrap := httptest.NewRecorder()
+	h.userWrapped(wWrap, reqWrap)
+	if wWrap.Code != 200 {
+		t.Fatalf("userWrapped status=%d: %s", wWrap.Code, wWrap.Body.String())
+	}
+	if !strings.Contains(wWrap.Body.String(), "totalPlays") {
+		t.Fatalf("expected totalPlays in userWrapped, got: %s", wWrap.Body.String())
+	}
+}
+

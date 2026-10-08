@@ -143,3 +143,86 @@ func TestApiRoutingAndNextAuthCompatibility(t *testing.T) {
 		t.Fatalf("expected 204 with CORS on webhook OPTIONS, got %d", recWebOpt.Code)
 	}
 }
+
+func TestAllRequiredFrontendRoutesServed(t *testing.T) {
+	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
+	routes := []string{
+		"/",
+		"/login",
+		"/setup",
+		"/about",
+		"/recent",
+		"/newsletter",
+		"/users",
+		"/users/test-user-id",
+		"/wrapped/test-user-id",
+		"/media",
+		"/media/all",
+		"/media/analysis",
+		"/media/collections",
+		"/media/popular",
+		"/media/artist/Daft.Punk",
+		"/media/test-media-id",
+		"/logs",
+		"/settings",
+		"/settings/overview",
+		"/settings/dataBackups",
+		"/settings/jellyfin",
+		"/settings/media",
+		"/settings/network",
+		"/settings/notifications",
+		"/settings/plugin",
+		"/settings/plugin/security",
+		"/settings/sso",
+		"/settings/scheduler",
+		"/settings/scheduler/schedules",
+		"/settings/scheduler/tasks",
+		"/admin/cleanup",
+		"/admin/health",
+		"/admin/log-health",
+		"/admin/plugin-health",
+		"/admin/server-compare",
+	}
+
+	for _, path := range routes {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		resp := httptest.NewRecorder()
+		handler.ServeHTTP(resp, req)
+		if resp.Code != http.StatusOK {
+			t.Errorf("route %s returned status %d", path, resp.Code)
+		}
+		if !strings.Contains(resp.Body.String(), "JellyTrack") {
+			t.Errorf("route %s did not contain JellyTrack brand, body: %q", path, resp.Body.String()[:100])
+		}
+	}
+}
+
+func TestStaticAssetsAreServed(t *testing.T) {
+	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
+	assets := []struct {
+		path        string
+		contentType string
+	}{
+		{"/assets/app.css", "text/css"},
+		{"/assets/app.js", "javascript"},
+		{"/assets/chart.min.js", "javascript"},
+		{"/assets/logo.svg", "image/svg+xml"},
+		{"/assets/icon.svg", "image/svg+xml"},
+		{"/assets/messages/fr.json", "application/json"},
+		{"/assets/messages/en.json", "application/json"},
+	}
+
+	for _, a := range assets {
+		req := httptest.NewRequest(http.MethodGet, a.path, nil)
+		resp := httptest.NewRecorder()
+		handler.ServeHTTP(resp, req)
+		if resp.Code != http.StatusOK {
+			t.Errorf("asset %s returned %d", a.path, resp.Code)
+		}
+		ct := resp.Header().Get("Content-Type")
+		if !strings.Contains(ct, a.contentType) && !strings.Contains(ct, "text/plain") {
+			t.Errorf("asset %s expected content-type %s, got %s", a.path, a.contentType, ct)
+		}
+	}
+}
+

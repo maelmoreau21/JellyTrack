@@ -1,14 +1,249 @@
 <!doctype html>
-<html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#e3eaf3" />
-    <title>JellyTrack</title>
-    <script type="module" crossorigin src="/assets/index-DG019-pH.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-XU6euE4S.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08111F">
+  <meta name="description" content="Tableau de bord d'analyse, statistiques et surveillance pour votre serveur Jellyfin.">
+  <title>JellyTrack</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
+  <link rel="apple-touch-icon" href="/assets/icon.svg">
+  <link rel="stylesheet" href="/assets/app.css">
+  <script src="/assets/chart.min.js"></script>
+</head>
+<body>
+  <div id="app-root">
+    <!-- Collapsible / Mobile Responsive Sidebar -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="sidebar-header">
+        <a href="/" class="brand-link" data-link>
+          <img src="/assets/logo.svg" alt="JellyTrack" class="brand-logo">
+          <span class="brand-title">JellyTrack</span>
+        </a>
+      </div>
+
+      <div class="sidebar-scroll">
+        <div>
+          <div class="nav-section-title" data-i18n="nav.general">Général</div>
+          <ul class="nav-list">
+            <li class="nav-item" data-route="/">
+              <a href="/" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <span data-i18n="nav.dashboard">Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/recent">
+              <a href="/recent" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span data-i18n="nav.recent">Récents</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/users">
+              <a href="/users" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <span data-i18n="nav.users">Utilisateurs</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/logs">
+              <a href="/logs" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span data-i18n="nav.logs">Logs</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/newsletter">
+              <a href="/newsletter" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                <span data-i18n="nav.newsletter">Newsletter</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="nav-section-title" data-i18n="nav.media">Médias</div>
+          <ul class="nav-list">
+            <li class="nav-item" data-route="/media">
+              <a href="/media" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>
+                <span data-i18n="nav.mediaOverview">Catalogue</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/media/popular">
+              <a href="/media/popular" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                <span data-i18n="nav.popular">Populaires</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/media/collections">
+              <a href="/media/collections" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <span data-i18n="nav.collections">Collections</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/media/analysis">
+              <a href="/media/analysis" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <span data-i18n="nav.analysis">Analyses Deep</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div id="nav-admin-section">
+          <div class="nav-section-title" data-i18n="nav.administration">Administration</div>
+          <ul class="nav-list">
+            <li class="nav-item" data-route="/settings">
+              <a href="/settings" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span data-i18n="nav.settings">Paramètres</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/admin/health">
+              <a href="/admin/health" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <span data-i18n="nav.health">Santé Système</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/admin/server-compare">
+              <a href="/admin/server-compare" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                <span data-i18n="nav.serverCompare">Comparateur</span>
+              </a>
+            </li>
+            <li class="nav-item" data-route="/admin/cleanup">
+              <a href="/admin/cleanup" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <span data-i18n="nav.cleanup">Nettoyage</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="nav-section-title" data-i18n="nav.info">Système</div>
+          <ul class="nav-list">
+            <li class="nav-item" data-route="/about">
+              <a href="/about" data-link>
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span data-i18n="nav.about">À propos</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-controls-row">
+          <div class="user-badge-mini" id="sidebar-user-badge">
+            <div class="user-avatar-mini" id="sidebar-user-avatar">?</div>
+            <span class="user-name-mini" id="sidebar-user-name">Utilisateur</span>
+          </div>
+
+          <div style="display: flex; gap: 0.25rem;">
+            <!-- Theme Toggle -->
+            <button class="btn btn-icon btn-sm" id="btn-theme-toggle" title="Thème clair/sombre" aria-label="Basculer le thème">
+              <svg id="theme-icon-sun" style="display:none; width:15px; height:15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              <svg id="theme-icon-moon" style="width:15px; height:15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            </button>
+
+            <!-- Logout -->
+            <button class="btn btn-icon btn-sm" id="btn-logout" title="Déconnexion" aria-label="Se déconnecter">
+              <svg style="width:15px; height:15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Language Selector -->
+        <select class="form-select" id="select-language" style="font-size:0.78rem; padding: 0.35rem 0.5rem;" aria-label="Langue">
+          <option value="fr">Français (FR)</option>
+          <option value="en">English (EN)</option>
+          <option value="de">Deutsch (DE)</option>
+          <option value="es">Español (ES)</option>
+          <option value="it">Italiano (IT)</option>
+          <option value="nl">Nederlands (NL)</option>
+          <option value="pl">Polski (PL)</option>
+          <option value="pt-BR">Português (BR)</option>
+          <option value="ru">Русский (RU)</option>
+          <option value="zh">中文 (ZH)</option>
+        </select>
+      </div>
+    </aside>
+
+    <!-- Main Container Layout -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu mobile">
+            <svg style="width:24px; height:24px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+
+          <button class="search-trigger-btn" id="search-trigger-btn" type="button">
+            <svg style="width:16px; height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <span data-i18n="common.search">Rechercher médias, utilisateurs...</span>
+            <span class="search-shortcut">/</span>
+          </button>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Active Streams Pill -->
+          <div class="live-streams-pill" id="topbar-live-streams-pill" title="Flux en direct">
+            <span class="pulse-dot"></span>
+            <span id="topbar-live-streams-count">0</span>
+            <span data-i18n="dashboard.streams">flux</span>
+          </div>
+
+          <!-- Quick Sync Button -->
+          <button class="btn btn-secondary btn-sm" id="btn-quick-sync" title="Synchroniser Jellyfin">
+            <svg id="sync-icon" style="width:14px; height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span data-i18n="common.sync">Sync</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Router Viewport Outlet -->
+      <main id="app-main" role="main">
+        <!-- Rendered dynamically by app.js router -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Global Quick Search Modal -->
+  <div class="modal-backdrop" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title" id="search-modal-title" data-i18n="search.title">Recherche Rapide</h2>
+        <button class="btn btn-icon btn-sm" id="search-modal-close" aria-label="Fermer">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="form-input" id="search-modal-input" placeholder="Tapez un titre de film, série, artiste ou utilisateur..." autofocus autocomplete="off">
+        <div id="search-modal-results" style="margin-top: 1rem; max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem;">
+          <!-- Live results populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Action Modal (Kill stream, confirmations, forms) -->
+  <div class="modal-backdrop" id="action-modal" role="dialog" aria-modal="true" aria-labelledby="action-modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title" id="action-modal-title">Titre</h2>
+        <button class="btn btn-icon btn-sm" id="action-modal-close" aria-label="Fermer">✕</button>
+      </div>
+      <div class="modal-body" id="action-modal-body">
+        <!-- Dynamic content -->
+      </div>
+      <div class="modal-footer" id="action-modal-footer">
+        <button class="btn btn-secondary" id="action-modal-cancel">Annuler</button>
+        <button class="btn btn-primary" id="action-modal-confirm">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notifications Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Main Vanilla JS Client Application -->
+  <script src="/assets/app.js"></script>
+</body>
 </html>
