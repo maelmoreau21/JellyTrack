@@ -323,16 +323,70 @@
     updateUserUI() {
       const avatarEl = document.getElementById('sidebar-user-avatar');
       const nameEl = document.getElementById('sidebar-user-name');
+      const userBadge = document.getElementById('sidebar-user-badge');
+      const userSection = document.getElementById('nav-user-section');
       const adminSection = document.getElementById('nav-admin-section');
+      const myProfileItem = document.getElementById('nav-item-my-profile');
+      const myWrappedItem = document.getElementById('nav-item-my-wrapped');
+      const backupBanner = document.getElementById('backup-server-banner');
+      const backupDesc = document.getElementById('backup-server-desc');
 
       if (State.user) {
-        if (avatarEl) avatarEl.textContent = State.user.username.slice(0, 2).toUpperCase();
-        if (nameEl) nameEl.textContent = State.user.username;
-        if (adminSection) adminSection.style.display = State.user.isAdmin ? 'block' : 'none';
+        const uname = State.user.username || 'User';
+        if (avatarEl) avatarEl.textContent = uname.slice(0, 2).toUpperCase();
+        if (nameEl) nameEl.textContent = uname;
+
+        const currentUid = State.user.jellyfinUserId || State.user.id;
+
+        // User account & Wrapped links
+        if (userSection) {
+          userSection.style.display = 'block';
+          if (currentUid) {
+            if (myProfileItem) {
+              myProfileItem.setAttribute('data-route', `/users/${currentUid}`);
+              const link = myProfileItem.querySelector('a');
+              if (link) link.setAttribute('href', `/users/${currentUid}`);
+            }
+            if (myWrappedItem) {
+              myWrappedItem.setAttribute('data-route', `/wrapped/${currentUid}`);
+              const link = myWrappedItem.querySelector('a');
+              if (link) link.setAttribute('href', `/wrapped/${currentUid}`);
+            }
+          }
+        }
+
+        // Click on user badge goes to profile
+        if (userBadge && currentUid) {
+          userBadge.style.cursor = 'pointer';
+          userBadge.onclick = () => Router.navigate(`/users/${currentUid}`);
+        }
+
+        // Admin section & admin-only elements
+        const isAdmin = Boolean(State.user.isAdmin);
+        if (adminSection) adminSection.style.display = isAdmin ? 'block' : 'none';
+        document.querySelectorAll('.nav-admin-only').forEach((el) => {
+          el.style.display = isAdmin ? '' : 'none';
+        });
+
+        // Backup Server Banner
+        if (backupBanner && State.user.authServerIsPrimary === false && State.user.authServerName) {
+          backupBanner.style.display = 'block';
+          if (backupDesc) {
+            backupDesc.textContent = I18n.t('nav.backupServerDesc', { server: State.user.authServerName }) ||
+              `Connecté sur ${State.user.authServerName}. Le serveur principal est indisponible.`;
+          }
+        } else if (backupBanner) {
+          backupBanner.style.display = 'none';
+        }
       } else {
         if (avatarEl) avatarEl.textContent = '?';
         if (nameEl) nameEl.textContent = I18n.t('common.anonymous') || 'Invité';
+        if (userSection) userSection.style.display = 'none';
         if (adminSection) adminSection.style.display = 'none';
+        if (backupBanner) backupBanner.style.display = 'none';
+        document.querySelectorAll('.nav-admin-only').forEach((el) => {
+          el.style.display = 'none';
+        });
       }
     },
 
@@ -5289,10 +5343,39 @@
       }
     },
 
+    adminNav(active) {
+      return `
+        <nav class="admin-tabs-nav">
+          <a href="/admin/health" data-link class="admin-tab-link ${active === 'health' ? 'active' : ''}">
+            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 11l6.92 3-3.96 4"/></svg>
+            <span>${I18n.t('nav.health') || 'Santé Système'}</span>
+          </a>
+          <a href="/admin/cleanup" data-link class="admin-tab-link ${active === 'cleanup' ? 'active' : ''}">
+            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>${I18n.t('nav.cleanup') || 'Nettoyage & Stockage'}</span>
+          </a>
+          <a href="/admin/log-health" data-link class="admin-tab-link ${active === 'log-health' ? 'active' : ''}">
+            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span>${I18n.t('nav.logHealth') || 'Santé Logs & Moteur'}</span>
+          </a>
+          <a href="/admin/plugin-health" data-link class="admin-tab-link ${active === 'plugin-health' ? 'active' : ''}">
+            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
+            <span>${I18n.t('nav.pluginHealth') || 'Santé Plugin'}</span>
+          </a>
+          <a href="/admin/server-compare" data-link class="admin-tab-link ${active === 'server-compare' ? 'active' : ''}">
+            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            <span>${I18n.t('nav.serverCompare') || 'Comparaison Serveurs'}</span>
+          </a>
+        </nav>
+      `;
+    },
+
     // 16. Admin Health & Diagnostics
     async health(sub = 'system') {
+      const activeAdminTab = sub === 'plugin' ? 'plugin-health' : (sub === 'logs' ? 'log-health' : 'health');
       const main = document.getElementById('app-main');
       main.innerHTML = `
+        ${Pages.adminNav(activeAdminTab)}
         <div class="page-header">
           <div>
             <h1 class="page-title">
@@ -5303,22 +5386,10 @@
           </div>
         </div>
 
-        <div class="segmented-control" id="health-tabs" style="margin-top: 1rem; flex-wrap: wrap;">
-          <button class="segment-btn ${sub === 'system' ? 'active' : ''}" data-route="/admin/health">Base & Système</button>
-          <button class="segment-btn ${sub === 'plugin' ? 'active' : ''}" data-route="/admin/plugin-health">Santé Plugin</button>
-          <button class="segment-btn ${sub === 'logs' ? 'active' : ''}" data-route="/admin/log-health">Journaux & Sécurité</button>
-        </div>
-
         <div id="health-content" style="margin-top: 1.5rem;">
           <div class="skeleton" style="height: 250px;"></div>
         </div>
       `;
-
-      document.querySelectorAll('#health-tabs .segment-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          Router.navigate(btn.getAttribute('data-route'));
-        });
-      });
 
       const container = document.getElementById('health-content');
 
@@ -5563,6 +5634,7 @@
     async serverCompare() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
+        ${Pages.adminNav('server-compare')}
         <div class="page-header">
           <div>
             <h1 class="page-title">
@@ -5633,6 +5705,7 @@
     async cleanup() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
+        ${Pages.adminNav('cleanup')}
         <div style="max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
           <div class="page-header">
             <div>
@@ -5803,22 +5876,72 @@
       const path = window.location.pathname || '/';
       State.currentPath = path;
 
-      // Update sidebar active state
-      document.querySelectorAll('.nav-item').forEach((item) => {
+      // Parity route aliases & redirects
+      if (path === '/settings/analytics') {
+        this.navigate('/media/analysis', true);
+        return;
+      }
+      if (path === '/settings/network') {
+        this.navigate('/settings/jellyfin', true);
+        return;
+      }
+      if (path === '/wrapped') {
+        const uid = State.user?.jellyfinUserId || State.user?.id;
+        if (uid) {
+          this.navigate('/wrapped/' + uid, true);
+          return;
+        }
+      }
+
+      // Update sidebar active states
+      const currentUid = State.user?.jellyfinUserId || State.user?.id;
+
+      document.querySelectorAll('.nav-item, .nav-sub-item').forEach((item) => {
         const r = item.getAttribute('data-route');
-        const matches = (r === path) ||
-          (r !== '/' && path.startsWith(r)) ||
-          (r === '/admin/health' && path.startsWith('/admin/'));
+        if (!r) return;
+        let matches = false;
+
+        if (r === '/') {
+          matches = (path === '/');
+        } else if (r === '/users/me' || (currentUid && r === `/users/${currentUid}`)) {
+          matches = Boolean(currentUid && (path === `/users/${currentUid}` || path === '/users/me'));
+        } else if (r === '/wrapped/me' || (currentUid && r === `/wrapped/${currentUid}`)) {
+          matches = Boolean(currentUid && (path.startsWith(`/wrapped/${currentUid}`) || path.startsWith('/wrapped/me')));
+        } else if (r === '/media') {
+          matches = (path === '/media' || path === '/media/all');
+        } else if (r === '/media/all') {
+          matches = (path === '/media/all' || path === '/media');
+        } else if (r === '/settings') {
+          matches = (path === '/settings' || path === '/settings/overview');
+        } else if (r === '/settings/scheduler') {
+          matches = (path === '/settings/scheduler');
+        } else if (r === '/users') {
+          matches = (path === '/users' || (path.startsWith('/users/') && (!currentUid || path !== `/users/${currentUid}`)));
+        } else {
+          matches = (path === r || (path.startsWith(r + '/') && !r.startsWith('/users') && !r.startsWith('/wrapped')));
+        }
+
         if (matches) {
           item.classList.add('active');
+          const group = item.closest('.nav-item-group');
+          if (group && group !== item) group.classList.add('child-active');
         } else {
           item.classList.remove('active');
         }
       });
 
-      // Close mobile drawer on route change
+      // Clear child-active if no sub-item in group is active
+      document.querySelectorAll('.nav-item-group').forEach((group) => {
+        if (!group.querySelector('.nav-sub-item.active')) {
+          group.classList.remove('child-active');
+        }
+      });
+
+      // Close mobile drawer and backdrop on route change
       const sidebar = document.getElementById('app-sidebar');
       if (sidebar) sidebar.classList.remove('mobile-open');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (backdrop) backdrop.classList.remove('active');
 
       // Scroll top
       window.scrollTo(0, 0);
@@ -5911,12 +6034,43 @@
       });
     }
 
-    // Mobile menu toggle
-    const mobileBtn = document.getElementById('mobile-menu-btn');
+    // Sidebar collapse state & button toggle
     const sidebar = document.getElementById('app-sidebar');
+    const collapseBtn = document.getElementById('sidebar-collapse-btn');
+    if (sidebar) {
+      try {
+        if (localStorage.getItem('jellytrack_sidebar_collapsed') === 'true') {
+          sidebar.classList.add('collapsed');
+        }
+      } catch (e) {}
+
+      if (collapseBtn) {
+        collapseBtn.addEventListener('click', () => {
+          sidebar.classList.toggle('collapsed');
+          const isCollapsed = sidebar.classList.contains('collapsed');
+          try {
+            localStorage.setItem('jellytrack_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+          } catch (e) {}
+        });
+      }
+    }
+
+    // Mobile menu toggle & backdrop click
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const backdrop = document.getElementById('sidebar-backdrop');
     if (mobileBtn && sidebar) {
       mobileBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('mobile-open');
+        const isOpen = sidebar.classList.toggle('mobile-open');
+        if (backdrop) {
+          if (isOpen) backdrop.classList.add('active');
+          else backdrop.classList.remove('active');
+        }
+      });
+    }
+    if (backdrop && sidebar) {
+      backdrop.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        backdrop.classList.remove('active');
       });
     }
 

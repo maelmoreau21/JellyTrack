@@ -54,10 +54,13 @@ type Manager struct {
 }
 
 type Principal struct {
-	Username  string `json:"username"`
-	Role      string `json:"role"`
-	CSRFToken string `json:"csrfToken,omitempty"`
-	sessionID string
+	Username            string `json:"username"`
+	Role                string `json:"role"`
+	CSRFToken           string `json:"csrfToken,omitempty"`
+	JellyfinUserID      string `json:"jellyfinUserId,omitempty"`
+	AuthServerName      string `json:"authServerName,omitempty"`
+	AuthServerIsPrimary *bool  `json:"authServerIsPrimary,omitempty"`
+	sessionID           string
 }
 
 func (p Principal) IsAdmin() bool {
@@ -408,12 +411,18 @@ func (m *Manager) authSession(w http.ResponseWriter, r *http.Request) {
 	var expiresStr string
 	_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "expiresAt" FROM "AuthSession" WHERE "id"=?`, m.driver), p.sessionID).Scan(&expiresStr)
 
+	var jfID string
+	if m.db != nil {
+		_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), p.Username).Scan(&jfID)
+	}
+
 	writeJSON(w, 200, map[string]any{
 		"user": map[string]any{
-			"name":     p.Username,
-			"username": p.Username,
-			"role":     p.Role,
-			"isAdmin":  p.Role == "admin",
+			"name":           p.Username,
+			"username":       p.Username,
+			"role":           p.Role,
+			"isAdmin":        p.Role == "admin",
+			"jellyfinUserId": jfID,
 		},
 		"expires": expiresStr,
 	})
@@ -432,12 +441,23 @@ func (m *Manager) authCSRF(w http.ResponseWriter, r *http.Request) {
 
 func (m *Manager) authProviders(w http.ResponseWriter, r *http.Request) {
 	cfg := m.resolveOIDC(r.Context())
+	hasLocal := len(m.passwordHash) > 0 ||
+		strings.TrimSpace(os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD")) != "" ||
+		strings.TrimSpace(os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD")) != ""
+
 	providers := map[string]any{
-		"local-credentials": map[string]any{
+		"credentials": map[string]any{
+			"id":   "credentials",
+			"name": "Credentials",
+			"type": "credentials",
+		},
+	}
+	if hasLocal {
+		providers["local-credentials"] = map[string]any{
 			"id":   "local-credentials",
 			"name": "Local Admin",
 			"type": "credentials",
-		},
+		}
 	}
 	if cfg.enabled {
 		providers["oidc"] = map[string]any{
@@ -557,6 +577,12 @@ func (m *Manager) me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p.CSRFToken = m.csrf(p.sessionID)
+	if p.JellyfinUserID == "" && m.db != nil {
+		var jfID string
+		if err := m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), p.Username).Scan(&jfID); err == nil {
+			p.JellyfinUserID = jfID
+		}
+	}
 	writeJSON(w, 200, p)
 }
 

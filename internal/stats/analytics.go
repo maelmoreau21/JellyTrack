@@ -66,10 +66,14 @@ type NetworkStats struct {
 }
 
 type NetworkHourly struct {
-	Time         string `json:"time"`
-	DirectPlay   int64  `json:"DirectPlay"`
-	Transcode    int64  `json:"Transcode"`
-	DirectStream int64  `json:"DirectStream"`
+	Time            string `json:"time"`
+	Hour            string `json:"hour"`
+	DirectPlay      int64  `json:"DirectPlay"`
+	Transcode       int64  `json:"Transcode"`
+	DirectStream    int64  `json:"DirectStream"`
+	DirectPlayVal   int64  `json:"directPlay"`
+	TranscodeVal    int64  `json:"transcode"`
+	DirectStreamVal int64  `json:"directStream"`
 }
 
 type ClientTranscodePoint struct {
@@ -146,6 +150,29 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 	defer rows.Close()
 
 	dailyMap := make(map[string]map[string]any)
+	var dailyKeys []string
+	daysCount := 30
+	if filter.TimeRange == "7d" {
+		daysCount = 7
+	} else if filter.TimeRange == "24h" {
+		daysCount = 1
+	} else if filter.Days > 0 {
+		daysCount = filter.Days
+	}
+	if daysCount > 0 && daysCount <= 90 {
+		for d := 0; d < daysCount; d++ {
+			dayKey := since.AddDate(0, 0, d).Format("02 Jan")
+			if _, ex := dailyMap[dayKey]; !ex {
+				dailyMap[dayKey] = map[string]any{
+					"time":          dayKey,
+					"totalPlays":    int64(0),
+					"totalDuration": float64(0),
+				}
+				dailyKeys = append(dailyKeys, dayKey)
+			}
+		}
+	}
+
 	hourlyPlays := make([]int64, 24)
 	hourlyDur := make([]float64, 24)
 	collectionSet := make(map[string]bool)
@@ -156,6 +183,7 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 	heatmapMatrix := make([][24]struct{ views, dur int64 }, 7)
 
 	type dropInfo struct {
+		mediaID         string
 		title           string
 		totalCompletion float64
 		sessions        int64
@@ -169,9 +197,9 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 	var dropSkipped, dropAbandoned, dropAlmost, dropFinished int64
 
 	for rows.Next() {
-		var startedStr, audioLang, subLang, subCodec, libName, title string
+		var startedStr, audioLang, subLang, subCodec, libName, title, mediaID string
 		var durSec, mediaDurMs int64
-		if rows.Scan(&startedStr, &durSec, &title, &audioLang, &subLang, &subCodec, &libName, &mediaDurMs, &title) == nil {
+		if rows.Scan(&startedStr, &durSec, &mediaID, &audioLang, &subLang, &subCodec, &libName, &mediaDurMs, &title) == nil {
 			t, pErr := time.Parse(time.RFC3339Nano, startedStr)
 			if pErr != nil {
 				t, pErr = time.Parse("2006-01-02 15:04:05", startedStr)
@@ -199,6 +227,7 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 					"totalDuration": float64(0),
 				}
 				dailyMap[dayKey] = dayEntry
+				dailyKeys = append(dailyKeys, dayKey)
 			}
 			dayEntry["totalPlays"] = dayEntry["totalPlays"].(int64) + 1
 			dayEntry["totalDuration"] = math.Round((dayEntry["totalDuration"].(float64)+durHours)*100) / 100
@@ -265,7 +294,7 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 			// Media drop off
 			md, mdEx := mediaDropMap[title]
 			if !mdEx {
-				md = &dropInfo{title: title}
+				md = &dropInfo{mediaID: mediaID, title: title}
 				mediaDropMap[title] = md
 			}
 			md.totalCompletion += completionPct
@@ -274,12 +303,19 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 	}
 
 	var dailyData []map[string]any
-	for _, entry := range dailyMap {
-		dailyData = append(dailyData, entry)
+	for _, k := range dailyKeys {
+		if entry, exists := dailyMap[k]; exists {
+			dailyData = append(dailyData, entry)
+		}
 	}
-	sort.Slice(dailyData, func(i, j int) bool {
-		return dailyData[i]["time"].(string) < dailyData[j]["time"].(string)
-	})
+	if len(dailyData) == 0 {
+		for _, entry := range dailyMap {
+			dailyData = append(dailyData, entry)
+		}
+		sort.Slice(dailyData, func(i, j int) bool {
+			return dailyData[i]["time"].(string) < dailyData[j]["time"].(string)
+		})
+	}
 
 	var hourlyData []GranularHourly
 	for i := 0; i < 24; i++ {
@@ -326,7 +362,7 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 		abandonedList = append(abandonedList, GranularAbandoned{
 			Title:      shortTitle,
 			FullTitle:  md.title,
-			MediaID:    "",
+			MediaID:    md.mediaID,
 			Completion: avgComp,
 			Count:      md.sessions,
 		})
@@ -360,8 +396,10 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 			c := heatmapMatrix[d][h]
 			heatmapData = append(heatmapData, HeatmapCell{
 				DayOfWeek: d,
+				Day:       d,
 				Hour:      h,
 				Views:     c.views,
+				Value:     c.views,
 				Duration:  c.dur,
 			})
 		}
@@ -518,10 +556,14 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 	var hourlyData []NetworkHourly
 	for i := 0; i < 24; i++ {
 		hourlyData = append(hourlyData, NetworkHourly{
-			Time:         fmt.Sprintf("%02dh", i),
-			DirectPlay:   hourlyMethod[i].dp,
-			Transcode:    hourlyMethod[i].tc,
-			DirectStream: hourlyMethod[i].ds,
+			Time:            fmt.Sprintf("%02dh", i),
+			Hour:            fmt.Sprintf("%02dh", i),
+			DirectPlay:      hourlyMethod[i].dp,
+			Transcode:       hourlyMethod[i].tc,
+			DirectStream:    hourlyMethod[i].ds,
+			DirectPlayVal:   hourlyMethod[i].dp,
+			TranscodeVal:    hourlyMethod[i].tc,
+			DirectStreamVal: hourlyMethod[i].ds,
 		})
 	}
 

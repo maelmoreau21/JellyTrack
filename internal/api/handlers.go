@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -96,6 +97,7 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"POST /api/sync":                                 h.sync,
 		"GET /api/stats/deep":                            h.deepStats,
 		"GET /api/stats/granular":                        h.granularStats,
+		"GET /api/stats/analysis":                        h.analysisStats,
 		"GET /api/stats/network":                         h.networkStats,
 		"GET /api/geo-stats":                             h.geoStats,
 		"GET /api/heatmap-detail":                        h.heatmapDetail,
@@ -249,6 +251,357 @@ func (h *Handler) granularStats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, 200, res)
+}
+
+func (h *Handler) analysisStats(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	excluded := excludedLibrariesClause(h.driver, "m")
+
+	mediaRows, err := h.db.QueryContext(ctx, database.Bind(`
+		SELECT m."id", COALESCE(m."type",''), COALESCE(m."resolution",''), COALESCE(m."durationMs",0), COALESCE(m."libraryName",'Uncategorized'), COALESCE(m."genres",'[]')
+		FROM "Media" m
+		WHERE `+excluded, h.driver))
+	if err != nil {
+		jsonError(w, 500, "Erreur lors de l'analyse des médias.")
+		return
+	}
+	defer mediaRows.Close()
+
+	totalMedia := 0
+	uniqueGenresSet := make(map[string]struct{})
+	var durationSum int64
+	var durationCount int64
+
+	res4K := 0
+	res1440p := 0
+	res1080p := 0
+	res720p := 0
+	resSD := 0
+
+	libraryCounts := make(map[string]int)
+
+	for mediaRows.Next() {
+		var id, mType, res, lib, genresRaw string
+		var dur int64
+		if err := mediaRows.Scan(&id, &mType, &res, &dur, &lib, &genresRaw); err == nil {
+			if mType == "Movie" || mType == "Series" || mType == "MusicAlbum" {
+				totalMedia++
+			}
+			for _, g := range parseStringList(genresRaw) {
+				if g != "" {
+					uniqueGenresSet[g] = struct{}{}
+				}
+			}
+			if dur > 0 {
+				durationSum += dur
+				durationCount++
+			}
+			if lib != "" {
+				libraryCounts[lib]++
+			}
+
+			if mType == "Movie" || mType == "Series" || mType == "Episode" {
+				rLow := strings.ToLower(res)
+				if strings.Contains(rLow, "4k") || strings.Contains(rLow, "2160") || strings.Contains(rLow, "uhd") {
+					res4K++
+				} else if strings.Contains(rLow, "1440") || strings.Contains(rLow, "2k") || strings.Contains(rLow, "qhd") {
+					res1440p++
+				} else if strings.Contains(rLow, "1080") || strings.Contains(rLow, "fhd") {
+					res1080p++
+				} else if strings.Contains(rLow, "720") || strings.Contains(rLow, "hd") {
+					res720p++
+				} else if len(rLow) > 0 && rLow != "unknown" {
+					resSD++
+				}
+			}
+		}
+	}
+
+	avgMinutes := 0
+	if durationCount > 0 {
+		avgMinutes = int((durationSum / durationCount) / 60000)
+	}
+
+	type LibItem struct {
+		Name  string `json:"name"`
+		Count int    `json:"count"`
+	}
+	var topLibraries []LibItem
+	for name, count := range libraryCounts {
+		topLibraries = append(topLibraries, LibItem{Name: name, Count: count})
+	}
+	sort.Slice(topLibraries, func(i, j int) bool {
+		return topLibraries[i].Count > topLibraries[j].Count
+	})
+	if len(topLibraries) > 8 {
+		topLibraries = topLibraries[:8]
+	}
+
+	// Binge watching analysis (30 days)
+	since30 := time.Now().UTC().AddDate(0, 0, -30).Format(time.RFC3339Nano)
+	epRows, err := h.db.QueryContext(ctx, database.Bind(`
+		SELECT p."userId", p."startedAt", p."durationWatched", m."title", COALESCE(m."parentId",'')
+		FROM "PlaybackHistory" p
+		JOIN "Media" m ON m."id" = p."mediaId"
+		WHERE p."startedAt" >= ? AND m."type" = 'Episode' AND p."durationWatched" >= 60
+		ORDER BY p."userId", p."startedAt" ASC
+	`, h.driver), since30)
+
+	type bingeRun struct {
+		seriesTitle string
+		episodes    int
+		durationSec int64
+	}
+	var runs []bingeRun
+
+	if err == nil {
+		defer epRows.Close()
+
+		var currentUserId string
+		var currentParentId string
+		var currentTitle string
+		var runCount int
+		var runDur int64
+		var lastEnd int64
+
+		flushRun := func() {
+			if runCount >= 3 {
+				runs = append(runs, bingeRun{
+					seriesTitle: currentTitle,
+					episodes:    runCount,
+					durationSec: runDur,
+				})
+			}
+		}
+
+		for epRows.Next() {
+			var uId, started, title, parentId string
+			var dur int64
+			if err := epRows.Scan(&uId, &started, &dur, &title, &parentId); err == nil {
+				startTime := parseTimeMs(started)
+				endTime := startTime + dur*1000
+
+				seriesKey := parentId
+				if seriesKey == "" {
+					seriesKey = title
+				}
+
+				if uId == currentUserId && seriesKey == currentParentId && (startTime-lastEnd) <= 45*60*1000 {
+					runCount++
+					runDur += dur
+					lastEnd = endTime
+				} else {
+					flushRun()
+					currentUserId = uId
+					currentParentId = seriesKey
+					currentTitle = title
+					runCount = 1
+					runDur = dur
+					lastEnd = endTime
+				}
+			}
+		}
+		flushRun()
+	}
+
+	totalBingeSessions := len(runs)
+	totalBingeEp := 0
+	maxEp := 0
+	type seriesAgg struct {
+		title       string
+		sessions    int
+		totalHours  float64
+		maxEpisodes int
+		totalEp     int
+	}
+	seriesMap := make(map[string]*seriesAgg)
+
+	for _, r := range runs {
+		totalBingeEp += r.episodes
+		if r.episodes > maxEp {
+			maxEp = r.episodes
+		}
+		entry, ok := seriesMap[r.seriesTitle]
+		if !ok {
+			entry = &seriesAgg{title: r.seriesTitle}
+			seriesMap[r.seriesTitle] = entry
+		}
+		entry.sessions++
+		entry.totalHours += float64(r.durationSec) / 3600.0
+		entry.totalEp += r.episodes
+		if r.episodes > entry.maxEpisodes {
+			entry.maxEpisodes = r.episodes
+		}
+	}
+
+	avgEpPerSession := 0.0
+	if totalBingeSessions > 0 {
+		avgEpPerSession = math.Round((float64(totalBingeEp)/float64(totalBingeSessions))*10) / 10
+	}
+
+	type SeriesItem struct {
+		SeriesTitle            string  `json:"seriesTitle"`
+		TotalBingeSessions     int     `json:"totalBingeSessions"`
+		AvgEpisodesPerSession  float64 `json:"avgEpisodesPerSession"`
+		MaxEpisodesInSingleRun int     `json:"maxEpisodesInSingleRun"`
+		TotalHoursBunged       float64 `json:"totalHoursBunged"`
+	}
+	var allBingedSeries []SeriesItem
+	for _, s := range seriesMap {
+		avgEp := 0.0
+		if s.sessions > 0 {
+			avgEp = math.Round((float64(s.totalEp)/float64(s.sessions))*10) / 10
+		}
+		allBingedSeries = append(allBingedSeries, SeriesItem{
+			SeriesTitle:            s.title,
+			TotalBingeSessions:     s.sessions,
+			AvgEpisodesPerSession:  avgEp,
+			MaxEpisodesInSingleRun: s.maxEpisodes,
+			TotalHoursBunged:       math.Round(s.totalHours*10) / 10,
+		})
+	}
+	sort.Slice(allBingedSeries, func(i, j int) bool {
+		return allBingedSeries[i].TotalBingeSessions > allBingedSeries[j].TotalBingeSessions
+	})
+	if len(allBingedSeries) > 6 {
+		allBingedSeries = allBingedSeries[:6]
+	}
+
+	// Taste insights (30 days)
+	tasteRows, err := h.db.QueryContext(ctx, database.Bind(`
+		SELECT COALESCE(m."genres",'[]'), COALESCE(p."durationWatched",0)
+		FROM "PlaybackHistory" p
+		JOIN "Media" m ON m."id" = p."mediaId"
+		WHERE p."startedAt" >= ? AND p."durationWatched" >= 60
+	`, h.driver), since30)
+
+	genreHours := make(map[string]float64)
+	var totalTasteHours float64
+	if err == nil {
+		defer tasteRows.Close()
+		for tasteRows.Next() {
+			var genresRaw string
+			var dur int64
+			if err := tasteRows.Scan(&genresRaw, &dur); err == nil {
+				h := float64(dur) / 3600.0
+				totalTasteHours += h
+				for _, g := range parseStringList(genresRaw) {
+					if g != "" {
+						genreHours[g] += h
+					}
+				}
+			}
+		}
+	}
+
+	type GenreBreakdown struct {
+		Name       string  `json:"name"`
+		TotalHours float64 `json:"totalHours"`
+		Percentage int     `json:"percentage"`
+	}
+	var topGenresBreakdown []GenreBreakdown
+	for g, h := range genreHours {
+		pct := 0
+		if totalTasteHours > 0 {
+			pct = int(math.Round((h / totalTasteHours) * 100))
+		}
+		topGenresBreakdown = append(topGenresBreakdown, GenreBreakdown{
+			Name:       g,
+			TotalHours: math.Round(h*10) / 10,
+			Percentage: pct,
+		})
+	}
+	sort.Slice(topGenresBreakdown, func(i, j int) bool {
+		return topGenresBreakdown[i].TotalHours > topGenresBreakdown[j].TotalHours
+	})
+	if len(topGenresBreakdown) > 6 {
+		topGenresBreakdown = topGenresBreakdown[:6]
+	}
+
+	type AcquisitionSuggestion struct {
+		Category     string `json:"category"`
+		Title        string `json:"title"`
+		Reason       string `json:"reason"`
+		ScorePercent int    `json:"scorePercent"`
+		Badge        string `json:"badge"`
+	}
+	var suggestions []AcquisitionSuggestion
+	if len(topGenresBreakdown) > 0 {
+		g1 := topGenresBreakdown[0]
+		suggestions = append(suggestions, AcquisitionSuggestion{
+			Category:     "Genre Dominant",
+			Title:        "Enrichir la collection " + g1.Name,
+			Reason:       fmt.Sprintf("Représente %d%% du temps total de visionnage (%.1fh). Vos utilisateurs adorent !", g1.Percentage, g1.TotalHours),
+			ScorePercent: int(math.Min(98, float64(g1.Percentage+25))),
+			Badge:        "Très Forte Demande",
+		})
+		if len(topGenresBreakdown) > 1 {
+			g2 := topGenresBreakdown[1]
+			suggestions = append(suggestions, AcquisitionSuggestion{
+				Category:     "Genre Tendance",
+				Title:        "Films & Séries " + g2.Name,
+				Reason:       fmt.Sprintf("Deuxième genre le plus plébiscité avec %.1fh visionnées sur les 30 derniers jours.", g2.TotalHours),
+				ScorePercent: int(math.Min(88, float64(g2.Percentage+20))),
+				Badge:        "Tendance Forte",
+			})
+		}
+	}
+	suggestions = append(suggestions, AcquisitionSuggestion{
+		Category:     "Qualité & Format",
+		Title:        "Ajouts 4K UHD & HDR",
+		Reason:       "Optimisation de la vidéothèque haute fidélité pour vos écrans compatibles et Home Cinéma.",
+		ScorePercent: 92,
+		Badge:        "Recommandation IA",
+	})
+
+	deep, _ := stats.GetDetailedDeepInsights(ctx, h.db, h.driver, stats.DashboardFilter{Days: 30})
+
+	jsonResponse(w, 200, map[string]any{
+		"content": map[string]any{
+			"totalMedia":         totalMedia,
+			"uniqueGenres":       len(uniqueGenresSet),
+			"avgDurationMinutes": avgMinutes,
+		},
+		"resolutions": map[string]int{
+			"res4K":    res4K,
+			"res1440p": res1440p,
+			"res1080p": res1080p,
+			"res720p":  res720p,
+			"resSD":    resSD,
+		},
+		"topLibraries": topLibraries,
+		"binge": map[string]any{
+			"totalBingeSessionsMonth": totalBingeSessions,
+			"avgEpisodesPerSession":   avgEpPerSession,
+			"maxEpisodesInSingleRun":  maxEp,
+			"allBingedSeries":         allBingedSeries,
+		},
+		"smartInsights": map[string]any{
+			"acquisitionSuggestions": suggestions,
+			"topGenres":              topGenresBreakdown,
+		},
+		"deep": map[string]any{
+			"topDirectors": deep.TopDirectors,
+			"topActors":    deep.TopActors,
+			"topStudios":   deep.TopStudios,
+		},
+	})
+}
+
+func parseTimeMs(s string) int64 {
+	t, err := time.Parse(time.RFC3339Nano, s)
+	if err == nil {
+		return t.UnixMilli()
+	}
+	t, err = time.Parse(time.RFC3339, s)
+	if err == nil {
+		return t.UnixMilli()
+	}
+	t, err = time.Parse("2006-01-02 15:04:05", s)
+	if err == nil {
+		return t.UnixMilli()
+	}
+	return 0
 }
 
 func (h *Handler) networkStats(w http.ResponseWriter, r *http.Request) {
@@ -464,23 +817,99 @@ func (h *Handler) heatmapDetail(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 	limit, offset := page(r)
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT u."id",u."username",u."jellyfinUserId",u."lastActive",s."name" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" WHERE u."isActive"=1 ORDER BY LOWER(u."username") LIMIT ? OFFSET ?`, h.driver), limit, offset)
+	if limit > 200 {
+		limit = 200
+	}
+	query := database.Bind(`
+		SELECT u."id", u."username", u."jellyfinUserId", u."lastActive", s."name",
+		       COALESCE(SUM(p."durationWatched"), 0) AS "totalSeconds",
+		       COUNT(p."id") AS "sessionsCount",
+		       COALESCE(SUM(CASE WHEN LOWER(COALESCE(p."playMethod",'')) LIKE '%transcode%' THEN 1 ELSE 0 END), 0) AS "transcodes",
+		       COALESCE(SUM(CASE WHEN LOWER(COALESCE(p."playMethod",'')) NOT LIKE '%transcode%' AND p."id" IS NOT NULL THEN 1 ELSE 0 END), 0) AS "directPlays",
+		       (SELECT p2."clientName" FROM "PlaybackHistory" p2 WHERE p2."userId"=u."id" AND p2."clientName" IS NOT NULL GROUP BY p2."clientName" ORDER BY COUNT(*) DESC LIMIT 1) AS "favoriteClient",
+		       (SELECT MAX(COALESCE(p3."endedAt", p3."startedAt")) FROM "PlaybackHistory" p3 WHERE p3."userId"=u."id") AS "latestHistoryDate"
+		FROM "User" u
+		LEFT JOIN "Server" s ON s."id"=u."serverId"
+		LEFT JOIN "PlaybackHistory" p ON p."userId"=u."id" AND p."durationWatched">=60
+		WHERE u."isActive"=1
+		GROUP BY u."id", u."username", u."jellyfinUserId", u."lastActive", s."name"
+		ORDER BY "totalSeconds" DESC, LOWER(u."username") ASC
+		LIMIT ? OFFSET ?
+	`, h.driver)
+
+	rows, err := h.db.QueryContext(r.Context(), query, limit, offset)
 	if err != nil {
-		jsonError(w, 500, "Impossible de charger les utilisateurs.")
+		basicRows, bErr := h.db.QueryContext(r.Context(), database.Bind(`SELECT u."id",u."username",u."jellyfinUserId",u."lastActive",s."name" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" WHERE u."isActive"=1 ORDER BY LOWER(u."username") LIMIT ? OFFSET ?`, h.driver), limit, offset)
+		if bErr != nil {
+			jsonError(w, 500, "Impossible de charger les utilisateurs.")
+			return
+		}
+		defer basicRows.Close()
+		out := []map[string]any{}
+		for basicRows.Next() {
+			var id, name, jid string
+			var active, server sql.NullString
+			if basicRows.Scan(&id, &name, &jid, &active, &server) == nil {
+				out = append(out, map[string]any{
+					"id": id, "username": name, "jellyfinUserId": jid, "lastActive": nullable(active), "server": nullable(server),
+					"totalHours": 0.0, "sessionsCount": 0, "favoriteClient": "Inconnu", "transcodeCount": 0, "directPlayCount": 0, "transcodeRatio": 0,
+				})
+			}
+		}
+		jsonResponse(w, 200, map[string]any{"items": out, "users": out, "limit": limit, "offset": offset})
 		return
 	}
 	defer rows.Close()
+
 	out := []map[string]any{}
 	for rows.Next() {
 		var id, name, jid string
-		var active, server sql.NullString
-		if rows.Scan(&id, &name, &jid, &active, &server) != nil {
+		var active, server, favClient, latestHistory sql.NullString
+		var totalSec, sessCount, tcCount, dpCount int64
+		if err := rows.Scan(&id, &name, &jid, &active, &server, &totalSec, &sessCount, &tcCount, &dpCount, &favClient, &latestHistory); err != nil {
 			jsonError(w, 500, "Erreur de lecture.")
 			return
 		}
-		out = append(out, map[string]any{"id": id, "username": name, "jellyfinUserId": jid, "lastActive": nullable(active), "server": nullable(server)})
+
+		totalStreams := tcCount + dpCount
+		ratio := 0
+		if totalStreams > 0 {
+			ratio = int((tcCount * 100) / totalStreams)
+		}
+
+		effLastActive := ""
+		if active.Valid {
+			effLastActive = active.String
+		}
+		if sessCount > 0 && latestHistory.Valid && latestHistory.String != "" {
+			effLastActive = latestHistory.String
+		}
+
+		clientName := "Inconnu"
+		if favClient.Valid && favClient.String != "" {
+			clientName = favClient.String
+		}
+
+		var lastActiveAny any
+		if effLastActive != "" {
+			lastActiveAny = effLastActive
+		}
+
+		out = append(out, map[string]any{
+			"id":             id,
+			"username":       name,
+			"jellyfinUserId": jid,
+			"totalHours":     math.Round((float64(totalSec)/3600.0)*10) / 10,
+			"sessionsCount":  sessCount,
+			"lastActive":     lastActiveAny,
+			"favoriteClient": clientName,
+			"transcodeCount": tcCount,
+			"directPlayCount": dpCount,
+			"transcodeRatio": ratio,
+			"server":         nullable(server),
+		})
 	}
-	jsonResponse(w, 200, map[string]any{"items": out, "limit": limit, "offset": offset})
+	jsonResponse(w, 200, map[string]any{"items": out, "users": out, "limit": limit, "offset": offset})
 }
 
 func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
@@ -606,9 +1035,11 @@ func (h *Handler) mediaList(w http.ResponseWriter, r *http.Request) {
 		orderBy = `m."durationMs" DESC`
 	case "recent":
 		orderBy = `(SELECT MAX("startedAt") FROM "PlaybackHistory" WHERE "mediaId"=m."id") DESC, m."title" ASC`
+	case "added", "new", "recentlyAdded":
+		orderBy = `COALESCE(m."dateAdded", m."createdAt") DESC, m."id" DESC`
 	}
 
-	query := fmt.Sprintf(`SELECT m."id",m."jellyfinMediaId",m."title",m."type",m."libraryName",m."resolution",m."durationMs",s."name" FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE %s ORDER BY %s LIMIT ? OFFSET ?`, strings.Join(whereClauses, " AND "), orderBy)
+	query := fmt.Sprintf(`SELECT m."id",m."jellyfinMediaId",m."title",m."type",m."libraryName",m."resolution",m."durationMs",s."name",COALESCE(m."dateAdded", m."createdAt"),COALESCE(m."genres",'[]'),(SELECT COUNT(*) FROM "PlaybackHistory" WHERE "mediaId"=m."id") FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE %s ORDER BY %s LIMIT ? OFFSET ?`, strings.Join(whereClauses, " AND "), orderBy)
 	queryArgs := append(append([]any{}, args...), limit, offset)
 
 	rows, err := h.db.QueryContext(r.Context(), database.Bind(query, h.driver), queryArgs...)
@@ -621,13 +1052,17 @@ func (h *Handler) mediaList(w http.ResponseWriter, r *http.Request) {
 	out := []map[string]any{}
 	for rows.Next() {
 		var id, jid, title, kind string
-		var lib, res, server sql.NullString
+		var lib, res, server, dateAdded, genresRaw sql.NullString
 		var dur sql.NullInt64
-		if rows.Scan(&id, &jid, &title, &kind, &lib, &res, &dur, &server) == nil {
+		var plays int64
+		if rows.Scan(&id, &jid, &title, &kind, &lib, &res, &dur, &server, &dateAdded, &genresRaw, &plays) == nil {
 			out = append(out, map[string]any{
 				"id": id, "jellyfinMediaId": jid, "title": title, "type": kind,
 				"library": nullable(lib), "resolution": nullable(res), "durationMs": dur.Int64,
 				"server": nullable(server),
+				"dateAdded": nullable(dateAdded),
+				"genres": parseStringList(genresRaw.String),
+				"plays": plays,
 			})
 		}
 	}

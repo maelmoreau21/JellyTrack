@@ -583,6 +583,28 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		sec        int64
 	})
 
+	// Pre-populate chronological time buckets so charts always have full axes and gridlines
+	if currentStart != nil {
+		if timeRange == "24h" || timeRange == "1d" {
+			for h := 0; h < 24; h++ {
+				k := fmt.Sprintf("%02d:00", h)
+				tp := &DashboardTrendPoint{Time: k}
+				trendMap[k] = tp
+				trendKeys = append(trendKeys, k)
+			}
+		} else if daysCount > 0 && daysCount <= 90 {
+			for d := 0; d < daysCount; d++ {
+				dayTime := currentStart.AddDate(0, 0, d)
+				k := fmt.Sprintf("%02d/%02d", dayTime.Day(), dayTime.Month())
+				if _, exists := trendMap[k]; !exists {
+					tp := &DashboardTrendPoint{Time: k}
+					trendMap[k] = tp
+					trendKeys = append(trendKeys, k)
+				}
+			}
+		}
+	}
+
 	// Completion counts
 	var completedCount, partialCount, abandonedCount int64
 
@@ -690,11 +712,12 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		}
 	}
 
-	// Day of week chart (7 buckets)
+	// Day of week chart (7 buckets: Dim=0, Lun=1, ... Sam=6)
+	dayNames := []string{"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"}
 	dayOfWeekChartData := make([]DashboardDayPoint, 7)
 	for i := 0; i < 7; i++ {
 		dayOfWeekChartData[i] = DashboardDayPoint{
-			Day:      strconv.Itoa(i),
+			Day:      dayNames[i],
 			DayIndex: i,
 			Count:    dayOfWeekMap[i],
 		}
@@ -789,13 +812,15 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		userList = userList[:5]
 	}
 
-	// Activity daily array for backward-compatibility
+	// Activity daily array for backward-compatibility (active days only)
 	var activityCompat []map[string]any
 	for _, tp := range trendData {
-		activityCompat = append(activityCompat, map[string]any{
-			"day":   tp.Time,
-			"views": tp.TotalViews,
-		})
+		if tp.TotalViews > 0 {
+			activityCompat = append(activityCompat, map[string]any{
+				"day":   tp.Time,
+				"views": tp.TotalViews,
+			})
+		}
 	}
 
 	// 7. Yearly Heatmap Matrix Data (Full Year history)

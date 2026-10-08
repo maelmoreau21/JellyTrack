@@ -13,11 +13,15 @@
     "collections": "Collections",
     "analysis": "Deep Analysis",
     "administration": "Administration",
+    "healthAndMaintenance": "Health & Diagnostics",
     "settings": "Settings",
     "health": "System Health",
     "logHealth": "Health",
     "serverCompare": "Server Compare",
     "cleanup": "Cleanup",
+    "pluginHealth": "Plugin Health",
+    "backupServerActive": "Backup server active",
+    "backupServerDesc": "Connected to {server}. The primary server is unavailable.",
     "info": "System",
     "about": "About",
     "myAccount": "My Account",
@@ -858,6 +862,7 @@
     "usersSection": "Users"
   },
   "settings": {
+    "overview": "Overview",
     "abandoned": "Abandoned",
     "autoAvailability": "Enable automatic availability period",
     "autoAvailabilityDesc": "If enabled, the Wrapped feature will only be accessible between the defined dates.",

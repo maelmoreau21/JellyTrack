@@ -192,8 +192,10 @@ func GetGeoStats(ctx context.Context, db *sql.DB, driver string, days int) (map[
 // HeatmapCell represents activity during a specific day of the week and hour.
 type HeatmapCell struct {
 	DayOfWeek int   `json:"dayOfWeek"` // 0=Sunday, 6=Saturday
+	Day       int   `json:"day"`       // Alias for frontend compatibility
 	Hour      int   `json:"hour"`      // 0-23
 	Views     int64 `json:"views"`
+	Value     int64 `json:"value"`     // Alias for frontend compatibility
 	Duration  int64 `json:"duration"`
 }
 
