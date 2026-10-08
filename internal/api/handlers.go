@@ -608,12 +608,30 @@ func (h *Handler) mediaDetail(w http.ResponseWriter, r *http.Request) {
 	var watchCount, totalDuration int64
 	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM("durationWatched"),0) FROM "PlaybackHistory" WHERE "mediaId"=(SELECT "id" FROM "Media" WHERE "id"=? OR "jellyfinMediaId"=? LIMIT 1)`, h.driver), id, id).Scan(&watchCount, &totalDuration)
 
+	recentRows, errRecent := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",u."username",u."id" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" WHERE p."mediaId"=(SELECT "id" FROM "Media" WHERE "id"=? OR "jellyfinMediaId"=? LIMIT 1) ORDER BY p."startedAt" DESC LIMIT 10`, h.driver), id, id)
+	recentActivity := []map[string]any{}
+	if errRecent == nil {
+		for recentRows.Next() {
+			var pid, started, method string
+			var dur int64
+			var uname, uid sql.NullString
+			if recentRows.Scan(&pid, &started, &dur, &method, &uname, &uid) == nil {
+				recentActivity = append(recentActivity, map[string]any{
+					"id": pid, "startedAt": started, "durationMs": dur * 1000,
+					"playMethod": method, "username": nullable(uname), "userId": nullable(uid),
+				})
+			}
+		}
+		recentRows.Close()
+	}
+
 	jsonResponse(w, 200, map[string]any{
 		"id": id, "jellyfinMediaId": jid, "title": title, "type": mType,
 		"library": nullable(lib), "genres": parseStringList(genres), "resolution": nullable(res),
 		"durationMs": dur.Int64, "sizeBytes": size.Int64, "directors": parseStringList(directors),
 		"actors": parseStringList(actors), "server": nullable(server),
 		"totalPlays": watchCount, "totalDurationMs": totalDuration * 1000,
+		"recentActivity": recentActivity,
 	})
 }
 
@@ -621,7 +639,7 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	limit, offset := page(r)
 	days := boundedInt(r.URL.Query().Get("days"), 30, 1, 3650)
 	since := time.Now().UTC().AddDate(0, 0, -days).Format(time.RFC3339Nano)
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."endedAt",p."durationWatched",p."playMethod",u."username",m."title",m."type",m."libraryName" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND `+excludedLibrariesClause(h.driver, "m")+` ORDER BY p."startedAt" DESC LIMIT ? OFFSET ?`, h.driver), since, limit, offset)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."endedAt",p."durationWatched",p."playMethod",u."username",m."title",m."type",m."libraryName",m."id",COALESCE(u."id",''),m."jellyfinMediaId" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND `+excludedLibrariesClause(h.driver, "m")+` ORDER BY p."startedAt" DESC LIMIT ? OFFSET ?`, h.driver), since, limit, offset)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger l’historique.")
 		return
@@ -629,11 +647,24 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 	out := []map[string]any{}
 	for rows.Next() {
-		var id, started, method, title, kind string
-		var ended, user, library sql.NullString
+		var id, started, method, title, kind, mid, uid string
+		var ended, user, library, jid sql.NullString
 		var duration int64
-		if rows.Scan(&id, &started, &ended, &duration, &method, &user, &title, &kind, &library) == nil {
-			out = append(out, map[string]any{"id": id, "startedAt": started, "endedAt": nullable(ended), "durationMs": duration * 1000, "playMethod": method, "username": nullable(user), "title": title, "type": kind, "library": nullable(library)})
+		if rows.Scan(&id, &started, &ended, &duration, &method, &user, &title, &kind, &library, &mid, &uid, &jid) == nil {
+			out = append(out, map[string]any{
+				"id":              id,
+				"mediaId":         mid,
+				"userId":          uid,
+				"jellyfinMediaId": nullable(jid),
+				"startedAt":       started,
+				"endedAt":         nullable(ended),
+				"durationMs":      duration * 1000,
+				"playMethod":      method,
+				"username":        nullable(user),
+				"title":           title,
+				"type":            kind,
+				"library":         nullable(library),
+			})
 		}
 	}
 	jsonResponse(w, 200, map[string]any{"items": out, "limit": limit, "offset": offset, "periodDays": days})

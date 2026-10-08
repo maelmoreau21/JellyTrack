@@ -1139,9 +1139,19 @@
 
         tbody.innerHTML = data.items.map((it) => `
           <tr>
-            <td><b><a href="/media/${it.id}" data-link>${Utils.escapeHtml(it.title)}</a></b></td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 32px; height: 48px; background: var(--surface-nested); border-radius: 4px; overflow: hidden; flex-shrink: 0;">
+                  ${it.jellyfinMediaId ? `<img src="/api/jellyfin/image?id=${it.jellyfinMediaId}&type=Primary&maxWidth=100" style="width:100%; height:100%; object-fit:cover;">` : ''}
+                </div>
+                <div>
+                  <b><a href="/media/${it.mediaId || it.id}" data-link>${Utils.escapeHtml(it.title)}</a></b>
+                  ${it.library ? `<div style="font-size:0.75rem; color:var(--muted-foreground);">${Utils.escapeHtml(it.library)}</div>` : ''}
+                </div>
+              </div>
+            </td>
             <td><span class="badge badge-secondary">${Utils.escapeHtml(it.type)}</span></td>
-            <td><a href="/users/${it.username}" data-link>${Utils.escapeHtml(it.username || 'Inconnu')}</a></td>
+            <td><a href="/users/${it.userId || it.username}" data-link>${Utils.escapeHtml(it.username || 'Inconnu')}</a></td>
             <td>${Utils.formatMs(it.durationMs)}</td>
             <td><span class="badge ${it.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}">${Utils.escapeHtml(it.playMethod || 'Stream')}</span></td>
             <td>${Utils.formatDateTime(it.startedAt)} <span style="color:var(--muted-foreground); font-size:0.75rem;">(${Utils.timeAgo(it.startedAt)})</span></td>
@@ -1523,7 +1533,8 @@
     },
 
     // 10. Media Catalog & Overview
-    async media(type = '') {
+    async media(options = {}) {
+      let { type = '', sort = 'title', artist = '', q = '' } = typeof options === 'string' ? { type: options } : (options || {});
       const main = document.getElementById('app-main');
       main.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
@@ -1541,13 +1552,20 @@
           </div>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
-          <input type="text" class="form-input" id="media-search-input" placeholder="Filtrer par titre, acteur, réalisateur..." style="max-width: 380px;">
+        ${artist ? `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 1rem; background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-md); margin-top: 0.75rem;">
+            <span>🎵 Filtré par artiste : <b>${Utils.escapeHtml(artist)}</b></span>
+            <button class="btn btn-secondary btn-sm" id="btn-clear-artist">✕ Effacer le filtre</button>
+          </div>
+        ` : ''}
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem; flex-wrap: wrap;">
+          <input type="text" class="form-input" id="media-search-input" value="${Utils.escapeHtml(q)}" placeholder="Filtrer par titre, acteur, réalisateur..." style="max-width: 380px;">
           <select class="form-select" id="media-sort-select" style="max-width: 180px;">
-            <option value="title">Titre (A-Z)</option>
-            <option value="popular">Les plus vus</option>
-            <option value="recent">Récemment lus</option>
-            <option value="duration">Plus longs</option>
+            <option value="title" ${sort === 'title' ? 'selected' : ''}>Titre (A-Z)</option>
+            <option value="popular" ${sort === 'popular' ? 'selected' : ''}>Les plus vus</option>
+            <option value="recent" ${sort === 'recent' ? 'selected' : ''}>Récemment lus</option>
+            <option value="duration" ${sort === 'duration' ? 'selected' : ''}>Plus longs</option>
           </select>
         </div>
 
@@ -1570,9 +1588,14 @@
 
       const loadMedia = async () => {
         const grid = document.getElementById('media-grid');
-        const q = document.getElementById('media-search-input')?.value.trim() || '';
-        const sort = document.getElementById('media-sort-select')?.value || 'title';
-        const url = `/api/media?limit=${limit}&offset=${currentOffset}&type=${encodeURIComponent(type)}&q=${encodeURIComponent(q)}&sort=${sort}`;
+        const searchInput = document.getElementById('media-search-input');
+        const sortSelect = document.getElementById('media-sort-select');
+        const searchVal = searchInput ? searchInput.value.trim() : q;
+        const sortVal = sortSelect ? sortSelect.value : sort;
+        let url = `/api/media?limit=${limit}&offset=${currentOffset}&type=${encodeURIComponent(type)}&q=${encodeURIComponent(searchVal)}&sort=${sortVal}`;
+        if (artist) {
+          url += `&artist=${encodeURIComponent(artist)}`;
+        }
 
         try {
           const res = await API.getJSON(url);
@@ -1617,6 +1640,10 @@
           currentOffset = 0;
           loadMedia();
         });
+      });
+
+      document.getElementById('btn-clear-artist')?.addEventListener('click', () => {
+        Router.navigate('/media');
       });
 
       document.getElementById('media-search-input')?.addEventListener('input', Utils.debounce(() => {
@@ -1698,6 +1725,34 @@
                 </div>
               ` : ''}
             </div>
+
+            ${m.recentActivity && m.recentActivity.length > 0 ? `
+              <div style="margin-top: 1.5rem; width: 100%;">
+                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem;">Dernières lectures de ce titre</h3>
+                <div class="table-wrapper">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Utilisateur</th>
+                        <th>Durée</th>
+                        <th>Méthode</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${m.recentActivity.map((r) => `
+                        <tr>
+                          <td><a href="/users/${r.userId || r.username}" data-link>${Utils.escapeHtml(r.username || 'Inconnu')}</a></td>
+                          <td>${Utils.formatMs(r.durationMs)}</td>
+                          <td><span class="badge ${r.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}">${Utils.escapeHtml(r.playMethod || 'Stream')}</span></td>
+                          <td>${Utils.formatDateTime(r.startedAt)} <span style="color:var(--muted-foreground); font-size:0.75rem;">(${Utils.timeAgo(r.startedAt)})</span></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ` : ''}
           </div>
         `;
 
@@ -1902,20 +1957,25 @@
     // 15. Settings Layout & Pages
     async settings(subpage = 'overview') {
       const main = document.getElementById('app-main');
+      const activeTab = subpage.startsWith('scheduler') ? 'scheduler' : (subpage.startsWith('plugin/security') ? 'plugin/security' : subpage);
+
       main.innerHTML = `
         <div>
           <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.settings') || 'Paramètres'}</h1>
-          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Administration, serveurs, sauvegardes et automatisations.</p>
+          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Administration, serveurs, médias, sauvegardes et planificateur.</p>
         </div>
 
-        <div class="segmented-control" id="settings-tabs" style="flex-wrap: wrap; margin-top: 0.5rem;">
-          <button class="segment-btn ${subpage === 'overview' ? 'active' : ''}" data-sub="overview">Vue d’ensemble</button>
-          <button class="segment-btn ${subpage === 'jellyfin' ? 'active' : ''}" data-sub="jellyfin">Serveurs Jellyfin</button>
-          <button class="segment-btn ${subpage === 'dataBackups' ? 'active' : ''}" data-sub="dataBackups">Sauvegardes</button>
-          <button class="segment-btn ${subpage === 'sso' ? 'active' : ''}" data-sub="sso">Authentification SSO</button>
-          <button class="segment-btn ${subpage === 'notifications' ? 'active' : ''}" data-sub="notifications">Notifications Discord</button>
-          <button class="segment-btn ${subpage === 'plugin' ? 'active' : ''}" data-sub="plugin">Plugin Jellyfin</button>
-          <button class="segment-btn ${subpage === 'scheduler' ? 'active' : ''}" data-sub="scheduler">Tâches planifiées</button>
+        <div class="segmented-control" id="settings-tabs" style="flex-wrap: wrap; margin-top: 0.75rem; gap: 0.25rem;">
+          <button class="segment-btn ${activeTab === 'overview' ? 'active' : ''}" data-sub="overview">Vue d’ensemble</button>
+          <button class="segment-btn ${activeTab === 'jellyfin' ? 'active' : ''}" data-sub="jellyfin">Serveurs Jellyfin</button>
+          <button class="segment-btn ${activeTab === 'media' ? 'active' : ''}" data-sub="media">Médias & Règles</button>
+          <button class="segment-btn ${activeTab === 'network' ? 'active' : ''}" data-sub="network">Réseau</button>
+          <button class="segment-btn ${activeTab === 'dataBackups' ? 'active' : ''}" data-sub="dataBackups">Sauvegardes</button>
+          <button class="segment-btn ${activeTab === 'sso' ? 'active' : ''}" data-sub="sso">Authentification SSO</button>
+          <button class="segment-btn ${activeTab === 'notifications' ? 'active' : ''}" data-sub="notifications">Notifications Discord</button>
+          <button class="segment-btn ${activeTab === 'plugin' ? 'active' : ''}" data-sub="plugin">Plugin Jellyfin</button>
+          <button class="segment-btn ${activeTab === 'plugin/security' ? 'active' : ''}" data-sub="plugin/security">Sécurité Plugin</button>
+          <button class="segment-btn ${activeTab === 'scheduler' ? 'active' : ''}" data-sub="scheduler">Tâches & Cron</button>
         </div>
 
         <div id="settings-content" style="margin-top: 1.5rem;">
@@ -1935,20 +1995,35 @@
       // Subpage 1: Overview
       if (subpage === 'overview') {
         try {
-          const s = await API.getJSON('/api/settings');
+          const [s, servers] = await Promise.all([
+            API.getJSON('/api/settings'),
+            API.getJSON('/api/settings/jellyfin-servers').catch(() => []),
+          ]);
           container.innerHTML = `
             <div class="card">
               <div class="card-header">
-                <div class="card-title">⚙️ Configuration Globale</div>
+                <div class="card-title">⚙️ Configuration Globale JellyTrack</div>
               </div>
               <div class="metric-grid">
                 <div class="metric-card">
                   <div class="metric-label">Langue par défaut</div>
-                  <div class="metric-value" style="font-size:1.4rem;">${Utils.escapeHtml(s.defaultLocale || 'fr')}</div>
+                  <div class="metric-value" style="font-size:1.4rem;">${Utils.escapeHtml(s.defaultLocale || 'fr').toUpperCase()}</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Serveurs connectés</div>
+                  <div class="metric-value" style="font-size:1.4rem;">${Array.isArray(servers) ? servers.length : 0}</div>
                 </div>
                 <div class="metric-card">
                   <div class="metric-label">Wrapped activé</div>
-                  <div class="metric-value" style="font-size:1.4rem;">${s.wrappedVisible ? 'Oui' : 'Non'}</div>
+                  <div class="metric-value" style="font-size:1.4rem; color: ${s.wrappedVisible !== false ? 'var(--accent)' : 'var(--muted-foreground)'};">
+                    ${s.wrappedVisible !== false ? 'Oui' : 'Non'}
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Alertes Discord</div>
+                  <div class="metric-value" style="font-size:1.4rem; color: ${s.discordAlertsEnabled ? 'var(--accent)' : 'var(--muted-foreground)'};">
+                    ${s.discordAlertsEnabled ? 'Actives' : 'Inactives'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1963,20 +2038,22 @@
         try {
           const servers = await API.getJSON('/api/settings/jellyfin-servers');
           container.innerHTML = `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-              <h2 style="font-size: 1.15rem; font-weight: 700;">Serveurs enregistrés</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+              <h2 style="font-size: 1.15rem; font-weight: 700;">Serveurs Jellyfin Connectés</h2>
               <button class="btn btn-primary btn-sm" id="btn-add-server">+ Ajouter un serveur</button>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              ${(servers || []).length === 0 ? '<div class="empty-state">Aucun serveur Jellyfin configuré pour le moment.</div>' : ''}
               ${(servers || []).map((srv) => `
-                <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
+                <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; flex-wrap: wrap; gap: 0.75rem;">
                   <div>
-                    <div style="font-weight: 700; font-size: 1rem;">${Utils.escapeHtml(srv.name)}</div>
+                    <div style="font-weight: 700; font-size: 1.05rem;">${Utils.escapeHtml(srv.name)}</div>
                     <div style="font-size: 0.82rem; color: var(--muted-foreground);">${Utils.escapeHtml(srv.url)}</div>
                   </div>
                   <div style="display: flex; gap: 0.5rem; align-items: center;">
                     <span class="badge ${srv.isActive ? 'badge-success' : 'badge-secondary'}">${srv.isActive ? 'Actif' : 'Inactif'}</span>
+                    <button class="btn btn-secondary btn-sm btn-rotate-srv-key" data-id="${srv.id}" title="Régénérer la clé plugin">🔑 Clé</button>
                     <button class="btn btn-danger btn-sm btn-del-server" data-id="${srv.id}">Supprimer</button>
                   </div>
                 </div>
@@ -1984,12 +2061,24 @@
             </div>
           `;
 
+          document.querySelectorAll('.btn-rotate-srv-key').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+              const id = btn.getAttribute('data-id');
+              try {
+                const res = await API.postJSON('/api/settings/jellyfin-servers/plugin-key', { serverId: id });
+                Toast.success(`Nouvelle clé générée : ${res.apiKey || 'OK'}`);
+              } catch (e) {
+                Toast.error(e.message);
+              }
+            });
+          });
+
           document.querySelectorAll('.btn-del-server').forEach((btn) => {
             btn.addEventListener('click', async () => {
               const id = btn.getAttribute('data-id');
               Modal.showAction({
                 title: 'Supprimer le serveur',
-                bodyHtml: '<p>Êtes-vous certain de vouloir supprimer ce serveur ?</p>',
+                bodyHtml: '<p>Êtes-vous certain de vouloir supprimer ce serveur ? Les statistiques historiques seront conservées.</p>',
                 confirmText: 'Supprimer',
                 onConfirm: async () => {
                   try {
@@ -2009,16 +2098,16 @@
               title: 'Ajouter un serveur Jellyfin',
               bodyHtml: `
                 <div class="form-group">
-                  <label class="form-label">Nom</label>
-                  <input type="text" class="form-input" id="m-srv-name" required value="Nouveau Serveur">
+                  <label class="form-label">Nom du serveur</label>
+                  <input type="text" class="form-input" id="m-srv-name" required value="Serveur Principal">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">URL</label>
+                  <label class="form-label">URL Jellyfin</label>
                   <input type="url" class="form-input" id="m-srv-url" required placeholder="http://192.168.1.50:8096">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Clé API</label>
-                  <input type="text" class="form-input" id="m-srv-key" required placeholder="Clé API Jellyfin">
+                  <label class="form-label">Clé API Jellyfin</label>
+                  <input type="text" class="form-input" id="m-srv-key" required placeholder="Générée dans Jellyfin > Tableau de bord">
                 </div>
               `,
               confirmText: 'Ajouter',
@@ -2041,18 +2130,213 @@
         }
       }
 
-      // Subpage 3: Backups
+      // Subpage 3: Media Settings & Rules
+      else if (subpage === 'media') {
+        try {
+          const [s, srvData] = await Promise.all([
+            API.getJSON('/api/settings'),
+            API.getJSON('/api/settings/jellyfin-servers').catch(() => []),
+          ]);
+
+          const resThresh = s.resolutionThresholds || {};
+          const compRules = resThresh.completionRules || {};
+          const defRules = compRules.default || { abandonedThreshold: 10, partialThreshold: 50, completedThreshold: 90 };
+          const excludedLibs = Array.isArray(s.excludedLibraries) ? s.excludedLibraries : [];
+          const availScopes = Array.isArray(s.availableLibraryScopes) ? s.availableLibraryScopes : [];
+
+          container.innerHTML = `
+            <form id="form-settings-media" style="display: flex; flex-direction: column; gap: 1.5rem; max-width: 820px;">
+              <!-- 1. Badges Switch -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">🏷️ Affichage des Badges Média</div>
+                </div>
+                <label class="form-switch">
+                  <input type="checkbox" id="media-badges-enabled" ${resThresh.showLibraryMediaBadges !== false ? 'checked' : ''} style="display:none;">
+                  <span class="switch-toggle"></span>
+                  <span class="form-label" style="margin: 0;">Afficher les badges de résolution et de type sur les jaquettes</span>
+                </label>
+              </div>
+
+              <!-- 2. Resolution Thresholds -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">📺 Seuils de Résolution (Largeur × Hauteur max)</div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label">480p SD (maxW / maxH)</label>
+                    <div style="display:flex; gap:0.4rem;">
+                      <input type="number" class="form-input" id="res-480-w" value="${resThresh['480p']?.maxW || 792}">
+                      <input type="number" class="form-input" id="res-480-h" value="${resThresh['480p']?.maxH || 528}">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">720p HD</label>
+                    <div style="display:flex; gap:0.4rem;">
+                      <input type="number" class="form-input" id="res-720-w" value="${resThresh['720p']?.maxW || 1408}">
+                      <input type="number" class="form-input" id="res-720-h" value="${resThresh['720p']?.maxH || 792}">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">1080p FHD</label>
+                    <div style="display:flex; gap:0.4rem;">
+                      <input type="number" class="form-input" id="res-1080-w" value="${resThresh['1080p']?.maxW || 2112}">
+                      <input type="number" class="form-input" id="res-1080-h" value="${resThresh['1080p']?.maxH || 1188}">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">4K UHD</label>
+                    <div style="display:flex; gap:0.4rem;">
+                      <input type="number" class="form-input" id="res-4k-w" value="${resThresh['4K']?.maxW || 4224}">
+                      <input type="number" class="form-input" id="res-4k-h" value="${resThresh['4K']?.maxH || 2376}">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Completion Rules -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">⏱️ Règles de Complétion de Lecture (%)</div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Abandonné si inférieur à (%)</label>
+                    <input type="number" min="1" max="100" class="form-input" id="comp-abandoned" value="${defRules.abandonedThreshold || 10}">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Partiel si inférieur à (%)</label>
+                    <input type="number" min="1" max="100" class="form-input" id="comp-partial" value="${defRules.partialThreshold || 50}">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Complété si supérieur à (%)</label>
+                    <input type="number" min="1" max="100" class="form-input" id="comp-completed" value="${defRules.completedThreshold || 90}">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. Excluded Libraries -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">🚫 Bibliothèques Exclues du Suivi</div>
+                </div>
+                <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
+                  Les bibliothèques cochées ne seront pas incluses dans les métriques et graphiques du tableau de bord.
+                </p>
+                <div id="media-excluded-libs-list" style="display:flex; flex-direction:column; gap:0.6rem;">
+                  ${availScopes.length === 0 ? '<p style="color:var(--muted-foreground); font-size:0.85rem;">Aucune bibliothèque découverte via les serveurs connectés.</p>' : ''}
+                  ${availScopes.map((scope) => {
+                    const isExcluded = excludedLibs.includes(scope.key || scope.libraryName);
+                    return `
+                      <label class="form-switch" style="padding:0.4rem 0;">
+                        <input type="checkbox" class="cb-exclude-lib" data-key="${Utils.escapeHtml(scope.key || scope.libraryName)}" ${isExcluded ? 'checked' : ''} style="display:none;">
+                        <span class="switch-toggle"></span>
+                        <span style="font-size:0.88rem; font-weight:600;">${Utils.escapeHtml(scope.libraryName)} <span style="font-size:0.75rem; color:var(--muted-foreground); font-weight:normal;">(${Utils.escapeHtml(scope.serverName || scope.serverId)})</span></span>
+                      </label>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Enregistrer les règles multimédias</button>
+            </form>
+          `;
+
+          document.getElementById('form-settings-media').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const showLibraryMediaBadges = document.getElementById('media-badges-enabled').checked;
+            const resolutionThresholds = {
+              '480p': { maxW: parseInt(document.getElementById('res-480-w').value) || 792, maxH: parseInt(document.getElementById('res-480-h').value) || 528 },
+              '720p': { maxW: parseInt(document.getElementById('res-720-w').value) || 1408, maxH: parseInt(document.getElementById('res-720-h').value) || 792 },
+              '1080p': { maxW: parseInt(document.getElementById('res-1080-w').value) || 2112, maxH: parseInt(document.getElementById('res-1080-h').value) || 1188 },
+              '4K': { maxW: parseInt(document.getElementById('res-4k-w').value) || 4224, maxH: parseInt(document.getElementById('res-4k-h').value) || 2376 },
+              showLibraryMediaBadges,
+              completionRules: {
+                default: {
+                  abandonedThreshold: parseInt(document.getElementById('comp-abandoned').value) || 10,
+                  partialThreshold: parseInt(document.getElementById('comp-partial').value) || 50,
+                  completedThreshold: parseInt(document.getElementById('comp-completed').value) || 90,
+                },
+              },
+            };
+
+            const excludedLibraries = [];
+            document.querySelectorAll('.cb-exclude-lib:checked').forEach((cb) => {
+              excludedLibraries.push(cb.getAttribute('data-key'));
+            });
+
+            try {
+              await API.postJSON('/api/settings', { resolutionThresholds, excludedLibraries });
+              Toast.success('Règles et seuils multimédias enregistrés.');
+            } catch (err) {
+              Toast.error(err.message);
+            }
+          });
+        } catch (e) {
+          Toast.error(e.message);
+        }
+      }
+
+      // Subpage 4: Network Diagnostics
+      else if (subpage === 'network') {
+        try {
+          const servers = await API.getJSON('/api/settings/jellyfin-servers').catch(() => []);
+          container.innerHTML = `
+            <div class="card" style="margin-bottom: 1.5rem;">
+              <div class="card-header">
+                <div class="card-title">🌐 Connectivité Réseau & Points d’Accès</div>
+              </div>
+              <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
+                État des points de terminaison réseau utilisés par JellyTrack pour contacter les serveurs Jellyfin.
+              </p>
+              <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                ${(servers || []).length === 0 ? '<p class="empty-state">Aucun serveur configuré.</p>' : ''}
+                ${(servers || []).map((s) => `
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--surface-soft); border-radius:var(--radius-md); flex-wrap:wrap; gap:0.5rem;">
+                    <div>
+                      <div style="font-weight:700;">${Utils.escapeHtml(s.name)}</div>
+                      <div style="font-size:0.82rem; color:var(--muted-foreground); font-family:monospace;">${Utils.escapeHtml(s.url)}</div>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                      <span class="badge ${s.isActive ? 'badge-success' : 'badge-secondary'}">${s.isActive ? 'Connecté' : 'Inactif'}</span>
+                      <a href="/settings/jellyfin" data-link class="btn btn-secondary btn-sm">Gérer</a>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">🛡️ Détection des En-têtes Proxy Inverse</div>
+              </div>
+              <p style="font-size:0.85rem; color:var(--muted-foreground);">
+                JellyTrack prend automatiquement en compte les en-têtes <code>X-Forwarded-For</code> et <code>X-Real-IP</code> provenant de Nginx, Caddy ou Traefik pour identifier l'emplacement géographique des flux.
+              </p>
+            </div>
+          `;
+        } catch (e) {
+          Toast.error(e.message);
+        }
+      }
+
+      // Subpage 5: Backups
       else if (subpage === 'dataBackups') {
         try {
           const autoList = await API.getJSON('/api/backup/auto');
           container.innerHTML = `
             <div class="card" style="margin-bottom: 1.5rem;">
               <div class="card-header">
-                <div class="card-title">💾 Actions de Sauvegarde</div>
+                <div class="card-title">💾 Actions de Sauvegarde & Restauration</div>
               </div>
-              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
                 <button class="btn btn-primary" id="btn-trigger-backup">Créer une sauvegarde maintenant</button>
                 <a href="/api/backup/export" class="btn btn-secondary" download="jellytrack-export.json">Exporter en JSON</a>
+                <label class="btn btn-outline" style="cursor: pointer; margin: 0;">
+                  📥 Importer JSON
+                  <input type="file" id="input-import-backup" accept=".json" style="display: none;">
+                </label>
               </div>
             </div>
 
@@ -2063,7 +2347,7 @@
               <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 ${(autoList.backups || []).length === 0 ? '<p class="empty-state">Aucune sauvegarde automatique trouvée.</p>' : ''}
                 ${(autoList.backups || []).map((b) => `
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background: var(--surface-soft); border-radius: var(--radius-md);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background: var(--surface-soft); border-radius: var(--radius-md); flex-wrap: wrap; gap: 0.5rem;">
                     <div>
                       <b>${Utils.escapeHtml(b.filename || b.id)}</b>
                       <div style="font-size: 0.78rem; color: var(--muted-foreground);">${Utils.formatDate(b.createdAt)} • ${(b.sizeBytes / 1024).toFixed(1)} KB</div>
@@ -2089,17 +2373,31 @@
             }
           });
 
+          document.getElementById('input-import-backup')?.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            try {
+              const text = await file.text();
+              const payload = JSON.parse(text);
+              await API.postJSON('/api/backup/import', payload);
+              Toast.success('Restauration depuis le fichier JSON réussie !');
+              Pages.settings('dataBackups');
+            } catch (err) {
+              Toast.error(`Erreur d'import : ${err.message}`);
+            }
+          });
+
           document.querySelectorAll('.btn-restore-backup').forEach((btn) => {
             btn.addEventListener('click', () => {
               const id = btn.getAttribute('data-id');
               Modal.showAction({
                 title: 'Restaurer la sauvegarde',
-                bodyHtml: '<p><b>Attention :</b> Cette opération restaurera les données depuis cette sauvegarde.</p>',
+                bodyHtml: '<p><b>Attention :</b> Cette opération restaurera l’ensemble de vos configurations et sessions depuis cette archive.</p>',
                 confirmText: 'Restaurer',
                 onConfirm: async () => {
                   try {
                     await API.postJSON('/api/backup/auto/restore', { id });
-                    Toast.success('Restauration terminée.');
+                    Toast.success('Restauration terminée avec succès.');
                   } catch (e) {
                     Toast.error(e.message);
                   }
@@ -2125,7 +2423,7 @@
         }
       }
 
-      // Subpage 4: SSO
+      // Subpage 6: SSO
       else if (subpage === 'sso') {
         try {
           const sso = await API.getJSON('/api/settings/sso');
@@ -2183,7 +2481,7 @@
         }
       }
 
-      // Subpage 5: Notifications Discord
+      // Subpage 7: Notifications Discord
       else if (subpage === 'notifications') {
         try {
           const s = await API.getJSON('/api/settings');
@@ -2226,7 +2524,7 @@
         }
       }
 
-      // Subpage 6: Plugin
+      // Subpage 8: Plugin API Key
       else if (subpage === 'plugin') {
         try {
           const keyData = await API.getJSON('/api/plugin/api-key');
@@ -2241,9 +2539,10 @@
               <div class="form-group">
                 <input type="text" class="form-input" readonly value="${Utils.escapeHtml(keyData.apiKey || 'Aucune clé configurée')}" id="plugin-key-val">
               </div>
-              <div style="display: flex; gap: 0.75rem;">
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                 <button class="btn btn-secondary btn-sm" id="btn-copy-plugin-key">📋 Copier</button>
                 <button class="btn btn-primary btn-sm" id="btn-rotate-plugin-key">🔄 Régénérer la clé</button>
+                <a href="/settings/plugin/security" data-link class="btn btn-outline btn-sm">🛡️ Paramètres de sécurité du plugin</a>
               </div>
             </div>
           `;
@@ -2268,95 +2567,562 @@
         }
       }
 
-      // Subpage 7: Scheduler
-      else if (subpage === 'scheduler') {
-        container.innerHTML = `
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title">⚡ Exécution Manuelle de Tâches</div>
+      // Subpage 9: Plugin Security & Telemetry
+      else if (subpage === 'plugin/security') {
+        try {
+          const [secOverview, smartSettings, settingsData] = await Promise.all([
+            API.getJSON('/api/admin/security/overview').catch(() => ({ plugin: {} })),
+            API.getJSON('/api/admin/security/smart-settings').catch(() => ({ thresholds: {} })),
+            API.getJSON('/api/settings').catch(() => ({})),
+          ]);
+
+          const p = secOverview.plugin || {};
+          const thresholds = smartSettings.thresholds || { ipAttemptThreshold: 50, ipWindowMinutes: 60, newCountryGraceMinutes: 120 };
+          const telem = settingsData.pluginTelemetrySettings || {
+            precisionProfile: 'very_precise',
+            playingIntervalSeconds: 5,
+            pausedIntervalSeconds: 30,
+            staleSessionTimeoutSeconds: 90,
+            mergeWindowSeconds: 300,
+            seekThresholdSeconds: 20,
+            trackPauseResume: true,
+            trackSeek: true,
+            trackAudioSubtitleChanges: true,
+            trackSessionEnded: true,
+          };
+
+          container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:1.5rem; max-width:820px;">
+              <!-- 1. Connection Status Card -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">🔌 État de Connexion du Plugin</div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                  <div>
+                    <div style="font-size:1.1rem; font-weight:700;">Serveur : ${Utils.escapeHtml(p.serverName || 'Serveur Jellyfin')}</div>
+                    <div style="font-size:0.82rem; color:var(--muted-foreground);">Version plugin : ${Utils.escapeHtml(p.version || 'v3.0.0')} • Dernier contact : ${p.lastSeen ? Utils.formatDateTime(p.lastSeen) : 'Inconnu'}</div>
+                  </div>
+                  <span class="badge ${p.connected ? 'badge-success' : 'badge-danger'}" style="font-size:0.88rem; padding:0.4rem 0.8rem;">
+                    ${p.connected ? '● En ligne' : '○ Déconnecté'}
+                  </span>
+                </div>
               </div>
-              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <button class="btn btn-secondary" id="task-sync-recent">Synchroniser les lectures récentes</button>
-                <button class="btn btn-secondary" id="task-sync-full">Synchronisation complète des médias</button>
-                <button class="btn btn-secondary" id="task-integrity">Vérification de l’intégrité</button>
-                <button class="btn btn-secondary" id="task-consolidate">Consolidation de l’historique</button>
+
+              <!-- 2. Smart Security Thresholds -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">🛡️ Seuils de Sécurité Intelligents</div>
+                </div>
+                <form id="form-smart-thresholds" style="display:flex; flex-direction:column; gap:1rem;">
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+                    <div class="form-group">
+                      <label class="form-label">Tentatives d’accès IP max</label>
+                      <input type="number" min="1" class="form-input" id="sec-ip-threshold" value="${thresholds.ipAttemptThreshold || 50}">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Fenêtre de surveillance (minutes)</label>
+                      <input type="number" min="5" class="form-input" id="sec-ip-window" value="${thresholds.ipWindowMinutes || 60}">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Grâce nouveau pays (minutes)</label>
+                      <input type="number" min="1" class="form-input" id="sec-country-grace" value="${thresholds.newCountryGraceMinutes || 120}">
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary" style="align-self:flex-start;">Enregistrer les seuils de sécurité</button>
+                </form>
+              </div>
+
+              <!-- 3. Plugin Telemetry Settings -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">⚡ Paramètres de Télémétrie & Précision</div>
+                </div>
+                <form id="form-telemetry-settings" style="display:flex; flex-direction:column; gap:1rem;">
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+                    <div class="form-group">
+                      <label class="form-label">Intervalle en lecture (secondes)</label>
+                      <input type="number" min="1" class="form-input" id="telem-playing" value="${telem.playingIntervalSeconds || 5}">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Intervalle en pause (secondes)</label>
+                      <input type="number" min="5" class="form-input" id="telem-paused" value="${telem.pausedIntervalSeconds || 30}">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Expiration session inactive (s)</label>
+                      <input type="number" min="30" class="form-input" id="telem-stale" value="${telem.staleSessionTimeoutSeconds || 90}">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Fenêtre de fusion d'historique (s)</label>
+                      <input type="number" min="60" class="form-input" id="telem-merge" value="${telem.mergeWindowSeconds || 300}">
+                    </div>
+                  </div>
+
+                  <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
+                    <label class="form-switch">
+                      <input type="checkbox" id="telem-pause-resume" ${telem.trackPauseResume ? 'checked' : ''} style="display:none;">
+                      <span class="switch-toggle"></span>
+                      <span class="form-label" style="margin:0;">Enregistrer les événements de pause / reprise</span>
+                    </label>
+                    <label class="form-switch">
+                      <input type="checkbox" id="telem-seek" ${telem.trackSeek ? 'checked' : ''} style="display:none;">
+                      <span class="switch-toggle"></span>
+                      <span class="form-label" style="margin:0;">Enregistrer les sauts temporels (seek)</span>
+                    </label>
+                    <label class="form-switch">
+                      <input type="checkbox" id="telem-audio-sub" ${telem.trackAudioSubtitleChanges ? 'checked' : ''} style="display:none;">
+                      <span class="switch-toggle"></span>
+                      <span class="form-label" style="margin:0;">Suivre les changements de langue audio et sous-titres</span>
+                    </label>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" style="align-self:flex-start; margin-top:0.5rem;">Enregistrer la configuration de télémétrie</button>
+                </form>
               </div>
             </div>
-          </div>
-        `;
+          `;
 
-        const bindTask = (id, url, payload) => {
-          document.getElementById(id)?.addEventListener('click', async () => {
+          document.getElementById('form-smart-thresholds').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+              thresholds: {
+                ipAttemptThreshold: parseInt(document.getElementById('sec-ip-threshold').value) || 50,
+                ipWindowMinutes: parseInt(document.getElementById('sec-ip-window').value) || 60,
+                newCountryGraceMinutes: parseInt(document.getElementById('sec-country-grace').value) || 120,
+              },
+            };
             try {
-              await API.postJSON(url, payload);
-              Toast.success('Tâche déclenchée avec succès.');
+              await API.patchJSON('/api/admin/security/smart-settings', payload);
+              Toast.success('Seuils de sécurité intelligents enregistrés.');
+            } catch (err) {
+              Toast.error(err.message);
+            }
+          });
+
+          document.getElementById('form-telemetry-settings').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pluginTelemetrySettings = {
+              precisionProfile: 'custom',
+              playingIntervalSeconds: parseInt(document.getElementById('telem-playing').value) || 5,
+              pausedIntervalSeconds: parseInt(document.getElementById('telem-paused').value) || 30,
+              staleSessionTimeoutSeconds: parseInt(document.getElementById('telem-stale').value) || 90,
+              mergeWindowSeconds: parseInt(document.getElementById('telem-merge').value) || 300,
+              seekThresholdSeconds: 20,
+              trackPauseResume: document.getElementById('telem-pause-resume').checked,
+              trackSeek: document.getElementById('telem-seek').checked,
+              trackAudioSubtitleChanges: document.getElementById('telem-audio-sub').checked,
+              trackSessionEnded: true,
+            };
+            try {
+              await API.postJSON('/api/settings', { pluginTelemetrySettings });
+              Toast.success('Paramètres de télémétrie enregistrés.');
+            } catch (err) {
+              Toast.error(err.message);
+            }
+          });
+        } catch (e) {
+          Toast.error(e.message);
+        }
+      }
+
+      // Subpage 10: Scheduler (Schedules & Tasks)
+      else if (subpage.startsWith('scheduler')) {
+        const isSchedules = subpage === 'scheduler/schedules';
+
+        try {
+          const s = await API.getJSON('/api/settings').catch(() => ({}));
+          const intervals = s.schedulerIntervals || {
+            recentSyncEveryHours: 1,
+            fullSyncEveryHours: 24,
+            integrityCheckEveryHours: 6,
+          };
+
+          container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:1.25rem; max-width:840px;">
+              <!-- Scheduler Sub-tabs -->
+              <div class="segmented-control" style="align-self:flex-start;">
+                <button class="segment-btn ${!isSchedules ? 'active' : ''}" id="sched-tab-tasks">⚡ Exécution Manuelle</button>
+                <button class="segment-btn ${isSchedules ? 'active' : ''}" id="sched-tab-schedules">🕒 Intervalles Automatiques (Cron)</button>
+              </div>
+
+              ${isSchedules ? `
+                <!-- Schedules Form -->
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title">🕒 Fréquence des Tâches Planifiées</div>
+                  </div>
+                  <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
+                    Définissez la fréquence à laquelle les tâches de fond s’exécutent automatiquement sur le serveur Go.
+                  </p>
+                  <form id="form-scheduler-intervals" style="display:flex; flex-direction:column; gap:1rem;">
+                    <div class="form-group">
+                      <label class="form-label">Synchronisation récente des lectures (toutes les X heures)</label>
+                      <input type="number" min="1" max="24" class="form-input" id="sched-recent" value="${intervals.recentSyncEveryHours || 1}" style="max-width:180px;">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Synchronisation complète de la médiathèque (toutes les X heures)</label>
+                      <input type="number" min="6" max="168" class="form-input" id="sched-full" value="${intervals.fullSyncEveryHours || 24}" style="max-width:180px;">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Nettoyage d'intégrité et sessions orphelines (toutes les X heures)</label>
+                      <input type="number" min="1" max="48" class="form-input" id="sched-integrity" value="${intervals.integrityCheckEveryHours || 6}" style="max-width:180px;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="align-self:flex-start;">Enregistrer les intervalles</button>
+                  </form>
+                </div>
+              ` : `
+                <!-- Manual Tasks Cards -->
+                <div class="card">
+                  <div class="card-header">
+                    <div class="card-title">⚡ Déclencheur Manuel de Tâches</div>
+                  </div>
+                  <div style="display:flex; flex-direction:column; gap:0.85rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--surface-soft); border-radius:var(--radius-md); flex-wrap:wrap; gap:0.5rem;">
+                      <div>
+                        <b>Synchronisation des lectures récentes</b>
+                        <div style="font-size:0.78rem; color:var(--muted-foreground);">Récupère les dernières sessions de visionnage (exécution rapide).</div>
+                      </div>
+                      <button class="btn btn-secondary btn-sm" id="btn-task-sync-recent">Exécuter</button>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--surface-soft); border-radius:var(--radius-md); flex-wrap:wrap; gap:0.5rem;">
+                      <div>
+                        <b>Synchronisation complète de la médiathèque</b>
+                        <div style="font-size:0.78rem; color:var(--muted-foreground);">Met à jour l'ensemble des films, séries, saisons, épisodes et métadonnées.</div>
+                      </div>
+                      <button class="btn btn-secondary btn-sm" id="btn-task-sync-full">Exécuter</button>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--surface-soft); border-radius:var(--radius-md); flex-wrap:wrap; gap:0.5rem;">
+                      <div>
+                        <b>Vérification d’intégrité & fermeture des orphelins</b>
+                        <div style="font-size:0.78rem; color:var(--muted-foreground);">Détecte et clôture les flux de lecture restés ouverts suite à une coupure réseau.</div>
+                      </div>
+                      <button class="btn btn-secondary btn-sm" id="btn-task-integrity">Exécuter</button>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--surface-soft); border-radius:var(--radius-md); flex-wrap:wrap; gap:0.5rem;">
+                      <div>
+                        <b>Consolidation de l’historique</b>
+                        <div style="font-size:0.78rem; color:var(--muted-foreground);">Fusionne les sessions fragmentées consécutives dans une fenêtre de 30 minutes.</div>
+                      </div>
+                      <button class="btn btn-secondary btn-sm" id="btn-task-consolidate">Exécuter</button>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--surface-soft); border-radius:var(--radius-md); flex-wrap:wrap; gap:0.5rem;">
+                      <div>
+                        <b>Sauvegarde automatique immédiate</b>
+                        <div style="font-size:0.78rem; color:var(--muted-foreground);">Génère une archive instantanée des configurations et sessions.</div>
+                      </div>
+                      <button class="btn btn-secondary btn-sm" id="btn-task-auto-backup">Exécuter</button>
+                    </div>
+                  </div>
+                </div>
+              `}
+            </div>
+          `;
+
+          document.getElementById('sched-tab-tasks')?.addEventListener('click', () => {
+            Router.navigate('/settings/scheduler/tasks');
+          });
+
+          document.getElementById('sched-tab-schedules')?.addEventListener('click', () => {
+            Router.navigate('/settings/scheduler/schedules');
+          });
+
+          document.getElementById('form-scheduler-intervals')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const schedulerIntervals = {
+              recentSyncEveryHours: parseInt(document.getElementById('sched-recent').value) || 1,
+              fullSyncEveryHours: parseInt(document.getElementById('sched-full').value) || 24,
+              integrityCheckEveryHours: parseInt(document.getElementById('sched-integrity').value) || 6,
+            };
+            try {
+              await API.postJSON('/api/settings', { schedulerIntervals });
+              Toast.success('Intervalles de planification enregistrés.');
+            } catch (err) {
+              Toast.error(err.message);
+            }
+          });
+
+          const bindTaskBtn = (id, url, body) => {
+            document.getElementById(id)?.addEventListener('click', async () => {
+              try {
+                await API.postJSON(url, body);
+                Toast.success('Tâche déclenchée avec succès.');
+              } catch (err) {
+                Toast.error(err.message);
+              }
+            });
+          };
+
+          bindTaskBtn('btn-task-sync-recent', '/api/sync', { recentOnly: true });
+          bindTaskBtn('btn-task-sync-full', '/api/sync', { recentOnly: false });
+          bindTaskBtn('btn-task-integrity', '/api/admin/integrity-cleanup', {});
+          bindTaskBtn('btn-task-consolidate', '/api/admin/consolidate-history', { mergeWindowMinutes: 30 });
+          bindTaskBtn('btn-task-auto-backup', '/api/backup/auto/trigger', {});
+        } catch (e) {
+          Toast.error(e.message);
+        }
+      }
+    },
+
+    // 16. Admin Health & Diagnostics
+    async health(sub = 'system') {
+      const main = document.getElementById('app-main');
+      main.innerHTML = `
+        <div>
+          <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.health') || 'Santé Système & Diagnostics'}</h1>
+          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Surveillance de la base de données, des processus, du plugin et des alertes de sécurité.</p>
+        </div>
+
+        <div class="segmented-control" id="health-tabs" style="margin-top: 0.75rem; flex-wrap: wrap;">
+          <button class="segment-btn ${sub === 'system' ? 'active' : ''}" data-route="/admin/health">Base & Système</button>
+          <button class="segment-btn ${sub === 'plugin' ? 'active' : ''}" data-route="/admin/plugin-health">Santé Plugin</button>
+          <button class="segment-btn ${sub === 'logs' ? 'active' : ''}" data-route="/admin/log-health">Journaux & Sécurité</button>
+        </div>
+
+        <div id="health-content" style="margin-top: 1.5rem;">
+          <div class="skeleton" style="height: 250px;"></div>
+        </div>
+      `;
+
+      document.querySelectorAll('#health-tabs .segment-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          Router.navigate(btn.getAttribute('data-route'));
+        });
+      });
+
+      const container = document.getElementById('health-content');
+
+      // Tab 1: System & Database Health
+      if (sub === 'system') {
+        try {
+          const [h, hw] = await Promise.all([
+            API.getJSON('/api/admin/health'),
+            API.getJSON('/api/hardware').catch(() => ({})),
+          ]);
+
+          container.innerHTML = `
+            <div class="metric-grid" style="margin-bottom: 1.5rem;">
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Base de données</span>
+                  <div class="metric-icon-box">🗄️</div>
+                </div>
+                <div class="metric-value" style="font-size:1.6rem; color: ${h.database === 'healthy' ? 'var(--accent)' : 'var(--destructive)'};">
+                  ${Utils.escapeHtml(h.database === 'healthy' ? 'Opérationnelle' : h.database || 'OK')}
+                </div>
+                <div class="metric-trend">Moteur : ${Utils.escapeHtml(h.driver || 'SQLite')}</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Sessions Orphelines</span>
+                  <div class="metric-icon-box">🧹</div>
+                </div>
+                <div class="metric-value">${h.counts ? (h.counts.openPlaybackOrphans || 0) : 0}</div>
+                <div class="metric-trend">Lectures sans fermeture propre</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Mémoire allouée</span>
+                  <div class="metric-icon-box">🧠</div>
+                </div>
+                <div class="metric-value">${hw.memory ? hw.memory.allocMb.toFixed(1) + ' MB' : '-'}</div>
+                <div class="metric-trend">Cœurs CPU : ${hw.cpu ? hw.cpu.cores : '-'}</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Goroutines actives</span>
+                  <div class="metric-icon-box">⚙️</div>
+                </div>
+                <div class="metric-value">${hw.runtime ? (hw.runtime.goroutines || '-') : '-'}</div>
+                <div class="metric-trend">Processus Go léger</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">🧹 Maintenance Rapide de la Base</div>
+              </div>
+              <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
+                Si des coupures réseau empêchent la réception des événements "playback stopped", vous pouvez purger les sessions orphelines.
+              </p>
+              <button class="btn btn-secondary btn-sm" id="btn-fix-orphans">Clôturer les sessions orphelines maintenant</button>
+            </div>
+          `;
+
+          document.getElementById('btn-fix-orphans')?.addEventListener('click', async () => {
+            try {
+              await API.postJSON('/api/admin/integrity-cleanup', {});
+              Toast.success('Nettoyage des sessions orphelines terminé !');
+              Pages.health('system');
+            } catch (err) {
+              Toast.error(err.message);
+            }
+          });
+        } catch (e) {
+          Toast.error(e.message);
+        }
+      }
+
+      // Tab 2: Plugin Health
+      else if (sub === 'plugin') {
+        try {
+          const [secOverview, pHealth] = await Promise.all([
+            API.getJSON('/api/admin/security/overview').catch(() => ({ plugin: {} })),
+            API.getJSON('/api/admin/plugin/health').catch(() => ({ status: 'ok' })),
+          ]);
+
+          const p = secOverview.plugin || {};
+          container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:1.5rem; max-width:820px;">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">🔌 Sondes & Connectivité du Plugin Jellyfin</div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+                  <div>
+                    <div style="font-size:1.15rem; font-weight:700;">${Utils.escapeHtml(p.serverName || 'Serveur Jellyfin')}</div>
+                    <div style="font-size:0.85rem; color:var(--muted-foreground);">Dernier signal : ${p.lastSeen ? Utils.formatDateTime(p.lastSeen) : 'Inconnu'}</div>
+                  </div>
+                  <span class="badge ${p.connected ? 'badge-success' : 'badge-danger'}" style="font-size:0.9rem; padding:0.4rem 0.85rem;">
+                    ${p.connected ? '● Plugin En Ligne' : '○ Déconnecté'}
+                  </span>
+                </div>
+
+                <div class="table-wrapper">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Sonde</th>
+                        <th>Cible</th>
+                        <th>État</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><b>Point d'ingestion des événements</b></td>
+                        <td><code>POST /api/plugin/events</code></td>
+                        <td><span class="badge badge-success">Actif</span></td>
+                      </tr>
+                      <tr>
+                        <td><b>Webhook de diagnostic</b></td>
+                        <td><code>GET /api/webhook/jellyfin</code></td>
+                        <td><span class="badge badge-success">Prêt</span></td>
+                      </tr>
+                      <tr>
+                        <td><b>Authentification par clé API</b></td>
+                        <td>En-tête <code>X-Plugin-Key</code></td>
+                        <td><span class="badge badge-primary">Activée</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
+                  <button class="btn btn-secondary btn-sm" id="btn-refresh-plugin-health">🔄 Tester la sonde maintenant</button>
+                  <a href="/settings/plugin" data-link class="btn btn-outline btn-sm">Gérer la clé API du plugin</a>
+                </div>
+              </div>
+            </div>
+          `;
+
+          document.getElementById('btn-refresh-plugin-health')?.addEventListener('click', async () => {
+            try {
+              await API.postJSON('/api/admin/plugin/health', {});
+              Toast.success('Diagnostic plugin exécuté avec succès.');
+              Pages.health('plugin');
             } catch (e) {
               Toast.error(e.message);
             }
           });
-        };
-
-        bindTask('task-sync-recent', '/api/sync', { recentOnly: true });
-        bindTask('task-sync-full', '/api/sync', { recentOnly: false });
-        bindTask('task-integrity', '/api/admin/integrity-cleanup', {});
-        bindTask('task-consolidate', '/api/admin/consolidate-history', { mergeWindowMinutes: 30 });
+        } catch (e) {
+          Toast.error(e.message);
+        }
       }
-    },
 
-    // 16. Admin Health
-    async health() {
-      const main = document.getElementById('app-main');
-      main.innerHTML = `
-        <div>
-          <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.health') || 'Santé Système'}</h1>
-          <p style="color: var(--muted-foreground); font-size: 0.88rem;">Diagnostics base de données, processus et sondes.</p>
-        </div>
+      // Tab 3: Log & Anomaly Health
+      else if (sub === 'logs') {
+        try {
+          const [audit, logsData] = await Promise.all([
+            API.getJSON('/api/admin/security/audit').catch(() => ({ anomalies: [] })),
+            API.getJSON('/api/logs/system').catch(() => ({ logs: [] })),
+          ]);
 
-        <div class="metric-grid" id="health-metrics">
-          <div class="metric-card skeleton" style="height: 120px;"></div>
-          <div class="metric-card skeleton" style="height: 120px;"></div>
-        </div>
-      `;
+          const logs = logsData.logs || [];
+          const errorCount = logs.filter((l) => l.level === 'ERROR').length;
+          const warnCount = logs.filter((l) => l.level === 'WARN').length;
+          const anomalies = audit.anomalies || [];
 
-      try {
-        const [h, hw] = await Promise.all([
-          API.getJSON('/api/admin/health'),
-          API.getJSON('/api/hardware').catch(() => ({})),
-        ]);
+          container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <div class="metric-header">
+                    <span class="metric-label">Erreurs Système</span>
+                    <div class="metric-icon-box">⚠️</div>
+                  </div>
+                  <div class="metric-value" style="color:${errorCount > 0 ? 'var(--destructive)' : 'var(--accent)'};">${errorCount}</div>
+                  <div class="metric-trend">Sur les derniers logs</div>
+                </div>
 
-        document.getElementById('health-metrics').innerHTML = `
-          <div class="metric-card">
-            <div class="metric-header">
-              <span class="metric-label">Base de données</span>
-              <div class="metric-icon-box">🗄️</div>
+                <div class="metric-card">
+                  <div class="metric-header">
+                    <span class="metric-label">Avertissements</span>
+                    <div class="metric-icon-box">⚡</div>
+                  </div>
+                  <div class="metric-value">${warnCount}</div>
+                  <div class="metric-trend">Avertissements de synchronisation</div>
+                </div>
+
+                <div class="metric-card">
+                  <div class="metric-header">
+                    <span class="metric-label">Anomalies de Sécurité</span>
+                    <div class="metric-icon-box">🛡️</div>
+                  </div>
+                  <div class="metric-value" style="color:${anomalies.length > 0 ? 'var(--destructive)' : 'var(--accent)'};">
+                    ${anomalies.length}
+                  </div>
+                  <div class="metric-trend">${anomalies.length === 0 ? 'Aucun comportement suspect' : 'Comportements détectés'}</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                  <div class="card-title">Derniers Événements d'Erreur & Alertes</div>
+                  <a href="/logs" data-link class="btn btn-secondary btn-sm">Consulter tous les logs →</a>
+                </div>
+
+                <div class="table-wrapper" style="border:none;">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Niveau</th>
+                        <th>Message</th>
+                        <th>Horodatage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${logs.filter((l) => l.level === 'ERROR' || l.level === 'WARN').slice(0, 8).map((l) => `
+                        <tr>
+                          <td><span class="badge ${l.level === 'ERROR' ? 'badge-danger' : 'badge-warning'}">${Utils.escapeHtml(l.level)}</span></td>
+                          <td style="font-family:monospace; font-size:0.82rem;">${Utils.escapeHtml(l.message || l.msg || '')}</td>
+                          <td style="white-space:nowrap; font-size:0.78rem; color:var(--muted-foreground);">${Utils.formatDateTime(l.time || l.timestamp)}</td>
+                        </tr>
+                      `).join('') || '<tr><td colspan="3" class="empty-state">Aucune erreur récente enregistrée. Système sain.</td></tr>'}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-            <div class="metric-value" style="font-size:1.6rem; color: ${h.database === 'healthy' ? 'var(--accent)' : 'var(--destructive)'};">
-              ${Utils.escapeHtml(h.database || 'OK')}
-            </div>
-            <div class="metric-trend">Moteur : ${Utils.escapeHtml(h.driver || 'SQLite')}</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header">
-              <span class="metric-label">Enregistrements Orphelins</span>
-              <div class="metric-icon-box">🧹</div>
-            </div>
-            <div class="metric-value">${h.counts ? h.counts.openPlaybackOrphans : 0}</div>
-            <div class="metric-trend">Sessions sans fermeture propre</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-header">
-              <span class="metric-label">Mémoire allouée</span>
-              <div class="metric-icon-box">🧠</div>
-            </div>
-            <div class="metric-value">${hw.memory ? hw.memory.allocMb.toFixed(1) + ' MB' : '-'}</div>
-            <div class="metric-trend">Cœurs CPU : ${hw.cpu ? hw.cpu.cores : '-'}</div>
-          </div>
-        `;
-      } catch (e) {
-        Toast.error(e.message);
+          `;
+        } catch (e) {
+          Toast.error(e.message);
+        }
       }
     },
 
@@ -2414,14 +3180,14 @@
       }
     },
 
-    // 18. Cleanup
+    // 18. Cleanup & Database Hygiene
     async cleanup() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        <div style="max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+        <div style="max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
           <div>
-            <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.cleanup') || 'Outils de Nettoyage'}</h1>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem;">Maintenez une base de données saine et compacte.</p>
+            <h1 style="font-size: 1.5rem; font-weight: 800;">${I18n.t('nav.cleanup') || 'Outils de Nettoyage & Hygiène'}</h1>
+            <p style="color: var(--muted-foreground); font-size: 0.88rem;">Maintenez une base de données saine, compacte et exempte d'enregistrements obsolètes.</p>
           </div>
 
           <div class="card">
@@ -2429,7 +3195,7 @@
               <div class="card-title">🗑️ Supprimer les films orphelins / obsolètes</div>
             </div>
             <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
-              Supprime les entrées de films qui ne figurent plus sur vos serveurs Jellyfin.
+              Supprime les entrées de films qui ne figurent plus sur vos serveurs Jellyfin après des suppressions de fichiers.
             </p>
             <button class="btn btn-danger btn-sm" id="btn-del-stale">Supprimer les films obsolètes</button>
           </div>
@@ -2439,9 +3205,31 @@
               <div class="card-title">👥 Synchroniser les utilisateurs supprimés</div>
             </div>
             <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
-              Désactive les utilisateurs Jellyfin qui ont été effacés du serveur.
+              Désactive les utilisateurs qui ont été supprimés sur vos instances Jellyfin.
             </p>
             <button class="btn btn-secondary btn-sm" id="btn-sync-deleted-users">Synchroniser les suppressions</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">👥 Détection & Fusion des Utilisateurs en Double</div>
+            </div>
+            <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
+              Recherche les utilisateurs ayant des pseudonymes identiques sur différents serveurs Jellyfin.
+            </p>
+            <div id="cleanup-duplicates-list" style="margin-bottom:0.75rem;">
+              <button class="btn btn-secondary btn-sm" id="btn-check-duplicates">Rechercher les doublons</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⏱️ Consolidation de l’Historique</div>
+            </div>
+            <p style="font-size:0.85rem; color:var(--muted-foreground); margin-bottom:1rem;">
+              Fusionne les sessions de visionnage découpées en plusieurs fragments consécutifs pour le même titre.
+            </p>
+            <button class="btn btn-secondary btn-sm" id="btn-run-consolidate">Consolider l'historique (30 min)</button>
           </div>
         </div>
       `;
@@ -2466,6 +3254,49 @@
         try {
           await API.postJSON('/api/admin/users/sync-deleted', {});
           Toast.success('Utilisateurs synchronisés.');
+        } catch (e) {
+          Toast.error(e.message);
+        }
+      });
+
+      document.getElementById('btn-check-duplicates')?.addEventListener('click', async () => {
+        const listEl = document.getElementById('cleanup-duplicates-list');
+        listEl.innerHTML = '<div class="skeleton" style="height:60px;"></div>';
+        try {
+          const data = await API.getJSON('/api/admin/users/duplicates');
+          const groups = data.duplicates || [];
+          if (groups.length === 0) {
+            listEl.innerHTML = '<p style="color:var(--accent); font-size:0.85rem; font-weight:600;">✓ Aucun utilisateur en double détecté.</p>';
+            return;
+          }
+          listEl.innerHTML = groups.map((g) => `
+            <div style="padding:0.6rem; background:var(--surface-soft); border-radius:var(--radius-sm); margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center;">
+              <span><b>${Utils.escapeHtml(g.username)}</b> (${g.count} comptes)</span>
+              <button class="btn btn-secondary btn-sm btn-merge-users" data-username="${Utils.escapeHtml(g.username)}">Fusionner</button>
+            </div>
+          `).join('');
+
+          listEl.querySelectorAll('.btn-merge-users').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+              const uname = btn.getAttribute('data-username');
+              try {
+                await API.postJSON('/api/admin/users/merge', { username: uname });
+                Toast.success(`Utilisateurs "${uname}" fusionnés avec succès.`);
+                Pages.cleanup();
+              } catch (err) {
+                Toast.error(err.message);
+              }
+            });
+          });
+        } catch (e) {
+          listEl.innerHTML = `<p style="color:var(--destructive); font-size:0.85rem;">Erreur : ${Utils.escapeHtml(e.message)}</p>`;
+        }
+      });
+
+      document.getElementById('btn-run-consolidate')?.addEventListener('click', async () => {
+        try {
+          await API.postJSON('/api/admin/consolidate-history', { mergeWindowMinutes: 30 });
+          Toast.success('Consolidation de l’historique effectuée avec succès.');
         } catch (e) {
           Toast.error(e.message);
         }
@@ -2515,7 +3346,10 @@
       // Update sidebar active state
       document.querySelectorAll('.nav-item').forEach((item) => {
         const r = item.getAttribute('data-route');
-        if (r === path || (r !== '/' && path.startsWith(r))) {
+        const matches = (r === path) ||
+          (r !== '/' && path.startsWith(r)) ||
+          (r === '/admin/health' && path.startsWith('/admin/'));
+        if (matches) {
           item.classList.add('active');
         } else {
           item.classList.remove('active');
@@ -2559,25 +3393,29 @@
       } else if (path === '/media' || path === '/media/all') {
         Pages.media();
       } else if (path === '/media/popular') {
-        Pages.media();
+        Pages.media({ sort: 'popular' });
       } else if (path === '/media/collections') {
         Pages.collections();
       } else if (path === '/media/analysis') {
         Pages.analysis();
       } else if (path.startsWith('/media/artist/')) {
-        const artist = decodeURIComponent(path.split('/')[3] || '');
-        Pages.media(artist);
+        const artist = decodeURIComponent(path.slice('/media/artist/'.length));
+        Pages.media({ artist });
       } else if (path.startsWith('/media/')) {
         const id = path.split('/')[2];
         Pages.mediaDetail(id);
       } else if (path === '/logs') {
         Pages.logs();
       } else if (path.startsWith('/settings')) {
-        const parts = path.split('/');
-        const sub = parts[2] || 'overview';
+        const rest = path.slice('/settings'.length).replace(/^\//, '');
+        const sub = rest || 'overview';
         Pages.settings(sub);
-      } else if (path === '/admin/health' || path === '/admin/log-health' || path === '/admin/plugin-health') {
-        Pages.health();
+      } else if (path === '/admin/health') {
+        Pages.health('system');
+      } else if (path === '/admin/plugin-health') {
+        Pages.health('plugin');
+      } else if (path === '/admin/log-health') {
+        Pages.health('logs');
       } else if (path === '/admin/server-compare') {
         Pages.serverCompare();
       } else if (path === '/admin/cleanup') {

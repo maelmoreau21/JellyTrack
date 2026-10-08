@@ -63,29 +63,37 @@ Toutes les pages de JellyTrack sont gérées de manière réactive par le routeu
   - Graphique des heures de pointe (histogramme 24h).
   - Carte thermique d'activité annuelle style GitHub avec modale de drilldown sur chaque case.
 - **`/login`** : Formulaire de connexion sécurisé avec option 30 jours et redirection SSO / OIDC.
-- **`/setup`** : Assistant de premier démarrage pour connecter un serveur Jellyfin.
-- **`/about`** : Informations sur l'application, technologies Go et liens utiles.
-- **`/recent`** : Historique récent de lecture avec vignettes, utilisateur, lecteur et durée.
+- **`/setup`** : Assistant de premier démarrage pour connecter un serveur Jellyfin initial.
+- **`/about`** : Informations sur l'application, architecture Go autonome et liens utiles.
+- **`/recent`** : Historique récent de lecture avec vignettes de jaquettes, liens directs média/utilisateur, lecteur et durée.
 - **`/newsletter`** : Bilan mensuel sur 30 jours et publication directe sur webhook Discord.
-- **`/users`** : Répertoire des utilisateurs Jellyfin avec statut d'activité et accès au profil.
+- **`/users`** : Répertoire des utilisateurs Jellyfin avec statut d'activité et accès au profil et Wrapped.
 - **`/users/{id}`** : Fiche utilisateur détaillée, statistiques cumulées et sessions récentes.
-- **`/wrapped/{userId}`** : JellyTrack Wrapped annuel interactif sous forme de diapositives animées.
+- **`/wrapped/{userId}`** : JellyTrack Wrapped annuel interactif sous forme de diapositives animées avec synthèse partageable.
 - **`/media` & `/media/all`** : Catalogue complet avec recherche en temps réel, filtres (Films, Séries, Musique, Livres), tri et pagination.
 - **`/media/popular`** : Titres les plus consultés.
 - **`/media/collections`** : Répartition par bibliothèque Jellyfin.
 - **`/media/analysis`** : Analyse approfondie (top réalisateurs, acteurs, studios).
-- **`/media/artist/{name}`** : Titres et albums filtrés par artiste.
-- **`/media/{id}`** : Détail média (jaquette, métadonnées, acteurs, historique des lectures, rotation de jaquette).
+- **`/media/artist/{name}`** : Titres et albums filtrés par artiste avec bandeau contextuel.
+- **`/media/{id}`** : Détail média (jaquette, métadonnées, acteurs, rotation de jaquette et tableau des dernières lectures).
 - **`/logs`** : Journaux système avec filtre par niveau, téléchargement de log brut et export CSV.
-- **`/settings`** (et sous-onglets : overview, jellyfin, dataBackups, sso, notifications, plugin, scheduler) :
-  - Gestion des serveurs Jellyfin (ajout, test, suppression, rotation de clé plugin).
-  - Sauvegardes manuelles, automatiques, téléchargement, restauration et export JSON.
-  - Configuration SSO / OpenID Connect (Authentik, Keycloak).
-  - Webhooks Discord d'alertes automatiques.
-  - Déclenchement manuel des tâches planifiées.
-- **`/admin/health`** : État de santé du système, latence DB, processus et sondes.
-- **`/admin/server-compare`** : Tableau comparatif multi-serveurs.
-- **`/admin/cleanup`** : Nettoyage des films obsolètes et synchronisation des utilisateurs supprimés.
+- **`/settings` & `/settings/overview`** : Vue d'ensemble de la configuration globale, langue et options.
+- **`/settings/jellyfin`** : Gestion des serveurs Jellyfin (ajout, test, suppression, régénération de clé plugin).
+- **`/settings/media`** : Seuils de résolution (480p, 720p, 1080p, 4K), règles de complétion (%) et exclusions de bibliothèques.
+- **`/settings/network`** : Connectivité réseau, diagnostic des endpoints serveurs et en-têtes proxy inverse.
+- **`/settings/dataBackups`** : Sauvegardes manuelles, automatiques, import JSON, export et restauration.
+- **`/settings/sso`** : Configuration OpenID Connect / SSO (Authentik, Keycloak).
+- **`/settings/notifications`** : Webhooks Discord pour les alertes automatiques.
+- **`/settings/plugin`** : Affichage, copie et régénération de la clé API du plugin Jellyfin.
+- **`/settings/plugin/security`** : État de connexion du plugin, seuils d'alertes intelligents et paramètres de télémétrie fine.
+- **`/settings/scheduler`** : Planificateur unifié intégrant les sous-onglets :
+  - **`/settings/scheduler/schedules`** : Intervalles automatiques (cron) pour les synchronisations et vérifications.
+  - **`/settings/scheduler/tasks`** : Déclenchement manuel instantané des tâches d'arrière-plan.
+- **`/admin/health`** : État de santé du système et de la base de données, latence et sondes.
+- **`/admin/plugin-health`** : Diagnostic complet et sondes de connectivité du plugin Jellyfin.
+- **`/admin/log-health`** : Détection des anomalies système, alertes de sécurité et journaux d'erreurs récents.
+- **`/admin/server-compare`** : Tableau comparatif multi-serveurs Jellyfin.
+- **`/admin/cleanup`** : Nettoyage des films orphelins, synchronisation des utilisateurs supprimés, détection des doublons et consolidation.
 
 ---
 
