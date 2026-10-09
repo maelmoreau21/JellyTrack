@@ -108,6 +108,12 @@ html.dark .nav-search-field,html.dark .nav-footer-control { background:linear-gr
 .historical-settings-tabs a { display:flex; align-items:center; gap:8px; flex-shrink:0; border:1px solid transparent; padding:8px 14px; border-radius:12px; font-size:14px; font-weight:600; color:var(--muted-foreground); }
 .historical-settings-tabs a.active { background:color-mix(in srgb,var(--primary) 15%,transparent); color:var(--primary); border-color:color-mix(in srgb,var(--primary) 30%,transparent); font-weight:700; }
 .historical-settings-tabs svg { width:16px; height:16px; }
+body.navigation-settings #app-main { padding:24px 32px; max-width:none; gap:0; }
+body.navigation-settings .historical-settings-tabs a { border-radius:8px; }
+body.navigation-admin #app-main { padding:32px; max-width:none; gap:0; }
+@media(max-width:767px) {
+  body.navigation-settings #app-main,body.navigation-admin #app-main { padding:16px; }
+}
 body.navigation-fullscreen .sidebar,body.navigation-fullscreen .topbar,body.navigation-fullscreen .sidebar-backdrop { display:none!important; }
 body.navigation-fullscreen .main-wrapper { margin:0!important; padding:0!important; }
 .wrapped-close-btn { position:fixed; top:32px; right:16px; z-index:150; width:36px; height:36px; border:0; border-radius:50%; background:#ffffff1a; color:white; cursor:pointer; backdrop-filter:blur(16px); }

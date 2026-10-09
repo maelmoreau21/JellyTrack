@@ -1,0 +1,2072 @@
+{
+  "source": "Historical main archive, original settings/admin components. Synthetic Prisma stub and signed NextAuth session.",
+  "cases": [
+    {
+      "route": "/settings/jellyfin",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/jellyfin",
+      "headings": [
+        "Serveurs Jellyfin connectés"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Sécurité",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Paramètres Média",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Planificateur de Tâches",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Sauvegardes de Données",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ajouter un serveur",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nJellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nServeurs Jellyfin connectés\nGérez les instances Jellyfin associées à JellyTrack, configurez les clés d'API plugin et basculez entre les serveurs.\n\nlocalhost\n\nServeur principal\nClé API manquante\nPlugin non configuré\n\nAPI key missing.\n\nModifier le serveur\nNom du serveur\nURL serveur\nClé d'API serveur\n\nConnexion plugin (localhost)\n\nURL plugin\nCopier l'URL\nClé API plugin de ce serveur\nCopier la clé\nRégénérer la clé du serveur\nAjouter un serveur\n\nLe bouton \"Ajouter un serveur\" reste disponible pour en ajouter autant que nécessaire.",
+      "rendered": true
+    },
+    {
+      "route": "/settings/sso",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/sso",
+      "headings": [
+        "Authentification SSO",
+        "URI de Redirection OAuth2 / OIDC (Callback URL)",
+        "Configuration & Rôles SSO"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Sécurité",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Paramètres Média",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Planificateur de Tâches",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Sauvegardes de Données",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Actualiser",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Copier",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "sso-toggle",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "auto-redirect-toggle",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "oidc-url",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "oidc-client-id",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "oidc-client-secret",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "user-group",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "admin-group",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Enregistrer les réglages SSO",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nJellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nAuthentification SSO\nInactif (Jellyfin)\nLe SSO est désactivé. L'authentification directe Jellyfin est actuellement utilisée.\nActualiser\nMode d'authentification\n\nJellyfin Direct\n\nAccès Administrateur Local\n\nDésactivé\n\nGestion des Groupes\n\nAccès Libre (Tout Utilisateur SSO)\n\nURI de Redirection OAuth2 / OIDC (Callback URL)\nCopiez et collez cette URL de redirection exacte dans votre fournisseur OIDC (Authentik, Keycloak, Authelia, etc.).\nCopier\nConfiguration & Rôles SSO\nModifiez les réglages SSO ci-dessous. Les variables définies dans votre docker-compose / .env restent toujours prioritaires.\nActiver l'authentification SSO\n\nEnregistré en base de données\n\nRedirection auto vers SSO\n\nConnexion transparente\n\nURL de l'Émetteur / Découverte (OIDC_URL)\n\nURL de découverte ou base de votre fournisseur OpenID Connect (ex: Authentik, Keycloak, Authelia).\n\nIdentifiant Client (OIDC_CLIENT_ID)\nSecret Client (OIDC_CLIENT_SECRET)\nGROUPES & RÔLES SSO\nGroupe Utilisateurs Standards (OIDC_USER_GROUP)\n\nLes membres de ce groupe sont autorisés à se connecter à JellyTrack en tant qu'utilisateurs.\n\nGroupe Administrateurs (OIDC_ADMIN_GROUP)\n\nLes membres de ce groupe obtiennent automatiquement les droits d'administration JellyTrack.\n\nTous les réglages ci-dessus sont configurés et stockés dans votre base de données.\n\nEnregistrer les réglages SSO",
+      "rendered": true
+    },
+    {
+      "route": "/settings/plugin/security",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/plugin/security",
+      "headings": [
+        "Centre de sécurité",
+        "État plugin",
+        "Précision de télémétrie plugin",
+        "Seuils Smart (anomalies)"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Sécurité",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Paramètres Média",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Planificateur de Tâches",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Sauvegardes de Données",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        },
+        {
+          "text": "Retour plugin",
+          "href": "/settings/plugin"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Rafraîchir",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Très précis",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Équilibré",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Trafic minimal",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder la télémétrie",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "smart-ip-attempt-threshold",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "smart-ip-window-minutes",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "smart-new-country-window",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nJellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nCentre de sécurité\n\nIndicateurs de clés plugin et journal d’audit de sécurité.\n\nRetour plugin\nRafraîchir\nÉtat plugin\nConnectivité et heartbeat\nStatut\nHors ligne\nServeur\n-\nVersion\n-\nDernier ping\n-\nPrécision de télémétrie plugin\nProfil très précis par défaut : transitions immédiates, progression fine en lecture et ralentissement automatique pendant les pauses.\nTrès précis\nÉquilibré\nTrafic minimal\nIntervalle lecture (s)\nIntervalle pause (s)\nSession inactive (s)\nFusion reprise (s)\nSeuil de saut manuel (s)\nFile retry max\nFlush retry max\nPause / reprise\nAvance / retour manuel\nChangements audio / sous-titres\nFermeture de session / Déconnexion\nSauvegarder la télémétrie\nSeuils Smart (anomalies)\nReglages dynamiques utilises par les filtres smart d audit et la detection d anomalies.\nTentatives IP (seuil)\nFenetre IP (minutes)\nNouveau pays (minutes)\nActions\nSauvegarder",
+      "rendered": true
+    },
+    {
+      "route": "/settings/media",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/media",
+      "headings": [
+        "Paramètres Média",
+        "Bibliothèques exclues des statistiques",
+        "Affichage des badges en bibliothèque",
+        "Règles par Bibliothèque",
+        "Seuils de Résolution"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Sécurité",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Paramètres Média",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Planificateur de Tâches",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Sauvegardes de Données",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "CinémaActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "LivresActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "MusiqueActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "SériesActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "CinémaActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "LivresActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "MusiqueActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "SériesActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Annuler",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nJellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nParamètres Média\nGérez les seuils de résolution et les préférences d'affichage du contenu.\nNote\nUne synchronisation complète est requise pour appliquer ces changements.\nBibliothèques exclues des statistiques\n\nLes bibliothèques désactivées ci-dessous seront exclues de toutes les statistiques du dashboard.\n\nDécochez une bibliothèque serveur par serveur. Deux bibliothèques portant le même nom sur des serveurs différents sont gérées séparément.\n\nAudit principal\nhttp://127.0.0.1:9\nCinéma\nActive\nLivres\nActive\nMusique\nActive\nSéries\nActive\nAudit secondaire\nhttp://127.0.0.1:9\nCinéma\nActive\nLivres\nActive\nMusique\nActive\nSéries\nActive\nAffichage des badges en bibliothèque\n\nAffiche ou masque les badges de résolution, qualité série et bitrate dans l'onglet Bibliothèque.\n\nAfficher les badges média\n\nDésactive cette option pour alléger visuellement les cartes.\n\nRègles par Bibliothèque\n\nGérez les seuils d'abandon et de complétion par bibliothèque. Vous pouvez désactiver le suivi de la complétion pour certaines bibliothèques (ex: Musique).\n\nAjustez les seuils pour définir quand une lecture est considérée comme passée, abandonnée, partielle ou terminée selon le type de bibliothèque.\n\nRègle par défaut (autres bibliothèques)\n\nActif\n\nAbandonné\n\nPartiel\n\nTerminé\n\nFilms\n\nActif\n\nAbandonné\n\nPartiel\n\nTerminé\n\nSéries\n\nActif\n\nAbandonné\n\nPartiel\n\nTerminé\n\nMusique\n\nActif\n\nAbandonné\n\nPartiel\n\nTerminé\n\nLivres\n\nActif\n\nAbandonné\n\nPartiel\n\nTerminé\n\nVidéos personnelles\n\nActif\n\nAbandonné\n\nPartiel\n\nTerminé\n\nSeuils de Résolution\n\nConfigurez comment JellyTrack catégorise la qualité vidéo. Si un fichier dépasse la largeur OU la hauteur d'un seuil, il est promu à la catégorie supérieure.\n\nSeuil SD / 480p (Max)\n480P\nLargeur Max (px)\nHauteur Max (px)\nSeuil 720p HD (Max)\n720P\nLargeur Max (px)\nHauteur Max (px)\nSeuil 1080p FHD (Max)\n1080P\nLargeur Max (px)\nHauteur Max (px)\nSeuil 4K UHD (Max)\n4K\nLargeur Max (px)\nHauteur Max (px)\nAnnuler\nSauvegarder les paramètres",
+      "rendered": true
+    },
+    {
+      "route": "/settings/scheduler",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/scheduler",
+      "headings": [
+        "Planificateur de Tâches",
+        "Sauvegarder les Plannings",
+        "Période de disponibilité pour l'année en cours"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Sécurité",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Paramètres Média",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Planificateur de Tâches",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Sauvegardes de Données",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les Plannings",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nJellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nPlanificateur de Tâches\nGérez les tâches automatiques de synchronisation et de sauvegarde.\nSynchro Récente\n\nSynchroniser uniquement les éléments récents/modifiés.\n\nToutes les 6 h\nLancer\nSynchro Totale\n\nEffectue une synchronisation complète de tous les métadonnées média. Cela peut prendre du temps.\n\nToutes les 48 h\nLancer\nVérification d'intégrité\n\nDétecte et clôture les sessions de lecture orphelines (coupures réseau ou crashs clients).\n\nToutes les 6 h\nLancer\nTâche de Sauvegarde\n\nTâche de sauvegarde automatique nocturne.\n\nToutes les 24 h\nLancer\nConsolidation de l'historique\n\nDétecte et fusionne les micro-coupures et pauses pour assainir l'historique de lecture.\n\nTous les jours à 03:45 UTC\nLancer\nSauvegarder les Plannings\nPlanifiez chaque tâche automatiquement avec un intervalle en heures. Exemple recommandé: Synchro récente 6h, Synchro totale 48h, Sauvegarde 24h.\nSynchro Récente\nIntervalle auto en heures (1-24)\nh\nSynchro Totale\nIntervalle auto en heures (24-168, multiple de 24)\nh\nVérification d'intégrité\nIntervalle auto en heures (1-168)\nh\nTâche de Sauvegarde\nIntervalle auto en heures (1-168)\nh\nRétention des journaux système\nDurée de conservation automatique des fichiers de journaux système avant rotation et suppression.\n7 jours\n14 jours\n30 jours\n60 jours\n90 jours\n180 jours\n365 jours\nConserver indéfiniment\nSauvegarder les Plannings\nPériode de disponibilité pour l'année en cours\nDéfinit quand le Wrapped de l'année actuelle (2025+) devient accessible. Les années précédentes restent toujours consultables.\nActiver la période de disponibilité automatique\n\nSi activé, le Wrapped ne sera accessible qu'entre les dates définies ci-dessous.\n\nVisibilité générale du Wrapped\n\nAfficher ou masquer le Wrapped dans la barre latérale et la navigation.\n\nSauvegarder les paramètres",
+      "rendered": true
+    },
+    {
+      "route": "/settings/dataBackups",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/dataBackups",
+      "headings": [
+        "Sauvegardes de Données",
+        "Historique des sauvegardes",
+        "Importer une sauvegarde"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Sécurité",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Paramètres Média",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Planificateur de Tâches",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Sauvegardes de Données",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder maintenant",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Exporter le Backup",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "file",
+          "id": "import-file",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Importer une sauvegarde",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nJellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nSauvegardes de Données\nHistorique des sauvegardes automatiques et manuelles.\nSauvegarder maintenant\nExporter le Backup\nSAUVEGARDES\n0\nTAILLE TOTALE\n0.00 Mo\nDERNIÈRE SAUVEGARDE\n-\nHistorique des sauvegardes\n\nRestaurez ou supprimez une sauvegarde existante.\n\nJour\tType\tMo\tFichier\tActions\nAucune sauvegarde automatique trouvée.\nImporter une sauvegarde\nSélectionnez un fichier d'archive ZIP (.zip) ou JSON (.json) depuis votre ordinateur pour restaurer votre base de données et vos paramètres.\nImporter une sauvegarde\nImporter une sauvegarde\nExportez ou importez votre base de données JellyTrack.",
+      "rendered": true
+    },
+    {
+      "route": "/settings/notifications",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/notifications",
+      "headings": [
+        "Notifications"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Sécurité",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Paramètres Média",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Planificateur de Tâches",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Sauvegardes de Données",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "discord-alerts",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nJellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nNotifications\nConfigurez où et quand vous souhaitez recevoir des alertes.\nActiver les Webhooks Discord\n\nEnvoyer des notifications vers un salon Discord.\n\nSauvegarder les paramètres",
+      "rendered": true
+    },
+    {
+      "route": "/settings/plugin",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/plugin",
+      "headings": [
+        "Serveurs Jellyfin connectés"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Sécurité",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Paramètres Média",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Planificateur de Tâches",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Sauvegardes de Données",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ajouter un serveur",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nJellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nServeurs Jellyfin connectés\nGérez les instances Jellyfin associées à JellyTrack, configurez les clés d'API plugin et basculez entre les serveurs.\n\nlocalhost\n\nServeur principal\nClé API manquante\nPlugin non configuré\n\nAPI key missing.\n\nModifier le serveur\nNom du serveur\nURL serveur\nClé d'API serveur\n\nConnexion plugin (localhost)\n\nURL plugin\nCopier l'URL\nClé API plugin de ce serveur\nCopier la clé\nRégénérer la clé du serveur\nAjouter un serveur\n\nLe bouton \"Ajouter un serveur\" reste disponible pour en ajouter autant que nécessaire.",
+      "rendered": true
+    },
+    {
+      "route": "/settings/analytics",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/media/analysis",
+      "headings": [
+        "Analyse Profonde",
+        "Contenu Total",
+        "Qualité Vidéo Globale",
+        "Collections",
+        "Diversité de la Bibliothèque (Top Genres)",
+        "Binge-Watching Tracker (Marathons de Séries)",
+        "Suggestions d'Acquisitions & Tendances (Smart Insights)",
+        "Aperçu des statistiques approfondies",
+        "Top Réalisateurs",
+        "Top Acteurs",
+        "Top Studios"
+      ],
+      "links": [
+        {
+          "text": "Tous les Médias",
+          "href": "/media/all"
+        },
+        {
+          "text": "Populaires",
+          "href": "/media/popular"
+        },
+        {
+          "text": "Analyse Profonde",
+          "href": "/media/analysis"
+        },
+        {
+          "text": "collections",
+          "href": "/media/collections"
+        },
+        {
+          "text": "4K UHD2",
+          "href": "/media/all?resolution=4K"
+        },
+        {
+          "text": "1440p QHD0",
+          "href": "/media/all?resolution=1440p"
+        },
+        {
+          "text": "1080p FHD0",
+          "href": "/media/all?resolution=1080p"
+        },
+        {
+          "text": "720p HD0",
+          "href": "/media/all?resolution=720p"
+        },
+        {
+          "text": "Standard / Autre0",
+          "href": "/media/all?resolution=SD"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "1Réalisateur Audit2 Top Réalisateurs",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "1Actrice Audit2 Top Acteurs",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "1Studio Audit2 Top Studios",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nAnalyse Profonde\nContenu Total\nInventaire des bibliothèques\nMédias Totaux\n2\nNombre d'éléments multimédia indexés.\nGenres uniques\n2\nDurée moyenne\n2h 0m\nDurée moyenne des médias.\nQualité Vidéo Globale\nRépartition par résolution certifiée.\n4K UHD\n2\n1440p QHD\n0\n1080p FHD\n0\n720p HD\n0\nStandard / Autre\n0\nCollections\nInventaire des bibliothèques\nCinéma\n2\nDiversité de la Bibliothèque (Top Genres)\nRépartition des médias par genre (catégories principales).\n0\n0.5\n1\n1.5\n2\nAudit\nDrama\nBinge-Watching Tracker (Marathons de Séries)\nDétection automatique des séries dévorées d'une traite (sessions de 3 épisodes consécutifs ou plus).\n30 derniers jours\nAucun marathon détecté sur les 30 derniers jours (minimum 3 épisodes consécutifs).\nSuggestions d'Acquisitions & Tendances (Smart Insights)\nRecommandations basées sur les genres, réalisateurs et acteurs les plus consommés pour optimiser vos ajouts dans la bibliothèque.\nIA JellyTrack\nGENRE DOMINANT\nTrès Forte Demande\nEnrichir la collection Audit\n\nReprésente 100% du temps total de visionnage (124.7h). Vos spectateurs en redemandent !\n\nIndice d'intérêt\n99%\nGENRE TENDANCE\nTendance Forte\nFilms & Séries Drama\n\nDeuxième genre le plus plébiscité avec 124.7h visionnées sur les 30 derniers jours.\n\nIndice d'intérêt\n85%\nARTISTE / RÉALISATEUR VEDETTE\nFavori Utilisateurs\nCompléter la filmographie / discographie de Artiste Audit\n\nCumule 124.7h d'écoute/visionnage sur 187 lectures.\n\nIndice d'intérêt\n92%\nGENRES DOMINANTS EN TEMPS DE VISIONNAGE\nAudit\n124.7h (100%)\nDrama\n124.7h (100%)\nAperçu des statistiques approfondies\nAnalyses avancées de votre collection multimédia.\nTop Réalisateurs\n1\nRéalisateur Audit\n2 Top Réalisateurs\nTop Acteurs\n1\nActrice Audit\n2 Top Acteurs\nTop Studios\n1\nStudio Audit\n2 Top Studios\nAudit",
+      "rendered": true
+    },
+    {
+      "route": "/admin/health",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/admin/plugin/health",
+          "status": 500
+        }
+      ],
+      "url": "/admin/health",
+      "headings": [
+        "Santé & Hygiène du Serveur",
+        "Sécurité & Anomalies",
+        "Espace Récupérable",
+        "Médias Inachevés",
+        "Moniteur de Flux",
+        "Nettoyage Intelligent & Optimisation",
+        "Médias Fantômes"
+      ],
+      "links": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_0_-trigger-cleanup",
+          "name": "",
+          "text": "Nettoyage & Stockage",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_0_-trigger-security",
+          "name": "",
+          "text": "Sécurité & Anomalies",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_0_-trigger-logs",
+          "name": "",
+          "text": "Moteur & Logs",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_4_-trigger-ghosts",
+          "name": "",
+          "text": "Médias Fantômes0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_4_-trigger-abandoned",
+          "name": "",
+          "text": "Médias Abandonnés0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_4_-trigger-duplicates",
+          "name": "",
+          "text": "Doublons0",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "30 derniers jours",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "25",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "JSON",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Tout",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Films (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Séries (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Albums (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Précédent",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Suivant",
+          "disabled": true
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nSanté & Hygiène du Serveur\n\nDiagnostics système, détection d'anomalies et optimisation du stockage\n\nSÉCURITÉ & ANOMALIES\nOptimal\n\nAucun partage suspect\n\nESPACE RÉCUPÉRABLE\n0 B\n\n0 médias fantômes\n\nMÉDIAS INACHEVÉS\n0\n\nAbandonnés < 25%\n\nMONITEUR DE FLUX\nIdle\n\n1 lectures orphelines\n\nNettoyage & Stockage\nSécurité & Anomalies\nMoteur & Logs\nNettoyage Intelligent & Optimisation\n\nDétectez et supprimez les fichiers jamais visionnés, abandonnés ou en doublon pour libérer de l'espace disque.\n\nEspace récupérable estimé\n0 B\nMédias Fantômes\n0\nMédias Abandonnés\n0\nDoublons détectés\n0\nMédias Fantômes\n0\nMédias Abandonnés\n0\nDoublons\n0\n30 derniers jours\n25\nCSV\nJSON\nMédias Fantômes\nContenus ajoutés il y a plus de 30 jours n'ayant jamais été regardés par personne.\nTout\nFilms (0)\nSéries (0)\nAlbums (0)\nTitre\tType\tAjouté\nAucun média fantôme. Votre serveur est propre !\n\n0-0 / 0\n\nPrécédent\nPage 1/1\nSuivant",
+      "interactions": [
+        {
+          "panel": "security",
+          "selected": true
+        },
+        {
+          "panel": "logs",
+          "selected": true
+        },
+        {
+          "panel": "cleanup",
+          "selected": true
+        },
+        {
+          "cleanup": "abandoned",
+          "selected": true
+        },
+        {
+          "cleanup": "duplicates",
+          "selected": true
+        },
+        {
+          "cleanup": "ghosts",
+          "selected": true
+        }
+      ],
+      "rendered": true
+    },
+    {
+      "route": "/admin/log-health",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/admin/health",
+      "headings": [
+        "Santé & Hygiène du Serveur",
+        "Sécurité & Anomalies",
+        "Espace Récupérable",
+        "Médias Inachevés",
+        "Moniteur de Flux",
+        "Nettoyage Intelligent & Optimisation",
+        "Médias Fantômes"
+      ],
+      "links": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_75esnebnalb_-trigger-cleanup",
+          "name": "",
+          "text": "Nettoyage & Stockage",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_75esnebnalb_-trigger-security",
+          "name": "",
+          "text": "Sécurité & Anomalies",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_75esnebnalb_-trigger-logs",
+          "name": "",
+          "text": "Moteur & Logs",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_19f5esnebnalb_-trigger-ghosts",
+          "name": "",
+          "text": "Médias Fantômes0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_19f5esnebnalb_-trigger-abandoned",
+          "name": "",
+          "text": "Médias Abandonnés0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_19f5esnebnalb_-trigger-duplicates",
+          "name": "",
+          "text": "Doublons0",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "30 derniers jours",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "25",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "JSON",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Tout",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Films (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Séries (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Albums (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Précédent",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Suivant",
+          "disabled": true
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nSanté & Hygiène du Serveur\n\nDiagnostics système, détection d'anomalies et optimisation du stockage\n\nSÉCURITÉ & ANOMALIES\nOptimal\n\nAucun partage suspect\n\nESPACE RÉCUPÉRABLE\n0 B\n\n0 médias fantômes\n\nMÉDIAS INACHEVÉS\n0\n\nAbandonnés < 25%\n\nMONITEUR DE FLUX\nIdle\n\n1 lectures orphelines\n\nNettoyage & Stockage\nSécurité & Anomalies\nMoteur & Logs\nNettoyage Intelligent & Optimisation\n\nDétectez et supprimez les fichiers jamais visionnés, abandonnés ou en doublon pour libérer de l'espace disque.\n\nEspace récupérable estimé\n0 B\nMédias Fantômes\n0\nMédias Abandonnés\n0\nDoublons détectés\n0\nMédias Fantômes\n0\nMédias Abandonnés\n0\nDoublons\n0\n30 derniers jours\n25\nCSV\nJSON\nMédias Fantômes\nContenus ajoutés il y a plus de 30 jours n'ayant jamais été regardés par personne.\nTout\nFilms (0)\nSéries (0)\nAlbums (0)\nTitre\tType\tAjouté\nAucun média fantôme. Votre serveur est propre !\n\n0-0 / 0\n\nPrécédent\nPage 1/1\nSuivant",
+      "rendered": true
+    },
+    {
+      "route": "/admin/plugin-health",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/admin/health",
+      "headings": [
+        "Santé & Hygiène du Serveur",
+        "Sécurité & Anomalies",
+        "Espace Récupérable",
+        "Médias Inachevés",
+        "Moniteur de Flux",
+        "Nettoyage Intelligent & Optimisation",
+        "Médias Fantômes"
+      ],
+      "links": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_75esnebnalb_-trigger-cleanup",
+          "name": "",
+          "text": "Nettoyage & Stockage",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_75esnebnalb_-trigger-security",
+          "name": "",
+          "text": "Sécurité & Anomalies",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_75esnebnalb_-trigger-logs",
+          "name": "",
+          "text": "Moteur & Logs",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_19f5esnebnalb_-trigger-ghosts",
+          "name": "",
+          "text": "Médias Fantômes0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_19f5esnebnalb_-trigger-abandoned",
+          "name": "",
+          "text": "Médias Abandonnés0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_19f5esnebnalb_-trigger-duplicates",
+          "name": "",
+          "text": "Doublons0",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "30 derniers jours",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "25",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "JSON",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Tout",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Films (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Séries (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Albums (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Précédent",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Suivant",
+          "disabled": true
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nSanté & Hygiène du Serveur\n\nDiagnostics système, détection d'anomalies et optimisation du stockage\n\nSÉCURITÉ & ANOMALIES\nOptimal\n\nAucun partage suspect\n\nESPACE RÉCUPÉRABLE\n0 B\n\n0 médias fantômes\n\nMÉDIAS INACHEVÉS\n0\n\nAbandonnés < 25%\n\nMONITEUR DE FLUX\nIdle\n\n1 lectures orphelines\n\nNettoyage & Stockage\nSécurité & Anomalies\nMoteur & Logs\nNettoyage Intelligent & Optimisation\n\nDétectez et supprimez les fichiers jamais visionnés, abandonnés ou en doublon pour libérer de l'espace disque.\n\nEspace récupérable estimé\n0 B\nMédias Fantômes\n0\nMédias Abandonnés\n0\nDoublons détectés\n0\nMédias Fantômes\n0\nMédias Abandonnés\n0\nDoublons\n0\n30 derniers jours\n25\nCSV\nJSON\nMédias Fantômes\nContenus ajoutés il y a plus de 30 jours n'ayant jamais été regardés par personne.\nTout\nFilms (0)\nSéries (0)\nAlbums (0)\nTitre\tType\tAjouté\nAucun média fantôme. Votre serveur est propre !\n\n0-0 / 0\n\nPrécédent\nPage 1/1\nSuivant",
+      "rendered": true
+    },
+    {
+      "route": "/admin/server-compare",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/admin/server-compare",
+      "headings": [
+        "Comparateur multi‑serveurs",
+        "Active streams",
+        "Plays (24h)",
+        "Plugin errors (24h)",
+        "Scope",
+        "Server ranking"
+      ],
+      "links": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Tout",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Audit principal",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Audit secondaire",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nComparateur multi‑serveurs\n\nCompare la charge actuelle, la pression de transcodage et la fraîcheur des heartbeats entre les serveurs Jellyfin.\n\nTout\nAudit principal\nAudit secondaire\nActive streams\n0\n\nAcross 2 server(s)\n\nPlays (24h)\n15\n\n6.2 watch hours\n\nPlugin errors (24h)\n0\n\nSecurity and ingest validation failures\n\nScope\nall servers\n\nURL/global selection fingerprint\n\nServer ranking\nHigher score means more steady activity with fewer stale sessions and lower transcode pressure.\nServer\tActive\tTranscodes\tAvg bitrate\tPlays (24h)\tHeartbeat\tScore\n\nAudit principal\nLoad index: 0%\n\t0\t0\t-\t10\n4.5h\n\tstale\n9h ago\n\t-3\n\nAudit secondaire\nLoad index: 0%\n\t0\t0\t-\t5\n1.7h\n\tstale\n9h ago\n\t-4",
+      "rendered": true
+    },
+    {
+      "route": "/admin/cleanup",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/admin/cleanup",
+      "headings": [
+        "Assistant de Nettoyage",
+        "Médias Fantômes"
+      ],
+      "links": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_l5esnebnalb_-trigger-ghosts",
+          "name": "",
+          "text": "Médias Fantômes0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_l5esnebnalb_-trigger-abandoned",
+          "name": "",
+          "text": "Médias Abandonnés0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_R_l5esnebnalb_-trigger-duplicates",
+          "name": "",
+          "text": "Doublons0",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "30 derniers jours",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "25",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "JSON",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Tout",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Films (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Séries (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Albums (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Précédent",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Suivant",
+          "disabled": true
+        }
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nAssistant de Nettoyage\nEspace récupérable estimé\n0 B\nMédias Fantômes\n0\nMédias Abandonnés\n0\nDoublons détectés\n0\nMédias Fantômes\n0\nMédias Abandonnés\n0\nDoublons\n0\n30 derniers jours\n25\nCSV\nJSON\nMédias Fantômes\nContenus ajoutés il y a plus de 30 jours n'ayant jamais été regardés par personne.\nTout\nFilms (0)\nSéries (0)\nAlbums (0)\nTitre\tType\tAjouté\nAucun média fantôme. Votre serveur est propre !\n\n0-0 / 0\n\nPrécédent\nPage 1/1\nSuivant",
+      "rendered": true
+    }
+  ]
+}

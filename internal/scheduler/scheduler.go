@@ -20,6 +20,7 @@ type Config struct {
 	IntegrityCheckEveryHours int
 	TelemetryRetentionDays   int
 	ConsolidationWindowMin   int
+	LogRetentionDays         int
 }
 
 type Runner struct {
@@ -39,6 +40,7 @@ func DefaultConfig() Config {
 		IntegrityCheckEveryHours: 6,
 		TelemetryRetentionDays:   90,
 		ConsolidationWindowMin:   60,
+		LogRetentionDays:         30,
 	}
 }
 
@@ -122,6 +124,7 @@ func (r *Runner) Start(ctx context.Context) {
 			r.logger.Info("telemetry retention completed", "deleted_events", deletedTel)
 		}
 	})
+	r.startTask(ctx, 24*time.Hour, "log retention", r.runLogRetention)
 }
 
 // Stop gracefully stops all scheduled tasks and waits for ongoing jobs to complete.
@@ -137,14 +140,28 @@ func (r *Runner) startTask(ctx context.Context, interval time.Duration, name str
 	r.wg.Add(1)
 	go func() {
 		defer r.wg.Done()
-		ticker := time.NewTicker(interval)
+		ticker := time.NewTicker(15 * time.Second)
 		defer ticker.Stop()
+		var lastMinute time.Time
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-ticker.C:
+			case now := <-ticker.C:
+				minute := now.UTC().Truncate(time.Minute)
+				if minute.Equal(lastMinute) {
+					continue
+				}
+				lastMinute = minute
+				planning, err := r.readPlanning(ctx)
+				if err != nil {
+					r.logger.Error("cannot read scheduler settings", "error", err)
+					continue
+				}
+				if !planningDue(minute, name, planning, interval) {
+					continue
+				}
 				r.logger.Info("executing scheduled task", "task", name)
 				task(ctx)
 			}

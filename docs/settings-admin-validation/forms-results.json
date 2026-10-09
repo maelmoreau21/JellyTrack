@@ -1,0 +1,274 @@
+{
+  "scope": "Real UI submissions and real API readback on isolated settings-admin.db. Backup creation and download only; every restore/delete/import canceled or rejected before request.",
+  "checks": [
+    {
+      "name": "Plugin controls nested under each server",
+      "ok": true
+    },
+    {
+      "name": "Existing Jellyfin secret never filled into edit",
+      "ok": true
+    },
+    {
+      "name": "Actual server submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "Server name readback",
+      "ok": true
+    },
+    {
+      "name": "Cancel server edit writes nothing",
+      "ok": true
+    },
+    {
+      "name": "Copy plugin key stable across repeated copies",
+      "ok": true
+    },
+    {
+      "name": "Secondary server delete canceled before request",
+      "ok": true
+    },
+    {
+      "name": "Server edit persists after reload",
+      "ok": true
+    },
+    {
+      "name": "SSO secret masked",
+      "ok": true
+    },
+    {
+      "name": "Actual sso submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "SSO groups persisted",
+      "ok": true
+    },
+    {
+      "name": "SSO stays disabled while preserving configured secret",
+      "ok": true
+    },
+    {
+      "name": "SSO form reloads saved groups",
+      "ok": true
+    },
+    {
+      "name": "Six historical completion rule groups",
+      "ok": true
+    },
+    {
+      "name": "Four resolution blocks eight inputs",
+      "ok": true
+    },
+    {
+      "name": "Same-name libraries kept separate by server",
+      "ok": true
+    },
+    {
+      "name": "Historical music defaults",
+      "ok": true
+    },
+    {
+      "name": "Actual media submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "Media resolution and badges persisted",
+      "ok": true
+    },
+    {
+      "name": "Unshown completion library preserved",
+      "ok": true
+    },
+    {
+      "name": "Unrelated JSON and scheduler preserved",
+      "ok": true
+    },
+    {
+      "name": "Legacy and orphan exclusions preserved",
+      "ok": true
+    },
+    {
+      "name": "Server exclusion does not exclude namesake secondary",
+      "ok": true
+    },
+    {
+      "name": "Media reload uses persisted values",
+      "ok": true
+    },
+    {
+      "name": "Disabled completion disables dependent thresholds",
+      "ok": true
+    },
+    {
+      "name": "Five historical runnable tasks",
+      "ok": true
+    },
+    {
+      "name": "Actual schedules submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "All five schedules readback",
+      "ok": true
+    },
+    {
+      "name": "Wrapped automatic dates hide conditionally",
+      "ok": true
+    },
+    {
+      "name": "Actual wrapped submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "Wrapped disabled readback",
+      "ok": true
+    },
+    {
+      "name": "Actual wrapped submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "Wrapped dates and visibility readback",
+      "ok": true
+    },
+    {
+      "name": "Wrapped save preserves schedules",
+      "ok": true
+    },
+    {
+      "name": "Schedules reload values",
+      "ok": true
+    },
+    {
+      "name": "Actual wrapped submission HTTP 400",
+      "ok": true
+    },
+    {
+      "name": "Impossible calendar date rejected",
+      "ok": true
+    },
+    {
+      "name": "Rejected Wrapped save leaves database unchanged",
+      "ok": true
+    },
+    {
+      "name": "Discord enable reveals all three fields",
+      "ok": true
+    },
+    {
+      "name": "Actual notifications submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "All notification fields readback",
+      "ok": true
+    },
+    {
+      "name": "Discord disable hides dependent fields",
+      "ok": true
+    },
+    {
+      "name": "Actual notifications submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "Disable preserves webhook",
+      "ok": true
+    },
+    {
+      "name": "Balanced preset selected",
+      "ok": true
+    },
+    {
+      "name": "Balanced preset values",
+      "ok": true
+    },
+    {
+      "name": "Actual telemetry submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "Telemetry profile values and switch readback",
+      "ok": true
+    },
+    {
+      "name": "Actual smart submission HTTP 200",
+      "ok": true
+    },
+    {
+      "name": "Smart thresholds readback",
+      "ok": true
+    },
+    {
+      "name": "Smart save preserves media and scheduler JSON",
+      "ok": true
+    },
+    {
+      "name": "Backup creation real success",
+      "ok": true
+    },
+    {
+      "name": "Created backup listed",
+      "ok": true
+    },
+    {
+      "name": "Backup download valid ZIP signature",
+      "ok": true
+    },
+    {
+      "name": "Invalid import explicit feedback",
+      "ok": true
+    },
+    {
+      "name": "Canceled restore/delete and invalid import never call destructive API",
+      "ok": true
+    },
+    {
+      "name": "Real settings loading state visible",
+      "ok": true
+    },
+    {
+      "name": "Actual notifications submission HTTP 503",
+      "ok": true
+    },
+    {
+      "name": "Injected save failure remains failure",
+      "ok": true
+    },
+    {
+      "name": "Save error visible and unsaved values retained",
+      "ok": true
+    },
+    {
+      "name": "Failed UI save never changes database",
+      "ok": true
+    },
+    {
+      "name": "Load error shown with retry control",
+      "ok": true
+    },
+    {
+      "name": "Retry recovers actual loaded form",
+      "ok": true
+    },
+    {
+      "name": "Synthetic ssoSecretPreserved",
+      "ok": true
+    },
+    {
+      "name": "Synthetic globalPluginKeyPreserved",
+      "ok": true
+    },
+    {
+      "name": "Synthetic serverSecretsPreserved",
+      "ok": true
+    },
+    {
+      "name": "No uncaught JavaScript errors",
+      "ok": true
+    }
+  ],
+  "pageErrors": []
+}

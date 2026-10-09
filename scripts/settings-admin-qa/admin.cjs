@@ -1,0 +1,64 @@
+const fs=require('fs'),path=require('path');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const base='http://localhost:3340',out=path.resolve(__dirname,'../../docs/settings-admin-validation'),captures=path.resolve(__dirname,'../../docs/settings-admin-captures'),scratch=path.resolve(__dirname,'../../scratch/settings-admin-qa');
+const report={scope:'Real admin health cleanup plugin server comparison APIs; synthetic disabled localhost servers. Delete modal validation/cancellation only. Heartbeat prompt cancellation only.',checks:[],pageErrors:[]};
+const check=(name,ok,details)=>report.checks.push({name,ok:!!ok,...(details?{details}:{})});
+async function test(name,fn){try{await fn();}catch(error){check(name,false,error.message);}}
+(async()=>{const browser=await chromium.launch();try{
+ const context=await browser.newContext({baseURL:base,viewport:{width:1440,height:900}});const login=await context.request.post('/api/auth/login',{headers:{Origin:base},data:{username:'settingsadmin',password:'Settings-admin-QA-test-2026!'}});if(!login.ok())throw Error('QA login failed');
+ const page=await context.newPage();page.on('pageerror',error=>report.pageErrors.push(error.message));
+ const go=async route=>{await page.goto(route,{waitUntil:'networkidle'});await page.locator('.ar-loading').waitFor({state:'hidden'});};
+ const get=async route=>(await context.request.get(route)).json();
+ const tab=async(kind,value)=>{await page.locator(`[data-ar-tab="${kind}:${value}"]`).click();await page.waitForLoadState('networkidle');check(kind+' '+value+' selected',await page.locator(`[data-ar-tab="${kind}:${value}"]`).getAttribute('aria-selected')==='true');};
+ await test('Health nested tabs keyboard and history',async()=>{
+  await go('/admin/health');check('Four historic health summary metrics',await page.locator('.admin-recovery > .ar-metrics').first().locator('.ar-metric').count()===4);
+  const labels=await page.locator('[data-ar-tab^="health:"]').allTextContents();check('Three health tabs historical order',labels.length===3&&labels[0].includes('Nettoyage & Stockage')&&labels[1].includes('Sécurité & Anomalies')&&labels[2].includes('Moteur & Logs'));
+  await page.locator('[data-ar-tab="health:cleanup"]').focus();await page.keyboard.press('ArrowRight');await page.waitForTimeout(300);check('Health keyboard ArrowRight selects security',await page.locator('[data-ar-tab="health:security"]').getAttribute('aria-selected')==='true');
+  await page.keyboard.press('End');await page.waitForTimeout(300);check('Health keyboard End selects logs',await page.locator('[data-ar-tab="health:logs"]').getAttribute('aria-selected')==='true');
+  check('Logs include closure selector and exclude Valkey diagnostics',await page.locator('[data-ar-field=closures]').count()===1&&!/Clés Valkey orphelines|DB sans Valkey/.test(await page.locator('#app-main').innerText()));
+  await page.locator('[data-ar-field=closures]').selectOption('10');check('Closure selector keeps selection',await page.locator('[data-ar-field=closures]').inputValue()==='10');
+  await page.screenshot({path:path.join(captures,'go-admin-health-logs-desktop-dark.png')});
+  await tab('health','security');await page.locator('[data-ar-action=plugin-refresh]').waitFor();check('Embedded plugin has no standalone thresholds',await page.locator('[data-ar-threshold]').count()===0&&await page.locator('[data-ar-action=plugin-export]').count()===0);await page.screenshot({path:path.join(captures,'go-admin-health-security-desktop-dark.png')});
+  await tab('health','cleanup');await tab('cleanup','abandoned');await tab('cleanup','duplicates');await page.goBack({waitUntil:'networkidle'});check('Browser back restores nested abandoned tab',await page.locator('[data-ar-tab="cleanup:abandoned"]').getAttribute('aria-selected')==='true');
+  await page.reload({waitUntil:'networkidle'});check('Query reload preserves nested abandoned',await page.locator('[data-ar-tab="cleanup:abandoned"]').getAttribute('aria-selected')==='true');
+ });
+ await test('Cleanup real data filters pagination exports',async()=>{
+  await go('/admin/cleanup');const data=await get('/api/admin/cleanup');check('Real cleanup nonempty fixtures',data.ghostMedia.length>=30&&data.abandonedMedia.length>=1&&data.duplicateMedia.length>=2);
+  await page.locator('[data-ar-field=period]').selectOption('all');const rowCount=await page.locator('.ar-table tbody tr').count();check('First cleanup page bounded25',rowCount===25);
+  await page.locator('[data-ar-action=next]').click();check('Cleanup next page changes content',await page.locator('.ar-table tbody tr').count()<=25);
+  await page.locator('[data-ar-field=query]').fill('ete qa fantome');await page.waitForTimeout(200);check('Cleanup accent-insensitive query',await page.locator('.ar-table tbody').innerText().then(text=>text.includes('Été QA fantôme')));
+  await page.locator('[data-ar-field=size]').selectOption('50');check('Cleanup pagination size50',await page.locator('.ar-table tbody tr').count()===30);
+  await page.locator('[data-ar-field=query]').fill('');await page.waitForTimeout(100);await page.locator('[data-ar-field=size]').selectOption('25');
+  const[jsonDownload]=await Promise.all([page.waitForEvent('download'),page.locator('[data-ar-action=export-json]').click()]);const jsonPath=path.join(scratch,'cleanup-export.json');await jsonDownload.saveAs(jsonPath);const rows=JSON.parse(fs.readFileSync(jsonPath,'utf8'));check('JSON export includes all filtered rows beyond page',rows.length>25&&rows.length===data.ghostMedia.length);
+  const[csvDownload]=await Promise.all([page.waitForEvent('download'),page.locator('[data-ar-action=export-csv]').click()]);const csvPath=path.join(scratch,'cleanup-export.csv');await csvDownload.saveAs(csvPath);const csv=fs.readFileSync(csvPath,'utf8');check('CSV export escapes formula title',csv.includes("\"'=2+2\""));
+  await tab('cleanup','abandoned');await page.locator('[data-ar-field=sort]').selectOption('last');check('Abandoned sort selector',await page.locator('[data-ar-field=sort]').inputValue()==='last');check('Abandoned real media row',await page.locator('.ar-table').innerText().then(text=>text.includes('Abandonné QA')));await page.screenshot({path:path.join(captures,'go-admin-health-abandoned-desktop-dark.png')});
+  await tab('cleanup','duplicates');check('Duplicate detail resolution and library',await page.locator('.ar-table').innerText().then(text=>text.includes('1080p')&&text.includes('Films QA')));await page.screenshot({path:path.join(captures,'go-admin-health-duplicates-desktop-dark.png')});
+ });
+ await test('Cleanup recommendation confirmation cancellation',async()=>{
+  await go('/admin/cleanup');const before=await get('/api/admin/cleanup');let deletes=0;const watch=request=>{if(request.method()==='POST'&&new URL(request.url()).pathname==='/api/admin/cleanup/delete-stale-movies')deletes++;};page.on('request',watch);
+  await page.locator('[data-ar-action=smart-review]').click();check('Smart review opens recommended ghosts',new URL(page.url()).search.includes('cleanupTab')||await page.locator('[data-ar-tab="cleanup:ghosts"]').getAttribute('aria-selected')==='true');
+  await page.locator('[data-ar-action=smart-delete]').click();const dialog=page.locator('.ar-delete-dialog');check('Delete confirmation initially disabled',await dialog.locator('[type=submit]').isDisabled());await dialog.locator('[name=confirmation]').fill('wrong');check('Delete wrong word disabled',await dialog.locator('[type=submit]').isDisabled());await dialog.locator('[name=confirmation]').fill(' supprimer ');check('Translated confirmation recognizes trimmed word',await dialog.locator('[type=submit]').isEnabled());await dialog.locator('[data-ar-action=cancel]').click();check('Cancel delete closes dialog',!(await dialog.isVisible()));
+  check('No cleanup deletion request sent',deletes===0);page.off('request',watch);check('Cleanup dataset unchanged after cancel',(await get('/api/admin/cleanup')).ghostMedia.length===before.ghostMedia.length);
+ });
+ await test('Plugin diagnostics and real connection probe',async()=>{
+  await go('/admin/plugin-diagnostics');check('Full plugin has four alert thresholds',await page.locator('[data-ar-threshold]').count()===4);
+  await page.locator('[data-ar-threshold=gapWarningSec]').fill('700');await page.locator('[data-ar-threshold=gapWarningSec]').blur();await page.reload({waitUntil:'networkidle'});check('Plugin thresholds local persistence',await page.locator('[data-ar-threshold=gapWarningSec]').inputValue()==='700');
+  await page.locator('[data-ar-action=threshold-reset]').click();check('Threshold reset default',await page.locator('[data-ar-threshold=gapWarningSec]').inputValue()==='600');
+  let heartbeats=0;const watch=request=>{if(request.method()==='POST'&&new URL(request.url()).pathname==='/api/admin/plugin/health'&&request.postDataJSON().action==='force_heartbeat')heartbeats++;};page.on('request',watch);page.once('dialog',dialog=>dialog.dismiss());await page.locator('[data-ar-action=plugin-heartbeat]').click();check('Canceled heartbeat does not submit',heartbeats===0);page.off('request',watch);
+  const[response]=await Promise.all([page.waitForResponse(res=>new URL(res.url()).pathname==='/api/admin/plugin/health'&&res.request().method()==='POST'),page.locator('[data-ar-action=plugin-test]').click()]);const result=await response.json();check('Real connection probe returns explicit outcome',typeof result.ok==='boolean'&&typeof result.status==='number');
+  const[download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-ar-action=plugin-export]').click()]);const target=path.join(scratch,'plugin-diagnostic.json');await download.saveAs(target);check('Plugin export uses real diagnostic shape',!!JSON.parse(fs.readFileSync(target,'utf8')).plugin);
+ });
+ await test('Server comparison multiple scopes query and back',async()=>{
+  await go('/admin/server-compare?qa=kept');const data=await get('/api/admin/server-compare');check('Multi-server comparison enabled with two selectable fixtures',data.multiServerEnabled===true&&data.selectableServers.length===2);
+  await page.locator('[data-ar-server=qa-primary]').click();await page.waitForFunction(()=>!document.querySelector('.ar-loading')&&document.querySelectorAll('.ar-compare > .ar-panel .ar-table tbody tr').length===1);check('Server scope keeps other query parameters',new URL(page.url()).searchParams.get('qa')==='kept'&&new URL(page.url()).searchParams.get('servers')==='qa-primary');check('Single-scope ranking only selected server',await page.locator('.ar-compare > .ar-panel .ar-table tbody tr').count()===1);
+  await page.locator('[data-ar-server=qa-secondary]').click();await page.waitForLoadState('networkidle');check('Multiple server selection',new URL(page.url()).searchParams.get('servers').split(',').length===2);
+  await page.goBack({waitUntil:'networkidle'});await page.waitForFunction(()=>!document.querySelector('.ar-loading')&&document.querySelectorAll('.ar-compare > .ar-panel .ar-table tbody tr').length===1);check('Server scope browser back',new URL(page.url()).searchParams.get('servers')==='qa-primary'&&await page.locator('.ar-compare > .ar-panel .ar-table tbody tr').count()===1);
+ });
+ await test('Admin loading error and retry',async()=>{
+  await context.route('**/api/admin/cleanup',async route=>{await new Promise(resolve=>setTimeout(resolve,700));await route.continue();});await page.goto('/admin/cleanup',{waitUntil:'domcontentloaded'});await page.locator('.ar-loading').waitFor();check('Admin loading state visible',await page.locator('.ar-loading').isVisible());await page.waitForLoadState('networkidle');await context.unroute('**/api/admin/cleanup');
+  await context.route('**/api/admin/cleanup',route=>route.fulfill({status:503,json:{error:'QA cleanup unavailable'}}));await page.goto('/admin/cleanup',{waitUntil:'networkidle'});check('Admin GET error visible',(await page.locator('.ar-error').innerText()).includes('QA cleanup unavailable'));await context.unroute('**/api/admin/cleanup');await page.locator('[data-ar-action=retry]').click();await page.locator('[data-ar-tab="cleanup:ghosts"]').waitFor();check('Admin retry recovers actual data',await page.locator('[data-ar-tab="cleanup:ghosts"]').count()===1);
+ });
+ check('No uncaught JavaScript errors',report.pageErrors.length===0);await context.close();
+}finally{await browser.close();fs.writeFileSync(path.join(out,'admin-results.json'),JSON.stringify(report,null,2));}
+const failed=report.checks.filter(item=>!item.ok);console.log(JSON.stringify({checks:report.checks.length,failed,pageErrors:report.pageErrors}));if(failed.length)process.exitCode=1;
+})().catch(error=>{report.fatal=error.message;fs.writeFileSync(path.join(out,'admin-results.json'),JSON.stringify(report,null,2));console.error(error);process.exitCode=1;});

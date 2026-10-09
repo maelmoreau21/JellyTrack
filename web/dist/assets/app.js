@@ -249,7 +249,7 @@
       }
       opts.headers = { ...opts.headers };
 
-      if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
+      if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData) && !(opts.body instanceof Blob) && !(opts.body instanceof ArrayBuffer) && !ArrayBuffer.isView(opts.body)) {
         opts.headers['Content-Type'] = 'application/json';
         opts.body = JSON.stringify(opts.body);
       }
@@ -5790,11 +5790,11 @@
             <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             <span>${I18n.t('nav.cleanup') || 'Nettoyage & Stockage'}</span>
           </a>
-          <a href="/admin/log-health" data-link class="admin-tab-link ${active === 'log-health' ? 'active' : ''}">
+          <a href="/admin/log-diagnostics" data-link class="admin-tab-link ${active === 'log-health' ? 'active' : ''}">
             <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
             <span>${I18n.t('nav.logHealth') || 'Santé Logs & Moteur'}</span>
           </a>
-          <a href="/admin/plugin-health" data-link class="admin-tab-link ${active === 'plugin-health' ? 'active' : ''}">
+          <a href="/admin/plugin-diagnostics" data-link class="admin-tab-link ${active === 'plugin-health' ? 'active' : ''}">
             <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
             <span>${I18n.t('nav.pluginHealth') || 'Santé Plugin'}</span>
           </a>
@@ -6439,19 +6439,9 @@
       } else if (path.startsWith('/settings')) {
         const rest = path.slice('/settings'.length).replace(/^\//, '');
         const sub = rest || 'overview';
-        Pages.settings(sub);
-      } else if (path === '/admin/health') {
-        window.JellyTrackNavigation.healthPage(sub => Pages.health(sub));
-      } else if (path === '/admin/system-health') {
-        Pages.health('system');
-      } else if (path === '/admin/plugin-health') {
-        Pages.health('plugin');
-      } else if (path === '/admin/log-health') {
-        Pages.health('logs');
-      } else if (path === '/admin/server-compare') {
-        Pages.serverCompare();
-      } else if (path === '/admin/cleanup') {
-        Pages.cleanup();
+        window.JellyTrackSettings.mount({main:document.getElementById('app-main'),api:API,utils:Utils,i18n:I18n,signal:State.pageController.signal,user:State.user,toast:Toast,navigate:(url,replace=false)=>Router.navigate(url,replace),legacy:page=>Pages.settings(page),cleanup:fn=>State.pageCleanups.push(fn)},sub);
+      } else if (path.startsWith('/admin/')) {
+        window.JellyTrackAdmin.mount({main:document.getElementById('app-main'),api:API,utils:Utils,i18n:I18n,signal:State.pageController.signal,user:State.user,toast:Toast,navigate:(url,replace=false)=>Router.navigate(url,replace),legacy:{health:sub=>Pages.health(sub),cleanup:()=>Pages.cleanup(),compare:()=>Pages.serverCompare()},cleanup:fn=>State.pageCleanups.push(fn)},path.slice('/admin/'.length));
       } else {
         // Fallback to dashboard
         Pages.dashboard();

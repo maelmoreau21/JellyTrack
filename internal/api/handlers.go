@@ -24,6 +24,7 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/jellyfin"
 	"github.com/maelmoreau21/jellytrack/internal/security"
+	"github.com/maelmoreau21/jellytrack/internal/settings"
 	"github.com/maelmoreau21/jellytrack/internal/stats"
 )
 
@@ -64,10 +65,10 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 
 	// Admin protected routes
 	adminRoutes := map[string]http.HandlerFunc{
-		"GET /api/admin/cleanup":                         h.navigationCleanup,
+		"GET /api/admin/cleanup":                         h.recoveredCleanup,
 		"GET /api/users":                                 h.users,
 		"GET /api/hardware":                              h.hardware,
-		"GET /api/admin/health":                          h.adminHealth,
+		"GET /api/admin/health":                          h.recoveredAdminHealth,
 		"GET /api/admin/security/overview":               h.securityOverview,
 		"GET /api/admin/security/audit":                  h.securityAudit,
 		"GET /api/admin/security/smart-settings":         h.getSmartSettings,
@@ -77,7 +78,7 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"POST /api/admin/users/merge":                    h.adminUserMerge,
 		"POST /api/admin/users/sync-deleted":             h.adminUserSyncDeleted,
 		"DELETE /api/admin/users/{id}":                   h.adminDeleteUser,
-		"POST /api/admin/cleanup/delete-stale-movies":    h.adminDeleteStaleMovies,
+		"POST /api/admin/cleanup/delete-stale-movies":    h.recoveredDeleteStaleMovies,
 		"GET /api/predictions":                           h.predictions,
 		"GET /api/metadata-audit":                        h.metadataAudit,
 		"GET /api/settings/sso":                          h.getSSO,
@@ -94,8 +95,8 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"GET /api/logs/system/download":                  h.downloadSystemLogs,
 		"GET /api/logs/export":                           h.exportLogsCSV,
 		"POST /api/media/{id}/poster-rotator/rotate":     h.posterRotatorRotate,
-		"GET /api/admin/plugin/health":                   h.adminPluginHealth,
-		"POST /api/admin/plugin/health":                  h.adminPluginHealth,
+		"GET /api/admin/plugin/health":                   h.recoveredPluginHealth,
+		"POST /api/admin/plugin/health":                  h.recoveredPluginHealth,
 		"POST /api/sync":                                 h.sync,
 		"GET /api/stats/deep":                            h.deepStats,
 		"GET /api/stats/granular":                        h.granularStats,
@@ -109,12 +110,12 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"POST /api/jellyfin/send-message":                h.sendMessage,
 		"GET /api/settings":                              h.getSettings,
 		"POST /api/settings":                             h.updateSettings,
-		"GET /api/settings/jellyfin-servers":             h.listServers,
+		"GET /api/settings/jellyfin-servers":             h.recoveredServers,
 		"POST /api/settings/jellyfin-servers":            h.saveServer,
 		"PATCH /api/settings/jellyfin-servers":           h.updateServer,
 		"DELETE /api/settings/jellyfin-servers":          h.deleteServer,
 		"DELETE /api/settings/jellyfin-servers/{id}":     h.deleteServer,
-		"POST /api/settings/jellyfin-servers/plugin-key": h.rotateServerPluginKey,
+		"POST /api/settings/jellyfin-servers/plugin-key": h.recoveredServerPluginKey,
 		"GET /api/backup/export":                         h.backupExport,
 		"POST /api/backup/import":                        h.backupImport,
 		"GET /api/backup/auto":                           h.backupAutoList,
@@ -123,7 +124,7 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"POST /api/backup/auto/restore":                  h.backupAutoRestore,
 		"POST /api/backup/auto/delete":                   h.backupAutoDelete,
 		"GET /api/newsletter":                            h.newsletterData,
-		"GET /api/admin/server-compare":                  h.serverCompare,
+		"GET /api/admin/server-compare":                  h.recoveredServerCompare,
 		"POST /api/admin/consolidate-history":            h.adminConsolidateHistory,
 		"POST /api/admin/integrity-cleanup":              h.adminIntegrityCleanup,
 	}
@@ -1477,7 +1478,15 @@ func (h *Handler) getSettings(w http.ResponseWriter, r *http.Request) {
 	var rememberThirty int
 	err := h.db.QueryRowContext(r.Context(), `SELECT "discordWebhookUrl","discordAlertCondition","discordAlertsEnabled","maxConcurrentTranscodes","excludedLibraries","syncCronHour","syncCronMinute","backupCronHour","backupCronMinute","defaultLocale","timeFormat","wrappedVisible","wrappedPeriodEnabled","wrappedStartMonth","wrappedStartDay","wrappedEndMonth","wrappedEndDay","authRememberThirtyDaysEnabled","resolutionThresholds","pluginTelemetrySettings" FROM "GlobalSettings" WHERE "id"='global'`).Scan(
 		&discordUrl, &discordCond, &alertsEnabled, &maxTranscodes, &exclLibs, &syncH, &syncM, &bH, &bM, &defLocale, &timeFmt, &wrapVis, &wrapPer, &wrapSM, &wrapSD, &wrapEM, &wrapED, &rememberThirty, &resThresholds, &plugTelemetry)
-	if err != nil && err != sql.ErrNoRows {
+	if err == sql.ErrNoRows {
+		if _, err = h.db.ExecContext(r.Context(), `INSERT INTO "GlobalSettings"("id") VALUES('global') ON CONFLICT DO NOTHING`); err != nil {
+			jsonError(w, 500, "Impossible d'initialiser les réglages.")
+			return
+		}
+		h.getSettings(w, r)
+		return
+	}
+	if err != nil {
 		jsonError(w, 500, "Impossible de lire les réglages.")
 		return
 	}
@@ -1512,10 +1521,11 @@ func (h *Handler) getSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	schedulerIntervals := map[string]any{
-		"recentSyncEveryHours": 6,
-		"fullSyncEveryHours":   48,
-		"backupEveryHours":     24,
-		"logRetentionDays":     30,
+		"recentSyncEveryHours":     6,
+		"fullSyncEveryHours":       48,
+		"backupEveryHours":         24,
+		"integrityCheckEveryHours": 6,
+		"logRetentionDays":         30,
 	}
 	var resObj map[string]any
 	if resThresholds.Valid && resThresholds.String != "" {
@@ -1528,7 +1538,7 @@ func (h *Handler) getSettings(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var plugObj any
+	var plugObj map[string]any
 	if plugTelemetry.Valid && plugTelemetry.String != "" {
 		_ = json.Unmarshal([]byte(plugTelemetry.String), &plugObj)
 	}
@@ -1554,139 +1564,14 @@ func (h *Handler) getSettings(w http.ResponseWriter, r *http.Request) {
 		"authRememberThirtyDaysEnabled": rememberThirty == 1,
 		"resolutionThresholds":          resObj,
 		"schedulerIntervals":            schedulerIntervals,
-		"pluginTelemetrySettings":       plugObj,
+		"pluginTelemetrySettings":       settings.NormalizeTelemetry(plugObj),
 		"availableLibraries":            availLibs,
 		"availableLibraryScopes":        availScopes,
 	})
 }
 
 func (h *Handler) updateSettings(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		DiscordWebhookUrl             *string   `json:"discordWebhookUrl"`
-		DiscordAlertCondition         *string   `json:"discordAlertCondition"`
-		DiscordAlertsEnabled          *bool     `json:"discordAlertsEnabled"`
-		MaxConcurrentTranscodes       *int      `json:"maxConcurrentTranscodes"`
-		ExcludedLibraries             *[]string `json:"excludedLibraries"`
-		SyncCronHour                  *int      `json:"syncCronHour"`
-		SyncCronMinute                *int      `json:"syncCronMinute"`
-		BackupCronHour                *int      `json:"backupCronHour"`
-		BackupCronMinute              *int      `json:"backupCronMinute"`
-		DefaultLocale                 *string   `json:"defaultLocale"`
-		TimeFormat                    *string   `json:"timeFormat"`
-		WrappedVisible                *bool     `json:"wrappedVisible"`
-		WrappedPeriodEnabled          *bool     `json:"wrappedPeriodEnabled"`
-		WrappedStartMonth             *int      `json:"wrappedStartMonth"`
-		WrappedStartDay               *int      `json:"wrappedStartDay"`
-		WrappedEndMonth               *int      `json:"wrappedEndMonth"`
-		WrappedEndDay                 *int      `json:"wrappedEndDay"`
-		ResolutionThresholds          any       `json:"resolutionThresholds"`
-		SchedulerIntervals            any       `json:"schedulerIntervals"`
-		PluginTelemetrySettings       any       `json:"pluginTelemetrySettings"`
-		AuthRememberThirtyDaysEnabled *bool     `json:"authRememberThirtyDaysEnabled"`
-	}
-	r.Body = http.MaxBytesReader(w, r.Body, 65536)
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		jsonError(w, 400, "Payload JSON invalide.")
-		return
-	}
-
-	_, _ = h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "GlobalSettings"("id") VALUES('global') ON CONFLICT DO NOTHING`, h.driver))
-
-	if input.ExcludedLibraries != nil {
-		b, _ := json.Marshal(*input.ExcludedLibraries)
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "excludedLibraries"=? WHERE "id"='global'`, h.driver), string(b))
-	}
-	if input.DiscordWebhookUrl != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "discordWebhookUrl"=? WHERE "id"='global'`, h.driver), *input.DiscordWebhookUrl)
-	}
-	if input.DiscordAlertCondition != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "discordAlertCondition"=? WHERE "id"='global'`, h.driver), *input.DiscordAlertCondition)
-	}
-	if input.DiscordAlertsEnabled != nil {
-		val := 0
-		if *input.DiscordAlertsEnabled {
-			val = 1
-		}
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "discordAlertsEnabled"=? WHERE "id"='global'`, h.driver), val)
-	}
-	if input.MaxConcurrentTranscodes != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "maxConcurrentTranscodes"=? WHERE "id"='global'`, h.driver), *input.MaxConcurrentTranscodes)
-	}
-	if input.SyncCronHour != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "syncCronHour"=? WHERE "id"='global'`, h.driver), *input.SyncCronHour)
-	}
-	if input.SyncCronMinute != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "syncCronMinute"=? WHERE "id"='global'`, h.driver), *input.SyncCronMinute)
-	}
-	if input.BackupCronHour != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "backupCronHour"=? WHERE "id"='global'`, h.driver), *input.BackupCronHour)
-	}
-	if input.BackupCronMinute != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "backupCronMinute"=? WHERE "id"='global'`, h.driver), *input.BackupCronMinute)
-	}
-	if input.DefaultLocale != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "defaultLocale"=? WHERE "id"='global'`, h.driver), *input.DefaultLocale)
-	}
-	if input.TimeFormat != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "timeFormat"=? WHERE "id"='global'`, h.driver), *input.TimeFormat)
-	}
-	if input.WrappedVisible != nil {
-		val := 0
-		if *input.WrappedVisible {
-			val = 1
-		}
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedVisible"=? WHERE "id"='global'`, h.driver), val)
-	}
-	if input.WrappedPeriodEnabled != nil {
-		val := 0
-		if *input.WrappedPeriodEnabled {
-			val = 1
-		}
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedPeriodEnabled"=? WHERE "id"='global'`, h.driver), val)
-	}
-	if input.WrappedStartMonth != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedStartMonth"=? WHERE "id"='global'`, h.driver), *input.WrappedStartMonth)
-	}
-	if input.WrappedStartDay != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedStartDay"=? WHERE "id"='global'`, h.driver), *input.WrappedStartDay)
-	}
-	if input.WrappedEndMonth != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedEndMonth"=? WHERE "id"='global'`, h.driver), *input.WrappedEndMonth)
-	}
-	if input.WrappedEndDay != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "wrappedEndDay"=? WHERE "id"='global'`, h.driver), *input.WrappedEndDay)
-	}
-	if input.AuthRememberThirtyDaysEnabled != nil {
-		val := 0
-		if *input.AuthRememberThirtyDaysEnabled {
-			val = 1
-		}
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "authRememberThirtyDaysEnabled"=? WHERE "id"='global'`, h.driver), val)
-	}
-	if input.ResolutionThresholds != nil || input.SchedulerIntervals != nil {
-		var curRes sql.NullString
-		_ = h.db.QueryRowContext(r.Context(), `SELECT "resolutionThresholds" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&curRes)
-		m := map[string]any{}
-		if curRes.Valid && curRes.String != "" {
-			_ = json.Unmarshal([]byte(curRes.String), &m)
-		}
-		if rtMap, ok := input.ResolutionThresholds.(map[string]any); ok {
-			for k, v := range rtMap {
-				m[k] = v
-			}
-		}
-		if input.SchedulerIntervals != nil {
-			m["schedulerIntervals"] = input.SchedulerIntervals
-		}
-		b, _ := json.Marshal(m)
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "resolutionThresholds"=? WHERE "id"='global'`, h.driver), string(b))
-	}
-	if input.PluginTelemetrySettings != nil {
-		b, _ := json.Marshal(input.PluginTelemetrySettings)
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "pluginTelemetrySettings"=? WHERE "id"='global'`, h.driver), string(b))
-	}
-
-	jsonResponse(w, 200, map[string]bool{"ok": true})
+	h.saveRecoveredSettings(w, r)
 }
 
 func (h *Handler) listServers(w http.ResponseWriter, r *http.Request) {
@@ -1734,6 +1619,26 @@ func (h *Handler) saveServer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rawApiKey := first(input.ApiKey, input.JellyfinApiKey)
+	var detectedServerID string
+	if input.ID == "" {
+		if strings.TrimSpace(rawApiKey) == "" {
+			jsonError(w, 400, "Clé API requise.")
+			return
+		}
+		probeCtx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+		client, probeErr := jellyfin.New(urlClean, rawApiKey)
+		if probeErr != nil {
+			jsonError(w, 400, "Connexion Jellyfin invalide.")
+			return
+		}
+		info, probeErr := client.SystemInfo(probeCtx)
+		if probeErr != nil || strings.TrimSpace(info.ID) == "" {
+			jsonError(w, 502, "Impossible de vérifier la connexion Jellyfin.")
+			return
+		}
+		detectedServerID = info.ID
+	}
 	name := strings.TrimSpace(input.Name)
 	if name == "" {
 		name = "Jellyfin"
@@ -1753,13 +1658,21 @@ func (h *Handler) saveServer(w http.ResponseWriter, r *http.Request) {
 		idBytes := make([]byte, 16)
 		rand.Read(idBytes)
 		input.ID = hex.EncodeToString(idBytes)
-		_, err := h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","allowAuthFallback","isActive") VALUES (?,?,?,?,?,?,?)`, h.driver), input.ID, input.ID, name, urlClean, rawApiKey, allowFallbackInt, activeInt)
+		_, err := h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","allowAuthFallback","isActive") VALUES (?,?,?,?,?,?,?)`, h.driver), input.ID, detectedServerID, name, urlClean, rawApiKey, allowFallbackInt, activeInt)
 		if err != nil {
 			jsonError(w, 500, "Échec de création du serveur.")
 			return
 		}
 	} else {
-		_, err := h.db.ExecContext(r.Context(), database.Bind(`UPDATE "Server" SET "name"=?, "url"=?, "jellyfinApiKey"=?, "allowAuthFallback"=?, "isActive"=? WHERE "id"=?`, h.driver), name, urlClean, rawApiKey, allowFallbackInt, activeInt, input.ID)
+		if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "jellyfinServerId" FROM "Server" WHERE "id"=?`, h.driver), input.ID).Scan(&detectedServerID); err != nil {
+			jsonError(w, 404, "Serveur introuvable.")
+			return
+		}
+		var savedKey any
+		if strings.TrimSpace(rawApiKey) != "" {
+			savedKey = rawApiKey
+		}
+		_, err := h.db.ExecContext(r.Context(), database.Bind(`UPDATE "Server" SET "name"=?, "url"=?, "jellyfinApiKey"=COALESCE(?,"jellyfinApiKey"), "allowAuthFallback"=?, "isActive"=? WHERE "id"=?`, h.driver), name, urlClean, savedKey, allowFallbackInt, activeInt, input.ID)
 		if err != nil {
 			jsonError(w, 500, "Échec de mise à jour du serveur.")
 			return
@@ -1771,7 +1684,7 @@ func (h *Handler) saveServer(w http.ResponseWriter, r *http.Request) {
 		"ok": true,
 		"server": map[string]any{
 			"id":                input.ID,
-			"jellyfinServerId":  input.ID,
+			"jellyfinServerId":  detectedServerID,
 			"name":              name,
 			"url":               urlClean,
 			"allowAuthFallback": allowFallbackInt == 1,

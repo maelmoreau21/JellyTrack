@@ -2,12 +2,11 @@ package api
 
 import (
 	"bytes"
-	"crypto/rand"
 	"database/sql"
 	"encoding/csv"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -20,7 +19,6 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/logging"
 	"github.com/maelmoreau21/jellytrack/internal/security"
-	"github.com/maelmoreau21/jellytrack/internal/settings"
 	"github.com/maelmoreau21/jellytrack/internal/stats"
 	"github.com/maelmoreau21/jellytrack/internal/users"
 )
@@ -142,7 +140,7 @@ func (h *Handler) getSmartSettings(w http.ResponseWriter, r *http.Request) {
 	var raw sql.NullString
 	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "resolutionThresholds" FROM "GlobalSettings" WHERE "id"='global'`, h.driver)).Scan(&raw)
 	defaults := map[string]any{
-		"ipAttemptThreshold":     10,
+		"ipAttemptThreshold":     50,
 		"ipWindowMinutes":        60,
 		"newCountryGraceMinutes": 120,
 	}
@@ -164,15 +162,20 @@ func (h *Handler) updateSmartSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, _ := json.Marshal(body.Thresholds)
-	_, err := h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "resolutionThresholds"=? WHERE "id"='global'`, h.driver), string(b))
-	if err != nil {
-		jsonError(w, 500, "Impossible d'enregistrer les réglages.")
+	if len(body.Thresholds) == 0 {
+		jsonError(w, 400, "Seuils requis.")
 		return
 	}
-
-	_ = security.LogAudit(r.Context(), h.db, h.driver, "admin.security.smart_settings_updated", nil, nil, nil, nil, body.Thresholds)
-	jsonResponse(w, 200, map[string]any{"success": true, "thresholds": body.Thresholds})
+	for key, value := range body.Thresholds {
+		n, ok := value.(float64)
+		if (key != "ipAttemptThreshold" && key != "ipWindowMinutes" && key != "newCountryGraceMinutes") || !ok || n < 1 || n != float64(int(n)) || n > 100000 {
+			jsonError(w, 400, "Seuil invalide: "+key)
+			return
+		}
+	}
+	b, _ := json.Marshal(map[string]any{"resolutionThresholds": body.Thresholds})
+	r.Body = io.NopCloser(strings.NewReader(string(b)))
+	h.saveRecoveredSettings(w, r)
 }
 
 func (h *Handler) adminUserDuplicates(w http.ResponseWriter, r *http.Request) {
@@ -488,7 +491,7 @@ func (h *Handler) getSSO(w http.ResponseWriter, r *http.Request) {
 	hasEnvAutoRedir := envAutoRedirRaw != ""
 	envAutoRedir := strings.EqualFold(envAutoRedirRaw, "true") || envAutoRedirRaw == "1" || envAutoRedirRaw == ""
 
-	enabled := dbCfg["enabled"].(bool)
+	enabled, _ := dbCfg["enabled"].(bool)
 	if hasEnvEnabled {
 		enabled = isEnvEnabled
 	}
@@ -560,7 +563,7 @@ func (h *Handler) getSSO(w http.ResponseWriter, r *http.Request) {
 			"userGroup":    ternary(envUserGroup != "", "env", ternary(userGroup != "", "db", "default")),
 			"adminGroup":   ternary(envAdminGroup != "", "env", ternary(adminGroup != "", "db", "default")),
 			"tokenAlg":     "default",
-			"autoRedirect": ternary(hasEnvAutoRedir, "env", "default"),
+			"autoRedirect": ternary(hasEnvAutoRedir, "env", ternary(raw.Valid, "db", "default")),
 		},
 		"isEnvControlled": map[string]bool{
 			"enabled":      hasEnvEnabled,
@@ -585,7 +588,7 @@ func (h *Handler) getSSO(w http.ResponseWriter, r *http.Request) {
 		},
 		"localAdminConfigured": localAdminConfigured,
 		"localAdminUser":       localAdminUser,
-		"callbackPath":         "/api/auth/callback/oidc",
+		"callbackPath":         "/api/auth/oidc/callback",
 	})
 }
 
@@ -597,32 +600,7 @@ func ternary(cond bool, a, b string) string {
 }
 
 func (h *Handler) updateSSO(w http.ResponseWriter, r *http.Request) {
-	var body map[string]any
-	r.Body = http.MaxBytesReader(w, r.Body, 16384)
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		jsonError(w, 400, "Payload JSON invalide.")
-		return
-	}
-
-	if rawURL, ok := body["url"].(string); ok && strings.TrimSpace(rawURL) != "" {
-		if _, err := security.ValidateSafeServerURL(rawURL); err != nil {
-			jsonError(w, 400, fmt.Sprintf("SSO URL invalide: %v", err))
-			return
-		}
-	}
-
-	b, _ := json.Marshal(body)
-	_, err := h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "ssoSettings"=? WHERE "id"='global'`, h.driver), string(b))
-	if err != nil {
-		jsonError(w, 500, "Impossible d'enregistrer les réglages SSO.")
-		return
-	}
-
-	_ = security.LogAudit(r.Context(), h.db, h.driver, "SSO Settings updated", nil, nil, nil, nil, nil)
-	jsonResponse(w, 200, map[string]any{
-		"success":      true,
-		"autoRedirect": body["autoRedirect"],
-	})
+	h.saveRecoveredSSO(w, r)
 }
 
 func (h *Handler) getSessionPolicy(w http.ResponseWriter, r *http.Request) {
@@ -706,52 +684,11 @@ func (h *Handler) updateSessionPolicy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getPluginApiKey(w http.ResponseWriter, r *http.Request) {
-	gs, err := settings.GetGlobalSettings(r.Context(), h.db)
-	if err != nil {
-		jsonError(w, 500, "Erreur de lecture.")
-		return
-	}
-	hasKey := gs.PluginAPIKey != nil && *gs.PluginAPIKey != ""
-	keyVal := ""
-	if hasKey {
-		keyVal = *gs.PluginAPIKey
-	}
-	jsonResponse(w, 200, map[string]any{
-		"apiKey":            keyVal,
-		"pluginApiKey":      keyVal,
-		"pluginKey":         keyVal,
-		"hasKey":            hasKey,
-		"hasApiKey":         hasKey,
-		"expiresAt":         gs.PluginKeyExpiresAt,
-		"status":            "active",
-		"keyVersion":        1,
-		"previousKeyActive": gs.PluginPreviousAPIKey != nil && *gs.PluginPreviousAPIKey != "",
-	})
+	h.recoveredPluginKeyInfo(w, r)
 }
 
 func (h *Handler) rotatePluginApiKey(w http.ResponseWriter, r *http.Request) {
-	tokenBytes := make([]byte, 32)
-	rand.Read(tokenBytes)
-	newKey := hex.EncodeToString(tokenBytes)
-	now := time.Now().UTC().Format(time.RFC3339Nano)
-
-	_, _ = h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "GlobalSettings"("id") VALUES('global') ON CONFLICT DO NOTHING`, h.driver))
-	_, err := h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "pluginPreviousApiKey"="pluginApiKey", "pluginApiKey"=?, "pluginKeyCreatedAt"=? WHERE "id"='global'`, h.driver), newKey, now)
-	if err != nil {
-		jsonError(w, 500, "Impossible de renouveler la clé plugin.")
-		return
-	}
-
-	_ = security.LogAudit(r.Context(), h.db, h.driver, "plugin.key.rotated", nil, nil, nil, nil, nil)
-	jsonResponse(w, 200, map[string]any{
-		"success":      true,
-		"apiKey":       newKey,
-		"pluginApiKey": newKey,
-		"pluginKey":    newKey,
-		"hasKey":       true,
-		"hasApiKey":    true,
-		"createdAt":    now,
-	})
+	h.recoveredRotatePluginKey(w, r)
 }
 
 func (h *Handler) revokePluginApiKey(w http.ResponseWriter, r *http.Request) {

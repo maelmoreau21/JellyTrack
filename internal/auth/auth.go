@@ -232,39 +232,42 @@ func (m *Manager) resolveOIDC(ctx context.Context) resolvedOIDCConfig {
 		autoRedirect: m.oidcAutoRedirect,
 	}
 
-	// If environment variables did not enable OIDC, check DB ssoSettings
-	if (!cfg.enabled || cfg.issuer == "" || cfg.clientID == "") && m.db != nil {
+	// Settings are resolved field by field. Environment values lock only their
+	// own field, so saving the database configuration takes effect immediately.
+	if m.db != nil {
 		var raw sql.NullString
 		_ = m.db.QueryRowContext(ctx, database.Bind(`SELECT "ssoSettings" FROM "GlobalSettings" WHERE "id"='global'`, m.driver)).Scan(&raw)
 		if raw.Valid && raw.String != "" {
 			var dbMap map[string]any
 			if json.Unmarshal([]byte(raw.String), &dbMap) == nil {
-				dbEnabled, _ := dbMap["enabled"].(bool)
-				if dbEnabled {
-					if u, ok := dbMap["url"].(string); ok && cfg.issuer == "" {
+				if enabled, ok := dbMap["enabled"].(bool); ok && os.Getenv("OIDC_ENABLED") == "" {
+					cfg.enabled = enabled
+				}
+				{
+					if u, ok := dbMap["url"].(string); ok && first(os.Getenv("OIDC_ISSUER"), os.Getenv("OIDC_URL"), os.Getenv("AUTHENTIK_URL"), os.Getenv("JELLYTRACK_AUTHENTIK_URL")) == "" {
 						cfg.issuer = strings.TrimRight(strings.TrimSpace(u), "/")
 					}
-					if cid, ok := dbMap["clientId"].(string); ok && cfg.clientID == "" {
+					if cid, ok := dbMap["clientId"].(string); ok && os.Getenv("OIDC_CLIENT_ID") == "" {
 						cfg.clientID = strings.TrimSpace(cid)
 					}
-					if cs, ok := dbMap["clientSecret"].(string); ok && cfg.clientSecret == "" {
+					if cs, ok := dbMap["clientSecret"].(string); ok && os.Getenv("OIDC_CLIENT_SECRET") == "" {
 						cfg.clientSecret = strings.TrimSpace(cs)
 					}
-					if ug, ok := dbMap["userGroup"].(string); ok && cfg.userGroup == "" {
+					if ug, ok := dbMap["userGroup"].(string); ok && os.Getenv("OIDC_USER_GROUP") == "" {
 						cfg.userGroup = strings.TrimSpace(ug)
 					}
-					if ag, ok := dbMap["adminGroup"].(string); ok && cfg.adminGroup == "" {
+					if ag, ok := dbMap["adminGroup"].(string); ok && os.Getenv("OIDC_ADMIN_GROUP") == "" {
 						cfg.adminGroup = strings.TrimSpace(ag)
 					}
-					if ar, ok := dbMap["autoRedirect"].(bool); ok {
+					if ar, ok := dbMap["autoRedirect"].(bool); ok && first(os.Getenv("OIDC_AUTO_REDIRECT"), os.Getenv("OIDC_AUTO_LOGIN")) == "" {
 						cfg.autoRedirect = ar
-					}
-					if cfg.issuer != "" && cfg.clientID != "" {
-						cfg.enabled = true
 					}
 				}
 			}
 		}
+	}
+	if raw := strings.TrimSpace(os.Getenv("OIDC_ENABLED")); raw != "" {
+		cfg.enabled = strings.EqualFold(raw, "true") || raw == "1" || strings.EqualFold(raw, "yes") || strings.EqualFold(raw, "on")
 	}
 	return cfg
 }

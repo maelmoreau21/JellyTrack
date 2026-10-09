@@ -1,0 +1,3495 @@
+{
+  "date": "2026-10-10",
+  "scope": "Fresh isolated SQLite, real administrator login and signed standard session. No role response interception. No destructive admin or backup request executed.",
+  "checks": [
+    {
+      "name": "Real administrator session",
+      "ok": true
+    },
+    {
+      "name": "Embedded runtime asset matches final source app.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded runtime asset matches final source app.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded runtime asset matches final source navigation.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded runtime asset matches final source navigation.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded runtime asset matches final source settings.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded runtime asset matches final source settings.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded runtime asset matches final source admin.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded runtime asset matches final source admin.css",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/jellyfin",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/jellyfin",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/jellyfin",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/jellyfin",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/jellyfin",
+      "ok": true
+    },
+    {
+      "name": "Viewport fits /settings/jellyfin",
+      "ok": true
+    },
+    {
+      "name": "Light theme /settings/jellyfin",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/sso",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/sso",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/sso",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/sso",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/sso",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/plugin/security",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/plugin/security",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/plugin/security",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/plugin/security",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/plugin/security",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/media",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/media",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/media",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/media",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/media",
+      "ok": true
+    },
+    {
+      "name": "Viewport fits /settings/media",
+      "ok": true
+    },
+    {
+      "name": "Light theme /settings/media",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/scheduler",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/scheduler",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/scheduler",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/scheduler",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/scheduler",
+      "ok": true
+    },
+    {
+      "name": "Viewport fits /settings/scheduler",
+      "ok": true
+    },
+    {
+      "name": "Light theme /settings/scheduler",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/scheduler/tasks",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/scheduler/tasks",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/scheduler/tasks",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/scheduler/tasks",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/scheduler/tasks",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/scheduler/schedules",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/scheduler/schedules",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/scheduler/schedules",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/scheduler/schedules",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/scheduler/schedules",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/dataBackups",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/dataBackups",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/dataBackups",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/dataBackups",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/dataBackups",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/notifications",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/notifications",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/notifications",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/notifications",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/notifications",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/plugin",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/plugin",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/plugin",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/plugin",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/plugin",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/overview",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/overview",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/overview",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/overview",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/overview",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/network",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/network",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/network",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/network",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/network",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/analytics",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/analytics",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/go-overview",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/go-overview",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/go-overview",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/go-overview",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/go-overview",
+      "ok": true
+    },
+    {
+      "name": "Rendered /settings/go-network",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /settings/go-network",
+      "ok": true
+    },
+    {
+      "name": "Seven historical tabs in order /settings/go-network",
+      "ok": true
+    },
+    {
+      "name": "Exact French historical tab labels /settings/go-network",
+      "ok": true
+    },
+    {
+      "name": "Historical active tab /settings/go-network",
+      "ok": true
+    },
+    {
+      "name": "Rendered /admin/health",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /admin/health",
+      "ok": true
+    },
+    {
+      "name": "Viewport fits /admin/health",
+      "ok": true
+    },
+    {
+      "name": "Light theme /admin/health",
+      "ok": true
+    },
+    {
+      "name": "Rendered /admin/system-health",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /admin/system-health",
+      "ok": true
+    },
+    {
+      "name": "Rendered /admin/log-health",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /admin/log-health",
+      "ok": true
+    },
+    {
+      "name": "Rendered /admin/plugin-health",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /admin/plugin-health",
+      "ok": true
+    },
+    {
+      "name": "Rendered /admin/log-diagnostics",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /admin/log-diagnostics",
+      "ok": true
+    },
+    {
+      "name": "Rendered /admin/plugin-diagnostics",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /admin/plugin-diagnostics",
+      "ok": true
+    },
+    {
+      "name": "Rendered /admin/server-compare",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /admin/server-compare",
+      "ok": true
+    },
+    {
+      "name": "Viewport fits /admin/server-compare",
+      "ok": true
+    },
+    {
+      "name": "Light theme /admin/server-compare",
+      "ok": true
+    },
+    {
+      "name": "Rendered /admin/cleanup",
+      "ok": true
+    },
+    {
+      "name": "HTTP content successful /admin/cleanup",
+      "ok": true
+    },
+    {
+      "name": "Settings alias retains query",
+      "ok": true
+    },
+    {
+      "name": "Browser back restores settings parent",
+      "ok": true
+    },
+    {
+      "name": "Historical redirect /settings/overview",
+      "ok": true
+    },
+    {
+      "name": "Alias replaces history /settings/overview",
+      "ok": true
+    },
+    {
+      "name": "Historical redirect /settings/network",
+      "ok": true
+    },
+    {
+      "name": "Alias replaces history /settings/network",
+      "ok": true
+    },
+    {
+      "name": "Historical redirect /admin/log-health",
+      "ok": true
+    },
+    {
+      "name": "Alias replaces history /admin/log-health",
+      "ok": true
+    },
+    {
+      "name": "Historical redirect /admin/plugin-health",
+      "ok": true
+    },
+    {
+      "name": "Alias replaces history /admin/plugin-health",
+      "ok": true
+    },
+    {
+      "name": "English settings tabs",
+      "ok": true
+    },
+    {
+      "name": "English page headings",
+      "ok": true
+    },
+    {
+      "name": "Genuine standard session",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/settings",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/settings",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/settings/sso",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/settings/sso",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/settings/jellyfin-servers",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/settings/jellyfin-servers",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/admin/health",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/admin/health",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/admin/cleanup",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/admin/cleanup",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/admin/security/overview",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/admin/security/overview",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/admin/security/smart-settings",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/admin/security/smart-settings",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/admin/plugin/health",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/admin/plugin/health",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/admin/server-compare",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/admin/server-compare",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/logs/system",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/logs/system",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/backup/auto",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/backup/auto",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/backup/export",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/backup/export",
+      "ok": true
+    },
+    {
+      "name": "Anonymous denied /api/plugin/api-key",
+      "ok": true
+    },
+    {
+      "name": "Standard denied /api/plugin/api-key",
+      "ok": true
+    },
+    {
+      "name": "Standard sidebar hides administrative menus",
+      "ok": true
+    },
+    {
+      "name": "Standard UI redirect /settings/media",
+      "ok": true
+    },
+    {
+      "name": "Standard UI redirect /settings/sso",
+      "ok": true
+    },
+    {
+      "name": "Standard UI redirect /admin/health",
+      "ok": true
+    },
+    {
+      "name": "Standard UI redirect /admin/server-compare",
+      "ok": true
+    },
+    {
+      "name": "Standard mutation denied POST /api/settings",
+      "ok": true
+    },
+    {
+      "name": "Standard mutation denied PUT /api/settings/sso",
+      "ok": true
+    },
+    {
+      "name": "Standard mutation denied PATCH /api/admin/security/smart-settings",
+      "ok": true
+    },
+    {
+      "name": "Standard mutation denied POST /api/settings/jellyfin-servers/plugin-key",
+      "ok": true
+    },
+    {
+      "name": "Standard mutation denied POST /api/backup/auto/trigger",
+      "ok": true
+    },
+    {
+      "name": "Standard mutation denied PATCH /api/settings/jellyfin-servers",
+      "ok": true
+    },
+    {
+      "name": "Invalid settings rejected",
+      "ok": true
+    },
+    {
+      "name": "Valid field in invalid payload unchanged",
+      "ok": true
+    },
+    {
+      "name": "No uncaught JavaScript errors",
+      "ok": true
+    }
+  ],
+  "pages": [
+    {
+      "route": "/settings/jellyfin",
+      "actual": "/settings/jellyfin",
+      "headings": [
+        "Serveurs Jellyfin connectés",
+        "QA principal modifié",
+        "QA secondaire"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-name-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-url-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "display-api-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "plugin-url-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "plugin-key-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-name-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-url-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "display-api-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "plugin-url-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "plugin-key-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ajouter un serveur",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "defaultLocale",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "timeFormat",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/sso",
+      "actual": "/settings/sso",
+      "headings": [
+        "Authentification SSO",
+        "URI de Redirection OAuth2 / OIDC (Callback URL)",
+        "Configuration & Rôles SSO",
+        "Groupes & Rôles SSO"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Actualiser",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "callback",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "enabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "autoRedirect",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "url",
+          "id": "",
+          "name": "url",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "clientId",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "clientSecret",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "userGroup",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "adminGroup",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Enregistrer les réglages SSO",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/plugin/security",
+      "actual": "/settings/plugin/security",
+      "headings": [
+        "Centre de sécurité",
+        "État plugin",
+        "Précision de télémétrie plugin",
+        "Seuils Smart (anomalies)"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Rafraîchir",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Très précis",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Équilibré",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Trafic minimal",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "hidden",
+          "id": "",
+          "name": "precisionProfile",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "playingIntervalSeconds",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "pausedIntervalSeconds",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "staleSessionTimeoutSeconds",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "mergeWindowSeconds",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "seekThresholdSeconds",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "retryQueueSize",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "retryFlushBatchSize",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "trackPauseResume",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "trackSeek",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "trackAudioSubtitleChanges",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "trackSessionEnded",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder la télémétrie",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "ipAttemptThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "ipWindowMinutes",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "newCountryGraceMinutes",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "authRememberThirtyDaysEnabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/media",
+      "actual": "/settings/media",
+      "headings": [
+        "Paramètres Média",
+        "Bibliothèques exclues des statistiques",
+        "Affichage des badges en bibliothèque",
+        "Règles par Bibliothèque",
+        "Seuils de Résolution"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Films QAExclue",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Films QAActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "×",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "×",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "showLibraryMediaBadges",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "rule-default-completionEnabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-default-abandonedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-default-partialThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-default-completedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "rule-movies-completionEnabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-movies-abandonedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-movies-partialThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-movies-completedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "rule-tvshows-completionEnabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-tvshows-abandonedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-tvshows-partialThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-tvshows-completedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "rule-music-completionEnabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-music-abandonedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-music-partialThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-music-completedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "rule-books-completionEnabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-books-abandonedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-books-partialThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-books-completedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "rule-homevideos-completionEnabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-homevideos-abandonedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-homevideos-partialThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "rule-homevideos-completedThreshold",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "res-480p-maxW",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "res-480p-maxH",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "res-720p-maxW",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "res-720p-maxH",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "res-1080p-maxW",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "res-1080p-maxH",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "res-4K-maxW",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "res-4K-maxH",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Annuler",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/scheduler",
+      "actual": "/settings/scheduler",
+      "headings": [
+        "Planificateur de Tâches",
+        "Synchro Récente",
+        "Synchro Totale",
+        "Vérification d'intégrité",
+        "Tâche de Sauvegarde",
+        "Consolidation de l'historique",
+        "Sauvegarder les Plannings",
+        "Période de disponibilité pour l'année en cours"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "recentSyncEveryHours",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "fullSyncEveryHours",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "integrityCheckEveryHours",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "backupEveryHours",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "logRetentionDays",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les Plannings",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "wrappedPeriodEnabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "wrappedStartMonth",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "wrappedStartDay",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "wrappedEndMonth",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "wrappedEndDay",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "wrappedVisible",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/scheduler/tasks",
+      "actual": "/settings/scheduler/tasks",
+      "headings": [
+        "Planificateur de Tâches",
+        "Synchro Récente",
+        "Synchro Totale",
+        "Vérification d'intégrité",
+        "Tâche de Sauvegarde",
+        "Consolidation de l'historique"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Lancer",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/scheduler/schedules",
+      "actual": "/settings/scheduler/schedules",
+      "headings": [
+        "Sauvegarder les Plannings"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "recentSyncEveryHours",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "fullSyncEveryHours",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "integrityCheckEveryHours",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "backupEveryHours",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "logRetentionDays",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les Plannings",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/dataBackups",
+      "actual": "/settings/dataBackups",
+      "headings": [
+        "Sauvegardes de Données",
+        "Historique des sauvegardes",
+        "Importer une sauvegarde"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder maintenant",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Restaurer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Restaurer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Restaurer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Restaurer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Restaurer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "file",
+          "id": "",
+          "name": "backupFile",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Importer une sauvegarde",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/notifications",
+      "actual": "/settings/notifications",
+      "headings": [
+        "Notifications"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "INPUT",
+          "type": "checkbox",
+          "id": "",
+          "name": "discordAlertsEnabled",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "url",
+          "id": "",
+          "name": "discordWebhookUrl",
+          "text": "",
+          "disabled": true
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "discordAlertCondition",
+          "text": "",
+          "disabled": true
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "maxConcurrentTranscodes",
+          "text": "",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/plugin",
+      "actual": "/settings/plugin",
+      "headings": [
+        "Serveurs Jellyfin connectés",
+        "QA principal modifié",
+        "QA secondaire"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-name-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-url-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "display-api-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "plugin-url-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "plugin-key-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-name-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-url-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "display-api-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "plugin-url-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "plugin-key-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ajouter un serveur",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "defaultLocale",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "timeFormat",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/overview",
+      "actual": "/settings/jellyfin",
+      "headings": [
+        "Serveurs Jellyfin connectés",
+        "QA principal modifié",
+        "QA secondaire"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-name-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-url-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "display-api-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "plugin-url-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "plugin-key-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-name-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-url-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "display-api-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "plugin-url-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "plugin-key-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ajouter un serveur",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "defaultLocale",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "timeFormat",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/network",
+      "actual": "/settings/jellyfin",
+      "headings": [
+        "Serveurs Jellyfin connectés",
+        "QA principal modifié",
+        "QA secondaire"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-name-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-url-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "display-api-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "plugin-url-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "plugin-key-qa-primary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Modifier le serveur",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-name-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "display-url-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "display-api-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "text",
+          "id": "",
+          "name": "plugin-url-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier l'URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "plugin-key-qa-secondary",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copier la clé",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Régénérer la clé du serveur",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ajouter un serveur",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "defaultLocale",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "timeFormat",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "submit",
+          "id": "",
+          "name": "",
+          "text": "Sauvegarder les paramètres",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/settings/analytics",
+      "actual": "/media/analysis",
+      "headings": [
+        "\n              \n              Analyses Deep\n            "
+      ],
+      "httpErrors": [],
+      "controls": []
+    },
+    {
+      "route": "/settings/go-overview",
+      "actual": "/settings/go-overview",
+      "headings": [
+        "\n              \n              Paramètres\n            "
+      ],
+      "httpErrors": [],
+      "controls": []
+    },
+    {
+      "route": "/settings/go-network",
+      "actual": "/settings/go-network",
+      "headings": [
+        "\n              \n              Paramètres\n            "
+      ],
+      "httpErrors": [],
+      "controls": []
+    },
+    {
+      "route": "/admin/health",
+      "actual": "/admin/health",
+      "headings": [
+        "Santé & Hygiène du Serveur",
+        "Sécurité & Anomalies",
+        "Espace Récupérable",
+        "Médias Inachevés",
+        "Moniteur de Flux",
+        "Nettoyage Intelligent & Optimisation",
+        "Espace récupérable estimé",
+        "Médias Fantômes",
+        "Médias Abandonnés",
+        "Doublons détectés",
+        "Suggestion automatique",
+        "Médias Fantômes"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-health-cleanup",
+          "name": "",
+          "text": "Nettoyage & Stockage33",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-health-security",
+          "name": "",
+          "text": "Sécurité & Anomalies",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-health-logs",
+          "name": "",
+          "text": "Moteur & Logs",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-ghosts",
+          "name": "",
+          "text": "Médias Fantômes0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-abandoned",
+          "name": "",
+          "text": "Médias Abandonnés1",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-duplicates",
+          "name": "",
+          "text": "Doublons2",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Examiner la sélection",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer maintenant",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ignorer",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "search",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "JSON",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Tout 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Films 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Séries 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Albums 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Précédent",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Suivant",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "route": "/admin/system-health",
+      "actual": "/admin/system-health",
+      "headings": [
+        "\n              \n              Santé Système\n            "
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "btn-fix-orphans",
+          "name": "",
+          "text": "Clôturer les sessions orphelines maintenant",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/admin/log-health",
+      "actual": "/admin/health",
+      "headings": [
+        "Santé & Hygiène du Serveur",
+        "Sécurité & Anomalies",
+        "Espace Récupérable",
+        "Médias Inachevés",
+        "Moniteur de Flux",
+        "Nettoyage Intelligent & Optimisation",
+        "Espace récupérable estimé",
+        "Médias Fantômes",
+        "Médias Abandonnés",
+        "Doublons détectés",
+        "Suggestion automatique",
+        "Médias Fantômes"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-health-cleanup",
+          "name": "",
+          "text": "Nettoyage & Stockage33",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-health-security",
+          "name": "",
+          "text": "Sécurité & Anomalies",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-health-logs",
+          "name": "",
+          "text": "Moteur & Logs",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-ghosts",
+          "name": "",
+          "text": "Médias Fantômes0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-abandoned",
+          "name": "",
+          "text": "Médias Abandonnés1",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-duplicates",
+          "name": "",
+          "text": "Doublons2",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Examiner la sélection",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer maintenant",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ignorer",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "search",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "JSON",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Tout 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Films 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Séries 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Albums 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Précédent",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Suivant",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "route": "/admin/plugin-health",
+      "actual": "/admin/health",
+      "headings": [
+        "Santé & Hygiène du Serveur",
+        "Sécurité & Anomalies",
+        "Espace Récupérable",
+        "Médias Inachevés",
+        "Moniteur de Flux",
+        "Nettoyage Intelligent & Optimisation",
+        "Espace récupérable estimé",
+        "Médias Fantômes",
+        "Médias Abandonnés",
+        "Doublons détectés",
+        "Suggestion automatique",
+        "Médias Fantômes"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-health-cleanup",
+          "name": "",
+          "text": "Nettoyage & Stockage33",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-health-security",
+          "name": "",
+          "text": "Sécurité & Anomalies",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-health-logs",
+          "name": "",
+          "text": "Moteur & Logs",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-ghosts",
+          "name": "",
+          "text": "Médias Fantômes0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-abandoned",
+          "name": "",
+          "text": "Médias Abandonnés1",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-duplicates",
+          "name": "",
+          "text": "Doublons2",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Examiner la sélection",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer maintenant",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ignorer",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "search",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "JSON",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Tout 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Films 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Séries 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Albums 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Précédent",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Suivant",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "route": "/admin/log-diagnostics",
+      "actual": "/admin/log-diagnostics",
+      "headings": [
+        "\n              \n              Santé Système\n            "
+      ],
+      "httpErrors": [],
+      "controls": []
+    },
+    {
+      "route": "/admin/plugin-diagnostics",
+      "actual": "/admin/plugin-diagnostics",
+      "headings": [
+        "Centre de santé du plugin",
+        "Connexion",
+        "Jitter heartbeat",
+        "Fiabilité d'ingestion",
+        "Santé des flux en direct",
+        "Intervalles heartbeat (24h)",
+        "Seuils d'alerte",
+        "Derniers échecs d'ingestion",
+        "Métriques remontées par le plugin",
+        "Progressions fusionnées",
+        "Dernier code HTTP",
+        "Profondeur de file",
+        "Tentatives",
+        "Profil",
+        "Lecture / pause"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Rafraîchir",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Tester la connexion",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Forcer un heartbeat",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Exporter le JSON de diagnostic",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Reinitialiser les valeurs par defaut",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/admin/server-compare",
+      "actual": "/admin/server-compare",
+      "headings": [
+        "Comparateur multi‑serveurs",
+        "Active streams",
+        "Plays (24h)",
+        "Plugin errors (24h)",
+        "Scope",
+        "Server ranking"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Tout",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "QA principal modifié",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "QA secondaire",
+          "disabled": false
+        }
+      ]
+    },
+    {
+      "route": "/admin/cleanup",
+      "actual": "/admin/cleanup",
+      "headings": [
+        "Assistant de Nettoyage",
+        "Espace récupérable estimé",
+        "Médias Fantômes",
+        "Médias Abandonnés",
+        "Doublons détectés",
+        "Suggestion automatique",
+        "Médias Fantômes"
+      ],
+      "httpErrors": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-ghosts",
+          "name": "",
+          "text": "Médias Fantômes0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-abandoned",
+          "name": "",
+          "text": "Médias Abandonnés1",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "ar-cleanup-duplicates",
+          "name": "",
+          "text": "Doublons2",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Examiner la sélection",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer maintenant",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Ignorer",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "search",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "JSON",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Tout 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Films 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Séries 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Albums 0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Précédent",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Suivant",
+          "disabled": true
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "embeddedAssets": [
+    {
+      "file": "app.js",
+      "sha256": "4dffeecc4d4064ae9f621b1af877f950299e131e1318febee1d9777cf9dbc672",
+      "status": 200
+    },
+    {
+      "file": "app.css",
+      "sha256": "2e5fb2e95e8aafe1cd4e5ff5933d99198a78e7b87ad2cc5542db840a0915b458",
+      "status": 200
+    },
+    {
+      "file": "navigation.js",
+      "sha256": "804dc63b719adb7e3566a23f0f14caef0529b233fcf2dda1a87cf02807d158bf",
+      "status": 200
+    },
+    {
+      "file": "navigation.css",
+      "sha256": "a797d26f2ee4811ee2ff3ceb0890a967845ba82261040c136efe188c0e568692",
+      "status": 200
+    },
+    {
+      "file": "settings.js",
+      "sha256": "9dc786c7053a3b956184c28528318d75d91478586c63fec684ed831c9828379f",
+      "status": 200
+    },
+    {
+      "file": "settings.css",
+      "sha256": "2b3976b149802fe93700edaf4d1e28eab8ec9b85acc0bfb47f8db74d80454d17",
+      "status": 200
+    },
+    {
+      "file": "admin.js",
+      "sha256": "33d6106e9ff39806ac0708af9630eb16608e8e829af103cd9fd93092b9e15c6f",
+      "status": 200
+    },
+    {
+      "file": "admin.css",
+      "sha256": "fe948e3e203ee24325083508890f6932a46d9a6a5664aaa2d44f70733522b4ea",
+      "status": 200
+    }
+  ]
+}

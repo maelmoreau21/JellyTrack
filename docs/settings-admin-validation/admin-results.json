@@ -1,0 +1,194 @@
+{
+  "scope": "Real admin health cleanup plugin server comparison APIs; synthetic disabled localhost servers. Delete modal validation/cancellation only. Heartbeat prompt cancellation only.",
+  "checks": [
+    {
+      "name": "Four historic health summary metrics",
+      "ok": true
+    },
+    {
+      "name": "Three health tabs historical order",
+      "ok": true
+    },
+    {
+      "name": "Health keyboard ArrowRight selects security",
+      "ok": true
+    },
+    {
+      "name": "Health keyboard End selects logs",
+      "ok": true
+    },
+    {
+      "name": "Logs include closure selector and exclude Valkey diagnostics",
+      "ok": true
+    },
+    {
+      "name": "Closure selector keeps selection",
+      "ok": true
+    },
+    {
+      "name": "health security selected",
+      "ok": true
+    },
+    {
+      "name": "Embedded plugin has no standalone thresholds",
+      "ok": true
+    },
+    {
+      "name": "health cleanup selected",
+      "ok": true
+    },
+    {
+      "name": "cleanup abandoned selected",
+      "ok": true
+    },
+    {
+      "name": "cleanup duplicates selected",
+      "ok": true
+    },
+    {
+      "name": "Browser back restores nested abandoned tab",
+      "ok": true
+    },
+    {
+      "name": "Query reload preserves nested abandoned",
+      "ok": true
+    },
+    {
+      "name": "Real cleanup nonempty fixtures",
+      "ok": true
+    },
+    {
+      "name": "First cleanup page bounded25",
+      "ok": true
+    },
+    {
+      "name": "Cleanup next page changes content",
+      "ok": true
+    },
+    {
+      "name": "Cleanup accent-insensitive query",
+      "ok": true
+    },
+    {
+      "name": "Cleanup pagination size50",
+      "ok": true
+    },
+    {
+      "name": "JSON export includes all filtered rows beyond page",
+      "ok": true
+    },
+    {
+      "name": "CSV export escapes formula title",
+      "ok": true
+    },
+    {
+      "name": "cleanup abandoned selected",
+      "ok": true
+    },
+    {
+      "name": "Abandoned sort selector",
+      "ok": true
+    },
+    {
+      "name": "Abandoned real media row",
+      "ok": true
+    },
+    {
+      "name": "cleanup duplicates selected",
+      "ok": true
+    },
+    {
+      "name": "Duplicate detail resolution and library",
+      "ok": true
+    },
+    {
+      "name": "Smart review opens recommended ghosts",
+      "ok": true
+    },
+    {
+      "name": "Delete confirmation initially disabled",
+      "ok": true
+    },
+    {
+      "name": "Delete wrong word disabled",
+      "ok": true
+    },
+    {
+      "name": "Translated confirmation recognizes trimmed word",
+      "ok": true
+    },
+    {
+      "name": "Cancel delete closes dialog",
+      "ok": true
+    },
+    {
+      "name": "No cleanup deletion request sent",
+      "ok": true
+    },
+    {
+      "name": "Cleanup dataset unchanged after cancel",
+      "ok": true
+    },
+    {
+      "name": "Full plugin has four alert thresholds",
+      "ok": true
+    },
+    {
+      "name": "Plugin thresholds local persistence",
+      "ok": true
+    },
+    {
+      "name": "Threshold reset default",
+      "ok": true
+    },
+    {
+      "name": "Canceled heartbeat does not submit",
+      "ok": true
+    },
+    {
+      "name": "Real connection probe returns explicit outcome",
+      "ok": true
+    },
+    {
+      "name": "Plugin export uses real diagnostic shape",
+      "ok": true
+    },
+    {
+      "name": "Multi-server comparison enabled with two selectable fixtures",
+      "ok": true
+    },
+    {
+      "name": "Server scope keeps other query parameters",
+      "ok": true
+    },
+    {
+      "name": "Single-scope ranking only selected server",
+      "ok": true
+    },
+    {
+      "name": "Multiple server selection",
+      "ok": true
+    },
+    {
+      "name": "Server scope browser back",
+      "ok": true
+    },
+    {
+      "name": "Admin loading state visible",
+      "ok": true
+    },
+    {
+      "name": "Admin GET error visible",
+      "ok": true
+    },
+    {
+      "name": "Admin retry recovers actual data",
+      "ok": true
+    },
+    {
+      "name": "No uncaught JavaScript errors",
+      "ok": true
+    }
+  ],
+  "pageErrors": []
+}

@@ -1,0 +1,883 @@
+{
+  "source": "Historical main archive, original settings/admin components. Synthetic Prisma stub and signed NextAuth session.",
+  "cases": [
+    {
+      "route": "/settings/jellyfin",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/jellyfin",
+      "headings": [
+        "Connected Jellyfin Servers"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Security",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Media Settings",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Task Scheduler",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Data Backups",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Edit server",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copy URL",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "password",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Copy key",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Regenerate server key",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Add server",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMy Account\nDashboard\nRecently Added\nLibrary\nUsers\nLog health\nLogs\nSettings\nLANGUAGE\nEnglish\nTHEME\nDark\nSign Out\nJellyTrack v0.0.0\nJellyfin\nSSO\nSecurity\nMedia Settings\nTask Scheduler\nData Backups\nNotifications\nConnected Jellyfin Servers\nManage Jellyfin instances connected to JellyTrack, configure plugin API keys, and switch between servers.\n\nlocalhost\n\nPrimary server\nMissing API key\nPlugin not configured\n\nAPI key missing.\n\nEdit server\nServer name\nServer URL\nServer API key\n\nPlugin connection (localhost)\n\nPlugin URL\nCopy URL\nPlugin API Key for this server\nCopy key\nRegenerate server key\nAdd server\n\nThe \"Add server\" button remains available to add as many as needed.",
+      "rendered": true
+    },
+    {
+      "route": "/settings/media",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/media",
+      "headings": [
+        "Media Settings",
+        "Libraries excluded from statistics",
+        "Library badge display",
+        "Rules per Library",
+        "Resolution Thresholds"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Security",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Media Settings",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Task Scheduler",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Data Backups",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "CinémaActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "LivresActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "MusiqueActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "SériesActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "CinémaActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "LivresActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "MusiqueActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "SériesActive",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Cancel",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Save Settings",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMy Account\nDashboard\nRecently Added\nLibrary\nUsers\nLog health\nLogs\nSettings\nLANGUAGE\nEnglish\nTHEME\nDark\nSign Out\nJellyTrack v0.0.0\nJellyfin\nSSO\nSecurity\nMedia Settings\nTask Scheduler\nData Backups\nNotifications\nMedia Settings\nManage resolution thresholds and content display preferences.\nNote\nA full synchronization is required to apply these changes.\nLibraries excluded from statistics\n\nLibraries disabled below will be excluded from all dashboard statistics.\n\nToggle each library per server. Two libraries with the same name on different servers are handled separately.\n\nAudit principal\nhttp://127.0.0.1:9\nCinéma\nActive\nLivres\nActive\nMusique\nActive\nSéries\nActive\nAudit secondaire\nhttp://localhost:9\nCinéma\nActive\nLivres\nActive\nMusique\nActive\nSéries\nActive\nLibrary badge display\n\nShow or hide resolution, series quality and bitrate badges in the Library tab.\n\nShow media badges\n\nDisable this option to visually lighten media cards.\n\nRules per Library\n\nManage abandonment and completion thresholds per library. You can disable completion tracking for some libraries (e.g. Music).\n\nAdjust thresholds to define when playback is considered skipped, abandoned, partial, or completed for each library type.\n\nDefault rule (other libraries)\n\nActive\n\nAbandoned\n\nPartial\n\nCompleted\n\nMovies\n\nActive\n\nAbandoned\n\nPartial\n\nCompleted\n\nTV Shows\n\nActive\n\nAbandoned\n\nPartial\n\nCompleted\n\nMusic\n\nActive\n\nAbandoned\n\nPartial\n\nCompleted\n\nBooks\n\nActive\n\nAbandoned\n\nPartial\n\nCompleted\n\nHome Videos\n\nActive\n\nAbandoned\n\nPartial\n\nCompleted\n\nResolution Thresholds\n\nConfigure how JellyTrack categorizes video quality. If a file exceeds either the width OR height of a threshold, it is promoted to the higher category.\n\nSD / 480p Threshold (Max)\n480P\nMax Width (px)\nMax Height (px)\n720p HD Threshold (Max)\n720P\nMax Width (px)\nMax Height (px)\n1080p FHD Threshold (Max)\n1080P\nMax Width (px)\nMax Height (px)\n4K UHD Threshold (Max)\n4K\nMax Width (px)\nMax Height (px)\nCancel\nSave Settings",
+      "rendered": true
+    },
+    {
+      "route": "/settings/scheduler",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/settings/scheduler",
+      "headings": [
+        "Task Scheduler",
+        "Save Schedules",
+        "Availability period for the current year"
+      ],
+      "links": [
+        {
+          "text": "Jellyfin",
+          "href": "/settings/jellyfin"
+        },
+        {
+          "text": "SSO",
+          "href": "/settings/sso"
+        },
+        {
+          "text": "Security",
+          "href": "/settings/plugin/security"
+        },
+        {
+          "text": "Media Settings",
+          "href": "/settings/media"
+        },
+        {
+          "text": "Task Scheduler",
+          "href": "/settings/scheduler"
+        },
+        {
+          "text": "Data Backups",
+          "href": "/settings/dataBackups"
+        },
+        {
+          "text": "Notifications",
+          "href": "/settings/notifications"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Run",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Run",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Run",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Run",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Run",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": "number",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "SELECT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Save Schedules",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Save Settings",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMy Account\nDashboard\nRecently Added\nLibrary\nUsers\nLog health\nLogs\nSettings\nLANGUAGE\nEnglish\nTHEME\nDark\nSign Out\nJellyTrack v0.0.0\nJellyfin\nSSO\nSecurity\nMedia Settings\nTask Scheduler\nData Backups\nNotifications\nTask Scheduler\nManage automatic synchronization and backup tasks.\nRecent Sync\n\nSynchronize only recently added/modified items.\n\nEvery 6h\nRun\nFull Sync\n\nPerforms a full synchronization of all media metadata. This may take some time.\n\nEvery 48h\nRun\nIntegrity Check\n\nDetects and closes orphaned playback sessions (network disconnects or client crashes).\n\nEvery 6h\nRun\nBackup Task\n\nAutomatic nightly backup task.\n\nEvery 24h\nRun\nPlayback History Consolidation\n\nDetects and merges fragmented playback sessions caused by pauses, buffers or disconnects.\n\nDaily at 03:45 UTC\nRun\nSave Schedules\nSchedule each task automatically with an hourly interval. Recommended example: Recent sync 6h, full sync 48h, backup 24h.\nRecent Sync\nAutomatic interval in hours (1-24)\nh\nFull Sync\nAutomatic interval in hours (24-168, multiple of 24)\nh\nIntegrity Check\nAutomatic interval in hours (1-168)\nh\nBackup Task\nAutomatic interval in hours (1-168)\nh\nSystem Log Retention\nDuration before automated log file and audit history rotation and deletion.\n7 days\n14 days\n30 days\n60 days\n90 days\n180 days\n365 days\nKeep indefinitely\nSave Schedules\nAvailability period for the current year\nDefines when the current year's Wrapped (2025+) becomes accessible. Previous years always remain accessible.\nEnable automatic availability period\n\nIf enabled, the Wrapped feature will only be accessible between the defined dates.\n\nWrapped General Visibility\n\nShow or hide the Wrapped item in the sidebar and navigation.\n\nSave Settings",
+      "rendered": true
+    },
+    {
+      "route": "/admin/health",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/admin/health",
+      "headings": [
+        "Server Health & Hygiene",
+        "Security",
+        "Reclaimable Space",
+        "Abandoned Media",
+        "Monitor Status",
+        "Smart Media Cleanup & Hygiene",
+        "Ghost Media"
+      ],
+      "links": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_0_-trigger-cleanup",
+          "name": "",
+          "text": "Media Cleanup",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_0_-trigger-security",
+          "name": "",
+          "text": "Security & Alerts",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_0_-trigger-logs",
+          "name": "",
+          "text": "Logs & Engine",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_4_-trigger-ghosts",
+          "name": "",
+          "text": "Ghost Media0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_4_-trigger-abandoned",
+          "name": "",
+          "text": "Abandoned Media0",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "radix-_r_4_-trigger-duplicates",
+          "name": "",
+          "text": "Doublons0",
+          "disabled": false
+        },
+        {
+          "tag": "INPUT",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Last 30 days",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "25",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "CSV",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "JSON",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "All",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Movies (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Series (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Albums (0)",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Previous",
+          "disabled": true
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Next",
+          "disabled": true
+        }
+      ],
+      "body": "JellyTrack\nMy Account\nDashboard\nRecently Added\nLibrary\nUsers\nLog health\nLogs\nSettings\nLANGUAGE\nEnglish\nTHEME\nDark\nSign Out\nJellyTrack v0.0.0\nServer Health & Hygiene\n\nSystem diagnostics, anomaly detection, and storage optimization\n\nSECURITY\nHealthy\n\nNo active threats\n\nRECLAIMABLE SPACE\n0 B\n\n0 ghost media\n\nABANDONED MEDIA\n0\n\nAbandoned < 25%\n\nMONITOR STATUS\nIdle\n\n1 orphans\n\nMedia Cleanup\nSecurity & Alerts\nLogs & Engine\nSmart Media Cleanup & Hygiene\n\nFind and delete unplayed, abandoned, or duplicate media to reclaim disk space.\n\nEspace récupérable estimé\n0 B\nGhost Media\n0\nAbandoned Media\n0\nDoublons détectés\n0\nGhost Media\n0\nAbandoned Media\n0\nDoublons\n0\nLast 30 days\n25\nCSV\nJSON\nGhost Media\nContent added over 30 days ago that has never been watched by anyone.\nAll\nMovies (0)\nSeries (0)\nAlbums (0)\nTitle\tType\tAdded\nNo ghost media. Your server is clean!\n\n0-0 / 0\n\nPrevious\nPage 1/1\nNext",
+      "rendered": true
+    },
+    {
+      "route": "/admin/server-compare",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/admin/server-compare",
+      "headings": [
+        "Multi-server Comparator",
+        "Active streams",
+        "Plays (24h)",
+        "Plugin errors (24h)",
+        "Scope",
+        "Server ranking"
+      ],
+      "links": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "All",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Audit principal",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": null,
+          "id": "",
+          "name": "",
+          "text": "Audit secondaire",
+          "disabled": false
+        }
+      ],
+      "body": "JellyTrack\nMy Account\nDashboard\nRecently Added\nLibrary\nUsers\nLog health\nLogs\nSettings\nLANGUAGE\nEnglish\nTHEME\nDark\nSign Out\nJellyTrack v0.0.0\nMulti-server Comparator\n\nCompare current load, transcoding pressure and heartbeat freshness across Jellyfin servers.\n\nAll\nAudit principal\nAudit secondaire\nActive streams\n0\n\nAcross 2 server(s)\n\nPlays (24h)\n15\n\n6.2 watch hours\n\nPlugin errors (24h)\n0\n\nSecurity and ingest validation failures\n\nScope\nall servers\n\nURL/global selection fingerprint\n\nServer ranking\nHigher score means more steady activity with fewer stale sessions and lower transcode pressure.\nServer\tActive\tTranscodes\tAvg bitrate\tPlays (24h)\tHeartbeat\tScore\n\nAudit principal\nLoad index: 0%\n\t0\t0\t-\t10\n4.5h\n\tstale\n9h ago\n\t-3\n\nAudit secondaire\nLoad index: 0%\n\t0\t0\t-\t5\n1.7h\n\tstale\n9h ago\n\t-4",
+      "rendered": true
+    }
+  ]
+}

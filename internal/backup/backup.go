@@ -215,31 +215,10 @@ func fetchExportData(ctx context.Context, db *sql.DB, driver string) (*ExportDat
 		pRows.Close()
 	}
 
-	// Fetch settings
-	var discordUrl, discordCond, defLocale, timeFmt, exclLibs sql.NullString
-	var alertsEnabled, maxTranscodes, syncH, syncM, bH, bM, wrapVis, wrapPer, wrapSM, wrapSD, wrapEM, wrapED int
-	err = db.QueryRowContext(ctx, `SELECT "discordWebhookUrl","discordAlertCondition","discordAlertsEnabled","maxConcurrentTranscodes","excludedLibraries","syncCronHour","syncCronMinute","backupCronHour","backupCronMinute","defaultLocale","timeFormat","wrappedVisible","wrappedPeriodEnabled","wrappedStartMonth","wrappedStartDay","wrappedEndMonth","wrappedEndDay" FROM "GlobalSettings" WHERE "id" = 'global'`).Scan(
-		&discordUrl, &discordCond, &alertsEnabled, &maxTranscodes, &exclLibs, &syncH, &syncM, &bH, &bM, &defLocale, &timeFmt, &wrapVis, &wrapPer, &wrapSM, &wrapSD, &wrapEM, &wrapED)
-	if err == nil {
-		out.Settings = map[string]any{
-			"discordWebhookUrl":       discordUrl.String,
-			"discordAlertCondition":   discordCond.String,
-			"discordAlertsEnabled":    alertsEnabled == 1,
-			"maxConcurrentTranscodes": maxTranscodes,
-			"excludedLibraries":       parseJSONList(exclLibs.String),
-			"syncCronHour":            syncH,
-			"syncCronMinute":          syncM,
-			"backupCronHour":          bH,
-			"backupCronMinute":        bM,
-			"defaultLocale":           defLocale.String,
-			"timeFormat":              timeFmt.String,
-			"wrappedVisible":          wrapVis == 1,
-			"wrappedPeriodEnabled":    wrapPer == 1,
-			"wrappedStartMonth":       wrapSM,
-			"wrappedStartDay":         wrapSD,
-			"wrappedEndMonth":         wrapEM,
-			"wrappedEndDay":           wrapED,
-		}
+	// Export all configuration sections, including secrets needed to recover SSO/plugin.
+	out.Settings, err = exportGlobalSettings(ctx, db)
+	if err != nil {
+		return out, err
 	}
 
 	return out, nil
@@ -563,21 +542,8 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 		sObj = s
 	}
 	if sObj != nil {
-		exclJSON := jsonCol(sObj, "excludedLibraries", "[]")
-		webhook := nullStringVal(sObj, "discordWebhookUrl")
-		locale := stringVal(sObj, "defaultLocale", "en")
-		timeFmt := stringVal(sObj, "timeFormat", "24h")
-		pluginKey := nullStringVal(sObj, "pluginApiKey")
-		pluginKeyCreated := nullStringVal(sObj, "pluginKeyCreatedAt")
-
-		var exists bool
-		_ = tx.QueryRowContext(ctx, database.Bind(`SELECT EXISTS(SELECT 1 FROM "GlobalSettings" WHERE "id"='global')`, driver)).Scan(&exists)
-		if !exists {
-			_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "GlobalSettings" ("id","excludedLibraries","discordWebhookUrl","defaultLocale","timeFormat","pluginApiKey","pluginKeyCreatedAt") VALUES ('global',?,?,?,?,?,?)`, driver),
-				exclJSON, webhook, locale, timeFmt, pluginKey, pluginKeyCreated)
-		} else {
-			_, _ = tx.ExecContext(ctx, database.Bind(`UPDATE "GlobalSettings" SET "excludedLibraries" = ?, "discordWebhookUrl" = COALESCE(?, "discordWebhookUrl"), "defaultLocale" = ?, "timeFormat" = ?, "pluginApiKey" = COALESCE(?, "pluginApiKey"), "pluginKeyCreatedAt" = COALESCE(?, "pluginKeyCreatedAt") WHERE "id" = 'global'`, driver),
-				exclJSON, webhook, locale, timeFmt, pluginKey, pluginKeyCreated)
+		if err := restoreGlobalSettings(ctx, tx, driver, sObj); err != nil {
+			return err
 		}
 	}
 

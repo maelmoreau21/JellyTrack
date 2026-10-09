@@ -112,7 +112,16 @@ func TestServerCRUDAndSSRFPrevention(t *testing.T) {
 	}
 
 	// 2. Valid server create
-	createPayload := strings.NewReader(`{"name":"Primary","url":"https://jellyfin.example.com","apiKey":"validkey","isActive":true}`)
+	probe := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/System/Info" || r.Header.Get("X-MediaBrowser-Token") != "validkey" {
+			w.WriteHeader(401)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"Id":"detected-jellyfin-id","ServerName":"Primary","Version":"12.0.0"}`))
+	}))
+	defer probe.Close()
+	createPayload := strings.NewReader(`{"name":"Primary","url":"` + probe.URL + `","apiKey":"validkey","isActive":true}`)
 	wCreate := httptest.NewRecorder()
 	h.saveServer(wCreate, httptest.NewRequest("POST", "/api/settings/jellyfin-servers", createPayload))
 	if wCreate.Code != 200 {
@@ -393,7 +402,7 @@ func TestAdminEndpoints(t *testing.T) {
 	}
 
 	wSmartPatch := httptest.NewRecorder()
-	h.updateSmartSettings(wSmartPatch, httptest.NewRequest("PATCH", "/api/admin/security/smart-settings", strings.NewReader(`{"thresholds":{"maxFailedLoginsPerIp":10}}`)))
+	h.updateSmartSettings(wSmartPatch, httptest.NewRequest("PATCH", "/api/admin/security/smart-settings", strings.NewReader(`{"thresholds":{"ipAttemptThreshold":50}}`)))
 	if wSmartPatch.Code != 200 {
 		t.Fatalf("smart settings PATCH status=%d", wSmartPatch.Code)
 	}
@@ -656,8 +665,8 @@ func TestAdminHealthAndPluginKey(t *testing.T) {
 	}
 	var getRes map[string]any
 	_ = json.Unmarshal(wGet.Body.Bytes(), &getRes)
-	if getRes["apiKey"] != rotRes["apiKey"] {
-		t.Fatalf("expected matching apiKey, got: %+v", getRes)
+	if getRes["hasApiKey"] != true || getRes["apiKey"] != nil || getRes["pluginKey"] != nil {
+		t.Fatalf("expected presence metadata without stored credential, got: %+v", getRes)
 	}
 }
 

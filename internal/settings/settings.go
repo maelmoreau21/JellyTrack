@@ -231,7 +231,11 @@ func GeneratePluginKey(pepper string) (rawKey, hashedKey string, err error) {
 		return "", "", err
 	}
 
-	digest, err := scrypt.Key([]byte(pepper+":"+rawKey), salt, 1<<14, 8, 1, 32)
+	input := rawKey
+	if pepper != "" {
+		input = pepper + ":" + rawKey
+	}
+	digest, err := scrypt.Key([]byte(input), salt, 1<<14, 8, 1, 64)
 	if err != nil {
 		return "", "", err
 	}
@@ -243,6 +247,12 @@ func GeneratePluginKey(pepper string) (rawKey, hashedKey string, err error) {
 // RotateGlobalPluginKey rotates the global plugin API key and archives the old one for the grace period.
 func RotateGlobalPluginKey(ctx context.Context, db *sql.DB, driver string) (string, error) {
 	pepper := os.Getenv("PLUGIN_KEY_PEPPER")
+	if pepper == "" {
+		pepper = os.Getenv("JELLYTRACK_SECRET")
+	}
+	if pepper == "" {
+		pepper = os.Getenv("AUTH_SECRET")
+	}
 	rawKey, hashedKey, err := GeneratePluginKey(pepper)
 	if err != nil {
 		return "", err
@@ -256,7 +266,11 @@ func RotateGlobalPluginKey(ctx context.Context, db *sql.DB, driver string) (stri
 		graceHours = 24
 	}
 	graceExpiry := now.Add(time.Duration(graceHours) * time.Hour).Format(time.RFC3339Nano)
-	keyExpiry := now.AddDate(0, 0, current.PluginKeyRotationDays).Format(time.RFC3339Nano)
+	rotationDays := current.PluginKeyRotationDays
+	if rotationDays <= 0 {
+		rotationDays = 90
+	}
+	keyExpiry := now.AddDate(0, 0, rotationDays).Format(time.RFC3339Nano)
 
 	query := database.Bind(`
 		UPDATE "GlobalSettings"

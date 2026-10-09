@@ -182,7 +182,7 @@
       const extras = document.getElementById('go-navigation-extras');
       extras.hidden = !user?.isAdmin;
       document.getElementById('go-extras-label').textContent = t('nav.goExtras');
-      document.getElementById('go-extras-links').innerHTML = [['/settings/overview','nav.goOverview'],['/settings/plugin','nav.goPlugin'],['/settings/network','dashboard.networkTab'],['/admin/system-health','nav.goSystemHealth'],['/admin/cleanup','nav.cleanup'],['/admin/log-health','nav.goLogHealth'],['/admin/plugin-health','nav.pluginHealth'],['/newsletter','nav.goNewsletter']].map(([href,key]) => `<a data-link href="${href}">${e(t(key))}</a>`).join('');
+      document.getElementById('go-extras-links').innerHTML = [['/settings/go-overview','nav.goOverview'],['/settings/plugin','nav.goPlugin'],['/settings/go-network','dashboard.networkTab'],['/admin/system-health','nav.goSystemHealth'],['/admin/cleanup','nav.cleanup'],['/admin/log-diagnostics','nav.goLogHealth'],['/admin/plugin-diagnostics','nav.pluginHealth'],['/newsletter','nav.goNewsletter']].map(([href,key]) => `<a data-link href="${href}">${e(t(key))}</a>`).join('');
       document.getElementById('nav-search-input').placeholder = t('search.placeholder');
       document.getElementById('sidebar-search-trigger').title = t('search.placeholder');
       document.getElementById('sidebar-search-trigger').setAttribute('aria-label',t('search.placeholder'));
@@ -214,6 +214,8 @@
       if (!config) return;
       const path=location.pathname;
       document.body.classList.toggle('navigation-fullscreen',path==='/login'||path.startsWith('/wrapped'));
+      document.body.classList.toggle('navigation-settings',path.startsWith('/settings'));
+      document.body.classList.toggle('navigation-admin',path.startsWith('/admin/'));
       document.getElementById('wrapped-close-btn').hidden=!path.startsWith('/wrapped');
       document.querySelectorAll('[data-nav-route]').forEach(link => {
         const href=link.dataset.navRoute, active=path===href||(href!=='/'&&path.startsWith(href));

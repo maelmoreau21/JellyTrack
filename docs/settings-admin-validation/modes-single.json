@@ -1,0 +1,29 @@
+{
+  "mode": "single",
+  "checks": [
+    {
+      "name": "Navigation reflects real single mode",
+      "ok": true
+    },
+    {
+      "name": "Server form backend reflects real single mode",
+      "ok": true
+    },
+    {
+      "name": "Comparison condition reflects real single mode",
+      "ok": true
+    },
+    {
+      "name": "Main comparison menu visibility single",
+      "ok": true
+    },
+    {
+      "name": "Historical secondary-server add visibility single",
+      "ok": true
+    },
+    {
+      "name": "Comparison scope buttons single",
+      "ok": true
+    }
+  ]
+}

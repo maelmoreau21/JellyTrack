@@ -1,0 +1,29 @@
+{
+  "mode": "multi",
+  "checks": [
+    {
+      "name": "Navigation reflects real multi mode",
+      "ok": true
+    },
+    {
+      "name": "Server form backend reflects real multi mode",
+      "ok": true
+    },
+    {
+      "name": "Comparison condition reflects real multi mode",
+      "ok": true
+    },
+    {
+      "name": "Main comparison menu visibility multi",
+      "ok": true
+    },
+    {
+      "name": "Historical secondary-server add visibility multi",
+      "ok": true
+    },
+    {
+      "name": "Comparison scope buttons multi",
+      "ok": true
+    }
+  ]
+}
