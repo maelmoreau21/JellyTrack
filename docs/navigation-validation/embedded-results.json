@@ -1,0 +1,52 @@
+[
+  {
+    "status": 200,
+    "bytes": 15,
+    "path": "/api/health"
+  },
+  {
+    "status": 200,
+    "bytes": 2804,
+    "path": "/about"
+  },
+  {
+    "status": 200,
+    "bytes": 346300,
+    "path": "/assets/app.js"
+  },
+  {
+    "status": 200,
+    "bytes": 34518,
+    "path": "/assets/navigation.js"
+  },
+  {
+    "status": 200,
+    "bytes": 15499,
+    "path": "/assets/navigation.css"
+  },
+  {
+    "status": 200,
+    "bytes": 25284,
+    "path": "/assets/sora-latin.woff2"
+  },
+  {
+    "status": 200,
+    "bytes": 3208,
+    "path": "/assets/lucide-LICENSE.txt"
+  },
+  {
+    "status": 200,
+    "bytes": 109,
+    "path": "/assets/flags/fr.png"
+  },
+  {
+    "status": 200,
+    "bytes": 288,
+    "path": "/assets/flags/gb.png"
+  },
+  {
+    "status": 200,
+    "bytes": 76487,
+    "path": "/assets/messages/fr.json"
+  }
+]

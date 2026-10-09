@@ -1,0 +1,145 @@
+{
+  "checks": [
+    {
+      "name": "Real administrator login",
+      "ok": true
+    },
+    {
+      "name": "Active historical link /users/jf-0",
+      "ok": true
+    },
+    {
+      "name": "Active historical link /",
+      "ok": true
+    },
+    {
+      "name": "Active historical link /recent",
+      "ok": true
+    },
+    {
+      "name": "Active historical link /media",
+      "ok": true
+    },
+    {
+      "name": "Active historical link /users",
+      "ok": true
+    },
+    {
+      "name": "Active historical link /admin/health",
+      "ok": true
+    },
+    {
+      "name": "Active historical link /logs",
+      "ok": true
+    },
+    {
+      "name": "Active historical link /settings",
+      "ok": true
+    },
+    {
+      "name": "Active historical link /admin/server-compare",
+      "ok": true
+    },
+    {
+      "name": "Health ArrowRight selects and focuses security",
+      "ok": true
+    },
+    {
+      "name": "Health End selects logs",
+      "ok": true
+    },
+    {
+      "name": "Cleanup ArrowRight selects abandoned",
+      "ok": true
+    },
+    {
+      "name": "Cleanup Home selects ghosts",
+      "ok": true
+    },
+    {
+      "name": "Recent has no library tabs",
+      "ok": true
+    },
+    {
+      "name": "Artist keeps library tabs",
+      "ok": true
+    },
+    {
+      "name": "Artist no selected library tab",
+      "ok": true
+    },
+    {
+      "name": "Media detail keeps library tabs",
+      "ok": true
+    },
+    {
+      "name": "Language retains system query",
+      "ok": true
+    },
+    {
+      "name": "Language retains selected system tab",
+      "ok": true
+    },
+    {
+      "name": "Expanded chevron on reduced sidebar",
+      "ok": true
+    },
+    {
+      "name": "Compact search popup visible",
+      "ok": true
+    },
+    {
+      "name": "Compact search results visible",
+      "ok": true
+    },
+    {
+      "name": "Compact language menu visible",
+      "ok": true
+    },
+    {
+      "name": "Compact custom tooltip visible",
+      "ok": true
+    },
+    {
+      "name": "Delayed search cannot reopen cleared results",
+      "ok": true
+    },
+    {
+      "name": "Wrapped hides sidebar",
+      "ok": true
+    },
+    {
+      "name": "Wrapped close visible",
+      "ok": true
+    },
+    {
+      "name": "Wrapped close returns to prior page",
+      "ok": true
+    },
+    {
+      "name": "Content can scroll independently",
+      "ok": true
+    },
+    {
+      "name": "SPA route restores content scroll position",
+      "ok": true
+    },
+    {
+      "name": "Same pathname keeps mobile drawer open",
+      "ok": true
+    },
+    {
+      "name": "Language refresh keeps mobile drawer open",
+      "ok": true
+    },
+    {
+      "name": "Different pathname closes mobile drawer",
+      "ok": true
+    },
+    {
+      "name": "No uncaught JavaScript errors",
+      "ok": true
+    }
+  ],
+  "errors": []
+}

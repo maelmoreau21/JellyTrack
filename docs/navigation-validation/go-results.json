@@ -1,0 +1,847 @@
+{
+  "source": "Live Go server; real admin login; role/configuration variants intercept only navigation presentation context",
+  "checks": [
+    {
+      "name": "admin-single/desktop order",
+      "ok": true,
+      "detail": {
+        "nav": [
+          "/",
+          "/recent",
+          "/media",
+          "/users",
+          "/admin/health",
+          "/logs",
+          "/settings"
+        ],
+        "expected": [
+          "/",
+          "/recent",
+          "/media",
+          "/users",
+          "/admin/health",
+          "/logs",
+          "/settings"
+        ]
+      }
+    },
+    {
+      "name": "admin-single backup visibility",
+      "ok": true
+    },
+    {
+      "name": "admin-single Go extra visibility",
+      "ok": true
+    },
+    {
+      "name": "admin-single collapsed width",
+      "ok": true,
+      "detail": 80
+    },
+    {
+      "name": "admin-single collapse persistence",
+      "ok": true
+    },
+    {
+      "name": "admin-single language choices",
+      "ok": true
+    },
+    {
+      "name": "admin-single language change",
+      "ok": true
+    },
+    {
+      "name": "admin-single theme toggle",
+      "ok": true
+    },
+    {
+      "name": "admin-single global search visible",
+      "ok": true
+    },
+    {
+      "name": "route / location",
+      "ok": true
+    },
+    {
+      "name": "route /recent location",
+      "ok": true
+    },
+    {
+      "name": "route /media location",
+      "ok": true
+    },
+    {
+      "name": "route /users location",
+      "ok": true
+    },
+    {
+      "name": "route /admin/health location",
+      "ok": true
+    },
+    {
+      "name": "route /logs location",
+      "ok": true
+    },
+    {
+      "name": "route /settings location",
+      "ok": true
+    },
+    {
+      "name": "route /about location",
+      "ok": true
+    },
+    {
+      "name": "settings historical tab count",
+      "ok": true,
+      "detail": [
+        "/settings/jellyfin",
+        "/settings/sso",
+        "/settings/plugin/security",
+        "/settings/media",
+        "/settings/scheduler",
+        "/settings/dataBackups",
+        "/settings/notifications"
+      ]
+    },
+    {
+      "name": "settings /settings/jellyfin active",
+      "ok": true
+    },
+    {
+      "name": "settings /settings/sso active",
+      "ok": true
+    },
+    {
+      "name": "settings /settings/plugin/security active",
+      "ok": true
+    },
+    {
+      "name": "settings /settings/media active",
+      "ok": true
+    },
+    {
+      "name": "settings /settings/scheduler active",
+      "ok": true
+    },
+    {
+      "name": "settings /settings/dataBackups active",
+      "ok": true
+    },
+    {
+      "name": "settings /settings/notifications active",
+      "ok": true
+    },
+    {
+      "name": "extra /settings/overview location",
+      "ok": true
+    },
+    {
+      "name": "extra /settings/plugin location",
+      "ok": true
+    },
+    {
+      "name": "extra /settings/network location",
+      "ok": true
+    },
+    {
+      "name": "extra /admin/system-health location",
+      "ok": true
+    },
+    {
+      "name": "extra /admin/cleanup location",
+      "ok": true
+    },
+    {
+      "name": "extra /admin/log-health location",
+      "ok": true
+    },
+    {
+      "name": "extra /admin/plugin-health location",
+      "ok": true
+    },
+    {
+      "name": "extra /newsletter location",
+      "ok": true
+    },
+    {
+      "name": "health historical main tabs",
+      "ok": true
+    },
+    {
+      "name": "health cleanup nested tabs",
+      "ok": true
+    },
+    {
+      "name": "health cleanup ghosts active",
+      "ok": true
+    },
+    {
+      "name": "health cleanup abandoned active",
+      "ok": true
+    },
+    {
+      "name": "health cleanup duplicates active",
+      "ok": true
+    },
+    {
+      "name": "health security active",
+      "ok": true
+    },
+    {
+      "name": "health logs active",
+      "ok": true
+    },
+    {
+      "name": "health cleanup active",
+      "ok": true
+    },
+    {
+      "name": "scheduler intervals section",
+      "ok": true
+    },
+    {
+      "name": "scheduler Wrapped section",
+      "ok": true
+    },
+    {
+      "name": "logs system query retained",
+      "ok": true
+    },
+    {
+      "name": "admin-single analysis visibility",
+      "ok": true
+    },
+    {
+      "name": "admin-single runtime JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "admin-single/mobile order",
+      "ok": true,
+      "detail": {
+        "nav": [
+          "/",
+          "/recent",
+          "/media",
+          "/users",
+          "/admin/health",
+          "/logs",
+          "/settings"
+        ],
+        "expected": [
+          "/",
+          "/recent",
+          "/media",
+          "/users",
+          "/admin/health",
+          "/logs",
+          "/settings"
+        ]
+      }
+    },
+    {
+      "name": "admin-single backup visibility",
+      "ok": true
+    },
+    {
+      "name": "admin-single Go extra visibility",
+      "ok": true
+    },
+    {
+      "name": "admin-single language choices",
+      "ok": true
+    },
+    {
+      "name": "admin-single language change",
+      "ok": true
+    },
+    {
+      "name": "admin-single theme toggle",
+      "ok": true
+    },
+    {
+      "name": "admin-single global search visible",
+      "ok": true
+    },
+    {
+      "name": "admin-single escape closes mobile",
+      "ok": true
+    },
+    {
+      "name": "admin-single analysis visibility",
+      "ok": true
+    },
+    {
+      "name": "mobile route change closes drawer",
+      "ok": true
+    },
+    {
+      "name": "admin-single runtime JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "admin-multi/desktop order",
+      "ok": true,
+      "detail": {
+        "nav": [
+          "/users/jf-0",
+          "/",
+          "/recent",
+          "/media",
+          "/users",
+          "/admin/health",
+          "/logs",
+          "/settings",
+          "/admin/server-compare"
+        ],
+        "expected": [
+          "/users/jf-0",
+          "/",
+          "/recent",
+          "/media",
+          "/users",
+          "/admin/health",
+          "/logs",
+          "/settings",
+          "/admin/server-compare"
+        ]
+      }
+    },
+    {
+      "name": "admin-multi backup visibility",
+      "ok": true
+    },
+    {
+      "name": "admin-multi Go extra visibility",
+      "ok": true
+    },
+    {
+      "name": "admin-multi collapsed width",
+      "ok": true,
+      "detail": 80
+    },
+    {
+      "name": "admin-multi collapse persistence",
+      "ok": true
+    },
+    {
+      "name": "admin-multi language choices",
+      "ok": true
+    },
+    {
+      "name": "admin-multi language change",
+      "ok": true
+    },
+    {
+      "name": "admin-multi theme toggle",
+      "ok": true
+    },
+    {
+      "name": "admin-multi global search visible",
+      "ok": true
+    },
+    {
+      "name": "admin-multi analysis visibility",
+      "ok": true
+    },
+    {
+      "name": "admin-multi runtime JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "user-wrapped/desktop order",
+      "ok": true,
+      "detail": {
+        "nav": [
+          "/users/jf-0",
+          "/media",
+          "/recent",
+          "/wrapped/jf-0"
+        ],
+        "expected": [
+          "/users/jf-0",
+          "/media",
+          "/recent",
+          "/wrapped/jf-0"
+        ]
+      }
+    },
+    {
+      "name": "user-wrapped backup visibility",
+      "ok": true
+    },
+    {
+      "name": "user-wrapped Go extra visibility",
+      "ok": true
+    },
+    {
+      "name": "user-wrapped collapsed width",
+      "ok": true,
+      "detail": 80
+    },
+    {
+      "name": "user-wrapped collapse persistence",
+      "ok": true
+    },
+    {
+      "name": "user-wrapped language choices",
+      "ok": true
+    },
+    {
+      "name": "user-wrapped language change",
+      "ok": true
+    },
+    {
+      "name": "user-wrapped theme toggle",
+      "ok": true
+    },
+    {
+      "name": "user-wrapped global search visible",
+      "ok": true
+    },
+    {
+      "name": "user-wrapped analysis visibility",
+      "ok": true
+    },
+    {
+      "name": "user-wrapped protected route denied",
+      "ok": true
+    },
+    {
+      "name": "user-wrapped runtime JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "user-no-wrapped/desktop order",
+      "ok": true,
+      "detail": {
+        "nav": [
+          "/users/jf-0",
+          "/media",
+          "/recent"
+        ],
+        "expected": [
+          "/users/jf-0",
+          "/media",
+          "/recent"
+        ]
+      }
+    },
+    {
+      "name": "user-no-wrapped backup visibility",
+      "ok": true
+    },
+    {
+      "name": "user-no-wrapped Go extra visibility",
+      "ok": true
+    },
+    {
+      "name": "user-no-wrapped collapsed width",
+      "ok": true,
+      "detail": 80
+    },
+    {
+      "name": "user-no-wrapped collapse persistence",
+      "ok": true
+    },
+    {
+      "name": "user-no-wrapped language choices",
+      "ok": true
+    },
+    {
+      "name": "user-no-wrapped language change",
+      "ok": true
+    },
+    {
+      "name": "user-no-wrapped theme toggle",
+      "ok": true
+    },
+    {
+      "name": "user-no-wrapped global search visible",
+      "ok": true
+    },
+    {
+      "name": "user-no-wrapped analysis visibility",
+      "ok": true
+    },
+    {
+      "name": "user-no-wrapped protected route denied",
+      "ok": true
+    },
+    {
+      "name": "user-no-wrapped runtime JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "user-backup/desktop order",
+      "ok": true,
+      "detail": {
+        "nav": [
+          "/users/jf-0",
+          "/media",
+          "/recent",
+          "/wrapped/jf-0"
+        ],
+        "expected": [
+          "/users/jf-0",
+          "/media",
+          "/recent",
+          "/wrapped/jf-0"
+        ]
+      }
+    },
+    {
+      "name": "user-backup backup visibility",
+      "ok": true
+    },
+    {
+      "name": "user-backup Go extra visibility",
+      "ok": true
+    },
+    {
+      "name": "user-backup collapsed width",
+      "ok": true,
+      "detail": 80
+    },
+    {
+      "name": "user-backup collapse persistence",
+      "ok": true
+    },
+    {
+      "name": "user-backup language choices",
+      "ok": true
+    },
+    {
+      "name": "user-backup language change",
+      "ok": true
+    },
+    {
+      "name": "user-backup theme toggle",
+      "ok": true
+    },
+    {
+      "name": "user-backup global search visible",
+      "ok": true
+    },
+    {
+      "name": "user-backup analysis visibility",
+      "ok": true
+    },
+    {
+      "name": "user-backup protected route denied",
+      "ok": true
+    },
+    {
+      "name": "user-backup runtime JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "user-backup/mobile order",
+      "ok": true,
+      "detail": {
+        "nav": [
+          "/users/jf-0",
+          "/media",
+          "/recent",
+          "/wrapped/jf-0"
+        ],
+        "expected": [
+          "/users/jf-0",
+          "/media",
+          "/recent",
+          "/wrapped/jf-0"
+        ]
+      }
+    },
+    {
+      "name": "user-backup backup visibility",
+      "ok": true
+    },
+    {
+      "name": "user-backup Go extra visibility",
+      "ok": true
+    },
+    {
+      "name": "user-backup language choices",
+      "ok": true
+    },
+    {
+      "name": "user-backup language change",
+      "ok": true
+    },
+    {
+      "name": "user-backup theme toggle",
+      "ok": true
+    },
+    {
+      "name": "user-backup global search visible",
+      "ok": true
+    },
+    {
+      "name": "user-backup escape closes mobile",
+      "ok": true
+    },
+    {
+      "name": "user-backup analysis visibility",
+      "ok": true
+    },
+    {
+      "name": "user-backup protected route denied",
+      "ok": true
+    },
+    {
+      "name": "mobile route change closes drawer",
+      "ok": true
+    },
+    {
+      "name": "user-backup runtime JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "user-no-id/desktop order",
+      "ok": true,
+      "detail": {
+        "nav": [
+          "/media",
+          "/recent"
+        ],
+        "expected": [
+          "/media",
+          "/recent"
+        ]
+      }
+    },
+    {
+      "name": "user-no-id backup visibility",
+      "ok": true
+    },
+    {
+      "name": "user-no-id Go extra visibility",
+      "ok": true
+    },
+    {
+      "name": "user-no-id collapsed width",
+      "ok": true,
+      "detail": 80
+    },
+    {
+      "name": "user-no-id collapse persistence",
+      "ok": true
+    },
+    {
+      "name": "user-no-id language choices",
+      "ok": true
+    },
+    {
+      "name": "user-no-id language change",
+      "ok": true
+    },
+    {
+      "name": "user-no-id theme toggle",
+      "ok": true
+    },
+    {
+      "name": "user-no-id global search visible",
+      "ok": true
+    },
+    {
+      "name": "user-no-id analysis visibility",
+      "ok": true
+    },
+    {
+      "name": "user-no-id protected route denied",
+      "ok": true
+    },
+    {
+      "name": "user-no-id runtime JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "real logout redirects login",
+      "ok": true
+    },
+    {
+      "name": "real logout invalidates session",
+      "ok": true,
+      "detail": 401
+    }
+  ],
+  "cases": [
+    {
+      "scenario": "admin-single",
+      "mobile": false,
+      "consoleErrors": [],
+      "httpErrors": [],
+      "links": [
+        "/",
+        "/recent",
+        "/media",
+        "/users",
+        "/admin/health",
+        "/logs",
+        "/settings"
+      ],
+      "routeResults": [
+        {
+          "href": "/",
+          "url": "http://localhost:3310/",
+          "active": [
+            "/"
+          ],
+          "title": "Tableau de bord\nTous les Médias\nFilms\nSéries\nMusique\nLivres\nTous les serveurs\nAudit principal\nAudit secondaire\n24h\n7j\n30j\n90j\n1 an\nTout\nPersonnalisé\n \nMoniteur : Actif\nDernier sondage : À l’instant\nSynchro :\nSauvegarde :\nSanté du système\nFlux actifs\n1\nSessions suivies\nLectures orphelines\n0\nPlayback sans fermeture\nFlux DB sans cache\n0\nFallback base de données\nBibliothèques exclues\n0\nFiltres actifs\nProcesseur (CPU)\nN/A\nMémoire Go (tas alloué)\n2.4 MiB\nTempérature Système\nN/A\nAujourd'hui\n6\nlectures\n2.4h\nvisionnées\n2\nutilisateur(s) actif(s)\nVue d'ensemble\nAnalyses détaillées\nRéseau\nModifier l'ordre\nFlux Actifs\n1\nActuellement géré par le serveur\nLectures Totales\n58\n+383.3%\nvs 12 période préc.\nLecture Directe\n48%DP\nLecture sans transcodage (Période)\nTemps Visionnage\n38,1h\n+452.2%\nvs 6.9h période préc.\nUtilisateurs actifs\n6\n+200.0%\nComptes actifs\nFilms\n14 vues\n21h regardées\nSéries\n14 lectures\n7h regardées\nMusique\n16 titres\n0.8h écoutées\nLivres\n14 ouverts\n9.3h passées\nVolume d'écoute & Activité\nÉvolution temporelle des heures regardées par type de média\nRépartition par catégorie\nVolume global d'écoute par catégorie\nLectures quotidiennes par bibliothèque\nSessions journalières initiées par type de contenu\n📅 Carte thermique d'activité annuelle\n118 sessions enregistrées en 2026\n◀\n2026\n▶\nTous\nFilms\nSéries\nMusique\nLivres\n\t\tJan\tFév\tMar\tAvr\tMai\tJuin\tJuil\tAoû\tSep\tOct\tNov\tDéc\nL\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nM\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nM\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nJ\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nV\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nS\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nD\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\nMoins\nPlus\n👥 Utilisateurs les plus fidèles\nClassement par heures de visionnage sur la période\n#1\nAlice Audit\n8.7h\n#2\nAlice Audit\n8.7h\n#3\nBob Audit\n5.4h\n#4\nBob Audit\n5.4h\n#5\nauditadmin\n4.9h\n📱 Écosystème des clients\nApplications et appareils utilisés pour la lecture\nFlux en direct\n1 Flux Actifs (~12 Mbps)\n🗂️ Vue Cartes\nMovie de validation Audit principal\n👤 Alice Audit\n📱 Audit Browser\nTranscode\n💬 Message\nArrêter\n🕒 Heures de pointe\nDistribution des sessions sur les 24 heures de la journée (UTC)\n📅 Activité par jour de la semaine\nComparatif du lundi au dimanche\n📈 Visionnage mensuel\nTotal d'heures par mois\n◀\n2026\n▶\n🎯 Taux de complétion\nTerminé (>90%), Partiel, Abandonné (<15%)\n🖥️ Familles d'appareils\nTV, Web, Mobile, Desktop, Autre\n⚡ Charge simultanée du serveur\nPics de flux simultanés calculés par balayage temporel\nTendances émergentes\nTitres en forte accélération de visionnage\n#1\nAudio de validation Audit principal\n8 lectures cette semaine\nNouveau\n#2\nAudio de validation Audit secondaire\n8 lectures cette semaine\nNouveau\n#3\nMovie de validation Audit principal\n7 lectures cette semaine\nNouveau\n#4\nEpisode de validation Audit principal\n7 lectures cette semaine\nNouveau\n#5\nBook de validation Audit principal\n7 lectures cette semaine\nNouveau\n#6\nMovie de validation Audit secondaire\n7 lectures cette semaine\nNouveau\nPrévisions des pics d'affluence\nCréneaux horaires de pointe anticipés par analyse EMA\nJeu\n21h\n~1 flux\n50%\nVen\n07h\n~1 flux\n50%\nJeu\n12h\n~1 flux\n50%\nMar\n05h\n~1 flux\n13%\nVen\n10h\n~1 flux\n13%\nMar\n00h\n~1 flux\n13%\nMer\n20h\n~1 flux\n13%\nJeu\n13h\n~1 flux\n13%\nMer\n15h\n~1 flux\n13%\nMer\n12h\n~1 flux\n13%"
+        },
+        {
+          "href": "/recent",
+          "url": "http://localhost:3310/recent",
+          "active": [
+            "/recent"
+          ],
+          "title": "Ajoutés récemment\n\nFilms, séries, albums et livres synchronisés depuis vos serveurs.\n\nTout\nFilms\nSéries\nMusique\nLivres\nTitre (A-Z)\nLes plus vus\nAjouts récents\nRécemment lus\nPlus longs\nBook\nBook de validation Audit secondaire\n1h\nBook de validation Audit secondaire\nLivres • 1h\nAudio\nAudio de validation Audit secondaire\n4 min\nAudio de validation Audit secondaire\nMusique • 4 min\nEpisode\nEpisode de validation Audit secondaire\n45 min\nEpisode de validation Audit secondaire\nSéries • 45 min\nMovie\nMovie de validation Audit secondaire\n2h\nMovie de validation Audit secondaire\nCinéma • 2h\nBook\nBook de validation Audit principal\n1h\nBook de validation Audit principal\nLivres • 1h\nAudio\nAudio de validation Audit principal\n4 min\nAudio de validation Audit principal\nMusique • 4 min\nEpisode\nEpisode de validation Audit principal\n45 min\nEpisode de validation Audit principal\nSéries • 45 min\nMovie\nMovie de validation Audit principal\n2h\nMovie de validation Audit principal\nCinéma • 2h\n← Précédent\nPage 1 sur 1 (8 titres)\nSuivant →"
+        },
+        {
+          "href": "/media",
+          "url": "http://localhost:3310/media",
+          "active": [
+            "/media"
+          ],
+          "title": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nMédias\n\nFilms, séries, albums et livres synchronisés depuis vos serveurs.\n\nTout\nFilms\nSéries\nMusique\nLivres\nTitre (A-Z)\nLes plus vus\nAjouts récents\nRécemment lus\nPlus longs\nAudio\nAudio de validation Audit principal\n4 min\nAudio de validation Audit principal\nMusique • 4 min\nAudio\nAudio de validation Audit secondaire\n4 min\nAudio de validation Audit secondaire\nMusique • 4 min\nBook\nBook de validation Audit principal\n1h\nBook de validation Audit principal\nLivres • 1h\nBook\nBook de validation Audit secondaire\n1h\nBook de validation Audit secondaire\nLivres • 1h\nEpisode\nEpisode de validation Audit principal\n45 min\nEpisode de validation Audit principal\nSéries • 45 min\nEpisode\nEpisode de validation Audit secondaire\n45 min\nEpisode de validation Audit secondaire\nSéries • 45 min\nMovie\nMovie de validation Audit principal\n2h\nMovie de validation Audit principal\nCinéma • 2h\nMovie\nMovie de validation Audit secondaire\n2h\nMovie de validation Audit secondaire\nCinéma • 2h\n← Précédent\nPage 1 sur 1 (8 titres)\nSuivant →"
+        },
+        {
+          "href": "/users",
+          "url": "http://localhost:3310/users",
+          "active": [
+            "/users"
+          ],
+          "title": "Utilisateurs\n\nComptes Jellyfin et profils d'écoute.\n\nAU\nauditadmin\nAudit principal\nDernière activité : 3j\nProfil\n🎉 Wrapped\nAU\nauditadmin\nAudit secondaire\nDernière activité : 3j\nProfil\n🎉 Wrapped\nBO\nBob Audit\nAudit principal\nDernière activité : 1j\nProfil\n🎉 Wrapped\nBO\nBob Audit\nAudit secondaire\nDernière activité : 1j\nProfil\n🎉 Wrapped\nAL\nAlice Audit\nAudit principal\nDernière activité : 40 min\nProfil\n🎉 Wrapped\nAL\nAlice Audit\nAudit secondaire\nDernière activité : 40 min\nProfil\n🎉 Wrapped"
+        },
+        {
+          "href": "/admin/health",
+          "url": "http://localhost:3310/admin/health",
+          "active": [
+            "/admin/health"
+          ],
+          "title": "Santé\nNettoyage & Stockage\nSécurité & Anomalies\nMoteur & Logs\nNettoyage Intelligent & Optimisation\nMédias Fantômes\n0\nMédias Abandonnés\n0\nDoublons\n0\nTITRE\t\tCOLLECTIONS\n"
+        },
+        {
+          "href": "/logs",
+          "url": "http://localhost:3310/logs",
+          "active": [
+            "/logs"
+          ],
+          "title": "Journaux\n\nHistorique complet des lectures et événements de télémétrie.\n\nApplication\nSystème\nRechercher\nType\nTout\nFilms\nÉpisodes\nMusique\nLivres\nApplication\nStatut\nTout\nDirectPlay\nDirectStream\nTranscode\nDownload\nDate (Depuis)\nDate (Jusqu'au)\nHeures (UTC)\nTout\n00:00\n01:00\n02:00\n03:00\n04:00\n05:00\n06:00\n07:00\n08:00\n09:00\n10:00\n11:00\n12:00\n13:00\n14:00\n15:00\n16:00\n17:00\n18:00\n19:00\n20:00\n21:00\n22:00\n23:00\nTrier\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nMasquer Zappés (< 1m)\nAppliquer\nRéinitialiser\n132 sessions\nExporter cette page (CSV)\nMÉDIA\tUTILISATEUR\tAPPLICATION\tDURÉE\tSTATUT\tDATE\tDÉTAILS\n\nEpisode de validation Audit secondaire\nSéries · Episode\n\tAlice Audit\tJellyfin Web\t30 min\tDirectPlay\t9 oct. 2026, 07:44\tDétails\n\nEpisode de validation Audit principal\nSéries · Episode\n\tAlice Audit\tJellyfin Web\t30 min\tDirectPlay\t9 oct. 2026, 07:44\tDétails\n\nBook de validation Audit secondaire\nLivres · Book\n\tAlice Audit\tJellyfin Web\t40 min\tDirectPlay\t9 oct. 2026, 04:02\tDétails\n\nBook de validation Audit principal\nLivres · Book\n\tAlice Audit\tJellyfin Web\t40 min\tDirectPlay\t9 oct. 2026, 04:02\tDétails\n\nEpisode de validation Audit secondaire\nSéries · Episode\n\tAlice Audit\tJellyfin Web\t30 min\tDirectPlay\t9 oct. 2026, 00:20\tDétails\n\nEpisode de validation Audit principal\nSéries · Episode\n\tAlice Audit\tJellyfin Web\t30 min\tDirectPlay\t9 oct. 2026, 00:20\tDétails\n\nAudio de validation Audit secondaire\nMusique · Audio\n\tAlice Audit\tJellyfin Web\t3 min\tDirectPlay\t8 oct. 2026, 23:25\tDétails\n\nAudio de validation Audit principal\nMusique · Audio\n\tAlice Audit\tJellyfin Web\t3 min\tDirectPlay\t8 oct. 2026, 23:25\tDétails\n\nMovie de validation Audit secondaire\nCinéma · Movie\n\tAlice Audit\tJellyfin Web\t1h 30m\tDirectPlay\t8 oct. 2026, 18:53\tDétails\n\nMovie de validation Audit principal\nCinéma · Movie\n\tAlice Audit\tJellyfin Web\t1h 30m\tDirectPlay\t8 oct. 2026, 18:53\tDétails\n\nAudio de validation Audit secondaire\nMusique · Audio\n\tAlice Audit\tJellyfin Web\t3 min\tDirectPlay\t8 oct. 2026, 15:11\tDétails\n\nAudio de validation Audit principal\nMusique · Audio\n\tAlice Audit\tJellyfin Web\t3 min\tDirectPlay\t8 oct. 2026, 15:11\tDétails\n\nBook de validation Audit secondaire\nLivres · Book\n\tAlice Audit\tJellyfin Web\t40 min\tDirectPlay\t8 oct. 2026, 14:16\tDétails\n\nBook de validation Audit principal\nLivres · Book\n\tAlice Audit\tJellyfin Web\t40 min\tDirectPlay\t8 oct. 2026, 14:16\tDétails\n\nEpisode de validation Audit secondaire\nSéries · Episode\n\tBob Audit\tAndroid TV\t30 min\tTranscode\t8 oct. 2026, 08:28\tDétails\n\nEpisode de validation Audit principal\nSéries · Episode\n\tBob Audit\tAndroid TV\t30 min\tTranscode\t8 oct. 2026, 08:28\tDétails\n\nAudio de validation Audit secondaire\nMusique · Audio\n\tBob Audit\tAndroid TV\t3 min\tTranscode\t8 oct. 2026, 06:43\tDétails\n\nAudio de validation Audit principal\nMusique · Audio\n\tBob Audit\tAndroid TV\t3 min\tTranscode\t8 oct. 2026, 06:43\tDétails\n\nMovie de validation Audit secondaire\nCinéma · Movie\n\tBob Audit\tAndroid TV\t1h 30m\tTranscode\t8 oct. 2026, 03:01\tDétails\n\nMovie de validation Audit principal\nCinéma · Movie\n\tBob Audit\tAndroid TV\t1h 30m\tTranscode\t8 oct. 2026, 03:01\tDétails\n\nAudio de validation Audit secondaire\nMusique · Audio\n\tBob Audit\tAndroid TV\t3 min\tTranscode\t7 oct. 2026, 23:19\tDétails\n\nAudio de validation Audit principal\nMusique · Audio\n\tBob Audit\tAndroid TV\t3 min\tTranscode\t7 oct. 2026, 23:19\tDétails\n\nBook de validation Audit secondaire\nLivres · Book\n\tBob Audit\tAndroid TV\t40 min\tTranscode\t7 oct. 2026, 22:24\tDétails\n\nBook de validation Audit principal\nLivres · Book\n\tBob Audit\tAndroid TV\t40 min\tTranscode\t7 oct. 2026, 22:24\tDétails\n\nEpisode de validation Audit secondaire\nSéries · Episode\n\tBob Audit\tAndroid TV\t30 min\tTranscode\t7 oct. 2026, 17:52\tDétails\n\nEpisode de validation Audit principal\nSéries · Episode\n\tBob Audit\tAndroid TV\t30 min\tTranscode\t7 oct. 2026, 17:52\tDétails\n\nBook de validation Audit secondaire\nLivres · Book\n\tBob Audit\tAndroid TV\t40 min\tTranscode\t7 oct. 2026, 14:10\tDétails\n\nBook de validation Audit principal\nLivres · Book\n\tBob Audit\tAndroid TV\t40 min\tTranscode\t7 oct. 2026, 14:10\tDétails\n\nMovie de validation Audit secondaire\nCinéma · Movie\n\tBob Audit\tAndroid TV\t1h 30m\tTranscode\t7 oct. 2026, 13:15\tDétails\n\nMovie de validation Audit principal\nCinéma · Movie\n\tBob Audit\tAndroid TV\t1h 30m\tTranscode\t7 oct. 2026, 13:15\tDétails\n\nAudio de validation Audit secondaire\nMusique · Audio\n\tauditadmin\tFinamp\t3 min\tDirectStream\t6 oct. 2026, 07:27\tDétails\n\nAudio de validation Audit principal\nMusique · Audio\n\tauditadmin\tFinamp\t3 min\tDirectStream\t6 oct. 2026, 07:27\tDétails\n\nBook de validation Audit secondaire\nLivres · Book\n\tauditadmin\tFinamp\t40 min\tDirectStream\t6 oct. 2026, 05:42\tDétails\n\nBook de validation Audit principal\nLivres · Book\n\tauditadmin\tFinamp\t40 min\tDirectStream\t6 oct. 2026, 05:42\tDétails\n\nEpisode de validation Audit secondaire\nSéries · Episode\n\tauditadmin\tFinamp\t30 min\tDirectStream\t6 oct. 2026, 02:00\tDétails\n\nEpisode de validation Audit principal\nSéries · Episode\n\tauditadmin\tFinamp\t30 min\tDirectStream\t6 oct. 2026, 02:00\tDétails\n\nBook de validation Audit secondaire\nLivres · Book\n\tauditadmin\tFinamp\t40 min\tDirectStream\t5 oct. 2026, 22:18\tDétails\n\nBook de validation Audit principal\nLivres · Book\n\tauditadmin\tFinamp\t40 min\tDirectStream\t5 oct. 2026, 22:18\tDétails\n\nMovie de validation Audit secondaire\nCinéma · Movie\n\tauditadmin\tFinamp\t1h 30m\tDirectStream\t5 oct. 2026, 21:23\tDétails\n\nMovie de validation Audit principal\nCinéma · Movie\n\tauditadmin\tFinamp\t1h 30m\tDirectStream\t5 oct. 2026, 21:23\tDétails\n\nAudio de validation Audit secondaire\nMusique · Audio\n\tauditadmin\tFinamp\t3 min\tDirectStream\t5 oct. 2026, 16:51\tDétails\n\nAudio de validation Audit principal\nMusique · Audio\n\tauditadmin\tFinamp\t3 min\tDirectStream\t5 oct. 2026, 16:51\tDétails\n\nMovie de validation Audit secondaire\nCinéma · Movie\n\tauditadmin\tFinamp\t1h 30m\tDirectStream\t5 oct. 2026, 13:09\tDétails\n\nMovie de validation Audit principal\nCinéma · Movie\n\tauditadmin\tFinamp\t1h 30m\tDirectStream\t5 oct. 2026, 13:09\tDétails\n\nAudio de validation Audit secondaire\nMusique · Audio\n\tAlice Audit\tJellyfin Web\t3 min\tDirectPlay\t3 oct. 2026, 09:13\tDétails\n\nAudio de validation Audit principal\nMusique · Audio\n\tAlice Audit\tJellyfin Web\t3 min\tDirectPlay\t3 oct. 2026, 09:13\tDétails\n\nBook de validation Audit secondaire\nLivres · Book\n\tAlice Audit\tJellyfin Web\t40 min\tDirectPlay\t3 oct. 2026, 06:26\tDétails\n\nBook de validation Audit principal\nLivres · Book\n\tAlice Audit\tJellyfin Web\t40 min\tDirectPlay\t3 oct. 2026, 06:26\tDétails\n\nMovie de validation Audit secondaire\nCinéma · Movie\n\tAlice Audit\tJellyfin Web\t1h 30m\tDirectPlay\t3 oct. 2026, 04:41\tDétails\n\nMovie de validation Audit principal\nCinéma · Movie\n\tAlice Audit\tJellyfin Web\t1h 30m\tDirectPlay\t3 oct. 2026, 04:41\tDétails\nPrécédent\n1 / 3\nSuivant"
+        },
+        {
+          "href": "/settings",
+          "url": "http://localhost:3310/settings/jellyfin",
+          "active": [
+            "/settings"
+          ],
+          "title": "Jellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nParamètres\n\nAdministration, serveurs, médias, sauvegardes et planificateur.\n\nServeurs Jellyfin Connectés\n+ Ajouter un serveur\nAudit principal\nhttp://127.0.0.1:9\nInactif\n🔑 Clé\nSupprimer\nAudit secondaire\nhttp://127.0.0.1:9\nInactif\n🔑 Clé\nSupprimer"
+        },
+        {
+          "href": "/about",
+          "url": "http://localhost:3310/about",
+          "active": [],
+          "title": "v3.0.0 • Go Native Engine\nJellyTrack\n\nTableau de bord d'analyse et de surveillance pour votre serveur Jellyfin. Suivez l'activité, les tendances et les performances de votre serveur multimédia en temps réel.\n\nFonctionnalités Clés\nArchitecture Go 100% autonome : zéro Node.js, zéro React, zéro npm au runtime.\nGraphiques haute performance : suivi de lecture en direct, analyse par format et client.\nCarte thermique annuelle : style GitHub interactive avec zoom par session.\nCatalogue multimédia enrichi : films, séries, musique et livres avec métadonnées.\nJellyTrack Wrapped : rétrospective annuelle interactive style Spotify avec partage.\nSécurité d’entreprise : sessions chiffrées, CSRF/SSRF guard, OpenID Connect / SSO.\nInternationalisation : 11 langues traduites (FR, EN, DE, ES, IT, NL, PL, PT, RU, ZH).\nStack Technique\n🐹\nGo 1.23+\nBackend ultra-rapide & serveur HTTP natif\n🗄️\nSQLite / PostgreSQL\nStockage persistant & migrations automatiques\n📊\nChart.js\nVisualisations fluides et interactives\n🔑\nOIDC & SSO\nAuthentification unique unifiée\nLiens & Communauté\nGitHub Repository\nProjet Jellyfin"
+        }
+      ]
+    },
+    {
+      "scenario": "admin-single",
+      "mobile": true,
+      "consoleErrors": [],
+      "httpErrors": [],
+      "links": [
+        "/",
+        "/recent",
+        "/media",
+        "/users",
+        "/admin/health",
+        "/logs",
+        "/settings"
+      ]
+    },
+    {
+      "scenario": "admin-multi",
+      "mobile": false,
+      "consoleErrors": [],
+      "httpErrors": [],
+      "links": [
+        "/users/jf-0",
+        "/",
+        "/recent",
+        "/media",
+        "/users",
+        "/admin/health",
+        "/logs",
+        "/settings",
+        "/admin/server-compare"
+      ]
+    },
+    {
+      "scenario": "user-wrapped",
+      "mobile": false,
+      "consoleErrors": [],
+      "httpErrors": [],
+      "links": [
+        "/users/jf-0",
+        "/media",
+        "/recent",
+        "/wrapped/jf-0"
+      ]
+    },
+    {
+      "scenario": "user-no-wrapped",
+      "mobile": false,
+      "consoleErrors": [],
+      "httpErrors": [],
+      "links": [
+        "/users/jf-0",
+        "/media",
+        "/recent"
+      ]
+    },
+    {
+      "scenario": "user-backup",
+      "mobile": false,
+      "consoleErrors": [],
+      "httpErrors": [],
+      "links": [
+        "/users/jf-0",
+        "/media",
+        "/recent",
+        "/wrapped/jf-0"
+      ]
+    },
+    {
+      "scenario": "user-backup",
+      "mobile": true,
+      "consoleErrors": [],
+      "httpErrors": [],
+      "links": [
+        "/users/jf-0",
+        "/media",
+        "/recent",
+        "/wrapped/jf-0"
+      ]
+    },
+    {
+      "scenario": "user-no-id",
+      "mobile": false,
+      "consoleErrors": [],
+      "httpErrors": [],
+      "links": [
+        "/media",
+        "/recent"
+      ]
+    }
+  ]
+}

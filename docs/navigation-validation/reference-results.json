@@ -1,0 +1,213 @@
+{
+  "source": "git archive main; original components and design CSS; Tailwind scan bounded via source(none) + src/app and src/components; official PRISMA_USE_STUB=true; genuine Sora files cached using Next test font hook; local synthetic signed NextAuth sessions",
+  "cases": [
+    {
+      "admin": true,
+      "mobile": false,
+      "consoleErrors": [],
+      "failedRequests": [],
+      "session": {
+        "user": {
+          "name": "Admin QA",
+          "isAdmin": true,
+          "jellyfinUserId": "local-admin",
+          "authServerName": "QA principal",
+          "authServerUrl": "",
+          "authServerJellyfinServerId": "",
+          "authServerIsPrimary": true
+        },
+        "expires": "2026-10-10T07:45:48.000Z"
+      },
+      "url": "http://localhost:3323/about",
+      "bodyText": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v2.1.1\nJellyTrack\n\nTableau de bord d'analyse et de surveillance pour votre serveur Jellyfin. Suivez l'activité, les tendances et les performances de votre serveur multimédia en temps réel.\n\nVersion 2.1.1\nFonctionnalités\n•\nTableau de bord interactif avec métriques temps réel\n•\nAnalyses détaillées par genre, client, plateforme et résolution\n•\nCarte thermique d'activité annuelle style GitHub\n•\nStatistiques par heure et jour de la semaine\n•\nSurveillance hardware (CPU, RAM, disque, réseau)\n•\nFlux en direct avec possibilité d'arrêt forcé\n•\nProfils utilisateurs avec Wrapped annuel\n•\nSystème de logs détaillé avec filtres avancés\n•\nSauvegardes et restaurations automatiques\n•\nSupport multi-langues (FR / EN)\n•\nSynchronisation programmable avec Jellyfin\nTechnologies\nNext.js\nv16\n\nFramework React full-stack avec App Router\n\nReact\nv19\n\nBibliothèque d'interface utilisateur\n\nPrisma\nv7\n\nPrisma ORM\n\nRecharts\nv3\n\nBibliothèque de graphiques React\n\nNextAuth.js\nv4\n\nAuthentification via Jellyfin\n\nNode-Cron\nv4\n\nPlanificateur de tâches automatique\n\nLiens & Crédits\nCode source sur GitHub\nJellyfin — Le système multimédia libre\n\nJellyTrack est un projet open-source réalisé avec ❤ pour la communauté Jellyfin.",
+      "navLinks": [
+        {
+          "href": "/users/local-admin",
+          "text": "",
+          "aria": "Mon Compte"
+        },
+        {
+          "href": "/",
+          "text": "",
+          "aria": "Tableau de bord"
+        },
+        {
+          "href": "/recent",
+          "text": "",
+          "aria": "Ajoutés récemment"
+        },
+        {
+          "href": "/media",
+          "text": "",
+          "aria": "Bibliothèque"
+        },
+        {
+          "href": "/users",
+          "text": "",
+          "aria": "Utilisateurs"
+        },
+        {
+          "href": "/admin/health",
+          "text": "",
+          "aria": "Santé"
+        },
+        {
+          "href": "/logs",
+          "text": "",
+          "aria": "Journaux"
+        },
+        {
+          "href": "/settings",
+          "text": "",
+          "aria": "Paramètres"
+        }
+      ]
+    },
+    {
+      "admin": true,
+      "mobile": true,
+      "consoleErrors": [],
+      "failedRequests": [],
+      "session": {
+        "user": {
+          "name": "Admin QA",
+          "isAdmin": true,
+          "jellyfinUserId": "local-admin",
+          "authServerName": "QA principal",
+          "authServerUrl": "",
+          "authServerJellyfinServerId": "",
+          "authServerIsPrimary": true
+        },
+        "expires": "2026-10-10T07:45:52.000Z"
+      },
+      "url": "http://localhost:3323/about",
+      "bodyText": "JellyTrack\nJellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v2.1.1\nJellyTrack\n\nTableau de bord d'analyse et de surveillance pour votre serveur Jellyfin. Suivez l'activité, les tendances et les performances de votre serveur multimédia en temps réel.\n\nVersion 2.1.1\nFonctionnalités\n•\nTableau de bord interactif avec métriques temps réel\n•\nAnalyses détaillées par genre, client, plateforme et résolution\n•\nCarte thermique d'activité annuelle style GitHub\n•\nStatistiques par heure et jour de la semaine\n•\nSurveillance hardware (CPU, RAM, disque, réseau)\n•\nFlux en direct avec possibilité d'arrêt forcé\n•\nProfils utilisateurs avec Wrapped annuel\n•\nSystème de logs détaillé avec filtres avancés\n•\nSauvegardes et restaurations automatiques\n•\nSupport multi-langues (FR / EN)\n•\nSynchronisation programmable avec Jellyfin\nTechnologies\nNext.js\nv16\n\nFramework React full-stack avec App Router\n\nReact\nv19\n\nBibliothèque d'interface utilisateur\n\nPrisma\nv7\n\nPrisma ORM\n\nRecharts\nv3\n\nBibliothèque de graphiques React\n\nNextAuth.js\nv4\n\nAuthentification via Jellyfin\n\nNode-Cron\nv4\n\nPlanificateur de tâches automatique\n\nLiens & Crédits\nCode source sur GitHub\nJellyfin — Le système multimédia libre\n\nJellyTrack est un projet open-source réalisé avec ❤ pour la communauté Jellyfin.",
+      "navLinks": [
+        {
+          "href": "/users/local-admin",
+          "text": "Mon Compte",
+          "aria": null
+        },
+        {
+          "href": "/",
+          "text": "Tableau de bord",
+          "aria": null
+        },
+        {
+          "href": "/recent",
+          "text": "Ajoutés récemment",
+          "aria": null
+        },
+        {
+          "href": "/media",
+          "text": "Bibliothèque",
+          "aria": null
+        },
+        {
+          "href": "/users",
+          "text": "Utilisateurs",
+          "aria": null
+        },
+        {
+          "href": "/admin/health",
+          "text": "Santé",
+          "aria": null
+        },
+        {
+          "href": "/logs",
+          "text": "Journaux",
+          "aria": null
+        },
+        {
+          "href": "/settings",
+          "text": "Paramètres",
+          "aria": null
+        }
+      ]
+    },
+    {
+      "admin": false,
+      "mobile": false,
+      "consoleErrors": [],
+      "failedRequests": [],
+      "session": {
+        "user": {
+          "name": "Alice QA",
+          "isAdmin": false,
+          "jellyfinUserId": "jf-0",
+          "authServerName": "QA principal",
+          "authServerUrl": "",
+          "authServerJellyfinServerId": "",
+          "authServerIsPrimary": true
+        },
+        "expires": "2026-10-10T07:45:56.000Z"
+      },
+      "url": "http://localhost:3323/about",
+      "bodyText": "JellyTrack\nMon Compte\nBibliothèque\nAjoutés récemment\nMon Wrapped\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v2.1.1\nJellyTrack\n\nTableau de bord d'analyse et de surveillance pour votre serveur Jellyfin. Suivez l'activité, les tendances et les performances de votre serveur multimédia en temps réel.\n\nVersion 2.1.1\nFonctionnalités\n•\nTableau de bord interactif avec métriques temps réel\n•\nAnalyses détaillées par genre, client, plateforme et résolution\n•\nCarte thermique d'activité annuelle style GitHub\n•\nStatistiques par heure et jour de la semaine\n•\nSurveillance hardware (CPU, RAM, disque, réseau)\n•\nFlux en direct avec possibilité d'arrêt forcé\n•\nProfils utilisateurs avec Wrapped annuel\n•\nSystème de logs détaillé avec filtres avancés\n•\nSauvegardes et restaurations automatiques\n•\nSupport multi-langues (FR / EN)\n•\nSynchronisation programmable avec Jellyfin\nTechnologies\nNext.js\nv16\n\nFramework React full-stack avec App Router\n\nReact\nv19\n\nBibliothèque d'interface utilisateur\n\nPrisma\nv7\n\nPrisma ORM\n\nRecharts\nv3\n\nBibliothèque de graphiques React\n\nNextAuth.js\nv4\n\nAuthentification via Jellyfin\n\nNode-Cron\nv4\n\nPlanificateur de tâches automatique\n\nLiens & Crédits\nCode source sur GitHub\nJellyfin — Le système multimédia libre\n\nJellyTrack est un projet open-source réalisé avec ❤ pour la communauté Jellyfin.",
+      "navLinks": [
+        {
+          "href": "/users/jf-0",
+          "text": "",
+          "aria": "Mon Compte"
+        },
+        {
+          "href": "/media",
+          "text": "",
+          "aria": "Bibliothèque"
+        },
+        {
+          "href": "/recent",
+          "text": "",
+          "aria": "Ajoutés récemment"
+        },
+        {
+          "href": "/wrapped/jf-0",
+          "text": "",
+          "aria": "Mon Wrapped"
+        }
+      ]
+    },
+    {
+      "admin": false,
+      "mobile": true,
+      "consoleErrors": [],
+      "failedRequests": [],
+      "session": {
+        "user": {
+          "name": "Alice QA",
+          "isAdmin": false,
+          "jellyfinUserId": "jf-0",
+          "authServerName": "QA principal",
+          "authServerUrl": "",
+          "authServerJellyfinServerId": "",
+          "authServerIsPrimary": true
+        },
+        "expires": "2026-10-10T07:46:00.000Z"
+      },
+      "url": "http://localhost:3323/about",
+      "bodyText": "JellyTrack\nJellyTrack\nMon Compte\nBibliothèque\nAjoutés récemment\nMon Wrapped\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v2.1.1\nJellyTrack\n\nTableau de bord d'analyse et de surveillance pour votre serveur Jellyfin. Suivez l'activité, les tendances et les performances de votre serveur multimédia en temps réel.\n\nVersion 2.1.1\nFonctionnalités\n•\nTableau de bord interactif avec métriques temps réel\n•\nAnalyses détaillées par genre, client, plateforme et résolution\n•\nCarte thermique d'activité annuelle style GitHub\n•\nStatistiques par heure et jour de la semaine\n•\nSurveillance hardware (CPU, RAM, disque, réseau)\n•\nFlux en direct avec possibilité d'arrêt forcé\n•\nProfils utilisateurs avec Wrapped annuel\n•\nSystème de logs détaillé avec filtres avancés\n•\nSauvegardes et restaurations automatiques\n•\nSupport multi-langues (FR / EN)\n•\nSynchronisation programmable avec Jellyfin\nTechnologies\nNext.js\nv16\n\nFramework React full-stack avec App Router\n\nReact\nv19\n\nBibliothèque d'interface utilisateur\n\nPrisma\nv7\n\nPrisma ORM\n\nRecharts\nv3\n\nBibliothèque de graphiques React\n\nNextAuth.js\nv4\n\nAuthentification via Jellyfin\n\nNode-Cron\nv4\n\nPlanificateur de tâches automatique\n\nLiens & Crédits\nCode source sur GitHub\nJellyfin — Le système multimédia libre\n\nJellyTrack est un projet open-source réalisé avec ❤ pour la communauté Jellyfin.",
+      "navLinks": [
+        {
+          "href": "/users/jf-0",
+          "text": "Mon Compte",
+          "aria": null
+        },
+        {
+          "href": "/media",
+          "text": "Bibliothèque",
+          "aria": null
+        },
+        {
+          "href": "/recent",
+          "text": "Ajoutés récemment",
+          "aria": null
+        },
+        {
+          "href": "/wrapped/jf-0",
+          "text": "Mon Wrapped",
+          "aria": null
+        }
+      ]
+    }
+  ]
+}
