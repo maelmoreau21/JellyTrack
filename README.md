@@ -43,7 +43,7 @@ JellyTrack is built as a **100% autonomous Go application**:
 - **Single Self-Contained Binary**: All web assets, styles, scripts, graphics, and SQL migrations are embedded directly via Go `embed.FS`.
 - **Zero Runtime Dependencies**: No Node.js runtime, no package managers, and no external tool chains required at runtime.
 - **Dual Database Support**: Native PostgreSQL (`pgx`) and standalone embedded SQLite (`modernc.org/sqlite`) with automatic schema migrations.
-- **Ultra-Low Resource Footprint**: Consumes under 20–30 MB of RAM under load and compiles to a minimal ~25 MB container image.
+- **Lightweight Go Runtime**: A standalone Go binary serves the bundled frontend. Memory and image size depend on the platform and workload; the recovery audit measured 75.27 MiB working set on Windows with a small synthetic dataset. Linux/Docker measurements remain pending; see [the recovery report](docs/FRONTEND_RECOVERY_REPORT.md).
 
 ```text
 JellyTrack/

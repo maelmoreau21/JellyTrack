@@ -2,6 +2,8 @@
 
 ## Vue d'ensemble
 
+État vérifié le 9 octobre 2026 : l'architecture Go/JavaScript existe, mais la présence d'une route ou d'un template ne prouve pas la parité fonctionnelle avec `main`. Les écarts, corrections et limites des tests sont recensés dans [le rapport de récupération](FRONTEND_RECOVERY_REPORT.md) et [l'audit frontend](audit-frontend.md). La liste ci-dessous décrit les surfaces implémentées, avec des comportements encore partiels.
+
 Le frontend de JellyTrack a été entièrement reconstruit pour être servi directement par le serveur Go, sans aucune dépendance envers Node.js, Next.js, React, TypeScript, npm ou pnpm au moment de l'exécution ou du déploiement.
 
 L'application fonctionne en tant que **binaire Go unique et autonome** intégrant l'ensemble des fichiers statiques, templates, styles CSS, scripts JavaScript vanilla, bibliothèques graphiques et dictionnaires de traduction.
@@ -32,6 +34,7 @@ web/
     └── assets/
         ├── app.css            # Feuille de style complète
         ├── app.js             # Routeur et contrôleurs de pages Vanilla JS
+        ├── history.js         # Historique filtré, détails de session et journaux système
         ├── chart.min.js       # Bibliothèque graphique autonome
         ├── logo.svg           # Logo JellyTrack
         ├── icon.svg           # Favicon & icône application
@@ -53,11 +56,11 @@ web/
 
 ## 3. Fonctionnalités & Pages Couvertes
 
-Toutes les pages de JellyTrack sont gérées de manière réactive par le routeur HTML5 dans `app.js` et connectées aux API REST de Go :
+Le routeur HTML5 dans `app.js` expose les pages suivantes, connectées aux API REST de Go. Leur parité et leur validation sont détaillées séparément :
 
 - **`/` (Dashboard)** :
   - Métriques clés (lectures, heures de visionnage, utilisateurs actifs, total médias).
-  - Sélecteur de période temporelle (24h, 7j, 30j, 90j, 365j).
+  - Sélecteur de période temporelle (24h, 7j, 30j, 90j, 365j, Tout et dates personnalisées) avec paramètres URL.
   - Panneau des flux en direct avec polling toutes les 5s, jauge de progression et bouton d'arrêt forcé.
   - Graphique d'activité temporelle (aire avec dégradé Chart.js).
   - Graphique des heures de pointe (histogramme 24h).
@@ -65,7 +68,7 @@ Toutes les pages de JellyTrack sont gérées de manière réactive par le routeu
 - **`/login`** : Formulaire de connexion sécurisé avec option 30 jours et redirection SSO / OIDC.
 - **`/setup`** : Assistant de premier démarrage pour connecter un serveur Jellyfin initial.
 - **`/about`** : Informations sur l'application, architecture Go autonome et liens utiles.
-- **`/recent`** : Historique récent de lecture avec vignettes de jaquettes, liens directs média/utilisateur, lecteur et durée.
+- **`/recent`** : Ajouts récents du catalogue, triés par date d'ajout ; recherche et filtres de famille média.
 - **`/newsletter`** : Bilan mensuel sur 30 jours et publication directe sur webhook Discord.
 - **`/users`** : Répertoire des utilisateurs Jellyfin avec statut d'activité et accès au profil et Wrapped.
 - **`/users/{id}`** : Fiche utilisateur détaillée, statistiques cumulées et sessions récentes.
@@ -76,7 +79,7 @@ Toutes les pages de JellyTrack sont gérées de manière réactive par le routeu
 - **`/media/analysis`** : Analyse approfondie (top réalisateurs, acteurs, studios).
 - **`/media/artist/{name}`** : Titres et albums filtrés par artiste avec bandeau contextuel.
 - **`/media/{id}`** : Détail média (jaquette, métadonnées, acteurs, rotation de jaquette et tableau des dernières lectures).
-- **`/logs`** : Journaux système avec filtre par niveau, téléchargement de log brut et export CSV.
+- **`/logs`** : Historique des lectures filtré et paginé, détails de session et événements réels. Onglet administrateur pour les journaux système et téléchargements. Export CSV limité à la page affichée.
 - **`/settings` & `/settings/overview`** : Vue d'ensemble de la configuration globale, langue et options.
 - **`/settings/jellyfin`** : Gestion des serveurs Jellyfin (ajout, test, suppression, régénération de clé plugin).
 - **`/settings/media`** : Seuils de résolution (480p, 720p, 1080p, 4K), règles de complétion (%) et exclusions de bibliothèques.
@@ -104,13 +107,13 @@ Le moteur i18n dans `app.js` :
 1. Détecte la langue préférée de l'utilisateur (stockée dans `localStorage` ou configurée sur le serveur).
 2. Charge le dictionnaire correspondant de manière asynchrone avec secours automatique sur `fr.json`.
 3. Fournit la fonction `I18n.t(key, params)` remplaçant dynamiquement les variables comme `{count}` ou `{year}`.
-4. Permet de changer instantanément de langue via le sélecteur du menu latéral.
+4. Permet de changer de langue via le sélecteur ; les formats de dates/nombres utilisent la locale choisie. Plusieurs chaînes restent codées en français : traduction complète non atteinte.
 
 ---
 
 ## 5. Sécurité & Bonnes Pratiques
 
-- **CSP (Content-Security-Policy)** : Conforme strict avec `script-src 'self'` et `style-src 'self'`. Aucun script inline ni `eval` n'est utilisé.
+- **CSP (Content-Security-Policy)** : `script-src 'self'` interdit les scripts inline et `eval`. Les attributs d'événements HTML ont été remplacés par des listeners. `style-src 'self' 'unsafe-inline'` permet les styles dynamiques de l'interface et de Chart.js ; la CSP n'est donc pas stricte pour les styles.
 - **Protection CSRF** : Jeton CSRF automatique injecté dans l'en-tête `X-CSRF-Token` pour toutes les requêtes mutantes (`POST`, `PUT`, `PATCH`, `DELETE`).
 - **Protection Admin** : Les routes et actions administratives vérifient le rôle de l'utilisateur avant affichage et exécution.
 
