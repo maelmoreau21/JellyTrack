@@ -1,0 +1,179 @@
+{
+  "checks": [
+    {
+      "name": "135 sessions API",
+      "ok": true
+    },
+    {
+      "name": "historical tiedpreferences andpeak",
+      "ok": true,
+      "detail": {
+        "favoriteFormat": "Movie",
+        "favoriteClient": "Jellyfin Web",
+        "peakDay": 5,
+        "peakHour": 13
+      }
+    },
+    {
+      "name": "50 rows first page",
+      "ok": true
+    },
+    {
+      "name": "5profile charts",
+      "ok": true
+    },
+    {
+      "name": "Wrapped profile link",
+      "ok": true
+    },
+    {
+      "name": "history page2",
+      "ok": true
+    },
+    {
+      "name": "history page3",
+      "ok": true
+    },
+    {
+      "name": "history pagination URL",
+      "ok": true
+    },
+    {
+      "name": "duration descending sort",
+      "ok": true
+    },
+    {
+      "name": "history title search",
+      "ok": true
+    },
+    {
+      "name": "history reset135",
+      "ok": true
+    },
+    {
+      "name": "advanced filters opens",
+      "ok": true
+    },
+    {
+      "name": "history media type",
+      "ok": true
+    },
+    {
+      "name": "history type reset",
+      "ok": true
+    },
+    {
+      "name": "transcode preset",
+      "ok": true
+    },
+    {
+      "name": "history client filter",
+      "ok": true
+    },
+    {
+      "name": "columns options16",
+      "ok": true
+    },
+    {
+      "name": "addIPcolumn URL",
+      "ok": true
+    },
+    {
+      "name": "column persistence",
+      "ok": true
+    },
+    {
+      "name": "reset7columns",
+      "ok": true
+    },
+    {
+      "name": "save filter",
+      "ok": true
+    },
+    {
+      "name": "remove saved filter",
+      "ok": true
+    },
+    {
+      "name": "inline telemetry expansion",
+      "ok": true
+    },
+    {
+      "name": "session detail modal",
+      "ok": true
+    },
+    {
+      "name": "export all135 across3pages",
+      "ok": true
+    },
+    {
+      "name": "history filtered empty state",
+      "ok": true
+    },
+    {
+      "name": "partial metadata no undefined",
+      "ok": true
+    },
+    {
+      "name": "nohistory retains activity andstats",
+      "ok": true
+    },
+    {
+      "name": "nohistory explanatory state",
+      "ok": true
+    },
+    {
+      "name": "mobile document width",
+      "ok": true
+    },
+    {
+      "name": "mobile metric2columns",
+      "ok": true
+    },
+    {
+      "name": "standard other page redirects own",
+      "ok": true
+    },
+    {
+      "name": "standard list redirectslogin",
+      "ok": true,
+      "detail": {
+        "url": "http://localhost:3330/login"
+      }
+    },
+    {
+      "name": "standard profile alias me",
+      "ok": true
+    },
+    {
+      "name": "standard profile alias @me",
+      "ok": true
+    },
+    {
+      "name": "standard profile alias qa-many",
+      "ok": true
+    },
+    {
+      "name": "standard export all135",
+      "ok": true
+    },
+    {
+      "name": "admin linked profiles44 meaningfulsessions",
+      "ok": true,
+      "detail": {
+        "actual": 44
+      }
+    },
+    {
+      "name": "profile loading4historicalsections",
+      "ok": true
+    },
+    {
+      "name": "runtime errors0",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "errors": [],
+  "note": "Live server and synthetic isolated SQLite; roles are real signed server AuthSession, no response mocks. Loading test delays actual response only."
+}

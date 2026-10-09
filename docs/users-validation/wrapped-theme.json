@@ -1,0 +1,38 @@
+{
+  "checks": [
+    {
+      "name": "real standard Wrapped navigation true",
+      "ok": true
+    },
+    {
+      "name": "real standard Wrapped profile true",
+      "ok": true
+    },
+    {
+      "name": "profile theme togglelight",
+      "ok": true
+    },
+    {
+      "name": "profile card changes theme",
+      "ok": true
+    },
+    {
+      "name": "profile mobilelight document width",
+      "ok": true
+    },
+    {
+      "name": "real standard Wrapped navigation false",
+      "ok": true
+    },
+    {
+      "name": "real standard Wrapped profile false",
+      "ok": true
+    },
+    {
+      "name": "runtimeerrors0",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

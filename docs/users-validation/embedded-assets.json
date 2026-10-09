@@ -1,0 +1,38 @@
+[
+  {
+    "path": "/index.html",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "matchesCurrentFile": true
+  },
+  {
+    "path": "/assets/app.js",
+    "status": 200,
+    "contentType": "text/javascript; charset=utf-8",
+    "matchesCurrentFile": true
+  },
+  {
+    "path": "/assets/users.js",
+    "status": 200,
+    "contentType": "text/javascript; charset=utf-8",
+    "matchesCurrentFile": true
+  },
+  {
+    "path": "/assets/users.css",
+    "status": 200,
+    "contentType": "text/css; charset=utf-8",
+    "matchesCurrentFile": true
+  },
+  {
+    "path": "/assets/profile.js",
+    "status": 200,
+    "contentType": "text/javascript; charset=utf-8",
+    "matchesCurrentFile": true
+  },
+  {
+    "path": "/assets/profile.css",
+    "status": 200,
+    "contentType": "text/css; charset=utf-8",
+    "matchesCurrentFile": true
+  }
+]

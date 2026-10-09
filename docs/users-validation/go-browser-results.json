@@ -1,0 +1,258 @@
+{
+  "fixture": "Isolated users.db9 users280 histories, no real Jellyfin server; real admin password login; signed real Go AuthSession for standard users.",
+  "cases": [
+    {
+      "label": "go-users-desktop-dark",
+      "url": "http://localhost:3330/users",
+      "errors": [],
+      "httpErrors": [],
+      "finalUrl": "http://localhost:3330/users",
+      "text": "Purger supprimés\nExport CSV\nExport JSON\nFiltres :\nTous (9)\nInactifs > 30 jours\nInactifs > 90 jours\nGros Transcodeurs (≥40%)\nSans activité (0h)\nUtilisateurs\n\n9 utilisateurs trouvés\n\n#\tUtilisateur\tTemps regardé\tSessions\tMode de flux\tClient favori\tDernière Act.\tActions\n1\t\nMS\nMany Sessions QA\n\t91.7 h\t135\t\n67% DP\n/\n33% TC\n\t\nAndroid TV\n\t9 oct. 2026, 14:26\t\n\n2\t\nA\nauditadmin\n\t15.8 h\t22\t\n100% DP\n/\n0% TC\n\t\nFinamp\n\t6 oct. 2026, 07:30\t\n\n3\t\nA\nauditadmin\n\t15.8 h\t22\t\n100% DP\n/\n0% TC\n\t\nFinamp\n\t6 oct. 2026, 07:30\t\n\n4\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t\n\n5\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t\n\n6\t\nAA\nAlice Audit\n\t14.1 h\t22\t\n100% DP\n/\n0% TC\n\t\nJellyfin Web\n\t9 oct. 2026, 09:30\t\n\n7\t\nAA\nAlice Audit\n\t14.1 h\t22\t\n100% DP\n/\n0% TC\n\t\nJellyfin Web\n\t9 oct. 2026, 09:30\t\n\n8\t\nPD\nPartial Data QA\n\t0 h\t1\t\n100% DP\n/\n0% TC\n\t\nInconnu\n\t9 oct. 2026, 13:56\t\n\n9\t\nEQ\nEmpty QA\n\t0 h\t0\t-\t\nInconnu\n\tJamais\t",
+      "geometry": {
+        "x": 256,
+        "width": 1184,
+        "scrollWidth": 1184,
+        "viewport": 1440
+      },
+      "screenshot": "go-users-desktop-dark.png"
+    },
+    {
+      "label": "go-profile-desktop-dark",
+      "url": "http://localhost:3330/users/qa-many",
+      "errors": [],
+      "httpErrors": [],
+      "finalUrl": "http://localhost:3330/users/qa-many",
+      "text": "MS\nProfil : Many Sessions QA\n\nID Jellyfin : qa-many\n\n🎁 Voir le JellyTrack Wrapped\nTemps de lecture\n91.7h\n\nCumul total\n\nDernière Act.: 9 oct. 2026, 14:26\n\nSession(s)\n135\n\n~41 min / session\n\nTop Genres\nAudit, Drama\n\nPréférences principales\n\nTaux de complétion\n100%\n\nComplétion moyenne\n\nPic d'Activité\nVen · 13h\n\nHeure la plus active\n\nMeilleure Série\n38 jours\n\nJours d'activité consécutifs\n\nContenu Unique\n3\n\n🎬 1 · 📺 1 · 🎵 1\n\nFormat favori\nMovie\n\nType de média principal\n\nLe Plus Visionné\nMovie de validation Audit principal\n\n34 sessions · 3060 min\n\nClient favori\nJellyfin Web\n\nApplication la plus utilisée\n\nAppareil favori\nQA device\n\nPlateforme la plus utilisée\n\nActivité sur 30 jours\n\nVue sur le volume quotidien de lecture de cet utilisateur.\n\nActivité par Jour\n\nNombre de sessions par jour de la semaine.\n\nTaux de Complétion\n\nRatio sessions terminées vs abandonnées vs partielles.\n\nTerminé\nActivité par Heure\n\nHeure de début des sessions sur la période.\n\nGenres préférés\n\nRépartition des genres les plus visionnés par cet utilisateur.\n\nFiche Technique\n\nIndicateurs de lecture et appareils préférés de l'utilisateur.\n\nAppareil ou client le plus utilisé\n\nJellyfin Web\n\nDirect Play\n\n33%\n\nDébit moyen\n\n12.0 Mbps\nHistorique de lecture\n\nHistorique complet agrégé des sessions démarrées. — 135 sessions\n\nFiltres sauvegardés\nColonnes\n↓ CSV\n↓ JSON\nMasquer Zappés (< 1m)\n☷ Filtres\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nRechercher\nDATE\n\tMÉDIA\n\tAPPLICATION\n\tRÉSOLUTION\n\tBITRATE AUDIO\n\tSTATUT\n\tDURÉE\n\n\n⌄\n9 oct.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n9 oct.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n9 oct.\n\n00:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n8 oct.\n\n22:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n8 oct.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n8 oct.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n7 oct.\n\n23:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n7 oct.\n\n21:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n7 oct.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n7 oct.\n\n09:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n6 oct.\n\n22:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n6 oct.\n\n20:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n6 oct.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n6 oct.\n\n08:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n5 oct.\n\n21:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n5 oct.\n\n19:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n5 oct.\n\n09:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n5 oct.\n\n07:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n4 oct.\n\n20:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n4 oct.\n\n18:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n4 oct.\n\n08:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n4 oct.\n\n06:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n3 oct.\n\n19:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n3 oct.\n\n17:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n3 oct.\n\n07:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n3 oct.\n\n05:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n2 oct.\n\n18:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n2 oct.\n\n16:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n2 oct.\n\n06:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n2 oct.\n\n04:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n1 oct.\n\n17:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n1 oct.\n\n15:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n1 oct.\n\n05:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n1 oct.\n\n03:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n30 sept.\n\n16:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n30 sept.\n\n14:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n30 sept.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n30 sept.\n\n04:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n30 sept.\n\n02:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n29 sept.\n\n15:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n29 sept.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n29 sept.\n\n03:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n29 sept.\n\n01:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n28 sept.\n\n14:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n28 sept.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n28 sept.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n28 sept.\n\n02:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n28 sept.\n\n00:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n27 sept.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n27 sept.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n1\n2\n3\n›\nPage 1 / 3",
+      "geometry": {
+        "x": 256,
+        "width": 1184,
+        "scrollWidth": 1184,
+        "viewport": 1440
+      },
+      "screenshot": "go-profile-desktop-dark.png"
+    },
+    {
+      "label": "go-users-mobile-dark",
+      "url": "http://localhost:3330/users",
+      "errors": [],
+      "httpErrors": [],
+      "finalUrl": "http://localhost:3330/users",
+      "text": "Purger supprimés\nExport CSV\nExport JSON\nFiltres :\nTous (9)\nInactifs > 30 jours\nInactifs > 90 jours\nGros Transcodeurs (≥40%)\nSans activité (0h)\nUtilisateurs\n\n9 utilisateurs trouvés\n\n#\tUtilisateur\tTemps regardé\tSessions\tMode de flux\tClient favori\tDernière Act.\tActions\n1\t\nMS\nMany Sessions QA\n\t91.7 h\t135\t\n67% DP\n/\n33% TC\n\t\nAndroid TV\n\t9 oct. 2026, 14:26\t\n\n2\t\nA\nauditadmin\n\t15.8 h\t22\t\n100% DP\n/\n0% TC\n\t\nFinamp\n\t6 oct. 2026, 07:30\t\n\n3\t\nA\nauditadmin\n\t15.8 h\t22\t\n100% DP\n/\n0% TC\n\t\nFinamp\n\t6 oct. 2026, 07:30\t\n\n4\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t\n\n5\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t\n\n6\t\nAA\nAlice Audit\n\t14.1 h\t22\t\n100% DP\n/\n0% TC\n\t\nJellyfin Web\n\t9 oct. 2026, 09:30\t\n\n7\t\nAA\nAlice Audit\n\t14.1 h\t22\t\n100% DP\n/\n0% TC\n\t\nJellyfin Web\n\t9 oct. 2026, 09:30\t\n\n8\t\nPD\nPartial Data QA\n\t0 h\t1\t\n100% DP\n/\n0% TC\n\t\nInconnu\n\t9 oct. 2026, 13:56\t\n\n9\t\nEQ\nEmpty QA\n\t0 h\t0\t-\t\nInconnu\n\tJamais\t",
+      "geometry": {
+        "x": 0,
+        "width": 390,
+        "scrollWidth": 390,
+        "viewport": 390
+      },
+      "screenshot": "go-users-mobile-dark.png"
+    },
+    {
+      "label": "go-profile-mobile-dark",
+      "url": "http://localhost:3330/users/qa-many",
+      "errors": [],
+      "httpErrors": [],
+      "finalUrl": "http://localhost:3330/users/qa-many",
+      "text": "MS\nProfil : Many Sessions QA\n\nID Jellyfin : qa-many\n\n🎁 Voir le JellyTrack Wrapped\nTemps de lecture\n91.7h\n\nCumul total\n\nDernière Act.: 9 oct. 2026, 14:26\n\nSession(s)\n135\n\n~41 min / session\n\nTop Genres\nAudit, Drama\n\nPréférences principales\n\nTaux de complétion\n100%\n\nComplétion moyenne\n\nPic d'Activité\nVen · 13h\n\nHeure la plus active\n\nMeilleure Série\n38 jours\n\nJours d'activité consécutifs\n\nContenu Unique\n3\n\n🎬 1 · 📺 1 · 🎵 1\n\nFormat favori\nMovie\n\nType de média principal\n\nLe Plus Visionné\nMovie de validation Audit principal\n\n34 sessions · 3060 min\n\nClient favori\nJellyfin Web\n\nApplication la plus utilisée\n\nAppareil favori\nQA device\n\nPlateforme la plus utilisée\n\nActivité sur 30 jours\n\nVue sur le volume quotidien de lecture de cet utilisateur.\n\nActivité par Jour\n\nNombre de sessions par jour de la semaine.\n\nTaux de Complétion\n\nRatio sessions terminées vs abandonnées vs partielles.\n\nTerminé\nActivité par Heure\n\nHeure de début des sessions sur la période.\n\nGenres préférés\n\nRépartition des genres les plus visionnés par cet utilisateur.\n\nFiche Technique\n\nIndicateurs de lecture et appareils préférés de l'utilisateur.\n\nAppareil ou client le plus utilisé\n\nJellyfin Web\n\nDirect Play\n\n33%\n\nDébit moyen\n\n12.0 Mbps\nHistorique de lecture\n\nHistorique complet agrégé des sessions démarrées. — 135 sessions\n\nFiltres sauvegardés\nColonnes\n↓ CSV\n↓ JSON\nMasquer Zappés (< 1m)\n☷ Filtres\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nRechercher\nDATE\n\tMÉDIA\n\tAPPLICATION\n\tRÉSOLUTION\n\tBITRATE AUDIO\n\tSTATUT\n\tDURÉE\n\n\n⌄\n9 oct.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nDirectPlay\n1h 30m\nJellyfin Web\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n9 oct.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nDirectStream\n3 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n9 oct.\n\n00:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nAudio Transcodé\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n8 oct.\n\n22:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nDirectPlay\n40 min\nJellyfin Web\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n8 oct.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nAudio Transcodé\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n8 oct.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nDirectPlay\n40 min\nJellyfin Web\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n7 oct.\n\n23:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nDirectStream\n3 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n7 oct.\n\n21:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nAudio Transcodé\n1h 30m\nAndroid TV\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n7 oct.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nDirectStream\n3 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n7 oct.\n\n09:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nAudio Transcodé\n1h 30m\nAndroid TV\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n6 oct.\n\n22:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nDirectPlay\n40 min\nJellyfin Web\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n6 oct.\n\n20:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nDirectStream\n30 min\nFinamp\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n6 oct.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nDirectPlay\n40 min\nJellyfin Web\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n6 oct.\n\n08:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nDirectStream\n30 min\nFinamp\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n5 oct.\n\n21:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nAudio Transcodé\n1h 30m\nAndroid TV\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n5 oct.\n\n19:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nDirectPlay\n3 min\nJellyfin Web\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n5 oct.\n\n09:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nAudio Transcodé\n1h 30m\nAndroid TV\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n5 oct.\n\n07:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nDirectPlay\n3 min\nJellyfin Web\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n4 oct.\n\n20:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nDirectStream\n30 min\nFinamp\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n4 oct.\n\n18:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nAudio Transcodé\n40 min\nAndroid TV\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n4 oct.\n\n08:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nDirectStream\n30 min\nFinamp\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n4 oct.\n\n06:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nAudio Transcodé\n40 min\nAndroid TV\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n3 oct.\n\n19:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nDirectPlay\n3 min\nJellyfin Web\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n3 oct.\n\n17:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nDirectStream\n1h 30m\nFinamp\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n3 oct.\n\n07:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nDirectPlay\n3 min\nJellyfin Web\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n3 oct.\n\n05:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nDirectStream\n1h 30m\nFinamp\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n2 oct.\n\n18:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nAudio Transcodé\n40 min\nAndroid TV\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n2 oct.\n\n16:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nDirectPlay\n30 min\nJellyfin Web\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n2 oct.\n\n06:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nAudio Transcodé\n40 min\nAndroid TV\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n2 oct.\n\n04:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nDirectPlay\n30 min\nJellyfin Web\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n1 oct.\n\n17:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nDirectStream\n1h 30m\nFinamp\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n1 oct.\n\n15:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nAudio Transcodé\n3 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n1 oct.\n\n05:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nDirectStream\n1h 30m\nFinamp\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n1 oct.\n\n03:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nAudio Transcodé\n3 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n30 sept.\n\n16:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nDirectPlay\n30 min\nJellyfin Web\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n30 sept.\n\n14:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nDirectStream\n40 min\nFinamp\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n30 sept.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nDirectPlay\n1h 30m\nJellyfin Web\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n30 sept.\n\n04:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nDirectPlay\n30 min\nJellyfin Web\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n30 sept.\n\n02:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nDirectStream\n40 min\nFinamp\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n29 sept.\n\n15:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nAudio Transcodé\n3 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n29 sept.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nAudio Transcodé\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n29 sept.\n\n03:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nAudio Transcodé\n3 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n29 sept.\n\n01:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nDirectPlay\n1h 30m\nJellyfin Web\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n28 sept.\n\n14:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nDirectStream\n40 min\nFinamp\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n28 sept.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n4K\nDirectPlay\n1h 30m\nJellyfin Web\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n28 sept.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\nAudio\nDirectStream\n3 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n28 sept.\n\n02:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nDirectStream\n40 min\nFinamp\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n28 sept.\n\n00:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nAudio Transcodé\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n27 sept.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n1080p\nAudio Transcodé\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n27 sept.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\nSD\nDirectPlay\n40 min\nJellyfin Web\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n1\n2\n3\n›\nPage 1 / 3",
+      "geometry": {
+        "x": 0,
+        "width": 390,
+        "scrollWidth": 390,
+        "viewport": 390
+      },
+      "screenshot": "go-profile-mobile-dark.png"
+    },
+    {
+      "label": "go-users-desktop-light",
+      "url": "http://localhost:3330/users",
+      "errors": [],
+      "httpErrors": [],
+      "finalUrl": "http://localhost:3330/users",
+      "text": "Purger supprimés\nExport CSV\nExport JSON\nFiltres :\nTous (9)\nInactifs > 30 jours\nInactifs > 90 jours\nGros Transcodeurs (≥40%)\nSans activité (0h)\nUtilisateurs\n\n9 utilisateurs trouvés\n\n#\tUtilisateur\tTemps regardé\tSessions\tMode de flux\tClient favori\tDernière Act.\tActions\n1\t\nMS\nMany Sessions QA\n\t91.7 h\t135\t\n67% DP\n/\n33% TC\n\t\nAndroid TV\n\t9 oct. 2026, 14:26\t\n\n2\t\nA\nauditadmin\n\t15.8 h\t22\t\n100% DP\n/\n0% TC\n\t\nFinamp\n\t6 oct. 2026, 07:30\t\n\n3\t\nA\nauditadmin\n\t15.8 h\t22\t\n100% DP\n/\n0% TC\n\t\nFinamp\n\t6 oct. 2026, 07:30\t\n\n4\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t\n\n5\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t\n\n6\t\nAA\nAlice Audit\n\t14.1 h\t22\t\n100% DP\n/\n0% TC\n\t\nJellyfin Web\n\t9 oct. 2026, 09:30\t\n\n7\t\nAA\nAlice Audit\n\t14.1 h\t22\t\n100% DP\n/\n0% TC\n\t\nJellyfin Web\n\t9 oct. 2026, 09:30\t\n\n8\t\nPD\nPartial Data QA\n\t0 h\t1\t\n100% DP\n/\n0% TC\n\t\nInconnu\n\t9 oct. 2026, 13:56\t\n\n9\t\nEQ\nEmpty QA\n\t0 h\t0\t-\t\nInconnu\n\tJamais\t",
+      "geometry": {
+        "x": 256,
+        "width": 1184,
+        "scrollWidth": 1184,
+        "viewport": 1440
+      },
+      "screenshot": "go-users-desktop-light.png"
+    },
+    {
+      "label": "go-profile-desktop-light",
+      "url": "http://localhost:3330/users/qa-many",
+      "errors": [],
+      "httpErrors": [],
+      "finalUrl": "http://localhost:3330/users/qa-many",
+      "text": "MS\nProfil : Many Sessions QA\n\nID Jellyfin : qa-many\n\n🎁 Voir le JellyTrack Wrapped\nTemps de lecture\n91.7h\n\nCumul total\n\nDernière Act.: 9 oct. 2026, 14:26\n\nSession(s)\n135\n\n~41 min / session\n\nTop Genres\nAudit, Drama\n\nPréférences principales\n\nTaux de complétion\n100%\n\nComplétion moyenne\n\nPic d'Activité\nVen · 13h\n\nHeure la plus active\n\nMeilleure Série\n38 jours\n\nJours d'activité consécutifs\n\nContenu Unique\n3\n\n🎬 1 · 📺 1 · 🎵 1\n\nFormat favori\nMovie\n\nType de média principal\n\nLe Plus Visionné\nMovie de validation Audit principal\n\n34 sessions · 3060 min\n\nClient favori\nJellyfin Web\n\nApplication la plus utilisée\n\nAppareil favori\nQA device\n\nPlateforme la plus utilisée\n\nActivité sur 30 jours\n\nVue sur le volume quotidien de lecture de cet utilisateur.\n\nActivité par Jour\n\nNombre de sessions par jour de la semaine.\n\nTaux de Complétion\n\nRatio sessions terminées vs abandonnées vs partielles.\n\nTerminé\nActivité par Heure\n\nHeure de début des sessions sur la période.\n\nGenres préférés\n\nRépartition des genres les plus visionnés par cet utilisateur.\n\nFiche Technique\n\nIndicateurs de lecture et appareils préférés de l'utilisateur.\n\nAppareil ou client le plus utilisé\n\nJellyfin Web\n\nDirect Play\n\n33%\n\nDébit moyen\n\n12.0 Mbps\nHistorique de lecture\n\nHistorique complet agrégé des sessions démarrées. — 135 sessions\n\nFiltres sauvegardés\nColonnes\n↓ CSV\n↓ JSON\nMasquer Zappés (< 1m)\n☷ Filtres\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nRechercher\nDATE\n\tMÉDIA\n\tAPPLICATION\n\tRÉSOLUTION\n\tBITRATE AUDIO\n\tSTATUT\n\tDURÉE\n\n\n⌄\n9 oct.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n9 oct.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n9 oct.\n\n00:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n8 oct.\n\n22:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n8 oct.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n8 oct.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n7 oct.\n\n23:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n7 oct.\n\n21:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n7 oct.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n7 oct.\n\n09:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n6 oct.\n\n22:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n6 oct.\n\n20:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n6 oct.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n6 oct.\n\n08:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n5 oct.\n\n21:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n5 oct.\n\n19:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n5 oct.\n\n09:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n5 oct.\n\n07:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n4 oct.\n\n20:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n4 oct.\n\n18:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n4 oct.\n\n08:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n4 oct.\n\n06:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n3 oct.\n\n19:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n3 oct.\n\n17:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n3 oct.\n\n07:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n3 oct.\n\n05:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n2 oct.\n\n18:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n2 oct.\n\n16:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n2 oct.\n\n06:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n2 oct.\n\n04:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n1 oct.\n\n17:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n1 oct.\n\n15:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n1 oct.\n\n05:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n1 oct.\n\n03:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n30 sept.\n\n16:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n30 sept.\n\n14:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n30 sept.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n30 sept.\n\n04:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n30 sept.\n\n02:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n29 sept.\n\n15:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n29 sept.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n29 sept.\n\n03:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n29 sept.\n\n01:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n28 sept.\n\n14:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n28 sept.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n28 sept.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n28 sept.\n\n02:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n28 sept.\n\n00:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n27 sept.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n27 sept.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n1\n2\n3\n›\nPage 1 / 3",
+      "geometry": {
+        "x": 256,
+        "width": 1184,
+        "scrollWidth": 1184,
+        "viewport": 1440
+      },
+      "screenshot": "go-profile-desktop-light.png"
+    },
+    {
+      "label": "go-profile-empty-dark",
+      "url": "http://localhost:3330/users/qa-empty",
+      "errors": [],
+      "httpErrors": [],
+      "finalUrl": "http://localhost:3330/users/qa-empty",
+      "text": "EQ\nProfil : Empty QA\n\nID Jellyfin : qa-empty\n\n🎁 Voir le JellyTrack Wrapped\nTemps de lecture\n0h\n\nCumul total\n\nSession(s)\n0\n\n~0 min / session\n\nTop Genres\nN/A\n\nPréférences principales\n\nTaux de complétion\n0%\n\nComplétion moyenne\n\nPic d'Activité\nN/A · 0h\n\nHeure la plus active\n\nMeilleure Série\n0 jours\n\nJours d'activité consécutifs\n\nContenu Unique\n0\n\n🎬 0 · 📺 0 · 🎵 0\n\nFormat favori\nN/A\n\nType de média principal\n\nClient favori\nN/A\n\nApplication la plus utilisée\n\nAppareil favori\nN/A\n\nPlateforme la plus utilisée\n\nActivité sur 30 jours\n\nVue sur le volume quotidien de lecture de cet utilisateur.\n\nHistorique de lecture\n\nAucun historique de lecture.",
+      "geometry": {
+        "x": 256,
+        "width": 1184,
+        "scrollWidth": 1184,
+        "viewport": 1440
+      },
+      "screenshot": "go-profile-empty-dark.png"
+    },
+    {
+      "label": "go-profile-partial-dark",
+      "url": "http://localhost:3330/users/qa-partial",
+      "errors": [],
+      "httpErrors": [],
+      "finalUrl": "http://localhost:3330/users/qa-partial",
+      "text": "PD\nProfil : Partial Data QA\n\nID Jellyfin : qa-partial\n\n🎁 Voir le JellyTrack Wrapped\nTemps de lecture\n0h\n\nCumul total\n\nDernière Act.: 9 oct. 2026, 13:56\n\nSession(s)\n1\n\n~2 min / session\n\nTop Genres\nAudit, Drama\n\nPréférences principales\n\nTaux de complétion\n2%\n\nComplétion moyenne\n\nPic d'Activité\nVen · 13h\n\nHeure la plus active\n\nMeilleure Série\n1 jours\n\nJours d'activité consécutifs\n\nContenu Unique\n1\n\n🎬 1 · 📺 0 · 🎵 0\n\nFormat favori\nMovie\n\nType de média principal\n\nLe Plus Visionné\nMovie de validation Audit principal\n\n1 sessions · 2 min\n\nClient favori\nN/A\n\nApplication la plus utilisée\n\nAppareil favori\nN/A\n\nPlateforme la plus utilisée\n\nActivité sur 30 jours\n\nVue sur le volume quotidien de lecture de cet utilisateur.\n\nActivité par Jour\n\nNombre de sessions par jour de la semaine.\n\nTaux de Complétion\n\nRatio sessions terminées vs abandonnées vs partielles.\n\nAucune donnée de durée\nActivité par Heure\n\nHeure de début des sessions sur la période.\n\nGenres préférés\n\nRépartition des genres les plus visionnés par cet utilisateur.\n\nFiche Technique\n\nIndicateurs de lecture et appareils préférés de l'utilisateur.\n\nAppareil ou client le plus utilisé\n\nUnknown Client\n\nDirect Play\n\n0%\n\nDébit moyen\n\n—\nHistorique de lecture\n\nHistorique complet agrégé des sessions démarrées. — 1 session\n\nFiltres sauvegardés\nColonnes\n↓ CSV\n↓ JSON\nMasquer Zappés (< 1m)\n☷ Filtres\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nRechercher\nDATE\n\tMÉDIA\n\tAPPLICATION\n\tRÉSOLUTION\n\tBITRATE AUDIO\n\tSTATUT\n\tDURÉE\n\n\n⌄\n9 oct.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\t—\t4K\t—\t\nUnknown\n\t2 min",
+      "geometry": {
+        "x": 256,
+        "width": 1184,
+        "scrollWidth": 1184,
+        "viewport": 1440
+      },
+      "screenshot": "go-profile-partial-dark.png"
+    },
+    {
+      "label": "go-standard-own-profile",
+      "url": "http://localhost:3330/users/qa-many",
+      "errors": [],
+      "httpErrors": [],
+      "finalUrl": "http://localhost:3330/users/qa-many",
+      "text": "MS\nProfil : Many Sessions QA\n\nID Jellyfin : qa-many\n\nTemps de lecture\n91.7h\n\nCumul total\n\nDernière Act.: 9 oct. 2026, 14:26\n\nSession(s)\n135\n\n~41 min / session\n\nTop Genres\nAudit, Drama\n\nPréférences principales\n\nTaux de complétion\n100%\n\nComplétion moyenne\n\nPic d'Activité\nVen · 13h\n\nHeure la plus active\n\nMeilleure Série\n38 jours\n\nJours d'activité consécutifs\n\nContenu Unique\n3\n\n🎬 1 · 📺 1 · 🎵 1\n\nFormat favori\nMovie\n\nType de média principal\n\nLe Plus Visionné\nMovie de validation Audit principal\n\n34 sessions · 3060 min\n\nClient favori\nJellyfin Web\n\nApplication la plus utilisée\n\nAppareil favori\nQA device\n\nPlateforme la plus utilisée\n\nActivité sur 30 jours\n\nVue sur le volume quotidien de lecture de cet utilisateur.\n\nActivité par Jour\n\nNombre de sessions par jour de la semaine.\n\nTaux de Complétion\n\nRatio sessions terminées vs abandonnées vs partielles.\n\nTerminé\nActivité par Heure\n\nHeure de début des sessions sur la période.\n\nGenres préférés\n\nRépartition des genres les plus visionnés par cet utilisateur.\n\nFiche Technique\n\nIndicateurs de lecture et appareils préférés de l'utilisateur.\n\nAppareil ou client le plus utilisé\n\nJellyfin Web\n\nDirect Play\n\n33%\n\nDébit moyen\n\n12.0 Mbps\nHistorique de lecture\n\nHistorique complet agrégé des sessions démarrées. — 135 sessions\n\nFiltres sauvegardés\nColonnes\n↓ CSV\n↓ JSON\nMasquer Zappés (< 1m)\n☷ Filtres\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nRechercher\nDATE\n\tMÉDIA\n\tAPPLICATION\n\tRÉSOLUTION\n\tBITRATE AUDIO\n\tSTATUT\n\tDURÉE\n\n\n⌄\n9 oct.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n9 oct.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n9 oct.\n\n00:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n8 oct.\n\n22:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n8 oct.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n8 oct.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n7 oct.\n\n23:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n7 oct.\n\n21:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n7 oct.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n7 oct.\n\n09:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n6 oct.\n\n22:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n6 oct.\n\n20:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n6 oct.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n\n⌄\n6 oct.\n\n08:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n5 oct.\n\n21:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n5 oct.\n\n19:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n5 oct.\n\n09:56\n\n\t\n▶\nMovie de validation Audit principal\n\tAndroid TV\t4K\t12 000 kbps\t\nAudio Transcodé\n\t1h 30m\n\n⌄\n5 oct.\n\n07:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n4 oct.\n\n20:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n4 oct.\n\n18:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n4 oct.\n\n08:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tFinamp\t1080p\t12 000 kbps\t\nDirectStream\n\t30 min\n\n⌄\n4 oct.\n\n06:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n3 oct.\n\n19:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n3 oct.\n\n17:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n3 oct.\n\n07:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tJellyfin Web\t—\t12 000 kbps\t\nDirectPlay\n\t3 min\n\n⌄\n3 oct.\n\n05:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n2 oct.\n\n18:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n2 oct.\n\n16:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n2 oct.\n\n06:56\n\n\t\n▶\nBook de validation Audit principal\n\tAndroid TV\tSD\t12 000 kbps\t\nAudio Transcodé\n\t40 min\n\n⌄\n2 oct.\n\n04:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n1 oct.\n\n17:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n1 oct.\n\n15:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n1 oct.\n\n05:56\n\n\t\n▶\nMovie de validation Audit principal\n\tFinamp\t4K\t12 000 kbps\t\nDirectStream\n\t1h 30m\n\n⌄\n1 oct.\n\n03:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n30 sept.\n\n16:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n30 sept.\n\n14:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n30 sept.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n30 sept.\n\n04:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tJellyfin Web\t1080p\t12 000 kbps\t\nDirectPlay\n\t30 min\n\n⌄\n30 sept.\n\n02:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n29 sept.\n\n15:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n29 sept.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n29 sept.\n\n03:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tAndroid TV\t—\t12 000 kbps\t\nAudio Transcodé\n\t3 min\n\n⌄\n29 sept.\n\n01:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n28 sept.\n\n14:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n28 sept.\n\n13:56\n\n\t\n▶\nMovie de validation Audit principal\n\tJellyfin Web\t4K\t12 000 kbps\t\nDirectPlay\n\t1h 30m\n\n⌄\n28 sept.\n\n11:56\n\n\t\n♫\nAudio de validation Audit principal\n\nArtiste Audit\n\n\tFinamp\t—\t12 000 kbps\t\nDirectStream\n\t3 min\n\n⌄\n28 sept.\n\n02:56\n\n\t\n▶\nBook de validation Audit principal\n\tFinamp\tSD\t12 000 kbps\t\nDirectStream\n\t40 min\n\n⌄\n28 sept.\n\n00:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n27 sept.\n\n12:56\n\n\t\n▶\nEpisode de validation Audit principal\n\tAndroid TV\t1080p\t12 000 kbps\t\nAudio Transcodé\n\t30 min\n\n⌄\n27 sept.\n\n10:56\n\n\t\n▶\nBook de validation Audit principal\n\tJellyfin Web\tSD\t12 000 kbps\t\nDirectPlay\n\t40 min\n1\n2\n3\n›\nPage 1 / 3",
+      "geometry": {
+        "x": 256,
+        "width": 1184,
+        "scrollWidth": 1184,
+        "viewport": 1440
+      },
+      "screenshot": "go-standard-own-profile.png"
+    }
+  ],
+  "checks": [
+    {
+      "name": "go-users-desktop-dark JS",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "users count9",
+      "ok": true
+    },
+    {
+      "name": "username search",
+      "ok": true
+    },
+    {
+      "name": "favorite-client search",
+      "ok": true
+    },
+    {
+      "name": "filter inactive30",
+      "ok": true,
+      "detail": {
+        "rows": "1\t\nEQ\nEmpty QA\n\t0 h\t0\t-\t\nInconnu\n\tJamais\t"
+      }
+    },
+    {
+      "name": "filter inactive90",
+      "ok": true,
+      "detail": {
+        "rows": "1\t\nEQ\nEmpty QA\n\t0 h\t0\t-\t\nInconnu\n\tJamais\t"
+      }
+    },
+    {
+      "name": "filter transcoders",
+      "ok": true,
+      "detail": {
+        "rows": "1\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t\n\n2\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t"
+      }
+    },
+    {
+      "name": "filter never",
+      "ok": true,
+      "detail": {
+        "rows": "1\t\nEQ\nEmpty QA\n\t0 h\t0\t-\t\nInconnu\n\tJamais\t"
+      }
+    },
+    {
+      "name": "filter all",
+      "ok": true,
+      "detail": {
+        "rows": "1\t\nMS\nMany Sessions QA\n\t91.7 h\t135\t\n67% DP\n/\n33% TC\n\t\nAndroid TV\n\t9 oct. 2026, 14:26\t\n\n2\t\nA\nauditadmin\n\t15.8 h\t22\t\n100% DP\n/\n0% TC\n\t\nFinamp\n\t6 oct. 2026, 07:30\t\n\n3\t\nA\nauditadmin\n\t15.8 h\t22\t\n100% DP\n/\n0% TC\n\t\nFinamp\n\t6 oct. 2026, 07:30\t\n\n4\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t\n\n5\t\nBA\nBob Audit\n\t14.3 h\t22\t\n0% DP\n/\n100% TC\n\t\nAndroid TV\n\t8 oct. 2026, 08:58\t\n\n6\t\nAA\nAlice Audit\n\t14.1 h\t22\t\n100% DP\n/\n0% TC\n\t\nJellyfin Web\n\t9 oct. 2026, 09:30\t\n\n7\t\nAA\nAlice Audit\n\t14.1 h\t22\t\n100% DP\n/\n0% TC\n\t\nJellyfin Web\n\t9 oct. 2026, 09:30\t\n\n8\t\nPD\nPartial Data QA\n\t0 h\t1\t\n100% DP\n/\n0% TC\n\t\nInconnu\n\t9 oct. 2026, 13:56\t\n\n9\t\nEQ\nEmpty QA\n\t0 h\t0\t-\t\nInconnu\n\tJamais\t"
+      }
+    },
+    {
+      "name": "empty search state",
+      "ok": true
+    },
+    {
+      "name": "JSON export9 real users",
+      "ok": true
+    },
+    {
+      "name": "profile link navigates",
+      "ok": true
+    },
+    {
+      "name": "go-profile-desktop-dark JS",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "go-users-mobile-dark JS",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "go-profile-mobile-dark JS",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "go-users-desktop-light JS",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "go-profile-desktop-light JS",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "go-profile-empty-dark JS",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "go-profile-partial-dark JS",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "go-standard-own-profile JS",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "standard own API",
+      "ok": true
+    },
+    {
+      "name": "standard other profile denied",
+      "ok": true
+    },
+    {
+      "name": "standard list denied",
+      "ok": true
+    }
+  ]
+}

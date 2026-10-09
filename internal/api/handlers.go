@@ -688,26 +688,30 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 	if limit > 200 {
 		limit = 200
 	}
+	var total int64
+	if err := h.db.QueryRowContext(r.Context(), `SELECT COUNT(*) FROM "User"`).Scan(&total); err != nil {
+		jsonError(w, 500, "Impossible de charger les utilisateurs.")
+		return
+	}
 	query := database.Bind(`
-		SELECT u."id", u."username", u."jellyfinUserId", u."lastActive", s."name",
+		SELECT u."id", u."username", u."jellyfinUserId", u."lastActive", s."name", u."serverId",
 		       COALESCE(SUM(p."durationWatched"), 0) AS "totalSeconds",
 		       COUNT(p."id") AS "sessionsCount",
 		       COALESCE(SUM(CASE WHEN LOWER(COALESCE(p."playMethod",'')) LIKE '%transcode%' THEN 1 ELSE 0 END), 0) AS "transcodes",
 		       COALESCE(SUM(CASE WHEN LOWER(COALESCE(p."playMethod",'')) NOT LIKE '%transcode%' AND p."id" IS NOT NULL THEN 1 ELSE 0 END), 0) AS "directPlays",
-		       (SELECT p2."clientName" FROM "PlaybackHistory" p2 WHERE p2."userId"=u."id" AND p2."clientName" IS NOT NULL GROUP BY p2."clientName" ORDER BY COUNT(*) DESC LIMIT 1) AS "favoriteClient",
-		       (SELECT MAX(COALESCE(p3."endedAt", p3."startedAt")) FROM "PlaybackHistory" p3 WHERE p3."userId"=u."id") AS "latestHistoryDate"
+		       (SELECT p2."clientName" FROM "PlaybackHistory" p2 WHERE p2."userId"=u."id" AND p2."durationWatched">=60 AND p2."clientName" IS NOT NULL AND p2."clientName"<>'' GROUP BY p2."clientName" ORDER BY COUNT(*) DESC, LOWER(p2."clientName") ASC LIMIT 1) AS "favoriteClient",
+		       (SELECT MAX(CASE WHEN p3."endedAt">p3."startedAt" THEN p3."endedAt" ELSE p3."startedAt" END) FROM "PlaybackHistory" p3 WHERE p3."userId"=u."id") AS "latestHistoryDate"
 		FROM "User" u
 		LEFT JOIN "Server" s ON s."id"=u."serverId"
 		LEFT JOIN "PlaybackHistory" p ON p."userId"=u."id" AND p."durationWatched">=60
-		WHERE u."isActive"=1
-		GROUP BY u."id", u."username", u."jellyfinUserId", u."lastActive", s."name"
+		GROUP BY u."id", u."username", u."jellyfinUserId", u."lastActive", s."name", u."serverId"
 		ORDER BY "totalSeconds" DESC, LOWER(u."username") ASC
 		LIMIT ? OFFSET ?
 	`, h.driver)
 
 	rows, err := h.db.QueryContext(r.Context(), query, limit, offset)
 	if err != nil {
-		basicRows, bErr := h.db.QueryContext(r.Context(), database.Bind(`SELECT u."id",u."username",u."jellyfinUserId",u."lastActive",s."name" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" WHERE u."isActive"=1 ORDER BY LOWER(u."username") LIMIT ? OFFSET ?`, h.driver), limit, offset)
+		basicRows, bErr := h.db.QueryContext(r.Context(), database.Bind(`SELECT u."id",u."username",u."jellyfinUserId",u."lastActive",s."name",u."serverId" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" ORDER BY LOWER(u."username") LIMIT ? OFFSET ?`, h.driver), limit, offset)
 		if bErr != nil {
 			jsonError(w, 500, "Impossible de charger les utilisateurs.")
 			return
@@ -715,26 +719,27 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 		defer basicRows.Close()
 		out := []map[string]any{}
 		for basicRows.Next() {
-			var id, name, jid string
+			var id, name, jid, serverID string
 			var active, server sql.NullString
-			if basicRows.Scan(&id, &name, &jid, &active, &server) == nil {
+			if basicRows.Scan(&id, &name, &jid, &active, &server, &serverID) == nil {
 				out = append(out, map[string]any{
-					"id": id, "username": name, "jellyfinUserId": jid, "lastActive": nullable(active), "server": nullable(server),
+					"id": id, "username": name, "jellyfinUserId": jid, "lastActive": nil, "server": nullable(server),
+					"serverId":   serverID,
 					"totalHours": 0.0, "sessionsCount": 0, "favoriteClient": "Inconnu", "transcodeCount": 0, "directPlayCount": 0, "transcodeRatio": 0,
 				})
 			}
 		}
-		jsonResponse(w, 200, map[string]any{"items": out, "users": out, "limit": limit, "offset": offset})
+		jsonResponse(w, 200, map[string]any{"items": out, "users": out, "total": total, "limit": limit, "offset": offset})
 		return
 	}
 	defer rows.Close()
 
 	out := []map[string]any{}
 	for rows.Next() {
-		var id, name, jid string
+		var id, name, jid, serverID string
 		var active, server, favClient, latestHistory sql.NullString
 		var totalSec, sessCount, tcCount, dpCount int64
-		if err := rows.Scan(&id, &name, &jid, &active, &server, &totalSec, &sessCount, &tcCount, &dpCount, &favClient, &latestHistory); err != nil {
+		if err := rows.Scan(&id, &name, &jid, &active, &server, &serverID, &totalSec, &sessCount, &tcCount, &dpCount, &favClient, &latestHistory); err != nil {
 			jsonError(w, 500, "Erreur de lecture.")
 			return
 		}
@@ -742,11 +747,11 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 		totalStreams := tcCount + dpCount
 		ratio := 0
 		if totalStreams > 0 {
-			ratio = int((tcCount * 100) / totalStreams)
+			ratio = int(math.Round(float64(tcCount) * 100 / float64(totalStreams)))
 		}
 
 		effLastActive := ""
-		if active.Valid {
+		if sessCount > 0 && active.Valid {
 			effLastActive = active.String
 		}
 		if sessCount > 0 && latestHistory.Valid && latestHistory.String != "" {
@@ -775,9 +780,14 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 			"directPlayCount": dpCount,
 			"transcodeRatio":  ratio,
 			"server":          nullable(server),
+			"serverId":        serverID,
 		})
 	}
-	jsonResponse(w, 200, map[string]any{"items": out, "users": out, "limit": limit, "offset": offset})
+	if rows.Err() != nil {
+		jsonError(w, 500, "Erreur de lecture.")
+		return
+	}
+	jsonResponse(w, 200, map[string]any{"items": out, "users": out, "total": total, "limit": limit, "offset": offset})
 }
 
 func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
@@ -819,19 +829,25 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 		userQuery += `u."id"=? AND u."serverId"=?`
 		userArgs = []any{id, authorizedServerID}
 	} else {
-		userQuery += `u."id"=? OR u."jellyfinUserId"=? OR LOWER(u."username")=LOWER(?) LIMIT 1`
+		userQuery += `u."id"=? OR u."jellyfinUserId"=? OR LOWER(u."username")=LOWER(?) ORDER BY u."createdAt" ASC,u."id" ASC LIMIT 1`
 	}
 	err := h.db.QueryRowContext(r.Context(), database.Bind(userQuery, h.driver), userArgs...).Scan(&dbUID, &username, &jid, &lastActive, &server, &accountServerID)
 	if err != nil {
 		jsonError(w, 404, "Utilisateur introuvable.")
 		return
 	}
-
-	var totalPlays, totalDuration int64
-	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM("durationWatched"),0) FROM "PlaybackHistory" WHERE "userId"=? AND "serverId"=?`, h.driver), dbUID, accountServerID).Scan(&totalPlays, &totalDuration)
+	for _, key := range []string{"dateFrom", "dateTo"} {
+		if raw := r.URL.Query().Get(key); raw != "" {
+			if _, err := time.Parse("2006-01-02", raw); err != nil {
+				jsonError(w, 400, "Date invalide.")
+				return
+			}
+		}
+	}
 
 	// Recent activity
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",m."title",m."type",m."libraryName" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."userId"=? AND p."serverId"=? ORDER BY p."startedAt" DESC LIMIT 20`, h.driver), dbUID, accountServerID)
+	profileClause, profileArgs := profileScope(r, dbUID, accountServerID)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",m."title",m."type",m."libraryName" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE `+profileClause+` ORDER BY p."startedAt" DESC LIMIT 20`, h.driver), profileArgs...)
 	recent := []map[string]any{}
 	if err == nil {
 		for rows.Next() {
@@ -848,12 +864,16 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 		rows.Close()
 	}
 
-	jsonResponse(w, 200, map[string]any{
-		"id": dbUID, "username": username, "jellyfinUserId": jid,
-		"lastActive": nullable(lastActive), "server": nullable(server),
-		"totalPlays": totalPlays, "totalDurationMs": totalDuration * 1000,
-		"recentActivity": recent,
-	})
+	profile, err := h.userProfileData(r, dbUID, accountServerID)
+	if err != nil {
+		jsonError(w, 500, "Impossible de charger le profil.")
+		return
+	}
+	profile["id"], profile["username"], profile["jellyfinUserId"] = dbUID, username, jid
+	profile["server"], profile["lastActive"] = nullable(server), nullable(lastActive)
+	profile["serverId"] = accountServerID
+	profile["recentActivity"] = recent
+	jsonResponse(w, 200, profile)
 }
 
 func (h *Handler) userActiveStream(w http.ResponseWriter, r *http.Request) {
@@ -885,19 +905,31 @@ func (h *Handler) userActiveStream(w http.ResponseWriter, r *http.Request) {
 	}
 	var stream map[string]any
 	var sid, playMethod, started string
-	var title, kind sql.NullString
+	var title, kind, client, device, itemID, parentID, artist, streamServer, state sql.NullString
 	var posTicks sql.NullInt64
-	query := `SELECT s."sessionId",s."playMethod",s."startedAt",s."positionTicks",m."title",m."type" FROM "ActiveStream" s LEFT JOIN "Media" m ON m."id"=s."mediaId" WHERE s."userId"=? OR s."userId" IN (SELECT "id" FROM "User" WHERE "jellyfinUserId"=? OR "id"=?) LIMIT 1`
+	var runtime sql.NullInt64
+	selectStream := `SELECT s."sessionId",s."playMethod",s."startedAt",s."positionTicks",m."title",m."type",s."clientName",s."deviceName",m."jellyfinMediaId",m."durationMs",m."parentId",m."artist",s."serverId",(SELECT t."eventType" FROM "TelemetryEvent" t WHERE t."playbackId"=s."playbackId" AND t."serverId"=s."serverId" AND LOWER(t."eventType") IN ('pause','resume') ORDER BY t."createdAt" DESC,t."id" DESC LIMIT 1) FROM "ActiveStream" s LEFT JOIN "Media" m ON m."id"=s."mediaId" WHERE `
+	query := selectStream + `(s."userId"=? OR s."userId" IN (SELECT "id" FROM "User" WHERE "jellyfinUserId"=? OR "id"=?)) ORDER BY s."startedAt" DESC LIMIT 1`
 	queryArgs := []any{id, id, id}
+	if ok && principal.IsAdmin() {
+		query = selectStream + `s."userId" IN (SELECT linked."id" FROM "User" linked WHERE LOWER(linked."username")=LOWER((SELECT seed."username" FROM "User" seed WHERE seed."id"=? OR seed."jellyfinUserId"=? OR LOWER(seed."username")=LOWER(?) ORDER BY seed."createdAt" ASC,seed."id" ASC LIMIT 1))) AND s."serverId"=(SELECT account."serverId" FROM "User" account WHERE account."id"=s."userId") ORDER BY s."startedAt" DESC LIMIT 1`
+	}
 	if ok && !principal.IsAdmin() {
-		query = `SELECT s."sessionId",s."playMethod",s."startedAt",s."positionTicks",m."title",m."type" FROM "ActiveStream" s LEFT JOIN "Media" m ON m."id"=s."mediaId" WHERE s."userId"=? AND s."serverId"=? LIMIT 1`
+		query = selectStream + `s."userId"=? AND s."serverId"=? ORDER BY s."startedAt" DESC LIMIT 1`
 		queryArgs = []any{authorizedAccount.ID, authorizedAccount.ServerID}
 	}
-	err := h.db.QueryRowContext(r.Context(), database.Bind(query, h.driver), queryArgs...).Scan(&sid, &playMethod, &started, &posTicks, &title, &kind)
+	err := h.db.QueryRowContext(r.Context(), database.Bind(query, h.driver), queryArgs...).Scan(&sid, &playMethod, &started, &posTicks, &title, &kind, &client, &device, &itemID, &runtime, &parentID, &artist, &streamServer, &state)
 	if err == nil {
+		progress := 0.0
+		if runtime.Int64 > 0 {
+			progress = math.Min(100, math.Max(0, float64(posTicks.Int64)/10000/float64(runtime.Int64)*100))
+		}
 		stream = map[string]any{
 			"sessionId": sid, "playMethod": playMethod, "startedAt": started,
 			"mediaTitle": title.String, "mediaType": kind.String, "positionTicks": posTicks.Int64,
+			"clientName": client.String, "deviceName": device.String, "itemId": itemID.String,
+			"progressPercent": progress, "isPaused": strings.EqualFold(state.String, "pause"),
+			"mediaSubtitle": h.profileMediaSubtitle(r, streamServer.String, kind.String, parentID.String, artist.String),
 		}
 	}
 	jsonResponse(w, 200, map[string]any{"stream": stream, "activeStream": stream})

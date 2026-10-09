@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "name": "actualSQLite telemetry5events",
+      "ok": true
+    },
+    {
+      "name": "inline5markers ungrouped",
+      "ok": true
+    },
+    {
+      "name": "legacyticks normalized600seconds",
+      "ok": true
+    },
+    {
+      "name": "timeline totalmedia2hours",
+      "ok": true
+    },
+    {
+      "name": "nested audiofromto labels",
+      "ok": true
+    },
+    {
+      "name": "speedfromto labels",
+      "ok": true
+    },
+    {
+      "name": "modal groups1500ms4markers",
+      "ok": true
+    },
+    {
+      "name": "pause/resumegroupcount2",
+      "ok": true
+    },
+    {
+      "name": "links native newtab",
+      "ok": true
+    },
+    {
+      "name": "copy temporalURL clipboard",
+      "ok": true,
+      "detail": {
+        "copied": "http://localhost:3330/media/jf-media-0?t=15",
+        "expected": "http://localhost:3330/media/jf-media-0?t=15"
+      }
+    },
+    {
+      "name": "runtimeerrors0",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

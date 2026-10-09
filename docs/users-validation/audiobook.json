@@ -1,0 +1,20 @@
+{
+  "checks": [
+    {
+      "name": "AudioBook matching filter1session",
+      "ok": true
+    },
+    {
+      "name": "AudioBook runtimecompletion50",
+      "ok": true
+    },
+    {
+      "name": "AudioBook runtime3600000",
+      "ok": true
+    },
+    {
+      "name": "AudioBook visible title",
+      "ok": true
+    }
+  ]
+}

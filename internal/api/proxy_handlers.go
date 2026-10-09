@@ -140,6 +140,14 @@ func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request) {
+	fallback := func() {
+		if r.URL.Query().Get("fallback") == "none" {
+			w.Header().Set("Cache-Control", "private, max-age=60")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		serveFallbackAvatar(w)
+	}
 	serverID := strings.TrimSpace(r.URL.Query().Get("serverId"))
 	userID := strings.TrimSpace(r.URL.Query().Get("userId"))
 	if userID == "" {
@@ -161,13 +169,13 @@ func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request)
 	}
 
 	if !srvURL.Valid || srvURL.String == "" || userID == "" {
-		serveFallbackAvatar(w)
+		fallback()
 		return
 	}
 
 	safeURL, err := security.ValidateSafeServerURL(srvURL.String)
 	if err != nil {
-		serveFallbackAvatar(w)
+		fallback()
 		return
 	}
 
@@ -184,7 +192,7 @@ func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request)
 
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, targetURL, nil)
 	if err != nil {
-		serveFallbackAvatar(w)
+		fallback()
 		return
 	}
 	if apiKey.Valid && apiKey.String != "" {
@@ -193,13 +201,13 @@ func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request)
 
 	resp, err := proxyHTTPClient.Do(req)
 	if err != nil {
-		serveFallbackAvatar(w)
+		fallback()
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		serveFallbackAvatar(w)
+		fallback()
 		return
 	}
 

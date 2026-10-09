@@ -4204,188 +4204,13 @@
       }
     },
 
-    // 7. Users List
+    // Historical user interfaces have isolated renderers and scoped styles.
     async users() {
-      const main = document.getElementById('app-main');
-      main.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1 class="page-title">
-              ${I18n.t('nav.users') || 'Utilisateurs'}
-            </h1>
-            <p class="page-subtitle">Comptes Jellyfin et profils d'écoute.</p>
-          </div>
-        </div>
-
-        <div class="users-grid" id="users-grid">
-          <div class="user-card skeleton" style="height: 160px;"></div>
-          <div class="user-card skeleton" style="height: 160px;"></div>
-          <div class="user-card skeleton" style="height: 160px;"></div>
-          <div class="user-card skeleton" style="height: 160px;"></div>
-        </div>
-      `;
-
-      try {
-        const data = await API.getJSON('/api/users?limit=100');
-        const grid = document.getElementById('users-grid');
-        if (!data.items || data.items.length === 0) {
-          grid.innerHTML = `
-            <div class="empty-state" style="grid-column: 1/-1;">
-              <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-              <span class="empty-state-title">Aucun utilisateur trouvé</span>
-              <span>Synchronisez votre serveur Jellyfin pour importer les utilisateurs.</span>
-            </div>`;
-          return;
-        }
-
-        grid.innerHTML = data.items.map((u) => `
-          <div class="user-card">
-            <div class="user-card-header">
-              <div class="user-card-avatar">${Utils.escapeHtml(u.username.slice(0, 2).toUpperCase())}</div>
-              <div style="min-width:0;">
-                <div class="user-card-name">
-                  <a href="/users/${u.id}" data-link style="color:inherit;">${Utils.escapeHtml(u.username)}</a>
-                </div>
-                <div class="user-card-server">${Utils.escapeHtml(u.server || 'Jellyfin')}</div>
-              </div>
-            </div>
-
-            <div class="user-card-last-active">
-              Dernière activité : <b>${u.lastActive ? Utils.timeAgo(u.lastActive) : 'Inconnue'}</b>
-            </div>
-
-            <div class="user-card-actions">
-              <a href="/users/${u.id}" data-link class="btn btn-secondary btn-sm" style="flex: 1; text-align: center;">
-                <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Profil
-              </a>
-              <a href="/wrapped/${u.id}" data-link class="btn btn-outline btn-sm" title="JellyTrack Wrapped">
-                🎉 Wrapped
-              </a>
-            </div>
-          </div>
-        `).join('');
-      } catch (e) {
-        Toast.error(e.message);
-      }
+      await window.UsersUI.render(document.getElementById('app-main'), { API, State, Utils, I18n, Router, Toast });
     },
 
-    // 8. User Detail
     async userDetail(userId) {
-      const main = document.getElementById('app-main');
-      main.innerHTML = `
-        <div class="skeleton" style="height: 80px; margin-bottom: 1.25rem;"></div>
-        <div class="stat-grid" style="margin-bottom: 1.5rem;">
-          <div class="stat-card skeleton" style="height: 120px;"></div>
-          <div class="stat-card skeleton" style="height: 120px;"></div>
-        </div>
-      `;
-
-      try {
-        const u = await API.getJSON(`/api/users/${encodeURIComponent(userId)}`);
-        main.innerHTML = `
-          <div class="page-header">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <div class="user-card-avatar" style="width: 56px; height: 56px; font-size: 1.3rem;">
-                ${Utils.escapeHtml(u.username.slice(0, 2).toUpperCase())}
-              </div>
-              <div>
-                <h1 class="page-title">${Utils.escapeHtml(u.username)}</h1>
-                <p class="page-subtitle">${Utils.escapeHtml(u.server || 'Jellyfin')} • Dernière activité : <b>${u.lastActive ? Utils.formatDateTime(u.lastActive) : 'Jamais'}</b></p>
-              </div>
-            </div>
-
-            <div class="page-actions">
-              <a href="/wrapped/${u.id}" data-link class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, #6366f1, #a855f7); border: none;">
-                🎉 Voir le Wrapped ${new Date().getFullYear()}
-              </a>
-            </div>
-          </div>
-
-          <!-- Active stream indicator if watching right now -->
-          <div id="user-active-stream-banner" class="stream-banner" style="display:none; margin-top: 1rem;">
-            <span class="pulse-dot"></span>
-            <span id="user-active-stream-text">Lecture en cours...</span>
-          </div>
-
-          <div class="stat-grid" style="margin-top: 1.5rem;">
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <span class="stat-card-label">Lectures totales</span>
-                <div class="stat-icon stat-icon-indigo">
-                  <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value">${Utils.formatNumber(u.totalPlays)}</div>
-              <div class="stat-card-footer">Sessions enregistrées</div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-card-header">
-                <span class="stat-card-label">Temps visionné</span>
-                <div class="stat-icon stat-icon-cyan">
-                  <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                </div>
-              </div>
-              <div class="stat-card-value">${Utils.formatMs(u.totalDurationMs)}</div>
-              <div class="stat-card-footer">Durée cumulée</div>
-            </div>
-          </div>
-
-          <!-- Recent sessions -->
-          <div class="card" style="margin-top: 1.5rem; padding: 0;">
-            <div class="card-header" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-subtle);">
-              <div class="card-title-group">
-                <div class="card-title">Dernières lectures de ${Utils.escapeHtml(u.username)}</div>
-                <div class="card-subtitle">Historique récent des flux et médias démarrés</div>
-              </div>
-            </div>
-            <div class="table-wrapper" style="border: none;">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Média</th>
-                    <th>Type</th>
-                    <th>Durée</th>
-                    <th>Méthode</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(u.recentActivity || []).length === 0 ? `
-                    <tr><td colspan="5" class="empty-state" style="padding: 2rem;">Aucune activité récente pour cet utilisateur.</td></tr>
-                  ` : (u.recentActivity || []).map((a) => `
-                    <tr>
-                      <td>
-                        <div style="font-weight: 600;">${Utils.escapeHtml(a.title)}</div>
-                      </td>
-                      <td><span class="badge badge-secondary">${Utils.escapeHtml(a.type || '—')}</span></td>
-                      <td style="white-space: nowrap;">${Utils.formatMs(a.durationMs)}</td>
-                      <td><span class="badge ${a.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}">${Utils.escapeHtml(a.playMethod || 'Stream')}</span></td>
-                      <td style="white-space: nowrap; font-size: 0.85rem; color: var(--muted-foreground);">${Utils.formatDateTime(a.startedAt)}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `;
-
-        // Check active stream
-        try {
-          const s = await API.getJSON(`/api/users/${encodeURIComponent(userId)}/active-stream`);
-          if (s.stream) {
-            const banner = document.getElementById('user-active-stream-banner');
-            const text = document.getElementById('user-active-stream-text');
-            if (banner && text) {
-              text.textContent = `En train de regarder : ${s.stream.mediaTitle || 'Média'} (${s.stream.playMethod || 'Stream'})`;
-              banner.style.display = 'flex';
-            }
-          }
-        } catch (e) {}
-      } catch (e) {
-        main.innerHTML = `<div class="empty-state"><h1>Utilisateur introuvable</h1><p>${Utils.escapeHtml(e.message)}</p></div>`;
-      }
+      await window.ProfileUI.render(document.getElementById('app-main'), userId, { API, State, Utils, I18n, Router, Toast, Modal });
     },
 
     // 9. Wrapped (Annual User Retrospective)
@@ -6563,7 +6388,11 @@
         document.body.classList.remove('is-auth-page');
       }
 
-      if (State.user && !State.user.isAdmin && (path === '/' || path === '/dashboard' || path === '/users' || path === '/logs' || path === '/newsletter' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
+      if (State.user && !State.user.isAdmin && path === '/users') {
+        this.navigate('/login', true);
+        return;
+      }
+      if (State.user && !State.user.isAdmin && (path === '/' || path === '/dashboard' || path === '/logs' || path === '/newsletter' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
         const uid = State.user.jellyfinUserId || State.user.id;
         if (uid) this.navigate('/users/' + encodeURIComponent(uid), true);
         else document.getElementById('app-main').innerHTML = '<div class="empty-state">Accès réservé à l’administration.</div>';
