@@ -3966,52 +3966,6 @@ html.dark .cal-lvl-4 { background: #39d353; }
   color: var(--foreground);
 }
 
-@media (min-width: 901px) {
-.sidebar.collapsed {
-  width: 76px !important;
-}
-
-.sidebar.collapsed .brand-title,
-.sidebar.collapsed .sidebar-search-box,
-.sidebar.collapsed .backup-server-banner,
-.sidebar.collapsed .nav-section-title,
-.sidebar.collapsed .nav-group-label,
-.sidebar.collapsed .nav-sub-list,
-.sidebar.collapsed .nav-item a span,
-.sidebar.collapsed .sidebar-lang-select,
-.sidebar.collapsed .sidebar-version-wrap,
-.sidebar.collapsed .user-name-mini {
-  display: none !important;
-}
-
-.sidebar.collapsed .sidebar-header {
-  padding: 1.25rem 0.5rem;
-  justify-content: center;
-}
-
-.sidebar.collapsed .sidebar-collapse-btn svg {
-  transform: rotate(180deg);
-}
-
-.sidebar.collapsed .nav-item a {
-  justify-content: center;
-  padding: 0.65rem 0;
-}
-
-.sidebar.collapsed ~ .main-wrapper {
-  margin-left: 76px !important;
-}
-
-.sidebar.collapsed .sidebar-footer {
-  padding: 0.75rem 0.5rem;
-}
-
-.sidebar.collapsed .user-controls-row,
-.sidebar.collapsed .sidebar-footer-actions {
-  flex-direction: column;
-}
-}
-
 /* Global Strict SVG icon size constraints on headers */
 .page-title svg,
 .page-header svg,

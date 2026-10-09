@@ -28,7 +28,15 @@
     "myProfile": "Mon Profil",
     "myWrapped": "Mon Wrapped",
     "library": "Bibliothèque",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "collapseMenu": "Réduire le menu",
+    "expandMenu": "Agrandir le menu",
+    "goExtras": "Compléments Go",
+    "goOverview": "Vue d’ensemble Go",
+    "goPlugin": "Configuration du plugin",
+    "goSystemHealth": "Diagnostic système Go",
+    "goLogHealth": "Diagnostic des journaux Go",
+    "goNewsletter": "Newsletter"
   },
   "about": {
     "description": "Tableau de bord d'analyse et de surveillance pour votre serveur Jellyfin. Suivez l'activité, les tendances et les performances de votre serveur multimédia en temps réel.",
@@ -51,7 +59,7 @@
     "linksCredits": "Liens & Crédits",
     "openSourceNote": "JellyTrack est un projet open-source réalisé avec ❤ pour la communauté Jellyfin.",
     "techCron": "Planificateur de tâches automatique",
-                        "technologies": "Technologies",
+    "technologies": "Technologies",
     "version": "Version {version}"
   },
   "charts": {
@@ -789,26 +797,6 @@
     "posterRotateMissing": "Aucun pool de Poster Rotator trouvé ou le pool est vide.",
     "multiVersionsTitle": "Versions & Éditions disponibles ({count})",
     "multiVersionsDesc": "Cet élément dispose de plusieurs montages ou versions alternatives sur votre serveur Jellyfin."
-  },
-  "nav": {
-    "cleanup": "Nettoyage",
-    "dashboard": "Tableau de bord",
-    "library": "Bibliothèque",
-    "logHealth": "Santé",
-    "logout": "Déconnexion",
-    "logs": "Journaux",
-    "myAccount": "Mon Compte",
-    "myProfile": "Mon Profil",
-    "myWrapped": "Mon Wrapped",
-    "recentlyAdded": "Ajoutés récemment",
-    "settings": "Paramètres",
-    "users": "Utilisateurs",
-    "serverCompare": "Comparaison de serveurs",
-    "pluginHealth": "Santé du plugin",
-    "backupServerActive": "Serveur de secours actif",
-    "backupServerDesc": "Connecté sur {server}. Le serveur principal est indisponible.",
-    "collapseMenu": "Réduire le menu",
-    "expandMenu": "Agrandir le menu"
   },
   "network": {
     "audioHDNotSupported": "Audio HD non supporté",

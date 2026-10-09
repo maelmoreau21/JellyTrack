@@ -179,6 +179,7 @@ func TestAllRequiredFrontendRoutesServed(t *testing.T) {
 		"/settings/scheduler/tasks",
 		"/admin/cleanup",
 		"/admin/health",
+		"/admin/system-health",
 		"/admin/log-health",
 		"/admin/plugin-health",
 		"/admin/server-compare",
@@ -205,6 +206,9 @@ func TestStaticAssetsAreServed(t *testing.T) {
 	}{
 		{"/assets/app.css", "text/css"},
 		{"/assets/app.js", "javascript"},
+		{"/assets/navigation.css", "text/css"},
+		{"/assets/navigation.js", "javascript"},
+		{"/assets/flags/fr.png", "image/png"},
 		{"/assets/chart.min.js", "javascript"},
 		{"/assets/logo.svg", "image/svg+xml"},
 		{"/assets/icon.svg", "image/svg+xml"},
@@ -225,4 +229,3 @@ func TestStaticAssetsAreServed(t *testing.T) {
 		}
 	}
 }
-

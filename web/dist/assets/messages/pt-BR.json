@@ -20,7 +20,7 @@
     "linksCredits": "Links & créditos",
     "openSourceNote": "JellyTrack é um projeto de código aberto feito com ❤ para a comunidade Jellyfin.",
     "techCron": "Agendador automático de tarefas",
-                        "technologies": "Tecnologias",
+    "technologies": "Tecnologias",
     "version": "Versão {version}"
   },
   "charts": {
@@ -770,7 +770,13 @@
     "backupServerDesc": "Conectado a {server}. O servidor principal está indisponível.",
     "collapseMenu": "Recolher barra lateral",
     "expandMenu": "Expandir barra lateral",
-    "myAccount": "Minha Conta"
+    "myAccount": "Minha Conta",
+    "goExtras": "Complementos Go",
+    "goOverview": "Visão geral Go",
+    "goPlugin": "Configuração do plugin",
+    "goSystemHealth": "Diagnóstico do sistema Go",
+    "goLogHealth": "Diagnóstico dos registros Go",
+    "goNewsletter": "Boletim"
   },
   "network": {
     "audioHDNotSupported": "Áudio HD não suportado",

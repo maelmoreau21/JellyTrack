@@ -12,6 +12,7 @@
   // =========================================================================
 
   const State = {
+    navigation: { multiServer: false, wrappedVisible: false },
     user: null, // { username, role, isAdmin, csrfToken }
     locale: localStorage.getItem('jt_locale') || 'fr',
     translations: {},
@@ -200,7 +201,8 @@
     async changeLocale(newLoc) {
       await this.loadLocale(newLoc);
       this.applyTranslationsToDOM();
-      Router.navigate(window.location.pathname, false, true);
+      window.JellyTrackNavigation.render();
+      Router.navigate(window.location.pathname + window.location.search, true, true);
     },
   };
 
@@ -315,6 +317,10 @@
         if (res.ok) {
           State.user = await res.json();
           State.user.isAdmin = String(State.user.role).toLowerCase() === 'admin';
+          try {
+            const context = await fetch('/api/navigation');
+            if (context.ok) State.navigation = await context.json();
+          } catch {}
           this.updateUserUI();
           return true;
         }
@@ -325,73 +331,7 @@
     },
 
     updateUserUI() {
-      const avatarEl = document.getElementById('sidebar-user-avatar');
-      const nameEl = document.getElementById('sidebar-user-name');
-      const userBadge = document.getElementById('sidebar-user-badge');
-      const userSection = document.getElementById('nav-user-section');
-      const adminSection = document.getElementById('nav-admin-section');
-      const myProfileItem = document.getElementById('nav-item-my-profile');
-      const myWrappedItem = document.getElementById('nav-item-my-wrapped');
-      const backupBanner = document.getElementById('backup-server-banner');
-      const backupDesc = document.getElementById('backup-server-desc');
-
-      if (State.user) {
-        const uname = State.user.username || 'User';
-        if (avatarEl) avatarEl.textContent = uname.slice(0, 2).toUpperCase();
-        if (nameEl) nameEl.textContent = uname;
-
-        const currentUid = State.user.jellyfinUserId === 'local-admin' ? null : (State.user.jellyfinUserId || State.user.id);
-
-        // User account & Wrapped links
-        if (userSection) {
-          userSection.style.display = currentUid ? 'block' : 'none';
-          if (currentUid) {
-            if (myProfileItem) {
-              myProfileItem.setAttribute('data-route', `/users/${currentUid}`);
-              const link = myProfileItem.querySelector('a');
-              if (link) link.setAttribute('href', `/users/${currentUid}`);
-            }
-            if (myWrappedItem) {
-              myWrappedItem.setAttribute('data-route', `/wrapped/${currentUid}`);
-              const link = myWrappedItem.querySelector('a');
-              if (link) link.setAttribute('href', `/wrapped/${currentUid}`);
-            }
-          }
-        }
-
-        // Click on user badge goes to profile
-        if (userBadge && currentUid) {
-          userBadge.style.cursor = 'pointer';
-          userBadge.onclick = () => Router.navigate(`/users/${currentUid}`);
-        }
-
-        // Admin section & admin-only elements
-        const isAdmin = Boolean(State.user.isAdmin);
-        if (adminSection) adminSection.style.display = isAdmin ? 'block' : 'none';
-        document.querySelectorAll('.nav-admin-only').forEach((el) => {
-          el.style.display = isAdmin ? '' : 'none';
-        });
-
-        // Backup Server Banner
-        if (backupBanner && State.user.authServerIsPrimary === false && State.user.authServerName) {
-          backupBanner.style.display = 'block';
-          if (backupDesc) {
-            backupDesc.textContent = I18n.t('nav.backupServerDesc', { server: State.user.authServerName }) ||
-              `Connecté sur ${State.user.authServerName}. Le serveur principal est indisponible.`;
-          }
-        } else if (backupBanner) {
-          backupBanner.style.display = 'none';
-        }
-      } else {
-        if (avatarEl) avatarEl.textContent = '?';
-        if (nameEl) nameEl.textContent = I18n.t('common.anonymous') || 'Invité';
-        if (userSection) userSection.style.display = 'none';
-        if (adminSection) adminSection.style.display = 'none';
-        if (backupBanner) backupBanner.style.display = 'none';
-        document.querySelectorAll('.nav-admin-only').forEach((el) => {
-          el.style.display = 'none';
-        });
-      }
+      window.JellyTrackNavigation.render();
     },
 
     async login(username, password, rememberMe = false) {
@@ -406,7 +346,7 @@
       }
       State.user = data;
       State.user.isAdmin = String(State.user.role).toLowerCase() === 'admin';
-      this.updateUserUI();
+      await this.checkSession();
       return data;
     },
 
@@ -416,7 +356,7 @@
       } catch (e) {}
       State.user = null;
       this.updateUserUI();
-      Router.navigate('/login');
+      Router.navigate('/login?logout=1');
     },
   };
 
@@ -458,104 +398,6 @@
     closeAction() {
       const modal = document.getElementById('action-modal');
       if (modal) modal.classList.remove('open');
-    },
-  };
-
-  const SearchDialog = {
-    init() {
-      const trigger = document.getElementById('search-trigger-btn');
-      const sidebarTrigger = document.getElementById('sidebar-search-trigger');
-      const modal = document.getElementById('search-modal');
-      const closeBtn = document.getElementById('search-modal-close');
-      const input = document.getElementById('search-modal-input');
-      const resultsEl = document.getElementById('search-modal-results');
-
-      const openSearch = () => {
-        if (!modal) return;
-        modal.classList.add('open');
-        setTimeout(() => input && input.focus(), 100);
-      };
-
-      if (trigger) {
-        trigger.addEventListener('click', openSearch);
-      }
-      if (sidebarTrigger) {
-        sidebarTrigger.addEventListener('click', openSearch);
-      }
-
-      if (closeBtn) {
-        closeBtn.addEventListener('click', () => modal.classList.remove('open'));
-      }
-
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('open');
-      });
-      resultsEl.addEventListener('click', e => {
-        if (e.target.closest('a[data-link]')) modal.classList.remove('open');
-      });
-
-      window.addEventListener('keydown', (e) => {
-        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-          e.preventDefault();
-          modal.classList.add('open');
-          setTimeout(() => input.focus(), 100);
-        } else if (e.key === 'Escape' && modal.classList.contains('open')) {
-          modal.classList.remove('open');
-        }
-      });
-
-      const onSearch = Utils.debounce(async () => {
-        const query = input.value.trim();
-        if (query.length < 2) {
-          resultsEl.innerHTML = '';
-          return;
-        }
-        resultsEl.innerHTML = '<div class="skeleton" style="height: 60px;"></div>';
-        try {
-          const data = await API.getJSON(`/api/search?q=${encodeURIComponent(query)}`);
-          let html = '';
-
-          if ((!data.media || data.media.length === 0) && (!data.users || data.users.length === 0)) {
-            resultsEl.innerHTML = `<div class="empty-state" style="padding: 1.5rem;"><p>${I18n.t('common.noResults') || 'Aucun résultat'}</p></div>`;
-            return;
-          }
-
-          if (data.media && data.media.length > 0) {
-            html += `<div style="font-size:0.75rem; font-weight:700; color:var(--muted-foreground); text-transform:uppercase;">Médias</div>`;
-            data.media.forEach((m) => {
-              html += `
-                <a href="/media/${m.id}" class="card" data-link style="padding: 0.65rem; display: flex; align-items: center; gap: 0.75rem;">
-                  <div style="width: 32px; height: 48px; background: var(--surface-nested); border-radius: 4px; overflow: hidden; flex-shrink: 0;">
-                    ${m.jellyfinMediaId ? `<img src="/api/jellyfin/image?id=${m.jellyfinMediaId}&type=Primary&maxWidth=100" style="width:100%; height:100%; object-fit:cover;">` : ''}
-                  </div>
-                  <div style="flex: 1; min-width: 0;">
-                    <div style="font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${Utils.escapeHtml(m.title)}</div>
-                    <div style="font-size: 0.75rem; color: var(--muted-foreground);">${Utils.escapeHtml(m.type)} ${m.subtitle ? '• ' + Utils.escapeHtml(m.subtitle) : ''}</div>
-                  </div>
-                </a>
-              `;
-            });
-          }
-
-          if (data.users && data.users.length > 0) {
-            html += `<div style="font-size:0.75rem; font-weight:700; color:var(--muted-foreground); text-transform:uppercase; margin-top:0.5rem;">Utilisateurs</div>`;
-            data.users.forEach((u) => {
-              html += `
-                <a href="/users/${u.id}" class="card" data-link style="padding: 0.65rem; display: flex; align-items: center; gap: 0.75rem;">
-                  <div class="user-avatar-mini" style="width: 32px; height: 32px;">${Utils.escapeHtml(u.username.slice(0, 2).toUpperCase())}</div>
-                  <div style="font-weight: 600; font-size: 0.88rem;">${Utils.escapeHtml(u.username)}</div>
-                </a>
-              `;
-            });
-          }
-
-          resultsEl.innerHTML = html;
-        } catch (e) {
-          resultsEl.innerHTML = `<p style="color:var(--destructive); font-size:0.85rem;">Erreur de recherche.</p>`;
-        }
-      }, 250);
-
-      input.addEventListener('input', onSearch);
     },
   };
 
@@ -4675,35 +4517,16 @@
     },
 
     mediaNav(active) {
-      return `
-        <nav class="media-tabs-nav">
-          <a href="/media" data-link class="media-tab-link ${active === 'media' ? 'active' : ''}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
-            <span>${I18n.t('media.allMedia') || 'Tout le catalogue'}</span>
-          </a>
-          <a href="/media/popular" data-link class="media-tab-link ${active === 'popular' ? 'active' : ''}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-            <span>${I18n.t('media.popularTab') || 'Top Contenus'}</span>
-          </a>
-          <a href="/media/analysis" data-link class="media-tab-link ${active === 'analysis' ? 'active' : ''}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-            <span>${I18n.t('media.deepAnalysisTitle') || 'Analyses Approfondies'}</span>
-          </a>
-          <a href="/media/collections" data-link class="media-tab-link ${active === 'collections' ? 'active' : ''}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
-            <span>${I18n.t('media.libraries') || 'Bibliothèques'}</span>
-          </a>
-        </nav>
-      `;
+      return window.JellyTrackNavigation.mediaTabs(active);
     },
 
     // 10. Media Catalog & Overview
     async media(options = {}) {
       let { type = '', sort = 'title', artist = '', q = new URLSearchParams(window.location.search).get('q') || '' } = typeof options === 'string' ? { type: options } : (options || {});
-      const activeNav = sort === 'popular' ? 'popular' : 'media';
+      const activeNav = window.location.pathname === '/media/popular' ? 'popular' : ['/media', '/media/all'].includes(window.location.pathname) ? 'media' : '';
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        ${Pages.mediaNav(activeNav)}
+        ${window.location.pathname.startsWith('/media') ? Pages.mediaNav(activeNav) : ''}
         <div class="page-header">
           <div>
             <h1 class="page-title">
@@ -4866,11 +4689,12 @@
     // 11. Media Detail Page
     async mediaDetail(mediaId) {
       const main = document.getElementById('app-main');
-      main.innerHTML = `<div class="skeleton" style="height: 380px; border-radius: var(--radius-xl);"></div>`;
+      main.innerHTML = `${Pages.mediaNav('')}<div class="skeleton" style="height: 380px; border-radius: var(--radius-xl);"></div>`;
 
       try {
         const m = await API.getJSON(`/api/media/${encodeURIComponent(mediaId)}`);
         main.innerHTML = `
+          ${Pages.mediaNav('')}
           <div class="card" style="display: flex; gap: 2.25rem; flex-wrap: wrap; padding: 2rem;">
             <div style="width: 240px; aspect-ratio: 2/3; border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-nested); flex-shrink: 0; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
               ${m.jellyfinMediaId
@@ -4968,7 +4792,7 @@
           }
         });
       } catch (e) {
-        main.innerHTML = `<div class="empty-state"><h1>Média introuvable</h1><p>${Utils.escapeHtml(e.message)}</p></div>`;
+        main.innerHTML = `${Pages.mediaNav('')}<div class="empty-state"><h1>Média introuvable</h1><p>${Utils.escapeHtml(e.message)}</p></div>`;
       }
     },
 
@@ -5223,6 +5047,7 @@
       const activeTab = subpage.startsWith('scheduler') ? 'scheduler' : (subpage.startsWith('plugin/security') ? 'plugin/security' : subpage);
 
       main.innerHTML = `
+        ${window.JellyTrackNavigation.settingsTabs(window.location.pathname)}
         <div class="page-header">
           <div>
             <h1 class="page-title">
@@ -5233,30 +5058,10 @@
           </div>
         </div>
 
-        <div class="segmented-control" id="settings-tabs" style="flex-wrap: wrap; margin-top: 1rem; gap: 0.25rem;">
-          <button class="segment-btn ${activeTab === 'overview' ? 'active' : ''}" data-sub="overview">Vue d’ensemble</button>
-          <button class="segment-btn ${activeTab === 'jellyfin' ? 'active' : ''}" data-sub="jellyfin">Serveurs Jellyfin</button>
-          <button class="segment-btn ${activeTab === 'media' ? 'active' : ''}" data-sub="media">Médias & Règles</button>
-          <button class="segment-btn ${activeTab === 'network' ? 'active' : ''}" data-sub="network">Réseau</button>
-          <button class="segment-btn ${activeTab === 'dataBackups' ? 'active' : ''}" data-sub="dataBackups">Sauvegardes</button>
-          <button class="segment-btn ${activeTab === 'sso' ? 'active' : ''}" data-sub="sso">Authentification SSO</button>
-          <button class="segment-btn ${activeTab === 'notifications' ? 'active' : ''}" data-sub="notifications">Notifications Discord</button>
-          <button class="segment-btn ${activeTab === 'plugin' ? 'active' : ''}" data-sub="plugin">Plugin Jellyfin</button>
-          <button class="segment-btn ${activeTab === 'plugin/security' ? 'active' : ''}" data-sub="plugin/security">Sécurité Plugin</button>
-          <button class="segment-btn ${activeTab === 'scheduler' ? 'active' : ''}" data-sub="scheduler">Tâches & Cron</button>
-        </div>
-
         <div id="settings-content" style="margin-top: 1.5rem;">
           <div class="skeleton" style="height: 250px;"></div>
         </div>
       `;
-
-      document.querySelectorAll('#settings-tabs .segment-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const sub = btn.getAttribute('data-sub');
-          Router.navigate(`/settings/${sub}`);
-        });
-      });
 
       const container = document.getElementById('settings-content');
 
@@ -6017,7 +5822,7 @@
 
       // Subpage 10: Scheduler (Schedules & Tasks)
       else if (subpage.startsWith('scheduler')) {
-        const isSchedules = subpage === 'scheduler/schedules';
+        // Historical scheduler presents both sections in one page.
 
         try {
           const s = await API.getJSON('/api/settings').catch(() => ({}));
@@ -6029,13 +5834,7 @@
 
           container.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:1.25rem; max-width:840px;">
-              <!-- Scheduler Sub-tabs -->
-              <div class="segmented-control" style="align-self:flex-start;">
-                <button class="segment-btn ${!isSchedules ? 'active' : ''}" id="sched-tab-tasks">⚡ Exécution Manuelle</button>
-                <button class="segment-btn ${isSchedules ? 'active' : ''}" id="sched-tab-schedules">🕒 Intervalles Automatiques (Cron)</button>
-              </div>
-
-              ${isSchedules ? `
+              ${`
                 <!-- Schedules Form -->
                 <div class="card">
                   <div class="card-header">
@@ -6060,7 +5859,8 @@
                     <button type="submit" class="btn btn-primary" style="align-self:flex-start;">Enregistrer les intervalles</button>
                   </form>
                 </div>
-              ` : `
+              `}
+              ${`
                 <!-- Manual Tasks Cards -->
                 <div class="card">
                   <div class="card-header">
@@ -6112,13 +5912,10 @@
             </div>
           `;
 
-          document.getElementById('sched-tab-tasks')?.addEventListener('click', () => {
-            Router.navigate('/settings/scheduler/tasks');
-          });
-
-          document.getElementById('sched-tab-schedules')?.addEventListener('click', () => {
-            Router.navigate('/settings/scheduler/schedules');
-          });
+          // Retain existing forms and handlers, in main's tasks -> schedules order.
+          const schedules = container.querySelector('#form-scheduler-intervals')?.closest('.card');
+          if (schedules) schedules.parentElement.appendChild(schedules);
+          window.JellyTrackNavigation.schedulerWrapped(container, s);
 
           document.getElementById('form-scheduler-intervals')?.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -6277,7 +6074,8 @@
             try {
               await API.postJSON('/api/admin/integrity-cleanup', {});
               Toast.success('Nettoyage des sessions orphelines terminé !');
-              Pages.health('system');
+              if (window.location.pathname === '/admin/health') window.JellyTrackNavigation.healthPage(sub => Pages.health(sub), 'logs');
+              else Pages.health('system');
             } catch (err) {
               Toast.error(err.message);
             }
@@ -6448,7 +6246,6 @@
     async serverCompare() {
       const main = document.getElementById('app-main');
       main.innerHTML = `
-        ${Pages.adminNav('server-compare')}
         <div class="page-header">
           <div>
             <h1 class="page-title">
@@ -6728,6 +6525,7 @@
       const oldMain = document.getElementById('app-main');
       if (oldMain) oldMain.replaceWith(oldMain.cloneNode(false));
       const path = window.location.pathname || '/';
+      const routeChanged = State.currentPath !== path;
       State.currentPath = path;
 
       // Parity route aliases & redirects
@@ -6735,8 +6533,8 @@
         this.navigate('/media/analysis', true);
         return;
       }
-      if (path === '/settings/network') {
-        this.navigate('/settings/jellyfin', true);
+      if (path === '/settings') {
+        this.navigate('/settings/jellyfin' + window.location.search, true);
         return;
       }
       if (path === '/wrapped') {
@@ -6747,58 +6545,13 @@
         }
       }
 
-      // Update sidebar active states
-      const currentUid = State.user?.jellyfinUserId || State.user?.id;
-
-      document.querySelectorAll('.nav-item, .nav-sub-item').forEach((item) => {
-        const r = item.getAttribute('data-route');
-        if (!r) return;
-        let matches = false;
-
-        if (r === '/') {
-          matches = (path === '/');
-        } else if (r === '/users/me' || (currentUid && r === `/users/${currentUid}`)) {
-          matches = Boolean(currentUid && (path === `/users/${currentUid}` || path === '/users/me'));
-        } else if (r === '/wrapped/me' || (currentUid && r === `/wrapped/${currentUid}`)) {
-          matches = Boolean(currentUid && (path.startsWith(`/wrapped/${currentUid}`) || path.startsWith('/wrapped/me')));
-        } else if (r === '/media') {
-          matches = (path === '/media' || path === '/media/all');
-        } else if (r === '/media/all') {
-          matches = (path === '/media/all' || path === '/media');
-        } else if (r === '/settings') {
-          matches = (path === '/settings' || path === '/settings/overview');
-        } else if (r === '/settings/scheduler') {
-          matches = (path === '/settings/scheduler');
-        } else if (r === '/users') {
-          matches = (path === '/users' || (path.startsWith('/users/') && (!currentUid || path !== `/users/${currentUid}`)));
-        } else {
-          matches = (path === r || (path.startsWith(r + '/') && !r.startsWith('/users') && !r.startsWith('/wrapped')));
-        }
-
-        if (matches) {
-          item.classList.add('active');
-          const group = item.closest('.nav-item-group');
-          if (group && group !== item) group.classList.add('child-active');
-        } else {
-          item.classList.remove('active');
-        }
-      });
-
-      // Clear child-active if no sub-item in group is active
-      document.querySelectorAll('.nav-item-group').forEach((group) => {
-        if (!group.querySelector('.nav-sub-item.active')) {
-          group.classList.remove('child-active');
-        }
-      });
-
-      // Close mobile drawer and backdrop on route change
-      const sidebar = document.getElementById('app-sidebar');
-      if (sidebar) sidebar.classList.remove('mobile-open');
-      const backdrop = document.getElementById('sidebar-backdrop');
-      if (backdrop) backdrop.classList.remove('active');
+      window.JellyTrackNavigation.updateRoute();
+      if (routeChanged) window.JellyTrackNavigation.closeMobile();
+      window.JellyTrackNavigation.closeSearch(false);
 
       // Scroll top
       window.scrollTo(0, 0);
+      if (routeChanged) document.querySelector('.main-wrapper').scrollTo(0, 0);
 
       // Auth protection guard
       if (!State.user && path !== '/login' && path !== '/setup') {
@@ -6810,7 +6563,7 @@
         document.body.classList.remove('is-auth-page');
       }
 
-      if (State.user && !State.user.isAdmin && (path === '/' || path === '/dashboard' || path === '/users' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
+      if (State.user && !State.user.isAdmin && (path === '/' || path === '/dashboard' || path === '/users' || path === '/logs' || path === '/newsletter' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
         const uid = State.user.jellyfinUserId || State.user.id;
         if (uid) this.navigate('/users/' + encodeURIComponent(uid), true);
         else document.getElementById('app-main').innerHTML = '<div class="empty-state">Accès réservé à l’administration.</div>';
@@ -6859,6 +6612,8 @@
         const sub = rest || 'overview';
         Pages.settings(sub);
       } else if (path === '/admin/health') {
+        window.JellyTrackNavigation.healthPage(sub => Pages.health(sub));
+      } else if (path === '/admin/system-health') {
         Pages.health('system');
       } else if (path === '/admin/plugin-health') {
         Pages.health('plugin');
@@ -6881,7 +6636,14 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize Theme
+    window.JellyTrackNavigation.init({
+      user: () => State.user, context: () => State.navigation, locale: () => State.locale,
+      t: (key, params) => I18n.t(key, params), escape: Utils.escapeHtml,
+      getJSON: url => API.getJSON(url), postJSON: (url, body) => API.postJSON(url, body),
+      refreshContext: async () => { State.navigation = await API.getJSON('/api/navigation'); }, changeLocale: locale => I18n.changeLocale(locale),
+    });
     Theme.init();
+    new MutationObserver(() => window.JellyTrackNavigation.updateTheme()).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
     // 2. Initialize i18n
     await I18n.init();
@@ -6909,6 +6671,8 @@
         collapseBtn.addEventListener('click', () => {
           sidebar.classList.toggle('collapsed');
           const isCollapsed = sidebar.classList.contains('collapsed');
+          window.JellyTrackNavigation.closeSearch(false);
+          window.JellyTrackNavigation.updateRoute();
           try {
             localStorage.setItem('jellytrack_sidebar_collapsed', isCollapsed ? 'true' : 'false');
           } catch (e) {}
@@ -6922,6 +6686,7 @@
     if (mobileBtn && sidebar) {
       mobileBtn.addEventListener('click', () => {
         const isOpen = sidebar.classList.toggle('mobile-open');
+        mobileBtn.setAttribute('aria-expanded', String(isOpen));
         if (backdrop) {
           if (isOpen) backdrop.classList.add('active');
           else backdrop.classList.remove('active');
@@ -6930,8 +6695,7 @@
     }
     if (backdrop && sidebar) {
       backdrop.addEventListener('click', () => {
-        sidebar.classList.remove('mobile-open');
-        backdrop.classList.remove('active');
+        window.JellyTrackNavigation.closeMobile();
       });
     }
 
@@ -6964,8 +6728,8 @@
       Router.navigate('/');
     });
 
-    // 3. Initialize Global Search Dialog
-    SearchDialog.init();
+    // 3. Update historical sidebar controls after loading translations.
+    window.JellyTrackNavigation.render();
 
     // 4. Verify user session
     await Auth.checkSession();

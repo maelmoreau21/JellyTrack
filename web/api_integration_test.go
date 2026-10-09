@@ -36,7 +36,7 @@ func TestFrontendAPIAuthenticationAndAdminPermissions(t *testing.T) {
 		t.Fatalf("login status %d", response.Code)
 	}
 	cookie := response.Result().Cookies()[0]
-	for _, path := range []string{"/api/dashboard", "/api/stats/deep", "/api/stats/granular", "/api/stats/network", "/api/users", "/api/media", "/api/media/collections", "/api/history", "/api/search?q=audit", "/api/hardware", "/api/admin/health", "/api/admin/security/overview", "/api/admin/security/audit", "/api/admin/server-compare", "/api/settings", "/api/settings/jellyfin-servers", "/api/settings/sso", "/api/streams", "/api/newsletter", "/api/heatmap-detail", "/api/predictions"} {
+	for _, path := range []string{"/api/navigation", "/api/admin/cleanup", "/api/dashboard", "/api/stats/deep", "/api/stats/granular", "/api/stats/network", "/api/users", "/api/media", "/api/media/collections", "/api/history", "/api/search?q=audit", "/api/hardware", "/api/admin/health", "/api/admin/security/overview", "/api/admin/security/audit", "/api/admin/server-compare", "/api/settings", "/api/settings/jellyfin-servers", "/api/settings/sso", "/api/streams", "/api/newsletter", "/api/heatmap-detail", "/api/predictions"} {
 		t.Run(path, func(t *testing.T) {
 			anonymous := httptest.NewRecorder()
 			handler.ServeHTTP(anonymous, httptest.NewRequest("GET", path, nil))
@@ -81,7 +81,7 @@ func TestFrontendAPIAuthenticationAndAdminPermissions(t *testing.T) {
 	if _, err := db.Exec(`UPDATE "AuthSession" SET "role"='user'`); err != nil {
 		t.Fatal(err)
 	}
-	for _, path := range []string{"/api/users", "/api/settings", "/api/streams", "/api/hardware", "/api/admin/health", "/api/stats/deep"} {
+	for _, path := range []string{"/api/admin/cleanup", "/api/users", "/api/settings", "/api/streams", "/api/hardware", "/api/admin/health", "/api/stats/deep"} {
 		request := httptest.NewRequest("GET", path, nil)
 		request.AddCookie(cookie)
 		rec := httptest.NewRecorder()
@@ -89,6 +89,13 @@ func TestFrontendAPIAuthenticationAndAdminPermissions(t *testing.T) {
 		if rec.Code != 403 {
 			t.Fatalf("ordinary user %s status %d", path, rec.Code)
 		}
+	}
+	userNavigation := httptest.NewRequest("GET", "/api/navigation", nil)
+	userNavigation.AddCookie(cookie)
+	userNavigationResponse := httptest.NewRecorder()
+	handler.ServeHTTP(userNavigationResponse, userNavigation)
+	if userNavigationResponse.Code != 200 {
+		t.Fatalf("user navigation context status %d", userNavigationResponse.Code)
 	}
 	if _, err := db.Exec(`UPDATE "AuthSession" SET "role"='admin'`); err != nil {
 		t.Fatal(err)

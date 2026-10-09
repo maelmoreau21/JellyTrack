@@ -44,6 +44,7 @@ func New(db *sql.DB, driver string, pluginHandler ...http.Handler) *Handler {
 func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.Handler) http.Handler) {
 	// Standard user session protected routes
 	userRoutes := map[string]http.HandlerFunc{
+		"GET /api/navigation":               h.navigation,
 		"GET /api/dashboard":                h.dashboard,
 		"GET /api/users/{id}":               h.userDetail,
 		"GET /api/users/{id}/active-stream": h.userActiveStream,
@@ -63,6 +64,7 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 
 	// Admin protected routes
 	adminRoutes := map[string]http.HandlerFunc{
+		"GET /api/admin/cleanup":                         h.navigationCleanup,
 		"GET /api/users":                                 h.users,
 		"GET /api/hardware":                              h.hardware,
 		"GET /api/admin/health":                          h.adminHealth,

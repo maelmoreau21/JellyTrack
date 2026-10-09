@@ -16,7 +16,7 @@
     "healthAndMaintenance": "Health & Diagnostics",
     "settings": "Settings",
     "health": "System Health",
-    "logHealth": "Health",
+    "logHealth": "Log health",
     "serverCompare": "Server Compare",
     "cleanup": "Cleanup",
     "pluginHealth": "Plugin Health",
@@ -28,7 +28,15 @@
     "myProfile": "My Profile",
     "myWrapped": "My Wrapped",
     "library": "Library",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "collapseMenu": "Collapse sidebar",
+    "expandMenu": "Expand sidebar",
+    "goExtras": "Go additions",
+    "goOverview": "Go overview",
+    "goPlugin": "Plugin configuration",
+    "goSystemHealth": "Go system diagnostics",
+    "goLogHealth": "Go log diagnostics",
+    "goNewsletter": "Newsletter"
   },
   "about": {
     "description": "Analytics and monitoring dashboard for your Jellyfin server. Track activity, trends and performance of your media server in real time.",
@@ -51,7 +59,7 @@
     "linksCredits": "Links & Credits",
     "openSourceNote": "JellyTrack is an open-source project made with ❤ for the Jellyfin community.",
     "techCron": "Automatic task scheduler",
-                        "technologies": "Technologies",
+    "technologies": "Technologies",
     "version": "Version {version}"
   },
   "charts": {
@@ -789,26 +797,6 @@
     "posterRotateMissing": "No Poster Rotator pool found, or the pool is empty.",
     "multiVersionsTitle": "Available Versions & Editions ({count})",
     "multiVersionsDesc": "This item has multiple cuts or alternate versions available on your Jellyfin server."
-  },
-  "nav": {
-    "cleanup": "Cleanup",
-    "dashboard": "Dashboard",
-    "library": "Library",
-    "logHealth": "Log health",
-    "logout": "Sign Out",
-    "logs": "Logs",
-    "myAccount": "My Account",
-    "myProfile": "My Profile",
-    "myWrapped": "My Wrapped",
-    "recentlyAdded": "Recently Added",
-    "settings": "Settings",
-    "users": "Users",
-    "serverCompare": "Server Compare",
-    "pluginHealth": "Plugin Health",
-    "backupServerActive": "Backup server active",
-    "backupServerDesc": "Connected to {server}. The primary server is unavailable.",
-    "collapseMenu": "Collapse sidebar",
-    "expandMenu": "Expand sidebar"
   },
   "network": {
     "audioHDNotSupported": "HD audio not supported",

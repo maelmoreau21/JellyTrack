@@ -20,7 +20,7 @@
     "linksCredits": "Links & Credits",
     "openSourceNote": "JellyTrack ist ein Open-Source-Projekt, mit ❤ für die Jellyfin-Community erstellt.",
     "techCron": "Automatischer Aufgabenplaner",
-                        "technologies": "Technologien",
+    "technologies": "Technologien",
     "version": "Version {version}"
   },
   "charts": {
@@ -770,7 +770,13 @@
     "backupServerDesc": "Verbunden mit {server}. Der primäre Server ist nicht verfügbar.",
     "collapseMenu": "Seitenleiste einklappen",
     "expandMenu": "Seitenleiste ausklappen",
-    "myAccount": "Mein Konto"
+    "myAccount": "Mein Konto",
+    "goExtras": "Go-Ergänzungen",
+    "goOverview": "Go-Übersicht",
+    "goPlugin": "Plugin-Konfiguration",
+    "goSystemHealth": "Go-Systemdiagnose",
+    "goLogHealth": "Go-Protokolldiagnose",
+    "goNewsletter": "Newsletter"
   },
   "network": {
     "audioHDNotSupported": "HD audio not supported",

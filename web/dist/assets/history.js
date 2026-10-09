@@ -191,6 +191,8 @@
       });
       let systemLoaded = false;
       const activateTab = async system => {
+        params.set('tab', system ? 'system' : 'application');
+        window.history.replaceState({}, '', '/logs?' + params.toString());
         find('#history-playback-panel').hidden = system;
         find('#history-system-panel').hidden = !system;
         for (const [id, selected] of [['#history-tab-playback', !system], ['#history-tab-system', system]]) {
@@ -221,6 +223,7 @@
       };
       listen(find('#history-tab-playback'), 'click', () => activateTab(false));
       listen(find('#history-tab-system'), 'click', () => activateTab(true));
+      if (params.get('tab') === 'system' && isAdmin) await activateTab(true);
       await load();
     },
   };

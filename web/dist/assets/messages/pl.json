@@ -20,7 +20,7 @@
     "linksCredits": "Linki",
     "openSourceNote": "JellyTrack to projekt społecznościowy stworzony z pasją.",
     "techCron": "Automatyzacja zadań",
-                        "technologies": "Technologie",
+    "technologies": "Technologie",
     "version": "Wersja {version}"
   },
   "charts": {
@@ -770,7 +770,13 @@
     "backupServerDesc": "Połączono z {server}. Główny serwer jest niedostępny.",
     "collapseMenu": "Zwiń pasek boczny",
     "expandMenu": "Rozwiń pasek boczny",
-    "myAccount": "Moje Konto"
+    "myAccount": "Moje Konto",
+    "goExtras": "Dodatki Go",
+    "goOverview": "Przegląd Go",
+    "goPlugin": "Konfiguracja wtyczki",
+    "goSystemHealth": "Diagnostyka systemu Go",
+    "goLogHealth": "Diagnostyka dzienników Go",
+    "goNewsletter": "Newsletter"
   },
   "network": {
     "audioHDNotSupported": "Audio HD nieobsługiwane",

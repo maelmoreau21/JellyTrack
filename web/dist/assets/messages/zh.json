@@ -20,7 +20,7 @@
     "linksCredits": "链接与鸣谢",
     "openSourceNote": "JellyTrack 是一个开源项目，带着 ❤ 为 Jellyfin 社区而造。",
     "techCron": "自动任务调度器",
-                        "technologies": "技术组合",
+    "technologies": "技术组合",
     "version": "版本 {version}"
   },
   "charts": {
@@ -770,7 +770,13 @@
     "backupServerDesc": "已连接到 {server}。主服务器不可用。",
     "collapseMenu": "折叠侧边栏",
     "expandMenu": "展开侧边栏",
-    "myAccount": "我的账户"
+    "myAccount": "我的账户",
+    "goExtras": "Go 扩展功能",
+    "goOverview": "Go 概览",
+    "goPlugin": "插件配置",
+    "goSystemHealth": "Go 系统诊断",
+    "goLogHealth": "Go 日志诊断",
+    "goNewsletter": "通讯"
   },
   "network": {
     "audioHDNotSupported": "不支持高清音频",

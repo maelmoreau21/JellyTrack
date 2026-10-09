@@ -20,7 +20,7 @@
     "linksCredits": "Ссылки",
     "openSourceNote": "JellyTrack — это open-source проект, созданный с душой.",
     "techCron": "Автоматизация задач",
-                        "technologies": "Технологии",
+    "technologies": "Технологии",
     "version": "Версия {version}"
   },
   "charts": {
@@ -770,7 +770,13 @@
     "backupServerDesc": "Подключено к {server}. Основной сервер недоступен.",
     "collapseMenu": "Свернуть панель",
     "expandMenu": "Развернуть панель",
-    "myAccount": "Мой аккаунт"
+    "myAccount": "Мой аккаунт",
+    "goExtras": "Дополнения Go",
+    "goOverview": "Обзор Go",
+    "goPlugin": "Настройки плагина",
+    "goSystemHealth": "Диагностика системы Go",
+    "goLogHealth": "Диагностика журналов Go",
+    "goNewsletter": "Рассылка"
   },
   "network": {
     "audioHDNotSupported": "HD-аудио не поддерживается",

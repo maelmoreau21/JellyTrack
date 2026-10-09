@@ -9,283 +9,12 @@
   <link rel="icon" type="image/svg+xml" href="/assets/icon.svg">
   <link rel="apple-touch-icon" href="/assets/icon.svg">
   <link rel="stylesheet" href="/assets/app.css">
+  <link rel="stylesheet" href="/assets/navigation.css">
   <script src="/assets/chart.min.js"></script>
 </head>
 <body>
   <div id="app-root">
-    <!-- Collapsible / Mobile Responsive Sidebar -->
-    <aside class="sidebar" id="app-sidebar">
-      <div class="sidebar-header">
-        <a href="/" class="brand-link" data-link>
-          <img src="/assets/logo.svg" alt="JellyTrack" class="brand-logo">
-          <span class="brand-title">JellyTrack</span>
-        </a>
-        <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Réduire le menu" aria-label="Réduire le menu">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-        </button>
-      </div>
-
-      <!-- Backup Server Alert Banner (Active when connected to secondary server) -->
-      <div id="backup-server-banner" class="backup-server-banner" style="display:none;">
-        <div class="backup-server-title">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <span data-i18n="nav.backupServerActive">Serveur de secours actif</span>
-        </div>
-        <p class="backup-server-desc" id="backup-server-desc"></p>
-      </div>
-
-      <div class="sidebar-scroll">
-        <div class="sidebar-search-box">
-          <button class="sidebar-search-trigger" id="sidebar-search-trigger" type="button">
-            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <span data-i18n="common.search">Rechercher...</span>
-            <kbd class="search-kbd">/</kbd>
-          </button>
-        </div>
-
-        <nav class="sidebar-nav">
-          <!-- Mon Compte (visible for authenticated users) -->
-          <div class="nav-section" id="nav-user-section" style="display:none;">
-            <div class="nav-section-title" data-i18n="nav.myAccount">Mon Compte</div>
-            <ul class="nav-list">
-              <li class="nav-item" data-route="/users/me" id="nav-item-my-profile">
-                <a href="/users/me" data-link title="Mon Profil">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
-                  <span data-i18n="nav.myProfile">Mon Profil</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/wrapped/me" id="nav-item-my-wrapped">
-                <a href="/wrapped/me" data-link title="Mon Wrapped">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-                  <span data-i18n="nav.myWrapped">Mon Wrapped</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <!-- Section GÉNÉRAL -->
-          <div class="nav-section">
-            <div class="nav-section-title" data-i18n="nav.general">Général</div>
-            <ul class="nav-list">
-              <li class="nav-item" data-route="/">
-                <a href="/" data-link title="Tableau de bord">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-                  <span data-i18n="nav.dashboard">Tableau de bord</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/recent">
-                <a href="/recent" data-link title="Récents">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-                  <span data-i18n="nav.recentlyAdded">Récents</span>
-                </a>
-              </li>
-
-              <!-- Groupe Médias avec sous-menus -->
-              <li class="nav-item nav-item-group" data-route="/media">
-                <a href="/media" data-link title="Médias">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
-                  <span data-i18n="nav.library">Médias</span>
-                </a>
-                <ul class="nav-sub-list">
-                  <li class="nav-sub-item" data-route="/media/all">
-                    <a href="/media/all" data-link title="Tous les médias">
-                      <svg class="nav-icon-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
-                      <span data-i18n="media.allMedia">Tous les médias</span>
-                    </a>
-                  </li>
-                  <li class="nav-sub-item" data-route="/media/popular">
-                    <a href="/media/popular" data-link title="Top Contenus">
-                      <svg class="nav-icon-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-                      <span data-i18n="media.popularTab">Top Contenus</span>
-                    </a>
-                  </li>
-                  <li class="nav-sub-item" data-route="/media/collections">
-                    <a href="/media/collections" data-link title="Collections">
-                      <svg class="nav-icon-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
-                      <span data-i18n="media.libraries">Collections</span>
-                    </a>
-                  </li>
-                  <li class="nav-sub-item nav-admin-only" data-route="/media/analysis">
-                    <a href="/media/analysis" data-link title="Analyses Approfondies">
-                      <svg class="nav-icon-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-                      <span data-i18n="media.deepAnalysisTitle">Analyses Médias</span>
-                    </a>
-                  </li>
-                </ul>
-              </li>
-
-              <li class="nav-item nav-admin-only" data-route="/users">
-                <a href="/users" data-link title="Utilisateurs">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  <span data-i18n="nav.users">Utilisateurs</span>
-                </a>
-              </li>
-
-              <li class="nav-item" data-route="/logs">
-                <a href="/logs" data-link title="Logs">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/><path d="M19 17V5a2 2 0 0 0-2-2H4"/></svg>
-                  <span data-i18n="nav.logs">Logs</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <!-- Section ADMINISTRATION (Separate group for admins) -->
-          <div class="nav-section" id="nav-admin-section">
-            <div class="nav-section-title" data-i18n="nav.administration">Administration</div>
-
-            <!-- Sous-groupe Santé & Diagnostic -->
-            <div class="nav-group-label">
-              <span data-i18n="nav.healthAndMaintenance">Santé & Diagnostic</span>
-            </div>
-            <ul class="nav-list">
-              <li class="nav-item" data-route="/admin/health">
-                <a href="/admin/health" data-link title="Santé Système">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 11l6.92 3-3.96 4"/></svg>
-                  <span data-i18n="nav.health">Santé Système</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/admin/cleanup">
-                <a href="/admin/cleanup" data-link title="Nettoyage & Stockage">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  <span data-i18n="nav.cleanup">Nettoyage</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/admin/log-health">
-                <a href="/admin/log-health" data-link title="Santé Logs">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                  <span data-i18n="nav.logHealth">Santé Logs</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/admin/plugin-health">
-                <a href="/admin/plugin-health" data-link title="Santé Plugin">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
-                  <span data-i18n="nav.pluginHealth">Santé Plugin</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/admin/server-compare">
-                <a href="/admin/server-compare" data-link title="Comparaison de serveurs">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-                  <span data-i18n="nav.serverCompare">Comparaison serveurs</span>
-                </a>
-              </li>
-            </ul>
-
-            <!-- Sous-groupe Configuration & Paramètres -->
-            <div class="nav-group-label" style="margin-top: 0.85rem;">
-              <span data-i18n="nav.settings">Paramètres</span>
-            </div>
-            <ul class="nav-list">
-              <li class="nav-item" data-route="/settings">
-                <a href="/settings" data-link title="Vue d'ensemble">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                  <span data-i18n="settings.overview">Vue d'ensemble</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/settings/jellyfin">
-                <a href="/settings/jellyfin" data-link title="Serveurs Jellyfin">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>
-                  <span data-i18n="settings.jellyfinTitle">Serveurs Jellyfin</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/settings/sso">
-                <a href="/settings/sso" data-link title="Authentification SSO">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 2-2 2m-1.5 1.5L16 7l-4 4-2-2-4 4 4 4 2-2 4-4 1.5-1.5M19 5l2 2"/></svg>
-                  <span data-i18n="settings.ssoTitle">Authentification SSO</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/settings/plugin/security">
-                <a href="/settings/plugin/security" data-link title="Sécurité Plugin">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  <span data-i18n="settings.authSecurity">Sécurité Plugin</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/settings/media">
-                <a href="/settings/media" data-link title="Médias & Règles">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 11 2-6h12l2 6"/><rect width="20" height="10" x="2" y="11" rx="2"/></svg>
-                  <span data-i18n="settings.mediaSettings">Médias & Règles</span>
-                </a>
-              </li>
-
-              <!-- Planificateur avec sous-items Tasks et Schedules -->
-              <li class="nav-item nav-item-group" data-route="/settings/scheduler">
-                <a href="/settings/scheduler" data-link title="Planificateur">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
-                  <span data-i18n="settings.taskScheduler">Planificateur</span>
-                </a>
-                <ul class="nav-sub-list">
-                  <li class="nav-sub-item" data-route="/settings/scheduler/tasks">
-                    <a href="/settings/scheduler/tasks" data-link title="Tâches Immédiates">
-                      <svg class="nav-icon-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                      <span>Tâches Immédiates</span>
-                    </a>
-                  </li>
-                  <li class="nav-sub-item" data-route="/settings/scheduler/schedules">
-                    <a href="/settings/scheduler/schedules" data-link title="Intervalles Automatiques">
-                      <svg class="nav-icon-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      <span>Planification Cron</span>
-                    </a>
-                  </li>
-                </ul>
-              </li>
-
-              <li class="nav-item" data-route="/settings/dataBackups">
-                <a href="/settings/dataBackups" data-link title="Sauvegardes">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
-                  <span data-i18n="settings.dataBackups">Sauvegardes</span>
-                </a>
-              </li>
-              <li class="nav-item" data-route="/settings/notifications">
-                <a href="/settings/notifications" data-link title="Notifications Discord">
-                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                  <span data-i18n="settings.notifications">Notifications</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </nav>
-      </div>
-
-      <div class="sidebar-footer">
-        <div class="user-controls-row">
-          <div class="user-badge-mini" id="sidebar-user-badge">
-            <div class="user-avatar-mini" id="sidebar-user-avatar">AD</div>
-            <span class="user-name-mini" id="sidebar-user-name">admin</span>
-          </div>
-
-          <div class="sidebar-footer-actions">
-            <!-- Theme Toggle -->
-            <button class="btn btn-icon btn-sm btn-footer-action" id="btn-theme-toggle" title="Thème clair/sombre" aria-label="Basculer le thème">
-              <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-              <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-            </button>
-
-            <!-- Logout -->
-            <button class="btn btn-icon btn-sm btn-footer-action" id="btn-logout" title="Déconnexion" aria-label="Se déconnecter">
-              <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Language Selector -->
-        <select class="form-select sidebar-lang-select" id="select-language" aria-label="Langue">
-          <option value="fr">Français (FR)</option>
-          <option value="en">English (EN)</option>
-          <option value="de">Deutsch (DE)</option>
-          <option value="es">Español (ES)</option>
-          <option value="it">Italiano (IT)</option>
-          <option value="nl">Nederlands (NL)</option>
-          <option value="pl">Polski (PL)</option>
-          <option value="pt-BR">Português (BR)</option>
-          <option value="ru">Русский (RU)</option>
-          <option value="zh">中文 (ZH)</option>
-        </select>
-
-        <div class="sidebar-version-wrap">
-          <a href="/about" data-link class="sidebar-version-link">JellyTrack v2.1.1</a>
-        </div>
-      </div>
-    </aside>
+    <aside class="sidebar" id="app-sidebar"></aside>
 
     <!-- Mobile Drawer Overlay Backdrop -->
     <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
@@ -293,54 +22,16 @@
     <!-- Main Container Layout -->
     <div class="main-wrapper">
       <header class="topbar">
-        <div class="topbar-left">
-          <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu mobile">
-            <svg class="topbar-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-          </button>
-
-          <button class="search-trigger-btn" id="search-trigger-btn" type="button">
-            <svg class="topbar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <span data-i18n="common.search">Rechercher médias, utilisateurs...</span>
-            <span class="search-shortcut">/</span>
-          </button>
-        </div>
-
-        <div class="topbar-right">
-          <!-- Active Streams Pill -->
-          <div class="live-streams-pill" id="topbar-live-streams-pill" title="Flux en direct">
-            <span class="pulse-dot"></span>
-            <span id="topbar-live-streams-count">0</span>
-            <span data-i18n="dashboard.streams">flux</span>
-          </div>
-
-          <!-- Quick Sync Button -->
-          <button class="btn btn-secondary btn-sm" id="btn-quick-sync" title="Synchroniser Jellyfin">
-            <svg class="sync-icon" id="sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            <span data-i18n="common.sync">Sync</span>
-          </button>
-        </div>
+        <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="app-sidebar"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <a data-link href="/" class="mobile-brand-link"><span id="mobile-brand-logo"></span><span>JellyTrack</span></a>
       </header>
+
+      <button id="wrapped-close-btn" class="wrapped-close-btn" type="button" aria-label="Fermer" hidden>✕</button>
 
       <!-- Router Viewport Outlet -->
       <main id="app-main" role="main">
         <!-- Rendered dynamically by app.js router -->
       </main>
-    </div>
-  </div>
-
-  <!-- Global Quick Search Modal -->
-  <div class="modal-backdrop" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-modal-title">
-    <div class="modal-box">
-      <div class="modal-header">
-        <h2 class="modal-title" id="search-modal-title" data-i18n="search.title">Recherche Rapide</h2>
-        <button class="btn btn-icon btn-sm" id="search-modal-close" aria-label="Fermer">✕</button>
-      </div>
-      <div class="modal-body">
-        <input type="text" class="form-input" id="search-modal-input" placeholder="Tapez un titre de film, série, artiste ou utilisateur..." autofocus autocomplete="off">
-        <div id="search-modal-results" class="search-modal-results-list">
-          <!-- Live results populated by JavaScript -->
-        </div>
-      </div>
     </div>
   </div>
 
@@ -366,6 +57,7 @@
 
   <!-- Main Vanilla JS Client Application -->
   <script src="/assets/history.js"></script>
+  <script src="/assets/navigation.js"></script>
   <script src="/assets/app.js"></script>
 </body>
 </html>
