@@ -90,7 +90,9 @@ func requestLogger(logger *slog.Logger, next http.Handler) http.Handler {
 func securityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := w.Header()
-		header.Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'")
+		// Chart.js and the existing SPA set dynamic element styles. Keep scripts
+		// restricted to bundled files while allowing those presentation attributes.
+		header.Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'")
 		header.Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
 		header.Set("X-Content-Type-Options", "nosniff")
 		header.Set("Referrer-Policy", "strict-origin-when-cross-origin")

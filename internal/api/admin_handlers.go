@@ -31,20 +31,21 @@ func (h *Handler) hardware(w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse(w, 200, map[string]any{
 		"cpu": map[string]any{
-			"usagePercent": 0.0,
+			"usagePercent": nil,
 			"cores":        runtime.NumCPU(),
 		},
 		"memory": map[string]any{
 			"allocMb":      float64(mem.Alloc) / (1024 * 1024),
 			"sysMb":        float64(mem.Sys) / (1024 * 1024),
 			"totalAllocMb": float64(mem.TotalAlloc) / (1024 * 1024),
-			"usagePercent": 0.0,
+			"usagePercent": nil,
 			"usedGb":       float64(mem.Alloc) / (1024 * 1024 * 1024),
 			"totalGb":      float64(mem.Sys) / (1024 * 1024 * 1024),
 		},
 		"temperature": map[string]any{
-			"main": -1,
+			"main": nil,
 		},
+		"runtime": map[string]any{"goroutines": runtime.NumGoroutine(), "goos": runtime.GOOS, "arch": runtime.GOARCH},
 	})
 }
 
@@ -651,10 +652,25 @@ func (h *Handler) updateSessionPolicy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nowStr := time.Now().UTC().Format(time.RFC3339Nano)
+	tx, err := h.db.BeginTx(r.Context(), nil)
+	if err != nil {
+		jsonError(w, 500, "Impossible de modifier la politique de session.")
+		return
+	}
+	defer tx.Rollback()
+	if _, err = tx.ExecContext(r.Context(), `INSERT INTO "GlobalSettings"("id") VALUES('global') ON CONFLICT("id") DO NOTHING`); err != nil {
+		jsonError(w, 500, "Impossible de modifier la politique de session.")
+		return
+	}
 	if body.Action == "revoke_all" || (body.RevokeAllSessions != nil && *body.RevokeAllSessions) {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`DELETE FROM "AuthSession"`, h.driver))
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "authSessionsRevokedAt"=? WHERE "id"='global'`, h.driver), nowStr)
-		_ = security.LogAudit(r.Context(), h.db, h.driver, "Auth sessions revoked", nil, nil, nil, nil, map[string]any{"revokedAt": nowStr})
+		if _, err = tx.ExecContext(r.Context(), `DELETE FROM "AuthSession"`); err != nil {
+			jsonError(w, 500, "Impossible de révoquer les sessions.")
+			return
+		}
+		if _, err = tx.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "authSessionsRevokedAt"=? WHERE "id"='global'`, h.driver), nowStr); err != nil {
+			jsonError(w, 500, "Impossible de révoquer les sessions.")
+			return
+		}
 	}
 
 	remVal := body.RememberSessionsExpireAfterDays
@@ -662,7 +678,19 @@ func (h *Handler) updateSessionPolicy(w http.ResponseWriter, r *http.Request) {
 		remVal = body.RememberThirtyDays
 	}
 	if remVal != nil {
-		_, _ = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "authRememberThirtyDaysEnabled"=? WHERE "id"='global'`, h.driver), *remVal)
+		if _, err = tx.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "authRememberThirtyDaysEnabled"=? WHERE "id"='global'`, h.driver), *remVal); err != nil {
+			jsonError(w, 500, "Impossible de modifier la politique de session.")
+			return
+		}
+	}
+	if err = tx.Commit(); err != nil {
+		jsonError(w, 500, "Impossible de modifier la politique de session.")
+		return
+	}
+	if body.Action == "revoke_all" || (body.RevokeAllSessions != nil && *body.RevokeAllSessions) {
+		_ = security.LogAudit(r.Context(), h.db, h.driver, "Auth sessions revoked", nil, nil, nil, nil, map[string]any{"revokedAt": nowStr})
+	}
+	if remVal != nil {
 		_ = security.LogAudit(r.Context(), h.db, h.driver, "Auth session policy updated", nil, nil, nil, nil, map[string]any{"rememberSessionsExpireAfterDays": *remVal})
 	}
 

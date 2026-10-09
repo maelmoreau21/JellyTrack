@@ -46,7 +46,7 @@ func TestSecurityHeadersArePresent(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
 	resp := httptest.NewRecorder()
 	handler.ServeHTTP(resp, req)
-	if got := resp.Header().Get("Content-Security-Policy"); got == "" || strings.Contains(got, "unsafe-inline") {
+	if got := resp.Header().Get("Content-Security-Policy"); !strings.Contains(got, "script-src 'self';") || !strings.Contains(got, "style-src 'self' 'unsafe-inline';") || strings.Contains(got, "unsafe-eval") {
 		t.Fatalf("unexpected CSP: %q", got)
 	}
 	if resp.Header().Get("X-Content-Type-Options") != "nosniff" || resp.Header().Get("Referrer-Policy") == "" {

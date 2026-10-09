@@ -27,6 +27,15 @@ func testManager(t *testing.T) (*Manager, *sql.DB) {
 	t.Cleanup(func() { db.Close() })
 	return New(db, "sqlite"), db
 }
+
+func TestStableUserIDPreservesDistinctUsersAndHandlesShortIDs(t *testing.T) {
+	if stableUserID("server-prefix-123", "alice") == stableUserID("server-prefix-123", "bob") {
+		t.Fatal("user IDs collide on shared server prefix")
+	}
+	if stableUserID("s", "u") == "" {
+		t.Fatal("short identifiers were not supported")
+	}
+}
 func TestLoginAndCSRFProtectedLogout(t *testing.T) {
 	m, _ := testManager(t)
 	body, _ := json.Marshal(map[string]string{"username": "admin", "password": "A-strong-passphrase-2026!"})
@@ -253,4 +262,3 @@ func TestReverseProxyOrigin(t *testing.T) {
 		t.Fatal("expected sameOrigin to return true for matching X-Forwarded-Host origin")
 	}
 }
-

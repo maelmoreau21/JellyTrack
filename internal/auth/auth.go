@@ -59,6 +59,8 @@ type Principal struct {
 	Role                string `json:"role"`
 	CSRFToken           string `json:"csrfToken,omitempty"`
 	JellyfinUserID      string `json:"jellyfinUserId,omitempty"`
+	AuthServerID        string `json:"authServerId,omitempty"`
+	IdentityVersion     int    `json:"identityVersion,omitempty"`
 	AuthServerName      string `json:"authServerName,omitempty"`
 	AuthServerIsPrimary *bool  `json:"authServerIsPrimary,omitempty"`
 	sessionID           string
@@ -180,36 +182,18 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 			clearFlow()
 			ip := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
 			_ = security.LogAudit(r.Context(), m.db, m.driver, "SSO Login Denied (Unauthorized Group)", nil, &username, nil, &ip, map[string]any{
-				"userGroups":          claims.Groups,
+				"userGroups":         claims.Groups,
 				"requiredUserGroup":  cfg.userGroup,
 				"requiredAdminGroup": cfg.adminGroup,
 			})
 			http.Redirect(w, r, "/login?error=AccessDeniedGroup", http.StatusSeeOther)
 			return
 		}
-		if _, e = m.createSession(w, r, username, role, false); e != nil {
+		resolvedJfID, resolvedServerID := m.resolveOIDCAccount(r.Context(), username, claims.Subject)
+		if _, e = m.createSessionIdentity(w, r, Principal{Username: username, Role: role, JellyfinUserID: resolvedJfID, AuthServerID: resolvedServerID}, false); e != nil {
 			clearFlow()
 			http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 			return
-		}
-
-		var resolvedJfID string
-		if m.db != nil {
-			_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "jellyfinUserId" FROM "User" WHERE LOWER("username") = LOWER(?) AND "jellyfinUserId" NOT LIKE 'oidc-%' LIMIT 1`, m.driver), username).Scan(&resolvedJfID)
-			if resolvedJfID == "" {
-				_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), username).Scan(&resolvedJfID)
-			}
-			if resolvedJfID == "" {
-				resolvedJfID = "oidc-" + username
-			}
-
-			var sID string
-			_ = m.db.QueryRowContext(r.Context(), `SELECT "id" FROM "Server" WHERE "isActive" = 1 LIMIT 1`).Scan(&sID)
-			if sID != "" {
-				nowIso := time.Now().UTC().Format(time.RFC3339Nano)
-				stableUID := "usr_" + hex.EncodeToString([]byte(sID+":"+resolvedJfID))[:16]
-				_ = m.upsertUser(r.Context(), stableUID, sID, resolvedJfID, username, nowIso)
-			}
 		}
 
 		ip := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
@@ -315,6 +299,11 @@ func (m *Manager) oidcConfigWith(ctx context.Context, cfg resolvedOIDCConfig) (*
 }
 
 func (m *Manager) createSession(w http.ResponseWriter, r *http.Request, username, role string, rememberMe ...bool) (string, error) {
+	return m.createSessionIdentity(w, r, Principal{Username: username, Role: role}, rememberMe...)
+}
+
+func (m *Manager) createSessionIdentity(w http.ResponseWriter, r *http.Request, principal Principal, rememberMe ...bool) (string, error) {
+	principal.IdentityVersion = 1
 	idBytes := make([]byte, 32)
 	if _, err := rand.Read(idBytes); err != nil {
 		return "", err
@@ -332,7 +321,11 @@ func (m *Manager) createSession(w http.ResponseWriter, r *http.Request, username
 
 	expires := time.Now().UTC().Add(duration)
 	nowStr := time.Now().UTC().Format(time.RFC3339Nano)
-	if _, err := m.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "AuthSession" ("id","username","role","expiresAt","createdAt") VALUES (?,?,?,?,?)`, m.driver), id, username, role, expires.Format(time.RFC3339Nano), nowStr); err != nil {
+	identity, err := json.Marshal(principal)
+	if err != nil {
+		return "", err
+	}
+	if _, err := m.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "AuthSession" ("id","username","role","expiresAt","createdAt","identity") VALUES (?,?,?,?,?,?)`, m.driver), id, principal.Username, principal.Role, expires.Format(time.RFC3339Nano), nowStr, string(identity)); err != nil {
 		return "", err
 	}
 	http.SetCookie(w, &http.Cookie{Name: cookieName, Value: m.sign(id, expires.Unix()), Path: "/", Expires: expires, HttpOnly: true, Secure: m.secure, SameSite: http.SameSiteLaxMode})
@@ -447,18 +440,11 @@ func (m *Manager) authSession(w http.ResponseWriter, r *http.Request) {
 	var expiresStr string
 	_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "expiresAt" FROM "AuthSession" WHERE "id"=?`, m.driver), p.sessionID).Scan(&expiresStr)
 
-	var jfID, dbUID string
-	if m.db != nil {
-		_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "jellyfinUserId", "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), p.Username).Scan(&jfID, &dbUID)
+	resolvedJfID := p.JellyfinUserID
+	if identity, err := ResolveAccount(r.Context(), m.db, m.driver, p); err == nil {
+		resolvedJfID = identity.JellyfinUserID
+		p.AuthServerID = identity.ServerID
 	}
-	resolvedJfID := jfID
-	if resolvedJfID == "" {
-		resolvedJfID = dbUID
-	}
-	if resolvedJfID == "" && p.JellyfinUserID != "" {
-		resolvedJfID = p.JellyfinUserID
-	}
-
 	writeJSON(w, 200, map[string]any{
 		"user": map[string]any{
 			"name":           p.Username,
@@ -466,6 +452,7 @@ func (m *Manager) authSession(w http.ResponseWriter, r *http.Request) {
 			"role":           p.Role,
 			"isAdmin":        p.Role == "admin",
 			"jellyfinUserId": resolvedJfID,
+			"authServerId":   p.AuthServerID,
 		},
 		"expires": expiresStr,
 	})
@@ -574,7 +561,8 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 
 	userOK := subtle.ConstantTimeCompare([]byte(input.Username), []byte(m.username)) == 1
 	if userOK && len(m.passwordHash) > 0 && bcrypt.CompareHashAndPassword(m.passwordHash, []byte(input.Password)) == nil {
-		csrf, err := m.createSession(w, r, m.username, "admin", rememberBool)
+		isPrimary := true
+		csrf, err := m.createSessionIdentity(w, r, Principal{Username: m.username, Role: "admin", JellyfinUserID: "local-admin", AuthServerName: "Local Admin", AuthServerIsPrimary: &isPrimary}, rememberBool)
 		if err != nil {
 			writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
 			return
@@ -626,12 +614,12 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if m.db != nil {
-		rows, err := m.db.QueryContext(r.Context(), `SELECT "id", "name", "url", "allowAuthFallback" FROM "Server" WHERE "isActive" = 1`)
+		rows, err := m.db.QueryContext(r.Context(), `SELECT "id", "name", "url", "allowAuthFallback" FROM "Server" WHERE "isActive" = TRUE`)
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
 				var sID, sName, sURL string
-				var allowFallback int
+				var allowFallback bool
 				if err := rows.Scan(&sID, &sName, &sURL, &allowFallback); err == nil {
 					norm := strings.ToLower(strings.TrimRight(strings.TrimSpace(sURL), "/"))
 					if norm == "" {
@@ -644,11 +632,11 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 							name:              sName,
 							url:               strings.TrimRight(strings.TrimSpace(sURL), "/"),
 							isPrimary:         len(candidates) == 0,
-							allowAuthFallback: allowFallback == 1,
+							allowAuthFallback: allowFallback,
 						})
 					} else {
 						for i := range candidates {
-							if strings.EqualFold(candidates[i].url, sURL) && candidates[i].id == "" {
+							if strings.EqualFold(strings.TrimRight(strings.TrimSpace(candidates[i].url), "/"), strings.TrimRight(strings.TrimSpace(sURL), "/")) && candidates[i].id == "" {
 								candidates[i].id = sID
 							}
 						}
@@ -698,7 +686,8 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 		if authUser.Policy.IsAdministrator {
 			role = "admin"
 		}
-		csrf, e := m.createSession(w, r, authUser.Name, role, rememberBool)
+		isPrimary := authCandidate.isPrimary
+		csrf, e := m.createSessionIdentity(w, r, Principal{Username: authUser.Name, Role: role, JellyfinUserID: authUser.ID, AuthServerID: authCandidate.id, AuthServerName: authCandidate.name, AuthServerIsPrimary: &isPrimary}, rememberBool)
 		if e != nil {
 			writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
 			return
@@ -708,12 +697,9 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 		loginMu.Unlock()
 
 		srvID := authCandidate.id
-		if srvID == "" && m.db != nil {
-			_ = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id" FROM "Server" WHERE "isActive" = 1 LIMIT 1`, m.driver)).Scan(&srvID)
-		}
 		if srvID != "" && m.db != nil {
 			nowIso := time.Now().UTC().Format(time.RFC3339Nano)
-			stableUID := "usr_" + hex.EncodeToString([]byte(srvID+":"+authUser.ID))[:16]
+			stableUID := stableUserID(srvID, authUser.ID)
 			_ = m.upsertUser(r.Context(), stableUID, srvID, authUser.ID, authUser.Name, nowIso)
 		}
 
@@ -728,6 +714,7 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 			Role:                role,
 			CSRFToken:           csrf,
 			JellyfinUserID:      authUser.ID,
+			AuthServerID:        authCandidate.id,
 			AuthServerName:      authCandidate.name,
 			AuthServerIsPrimary: &isPrim,
 		})
@@ -745,34 +732,48 @@ func (m *Manager) me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p.CSRFToken = m.csrf(p.sessionID)
-	if p.JellyfinUserID == "" && m.db != nil {
-		var jfID, dbUID string
-		if err := m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "jellyfinUserId", "id" FROM "User" WHERE LOWER("username") = LOWER(?) LIMIT 1`, m.driver), p.Username).Scan(&jfID, &dbUID); err == nil {
-			if jfID != "" {
-				p.JellyfinUserID = jfID
-			} else {
-				p.JellyfinUserID = dbUID
-			}
-		}
-	}
-	if p.AuthServerName == "" && m.db != nil {
-		var sName string
-		if err := m.db.QueryRowContext(r.Context(), `SELECT "name" FROM "Server" WHERE "isActive"=1 LIMIT 1`).Scan(&sName); err == nil {
-			p.AuthServerName = sName
-			t := true
-			p.AuthServerIsPrimary = &t
+	if identity, err := ResolveAccount(r.Context(), m.db, m.driver, p); err == nil {
+		p.JellyfinUserID, p.AuthServerID = identity.JellyfinUserID, identity.ServerID
+		if p.AuthServerName == "" {
+			p.AuthServerName = identity.ServerName
 		}
 	}
 	writeJSON(w, 200, p)
 }
 
 func (m *Manager) upsertUser(ctx context.Context, id, serverID, jfUserID, username, lastActive string) error {
+	if forms := JellyfinIDForms(jfUserID); len(forms) == 2 {
+		rows, err := m.db.QueryContext(ctx, database.Bind(`SELECT "id","jellyfinUserId" FROM "User" WHERE "serverId"=? AND LOWER("jellyfinUserId") IN (?,?) LIMIT 2`, m.driver), serverID, forms[0], forms[1])
+		if err != nil {
+			return err
+		}
+		matches := 0
+		var existingID, existingJFID string
+		for rows.Next() {
+			if err := rows.Scan(&existingID, &existingJFID); err != nil {
+				rows.Close()
+				return err
+			}
+			matches++
+		}
+		queryErr := rows.Err()
+		rows.Close()
+		if queryErr != nil {
+			return queryErr
+		}
+		if matches > 1 {
+			return fmt.Errorf("ambiguous Jellyfin user identity")
+		}
+		if matches == 1 {
+			id, jfUserID = existingID, existingJFID
+		}
+	}
 	query := `INSERT INTO "User" ("id", "serverId", "jellyfinUserId", "username", "lastActive", "isActive", "updatedAt")
-VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+VALUES (?, ?, ?, ?, ?, TRUE, CURRENT_TIMESTAMP)
 ON CONFLICT("jellyfinUserId", "serverId") DO UPDATE SET
   "username" = excluded."username",
   "lastActive" = COALESCE(excluded."lastActive", "User"."lastActive"),
-  "isActive" = 1,
+  "isActive" = TRUE,
   "updatedAt" = CURRENT_TIMESTAMP`
 	_, err := m.db.ExecContext(ctx, database.Bind(query, m.driver), id, serverID, jfUserID, username, lastActive)
 	return err
@@ -832,7 +833,8 @@ func (m *Manager) authenticate(r *http.Request) (Principal, bool) {
 	}
 	var p Principal
 	var expires, createdAt string
-	err = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "username","role","expiresAt","createdAt" FROM "AuthSession" WHERE "id"=?`, m.driver), id).Scan(&p.Username, &p.Role, &expires, &createdAt)
+	var identity sql.NullString
+	err = m.db.QueryRowContext(r.Context(), database.Bind(`SELECT "username","role","expiresAt","createdAt","identity" FROM "AuthSession" WHERE "id"=?`, m.driver), id).Scan(&p.Username, &p.Role, &expires, &createdAt, &identity)
 	if err != nil {
 		return Principal{}, false
 	}
@@ -857,7 +859,21 @@ func (m *Manager) authenticate(r *http.Request) (Principal, bool) {
 	}
 
 	p.sessionID = id
+	if identity.Valid {
+		var stored Principal
+		if json.Unmarshal([]byte(identity.String), &stored) == nil {
+			p.JellyfinUserID, p.AuthServerID, p.AuthServerName, p.AuthServerIsPrimary = stored.JellyfinUserID, stored.AuthServerID, stored.AuthServerName, stored.AuthServerIsPrimary
+			p.IdentityVersion = stored.IdentityVersion
+		}
+	}
 	return p, true
+}
+
+// Match synchronisation IDs; a prefix of hex-encoded input collides for users
+// sharing a server prefix and can panic when IDs are short.
+func stableUserID(serverID, userID string) string {
+	sum := sha256.Sum256([]byte(serverID + ":" + userID))
+	return "usr_" + hex.EncodeToString(sum[:16])
 }
 
 func (m *Manager) sign(id string, expiry int64) string {
@@ -1042,4 +1058,3 @@ func parseTimeFlex(s string) (time.Time, error) {
 	}
 	return time.Parse(time.RFC3339, s)
 }
-

@@ -44,19 +44,18 @@ func New(db *sql.DB, driver string, pluginHandler ...http.Handler) *Handler {
 func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.Handler) http.Handler) {
 	// Standard user session protected routes
 	userRoutes := map[string]http.HandlerFunc{
-		"GET /api/dashboard":               h.dashboard,
-		"GET /api/users":                   h.users,
-		"GET /api/users/{id}":              h.userDetail,
+		"GET /api/dashboard":                h.dashboard,
+		"GET /api/users/{id}":               h.userDetail,
 		"GET /api/users/{id}/active-stream": h.userActiveStream,
-		"GET /api/wrapped/{id}":            h.userWrapped,
-		"GET /api/media":                   h.mediaList,
-		"GET /api/media/collections":       h.mediaCollections,
-		"GET /api/media/{id}":              h.mediaDetail,
-		"GET /api/history":                 h.history,
-		"GET /api/search":                  h.search,
-		"GET /api/jellyfin/sessions":       h.sessions,
-		"GET /api/jellyfin/image":          h.jellyfinImageProxy,
-		"GET /api/jellyfin/user-image":     h.jellyfinUserImageProxy,
+		"GET /api/wrapped/{id}":             h.userWrapped,
+		"GET /api/media":                    h.mediaList,
+		"GET /api/media/collections":        h.mediaCollections,
+		"GET /api/media/{id}":               h.mediaDetail,
+		"GET /api/history":                  h.history,
+		"GET /api/search":                   h.search,
+		"GET /api/jellyfin/sessions":        h.sessions,
+		"GET /api/jellyfin/image":           h.jellyfinImageProxy,
+		"GET /api/jellyfin/user-image":      h.jellyfinUserImageProxy,
 	}
 	for path, fn := range userRoutes {
 		mux.Handle(path, protect(fn))
@@ -64,6 +63,7 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 
 	// Admin protected routes
 	adminRoutes := map[string]http.HandlerFunc{
+		"GET /api/users":                                 h.users,
 		"GET /api/hardware":                              h.hardware,
 		"GET /api/admin/health":                          h.adminHealth,
 		"GET /api/admin/security/overview":               h.securityOverview,
@@ -156,6 +156,9 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 func getServerScope(r *http.Request) []string {
 	serversParam := strings.TrimSpace(r.URL.Query().Get("servers"))
 	if serversParam == "" {
+		serversParam = strings.TrimSpace(r.URL.Query().Get("serverId"))
+	}
+	if serversParam == "" {
 		if c, err := r.Cookie("jellytrack_server_scope"); err == nil {
 			serversParam = strings.TrimSpace(c.Value)
 		}
@@ -173,24 +176,10 @@ func getServerScope(r *http.Request) []string {
 }
 
 func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	days := boundedInt(q.Get("days"), 7, 1, 365)
-	timeRange := q.Get("timeRange")
-	if timeRange == "" {
-		timeRange = q.Get("range")
-	}
-	mediaType := q.Get("type")
-	from := q.Get("from")
-	to := q.Get("to")
-	serverIDs := getServerScope(r)
-
-	filter := stats.DashboardFilter{
-		TimeRange: timeRange,
-		Days:      days,
-		From:      from,
-		To:        to,
-		MediaType: mediaType,
-		ServerIDs: serverIDs,
+	filter, err := dashboardFilter(r, 7)
+	if err != nil {
+		jsonError(w, 400, err.Error())
+		return
 	}
 
 	res, err := stats.GetFullDashboard(r.Context(), h.db, h.driver, filter)
@@ -203,17 +192,10 @@ func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deepStats(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	days := boundedInt(q.Get("days"), 30, 1, 365)
-	timeRange := q.Get("timeRange")
-	mediaType := q.Get("type")
-	serverIDs := getServerScope(r)
-
-	filter := stats.DashboardFilter{
-		TimeRange: timeRange,
-		Days:      days,
-		MediaType: mediaType,
-		ServerIDs: serverIDs,
+	filter, err := dashboardFilter(r, 30)
+	if err != nil {
+		jsonError(w, 400, err.Error())
+		return
 	}
 
 	res, err := stats.GetDetailedDeepInsights(r.Context(), h.db, h.driver, filter)
@@ -226,25 +208,10 @@ func (h *Handler) deepStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) granularStats(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	days := boundedInt(q.Get("days"), 30, 1, 365)
-	timeRange := q.Get("timeRange")
-	mediaType := q.Get("type")
-	serversParam := q.Get("servers")
-	var serverIDs []string
-	if serversParam != "" {
-		for _, s := range strings.Split(serversParam, ",") {
-			if trimmed := strings.TrimSpace(s); trimmed != "" {
-				serverIDs = append(serverIDs, trimmed)
-			}
-		}
-	}
-
-	filter := stats.DashboardFilter{
-		TimeRange: timeRange,
-		Days:      days,
-		MediaType: mediaType,
-		ServerIDs: serverIDs,
+	filter, err := dashboardFilter(r, 30)
+	if err != nil {
+		jsonError(w, 400, err.Error())
+		return
 	}
 
 	res, err := stats.GetGranularAnalysis(r.Context(), h.db, h.driver, filter)
@@ -608,23 +575,10 @@ func parseTimeMs(s string) int64 {
 }
 
 func (h *Handler) networkStats(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	days := boundedInt(q.Get("days"), 30, 1, 365)
-	timeRange := q.Get("timeRange")
-	serversParam := q.Get("servers")
-	var serverIDs []string
-	if serversParam != "" {
-		for _, s := range strings.Split(serversParam, ",") {
-			if trimmed := strings.TrimSpace(s); trimmed != "" {
-				serverIDs = append(serverIDs, trimmed)
-			}
-		}
-	}
-
-	filter := stats.DashboardFilter{
-		TimeRange: timeRange,
-		Days:      days,
-		ServerIDs: serverIDs,
+	filter, err := dashboardFilter(r, 30)
+	if err != nil {
+		jsonError(w, 400, err.Error())
+		return
 	}
 
 	res, err := stats.GetNetworkAnalysis(r.Context(), h.db, h.driver, filter)
@@ -725,133 +679,6 @@ func (h *Handler) geoStats(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) heatmapDetail(w http.ResponseWriter, r *http.Request) {
-	dateStr := r.URL.Query().Get("date")
-	if dateStr != "" {
-		tDate, err := time.Parse("2006-01-02", dateStr)
-		if err == nil {
-			start := tDate.UTC()
-			end := start.Add(24 * time.Hour)
-			rows, qErr := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."startedAt",p."durationWatched",p."playMethod",p."clientName",u."username",m."title",m."type" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND p."startedAt"<? AND p."durationWatched">=10 ORDER BY p."startedAt" DESC LIMIT 100`, h.driver), start.Format(time.RFC3339Nano), end.Format(time.RFC3339Nano))
-			if qErr == nil {
-				defer rows.Close()
-				sessions := []map[string]any{}
-				for rows.Next() {
-					var started string
-					var dur int64
-					var pm, cn, uname, title, mType sql.NullString
-					if rows.Scan(&started, &dur, &pm, &cn, &uname, &title, &mType) == nil {
-						t, _ := time.Parse(time.RFC3339Nano, started)
-						if t.IsZero() {
-							t, _ = time.Parse(time.RFC3339, started)
-						}
-						sessions = append(sessions, map[string]any{
-							"username":    uname.String,
-							"mediaTitle":  title.String,
-							"mediaType":   mType.String,
-							"durationMin": int(dur / 60),
-							"playMethod":  pm.String,
-							"clientName":  cn.String,
-							"startedAt":   t.Format(time.RFC3339),
-						})
-					}
-				}
-				jsonResponse(w, 200, map[string]any{"sessions": sessions, "date": dateStr})
-				return
-			}
-		}
-	}
-
-	dayStr := r.URL.Query().Get("day")
-	hourStr := r.URL.Query().Get("hour")
-
-	if dayStr != "" && hourStr != "" {
-		day, errD := strconv.Atoi(dayStr)
-		hour, errH := strconv.Atoi(hourStr)
-		if errD != nil || errH != nil || day < 0 || day > 6 || hour < 0 || hour > 23 {
-			jsonError(w, 400, "Invalid day/hour")
-			return
-		}
-
-		since := time.Now().UTC().AddDate(0, 0, -30).Format(time.RFC3339Nano)
-		rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."startedAt",p."durationWatched",p."playMethod",p."clientName",u."username",m."title",m."type" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND p."durationWatched">=10 ORDER BY p."startedAt" DESC LIMIT 5000`, h.driver), since)
-		if err != nil {
-			jsonError(w, 500, "Erreur de lecture.")
-			return
-		}
-		defer rows.Close()
-
-		sessions := []map[string]any{}
-		for rows.Next() {
-			var started string
-			var dur int64
-			var pm, cn, uname, title, mType sql.NullString
-			if rows.Scan(&started, &dur, &pm, &cn, &uname, &title, &mType) == nil {
-				t, parseErr := time.Parse(time.RFC3339Nano, started)
-				if parseErr != nil {
-					t, parseErr = time.Parse(time.RFC3339, started)
-				}
-				if parseErr == nil {
-					if int(t.Weekday()) == day && t.Hour() == hour {
-						username := uname.String
-						if username == "" {
-							username = "?"
-						}
-						mTitle := title.String
-						if mTitle == "" {
-							mTitle = "?"
-						}
-						sessions = append(sessions, map[string]any{
-							"username":    username,
-							"mediaTitle":  mTitle,
-							"mediaType":   mType.String,
-							"durationMin": int(dur / 60),
-							"playMethod":  pm.String,
-							"clientName":  cn.String,
-							"startedAt":   t.Format(time.RFC3339),
-						})
-						if len(sessions) >= 50 {
-							break
-						}
-					}
-				}
-			}
-		}
-		if sessions == nil {
-			sessions = []map[string]any{}
-		}
-		jsonResponse(w, 200, map[string]any{"sessions": sessions})
-		return
-	}
-
-	rows, err := h.db.QueryContext(r.Context(), `SELECT strftime('%w', "startedAt") AS "dayOfWeek", strftime('%H', "startedAt") AS "hour", COUNT(*) FROM "PlaybackHistory" GROUP BY "dayOfWeek", "hour"`)
-	if err != nil {
-		// Postgres fallback
-		rows, err = h.db.QueryContext(r.Context(), `SELECT EXTRACT(DOW FROM "startedAt")::TEXT AS "dayOfWeek", EXTRACT(HOUR FROM "startedAt")::TEXT AS "hour", COUNT(*) FROM "PlaybackHistory" GROUP BY "dayOfWeek", "hour"`)
-	}
-	if err != nil {
-		jsonError(w, 500, "Impossible de charger la carte thermique.")
-		return
-	}
-	defer rows.Close()
-
-	heatmap := []map[string]any{}
-	for rows.Next() {
-		var dow, hour string
-		var count int64
-		if rows.Scan(&dow, &hour, &count) == nil {
-			d, _ := strconv.Atoi(dow)
-			hr, _ := strconv.Atoi(hour)
-			heatmap = append(heatmap, map[string]any{
-				"dayOfWeek": d,
-				"hour":      hr,
-				"count":     count,
-			})
-		}
-	}
-	jsonResponse(w, 200, map[string]any{"heatmap": heatmap})
-}
-
 // ---------------------- Users & Media ----------------------
 
 func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
@@ -935,17 +762,17 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 		}
 
 		out = append(out, map[string]any{
-			"id":             id,
-			"username":       name,
-			"jellyfinUserId": jid,
-			"totalHours":     math.Round((float64(totalSec)/3600.0)*10) / 10,
-			"sessionsCount":  sessCount,
-			"lastActive":     lastActiveAny,
-			"favoriteClient": clientName,
-			"transcodeCount": tcCount,
+			"id":              id,
+			"username":        name,
+			"jellyfinUserId":  jid,
+			"totalHours":      math.Round((float64(totalSec)/3600.0)*10) / 10,
+			"sessionsCount":   sessCount,
+			"lastActive":      lastActiveAny,
+			"favoriteClient":  clientName,
+			"transcodeCount":  tcCount,
 			"directPlayCount": dpCount,
-			"transcodeRatio": ratio,
-			"server":         nullable(server),
+			"transcodeRatio":  ratio,
+			"server":          nullable(server),
 		})
 	}
 	jsonResponse(w, 200, map[string]any{"items": out, "users": out, "limit": limit, "offset": offset})
@@ -966,19 +793,43 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	var dbUID, username, jid string
+	principal, authenticated := auth.PrincipalFromContext(r.Context())
+	if !authenticated {
+		jsonError(w, 401, "Authentification requise.")
+		return
+	}
+	isSelf := !principal.IsAdmin()
+	var authorizedServerID string
+	if isSelf {
+		identity, err := auth.ResolveAccount(r.Context(), h.db, h.driver, principal)
+		if err != nil || !identity.Matches(strings.TrimSpace(r.PathValue("id"))) {
+			jsonError(w, 403, "Accès refusé.")
+			return
+		}
+		id = identity.ID
+		authorizedServerID = identity.ServerID
+	}
+	var dbUID, username, jid, accountServerID string
 	var lastActive, server sql.NullString
-	err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT u."id",u."username",u."jellyfinUserId",u."lastActive",s."name" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" WHERE u."id"=? OR u."jellyfinUserId"=? OR LOWER(u."username")=LOWER(?) LIMIT 1`, h.driver), id, id, id).Scan(&dbUID, &username, &jid, &lastActive, &server)
+	userQuery := `SELECT u."id",u."username",u."jellyfinUserId",u."lastActive",s."name",u."serverId" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" WHERE `
+	userArgs := []any{id, id, id}
+	if isSelf {
+		userQuery += `u."id"=? AND u."serverId"=?`
+		userArgs = []any{id, authorizedServerID}
+	} else {
+		userQuery += `u."id"=? OR u."jellyfinUserId"=? OR LOWER(u."username")=LOWER(?) LIMIT 1`
+	}
+	err := h.db.QueryRowContext(r.Context(), database.Bind(userQuery, h.driver), userArgs...).Scan(&dbUID, &username, &jid, &lastActive, &server, &accountServerID)
 	if err != nil {
 		jsonError(w, 404, "Utilisateur introuvable.")
 		return
 	}
 
 	var totalPlays, totalDuration int64
-	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM("durationWatched"),0) FROM "PlaybackHistory" WHERE "userId"=? OR "userId"=?`, h.driver), dbUID, jid).Scan(&totalPlays, &totalDuration)
+	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*),COALESCE(SUM("durationWatched"),0) FROM "PlaybackHistory" WHERE "userId"=? AND "serverId"=?`, h.driver), dbUID, accountServerID).Scan(&totalPlays, &totalDuration)
 
 	// Recent activity
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",m."title",m."type",m."libraryName" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."userId"=? OR p."userId"=? ORDER BY p."startedAt" DESC LIMIT 20`, h.driver), dbUID, jid)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",m."title",m."type",m."libraryName" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."userId"=? AND p."serverId"=? ORDER BY p."startedAt" DESC LIMIT 20`, h.driver), dbUID, accountServerID)
 	recent := []map[string]any{}
 	if err == nil {
 		for rows.Next() {
@@ -1020,29 +871,27 @@ func (h *Handler) userActiveStream(w http.ResponseWriter, r *http.Request) {
 	}
 
 	principal, ok := auth.PrincipalFromContext(r.Context())
+	var authorizedAccount auth.AccountIdentity
 	if ok && !principal.IsAdmin() {
-		isSelf := false
-		if strings.EqualFold(principal.Username, id) || (principal.JellyfinUserID != "" && principal.JellyfinUserID == id) {
-			isSelf = true
-		} else {
-			var uname string
-			err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "username" FROM "User" WHERE "id"=? OR "jellyfinUserId"=? OR "username"=? LIMIT 1`, h.driver), id, id, id).Scan(&uname)
-			if err == nil && strings.EqualFold(uname, principal.Username) {
-				isSelf = true
-			}
-		}
-		if !isSelf {
+		var err error
+		authorizedAccount, err = auth.ResolveAccount(r.Context(), h.db, h.driver, principal)
+		if err != nil || !authorizedAccount.Matches(strings.TrimSpace(r.PathValue("id"))) {
 			jsonError(w, 403, "Forbidden")
 			return
 		}
+		id = authorizedAccount.ID
 	}
-
 	var stream map[string]any
 	var sid, playMethod, started string
 	var title, kind sql.NullString
 	var posTicks sql.NullInt64
 	query := `SELECT s."sessionId",s."playMethod",s."startedAt",s."positionTicks",m."title",m."type" FROM "ActiveStream" s LEFT JOIN "Media" m ON m."id"=s."mediaId" WHERE s."userId"=? OR s."userId" IN (SELECT "id" FROM "User" WHERE "jellyfinUserId"=? OR "id"=?) LIMIT 1`
-	err := h.db.QueryRowContext(r.Context(), database.Bind(query, h.driver), id, id, id).Scan(&sid, &playMethod, &started, &posTicks, &title, &kind)
+	queryArgs := []any{id, id, id}
+	if ok && !principal.IsAdmin() {
+		query = `SELECT s."sessionId",s."playMethod",s."startedAt",s."positionTicks",m."title",m."type" FROM "ActiveStream" s LEFT JOIN "Media" m ON m."id"=s."mediaId" WHERE s."userId"=? AND s."serverId"=? LIMIT 1`
+		queryArgs = []any{authorizedAccount.ID, authorizedAccount.ServerID}
+	}
+	err := h.db.QueryRowContext(r.Context(), database.Bind(query, h.driver), queryArgs...).Scan(&sid, &playMethod, &started, &posTicks, &title, &kind)
 	if err == nil {
 		stream = map[string]any{
 			"sessionId": sid, "playMethod": playMethod, "startedAt": started,
@@ -1068,8 +917,17 @@ func (h *Handler) mediaList(w http.ResponseWriter, r *http.Request) {
 		args = append(args, "%"+q+"%", "%"+q+"%", "%"+q+"%")
 	}
 	if mType != "" {
-		whereClauses = append(whereClauses, `m."type" = ?`)
-		args = append(args, mType)
+		switch strings.ToLower(mType) {
+		case "series":
+			whereClauses = append(whereClauses, `m."type" IN ('Series','Season','Episode')`)
+		case "audio", "music":
+			whereClauses = append(whereClauses, `m."type" IN ('Audio','Track','MusicAlbum')`)
+		case "book":
+			whereClauses = append(whereClauses, `m."type" IN ('Book','AudioBook')`)
+		default:
+			whereClauses = append(whereClauses, `m."type" = ?`)
+			args = append(args, mType)
+		}
 	}
 	if library != "" {
 		whereClauses = append(whereClauses, `m."libraryName" = ?`)
@@ -1078,6 +936,14 @@ func (h *Handler) mediaList(w http.ResponseWriter, r *http.Request) {
 	if artist != "" {
 		whereClauses = append(whereClauses, `(m."artist" LIKE ? OR m."directors" LIKE ? OR m."title" LIKE ?)`)
 		args = append(args, "%"+artist+"%", "%"+artist+"%", "%"+artist+"%")
+	}
+	if servers := getServerScope(r); len(servers) > 0 {
+		marks := make([]string, len(servers))
+		for i, id := range servers {
+			marks[i] = "?"
+			args = append(args, id)
+		}
+		whereClauses = append(whereClauses, `m."serverId" IN (`+strings.Join(marks, ",")+`)`)
 	}
 
 	var total int64
@@ -1116,10 +982,10 @@ func (h *Handler) mediaList(w http.ResponseWriter, r *http.Request) {
 			out = append(out, map[string]any{
 				"id": id, "jellyfinMediaId": jid, "title": title, "type": kind,
 				"library": nullable(lib), "resolution": nullable(res), "durationMs": dur.Int64,
-				"server": nullable(server),
+				"server":    nullable(server),
 				"dateAdded": nullable(dateAdded),
-				"genres": parseStringList(genresRaw.String),
-				"plays": plays,
+				"genres":    parseStringList(genresRaw.String),
+				"plays":     plays,
 			})
 		}
 	}
@@ -1175,41 +1041,6 @@ func (h *Handler) mediaDetail(w http.ResponseWriter, r *http.Request) {
 		"speedChangeCount": speedChangeCount, "maxPlaybackRate": maxRateVal,
 		"recentActivity": recentActivity,
 	})
-}
-
-func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
-	limit, offset := page(r)
-	days := boundedInt(r.URL.Query().Get("days"), 30, 1, 3650)
-	since := time.Now().UTC().AddDate(0, 0, -days).Format(time.RFC3339Nano)
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."endedAt",p."durationWatched",p."playMethod",u."username",m."title",m."type",m."libraryName",m."id",COALESCE(u."id",''),m."jellyfinMediaId" FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" JOIN "Media" m ON m."id"=p."mediaId" WHERE p."startedAt">=? AND `+excludedLibrariesClause(h.driver, "m")+` ORDER BY p."startedAt" DESC LIMIT ? OFFSET ?`, h.driver), since, limit, offset)
-	if err != nil {
-		jsonError(w, 500, "Impossible de charger l’historique.")
-		return
-	}
-	defer rows.Close()
-	out := []map[string]any{}
-	for rows.Next() {
-		var id, started, method, title, kind, mid, uid string
-		var ended, user, library, jid sql.NullString
-		var duration int64
-		if rows.Scan(&id, &started, &ended, &duration, &method, &user, &title, &kind, &library, &mid, &uid, &jid) == nil {
-			out = append(out, map[string]any{
-				"id":              id,
-				"mediaId":         mid,
-				"userId":          uid,
-				"jellyfinMediaId": nullable(jid),
-				"startedAt":       started,
-				"endedAt":         nullable(ended),
-				"durationMs":      duration * 1000,
-				"playMethod":      method,
-				"username":        nullable(user),
-				"title":           title,
-				"type":            kind,
-				"library":         nullable(library),
-			})
-		}
-	}
-	jsonResponse(w, 200, map[string]any{"items": out, "limit": limit, "offset": offset, "periodDays": days})
 }
 
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
@@ -2632,16 +2463,15 @@ func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
 	// Verify permissions
 	isAdmin := principal.IsAdmin()
 	if !isAdmin {
-		var selfUsername string
-		_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "username" FROM "User" WHERE "id"=? OR "jellyfinUserId"=? OR "username"=? LIMIT 1`, h.driver), id, id, id).Scan(&selfUsername)
-		if !strings.EqualFold(selfUsername, principal.Username) && !strings.EqualFold(id, principal.Username) {
+		identity, err := auth.ResolveAccount(r.Context(), h.db, h.driver, principal)
+		if err != nil || !identity.Matches(strings.TrimSpace(r.PathValue("id"))) {
 			jsonError(w, 403, "Accès refusé.")
 			return
 		}
-
+		id = identity.ID
 		var wrapVis, wrapPer int
 		var wrapSM, wrapSD, wrapEM, wrapED int
-		err := h.db.QueryRowContext(r.Context(), `SELECT "wrappedVisible","wrappedPeriodEnabled","wrappedStartMonth","wrappedStartDay","wrappedEndMonth","wrappedEndDay" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&wrapVis, &wrapPer, &wrapSM, &wrapSD, &wrapEM, &wrapED)
+		err = h.db.QueryRowContext(r.Context(), `SELECT "wrappedVisible","wrappedPeriodEnabled","wrappedStartMonth","wrappedStartDay","wrappedEndMonth","wrappedEndDay" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&wrapVis, &wrapPer, &wrapSM, &wrapSD, &wrapEM, &wrapED)
 		if err == nil {
 			if wrapVis == 0 {
 				jsonError(w, 404, "Le Wrapped n'est pas activé.")
@@ -2664,7 +2494,16 @@ func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var uid, uname, jid string
-	err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "id","username","jellyfinUserId" FROM "User" WHERE "id"=? OR "jellyfinUserId"=? OR "username"=? LIMIT 1`, h.driver), id, id, id).Scan(&uid, &uname, &jid)
+	var accountServerID string
+	userQuery := `SELECT "id","username","jellyfinUserId","serverId" FROM "User" WHERE `
+	userArgs := []any{id, id, id}
+	if !isAdmin {
+		userQuery += `"id"=?`
+		userArgs = []any{id}
+	} else {
+		userQuery += `"id"=? OR "jellyfinUserId"=? OR "username"=? LIMIT 1`
+	}
+	err := h.db.QueryRowContext(r.Context(), database.Bind(userQuery, h.driver), userArgs...).Scan(&uid, &uname, &jid, &accountServerID)
 	if err != nil {
 		jsonError(w, 404, "Utilisateur introuvable.")
 		return
@@ -2680,8 +2519,8 @@ func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
 	startDate := fmt.Sprintf("%04d-01-01T00:00:00Z", targetYear)
 	endDate := fmt.Sprintf("%04d-01-01T00:00:00Z", targetYear+1)
 
-	historyQ := `SELECT p."durationWatched", p."startedAt", p."clientName", m."id", m."jellyfinMediaId", m."title", m."type", m."genres", m."artist" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE (p."userId"=? OR p."userId"=?) AND p."startedAt" >= ? AND p."startedAt" < ? AND p."durationWatched" >= 10`
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(historyQ, h.driver), uid, jid, startDate, endDate)
+	historyQ := `SELECT p."durationWatched", p."startedAt", p."clientName", m."id", m."jellyfinMediaId", m."title", m."type", m."genres", m."artist" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE p."userId"=? AND p."serverId"=? AND p."startedAt" >= ? AND p."startedAt" < ? AND p."durationWatched" >= 10`
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(historyQ, h.driver), uid, accountServerID, startDate, endDate)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les données.")
 		return
@@ -2867,23 +2706,23 @@ func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, 200, map[string]any{
-		"userId":        uid,
-		"username":      uname,
+		"userId":         uid,
+		"username":       uname,
 		"jellyfinUserId": jid,
-		"year":          targetYear,
-		"totalSeconds":  totalSeconds,
-		"totalHours":    float64(totalSeconds) / 3600.0,
-		"totalPlays":    totalPlays,
-		"topMovies":     topMovies,
-		"topSeries":     topSeries,
-		"topMusic":      topMusic,
-		"topGenres":     topGenres,
-		"topClients":    topClients,
-		"dayCounts":     dayCounts,
-		"hourCounts":    hourCounts,
-		"monthCounts":   monthCounts,
-		"peakDay":       peakDay,
-		"peakHour":      peakHour,
-		"peakMonth":     peakMonth,
+		"year":           targetYear,
+		"totalSeconds":   totalSeconds,
+		"totalHours":     float64(totalSeconds) / 3600.0,
+		"totalPlays":     totalPlays,
+		"topMovies":      topMovies,
+		"topSeries":      topSeries,
+		"topMusic":       topMusic,
+		"topGenres":      topGenres,
+		"topClients":     topClients,
+		"dayCounts":      dayCounts,
+		"hourCounts":     hourCounts,
+		"monthCounts":    monthCounts,
+		"peakDay":        peakDay,
+		"peakHour":       peakHour,
+		"peakMonth":      peakMonth,
 	})
 }

@@ -18,11 +18,11 @@ import (
 
 // DashboardFilter configures scope and time bounds for dashboard aggregations.
 type DashboardFilter struct {
-	TimeRange         string   // "24h", "7d", "30d", "90d", "365d", "all", "custom"
-	Days              int      // fallback integer days
-	From              string   // ISO date string e.g. "2026-10-01"
-	To                string   // ISO date string e.g. "2026-10-08"
-	MediaType         string   // "Movie", "Series", "Audio", "Book"
+	TimeRange         string // "24h", "7d", "30d", "90d", "365d", "all", "custom"
+	Days              int    // fallback integer days
+	From              string // ISO date string e.g. "2026-10-01"
+	To                string // ISO date string e.g. "2026-10-08"
+	MediaType         string // "Movie", "Series", "Audio", "Book"
 	ServerIDs         []string
 	ExcludedLibraries []string
 	ExcludedTypes     []string
@@ -231,105 +231,26 @@ type playbackRawItem struct {
 // GetFullDashboard aggregates all necessary data for the comprehensive JellyTrack dashboard.
 func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter DashboardFilter) (FullDashboardResult, error) {
 	now := time.Now().UTC()
-	var currentStart, previousStart, previousEnd *time.Time
-	hasPrev := false
-
 	timeRange := strings.ToLower(strings.TrimSpace(filter.TimeRange))
-	if timeRange == "" {
-		if filter.Days > 0 {
-			timeRange = fmt.Sprintf("%dd", filter.Days)
-		} else {
-			timeRange = "7d"
-		}
+	if filter.Days <= 0 {
+		filter.Days = 7
 	}
-
-	daysCount := 7
-	switch timeRange {
-	case "24h", "1d":
-		t := now.Add(-24 * time.Hour)
-		currentStart = &t
-		pStart := now.Add(-48 * time.Hour)
-		pEnd := t
-		previousStart = &pStart
-		previousEnd = &pEnd
-		hasPrev = true
-		daysCount = 1
-	case "7d":
-		t := now.AddDate(0, 0, -7).Truncate(24 * time.Hour)
-		currentStart = &t
-		pStart := t.AddDate(0, 0, -7)
-		pEnd := t
-		previousStart = &pStart
-		previousEnd = &pEnd
-		hasPrev = true
-		daysCount = 7
-	case "30d":
-		t := now.AddDate(0, 0, -30).Truncate(24 * time.Hour)
-		currentStart = &t
-		pStart := t.AddDate(0, 0, -30)
-		pEnd := t
-		previousStart = &pStart
-		previousEnd = &pEnd
-		hasPrev = true
-		daysCount = 30
-	case "90d":
-		t := now.AddDate(0, 0, -90).Truncate(24 * time.Hour)
-		currentStart = &t
-		pStart := t.AddDate(0, 0, -90)
-		pEnd := t
-		previousStart = &pStart
-		previousEnd = &pEnd
-		hasPrev = true
-		daysCount = 90
-	case "365d", "1y":
-		t := now.AddDate(-1, 0, 0).Truncate(24 * time.Hour)
-		currentStart = &t
-		pStart := t.AddDate(-1, 0, 0)
-		pEnd := t
-		previousStart = &pStart
-		previousEnd = &pEnd
-		hasPrev = true
-		daysCount = 365
-	case "all":
-		currentStart = nil
-		hasPrev = false
-		daysCount = 365
-	case "custom":
-		if filter.From != "" {
-			if tFrom, err := time.Parse("2006-01-02", filter.From); err == nil {
-				currentStart = &tFrom
-				if filter.To != "" {
-					if tTo, err := time.Parse("2006-01-02", filter.To); err == nil {
-						tTo = tTo.Add(24 * time.Hour)
-						diff := tTo.Sub(tFrom)
-						pStart := tFrom.Add(-diff)
-						pEnd := tFrom
-						previousStart = &pStart
-						previousEnd = &pEnd
-						hasPrev = true
-						daysCount = int(diff.Hours() / 24)
-					}
-				}
-			}
-		}
-	default:
-		if d, err := strconv.Atoi(strings.TrimSuffix(timeRange, "d")); err == nil && d > 0 {
-			t := now.AddDate(0, 0, -d).Truncate(24 * time.Hour)
-			currentStart = &t
-			pStart := t.AddDate(0, 0, -d)
-			pEnd := t
-			previousStart = &pStart
-			previousEnd = &pEnd
-			hasPrev = true
-			daysCount = d
-		} else {
-			t := now.AddDate(0, 0, -7).Truncate(24 * time.Hour)
-			currentStart = &t
-			hasPrev = true
-			daysCount = 7
-		}
+	currentStart, currentEnd, daysCount, err := timeBounds(filter, now)
+	if err != nil {
+		return FullDashboardResult{}, err
 	}
-
+	var previousStart, previousEnd *time.Time
+	hasPrev := currentStart != nil
+	if hasPrev {
+		periodEnd := now
+		if currentEnd != nil {
+			periodEnd = *currentEnd
+		}
+		previous := currentStart.Add(-periodEnd.Sub(*currentStart))
+		previousStart, previousEnd = &previous, currentStart
+	} else {
+		daysCount = 365
+	}
 	// 1. Total counts of users and media
 	var totalUsers, totalMedia int64
 	userWhere := `WHERE "isActive"=1`
@@ -343,7 +264,22 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		userWhere += ` AND "serverId" IN (` + strings.Join(placeholders, ",") + `)`
 	}
 	_ = db.QueryRowContext(ctx, database.Bind(`SELECT COUNT(*) FROM "User" `+userWhere, driver), userArgs...).Scan(&totalUsers)
-	_ = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "Media"`).Scan(&totalMedia)
+	mediaWhere := []string{media.ExcludedLibrariesClause(driver, "m")}
+	mediaArgs := []any{}
+	if clause := mediaTypeCondition(filter.MediaType, "m"); clause != "" {
+		mediaWhere = append(mediaWhere, clause)
+	}
+	if len(filter.ServerIDs) > 0 {
+		marks := make([]string, len(filter.ServerIDs))
+		for i, id := range filter.ServerIDs {
+			marks[i] = "?"
+			mediaArgs = append(mediaArgs, id)
+		}
+		mediaWhere = append(mediaWhere, `m."serverId" IN (`+strings.Join(marks, ",")+`)`)
+	}
+	if err := db.QueryRowContext(ctx, database.Bind(`SELECT COUNT(*) FROM "Media" m WHERE `+strings.Join(mediaWhere, " AND "), driver), mediaArgs...).Scan(&totalMedia); err != nil {
+		return FullDashboardResult{}, err
+	}
 
 	// 2. Fetch Playback History with Media and User joins
 	var whereClauses []string
@@ -359,11 +295,9 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		whereClauses = append(whereClauses, `p."startedAt" >= ?`)
 		args = append(args, currentStart.Format(time.RFC3339Nano))
 	}
-	if filter.TimeRange == "custom" && filter.To != "" {
-		if tTo, err := time.Parse("2006-01-02", filter.To); err == nil {
-			whereClauses = append(whereClauses, `p."startedAt" <= ?`)
-			args = append(args, tTo.Add(24*time.Hour).Format(time.RFC3339Nano))
-		}
+	if currentEnd != nil {
+		whereClauses = append(whereClauses, `p."startedAt" < ?`)
+		args = append(args, currentEnd.Format(time.RFC3339Nano))
 	}
 
 	if filter.MediaType != "" {
@@ -447,9 +381,6 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 
 	totalPlays := int64(len(histories))
 	hoursWatched := math.Round((float64(totalDurationSec)/3600.0)*10) / 10
-	if totalDurationSec >= 3600000 && totalDurationSec%3600000 == 0 && totalPlays <= 5 {
-		hoursWatched = math.Round((float64(totalDurationSec)/3600000.0)*10) / 10
-	}
 	currentActiveUsers := len(activeUserSet)
 	directPlayPercent := 100
 	if totalPlays > 0 {
@@ -829,15 +760,23 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	yearSet := make(map[int]bool)
 	libTypeSet := make(map[string]bool)
 
-	hmRows, hmErr := db.QueryContext(ctx, `
+	heatmapFilter := filter
+	heatmapFilter.TimeRange, heatmapFilter.From, heatmapFilter.To = "all", "", ""
+	heatmapWhere, heatmapArgs, _, _, _ := analyticsConditions(heatmapFilter, now)
+	heatmapWhere = append(heatmapWhere, history.ZappingClause("p"), excludedLibClause)
+	hmRows, hmErr := db.QueryContext(ctx, database.Bind(`
 		SELECT substr(CAST(p."startedAt" AS TEXT), 1, 10) AS dt,
-		       COALESCE(m."collectionType", COALESCE(m."type", 'Unknown')) AS lib,
+		       CASE WHEN m."type"='Movie' THEN 'Movie'
+		            WHEN m."type" IN ('Series','Season','Episode') THEN 'Series'
+		            WHEN m."type" IN ('Audio','Track','MusicAlbum') THEN 'Audio'
+		            WHEN m."type" IN ('Book','AudioBook') THEN 'Book'
+		            ELSE COALESCE(m."type", 'Unknown') END AS lib,
 		       COUNT(*)
 		FROM "PlaybackHistory" p
 		LEFT JOIN "Media" m ON m."id" = p."mediaId"
-		WHERE p."durationWatched" >= 10
+		WHERE `+strings.Join(heatmapWhere, " AND ")+`
 		GROUP BY dt, lib
-	`)
+	`, driver), heatmapArgs...)
 	if hmErr == nil {
 		defer hmRows.Close()
 		for hmRows.Next() {
@@ -906,7 +845,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	return FullDashboardResult{
 		PeriodDays:            daysCount,
 		Views:                 totalPlays,
-		DurationMs:            totalDurationSec,
+		DurationMs:            totalDurationSec * 1000,
 		Users:                 totalUsers,
 		Media:                 totalMedia,
 		Activity:              activityCompat,

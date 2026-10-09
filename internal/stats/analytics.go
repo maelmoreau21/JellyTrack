@@ -103,34 +103,14 @@ type PeakPrediction struct {
 
 // GetGranularAnalysis aggregates fine-grained data for GranularAnalysis.
 func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter DashboardFilter) (GranularResult, error) {
-	now := time.Now().UTC()
-	since := now.AddDate(0, 0, -30)
-	if filter.TimeRange == "7d" {
-		since = now.AddDate(0, 0, -7)
-	} else if filter.TimeRange == "24h" {
-		since = now.Add(-24 * time.Hour)
-	} else if filter.Days > 0 {
-		since = now.AddDate(0, 0, -filter.Days)
+	whereClauses, args, since, daysCount, err := analyticsConditions(filter, time.Now().UTC())
+	if err != nil {
+		return GranularResult{}, err
 	}
-
-	var whereClauses []string
-	var args []any
-	excluded := media.ExcludedLibrariesClause(driver, "m")
-	if excluded != "" {
+	if excluded := media.ExcludedLibrariesClause(driver, "m"); excluded != "" {
 		whereClauses = append(whereClauses, excluded)
 	}
 	whereClauses = append(whereClauses, history.ZappingClause("p"))
-	whereClauses = append(whereClauses, `p."startedAt" >= ?`)
-	args = append(args, since.Format(time.RFC3339Nano))
-
-	if len(filter.ServerIDs) > 0 {
-		placeholders := make([]string, len(filter.ServerIDs))
-		for i, sid := range filter.ServerIDs {
-			placeholders[i] = "?"
-			args = append(args, sid)
-		}
-		whereClauses = append(whereClauses, `p."serverId" IN (`+strings.Join(placeholders, ",")+`)`)
-	}
 
 	q := database.Bind(fmt.Sprintf(`
 		SELECT p."startedAt", p."durationWatched", p."mediaId",
@@ -151,17 +131,9 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 
 	dailyMap := make(map[string]map[string]any)
 	var dailyKeys []string
-	daysCount := 30
-	if filter.TimeRange == "7d" {
-		daysCount = 7
-	} else if filter.TimeRange == "24h" {
-		daysCount = 1
-	} else if filter.Days > 0 {
-		daysCount = filter.Days
-	}
-	if daysCount > 0 && daysCount <= 90 {
+	if since != nil && daysCount > 0 && daysCount <= 366 {
 		for d := 0; d < daysCount; d++ {
-			dayKey := since.AddDate(0, 0, d).Format("02 Jan")
+			dayKey := since.AddDate(0, 0, d).Format("2006-01-02")
 			if _, ex := dailyMap[dayKey]; !ex {
 				dailyMap[dayKey] = map[string]any{
 					"time":          dayKey,
@@ -213,7 +185,7 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 			t = t.UTC()
 
 			collectionSet[libName] = true
-			dayKey := t.Format("02 Jan")
+			dayKey := t.Format("2006-01-02")
 			hr := t.Hour()
 			dow := int(t.Weekday())
 			durHours := float64(durSec) / 3600.0
@@ -420,33 +392,14 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 
 // GetNetworkAnalysis aggregates data for NetworkAnalysis view.
 func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter DashboardFilter) (NetworkResult, error) {
-	now := time.Now().UTC()
-	since := now.AddDate(0, 0, -30)
-	if filter.TimeRange == "7d" {
-		since = now.AddDate(0, 0, -7)
-	} else if filter.TimeRange == "24h" {
-		since = now.Add(-24 * time.Hour)
+	whereClauses, args, _, _, err := analyticsConditions(filter, time.Now().UTC())
+	if err != nil {
+		return NetworkResult{}, err
 	}
-
-	var whereClauses []string
-	var args []any
-	excluded := media.ExcludedLibrariesClause(driver, "m")
-	if excluded != "" {
+	if excluded := media.ExcludedLibrariesClause(driver, "m"); excluded != "" {
 		whereClauses = append(whereClauses, excluded)
 	}
 	whereClauses = append(whereClauses, history.ZappingClause("p"))
-	whereClauses = append(whereClauses, `p."startedAt" >= ?`)
-	args = append(args, since.Format(time.RFC3339Nano))
-
-	if len(filter.ServerIDs) > 0 {
-		placeholders := make([]string, len(filter.ServerIDs))
-		for i, sid := range filter.ServerIDs {
-			placeholders[i] = "?"
-			args = append(args, sid)
-		}
-		whereClauses = append(whereClauses, `p."serverId" IN (`+strings.Join(placeholders, ",")+`)`)
-	}
-
 	q := database.Bind(fmt.Sprintf(`
 		SELECT p."id", COALESCE(p."playMethod", 'DirectPlay'), COALESCE(p."clientName", '?'),
 		       COALESCE(p."deviceName", '?'), COALESCE(p."audioCodec", ''),
@@ -780,35 +733,14 @@ type ClientStatItem struct {
 
 // GetDetailedDeepInsights computes comprehensive deep analytics for media, genres, and clients.
 func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, filter DashboardFilter) (DetailedDeepInsights, error) {
-	now := time.Now().UTC()
-	since := now.AddDate(0, 0, -30)
-	if filter.TimeRange == "7d" {
-		since = now.AddDate(0, 0, -7)
-	} else if filter.TimeRange == "24h" {
-		since = now.Add(-24 * time.Hour)
-	} else if filter.Days > 0 {
-		since = now.AddDate(0, 0, -filter.Days)
+	whereClauses, args, _, _, err := analyticsConditions(filter, time.Now().UTC())
+	if err != nil {
+		return DetailedDeepInsights{}, err
 	}
-
-	var whereClauses []string
-	var args []any
-	excluded := media.ExcludedLibrariesClause(driver, "m")
-	if excluded != "" {
+	if excluded := media.ExcludedLibrariesClause(driver, "m"); excluded != "" {
 		whereClauses = append(whereClauses, excluded)
 	}
 	whereClauses = append(whereClauses, history.ZappingClause("p"))
-	whereClauses = append(whereClauses, `p."startedAt" >= ?`)
-	args = append(args, since.Format(time.RFC3339Nano))
-
-	if len(filter.ServerIDs) > 0 {
-		placeholders := make([]string, len(filter.ServerIDs))
-		for i, sid := range filter.ServerIDs {
-			placeholders[i] = "?"
-			args = append(args, sid)
-		}
-		whereClauses = append(whereClauses, `p."serverId" IN (`+strings.Join(placeholders, ",")+`)`)
-	}
-
 	q := database.Bind(fmt.Sprintf(`
 		SELECT p."playMethod", COALESCE(p."clientName", '?'), COALESCE(p."deviceName", '?'),
 		       COALESCE(p."audioLanguage", ''), COALESCE(p."subtitleLanguage", ''),
@@ -996,4 +928,3 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 		TopStudios:             sortLimitStringMap(stuMap, 10),
 	}, nil
 }
-

@@ -29,7 +29,7 @@ func apiDB(t *testing.T) *sql.DB {
 
 func TestDashboardReadsPersistedData(t *testing.T) {
 	db := apiDB(t)
-	for _, q := range []string{`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s','jf','Jellyfin','http://jellyfin')`, `INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u','s','jf-u','Mael')`, `INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type") VALUES('m','s','jf-m','Film','Movie')`, `INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName") VALUES('m2','s','jf-m2','Kids film','Movie','Kids')`, `INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched") VALUES('p','s','u','m','DirectPlay',3600000)`, `INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched") VALUES('p2','s','u','m2','DirectPlay',900000)`, `INSERT INTO "GlobalSettings"("id","excludedLibraries") VALUES('global','["Kids"]')`} {
+	for _, q := range []string{`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s','jf','Jellyfin','http://jellyfin')`, `INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u','s','jf-u','Mael')`, `INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type") VALUES('m','s','jf-m','Film','Movie')`, `INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName") VALUES('m2','s','jf-m2','Kids film','Movie','Kids')`, `INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched") VALUES('p','s','u','m','DirectPlay',3600)`, `INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched") VALUES('p2','s','u','m2','DirectPlay',900)`, `INSERT INTO "GlobalSettings"("id","excludedLibraries") VALUES('global','["Kids"]')`} {
 		if _, err := db.Exec(q); err != nil {
 			t.Fatal(err)
 		}
@@ -49,7 +49,7 @@ func TestDashboardReadsPersistedData(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatal(err)
 	}
-	if result.Views != 1 || result.Duration != 3600000 || result.Users != 1 || result.Media != 2 || len(result.Activity) != 1 {
+	if result.Views != 1 || result.Duration != 3600000 || result.Users != 1 || result.Media != 1 || len(result.Activity) != 1 {
 		t.Fatalf("unexpected dashboard data: %+v", result)
 	}
 }
@@ -352,7 +352,7 @@ func TestHeatmapDrilldownAndMatrix(t *testing.T) {
 	}
 
 	// 2. Drilldown by day/hour
-now := time.Now().UTC()
+	now := time.Now().UTC()
 	dayStr := strconv.Itoa(int(now.Weekday()))
 	hourStr := strconv.Itoa(now.Hour())
 	wDrill := httptest.NewRecorder()
@@ -696,5 +696,3 @@ func TestSettingsFullCoverage(t *testing.T) {
 		t.Fatalf("expected updated settings, got: %+v", sMap2)
 	}
 }
-
-
