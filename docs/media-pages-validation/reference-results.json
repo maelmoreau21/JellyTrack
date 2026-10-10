@@ -1,0 +1,2384 @@
+{
+  "date": "2026-10-10",
+  "source": "Original main component archive, signed isolated NextAuth session, synthetic Prisma adapter. No browser API response replacement.",
+  "cases": [
+    {
+      "route": "/",
+      "errors": [],
+      "httpErrors": [],
+      "overviewHydrated": true,
+      "url": "/",
+      "headings": [
+        "Tableau de bord",
+        "Flux Actifs",
+        "Lectures Totales",
+        "Lecture Directe",
+        "Temps Visionnage",
+        "Utilisateurs actifs",
+        "Films",
+        "Séries & Épisodes",
+        "Musique",
+        "Livres & Audiobooks",
+        "Volume Temporel",
+        "Répartition par Catégorie",
+        "Lectures par Bibliothèque",
+        "Activité Annuelle2026",
+        " Plus Grands Fans",
+        "Écosystème Clients",
+        " Lectures en direct ",
+        "Activité par Heure",
+        "Activité par Jour",
+        "Temps Mensuel",
+        "Taux de Complétion",
+        "Familles de Clients",
+        "Charge du Serveur (Flux Simultanés)",
+        "Tendances",
+        "Prédiction de Charge"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTableau de bord\nTout\nFilms\nSéries\nMusique\nLivres\nTout\nQA principal\nQA secondaire\n7 derniers jours\nMoniteur actif\nDernier poll: Jamais\nDernière synchro: Jamais\nDernière sauvegarde: Jamais\nSanté\nFlux Actifs\n0\nLectures orphelines ouvertes\n0\nBibliothèques exclues\n0\n\nUtilisation CPU\n\n75.1%\n\nRAM (15.5Go)\n\n85.2%\n\nTempérature\n\nN/A\n\nAujourd'hui\n0\nlectures\n0h\nvisionnées\n0\nutilisateur(s) actif(s)\nVue d'ensemble\nAnalyses détaillées\nRéseau\nModifier l'ordre\nFlux Actifs\n0\n\nActuellement géré par le serveur\n\nLectures Totales\n68\n+21.4%\n\nvs 56 période préc.\n\nLecture Directe\n34%DP\n\nLecture sans transcodage (Période)\n\nTemps Visionnage\n37,8h\n+23.5%\n\nCumul vs période précédente (30.6h)\n\nUtilisateurs actifs\n4\n+100.0%\n\nvs 2 période préc.\n\nFilms\n9 vues\n\n12h visionnés\n\nSéries & Épisodes\n27 lectures\n\n13.5h marathonnés\n\nMusique\n24 titres\n\n1.2h écoutés\n\nLivres & Audiobooks\n8 ouvertures\n\n11.1h passés\n\nVolume Temporel\nÉvolution des heures de visionnage par bibliothèque.\nFilmsLivresMusiqueSéries\n03/10\n04/10\n05/10\n06/10\n07/10\n08/10\n09/10\n0h\n45m\n1.5h\n2.3h\n3h\nRépartition par Catégorie\nPart du volume total de lecture (Heures).\nFilmsLivresMusiqueSéries\nLectures par Bibliothèque\nNombre de lectures quotidiennes par type. Cliquez pour isoler.\nFilmsLivresMusiqueSériesTotal\n03/10\n04/10\n05/10\n06/10\n07/10\n08/10\n09/10\n0\n4\n8\n12\n16\nActivité Annuelle\n2026\n147 lectures en 2026\nTout\nFilms\nSéries\nMusique\nLivres\nJan\nFév\nMar\nAvr\nMai\nJuin\nJuil\nAoû\nSep\nOct\nNov\nDéc\n147 lectures en 2026\nMoins\nPlus\nPlus Grands Fans\nUtilisateurs les plus actifs.\n#1\n\nAlice QA\n\n20h\n#2\n\nBob QA\n\n10.6h\n#3\n\nAlice QA\n\n4.8h\n#4\n\nBob QA\n\n2.4h\nÉcosystème Clients\nDistribution des plateformes de lecture (Top 8).\nAndroid TVFinampJellyfin Web\nLectures en direct\nIl y a actuellement 0 flux actif(s).\n\nAucun flux en cours de lecture.\n\nActivité par Heure\nHeure de début des sessions sur la période.\n00:00\n02:00\n04:00\n06:00\n08:00\n10:00\n12:00\n14:00\n16:00\n18:00\n20:00\n23:00\n0\n3\n6\n9\n12\nmoy.: 3\nActivité par Jour\nNombre de sessions par jour de la semaine.\nDim\nLun\nMar\nMer\nJeu\nVen\nSam\n0\n4\n8\n12\n16\nTemps Mensuel\nHeures de visionnage par mois (12 derniers mois).\n2026\nJan\nFév\nMar\nAvr\nMai\nJuin\nJuil\nAoû\nSep\nOct\nNov\nDéc\n0h\n10h\n20h\n30h\n40h\nTaux de Complétion\nRatio sessions terminées vs abandonnées vs partielles.\nPartielTerminé\nFamilles de Clients\nTV, Web, Mobile, Desktop — catégorisation automatique.\n0\n6\n12\n18\n24\nTV\nWeb\nMobile\nCharge du Serveur (Flux Simultanés)\nÉvolution temporelle du nombre de flux actifs simultanés enregistrés.\nFlux Actifs\n03/10\n04/10\n05/10\n06/10\n07/10\n08/10\n09/10\n0h\n1h\n2h\n3h\n4h\nTendances\nContenus en hausse cette semaine vs la semaine précédente.\n1.\nSérie principale QA\n27 lectures cette semaine\n+29%\n2.\nFilm principal QA\n7 lectures cette semaine\nNouveau\n3.\nPiste 1\n7 lectures cette semaine\nNouveau\n4.\nPiste 2\n7 lectures cette semaine\nNouveau\n5.\nPiste 3\n7 lectures cette semaine\nNouveau\n6.\nLivre principal QA\n7 lectures cette semaine\nNouveau\n7.\nFilm principal QA\n2 lectures cette semaine\n+100%\nPrédiction de Charge\nPics de sessions prévus basés sur les 4 dernières semaines.\nJeu\n19h\n~1\n65%\nJeu\n20h\n~1\n65%\nJeu\n21h\n~1\n65%\nJeu\n22h\n~1\n65%\nVen\n15h\n~1\n65%\nVen\n16h\n~1\n65%\nVen\n17h\n~1\n65%\nVen\n18h\n~1\n65%\nVen\n19h\n~1\n65%\nVen\n20h\n~1\n65%\n\nBasé sur l'historique des 4 dernières semaines\n\nTV",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Films",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Séries",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Musique",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Livres",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA principal",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA secondaire",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "7 derniers jours",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "radix-_R_2pbnalb_-trigger-overview",
+          "text": "Vue d'ensemble",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "radix-_R_2pbnalb_-trigger-analytics",
+          "text": "Analyses détaillées",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "radix-_R_2pbnalb_-trigger-network",
+          "text": "Réseau",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Modifier l'ordre",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Films",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Séries",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Musique",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Livres",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        }
+      ],
+      "analytics": {
+        "selected": "active",
+        "headings": [
+          "Tableau de bord",
+          "Top Films",
+          "Top Séries",
+          "Top Albums",
+          "Top Livres",
+          "Top Genres",
+          "Top Clients",
+          "Méthodes de Flux",
+          "Matrice des Résolutions",
+          "Écosystème Appareils",
+          "Répartition Audio",
+          "Sous-titres",
+          "Lectures par Jour",
+          "Durée par Jour",
+          "Lectures par Bibliothèque",
+          "Durée par Bibliothèque",
+          "Lectures (Moy. Horaire)",
+          "Durée (Moy. Horaire)",
+          "Carte de Fréquentation",
+          "Taux de Complétion Moyen par Biblio",
+          "Segments d'Abandon",
+          "Pires Taux de Complétion",
+          "Répartition Audio",
+          "Sous-titres"
+        ],
+        "charts": 41
+      },
+      "network": {
+        "selected": "active",
+        "headings": [
+          "Tableau de bord",
+          "Total Sessions",
+          "Taux de Transcodage",
+          "DirectStream",
+          "Durée de Transcodage",
+          "DirectPlay vs Transcode (par Heure)",
+          "Profil Transcode par Client",
+          "Media les plus transcoder — Tableau des Coupables"
+        ],
+        "charts": 5
+      }
+    },
+    {
+      "route": "/recent",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        }
+      ],
+      "url": "/recent",
+      "headings": [
+        "Ajouts récents",
+        "Film principal QA",
+        "Film principal QA",
+        "Série principale QA",
+        "Série principale QA",
+        "Album principal QA",
+        "Album principal QA",
+        "Film QA 00",
+        "Film QA 00",
+        "Film QA 01",
+        "Film QA 01",
+        "Film QA 02",
+        "Film QA 02",
+        "Film QA 03",
+        "Film QA 03",
+        "Film QA 04",
+        "Film QA 04",
+        "Film QA 05",
+        "Film QA 05",
+        "Film QA 06",
+        "Film QA 06",
+        "Film QA 07",
+        "Film QA 07",
+        "Film QA 08",
+        "Film QA 08",
+        "Film QA 09",
+        "Film QA 09",
+        "Film QA 10",
+        "Film QA 10",
+        "Film QA 11",
+        "Film QA 11",
+        "Film QA 12",
+        "Film QA 12",
+        "Film QA 13",
+        "Film QA 13",
+        "Film QA 14",
+        "Film QA 14",
+        "Film QA 15",
+        "Film QA 15",
+        "Film QA 16",
+        "Film QA 16",
+        "Film QA 17",
+        "Film QA 17",
+        "Film QA 18",
+        "Film QA 18",
+        "Film QA 19",
+        "Film QA 19",
+        "Film QA 20",
+        "Film QA 20",
+        "Film QA 21",
+        "Film QA 21",
+        "Film QA 22",
+        "Film QA 22",
+        "Film QA 23",
+        "Film QA 23",
+        "Film QA 24",
+        "Film QA 24",
+        "Film QA 25",
+        "Film QA 25",
+        "Film QA 26",
+        "Film QA 26",
+        "Film QA 27",
+        "Film QA 27",
+        "Film QA 28",
+        "Film QA 28",
+        "Film QA 29",
+        "Film QA 29",
+        "Film QA 30",
+        "Film QA 30",
+        "Film QA 31",
+        "Film QA 31",
+        "Film QA 32",
+        "Film QA 32",
+        "Film QA 33",
+        "Film QA 33",
+        "Film QA 34",
+        "Film QA 34",
+        "Film QA 35",
+        "Film QA 35",
+        "Film QA 36",
+        "Film QA 36"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nAjouts récents\n112 médias\nTout\nQA principal\nQA secondaire\nNOUVEAU\nFilm\nFilm principal QA\n9 oct. 2026\nDrama\nQA\n4K\nFilm principal QA\n\n9 oct.\n\nNOUVEAU\nSérie\nSérie principale QA\n8 oct. 2026\nDrama\nQA\nSérie principale QA\n\n8 oct.\n\nNOUVEAU\nAlbum\nAlbum principal QA\n3 oct. 2026\nRock\nAlbum principal QA\n\n3 oct.\n\nFilm\nFilm QA 00\n28 sept. 2026\nDrama\nQA\n4K\nFilm QA 00\n\n28 sept.\n\nNOUVEAU\nFilm\nFilm QA 01\n9 oct. 2026\nDrama\nQA\n4K\nFilm QA 01\n\n9 oct.\n\nNOUVEAU\nFilm\nFilm QA 02\n8 oct. 2026\nDrama\nQA\n4K\nFilm QA 02\n\n8 oct.\n\nNOUVEAU\nFilm\nFilm QA 03\n7 oct. 2026\nDrama\nQA\n4K\nFilm QA 03\n\n7 oct.\n\nNOUVEAU\nFilm\nFilm QA 04\n6 oct. 2026\nDrama\nQA\n4K\nFilm QA 04\n\n6 oct.\n\nNOUVEAU\nFilm\nFilm QA 05\n5 oct. 2026\nDrama\nQA\n4K\nFilm QA 05\n\n5 oct.\n\nNOUVEAU\nFilm\nFilm QA 06\n4 oct. 2026\nDrama\nQA\n4K\nFilm QA 06\n\n4 oct.\n\nNOUVEAU\nFilm\nFilm QA 07\n3 oct. 2026\nDrama\nQA\n4K\nFilm QA 07\n\n3 oct.\n\nFilm\nFilm QA 08\n2 oct. 2026\nDrama\nQA\n4K\nFilm QA 08\n\n2 oct.\n\nFilm\nFilm QA 09\n1 oct. 2026\nDrama\nQA\n4K\nFilm QA 09\n\n1 oct.\n\nFilm\nFilm QA 10\n30 sept. 2026\nDrama\nQA\n4K\nFilm QA 10\n\n30 sept.\n\nFilm\nFilm QA 11\n29 sept. 2026\nDrama\nQA\n4K\nFilm QA 11\n\n29 sept.\n\nFilm\nFilm QA 12\n28 sept. 2026\nDrama\nQA\n4K\nFilm QA 12\n\n28 sept.\n\nNOUVEAU\nFilm\nFilm QA 13\n9 oct. 2026\nDrama\nQA\n4K\nFilm QA 13\n\n9 oct.\n\nNOUVEAU\nFilm\nFilm QA 14\n8 oct. 2026\nDrama\nQA\n4K\nFilm QA 14\n\n8 oct.\n\nNOUVEAU\nFilm\nFilm QA 15\n7 oct. 2026\nDrama\nQA\n4K\nFilm QA 15\n\n7 oct.\n\nNOUVEAU\nFilm\nFilm QA 16\n6 oct. 2026\nDrama\nQA\n4K\nFilm QA 16\n\n6 oct.\n\nNOUVEAU\nFilm\nFilm QA 17\n5 oct. 2026\nDrama\nQA\n4K\nFilm QA 17\n\n5 oct.\n\nNOUVEAU\nFilm\nFilm QA 18\n4 oct. 2026\nDrama\nQA\n4K\nFilm QA 18\n\n4 oct.\n\nNOUVEAU\nFilm\nFilm QA 19\n3 oct. 2026\nDrama\nQA\n4K\nFilm QA 19\n\n3 oct.\n\nFilm\nFilm QA 20\n2 oct. 2026\nDrama\nQA\n4K\nFilm QA 20\n\n2 oct.\n\nFilm\nFilm QA 21\n1 oct. 2026\nDrama\nQA\n4K\nFilm QA 21\n\n1 oct.\n\nFilm\nFilm QA 22\n30 sept. 2026\nDrama\nQA\n4K\nFilm QA 22\n\n30 sept.\n\nFilm\nFilm QA 23\n29 sept. 2026\nDrama\nQA\n4K\nFilm QA 23\n\n29 sept.\n\nFilm\nFilm QA 24\n28 sept. 2026\nDrama\nQA\n4K\nFilm QA 24\n\n28 sept.\n\nNOUVEAU\nFilm\nFilm QA 25\n9 oct. 2026\nDrama\nQA\n4K\nFilm QA 25\n\n9 oct.\n\nNOUVEAU\nFilm\nFilm QA 26\n8 oct. 2026\nDrama\nQA\n4K\nFilm QA 26\n\n8 oct.\n\nNOUVEAU\nFilm\nFilm QA 27\n7 oct. 2026\nDrama\nQA\n4K\nFilm QA 27\n\n7 oct.\n\nNOUVEAU\nFilm\nFilm QA 28\n6 oct. 2026\nDrama\nQA\n4K\nFilm QA 28\n\n6 oct.\n\nNOUVEAU\nFilm\nFilm QA 29\n5 oct. 2026\nDrama\nQA\n4K\nFilm QA 29\n\n5 oct.\n\nNOUVEAU\nFilm\nFilm QA 30\n4 oct. 2026\nDrama\nQA\n4K\nFilm QA 30\n\n4 oct.\n\nNOUVEAU\nFilm\nFilm QA 31\n3 oct. 2026\nDrama\nQA\n4K\nFilm QA 31\n\n3 oct.\n\nFilm\nFilm QA 32\n2 oct. 2026\nDrama\nQA\n4K\nFilm QA 32\n\n2 oct.\n\nFilm\nFilm QA 33\n1 oct. 2026\nDrama\nQA\n4K\nFilm QA 33\n\n1 oct.\n\nFilm\nFilm QA 34\n30 sept. 2026\nDrama\nQA\n4K\nFilm QA 34\n\n30 sept.\n\nFilm\nFilm QA 35\n29 sept. 2026\nDrama\nQA\n4K\nFilm QA 35\n\n29 sept.\n\nFilm\nFilm QA 36\n28 sept. 2026\nDrama\nQA\n4K\nFilm QA 36\n\n28 sept.\n\nPage 1 / 3\nSuivant",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA principal",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA secondaire",
+          "type": null
+        }
+      ]
+    },
+    {
+      "route": "/media/all",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        }
+      ],
+      "url": "/media/all",
+      "headings": [
+        "Tous les Médias"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTous les Médias\nTout\nQA principal\nQA secondaire\nTout\nFilms\nSéries\nMusique\n1080P\nSérie principale QA\n57 vues\n28.5h\n1080P\nSérie principale QA\n57 vues\n28.5h\n3495 KBPS\nAlbum principal QA\n54 vues\n2.6h\n3495 KBPS\nAlbum principal QA\n54 vues\n2.6h\n4K UHD\nFilm principal QA\n17 vues\n22.7h\n4K UHD\nFilm principal QA\n2 vues\n2.7h\n4K UHD\nFilm QA 00\n0 vues\n4K UHD\nFilm QA 01\n0 vues\n4K UHD\nFilm QA 02\n0 vues\n4K UHD\nFilm QA 03\n0 vues\n4K UHD\nFilm QA 04\n0 vues\n4K UHD\nFilm QA 05\n0 vues\n4K UHD\nFilm QA 06\n0 vues\n4K UHD\nFilm QA 07\n0 vues\n4K UHD\nFilm QA 08\n0 vues\n4K UHD\nFilm QA 09\n0 vues\n4K UHD\nFilm QA 10\n0 vues\n4K UHD\nFilm QA 11\n0 vues\n4K UHD\nFilm QA 12\n0 vues\n4K UHD\nFilm QA 13\n0 vues\n4K UHD\nFilm QA 14\n0 vues\n4K UHD\nFilm QA 15\n0 vues\n4K UHD\nFilm QA 16\n0 vues\n4K UHD\nFilm QA 17\n0 vues\n4K UHD\nFilm QA 18\n0 vues\n4K UHD\nFilm QA 19\n0 vues\n4K UHD\nFilm QA 20\n0 vues\n4K UHD\nFilm QA 21\n0 vues\n4K UHD\nFilm QA 22\n0 vues\n4K UHD\nFilm QA 23\n0 vues\n4K UHD\nFilm QA 24\n0 vues\n4K UHD\nFilm QA 25\n0 vues\n4K UHD\nFilm QA 26\n0 vues\n4K UHD\nFilm QA 27\n0 vues\n4K UHD\nFilm QA 28\n0 vues\n4K UHD\nFilm QA 29\n0 vues\n4K UHD\nFilm QA 30\n0 vues\n4K UHD\nFilm QA 31\n0 vues\n4K UHD\nFilm QA 32\n0 vues\n4K UHD\nFilm QA 33\n0 vues\n4K UHD\nFilm QA 34\n0 vues\n4K UHD\nFilm QA 35\n0 vues\n4K UHD\nFilm QA 36\n0 vues\n4K UHD\nFilm QA 37\n0 vues\n4K UHD\nFilm QA 38\n0 vues\n4K UHD\nFilm QA 39\n0 vues\n4K UHD\nFilm QA 40\n0 vues\n4K UHD\nFilm QA 41\n0 vues\n4K UHD\nFilm QA 42\n0 vues\n4K UHD\nFilm QA 43\n0 vues\nPage 1 / 3\nSuivant",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA principal",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA secondaire",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Films",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Séries",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Musique",
+          "type": null
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "text": "",
+          "type": null
+        }
+      ]
+    },
+    {
+      "route": "/media/popular",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/media/popular",
+      "headings": [
+        "Top Contenus",
+        "Top Films",
+        "Top Séries",
+        "Top Titres Musicaux",
+        "Top Réalisateurs",
+        "Top Acteurs",
+        "Top Studios"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTop Contenus\n\nLes films, séries et musiques les plus populaires de votre serveur.\n\nTout\nQA principal\nQA secondaire\nTop Films\nLes films les plus visionnés.\n#1\n\nFilm principal QA\n\n17 lectures\n22.7h\n#2\n\nFilm principal QA\n\n2 lectures\n2.7h\nTop Séries\nLes séries les plus suivies.\n#1\n\nSérie principale QA\n\n57 épisodes\n28.5h\nTop Titres Musicaux\nLes musiques les plus écoutées.\n#1\n\nArtiste QA - Piste 1\n\n17 écoutes\n1.1h\n#2\n\nArtiste QA - Piste 2\n\n17 écoutes\n0.8h\n#3\n\nArtiste QA - Piste 3\n\n17 écoutes\n0.6h\n#4\n\nArtiste QA - Piste 1\n\n1 écoute\n0.1h\n#5\n\nArtiste QA - Piste 2\n\n1 écoute\n0.1h\nTop Réalisateurs\nLes réalisateurs les plus visionnés.\n#1\n\nRéalisateur QA\n\n76 lectures\n53.8h\nTop Acteurs\nLes acteurs les plus visionnés.\n#1\n\nActrice QA\n\n76 lectures\n53.8h\nTop Studios\nLes studios les plus populaires.\n#1\n\nStudio QA\n\n76 lectures\n53.8h",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA principal",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA secondaire",
+          "type": null
+        }
+      ]
+    },
+    {
+      "route": "/media/collections",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        }
+      ],
+      "url": "/media/collections",
+      "headings": [
+        "Collections",
+        " Volume du Disque",
+        " Contenu Total",
+        " Temps Total",
+        "Détails par Collection",
+        "Films",
+        "Livres",
+        "Musique",
+        "Séries"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nCollections\nTout\nQA principal\nQA secondaire\nVOLUME DU DISQUE\n11.9 Go\n\nEspace total utilisé\n\nCONTENU TOTAL\n108 films, 2 séries, 6 musique, 2 livres\n\nInventaire des bibliothèques\n\nTEMPS TOTAL\n7j 1h\n\nDurée cumulée des médias\n\nDétails par Collection\n\n4 collections total\n\nFilms\nFilms QA\n10.5 Go\n108 films\n6j 18h\nLEADER\nFilm principal QA\n17 vues\nNOUVEAUTÉ\nFilm principal QA\n09/10/2026\nLivres\nLivres QA\n0.2 Go\n2 livres\n0j 4h\nLEADER\nLivre principal QA\n16 vues\nAucun contenu ajouté\nMusique\nMusique QA\n0.6 Go\n6 musique\n0j 0h\nLEADER\nPiste 1\n17 vues\nNOUVEAUTÉ\nAlbum principal QA\n03/10/2026\nSéries\nSéries QA\n0.6 Go\n2 séries\n0j 3h\n6 épisodes\nLEADER\nÉpisode 1\n17 vues\nNOUVEAUTÉ\nSérie principale QA\n08/10/2026",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA principal",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA secondaire",
+          "type": null
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "text": "",
+          "type": null
+        }
+      ]
+    },
+    {
+      "route": "/media/analysis",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/media/analysis",
+      "headings": [
+        "Analyse Profonde",
+        "Contenu Total",
+        "Qualité Vidéo Globale",
+        "Collections",
+        "Diversité de la Bibliothèque (Top Genres)",
+        "Binge-Watching Tracker (Marathons de Séries)",
+        "Suggestions d'Acquisitions & Tendances (Smart Insights)",
+        "Aperçu des statistiques approfondies",
+        "Top Réalisateurs",
+        "Top Acteurs",
+        "Top Studios"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nAnalyse Profonde\nTout\nQA principal\nQA secondaire\nContenu Total\nInventaire des bibliothèques\nMédias Totaux\n112\nNombre d'éléments multimédia indexés.\nGenres uniques\n3\nDurée moyenne\n1h 30m\nDurée moyenne des médias.\nQualité Vidéo Globale\nRépartition par résolution certifiée.\n4K UHD\n108\n1440p QHD\n0\n1080p FHD\n0\n720p HD\n0\nStandard / Autre\n0\nCollections\nInventaire des bibliothèques\nFilms QA\n108\nSéries QA\n2\nMusique QA\n2\nDiversité de la Bibliothèque (Top Genres)\nRépartition des médias par genre (catégories principales).\n0\n30\n60\n90\n120\nDrama\nQA\nRock\nBinge-Watching Tracker (Marathons de Séries)\nDétection automatique des séries dévorées d'une traite (sessions de 3 épisodes consécutifs ou plus).\n30 derniers jours\nAucun marathon détecté sur les 30 derniers jours (minimum 3 épisodes consécutifs).\nSuggestions d'Acquisitions & Tendances (Smart Insights)\nRecommandations basées sur les genres, réalisateurs et acteurs les plus consommés pour optimiser vos ajouts dans la bibliothèque.\nIA JellyTrack\nGENRE DOMINANT\nTrès Forte Demande\nEnrichir la collection Drama\n\nReprésente 97% du temps total de visionnage (77.4h). Vos spectateurs en redemandent !\n\nIndice d'intérêt\n99%\nGENRE TENDANCE\nTendance Forte\nFilms & Séries QA\n\nDeuxième genre le plus plébiscité avec 77.4h visionnées sur les 30 derniers jours.\n\nIndice d'intérêt\n85%\nARTISTE / RÉALISATEUR VEDETTE\nFavori Utilisateurs\nCompléter la filmographie / discographie de Artiste QA\n\nCumule 2.6h d'écoute/visionnage sur 54 lectures.\n\nIndice d'intérêt\n92%\nGENRES DOMINANTS EN TEMPS DE VISIONNAGE\nDrama\n77.4h (97%)\nQA\n77.4h (97%)\nRock\n2.6h (3%)\nAperçu des statistiques approfondies\nAnalyses avancées de votre collection multimédia.\nTop Réalisateurs\n1\nRéalisateur QA\n110 Top Réalisateurs\nTop Acteurs\n1\nActrice QA\n110 Top Acteurs\nTop Studios\n1\nStudio QA\n110 Top Studios\nDrama",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA principal",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA secondaire",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "1Réalisateur QA110 Top Réalisateurs",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "1Actrice QA110 Top Acteurs",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "1Studio QA110 Top Studios",
+          "type": null
+        }
+      ]
+    },
+    {
+      "route": "/media/movie",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        }
+      ],
+      "url": "/media/movie",
+      "headings": [
+        "Film principal QA",
+        "Temps Total",
+        "Vues",
+        "Durée Moyenne",
+        " Résumé Télémétrie",
+        " Analyse des passages",
+        " Passages sautés / revus",
+        " Vitesses de lecture",
+        " Changements audio / sous-titres",
+        "Spectateurs (2)",
+        " Langues Audio",
+        " Sous-titres",
+        "Distribution de la Complétion",
+        " Chronologie Profonde",
+        "Télémétrie par Session",
+        "Historique Détaillé"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nBibliothèque\nFilm principal QA\nFilm principal QA\nMovie\n4K\n90 min\nDRAMA\nQA\nTemps Total\n22.7h\n\nCumulé\n\nVues\n17\n\nSessions uniques\n\nDurée Moyenne\n80 min\n\nPar session\n\nRésumé Télémétrie\nInteractions utilisateurs cumulées sur toutes les sessions.\nPauses\n34\nPassages sautés\n17\nPassages revus\n0\nChangements de vitesse\n17\nModif. Audio\n17\nModif. Sous-titres\n17\nAnalyse des passages\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\nPassages sautés / revus\n0:30 -> 1:30\n1\n\nPassages sautés - 1 sessions\n\nVitesses de lecture\n\nAucun signal détaillé pour l'instant.\n\nVitesse max: x1.25\n\nChangements audio / sous-titres\nAudio\neng -> fre\n1x\n\n⏱️ Changement à 2:00\n\nPÉRIODES DE LANGUE\n\nAudio\neng (aac)\n16 sessions\nMoment du film :\n0:00 -> 1:20:00\nAudio\neng (aac)\n1 session\nMoment du film :\n0:00 -> 2:00\nAudio\nfre\n1 session\nMoment du film :\n2:00 -> 1:20:00\nSpectateurs (2)\nUtilisateurs ayant visionné ce média.\nAlice QA\n11 sessions\n14.7h\nBob QA\n6 sessions\n8.0h\nLangues Audio\neng (aac)\n17\nSous-titres\n\nAucun\n\nDistribution de la Complétion\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\nChronologie Profonde\nChronologie détaillée des événements pour cette session.\nStop\nDL\nPause\nSkip\nReplay\nVitesse\nAudio\nSous-titres\n0:00\n22:30\n45:00\n1:07:30\n1:30:00\nDÉTAIL DE LA SESSION (1)\nPositions des événements par utilisateur\nBob QA\n80m\nTélémétrie par Session\nPauses, changements d'audio et de sous-titres au fil du temps.\nHistorique Détaillé\n17 sessions au total.\nUtilisateur\tDate\tMéthode\tAudio\tSous-titres\tPauses\tSauts\tRetours\tVitesse max\tDurée\nBob QA\t09/10/2026 22:34\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t08/10/2026 22:31\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t07/10/2026 22:33\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nBob QA\t06/10/2026 22:30\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t05/10/2026 22:32\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t04/10/2026 22:34\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nBob QA\t03/10/2026 22:31\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t02/10/2026 22:33\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t01/10/2026 22:30\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nBob QA\t30/09/2026 22:32\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t29/09/2026 22:34\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t28/09/2026 22:31\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nBob QA\t27/09/2026 22:33\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t26/09/2026 22:30\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t25/09/2026 22:32\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nBob QA\t24/09/2026 22:34\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min\nAlice QA\t23/09/2026 22:31\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t80 min",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Stop",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "DL",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Pause",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Skip",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Replay",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Vitesse",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Audio",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Sous-titres",
+          "type": null
+        }
+      ]
+    },
+    {
+      "route": "/media/series",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        }
+      ],
+      "url": "/media/series",
+      "headings": [
+        "Série principale QA",
+        " Saisons (1)",
+        "Temps Total",
+        "Vues",
+        "Durée Moyenne",
+        " Résumé Télémétrie",
+        " Analyse des passages",
+        " Passages sautés / revus",
+        " Vitesses de lecture",
+        " Changements audio / sous-titres",
+        "Spectateurs (2)",
+        " Langues Audio",
+        " Sous-titres",
+        "Télémétrie par Session",
+        "Historique Détaillé"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nBibliothèque\nSérie principale QA\nSérie principale QA\nSeries\nDRAMA\nQA\nSaisons (1)\nSaisons de cette série avec statistiques agrégées.\n#\tTitre\tType\tRésolution\tSessions\tTemps Total\n1\t\nSaison 1\n\tSeason\t—\t51\t25.5h\nTemps Total\n25.5h\n\nCumulé\n\nVues\n51\n\nSessions uniques\n\nDurée Moyenne\n30 min\n\nPar session\n\nRésumé Télémétrie\nInteractions utilisateurs cumulées sur toutes les sessions.\nPauses\n102\nPassages sautés\n51\nPassages revus\n0\nChangements de vitesse\n51\nModif. Audio\n51\nModif. Sous-titres\n51\nAnalyse des passages\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\nPassages sautés / revus\n\nAucun signal détaillé pour l'instant.\n\nVitesses de lecture\n\nAucun signal détaillé pour l'instant.\n\nVitesse max: x1.25\n\nChangements audio / sous-titres\n\nAucun signal détaillé pour l'instant.\n\nPÉRIODES DE LANGUE\n\nAudio\nfre (aac)\n34 sessions\nMoment du film :\n0:00 -> 30:00\nSous-titres\neng (subrip)\n34 sessions\nMoment du film :\n0:00 -> 30:00\nAudio\neng (aac)\n17 sessions\nMoment du film :\n0:00 -> 30:00\nSpectateurs (2)\nUtilisateurs ayant visionné ce média.\nAlice QA\n34 sessions\n17.0h\nBob QA\n17 sessions\n8.5h\nLangues Audio\nfre (aac)\n34\neng (aac)\n17\nSous-titres\neng (subrip)\n34\nTélémétrie par Session\nPauses, changements d'audio et de sous-titres au fil du temps.\nHistorique Détaillé\n51 sessions au total.\nUtilisateur\tDate\tMéthode\tAudio\tSous-titres\tPauses\tSauts\tRetours\tVitesse max\tDurée\nAlice QA\t09/10/2026 21:33\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t08/10/2026 21:30\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t07/10/2026 21:32\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t06/10/2026 21:34\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t05/10/2026 21:31\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t04/10/2026 21:33\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t03/10/2026 21:30\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t02/10/2026 21:32\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t01/10/2026 21:34\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t30/09/2026 21:31\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t29/09/2026 21:33\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t28/09/2026 21:30\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t27/09/2026 21:32\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t26/09/2026 21:34\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t25/09/2026 21:31\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t24/09/2026 21:33\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t23/09/2026 21:30\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t09/10/2026 20:32\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t08/10/2026 20:34\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nBob QA\t07/10/2026 20:31\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t06/10/2026 20:33\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t05/10/2026 20:30\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nBob QA\t04/10/2026 20:32\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t03/10/2026 20:34\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t02/10/2026 20:31\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nBob QA\t01/10/2026 20:33\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t30/09/2026 20:30\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t29/09/2026 20:32\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nBob QA\t28/09/2026 20:34\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t27/09/2026 20:31\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t26/09/2026 20:33\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nBob QA\t25/09/2026 20:30\tDirectPlay\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t24/09/2026 20:32\tTranscode\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nAlice QA\t23/09/2026 20:34\tDirectStream\teng (aac)\t—\t2\t1\t0\tx1.25\t30 min\nBob QA\t09/10/2026 19:31\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t08/10/2026 19:33\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t07/10/2026 19:30\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t06/10/2026 19:32\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t05/10/2026 19:34\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t04/10/2026 19:31\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t03/10/2026 19:33\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t02/10/2026 19:30\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t01/10/2026 19:32\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t30/09/2026 19:34\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t29/09/2026 19:31\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t28/09/2026 19:33\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t27/09/2026 19:30\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t26/09/2026 19:32\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t25/09/2026 19:34\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t24/09/2026 19:31\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t23/09/2026 19:33\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": "button"
+        }
+      ]
+    },
+    {
+      "route": "/media/episode1",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        }
+      ],
+      "url": "/media/episode1",
+      "headings": [
+        "Épisode 1",
+        "Temps Total",
+        "Vues",
+        "Durée Moyenne",
+        " Résumé Télémétrie",
+        " Analyse des passages",
+        " Passages sautés / revus",
+        " Vitesses de lecture",
+        " Changements audio / sous-titres",
+        "Spectateurs (2)",
+        " Langues Audio",
+        " Sous-titres",
+        "Distribution de la Complétion",
+        " Chronologie Profonde",
+        "Télémétrie par Session",
+        "Historique Détaillé"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nBibliothèque\nSérie principale QA\nSaison 1\nÉpisode 1\nVoir la série : Série principale QA\nSaison 1\nÉpisode 1\nSérie principale QA\n-\nSaison 1\nEpisode\n1080p\n30 min\nDRAMA\nQA\nTemps Total\n8.5h\n\nCumulé\n\nVues\n17\n\nSessions uniques\n\nDurée Moyenne\n30 min\n\nPar session\n\nRésumé Télémétrie\nInteractions utilisateurs cumulées sur toutes les sessions.\nPauses\n34\nPassages sautés\n17\nPassages revus\n0\nChangements de vitesse\n17\nModif. Audio\n17\nModif. Sous-titres\n17\nAnalyse des passages\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\nPassages sautés / revus\n0:30 -> 1:30\n1\n\nPassages sautés - 1 sessions\n\nVitesses de lecture\n\nAucun signal détaillé pour l'instant.\n\nVitesse max: x1.25\n\nChangements audio / sous-titres\nAudio\neng -> fre\n1x\n\n⏱️ Changement à 2:00\n\nPÉRIODES DE LANGUE\n\nSous-titres\neng (subrip)\n17 sessions\nMoment du film :\n0:00 -> 30:00\nAudio\nfre (aac)\n16 sessions\nMoment du film :\n0:00 -> 30:00\nAudio\nfre (aac)\n1 session\nMoment du film :\n0:00 -> 2:00\nAudio\nfre\n1 session\nMoment du film :\n2:00 -> 30:00\nSpectateurs (2)\nUtilisateurs ayant visionné ce média.\nAlice QA\n11 sessions\n5.5h\nBob QA\n6 sessions\n3.0h\nLangues Audio\nfre (aac)\n17\nSous-titres\neng (subrip)\n17\nDistribution de la Complétion\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\nChronologie Profonde\nChronologie détaillée des événements pour cette session.\nStop\nDL\nPause\nSkip\nReplay\nVitesse\nAudio\nSous-titres\n0:00\n7:30\n15:00\n22:30\n30:00\nDÉTAIL DE LA SESSION (1)\nPositions des événements par utilisateur\nAlice QA\n30m\nTélémétrie par Session\nPauses, changements d'audio et de sous-titres au fil du temps.\nHistorique Détaillé\n17 sessions au total.\nUtilisateur\tDate\tMéthode\tAudio\tSous-titres\tPauses\tSauts\tRetours\tVitesse max\tDurée\nAlice QA\t09/10/2026 21:33\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t08/10/2026 21:30\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t07/10/2026 21:32\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t06/10/2026 21:34\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t05/10/2026 21:31\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t04/10/2026 21:33\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t03/10/2026 21:30\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t02/10/2026 21:32\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t01/10/2026 21:34\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t30/09/2026 21:31\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t29/09/2026 21:33\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t28/09/2026 21:30\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t27/09/2026 21:32\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t26/09/2026 21:34\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t25/09/2026 21:31\tTranscode\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nAlice QA\t24/09/2026 21:33\tDirectStream\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min\nBob QA\t23/09/2026 21:30\tDirectPlay\tfre (aac)\teng (subrip)\t2\t1\t0\tx1.25\t30 min",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Stop",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "DL",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Pause",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Skip",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Replay",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Vitesse",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Audio",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Sous-titres",
+          "type": null
+        }
+      ]
+    },
+    {
+      "route": "/media/artist/Artiste%20QA",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        }
+      ],
+      "url": "/media/artist/Artiste%20QA",
+      "headings": [
+        "Artiste QA",
+        "Albums",
+        "Tracks",
+        "Plays",
+        "Listening Time",
+        " Albums",
+        " Tracks"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nBibliothèque\n/\nArtiste QA\nARTIST\nArtiste QA\n\n2 albums • 6 tracks\n\nAlbums\n2\nTracks\n6\nPlays\n54\nListening Time\n2.6h\nAlbums\nQuick link back to albums by this artist.\n\nAlbum principal QA\n\n3\n51\n2.5h\n\nAlbum principal QA\n\n3\n3\n0.1h\nTracks\nTop tracks related to this artist.\nPer page\n25\n50\nPiste 1\nAlbum principal QA\n4 min\n17 plays\n65 min played\nPiste 2\nAlbum principal QA\n4 min\n17 plays\n51 min played\nPiste 3\nAlbum principal QA\n4 min\n17 plays\n34 min played\nPiste 1\nAlbum principal QA\n4 min\n1 plays\n4 min played\nPiste 2\nAlbum principal QA\n4 min\n1 plays\n3 min played\nPiste 3\nAlbum principal QA\n4 min\n1 plays\n2 min played",
+      "rendered": true,
+      "controls": []
+    },
+    {
+      "route": "/logs",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        }
+      ],
+      "url": "/logs",
+      "headings": [
+        "Journaux",
+        "Alertes smart"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nJournaux\n\nHistorique complet des lectures et événements de télémétrie. — 147 entrées au total\n\nApplication\nSystème\nAlertes smart\nℹ Disparaît automatiquement après 24h sans activité anormale (fenêtre glissante)\n2\nConnexions depuis un nouveau pays\nFiltres sauvegardés\nColonnes\nTout\nQA principal\nQA secondaire\nMasquer Zappés (< 1m)\nFiltres\nTrier\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nRechercher\nCSV\nJSON\n≡\nDATE\n\t\n≡\nUTILISATEUR\n\t\n≡\nMÉDIA\n\t\n≡\nAPPLICATION\n\t\n≡\nRÉSOLUTION\n\t\n≡\nBITRATE AUDIO\n\t\n≡\nSTATUT\n\t\n≡\nDURÉE\n\n\n9 oct.\n22:34\n\tBob QA\t\nFilm principal QA\n\t\nJellyfin Web\n\t\n4K\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t1h 20m 00s\n\n9 oct.\n22:34\n\tBob QA\t\nFilm principal QA\n\t\nJellyfin Web\n\t\n4K\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t1h 20m 00s\n\n9 oct.\n21:33\n\tAlice QA\t\nÉpisode 1\nSaison 1\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n9 oct.\n21:33\n\tAlice QA\t\nÉpisode 1\nSaison 1\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n9 oct.\n20:32\n\tAlice QA\t\nÉpisode 2\nSaison 1\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n9 oct.\n20:32\n\tAlice QA\t\nÉpisode 2\nSaison 1\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n9 oct.\n19:31\n\tBob QA\t\nÉpisode 3\nSaison 1\n\t\nJellyfin Web\n\t\n1080p\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t30m 00s\n\n9 oct.\n19:31\n\tBob QA\t\nÉpisode 3\nSaison 1\n\t\nJellyfin Web\n\t\n1080p\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t30m 00s\n\n9 oct.\n18:30\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 50s\n\n9 oct.\n18:30\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 50s\n\n9 oct.\n17:34\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t3m 00s\n\n9 oct.\n17:34\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t3m 00s\n\n9 oct.\n16:33\n\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\t\nJellyfin Web\n\t\n—\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t2m 00s\n\n9 oct.\n16:33\n\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\t\nJellyfin Web\n\t\n—\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t2m 00s\n\n9 oct.\n15:32\n\tAlice QA\t\nLivre principal QA\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t1h 23m 20s\n\n9 oct.\n15:32\n\tAlice QA\t\nLivre principal QA\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t1h 23m 20s\n\n8 oct.\n22:31\n\tAlice QA\t\nFilm principal QA\n\t\nFinamp\n\t\n4K\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 20m 00s\n\n8 oct.\n22:31\n\tAlice QA\t\nFilm principal QA\n\t\nFinamp\n\t\n4K\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 20m 00s\n\n8 oct.\n21:30\n\tBob QA\t\nÉpisode 1\nSaison 1\n\t\nJellyfin Web\n\t\n1080p\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t30m 00s\n\n8 oct.\n21:30\nNouveau pays\n\tBob QA\t\nÉpisode 1\nSaison 1\n\t\nJellyfin Web\n\t\n1080p\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t30m 00s\n\n8 oct.\n20:34\n\tAlice QA\t\nÉpisode 2\nSaison 1\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n8 oct.\n20:34\n\tAlice QA\t\nÉpisode 2\nSaison 1\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n8 oct.\n19:33\n\tAlice QA\t\nÉpisode 3\nSaison 1\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n8 oct.\n19:33\nNouveau pays\n\tAlice QA\t\nÉpisode 3\nSaison 1\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n8 oct.\n18:32\n\tBob QA\t\nPiste 1\nArtiste QA — Album principal QA\n\t\nJellyfin Web\n\t\n—\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t3m 50s\n\n8 oct.\n17:31\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 00s\n\n8 oct.\n16:30\n\tAlice QA\t\nPiste 3\nArtiste QA — Album principal QA\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t2m 00s\n\n8 oct.\n15:34\n\tBob QA\t\nLivre principal QA\n\t\nJellyfin Web\n\t\n—\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t1h 23m 20s\n\n7 oct.\n22:33\n\tAlice QA\t\nFilm principal QA\n\t\nAndroid TV\n\t\n4K\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t1h 20m 00s\n\n7 oct.\n21:32\n\tAlice QA\t\nÉpisode 1\nSaison 1\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n7 oct.\n20:31\n\tBob QA\t\nÉpisode 2\nSaison 1\n\t\nJellyfin Web\n\t\n1080p\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t30m 00s\n\n7 oct.\n19:30\n\tAlice QA\t\nÉpisode 3\nSaison 1\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n7 oct.\n18:34\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t3m 50s\n\n7 oct.\n17:33\n\tBob QA\t\nPiste 2\nArtiste QA — Album principal QA\n\t\nJellyfin Web\n\t\n—\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t3m 00s\n\n7 oct.\n16:32\n\tAlice QA\t\nPiste 3\nArtiste QA — Album principal QA\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t2m 00s\n\n7 oct.\n15:31\n\tAlice QA\t\nLivre principal QA\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 23m 20s\n\n6 oct.\n22:30\n\tBob QA\t\nFilm principal QA\n\t\nJellyfin Web\n\t\n4K\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t1h 20m 00s\n\n6 oct.\n21:34\n\tAlice QA\t\nÉpisode 1\nSaison 1\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n6 oct.\n20:33\n\tAlice QA\t\nÉpisode 2\nSaison 1\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n6 oct.\n19:32\n\tBob QA\t\nÉpisode 3\nSaison 1\n\t\nJellyfin Web\n\t\n1080p\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t30m 00s\n\n6 oct.\n18:31\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 50s\n\n6 oct.\n17:30\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t3m 00s\n\n6 oct.\n16:34\n\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\t\nJellyfin Web\n\t\n—\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t2m 00s\n\n6 oct.\n15:33\n\tAlice QA\t\nLivre principal QA\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t1h 23m 20s\n\n5 oct.\n22:32\n\tAlice QA\t\nFilm principal QA\n\t\nFinamp\n\t\n4K\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 20m 00s\n\n5 oct.\n21:31\n\tBob QA\t\nÉpisode 1\nSaison 1\n\t\nJellyfin Web\n\t\n1080p\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t30m 00s\n\n5 oct.\n20:30\n\tAlice QA\t\nÉpisode 2\nSaison 1\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n5 oct.\n19:34\n\tAlice QA\t\nÉpisode 3\nSaison 1\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n5 oct.\n18:33\n\tBob QA\t\nPiste 1\nArtiste QA — Album principal QA\n\t\nJellyfin Web\n\t\n—\n\t\n12 kbps\n\t\nDirectPlay\n⏸ Pauses (2)\n\t3m 50s\n\n5 oct.\n17:32\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 00s\n1\n2\n3\nSuivant\nPage 1 / 3",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "text": "",
+          "type": "text"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Filtres sauvegardés",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Colonnes",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Tout",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA principal",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "QA secondaire",
+          "type": null
+        },
+        {
+          "tag": "INPUT",
+          "id": "hideZapped",
+          "text": "",
+          "type": "checkbox"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Filtres",
+          "type": "button"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Trier",
+          "type": "button"
+        },
+        {
+          "tag": "SELECT",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Rechercher",
+          "type": "submit"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "P",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "S",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "A",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        }
+      ]
+    },
+    {
+      "route": "/newsletter",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 400
+        }
+      ],
+      "url": "/newsletter",
+      "headings": [
+        "JellyTrack Rewind",
+        "Le Podium Vidéo",
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nJellyTrack Rewind\n\nVotre récapitulatif des 30 derniers jours\n\n10 sept. 2026 - 10 oct. 2026\n\n80h\nVisionné\n147\nLectures totales\nLe Podium Vidéo\n1\nFilm principal QA\n\nMovie\n\n22.7h\n2\nLivre principal QA\n\nBook\n\n22.2h\n3\nÉpisode 1\n\nEpisode\n\n8.5h\n\nMeilleur spectateur\n\nAlice QA\n\n49h\n\nVisionné\n\nTélécharger l'infographie (PNG)\nDiffuser sur Discord",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Télécharger l'infographie (PNG)",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Diffuser sur Discord",
+          "type": null
+        }
+      ]
+    },
+    {
+      "route": "/wrapped/alice",
+      "errors": [],
+      "httpErrors": [],
+      "url": "/wrapped/alice",
+      "headings": [
+        "Le Récap de Alice QA",
+        "JellyTrack Wrapped 2026"
+      ],
+      "body": "LE RÉCAP DE ALICE QA\nJellyTrack Wrapped 2026\n\nPrêt à découvrir votre année en médias ?\n\nPersonnaliser\nRetour\n2026 • GENERAL\n1 / 18\nSuivant",
+      "rendered": true,
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Personnaliser",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Retour",
+          "type": null
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "text": "Suivant",
+          "type": null
+        }
+      ]
+    }
+  ]
+}
