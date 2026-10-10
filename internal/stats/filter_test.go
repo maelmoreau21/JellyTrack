@@ -36,6 +36,7 @@ func TestAnalyticsHonorPeriodMediaAndServerFilters(t *testing.T) {
 		{"365d", DashboardFilter{TimeRange: "365d", MediaType: "Movie", ServerIDs: []string{"s1"}}, 2},
 		{"all", DashboardFilter{TimeRange: "all", MediaType: "Movie", ServerIDs: []string{"s1"}}, 3},
 		{"series includes episodes", DashboardFilter{TimeRange: "all", MediaType: "Series", ServerIDs: []string{"s1"}}, 1},
+		{"multiple category exclusions", DashboardFilter{TimeRange: "all", ExcludedTypes: []string{"Movie", "MusicAlbum", "Book"}, ServerIDs: []string{"s1"}}, 1},
 		{"24h alias", DashboardFilter{TimeRange: "1d"}, 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -68,13 +69,16 @@ func TestAnalyticsHonorPeriodMediaAndServerFilters(t *testing.T) {
 			if count != tc.want {
 				t.Fatalf("deep=%d want %d", count, tc.want)
 			}
-			if tc.filter.TimeRange == "all" && tc.filter.MediaType == "Series" {
+			if tc.filter.TimeRange == "all" && (tc.filter.MediaType == "Series" || len(tc.filter.ExcludedTypes) > 0) {
 				dashboard, err := GetFullDashboard(context.Background(), db, "sqlite", tc.filter)
 				if err != nil {
 					t.Fatal(err)
 				}
 				if dashboard.Media != 1 {
 					t.Fatalf("catalog scope=%d", dashboard.Media)
+				}
+				if dashboard.TotalPlays != tc.want {
+					t.Fatalf("dashboard exclusion scope=%d want %d", dashboard.TotalPlays, tc.want)
 				}
 				var total int64
 				for _, cell := range dashboard.YearlyHeatmap.DataByType["Series"] {

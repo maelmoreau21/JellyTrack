@@ -365,7 +365,10 @@
   // =========================================================================
 
   const Modal = {
+    activeCleanup: null,
     showAction({ title, bodyHtml, confirmText = 'Confirmer', cancelText = 'Annuler', onConfirm }) {
+      this.closeAction();
+      const previousFocus = document.activeElement;
       const modal = document.getElementById('action-modal');
       const titleEl = document.getElementById('action-modal-title');
       const bodyEl = document.getElementById('action-modal-body');
@@ -380,22 +383,48 @@
 
       const cleanup = () => {
         modal.classList.remove('open');
+        modal.removeEventListener('click', backdrop);
+        document.removeEventListener('keydown', keyboard);
+        this.activeCleanup = null;
+        confirmBtn.disabled = false;
         confirmBtn.replaceWith(confirmBtn.cloneNode(true));
         cancelBtn.replaceWith(cancelBtn.cloneNode(true));
         closeBtn.replaceWith(closeBtn.cloneNode(true));
+        if (previousFocus?.isConnected) previousFocus.focus();
       };
+
+      const backdrop = event => { if (event.target === modal) cleanup(); };
+      const keyboard = event => {
+        if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); cleanup(); }
+        if (event.key !== 'Tab') return;
+        const targets = [...modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex="0"]')].filter(element => element.getClientRects().length);
+        const first = targets[0], last = targets.at(-1);
+        if (!first) return;
+        if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+      };
+      this.activeCleanup = cleanup;
 
       document.getElementById('action-modal-cancel').onclick = cleanup;
       document.getElementById('action-modal-close').onclick = cleanup;
       document.getElementById('action-modal-confirm').onclick = async () => {
-        if (onConfirm && await onConfirm() === false) return;
-        cleanup();
+        if (confirmBtn.disabled) return;
+        confirmBtn.disabled = true;
+        try {
+          if (onConfirm && await onConfirm() === false) return;
+          if (this.activeCleanup === cleanup) cleanup();
+        } catch (error) { Toast.error(error.message); }
+        finally { if (confirmBtn.isConnected) confirmBtn.disabled = false; }
       };
 
       modal.classList.add('open');
+      modal.addEventListener('click', backdrop);
+      document.addEventListener('keydown', keyboard);
+      (bodyEl.querySelector('input, textarea, select') || cancelBtn).focus();
     },
 
     closeAction() {
+      if (this.activeCleanup) { this.activeCleanup(); return; }
       const modal = document.getElementById('action-modal');
       if (modal) modal.classList.remove('open');
     },
@@ -676,6 +705,10 @@
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
+          onClick: options.onClick ? (event, elements) => {
+            if (!elements?.length) return;
+            const hit = elements[0]; options.onClick(hit.index, labels[hit.index], hit.datasetIndex);
+          } : undefined,
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -847,6 +880,10 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          onClick: options.onClick ? (event, elements) => {
+            if (!elements?.length) return;
+            const hit = elements[0]; options.onClick(hit.index, labels[hit.index], hit.datasetIndex);
+          } : undefined,
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -902,6 +939,10 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          onClick: options.onClick ? (event, elements) => {
+            if (!elements?.length) return;
+            const hit = elements[0]; options.onClick(hit.index, labels[hit.index], hit.datasetIndex);
+          } : undefined,
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: {
@@ -1069,10 +1110,38 @@
       };
       let currentMediaType = initialParams.get('type') || '';
       let currentServerId = initialParams.get('servers') || '';
+      if (!initialParams.has('servers')) {
+        try { currentServerId = localStorage.getItem('jellytrack:server-scope') || ''; } catch (e) {}
+      }
+      let excludedTypes = (initialParams.get('excludeTypes') || '').split(',').filter(Boolean);
+      const excludedLibraries = initialParams.get('excludeLibs') || '';
+      const appendMediaFilters = params => {
+        if (currentMediaType) params.set('type', currentMediaType);
+        if (excludedTypes.length) params.set('excludeTypes', excludedTypes.join(','));
+        if (excludedLibraries) params.set('excludeLibs', excludedLibraries);
+      };
+      const mediaButtonType = type => type === 'Audio' ? 'MusicAlbum' : type;
+      const updateMediaButtons = () => document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach(btn => {
+        const type = btn.dataset.type;
+        const active = currentMediaType ? type === currentMediaType : type ? !excludedTypes.includes(mediaButtonType(type)) : excludedTypes.length === 0;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', String(active));
+      });
+      const updateServerButtons = () => {
+        const selected = currentServerId.split(',').filter(Boolean);
+        document.querySelectorAll('#dash-server-filter-container .header-filter-btn').forEach(btn => {
+          const active = btn.dataset.serverId ? selected.length === 0 || selected.includes(btn.dataset.serverId) : selected.length === 0;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-pressed', String(active));
+        });
+      };
       const historyURL = (extra = '') => {
         const params = new URLSearchParams(extra);
+        if (activeTab !== 'overview' && !params.has('hideZapped')) params.set('hideZapped', 'false');
         params.set('days', currentTimeRange === 'all' || currentTimeRange === 'custom' || params.has('dateFrom') ? 'all' : String(parseInt(currentTimeRange, 10) || 7));
         if (currentMediaType && !params.has('type')) params.set('type', currentMediaType);
+        if (excludedTypes.length) params.set('excludeTypes', excludedTypes.join(','));
+        if (excludedLibraries) params.set('excludeLibs', excludedLibraries);
         if (currentServerId) params.set('servers', currentServerId);
         if (currentTimeRange === 'custom' && !params.has('dateFrom')) {
           params.set('dateFrom', customFrom);
@@ -1083,7 +1152,7 @@
       const heatmapURL = (extra, annual = false) => {
         const params = new URLSearchParams(extra);
         if (!annual) appendDateFilters(params);
-        if (currentMediaType) params.set('type', currentMediaType);
+        appendMediaFilters(params);
         if (currentServerId) params.set('servers', currentServerId);
         if (annual && selectedHeatmapLib !== '_total') params.set('type', selectedHeatmapLib);
         return '/api/heatmap-detail?' + params.toString();
@@ -1091,7 +1160,7 @@
       let isDraggableEditing = false;
       let activeTab = 'overview';
       let liveStreamsData = [];
-      let liveBandwidth = 0;
+      let liveBandwidth = 0, liveBandwidthKnown = true;
       let forceCardsView = false;
       let selectedHeatmapYear = new Date().getFullYear();
       let selectedHeatmapLib = '_total';
@@ -1109,7 +1178,7 @@
 
       // Render base dashboard skeleton
       main.innerHTML = `
-        <div class="page-header">
+        <div class="page-header dashboard-header">
           <div class="page-header-left">
             <h1 class="page-title">${I18n.t('dashboard.title') || 'Tableau de bord'}</h1>
             <div class="header-filter-bar" id="dash-media-filter">
@@ -1134,10 +1203,19 @@
                 <span>${I18n.t('media.books') || 'Livres'}</span>
               </button>
             </div>
-            <div id="dash-server-filter-container" class="header-filter-bar" style="display:none; margin-left:0.5rem;"></div>
+            <div id="dash-server-filter-container" class="header-filter-bar" style="display:none;"></div>
           </div>
           <div class="page-header-right">
-            <div class="time-pills-bar" id="dash-time-range">
+            <select id="dash-time-select" class="form-input" aria-label="${I18n.t('timeRange.period')}">
+              <option value="1d">${I18n.t('timeRange.last24h')}</option>
+              <option value="7d">${I18n.t('timeRange.last7d')}</option>
+              <option value="30d">${I18n.t('timeRange.last30d')}</option>
+              <option value="all">${I18n.t('timeRange.allTime')}</option>
+              <option value="custom">${I18n.t('timeRange.custom')}</option>
+              <option value="90d">${I18n.t('timeRange.90d') || '90j'}</option>
+              <option value="365d">${State.locale === 'en' ? '1 year' : '1 an'}</option>
+            </select>
+            <div class="time-pills-bar hidden" id="dash-time-range">
               <button class="time-pill-btn" data-range="1d">24h</button>
               <button class="time-pill-btn active" data-range="7d">7j</button>
               <button class="time-pill-btn" data-range="30d">30j</button>
@@ -1154,9 +1232,6 @@
 
         <!-- System Health Widgets -->
         <div id="dash-system-health-container"></div>
-
-        <!-- Hardware Monitor Bar -->
-        <div id="dash-hardware-container"></div>
 
         <!-- Today Stats Banner -->
         <div class="dashboard-banner">
@@ -1203,12 +1278,13 @@
 
           <!-- Predictions Panel at the bottom of Overview -->
           <div id="dash-predictions-container" style="margin-top: 1.5rem;"></div>
+          <details class="dashboard-process-resources"><summary>${State.locale === 'en' ? 'Process resources' : 'Ressources du processus'}</summary><div id="dash-hardware-container"></div></details>
         </div>
 
         <!-- Tab 2: Analytics Tab Content -->
         <div id="tab-content-analytics" class="hidden">
-          <div id="dash-granular-container" style="display:flex; flex-direction:column; gap:1.5rem; margin-bottom:1.5rem;"></div>
-          <div id="dash-deep-insights-container"></div>
+          <div id="dash-deep-insights-container" style="margin-bottom:1.5rem;"></div>
+          <div id="dash-granular-container" style="display:flex; flex-direction:column; gap:1.5rem;"></div>
         </div>
 
         <!-- Tab 3: Network Tab Content -->
@@ -1218,7 +1294,7 @@
       `;
 
       // Helper: Send message to user live playback
-      window.openSendMessageModal = (sessionId, userName, mediaTitle) => {
+      window.openSendMessageModal = (sessionId, userName, mediaTitle, serverId) => {
         let selectedSec = 10;
         const cannedList = [
           "Redémarrage du serveur dans 5 minutes.",
@@ -1268,6 +1344,7 @@
             try {
               await API.postJSON('/api/jellyfin/send-message', {
                 sessionId,
+                serverId,
                 header,
                 message: text,
                 text,
@@ -1290,7 +1367,7 @@
       };
 
       // Helper: Kill stream
-      window.confirmKillStream = (sessionId, mediaTitle) => {
+      window.confirmKillStream = (sessionId, mediaTitle, serverId) => {
         Modal.showAction({
           title: I18n.t('dashboard.killStream') || 'Arrêter le flux',
           bodyHtml: `<p>Voulez-vous forcer l'arrêt de la lecture : <b>${Utils.escapeHtml(mediaTitle || 'Session')}</b> ?</p>`,
@@ -1298,7 +1375,7 @@
           cancelText: 'Annuler',
           onConfirm: async () => {
             try {
-              await API.postJSON('/api/jellyfin/kill-stream', { sessionId });
+              await API.postJSON('/api/jellyfin/kill-stream', { sessionId, serverId });
               Toast.success('Flux arrêté avec succès.');
               refreshLiveStreams();
             } catch (e) {
@@ -1312,7 +1389,7 @@
       try {
         const srvRes = await API.getJSON('/api/settings/jellyfin-servers').catch(() => null);
         const servers = (srvRes && srvRes.servers) ? srvRes.servers : [];
-        if (servers.length > 1) {
+        if (State.navigation.multiServer && servers.length > 1) {
           const srvContainer = document.getElementById('dash-server-filter-container');
           if (srvContainer) {
             srvContainer.style.display = 'inline-flex';
@@ -1334,9 +1411,13 @@
             `;
             srvContainer.querySelectorAll('.header-filter-btn').forEach(btn => {
               btn.addEventListener('click', () => {
-                srvContainer.querySelectorAll('.header-filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentServerId = btn.getAttribute('data-server-id') || '';
+                const id = btn.dataset.serverId;
+                let selected = currentServerId.split(',').filter(Boolean);
+                selected = id ? selected.includes(id) ? selected.filter(value => value !== id) : [...selected, id] : [];
+                currentServerId = selected.join(',');
+                try { if (currentServerId) localStorage.setItem('jellytrack:server-scope', currentServerId); else localStorage.removeItem('jellytrack:server-scope'); } catch (e) {}
+                document.cookie = `jellytrack_server_scope=${encodeURIComponent(currentServerId)}; path=/; max-age=${currentServerId ? 31536000 : 0}; samesite=lax`;
+                updateServerButtons();
                 refreshFilteredDashboard();
                 refreshLiveStreams();
               });
@@ -1354,9 +1435,10 @@
           if (!container) return;
 
           const isErr = health.status && health.status.monitor && health.status.monitor.status === 'error';
-          const lastPoll = health.status && health.status.monitor ? Utils.timeAgo(health.status.monitor.lastPollAt) : '-';
-          const lastSync = health.status && health.status.sync ? Utils.timeAgo(health.status.sync.lastSuccessAt) : '-';
-          const lastBackup = health.status && health.status.backup ? Utils.timeAgo(health.status.backup.lastSuccessAt) : '-';
+          const never = I18n.t('common.never') || (State.locale === 'en' ? 'Never' : 'Jamais');
+          const lastPoll = Utils.timeAgo(health.status?.monitor?.lastPollAt) || never;
+          const lastSync = Utils.timeAgo(health.status?.sync?.lastSuccessAt) || never;
+          const lastBackup = Utils.timeAgo(health.status?.backup?.lastSuccessAt) || never;
           const counts = health.counts || { activeStreams: 0, openPlaybackOrphans: 0, dbStreamsWithoutValkey: 0 };
           const excludedCount = (health.excludedLibraries || []).length;
 
@@ -1380,14 +1462,14 @@
               </div>
               <a href="/admin/health" class="btn btn-secondary btn-sm" style="margin-left:auto; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
                 <svg class="nav-icon text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                <span>Santé du système</span>
+                <span>${I18n.t('dashboard.logHealth') || 'Santé du système'}</span>
               </a>
             </div>
 
             <div class="stat-grid-4" style="margin-bottom:1rem;">
               <div class="stat-card-modern">
                 <div class="stat-header">
-                  <span class="stat-title">Flux actifs</span>
+                  <span class="stat-title">${I18n.t('dashboard.activeStreams') || 'Flux actifs'}</span>
                   <span class="pulse-dot"></span>
                 </div>
                 <div class="stat-num metric-glow-emerald">${counts.activeStreams}</div>
@@ -1395,7 +1477,7 @@
               </div>
               <div class="stat-card-modern">
                 <div class="stat-header">
-                  <span class="stat-title">Lectures orphelines</span>
+                  <span class="stat-title">${I18n.t('dashboard.openPlaybackOrphans') || 'Lectures orphelines'}</span>
                   <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 </div>
                 <div class="stat-num metric-glow-amber">${counts.openPlaybackOrphans}</div>
@@ -1403,7 +1485,7 @@
               </div>
               <div class="stat-card-modern">
                 <div class="stat-header">
-                  <span class="stat-title">Flux DB sans cache</span>
+                  <span class="stat-title">${I18n.t('dashboard.dbWithoutValkey') || 'Flux DB sans cache'}</span>
                   <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 </div>
                 <div class="stat-num metric-glow-cyan">${counts.dbStreamsWithoutValkey}</div>
@@ -1411,7 +1493,7 @@
               </div>
               <div class="stat-card-modern">
                 <div class="stat-header">
-                  <span class="stat-title">Bibliothèques exclues</span>
+                  <span class="stat-title">${I18n.t('dashboard.excludedLibraries') || 'Bibliothèques exclues'}</span>
                   <svg class="nav-icon text-violet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 3 18 18M4 7h3m4 0h9M4 12h16M4 17h11"/></svg>
                 </div>
                 <div class="stat-num metric-glow-violet">${excludedCount}</div>
@@ -1419,6 +1501,11 @@
               </div>
             </div>
           `;
+          if (health.isValkeyEnabled === false) {
+            const grid = container.querySelector('.stat-grid-4');
+            grid?.children[2]?.remove();
+            if (grid) grid.className = 'stat-grid';
+          }
         } catch (e) {}
       };
 
@@ -1437,7 +1524,7 @@
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9"/><path d="M15 2v2M9 2v2M20 15h2M20 9h2M9 20v2M15 20v2M2 9h2M2 15h2"/></svg>
                 </div>
                 <div>
-                  <div style="font-size:0.75rem; color:var(--muted-foreground);">Processeur (CPU)</div>
+                  <div style="font-size:0.75rem; color:var(--muted-foreground);">${I18n.t('hardware.cpuUsage') || 'Processeur (CPU)'}</div>
                   <div class="metric-glow-blue" style="font-size:1.35rem; font-weight:800;">${hw.cpu.usagePercent == null ? 'N/A' : `${hw.cpu.usagePercent}%`}</div>
                 </div>
               </div>
@@ -1455,7 +1542,7 @@
                   <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
                 </div>
                 <div>
-                  <div style="font-size:0.75rem; color:var(--muted-foreground);">Température Système</div>
+                  <div style="font-size:0.75rem; color:var(--muted-foreground);">${I18n.t('hardware.temperature') || 'Température Système'}</div>
                   <div class="metric-glow-amber" style="font-size:1.35rem; font-weight:800;">${hw.temperature && hw.temperature.main > 0 ? `${hw.temperature.main}°C` : 'N/A'}</div>
                 </div>
               </div>
@@ -1466,11 +1553,13 @@
 
       // 4. Live Streams Poller & Renderer
       const refreshLiveStreams = async () => {
+        if (document.hidden) return;
         try {
           const res = await API.getJSON(`/api/streams${currentServerId ? `?servers=${encodeURIComponent(currentServerId)}` : ''}`);
           if (pageSignal.aborted) return;
           liveStreamsData = res.streams || [];
           liveBandwidth = res.totalBandwidthMbps || 0;
+          liveBandwidthKnown = res.bandwidthKnown !== false;
           State.activeStreamsCount = liveStreamsData.length;
 
           const topbarBadge = document.getElementById('topbar-live-streams-count');
@@ -1486,7 +1575,7 @@
 
         const countEl = document.getElementById('dash-live-header-info');
         if (countEl) {
-          countEl.textContent = `${liveStreamsData.length} ${I18n.t('dashboard.activeStreams') || 'flux actifs'}${liveBandwidth > 0 ? ` (~${liveBandwidth} Mbps)` : ''}`;
+          countEl.textContent = `${liveStreamsData.length} ${I18n.t('dashboard.activeStreams') || 'flux actifs'}${liveStreamsData.length ? ` (${liveBandwidthKnown ? `${liveBandwidth} Mbps` : 'N/A'})` : ''}`;
         }
 
         if (liveStreamsData.length === 0) {
@@ -1502,7 +1591,7 @@
             <div style="display:flex; flex-direction:column; gap:0.6rem;">
               ${liveStreamsData.map((s, idx) => {
                 const c = GANTT_COLORS[idx % GANTT_COLORS.length];
-                const pct = Math.min(100, Math.max(3, s.progressPercent || 0));
+                const pct = Math.min(100, Math.max(0, s.progressPercent || 0));
                 return `
                   <div class="live-stream-timeline-row">
                     <div class="gantt-avatar" style="background:${c}22; color:${c};">${(s.user || s.username || '?').charAt(0).toUpperCase()}</div>
@@ -1517,12 +1606,12 @@
                           ` : `<span style="font-size:0.75rem; color:var(--muted-foreground); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${Utils.escapeHtml(s.mediaTitle || 'Média')}</span>`}
                         </div>
                         <div style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0;">
-                          <span class="badge ${s.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}" style="font-size:0.68rem; padding:0.15rem 0.45rem;">${s.playMethod === 'DirectPlay' ? 'DP' : 'Transcode'}</span>
+                          <span class="badge ${s.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}" style="font-size:0.68rem; padding:0.15rem 0.45rem;">${Utils.escapeHtml(s.playMethod === 'DirectPlay' ? 'DP' : (s.playMethod || I18n.t('common.unknown')))}</span>
                           ${s.isPaused ? '<span style="font-size:0.75rem; color:#f59e0b;">⏸</span>' : ''}
                           <span style="font-size:0.75rem; color:var(--muted-foreground);">${pct}%</span>
-                          <button class="btn btn-secondary btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" data-stream-action="message" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-user-name="${Utils.escapeHtml(s.user || s.username || '')}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Envoyer un message">💬</button>
+                          <button class="btn btn-secondary btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" data-stream-action="message" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-server-id="${Utils.escapeHtml(s.serverId || '')}" data-user-name="${Utils.escapeHtml(s.user || s.username || '')}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Envoyer un message">💬</button>
                           ${State.user && State.user.isAdmin ? `
-                            <button class="btn btn-danger btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" data-stream-action="kill" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Couper le flux">✕</button>
+                            <button class="btn btn-danger btn-sm" style="padding:0.2rem 0.45rem; font-size:0.72rem;" data-stream-action="kill" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-server-id="${Utils.escapeHtml(s.serverId || '')}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Couper le flux">✕</button>
                           ` : ''}
                         </div>
                       </div>
@@ -1540,7 +1629,11 @@
             <div style="display:flex; flex-direction:column; gap:0.75rem;">
               ${liveStreamsData.map(s => {
                 const posterId = s.posterItemId || s.itemId;
-                const pct = Math.min(100, Math.max(3, s.progressPercent || 0));
+                const imageParams = new URLSearchParams({ itemId: posterId || '', type: 'Primary', maxWidth: '240' });
+                if (s.serverId) imageParams.set('serverId', s.serverId);
+                if (s.itemId && s.itemId !== posterId) imageParams.set('fallbackId', s.itemId);
+                const posterShape = ['Audio', 'Track', 'MusicAlbum'].includes(s.mediaType) ? 'square' : s.mediaType === 'Episode' ? 'wide' : '';
+                const pct = Math.min(100, Math.max(0, s.progressPercent || 0));
                 const audioSub = [
                   s.audioCodec ? `🔊 ${s.audioCodec.toUpperCase()}${s.audioLanguage ? ` (${s.audioLanguage})` : ''}` : '',
                   s.subtitleCodec ? `💬 ${s.subtitleCodec.toUpperCase()}${s.subtitleLanguage ? ` (${s.subtitleLanguage})` : ''}` : '',
@@ -1548,12 +1641,12 @@
 
                 return `
                   <div class="stream-card">
-                    <div class="stream-poster-thumb">
-                      ${posterId ? `<img src="/api/jellyfin/image?itemId=${posterId}&type=Primary&maxWidth=140" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;" data-hide-on-error>` : ''}
-                    </div>
+                    <a href="/media/${encodeURIComponent(s.itemId || s.mediaId || '')}" data-link class="stream-poster-thumb ${posterShape}">
+                      ${posterId ? `<img src="/api/jellyfin/image?${Utils.escapeHtml(imageParams.toString())}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;" data-hide-on-error alt="${Utils.escapeHtml(s.mediaTitle || '')}">` : ''}
+                    </a>
                     <div class="stream-info">
                       <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
-                        <span class="stream-title">${Utils.escapeHtml(s.mediaTitle || 'Titre inconnu')}</span>
+                        <a href="/media/${encodeURIComponent(s.itemId || s.mediaId || '')}" data-link class="stream-title">${Utils.escapeHtml(s.mediaTitle || I18n.t('common.unknownMedia'))}</a>
                         ${s.versionName ? `<span class="badge badge-info" style="font-size:0.65rem;">${Utils.escapeHtml(s.versionName)}</span>` : ''}
                         ${s.isPaused ? '<span class="badge badge-warning" style="font-size:0.65rem;">⏸ En pause</span>' : ''}
                       </div>
@@ -1570,11 +1663,11 @@
                       </div>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:0.35rem; align-items:flex-end;">
-                      <button class="btn btn-secondary btn-sm" data-stream-action="message" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-user-name="${Utils.escapeHtml(s.user || s.username || '')}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Envoyer un pop-up à l'écran">
+                      <button class="btn btn-secondary btn-sm" data-stream-action="message" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-server-id="${Utils.escapeHtml(s.serverId || '')}" data-user-name="${Utils.escapeHtml(s.user || s.username || '')}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Envoyer un pop-up à l'écran">
                         💬 Message
                       </button>
                       ${State.user && State.user.isAdmin ? `
-                        <button class="btn btn-danger btn-sm" data-stream-action="kill" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Couper la session">
+                        <button class="btn btn-danger btn-sm" data-stream-action="kill" data-session-id="${Utils.escapeHtml(s.sessionId)}" data-server-id="${Utils.escapeHtml(s.serverId || '')}" data-media-title="${Utils.escapeHtml(s.mediaTitle || '')}" title="Couper la session">
                           ${I18n.t('dashboard.killStream') || 'Arrêter'}
                         </button>
                       ` : ''}
@@ -1597,7 +1690,7 @@
           const params = new URLSearchParams();
           params.set('days', String(queryDays));
           appendDateFilters(params);
-          if (currentMediaType) params.set('type', currentMediaType);
+          appendMediaFilters(params);
           if (currentServerId) params.set('servers', currentServerId);
 
           const requestNumber = ++dashboardRequest;
@@ -1686,18 +1779,18 @@
 
               <div class="stat-card-modern">
                 <div class="stat-header">
-                  <span class="stat-title">${I18n.t('dashboard.users') || 'Utilisateurs actifs'}</span>
+                  <span class="stat-title">${I18n.t('dashboard.activeUsersTitle')}</span>
                   <svg class="nav-icon text-pink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
                 <div style="display:flex; align-items:center; gap:0.5rem;">
-                  <div class="stat-num metric-glow-emerald">${Utils.formatNumber(d.currentActiveUsers || d.users || 0)}</div>
+                  <div class="stat-num metric-glow-emerald">${Utils.formatNumber(d.currentActiveUsers ?? 0)}</div>
                   ${d.activeUsersGrowth !== undefined && d.activeUsersGrowth !== 0 ? `
                     <span class="badge ${d.activeUsersGrowth >= 0 ? 'badge-success' : 'badge-danger'}" style="font-size:0.7rem;">
                       ${d.activeUsersGrowth > 0 ? '+' : ''}${d.activeUsersGrowth.toFixed(1)}%
                     </span>
                   ` : ''}
                 </div>
-                <div class="stat-desc">Comptes actifs</div>
+                <div class="stat-desc">${currentTimeRange !== 'all' && d.previousActiveUsers > 0 ? (State.locale === 'en' ? `vs ${d.previousActiveUsers} previous period` : `vs ${d.previousActiveUsers} période préc.`) : (State.locale === 'en' ? `Out of ${d.totalUsers ?? d.users ?? 0} registered` : `Sur ${d.totalUsers ?? d.users ?? 0} inscrits`)}</div>
               </div>
             </div>
           `,
@@ -1761,7 +1854,7 @@
               <div class="chart-card">
                 <div class="card-header">
                   <div class="card-title-group">
-                    <div class="card-title">Répartition par catégorie</div>
+                    <div class="card-title">${I18n.t('dashboard.categoryBreakdown') || 'Répartition par catégorie'}</div>
                     <div class="card-subtitle">Volume global d'écoute par catégorie</div>
                   </div>
                 </div>
@@ -1777,7 +1870,7 @@
             <div class="chart-card">
               <div class="card-header">
                 <div class="card-title-group">
-                  <div class="card-title">Lectures quotidiennes par bibliothèque</div>
+                  <div class="card-title">${I18n.t('dashboard.libraryPlays') || 'Lectures quotidiennes par bibliothèque'}</div>
                   <div class="card-subtitle">Sessions journalières initiées par type de contenu</div>
                 </div>
               </div>
@@ -1793,7 +1886,7 @@
               <div class="card-header">
                 <div class="card-title-group" style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:0.5rem;">
                   <div>
-                    <div class="card-title">📅 Carte thermique d'activité annuelle</div>
+                    <div class="card-title">${I18n.t('charts.yearlyActivity') || "📅 Carte thermique d'activité annuelle"}</div>
                     <div class="card-subtitle" id="dash-heatmap-summary">Sessions enregistrées sur l'année</div>
                   </div>
                   <div style="display:flex; align-items:center; gap:0.5rem;">
@@ -1803,11 +1896,7 @@
                   </div>
                 </div>
                 <div style="display:flex; gap:0.4rem; margin-top:0.6rem; flex-wrap:wrap;" id="dash-heatmap-lib-filters">
-                  <button class="time-pill-btn active" data-lib="_total">Tous</button>
-                  <button class="time-pill-btn" data-lib="Movie">Films</button>
-                  <button class="time-pill-btn" data-lib="Series">Séries</button>
-                  <button class="time-pill-btn" data-lib="Audio">Musique</button>
-                  <button class="time-pill-btn" data-lib="Book">Livres</button>
+                  ${['_total', ...(d.yearlyHeatmap?.libraryTypes || [])].map(type => `<button class="time-pill-btn ${selectedHeatmapLib === type ? 'active' : ''}" data-lib="${Utils.escapeHtml(type)}">${Utils.escapeHtml(type === '_total' ? I18n.t('common.all') : I18n.t(`common.${type}`) || type)}</button>`).join('')}
                 </div>
               </div>
               <div class="yearly-heatmap-wrapper" id="dash-heatmap-grid-container" style="padding:1rem;">
@@ -1822,8 +1911,8 @@
               <div class="card">
                 <div class="card-header">
                   <div class="card-title-group">
-                    <div class="card-title">👥 Utilisateurs les plus fidèles</div>
-                    <div class="card-subtitle">Classement par heures de visionnage sur la période</div>
+                    <div class="card-title">${I18n.t('dashboard.loyalUsers') || '👥 Utilisateurs les plus fidèles'}</div>
+                    <div class="card-subtitle">${I18n.t('dashboard.loyalUsersDesc') || 'Classement par heures de visionnage sur la période'}</div>
                   </div>
                 </div>
                 <div class="ranking-list" id="dash-top-users-list">
@@ -1842,8 +1931,8 @@
               <div class="chart-card">
                 <div class="card-header">
                   <div class="card-title-group">
-                    <div class="card-title">📱 Écosystème des clients</div>
-                    <div class="card-subtitle">Applications et appareils utilisés pour la lecture</div>
+                    <div class="card-title">${I18n.t('dashboard.clientEcosystem') || '📱 Écosystème des clients'}</div>
+                    <div class="card-subtitle">${I18n.t('dashboard.clientEcosystemDesc') || 'Applications et appareils utilisés pour la lecture'}</div>
                   </div>
                 </div>
                 <div class="chart-wrap" style="height:280px;">
@@ -1983,6 +2072,27 @@
           </div>
         `).join('');
 
+        const historicalChartLabels = {
+          'chart-composed-trend': 'volumeHistory', 'chart-category-pie': 'categoryBreakdown',
+          'chart-library-plays': 'libraryPlays', 'chart-platform-dist': 'clientEcosystem',
+          'chart-activity-by-hour': 'hourlyActivity', 'chart-day-of-week': 'dayOfWeekActivity',
+          'chart-monthly-watch': 'monthlyTime', 'chart-completion-ratio': 'completionRate',
+          'chart-client-category': 'clientFamilies', 'chart-server-load': 'serverLoad',
+        };
+        Object.entries(historicalChartLabels).forEach(([id, key]) => {
+          const card = container.querySelector(`#${id}`)?.closest('.chart-card');
+          if (!card) return;
+          card.querySelector('.card-title').textContent = I18n.t(`dashboard.${key}`);
+          card.querySelector('.card-subtitle').textContent = I18n.t(`dashboard.${key}Desc`);
+        });
+        container.querySelectorAll('[data-block-id="1"] .breadcrumb-card').forEach((card, index) => {
+          const prefix = ['movies', 'series', 'music', 'books'][index];
+          const description = ['moviesWatched', 'seriesWatched', 'musicListened', 'booksSpent'][index];
+          card.children[0].querySelector('span').textContent = I18n.t(`dashboard.${prefix}Card`);
+          card.children[1].querySelector('span').textContent = I18n.t(`dashboard.${['moviesViews', 'seriesPlays', 'musicTitles', 'booksOpened'][index]}`);
+          card.children[2].textContent = `${b[`${prefix === 'movies' ? 'movie' : prefix}Hours`] || 0}h ${I18n.t(`dashboard.${description}`)}`;
+        });
+
         // Wire Draggable Move Buttons
         if (isDraggableEditing) {
           container.querySelectorAll('.draggable-move-btn').forEach(btn => {
@@ -2019,10 +2129,10 @@
           if (d.trendData && d.trendData.length > 0) {
             const labels = d.trendData.map(t => t.time);
             const datasets = [
-              { label: 'Films (h)', data: d.trendData.map(t => t.movieVolume || 0), color: '#38bdf8' },
-              { label: 'Séries (h)', data: d.trendData.map(t => t.seriesVolume || 0), color: '#22c55e' },
-              { label: 'Musique (h)', data: d.trendData.map(t => t.musicVolume || 0), color: '#f59e0b' },
-              { label: 'Livres (h)', data: d.trendData.map(t => t.booksVolume || 0), color: '#a855f7' },
+              { label: I18n.t('charts.movies') + ' (h)', data: d.trendData.map(t => t.movieVolume || 0), color: '#38bdf8' },
+              { label: I18n.t('charts.series') + ' (h)', data: d.trendData.map(t => t.seriesVolume || 0), color: '#22c55e' },
+              { label: I18n.t('charts.music') + ' (h)', data: d.trendData.map(t => t.musicVolume || 0), color: '#f59e0b' },
+              { label: I18n.t('charts.books') + ' (h)', data: d.trendData.map(t => t.booksVolume || 0), color: '#a855f7' },
             ];
             ChartHelper.renderMultiLine('chart-composed-trend', labels, datasets, { isHours: true });
           } else {
@@ -2080,10 +2190,10 @@
           if (d.trendData && d.trendData.length > 0) {
             const labels = d.trendData.map(t => t.time);
             const datasets = [
-              { label: 'Films', data: d.trendData.map(t => t.moviePlays || 0), color: '#3b82f6' },
-              { label: 'Séries', data: d.trendData.map(t => t.seriesPlays || 0), color: '#22c55e' },
-              { label: 'Musique', data: d.trendData.map(t => t.musicPlays || 0), color: '#eab308' },
-              { label: 'Livres', data: d.trendData.map(t => t.booksPlays || 0), color: '#a855f7' },
+              { label: I18n.t('charts.movies'), data: d.trendData.map(t => t.moviePlays || 0), color: '#3b82f6' },
+              { label: I18n.t('charts.series'), data: d.trendData.map(t => t.seriesPlays || 0), color: '#22c55e' },
+              { label: I18n.t('charts.music'), data: d.trendData.map(t => t.musicPlays || 0), color: '#eab308' },
+              { label: I18n.t('charts.books'), data: d.trendData.map(t => t.booksPlays || 0), color: '#a855f7' },
               { label: 'Total lectures', data: d.trendData.map(t => t.totalViews || 0), color: '#94a3b8' },
             ];
             ChartHelper.renderMultiLine('chart-library-plays', labels, datasets, { isHours: false });
@@ -2498,6 +2608,7 @@
 
         try {
           const preds = await API.getJSON('/api/predictions');
+          if (pageSignal.aborted) return;
           const trending = preds.trendingMedia || [];
           const topPeaks = (preds.peakPredictions || []).slice(0, 10);
           const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
@@ -2517,11 +2628,11 @@
                         <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                         Tendances émergentes
                       </div>
-                      <div class="card-subtitle">Titres en forte accélération de visionnage</div>
+                      <div class="card-subtitle">${I18n.t('dashboard.trendingMediaDesc') || 'Titres en forte accélération de visionnage'}</div>
                     </div>
                   </div>
                   <div class="ranking-list">
-                    ${trending.slice(0, 6).map((item, i) => `
+                    ${trending.slice(0, 8).map((item, i) => `
                       <a href="/media/${item.jellyfinMediaId || ''}" class="ranking-item">
                         <span class="ranking-badge">#${i + 1}</span>
                         <div class="ranking-name">
@@ -2545,7 +2656,7 @@
                         <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                         Prévisions des pics d'affluence
                       </div>
-                      <div class="card-subtitle">Créneaux horaires de pointe anticipés par analyse EMA</div>
+                      <div class="card-subtitle">${I18n.t('dashboard.peakPredictionsDesc') || 'Créneaux horaires de pointe anticipés par analyse EMA'}</div>
                     </div>
                   </div>
                   <div style="display:flex; flex-direction:column; gap:0.6rem; padding:0.5rem 0;">
@@ -2570,6 +2681,10 @@
               ` : ''}
             </div>
           `;
+          if (topPeaks.length) {
+            const note = document.createElement('p'); note.className = 'text-xs text-muted-foreground'; note.textContent = I18n.t('dashboard.predictionBasis');
+            container.querySelectorAll('.card').item(container.querySelectorAll('.card').length - 1)?.appendChild(note);
+          }
         } catch (e) {}
       };
 
@@ -2579,7 +2694,7 @@
         try {
           const params = new URLSearchParams();
           appendDateFilters(params);
-          if (currentMediaType) params.set('type', currentMediaType);
+          appendMediaFilters(params);
           if (currentServerId) params.set('servers', currentServerId);
 
           const [gran, deep] = await Promise.all([
@@ -2606,15 +2721,7 @@
               cellMap.set(`${d}-${h}`, v);
             });
 
-            const frenchDays = [
-              { name: 'Lun', dow: 1 },
-              { name: 'Mar', dow: 2 },
-              { name: 'Mer', dow: 3 },
-              { name: 'Jeu', dow: 4 },
-              { name: 'Ven', dow: 5 },
-              { name: 'Sam', dow: 6 },
-              { name: 'Dim', dow: 0 },
-            ];
+            const frenchDays = [1, 2, 3, 4, 5, 6, 0].map(dow => ({ dow, name: new Intl.DateTimeFormat(State.locale, { weekday: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(2023, 0, 1 + dow))) }));
 
             const getHeatmapColor = (count) => {
               if (!count || count <= 0) return 'rgba(148, 163, 184, 0.1)';
@@ -2889,6 +2996,56 @@
               </div>
             `;
 
+            const takeCard = id => granContainer.querySelector(`#${id}`)?.closest('.chart-card, .card');
+            const originalCards = Array.from(granContainer.querySelectorAll('.chart-card, .card'));
+            const attendanceCard = granContainer.querySelector('.attendance-heatmap-container')?.closest('.card');
+            const segmentCard = originalCards.find(card => card.textContent.includes("Segments d'abandon"));
+            const abandonedCard = granContainer.querySelector('.ranking-list')?.closest('.card');
+            segmentCard.querySelector('div[style*="padding:1.25rem"]').innerHTML = '<div class="chart-wrap" style="height:300px"><canvas id="chart-abandon-segments"></canvas></div>';
+            for (const [index, link] of Array.from(abandonedCard.querySelectorAll('a')).entries()) {
+              const item = (gran.topAbandoned || [])[index];
+              if (!item) continue;
+              link.href = item.mediaId ? `/media/${encodeURIComponent(item.mediaId)}` : `/media?q=${encodeURIComponent(item.fullTitle || item.title)}`;
+              link.setAttribute('data-link', '');
+              const progress = document.createElement('div');
+              progress.className = 'historical-completion-track';
+              progress.innerHTML = `<span style="width:${Math.max(0, Math.min(100, item.completion || 0))}%"></span>`;
+              link.appendChild(progress);
+            }
+            const pairs = [
+              [takeCard('chart-plays-per-day'), takeCard('chart-duration-per-day')],
+              [takeCard('chart-plays-by-lib'), takeCard('chart-duration-by-lib')],
+              [takeCard('chart-plays-hourly-avg'), takeCard('chart-duration-hourly-avg')],
+              [attendanceCard, takeCard('chart-avg-completion-lib')],
+              [segmentCard, abandonedCard],
+              [takeCard('chart-audio-breakdown'), takeCard('chart-subtitles-breakdown')],
+            ];
+            const fragment = document.createDocumentFragment();
+            pairs.forEach(cards => {
+              const row = document.createElement('div'); row.className = 'dash-grid-2';
+              cards.filter(Boolean).forEach(card => row.appendChild(card)); fragment.appendChild(row);
+            });
+            granContainer.replaceChildren(fragment);
+            const segments = Object.entries(segMap).map(([name, segment]) => ({ ...segment, name }));
+            if (totalDrop > 0) ChartHelper.renderDoughnut('chart-abandon-segments', segments.map(s => I18n.t(`granular.${s.name}`) || s.label), segments.map(s => s.val), {
+              colors: segments.map(s => s.color), onClick: index => Router.navigate(historyURL(`completion=${encodeURIComponent(segments[index].name)}`)),
+            });
+            else ChartHelper.showEmpty('chart-abandon-segments', I18n.t('common.noData'));
+            const cardKeys = {
+              'chart-plays-per-day': ['playsPerDay', 'playsPerDayDesc'], 'chart-duration-per-day': ['durationPerDay', 'durationPerDayDesc'],
+              'chart-plays-by-lib': ['playsByLibTitle', 'playsByLibDesc'], 'chart-duration-by-lib': ['durationByLibTitle', 'durationByLibDesc'],
+              'chart-plays-hourly-avg': ['playsHourlyAvg', 'playsHourlyAvgDesc'], 'chart-duration-hourly-avg': ['durationHourlyAvg', 'durationHourlyAvgDesc'],
+              'chart-avg-completion-lib': ['avgCompletionByLib', 'avgCompletionByLibDesc'], 'chart-audio-breakdown': ['audioBreakdown', 'audioBreakdownDesc'],
+              'chart-subtitles-breakdown': ['subtitles', 'subtitlesDesc'], 'chart-abandon-segments': ['abandonSegments', 'abandonSegmentsDesc'],
+            };
+            const localizeCard = (card, namespace, keys) => {
+              if (!card) return;
+              keys.forEach((key, index) => { const target = card.querySelector(index ? '.card-subtitle' : '.card-title'); if (target) target.textContent = I18n.t(`${namespace}.${key}`) || target.textContent; });
+            };
+            Object.entries(cardKeys).forEach(([id, keys]) => localizeCard(takeCard(id), 'granular', keys));
+            localizeCard(attendanceCard, 'granular', ['attendanceHeatmap', 'attendanceHeatmapDesc']);
+            localizeCard(abandonedCard, 'granular', ['worstCompletion', 'worstCompletionDesc']);
+
             // Palette for multi-series
             const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ec4899', '#6366f1', '#14b8a6', '#f43f5e'];
 
@@ -2897,7 +3054,7 @@
             if (dailyData.length > 0) {
               const labels = dailyData.map(d => d.time);
               const data = dailyData.map(d => Number(d.totalPlays || 0));
-              ChartHelper.renderArea('chart-plays-per-day', labels, data, { label: 'Lectures', color: '#38bdf8' });
+              ChartHelper.renderBar('chart-plays-per-day', labels, data, { label: I18n.t('granular.playsPerDay'), backgroundColors: '#38bdf8', onClick: index => Router.navigate(historyURL(`dateFrom=${encodeURIComponent(dailyData[index].time)}&dateTo=${encodeURIComponent(dailyData[index].time)}`)) });
             } else {
               ChartHelper.showEmpty('chart-plays-per-day', 'Aucune lecture quotidienne');
             }
@@ -2910,7 +3067,7 @@
                 data: dailyData.map(d => Number(d[`${col}_plays`] || 0)),
                 color: palette[idx % palette.length],
               }));
-              ChartHelper.renderStackedBar('chart-plays-by-lib', labels, datasets);
+              ChartHelper.renderStackedBar('chart-plays-by-lib', labels, datasets, { onClick: (index, label, datasetIndex) => Router.navigate(historyURL(`library=${encodeURIComponent(gran.collections[datasetIndex])}&dateFrom=${encodeURIComponent(dailyData[index].time)}&dateTo=${encodeURIComponent(dailyData[index].time)}`)) });
             } else {
               ChartHelper.showEmpty('chart-plays-by-lib', 'Aucune donnée par bibliothèque');
             }
@@ -2919,7 +3076,7 @@
             if (dailyData.length > 0) {
               const labels = dailyData.map(d => d.time);
               const data = dailyData.map(d => Number(d.totalDuration || 0));
-              ChartHelper.renderArea('chart-duration-per-day', labels, data, { label: 'Durée (h)', color: '#a855f7', isHours: true });
+              ChartHelper.renderArea('chart-duration-per-day', labels, data, { label: I18n.t('granular.durationPerDay'), color: '#a855f7', isHours: true, onClick: index => Router.navigate(historyURL(`dateFrom=${encodeURIComponent(dailyData[index].time)}&dateTo=${encodeURIComponent(dailyData[index].time)}`)) });
             } else {
               ChartHelper.showEmpty('chart-duration-per-day', 'Aucune durée enregistrée');
             }
@@ -2932,7 +3089,7 @@
                 data: dailyData.map(d => Number(d[`${col}_duration`] || 0)),
                 color: palette[idx % palette.length],
               }));
-              ChartHelper.renderStackedArea('chart-duration-by-lib', labels, datasets);
+              ChartHelper.renderStackedBar('chart-duration-by-lib', labels, datasets, { isHours: true, onClick: (index, label, datasetIndex) => Router.navigate(historyURL(`library=${encodeURIComponent(gran.collections[datasetIndex])}&dateFrom=${encodeURIComponent(dailyData[index].time)}&dateTo=${encodeURIComponent(dailyData[index].time)}`)) });
             } else {
               ChartHelper.showEmpty('chart-duration-by-lib', 'Aucune donnée par bibliothèque');
             }
@@ -2963,7 +3120,8 @@
               const values = dropOff.map(d => Number(d.completion || 0));
               ChartHelper.renderHorizontalBar('chart-avg-completion-lib', labels, values, {
                 backgroundColors: '#8b5cf6',
-                label: '% Moyen vu',
+                label: I18n.t('granular.completionPct'),
+                onClick: index => Router.navigate(historyURL(`libraryCategory=${encodeURIComponent(dropOff[index].time)}`)),
               });
             } else {
               ChartHelper.showEmpty('chart-avg-completion-lib', 'Aucune donnée de complétion');
@@ -2974,7 +3132,7 @@
             if (audio.length > 0 && audio.some(a => (a.value || 0) > 0)) {
               const labels = audio.map(a => a.name || 'Inconnu');
               const values = audio.map(a => Number(a.value || 0));
-              ChartHelper.renderDoughnut('chart-audio-breakdown', labels, values, { isHours: false });
+              ChartHelper.renderDoughnut('chart-audio-breakdown', labels, values, { isHours: false, onClick: index => Router.navigate(historyURL(`audio=${encodeURIComponent(audio[index].name)}`)) });
             } else {
               ChartHelper.showEmpty('chart-audio-breakdown', 'Aucune piste audio enregistrée');
             }
@@ -2984,7 +3142,7 @@
             if (subs.length > 0 && subs.some(s => (s.value || 0) > 0)) {
               const labels = subs.map(s => s.name || 'Désactivé');
               const values = subs.map(s => Number(s.value || 0));
-              ChartHelper.renderDoughnut('chart-subtitles-breakdown', labels, values, { isHours: false });
+              ChartHelper.renderDoughnut('chart-subtitles-breakdown', labels, values, { isHours: false, onClick: index => Router.navigate(historyURL(`subtitle=${encodeURIComponent(subs[index].name)}`)) });
             } else {
               ChartHelper.showEmpty('chart-subtitles-breakdown', 'Aucun sous-titre utilisé');
             }
@@ -3006,13 +3164,13 @@
                 <div style="padding:0.5rem 0.75rem 0.75rem; display:flex; flex-direction:column; gap:0.4rem;">
                   ${items.length === 0 ? `<div class="text-muted-foreground text-xs" style="padding:0.5rem;">${emptyText}</div>` : ''}
                   ${items.map((m, i) => `
-                    <div class="category-media-item">
+                    <a class="category-media-item" href="/media?q=${encodeURIComponent(m.title)}" data-link>
                       <div style="display:flex; align-items:center; gap:0.4rem; overflow:hidden;">
                         <span style="font-size:0.75rem; color:var(--muted-foreground); width:16px;">${i + 1}.</span>
                         <span style="font-size:0.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${Utils.escapeHtml(m.title)}">${Utils.escapeHtml(m.title)}</span>
                       </div>
-                      <span class="badge badge-secondary" style="font-size:0.7rem; font-family:monospace; shrink-0;">${m.plays} v. · ${m.duration}h</span>
-                    </div>
+                      <span class="badge badge-secondary" style="font-size:0.7rem; font-family:monospace; shrink-0;">${m.plays} ${I18n.t('deepInsights.views')} · ${m.duration}h</span>
+                    </a>
                   `).join('')}
                 </div>
               </div>
@@ -3020,11 +3178,11 @@
 
             deepContainer.innerHTML = `
               <!-- Categorized Top Media Cards (4 cards) -->
-              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap:1rem; margin-bottom:1.25rem;">
-                ${renderMediaCategoryCard('Top Films', movies, 'Aucun film regardé')}
-                ${renderMediaCategoryCard('Top Séries', series, 'Aucune série regardée')}
-                ${renderMediaCategoryCard('Top Musique', albums, 'Aucun album écouté')}
-                ${renderMediaCategoryCard('Top Livres', books, 'Aucun livre lu')}
+              <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1rem; margin-bottom:1.25rem;">
+                ${renderMediaCategoryCard(I18n.t('deepInsights.topMovies'), movies, I18n.t('deepInsights.noMovies'))}
+                ${renderMediaCategoryCard(I18n.t('deepInsights.topSeries'), series, I18n.t('deepInsights.noSeries'))}
+                ${renderMediaCategoryCard(I18n.t('deepInsights.topAlbums'), albums, I18n.t('deepInsights.noAlbums'))}
+                ${renderMediaCategoryCard(I18n.t('deepInsights.topBooks'), books, I18n.t('deepInsights.noBooks'))}
               </div>
 
               <!-- Top Genres -->
@@ -3032,8 +3190,8 @@
                 <div class="card" style="margin-bottom:1.25rem;">
                   <div class="card-header">
                     <div class="card-title-group">
-                      <div class="card-title">Top Genres</div>
-                      <div class="card-subtitle">Styles et catégories les plus visionnés</div>
+                      <div class="card-title">${I18n.t('deepInsights.topGenres') || 'Top Genres'}</div>
+                      <div class="card-subtitle">${I18n.t('deepInsights.genresDesc') || 'Styles et catégories les plus visionnés'}</div>
                     </div>
                   </div>
                   <div style="padding:1rem;">
@@ -3044,7 +3202,7 @@
                         const genreColors = ['#38bdf8', '#22c55e', '#a855f7', '#f59e0b', '#ec4899', '#06b6d4', '#eab308', '#ef4444', '#6366f1', '#14b8a6'];
                         const col = genreColors[i % genreColors.length];
                         return `
-                          <div style="display:flex; align-items:center; gap:0.6rem; font-size:0.8rem;">
+                          <a href="/media/all?genre=${encodeURIComponent(g.name)}" data-link style="display:flex; align-items:center; gap:0.6rem; font-size:0.8rem;">
                             <span style="width:20px; text-align:right; color:var(--muted-foreground);">${i + 1}.</span>
                             <div style="flex:1; min-width:0;">
                               <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
@@ -3055,7 +3213,7 @@
                                 <div style="height:100%; border-radius:999px; width:${pct}%; background:${col}; transition:width 0.4s ease;"></div>
                               </div>
                             </div>
-                          </div>
+                          </a>
                         `;
                       }).join('')}
                     </div>
@@ -3068,17 +3226,17 @@
                 <div class="card">
                   <div class="card-header">
                     <div class="card-title-group">
-                      <div class="card-title">Top Clients</div>
-                      <div class="card-subtitle">Applications de lecture les plus sollicitées</div>
+                      <div class="card-title">${I18n.t('deepInsights.topClients') || 'Top Clients'}</div>
+                      <div class="card-subtitle">${I18n.t('deepInsights.topClientsDesc') || 'Applications de lecture les plus sollicitées'}</div>
                     </div>
                   </div>
                   <div class="ranking-list" style="padding:0.75rem 1rem 1rem;">
                     ${(deep.topClients || []).map((c, i) => `
-                      <div class="ranking-item">
+                      <a href="${historyURL(`client=${encodeURIComponent(c.clientName || '')}`)}" data-link class="ranking-item">
                         <span class="ranking-badge">#${i + 1}</span>
                         <span class="ranking-name">${Utils.escapeHtml(c.clientName || '?')}</span>
-                        <span class="ranking-value font-mono">${c.count} sessions</span>
-                      </div>
+                        <span class="ranking-value font-mono">${c.count} ${I18n.t('charts.sessions')}</span>
+                      </a>
                     `).join('') || '<div class="text-muted-foreground text-sm" style="padding:1rem;">Aucun client enregistré</div>'}
                   </div>
                 </div>
@@ -3133,7 +3291,7 @@
                 </div>
                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap:1rem; padding:1rem;">
                   <div class="app-surface-soft p-4 rounded-lg">
-                    <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">Top Acteurs</h4>
+                    <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">${I18n.t('deepInsights.topActors') || 'Top Acteurs'}</h4>
                     <div class="ranking-list">
                       ${(deep.topActors || []).slice(0, 5).map((a, i) => `
                         <div class="ranking-item">
@@ -3145,7 +3303,7 @@
                     </div>
                   </div>
                   <div class="app-surface-soft p-4 rounded-lg">
-                    <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">Top Réalisateurs</h4>
+                    <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">${I18n.t('deepInsights.topDirectors') || 'Top Réalisateurs'}</h4>
                     <div class="ranking-list">
                       ${(deep.topDirectors || []).slice(0, 5).map((d, i) => `
                         <div class="ranking-item">
@@ -3157,7 +3315,7 @@
                     </div>
                   </div>
                   <div class="app-surface-soft p-4 rounded-lg">
-                    <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">Top Studios</h4>
+                    <h4 style="font-weight:700; font-size:0.85rem; margin-bottom:0.75rem;">${I18n.t('deepInsights.topStudios') || 'Top Studios'}</h4>
                     <div class="ranking-list">
                       ${(deep.topStudios || []).slice(0, 5).map((s, i) => `
                         <div class="ranking-item">
@@ -3171,6 +3329,18 @@
                 </div>
               </div>
             `;
+
+            const extraFigures = Array.from(deepContainer.children).at(-1);
+            const deepAudioRow = document.createElement('div'); deepAudioRow.className = 'dash-grid-2'; deepAudioRow.style.marginBottom = '1.25rem';
+            deepAudioRow.innerHTML = ['audio', 'subtitle'].map(kind => `<div class="chart-card"><div class="card-header"><div class="card-title-group"><div class="card-title">${I18n.t(kind === 'audio' ? 'granular.audioBreakdown' : 'granular.subtitles')}</div><div class="card-subtitle">${I18n.t(kind === 'audio' ? 'granular.audioBreakdownDesc' : 'granular.subtitlesDesc')}</div></div></div><div class="chart-wrap" style="height:300px"><canvas id="chart-deep-${kind}"></canvas></div></div>`).join('');
+            deepContainer.insertBefore(deepAudioRow, extraFigures);
+            ['audio', 'subtitle'].forEach(kind => {
+              const data = deep[kind === 'audio' ? 'audioChartData' : 'subtitleChartData'] || [];
+              if (data.some(item => item.value > 0)) ChartHelper.renderDoughnut(`chart-deep-${kind}`, data.map(item => item.name === 'None' ? I18n.t('common.none') : item.name), data.map(item => item.value), { onClick: index => Router.navigate(historyURL(`hideZapped=true&${kind}=${encodeURIComponent(data[index].name)}`)) });
+              else ChartHelper.showEmpty(`chart-deep-${kind}`, I18n.t(kind === 'audio' ? 'deepInsights.noAudioData' : 'deepInsights.noSubtitleData'));
+            });
+            const deepKeys = { 'chart-stream-methods': ['streamMethods', 'streamMethodsDesc'], 'chart-resolution-matrix': ['resolutionMatrix', 'resolutionMatrixDesc'], 'chart-device-ecosystem': ['deviceEcosystem', 'deviceEcosystemDesc'] };
+            Object.entries(deepKeys).forEach(([id, keys]) => { const card = deepContainer.querySelector(`#${id}`)?.closest('.chart-card'); keys.forEach((key, index) => { const target = card?.querySelector(index ? '.card-subtitle' : '.card-title'); if (target) target.textContent = I18n.t(`deepInsights.${key}`) || target.textContent; }); });
 
             // Stream methods chart
             const streamMethods = deep.streamMethodsChartData || [];
@@ -3190,7 +3360,7 @@
             if (resolutions.length > 0 && resolutions.some(r => (r.value || 0) > 0)) {
               const labels = resolutions.map(r => r.name || '?');
               const values = resolutions.map(r => Number(r.value || 0));
-              ChartHelper.renderDoughnut('chart-resolution-matrix', labels, values, { isHours: false });
+              ChartHelper.renderDoughnut('chart-resolution-matrix', labels, values, { isHours: false, onClick: index => Router.navigate(historyURL(`hideZapped=true&resolution=${encodeURIComponent(resolutions[index].name)}`)) });
             } else {
               ChartHelper.showEmpty('chart-resolution-matrix', 'Aucune résolution enregistrée');
             }
@@ -3200,7 +3370,7 @@
             if (devices.length > 0 && devices.some(d => (d.value || 0) > 0)) {
               const labels = devices.map(d => d.name || '?');
               const values = devices.map(d => Number(d.value || 0));
-              ChartHelper.renderDoughnut('chart-device-ecosystem', labels, values, { isHours: false });
+              ChartHelper.renderDoughnut('chart-device-ecosystem', labels, values, { isHours: false, onClick: index => Router.navigate(historyURL(`hideZapped=true&device=${encodeURIComponent(devices[index].name)}`)) });
             } else {
               ChartHelper.showEmpty('chart-device-ecosystem', 'Aucun appareil enregistré');
             }
@@ -3219,12 +3389,12 @@
         try {
           const params = new URLSearchParams();
           appendDateFilters(params);
-          if (currentMediaType) params.set('type', currentMediaType);
+          appendMediaFilters(params);
           if (currentServerId) params.set('servers', currentServerId);
 
           const [net, geo] = await Promise.all([
             API.getJSON(`/api/stats/network?${params.toString()}`),
-            API.getJSON('/api/geo-stats'),
+            API.getJSON('/api/geo-stats').catch(error => ({ locations: [], error: error.message })),
           ]);
 
           if (pageSignal.aborted || requestNumber !== networkRequest) return;
@@ -3239,7 +3409,7 @@
             <div class="stat-grid-4">
               <div class="stat-card-modern">
                 <div class="stat-header">
-                  <span class="stat-title">Sessions totales</span>
+                  <span class="stat-title">${I18n.t('network.totalSessions') || 'Sessions totales'}</span>
                   <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
                 </div>
                 <div class="stat-num metric-glow-cyan">${stats.totalSessions}</div>
@@ -3248,7 +3418,7 @@
 
               <div class="stat-card-modern">
                 <div class="stat-header">
-                  <span class="stat-title">Taux de transcodage</span>
+                  <span class="stat-title">${I18n.t('network.transcodeRate') || 'Taux de transcodage'}</span>
                   <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                 </div>
                 <div class="stat-num metric-glow-amber">${stats.transcodePercent}%</div>
@@ -3261,16 +3431,16 @@
                   <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="15" x="2" y="3" rx="2"/></svg>
                 </div>
                 <div class="stat-num metric-glow-blue">${stats.directStreamSessions}</div>
-                <div class="stat-desc">Conteneur modifié sans ré-encodage vidéo</div>
+                <div class="stat-desc">${I18n.t('network.remuxed') || 'Conteneur modifié sans ré-encodage vidéo'}</div>
               </div>
 
               <div class="stat-card-modern">
                 <div class="stat-header">
-                  <span class="stat-title">Durée de transcodage</span>
+                  <span class="stat-title">${I18n.t('network.transcodeDuration') || 'Durée de transcodage'}</span>
                   <svg class="nav-icon text-rose" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 </div>
                 <div class="stat-num metric-glow-rose">${Math.round((stats.totalTranscodeDuration || 0) / 3600)}h</div>
-                <div class="stat-desc">Temps machine cumulé</div>
+                <div class="stat-desc">${I18n.t('network.transcodeDurationDesc') || 'Temps machine cumulé'}</div>
               </div>
             </div>
 
@@ -3279,8 +3449,8 @@
               <div class="chart-card">
                 <div class="card-header">
                   <div class="card-title-group">
-                    <div class="card-title">DirectPlay vs Transcode par heure</div>
-                    <div class="card-subtitle">Répartition temporelle des méthodes de flux (UTC)</div>
+                    <div class="card-title">${I18n.t('network.directVsTranscodeByHour') || 'DirectPlay vs Transcode par heure'}</div>
+                    <div class="card-subtitle">${I18n.t('network.directVsTranscodeByHourDesc') || 'Répartition temporelle des méthodes de flux (UTC)'}</div>
                   </div>
                 </div>
                 <div class="chart-wrap" style="height:280px;">
@@ -3291,8 +3461,8 @@
               <div class="chart-card">
                 <div class="card-header">
                   <div class="card-title-group">
-                    <div class="card-title">Transcodage par client</div>
-                    <div class="card-subtitle">Pourcentage de sessions transcodées par application</div>
+                    <div class="card-title">${I18n.t('network.transcodeByClient') || 'Transcodage par client'}</div>
+                    <div class="card-subtitle">${I18n.t('network.transcodeByClientDesc') || 'Pourcentage de sessions transcodées par application'}</div>
                   </div>
                 </div>
                 <div class="chart-wrap" style="height:280px;">
@@ -3305,8 +3475,8 @@
             <div class="card">
               <div class="card-header">
                 <div class="card-title-group">
-                  <div class="card-title">🚨 Tableau des Coupables (Titres les plus transcodés)</div>
-                  <div class="card-subtitle">Fichiers consommant le plus de ressources CPU/GPU avec motif identifié</div>
+                  <div class="card-title">${I18n.t('network.mostTranscoded') || '🚨 Tableau des Coupables (Titres les plus transcodés)'}</div>
+                  <div class="card-subtitle">${I18n.t('network.mostTranscodedDesc') || 'Fichiers consommant le plus de ressources CPU/GPU avec motif identifié'}</div>
                 </div>
               </div>
               <div style="padding:1rem; overflow-x:auto;">
@@ -3314,12 +3484,12 @@
                   <table class="table-modern">
                     <thead>
                       <tr>
-                        <th>Média</th>
-                        <th>Résolution</th>
-                        <th style="text-align:center;">Sessions</th>
-                        <th style="text-align:center;">Durée</th>
-                        <th>Cause principale</th>
-                        <th>Client principal</th>
+                        <th>${I18n.t('network.colMedia') || 'Média'}</th>
+                        <th>${I18n.t('network.colResolution') || 'Résolution'}</th>
+                        <th style="text-align:center;">${I18n.t('network.colSessions') || 'Sessions'}</th>
+                        <th style="text-align:center;">${I18n.t('network.colDuration') || 'Durée'}</th>
+                        <th>${I18n.t('network.colCause') || 'Cause principale'}</th>
+                        <th>${I18n.t('network.colClient') || 'Client principal'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3332,7 +3502,7 @@
                             </div>
                           </td>
                           <td>
-                            <span class="badge ${row.resolution === '4K' ? 'badge-warning' : 'badge-info'}" style="font-size:0.7rem;">${row.resolution || 'HD'}</span>
+                            <span class="badge ${row.resolution === '4K' ? 'badge-warning' : 'badge-info'}" style="font-size:0.7rem;">${Utils.escapeHtml(row.resolution || I18n.t('common.unknown'))}</span>
                           </td>
                           <td style="text-align:center; font-weight:700;" class="metric-glow-amber">${row.count}</td>
                           <td style="text-align:center; font-size:0.8rem;">${row.durationMin} min</td>
@@ -3360,6 +3530,7 @@
               </div>
               <div style="padding:1rem;">
                 <div class="ranking-list">
+                  ${geo.error ? `<p role="status">${Utils.escapeHtml(geo.error)}</p>` : ''}
                   ${(geo.locations || []).slice(0, 10).map((loc, i) => `
                     <div class="ranking-item">
                       <span class="ranking-badge">🌍</span>
@@ -3427,9 +3598,10 @@
       });
 
       const refreshFilteredDashboard = () => {
+        document.getElementById('dash-time-select').value = currentTimeRange;
         const params = new URLSearchParams();
         appendDateFilters(params);
-        if (currentMediaType) params.set('type', currentMediaType);
+        appendMediaFilters(params);
         if (currentServerId) params.set('servers', currentServerId);
         window.history.replaceState({}, '', window.location.pathname + '?' + params.toString());
         loadAllDashboard();
@@ -3437,6 +3609,11 @@
         if (activeTab === 'network') loadNetworkTab();
       };
       // 15. Time range pills click handlers
+      document.getElementById('dash-time-select').addEventListener('change', event => {
+        const range = event.target.value;
+        event.target.value = currentTimeRange;
+        document.querySelector(`#dash-time-range [data-range="${range}"]`)?.click();
+      });
       document.querySelectorAll('#dash-time-range .time-pill-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           if (btn.dataset.range === 'custom') {
@@ -3470,9 +3647,14 @@
       // 16. Media filter buttons click handlers
       document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentMediaType = btn.getAttribute('data-type') || '';
+          const type = mediaButtonType(btn.dataset.type);
+          const types = ['Movie', 'Series', 'MusicAlbum', 'Book'];
+          if (!type) excludedTypes = [];
+          else if (currentMediaType || excludedTypes.length === 0) excludedTypes = types.filter(value => value !== type);
+          else excludedTypes = excludedTypes.includes(type) ? excludedTypes.filter(value => value !== type) : [...excludedTypes, type];
+          if (excludedTypes.length >= types.length) excludedTypes = [];
+          currentMediaType = '';
+          updateMediaButtons();
           refreshFilteredDashboard();
         });
       });
@@ -3490,8 +3672,9 @@
       }
 
       document.querySelectorAll('#dash-time-range .time-pill-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.range === currentTimeRange));
-      document.querySelectorAll('#dash-media-filter .header-filter-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.type === currentMediaType));
-      document.querySelectorAll('#dash-server-filter-container .header-filter-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.serverId === currentServerId));
+      document.getElementById('dash-time-select').value = currentTimeRange;
+      updateMediaButtons();
+      updateServerButtons();
       // Initial loaders
       await Promise.all([
         loadSystemHealth(),
@@ -3503,7 +3686,7 @@
       if (pageSignal.aborted) return;
       hwInterval = setInterval(loadHardware, 10000);
       healthInterval = setInterval(loadSystemHealth, 30000);
-      streamsInterval = setInterval(refreshLiveStreams, 5000);
+      streamsInterval = setInterval(refreshLiveStreams, 4000);
     },
 
     // 2. Login Page
@@ -4088,121 +4271,97 @@
     // 6. Newsletter / Discord Announcement
     async newsletter() {
       const main = document.getElementById('app-main');
-      main.innerHTML = `
-        <div style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
-          <div class="page-header">
-            <div>
-              <h1 class="page-title">
-                <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                ${I18n.t('newsletter.title') || 'Newsletter & Récapitulatif'}
-              </h1>
-              <p class="page-subtitle">Générez et publiez le résumé mensuel automatisé sur votre canal Discord.</p>
-            </div>
-            <div class="page-actions">
-              <button class="btn btn-primary" id="btn-post-discord" style="display: flex; align-items: center; gap: 0.5rem;">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028z"/></svg>
-                ${I18n.t('newsletter.sendDiscord') || 'Publier sur Discord'}
-              </button>
-            </div>
-          </div>
-
-          <div class="card" id="newsletter-preview-card" style="padding: 1.75rem;">
-            <div class="skeleton" style="height: 250px;"></div>
-          </div>
-        </div>
-      `;
-
+      const pageSignal = State.pageController.signal;
+      const copy = (fr, en) => State.locale.startsWith('fr') ? fr : en;
+      const tr = (key, fallback) => I18n.t(`newsletter.${key}`) || fallback;
+      const escape = Utils.escapeHtml;
+      const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${{
+        sparkles: '<path d="m9 3 1.9 5.8L17 11l-6.1 2.2L9 19l-1.9-5.8L1 11l6.1-2.2L9 3Z"/><path d="M20 3v4M18 5h4M20 17v4M18 19h4"/>',
+        clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+        play: '<circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4V8Z"/>',
+        trophy: '<path d="M8 21h8M12 17v4M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v2a4 4 0 0 0 4 4M17 5h3v2a4 4 0 0 1-4 4"/>',
+      }[name]}</svg>`;
+      main.innerHTML = `<div class="newsletter-recovery">${Pages.mediaNav('')}<div class="newsletter-loading skeleton" style="height:500px"></div></div>`;
       try {
         const data = await API.getJSON('/api/newsletter');
-        const card = document.getElementById('newsletter-preview-card');
-        card.innerHTML = `
-          <div class="card-header" style="padding:0 0 1.25rem 0; border-bottom: 1px solid var(--border-subtle);">
-            <div class="card-title-group">
-              <div class="card-title" style="display:flex;align-items:center;gap:0.5rem;">
-                <span>📢</span>
-                Récapitulatif des 30 derniers jours
-              </div>
-              <div class="card-subtitle">Période : ${Utils.escapeHtml(data.dateRange || 'Derniers 30 jours')}</div>
-            </div>
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1.25rem;">
-            <div class="stat-grid">
-              <div class="stat-card">
-                <div class="stat-card-header">
-                  <span class="stat-card-label">Lectures totales</span>
-                  <div class="stat-icon stat-icon-indigo">
-                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                  </div>
+        if (pageSignal.aborted) return;
+        const media = data.topMedia || [], users = data.topUsers || [], leader = users[0];
+        const totalHours = Math.round(Number(data.totalHours) || 0);
+        const date = value => new Date(value).toLocaleDateString(State.locale, { day: '2-digit', month: 'short', year: 'numeric' });
+        const dateRange = data.startDate && data.endDate ? `${date(data.startDate)} – ${date(data.endDate)}` : data.dateRange || '';
+        const poster = item => {
+          const params = new URLSearchParams({ itemId: item.jellyfinMediaId || item.jellyfinId || '', type: 'Primary', maxWidth: '160' });
+          if (item.serverId) params.set('serverId', item.serverId);
+          return item.jellyfinMediaId || item.jellyfinId ? `<img src="/api/jellyfin/image?${escape(params.toString())}" alt="${escape(item.title)}" loading="lazy" data-hide-on-error>` : '';
+        };
+        main.innerHTML = `
+          <div class="newsletter-recovery">
+            ${Pages.mediaNav('')}
+            <article class="rewind-card">
+              <header class="rewind-hero"><span class="rewind-sparkles" aria-hidden="true">${icon("sparkles")}</span><h1>JellyTrack Rewind</h1><p>${tr('monthlyRecap', copy('Votre récapitulatif des 30 derniers jours', 'Your recap of the last 30 days'))}</p><time>${escape(dateRange)}</time></header>
+              <div class="rewind-content">
+                <div class="rewind-metrics">
+                  <div class="rewind-metric"><span aria-hidden="true">${icon("clock")}</span><strong class="metric-glow-emerald">${Utils.formatNumber(totalHours)}h</strong><p>${tr('hoursWatched', copy('Visionné', 'Watched'))}</p></div>
+                  <div class="rewind-metric"><span aria-hidden="true">${icon("play")}</span><strong class="metric-glow-blue">${Utils.formatNumber(data.totalPlays || 0)}</strong><p>${tr('totalPlays', copy('Lectures totales', 'Total plays'))}</p></div>
                 </div>
-                <div class="stat-card-value">${Utils.formatNumber(data.totalPlays)}</div>
-                <div class="stat-card-footer">Sessions enregistrées</div>
+                <section class="rewind-podium"><h2>${icon("trophy")} ${tr('videoPodium', copy('Le Podium Vidéo', 'The Video Podium'))}</h2>
+                  ${media.slice(0, 3).map((item, index) => `<div class="rewind-podium-item"><strong class="rewind-rank">${index + 1}</strong><div class="rewind-poster">${poster(item)}</div><div class="rewind-media-title"><h3>${escape(item.title)}</h3><p>${escape(I18n.t(`common.${item.type}`) || item.type)}</p></div><strong class="metric-glow-emerald">${Number(item.hours || 0).toFixed(1)}h</strong></div>`).join('') || `<p class="text-muted-foreground">${I18n.t('common.noData')}</p>`}
+                </section>
+                ${leader ? `<section class="rewind-viewer"><span class="rewind-viewer-icon" aria-hidden="true">♙</span><div><p>${tr('bestViewer', copy('Meilleur spectateur', 'Best viewer'))}</p><h2>${escape(leader.username)}</h2></div><div class="rewind-viewer-hours"><strong class="metric-glow-violet">${Math.round(leader.hours || 0)}h</strong><p>${tr('hoursWatched', copy('Visionné', 'Watched'))}</p></div></section>` : ''}
               </div>
-
-              <div class="stat-card">
-                <div class="stat-card-header">
-                  <span class="stat-card-label">Heures visionnées</span>
-                  <div class="stat-icon stat-icon-cyan">
-                    <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  </div>
-                </div>
-                <div class="stat-card-value">${Math.round(data.totalHours || 0)} h</div>
-                <div class="stat-card-footer">Temps cumulé</div>
-              </div>
-            </div>
-
-            <div>
-              <div class="card-title" style="font-size: 1.05rem; margin-bottom: 0.75rem;">🏆 Top Médias du mois</div>
-              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                ${(data.topMedia || []).map((m, idx) => `
-                  <div class="newsletter-top-item">
-                    <div style="display:flex;align-items:center;gap:0.6rem;">
-                      <span class="user-card-avatar" style="width:24px;height:24px;font-size:0.7rem;border:none;background:${idx === 0 ? 'var(--primary)' : 'var(--surface-nested)'};color:${idx === 0 ? 'white' : 'var(--muted-foreground)'};">#${idx + 1}</span>
-                      <span style="font-weight:600;">${Utils.escapeHtml(m.title)}</span>
-                      <span class="badge badge-secondary" style="font-size:0.7rem;">${Utils.escapeHtml(m.type)}</span>
-                    </div>
-                    <span style="color: var(--primary); font-weight: 700; font-size: 0.85rem;">${m.hours.toFixed(1)} h • ${m.plays} lectures</span>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <div>
-              <div class="card-title" style="font-size: 1.05rem; margin-bottom: 0.75rem;">👑 Top Utilisateurs les plus actifs</div>
-              <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                ${(data.topUsers || []).map((u, idx) => `
-                  <div class="newsletter-top-item">
-                    <div style="display:flex;align-items:center;gap:0.6rem;">
-                      <span class="user-card-avatar" style="width:24px;height:24px;font-size:0.7rem;border:none;background:${idx === 0 ? '#a855f7' : 'var(--surface-nested)'};color:${idx === 0 ? 'white' : 'var(--muted-foreground)'};">#${idx + 1}</span>
-                      <span style="font-weight:600;">${Utils.escapeHtml(u.username)}</span>
-                    </div>
-                    <span style="color: var(--accent); font-weight: 700; font-size: 0.85rem;">${u.hours.toFixed(1)} h</span>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          </div>
-        `;
-
-        document.getElementById('btn-post-discord').addEventListener('click', async () => {
-          Modal.showAction({
-            title: 'Publier sur Discord',
-            bodyHtml: '<p>Voulez-vous envoyer ce récapitulatif sur le canal Discord configuré ?</p>',
-            confirmText: 'Publier',
-            onConfirm: async () => {
-              try {
-                await API.postJSON('/api/newsletter/discord-post', {});
-                Toast.success('Message envoyé sur Discord avec succès !');
-              } catch (e) {
-                Toast.error(e.message);
-              }
-            },
-          });
+            </article>
+            <div class="rewind-actions"><button class="btn btn-primary" id="btn-download-rewind">↓ ${copy("Télécharger l'infographie (PNG)", 'Download infographic (PNG)')}</button><button class="btn btn-secondary" id="btn-post-discord">${copy('Diffuser sur Discord', 'Post to Discord')}</button></div>
+            <p id="rewind-result" role="status" aria-live="polite"></p>
+            ${media.length > 3 || users.length > 1 ? `<details class="rewind-complements"><summary>${copy('Classements complémentaires', 'Additional rankings')}</summary><div class="dash-grid-2"><section><h3>${copy('Autres médias du mois', 'More media this month')}</h3>${media.slice(3).map(item => `<div class="newsletter-top-item"><span>${escape(item.title)}</span><span>${Number(item.hours || 0).toFixed(1)}h · ${item.plays || 0} ${I18n.t('dashboard.readings')}</span></div>`).join('') || `<p>${I18n.t('common.noData')}</p>`}</section><section><h3>${copy('Autres spectateurs', 'More viewers')}</h3>${users.slice(1).map(user => `<div class="newsletter-top-item"><span>${escape(user.username)}</span><span>${Number(user.hours || 0).toFixed(1)}h</span></div>`).join('') || `<p>${I18n.t('common.noData')}</p>`}</section></div></details>` : ''}
+          </div>`;
+        const result = (message, error = false) => {
+          const element = document.getElementById('rewind-result');
+          if (element) { element.textContent = message; element.className = error ? 'text-danger' : 'text-emerald'; }
+        };
+        document.getElementById('btn-download-rewind').addEventListener('click', () => {
+          const button = document.getElementById('btn-download-rewind'); button.disabled = true;
+          try {
+            const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1350;
+            const context = canvas.getContext('2d');
+            if (!context) throw new Error(copy("Impossible de générer l'infographie.", 'Cannot generate the infographic.'));
+            const background = context.createLinearGradient(0, 0, 1080, 1350);
+            background.addColorStop(0, '#0f172a'); background.addColorStop(.4, '#1e1b4b'); background.addColorStop(1, '#090d16');
+            context.fillStyle = background; context.fillRect(0, 0, 1080, 1350);
+            const glow = context.createRadialGradient(540, 200, 10, 540, 200, 450);
+            glow.addColorStop(0, 'rgba(170,92,195,.4)'); glow.addColorStop(1, 'transparent'); context.fillStyle = glow; context.fillRect(0, 0, 1080, 600);
+            const label = (text, x, y, size, color, align = 'left', bold = false, width) => {
+              context.fillStyle = color; context.font = `${bold ? 'bold ' : ''}${size}px system-ui, sans-serif`; context.textAlign = align;
+              const value = String(text); if (width) context.fillText(value, x, y, width); else context.fillText(value, x, y);
+            };
+            const card = (x, y, width, height, color = 'rgba(30,41,59,.75)') => { context.fillStyle = color; context.strokeStyle = 'rgba(148,163,184,.2)'; context.lineWidth = 2; context.beginPath(); context.roundRect(x, y, width, height, 20); context.fill(); context.stroke(); };
+            label('JellyTrack Rewind', 540, 150, 56, '#fff', 'center', true);
+            label(tr('monthlyRecap', copy('Récapitulatif des 30 derniers jours', 'Last 30 days recap')), 540, 200, 28, '#cbd5e1', 'center', false, 960);
+            label(dateRange, 540, 240, 20, '#94a3b8', 'center');
+            card(80, 310, 440, 160); card(560, 310, 440, 160);
+            label(`${totalHours}h`, 300, 390, 52, '#34d399', 'center', true); label(tr('hoursWatched', 'Watched'), 300, 435, 22, '#94a3b8', 'center');
+            label(data.totalPlays || 0, 780, 390, 52, '#60a5fa', 'center', true); label(tr('totalPlays', 'Total plays'), 780, 435, 22, '#94a3b8', 'center');
+            label(tr('videoPodium', 'Media Podium'), 80, 540, 36, '#fff', 'left', true);
+            media.slice(0, 3).forEach((item, index) => { const y = 580 + index * 120; card(80, y, 920, 100); label(index + 1, 130, y + 65, 42, ['#facc15', '#cbd5e1', '#d97706'][index], 'center', true); label(item.title, 190, y + 47, 26, '#f8fafc', 'left', true, 650); label(item.type, 190, y + 80, 20, '#94a3b8'); label(`${Number(item.hours || 0).toFixed(1)}h`, 960, y + 60, 28, '#34d399', 'right', true); });
+            if (leader) { card(80, 980, 920, 140, 'rgba(79,70,229,.3)'); label(tr('bestViewer', 'Best viewer'), 120, 1030, 22, '#a5b4fc'); label(leader.username, 120, 1075, 36, '#fff', 'left', true, 650); label(`${Math.round(leader.hours || 0)}h`, 960, 1055, 44, '#c084fc', 'right', true); }
+            label(copy('Généré avec JellyTrack pour Jellyfin', 'Generated with JellyTrack for Jellyfin'), 540, 1260, 18, '#64748b', 'center');
+            const link = document.createElement('a'); link.download = `jellytrack_rewind_${new Date().toISOString().slice(0, 10)}.png`; link.href = canvas.toDataURL('image/png'); link.click();
+            result(copy('Infographie téléchargée.', 'Infographic downloaded.'));
+          } catch (error) { result(error.message, true); } finally { button.disabled = false; }
         });
-      } catch (e) {
-        Toast.error(e.message);
+        document.getElementById('btn-post-discord').addEventListener('click', () => {
+          Modal.showAction({ title: copy('Diffuser sur Discord', 'Post to Discord'), bodyHtml: `<p>${copy('Envoyer ce récapitulatif sur le canal Discord configuré ?', 'Send this recap to the configured Discord channel?')}</p>`, confirmText: copy('Diffuser', 'Post'), onConfirm: async () => {
+            const button = document.getElementById('btn-post-discord'); if (button?.disabled) return false;
+            if (button) button.disabled = true;
+            try { const response = await API.postJSON('/api/newsletter/discord-post', {}); result(response.message || copy('Bilan diffusé sur Discord !', 'Recap posted to Discord!')); }
+            catch (error) { result(error.message, true); return false; }
+            finally { if (button && !pageSignal.aborted) button.disabled = false; }
+          } });
+        });
+      } catch (error) {
+        if (!pageSignal.aborted) main.innerHTML = `<div class="empty-state" role="alert">${escape(error.message)}</div>`;
       }
     },
+
 
     // Historical user interfaces have isolated renderers and scoped styles.
     async users() {
@@ -4216,551 +4375,108 @@
     // 9. Wrapped (Annual User Retrospective)
     async wrapped(userId) {
       const main = document.getElementById('app-main');
-      const year = new Date().getFullYear();
-      main.innerHTML = `<div class="skeleton" style="height: 400px; max-width: 680px; margin: 2rem auto;"></div>`;
-
+      const pageSignal = State.pageController.signal;
+      const escape = Utils.escapeHtml;
+      const copy = (fr, en) => State.locale.startsWith('fr') ? fr : en;
+      const t = (key, params = {}) => I18n.t(`wrapped.${key}`, params) || key;
+      const search = new URLSearchParams(window.location.search);
+      const year = Number(search.get('year')) || new Date().getFullYear();
+      const filterType = ['Movies', 'TV', 'Music', 'Books'].includes(search.get('type')) ? search.get('type') : 'general';
+      let currentSlide = 0, configOpen = false, timer;
+      const cleanup = () => { clearTimeout(timer); document.body.classList.remove('wrapped-active'); };
+      State.pageCleanups.push(cleanup);
+      main.innerHTML = '<div class="skeleton" style="height:400px;max-width:680px;margin:2rem auto"></div>';
       try {
-        const data = await API.getJSON(`/api/wrapped/${encodeURIComponent(userId)}?year=${year}`);
-        let currentSlide = 0;
-
-        const slides = [
-          // Slide 0: Intro
-          `
-            <div class="wrapped-tag">JellyTrack Wrapped ${year}</div>
-            <h1 class="wrapped-hero-title">Une Année Extraordinaire</h1>
-            <p style="color: var(--muted-foreground); font-size: 1.05rem; margin-top: 0.5rem;">
-              Prêt à revivre vos moments forts sur votre serveur Jellyfin ?
-            </p>
-            <div class="wrapped-stat-big">${Math.round(data.totalHours || 0)}</div>
-            <div style="font-size: 1.15rem; font-weight: 700; color: var(--foreground); margin-bottom: 1.5rem;">
-              Heures totales passées à regarder et écouter
-            </div>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem;">
-              Soit environ ${(data.totalHours / 24).toFixed(1)} jours non-stop de pur divertissement !
-            </p>
-          `,
-
-          // Slide 1: Top Movies
-          `
-            <div class="wrapped-tag">Cinéma & Films</div>
-            <h2 class="wrapped-hero-title">Vos Films Incontournables</h2>
-            <div style="display: flex; flex-direction: column; gap: 0.6rem; text-align: left; margin: 1.5rem 0;">
-              ${(data.topMovies || []).slice(0, 4).map((m, i) => `
-                <div style="padding: 0.75rem 1rem; background: var(--surface-soft); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
-                  <span><b>#${i + 1}</b> ${Utils.escapeHtml(m.title)}</span>
-                  <span style="color: var(--primary); font-weight: 700;">${m.hours.toFixed(1)} h</span>
-                </div>
-              `).join('')}
-            </div>
-          `,
-
-          // Slide 2: Top Series
-          `
-            <div class="wrapped-tag">Séries TV</div>
-            <h2 class="wrapped-hero-title">Vos Meilleurs Marathons</h2>
-            <div style="display: flex; flex-direction: column; gap: 0.6rem; text-align: left; margin: 1.5rem 0;">
-              ${(data.topSeries || []).slice(0, 4).map((s, i) => `
-                <div style="padding: 0.75rem 1rem; background: var(--surface-soft); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center;">
-                  <span><b>#${i + 1}</b> ${Utils.escapeHtml(s.title)}</span>
-                  <span style="color: var(--accent-purple, #A855F7); font-weight: 700;">${s.hours.toFixed(1)} h</span>
-                </div>
-              `).join('')}
-            </div>
-          `,
-
-          // Slide 3: Habits & Peak Times
-          `
-            <div class="wrapped-tag">Habitudes de lecture</div>
-            <h2 class="wrapped-hero-title">Votre Rythme Idéal</h2>
-            <div class="metric-grid" style="grid-template-columns: repeat(2, 1fr); margin: 1.5rem 0; text-align: center;">
-              <div class="metric-card">
-                <div class="metric-label">Jour favori</div>
-                <div class="metric-value" style="font-size: 1.8rem;">${['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][data.peakDay || 0]}</div>
-              </div>
-              <div class="metric-card">
-                <div class="metric-label">Heure de pointe</div>
-                <div class="metric-value" style="font-size: 1.8rem;">${data.peakHour || 21}h:00</div>
-              </div>
-            </div>
-            <p style="color: var(--muted-foreground); font-size: 0.88rem;">Vous adorez profiter de votre médiathèque en soirée !</p>
-          `,
-
-          // Slide 4: Summary Card
-          `
-            <div class="wrapped-tag">Bilan ${year}</div>
-            <h2 class="wrapped-hero-title">${Utils.escapeHtml(data.username)}</h2>
-            <div style="margin: 1.5rem 0; font-size: 1.1rem; line-height: 1.8;">
-              🍿 <b>${Utils.formatNumber(data.totalPlays)}</b> lectures lancées<br>
-              ⏱️ <b>${Math.round(data.totalHours || 0)}</b> heures de divertissement<br>
-              🌟 Film n°1 : <b>${data.topMovies && data.topMovies[0] ? Utils.escapeHtml(data.topMovies[0].title) : 'Aucun'}</b><br>
-              📺 Série n°1 : <b>${data.topSeries && data.topSeries[0] ? Utils.escapeHtml(data.topSeries[0].title) : 'Aucune'}</b>
-            </div>
-            <button class="btn btn-primary" id="btn-share-wrapped">📋 Copier le résumé</button>
-          `,
-        ];
-
-        const renderSlide = (idx) => {
-          main.innerHTML = `
-            <div class="wrapped-container">
-              <div class="wrapped-card" id="wrapped-deck-card">
-                ${slides[idx]}
-              </div>
-
-              <div class="wrapped-nav-bar">
-                <button class="btn btn-secondary btn-sm" id="btn-wrap-prev" ${idx === 0 ? 'disabled' : ''}>← Précédent</button>
-                <span style="font-size: 0.82rem; color: var(--muted-foreground); font-weight: 600;">${idx + 1} / ${slides.length}</span>
-                <button class="btn btn-primary btn-sm" id="btn-wrap-next" ${idx === slides.length - 1 ? 'disabled' : ''}>Suivant →</button>
-              </div>
-            </div>
-          `;
-
-          document.getElementById('btn-wrap-prev')?.addEventListener('click', () => {
-            if (currentSlide > 0) {
-              currentSlide--;
-              renderSlide(currentSlide);
-            }
+        const params = new URLSearchParams({ year: String(year) }); if (filterType !== 'general') params.set('type', filterType);
+        const data = await API.getJSON(`/api/wrapped/${encodeURIComponent(userId)}?${params}`);
+        if (pageSignal.aborted) return;
+        document.body.classList.add('wrapped-active');
+        const seconds = Number(data.totalSeconds) || 0, hours = Math.round(seconds / 3600);
+        const noData = `<p class="wrapped-no-data">${t('noData')}</p>`;
+        const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayLabel = t(dayKeys[data.peakDay ?? 0]);
+        const peakHour = data.totalPlays > 0 ? `${data.peakHour ?? 0}h` : 'N/A';
+        const genres = data.topGenres || [], topGenre = genres[0]?.name || t('unknown');
+        const duration = value => { const s = Number(value) || 0; return s >= 3600 ? `${Math.floor(s / 3600)}h ${Math.round(s % 3600 / 60)}m` : `${Math.round(s / 60)}m`; };
+        const ranked = items => !items?.length ? noData : `<ol class="wrapped-ranked">${items.slice(0, 5).map((item, index) => `<li><b>${index + 1}</b><span>${escape(item.title)}</span><small>${duration(item.seconds ?? Number(item.hours || 0) * 3600)}</small></li>`).join('')}</ol>`;
+        const slides = [];
+        const add = (title, subtitle, icon, content, theme) => slides.push({ title, subtitle, icon, content, theme });
+        add(`JellyTrack Wrapped ${data.year || year}`, t('introSubtitle', { username: data.username }), '▷', `<p>${t('introContent')}</p><button class="btn btn-secondary wrapped-customize" data-wrapped-config>${t('customize')}</button>`, 'purple');
+        add(t('totalTimeTitle'), t('totalTimeSubtitle'), '◷', `<strong class="wrapped-number">${Utils.formatNumber(hours)}</strong><p>${t('hours')} ${t('streaming')}</p><p>${t('acrossSessions', { count: data.totalPlays || 0 })}</p>`, 'emerald');
+        if (hours >= 24) add(t('totalTimeDays', { days: Math.floor(hours / 24), hours: hours % 24 }), t('totalTimeDaysDesc'), '▦', `<strong class="wrapped-number">${Math.floor(hours / 24)}</strong><p>${t('days')}</p>`, 'cyan');
+        const monthly = data.monthlyHours || [];
+        const maxMonth = Math.max(0, ...monthly.map(item => Number(item.hours) || 0));
+        add(t('monthlyTitle'), t('monthlySubtitle'), '▥', monthly.length ? `<div class="wrapped-months">${monthly.map(item => `<div><span style="height:${maxMonth > 0 ? Math.max(0, Number(item.hours) / maxMonth * 100) : 0}%"><small>${Number(item.hours || 0).toFixed(1)}h</small></span><b>${t(item.name)}</b></div>`).join('')}</div>${maxMonth > 0 ? `<p>${t('bestMonth', { name: t(monthly.find(item => Number(item.hours) === maxMonth)?.name || 'jan'), hours: maxMonth.toFixed(1) })}</p>` : noData}` : noData, 'pink');
+        add(t('peakTitle'), t('peakSubtitle'), '↗', `<strong class="wrapped-number">${peakHour}</strong><p>${data.totalPlays > 0 ? escape(t('peakContent', { bold: '', hour: peakHour, count: data.peakHourSessions ?? data.hourCounts?.[data.peakHour] ?? 0 })) : t('noData')}</p>`, 'orange');
+        if (data.topDevice && data.topDevice !== 'N/A') add(t('topDevice'), t('topDeviceDesc', { device: data.topDevice }), '◉', `<strong class="wrapped-device">${escape(data.topDevice)}</strong>`, 'amber');
+        add(t('genresTitle'), t('genresSubtitle'), '☆', genres.length ? `<p>${t('genreFirst')}</p><strong class="wrapped-device">${escape(topGenre)}</strong><ol class="wrapped-genres">${genres.map(item => `<li>${escape(item.name)} <small>${item.count || 0}</small></li>`).join('')}</ol>` : noData, 'pink');
+        add(t('dayTitle'), t('daySubtitle'), '▦', data.totalPlays > 0 ? `<strong class="wrapped-device">${dayLabel}</strong><p>${t('dayContent')}</p>` : noData, 'amber');
+        add(t('pantheonTitle'), t('pantheonSubtitle'), '☆', ranked(data.topMedia || data.topMovies), 'amber');
+        if (data.topSeries?.length) add(t('bingeTitle'), t('bingeSubtitle'), '▣', ranked(data.topSeries), 'blue');
+        if (data.topTracks?.length || data.topMusic?.length) add(t('tracksTitle'), t('tracksSubtitle'), '♫', ranked(data.topTracks || data.topMusic), 'emerald');
+        if (data.topArtists?.length) add(t('artistsTitle'), t('artistsSubtitle'), '♬', ranked(data.topArtists), 'purple');
+        if (data.topAlbums?.length) add(t('albumsTitle'), t('albumsSubtitle'), '◎', ranked(data.topAlbums), 'pink');
+        const categoryConfigs = [ ['movies', 'moviesTitle', 'moviesSubtitle', 'moviesLabel', '▣', 'red'], ['series', 'episodesTitle', 'episodesSubtitle', 'episodesLabel', '▣', 'blue'], ['music', 'musicTitle', 'musicSubtitle', 'musicLabel', '♫', 'emerald'], ['books', 'booksTitle', 'booksSubtitle', 'booksLabel', '▤', 'amber'] ];
+        categoryConfigs.forEach(([key, title, subtitle, label, icon, theme]) => { const category = data.categories?.[key]; if (category?.totalSeconds > 0) add(t(title), t(subtitle), icon, `<strong class="wrapped-number">${Math.round(category.totalSeconds / 3600)}</strong><p>${t('hours')} ${t('ofLabel', { label: t(label) })}</p>${ranked(category.topMedia)}`, theme); });
+        add(t('shareTitle'), t('shareSubtitle'), '↗', `<div class="wrapped-share-card"><p>${t('shareCardYear', { year: data.year || year })}</p><h2>${escape(data.username)}</h2><strong>${hours} ${t('hours')}</strong><p>${t('acrossSessions', { count: data.totalPlays || 0 })}</p>${data.totalPlays > 0 ? `<p>${escape(t('genreLabel', { genre: topGenre }))}</p><p>${t('favDayLabel', { day: dayLabel })}</p>` : ''}<p>${t('captureScreen')}</p><button class="btn btn-primary" id="btn-share-wrapped">${copy('Copier le résumé', 'Copy summary')}</button></div>`, 'purple');
+        const change = direction => { const next = Math.max(0, Math.min(slides.length - 1, currentSlide + direction)); if (next !== currentSlide) { currentSlide = next; render(); } };
+        const schedule = () => { clearTimeout(timer); if (!pageSignal.aborted && !configOpen && !document.hidden && currentSlide < slides.length - 1) timer = setTimeout(() => change(1), 8000); };
+        const configuration = () => {
+          configOpen = true; clearTimeout(timer);
+          const overlay = document.createElement('div'); overlay.className = 'wrapped-config'; overlay.setAttribute('role', 'dialog'); overlay.setAttribute('aria-modal', 'true'); overlay.setAttribute('aria-label', t('customize'));
+          const years = data.availableYears?.length ? data.availableYears : [data.year || year];
+          overlay.innerHTML = `<button class="btn btn-secondary wrapped-config-close" id="wrapped-config-close" aria-label="${I18n.t('common.close') || copy('Fermer', 'Close')}">✕</button><div><h2>${t('customize')}</h2><label for="wrapped-year">${t('year')}</label><select class="form-input" id="wrapped-year">${years.map(value => `<option value="${value}" ${value === (data.year || year) ? 'selected' : ''}>${value}</option>`).join('')}</select><fieldset><legend>${t('type')}</legend><div class="wrapped-type-buttons">${[['general', 'all'], ['Movies', 'moviesLabel'], ['TV', 'tv'], ['Music', 'musicLabel'], ['Books', 'booksLabel']].map(([value, label]) => `<button class="btn ${filterType === value ? 'btn-primary' : 'btn-secondary'}" data-wrapped-type="${value}" aria-pressed="${filterType === value}">${t(label)}</button>`).join('')}</div></fieldset></div>`;
+          main.querySelector('.wrapped-recovery').appendChild(overlay);
+          const close = () => { configOpen = false; overlay.remove(); main.querySelector('[data-wrapped-config]')?.focus(); schedule(); };
+          overlay.querySelector('#wrapped-config-close').addEventListener('click', close);
+          const update = values => { const query = new URLSearchParams(window.location.search); for (const [key, value] of Object.entries(values)) { if (value === 'general') query.delete(key); else query.set(key, value); } Router.navigate(`${window.location.pathname}?${query}`); };
+          overlay.querySelector('#wrapped-year').addEventListener('change', event => update({ year: event.target.value }));
+          overlay.querySelectorAll('[data-wrapped-type]').forEach(button => button.addEventListener('click', () => update({ type: button.dataset.wrappedType })));
+          overlay.addEventListener('keydown', event => {
+            if (event.key === 'Escape') { event.stopPropagation(); close(); }
+            if (event.key === 'Tab') { const focusable = Array.from(overlay.querySelectorAll('button, select')); const first = focusable[0], last = focusable.at(-1); if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); } }
           });
-
-          document.getElementById('btn-wrap-next')?.addEventListener('click', () => {
-            if (currentSlide < slides.length - 1) {
-              currentSlide++;
-              renderSlide(currentSlide);
-            }
-          });
-
-          document.getElementById('btn-share-wrapped')?.addEventListener('click', () => {
-            const text = `🎉 Mon JellyTrack Wrapped ${year} :\n- ${Math.round(data.totalHours)} heures visionnées\n- ${data.totalPlays} lectures\nDécouvrez vos stats sur JellyTrack !`;
-            navigator.clipboard.writeText(text);
-            Toast.success('Résumé copié dans le presse-papiers !');
-          });
+          overlay.querySelector('#wrapped-config-close').focus();
         };
-
-        renderSlide(currentSlide);
-      } catch (e) {
-        main.innerHTML = `<div class="empty-state"><h1>Wrapped indisponible</h1><p>${Utils.escapeHtml(e.message)}</p></div>`;
+        const render = () => {
+          const slide = slides[currentSlide];
+          main.innerHTML = `<section class="wrapped-recovery wrapped-theme-${slide.theme}" aria-label="JellyTrack Wrapped ${data.year || year}">
+            <div class="wrapped-progress" aria-label="${currentSlide + 1} / ${slides.length}">${slides.map((_, index) => `<span><i class="${index < currentSlide ? 'complete' : index === currentSlide ? 'playing' : ''}"></i></span>`).join('')}</div>
+            <div class="wrapped-touch-zones"><button data-wrap-zone="-1" aria-label="${t('back')}"></button><button data-wrap-zone="1" aria-label="${t('next')}"></button></div>
+            <article class="wrapped-slide" aria-live="polite"><span class="wrapped-icon" aria-hidden="true">${slide.icon}</span><h2>${escape(slide.subtitle)}</h2><h1>${escape(slide.title)}</h1><div class="wrapped-slide-content">${slide.content}</div></article>
+            <nav class="wrapped-controls"><button id="btn-wrap-prev" ${currentSlide === 0 ? 'disabled' : ''}>← ${t('back')}</button><div><span>${data.year || year} • ${escape(filterType === 'general' ? t('all') : filterType)}</span><small>${currentSlide + 1} / ${slides.length}</small><button id="wrapped-config-nav">${t('customize')}</button></div><button id="btn-wrap-next" ${currentSlide === slides.length - 1 ? 'disabled' : ''}>${t('next')} →</button></nav>
+          </section>`;
+          const close = () => Router.navigate(`/users/${encodeURIComponent(userId)}`);
+          document.getElementById('btn-wrap-prev').addEventListener('click', () => change(-1));
+          document.getElementById('btn-wrap-next').addEventListener('click', () => change(1));
+          main.querySelectorAll('[data-wrap-zone]').forEach(zone => zone.addEventListener('click', () => change(Number(zone.dataset.wrapZone))));
+          main.querySelectorAll('[data-wrapped-config], #wrapped-config-nav').forEach(button => button.addEventListener('click', configuration));
+          document.getElementById('btn-share-wrapped')?.addEventListener('click', async () => {
+            const summary = `JellyTrack Wrapped ${data.year || year} — ${data.username}\n${hours} ${t('hours')} • ${data.totalPlays || 0} ${I18n.t('dashboard.readings')}\n${topGenre} • ${dayLabel}`;
+            try { await navigator.clipboard.writeText(summary); Toast.success(copy('Résumé copié !', 'Summary copied!')); } catch (error) { Toast.error(copy('Impossible de copier le résumé.', 'Cannot copy the summary.')); }
+          });
+          schedule();
+        };
+        const keyboard = event => { if (configOpen || event.target.closest('input, select, textarea, button')) return; if (event.key === 'ArrowRight') { event.preventDefault(); change(1); } else if (event.key === 'ArrowLeft') { event.preventDefault(); change(-1); } else if (event.key === 'Escape') Router.navigate(`/users/${encodeURIComponent(userId)}`); };
+        const visibility = () => { main.querySelector('.wrapped-recovery')?.classList.toggle('wrapped-paused', document.hidden); schedule(); };
+        document.addEventListener('keydown', keyboard); document.addEventListener('visibilitychange', visibility);
+        State.pageCleanups.push(() => { document.removeEventListener('keydown', keyboard); document.removeEventListener('visibilitychange', visibility); });
+        render();
+      } catch (error) {
+        cleanup(); if (!pageSignal.aborted) main.innerHTML = `<div class="empty-state" role="alert">${escape(error.message)}</div>`;
       }
     },
+
 
     mediaNav(active) {
       return window.JellyTrackNavigation.mediaTabs(active);
     },
 
-    // 10. Media Catalog & Overview
-    async media(options = {}) {
-      let { type = '', sort = 'title', artist = '', q = new URLSearchParams(window.location.search).get('q') || '' } = typeof options === 'string' ? { type: options } : (options || {});
-      const activeNav = window.location.pathname === '/media/popular' ? 'popular' : ['/media', '/media/all'].includes(window.location.pathname) ? 'media' : '';
-      const main = document.getElementById('app-main');
-      main.innerHTML = `
-        ${window.location.pathname.startsWith('/media') ? Pages.mediaNav(activeNav) : ''}
-        <div class="page-header">
-          <div>
-            <h1 class="page-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
-              ${activeNav === 'popular' ? (I18n.t('media.popularTab') || 'Top Contenus') : (sort === 'added' ? (I18n.t('nav.recentlyAdded') || 'Ajouts récents') : (I18n.t('nav.media') || 'Catalogue Multimédia'))}
-            </h1>
-            <p class="page-subtitle">Films, séries, albums et livres synchronisés depuis vos serveurs.</p>
-          </div>
-
-          <div class="page-actions">
-            <div class="segmented-control" id="media-type-filter">
-              <button class="segment-btn ${!type ? 'active' : ''}" data-type="">Tout</button>
-              <button class="segment-btn ${type === 'Movie' ? 'active' : ''}" data-type="Movie">Films</button>
-              <button class="segment-btn ${type === 'Series' ? 'active' : ''}" data-type="Series">Séries</button>
-              <button class="segment-btn ${type === 'Audio' ? 'active' : ''}" data-type="Audio">Musique</button>
-              <button class="segment-btn ${type === 'Book' ? 'active' : ''}" data-type="Book">Livres</button>
-            </div>
-          </div>
-        </div>
-
-        ${artist ? `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.25rem; background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-top: 1rem;">
-            <span>🎵 Filtré par artiste : <b>${Utils.escapeHtml(artist)}</b></span>
-            <button class="btn btn-secondary btn-sm" id="btn-clear-artist">✕ Effacer le filtre</button>
-          </div>
-        ` : ''}
-
-        <div style="display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap;">
-          <input type="text" class="form-input" id="media-search-input" value="${Utils.escapeHtml(q)}" placeholder="Filtrer par titre, réalisateur..." style="max-width: 380px;">
-          <select class="form-select" id="media-sort-select" style="max-width: 200px;">
-            <option value="title" ${sort === 'title' ? 'selected' : ''}>Titre (A-Z)</option>
-            <option value="popular" ${sort === 'popular' ? 'selected' : ''}>Les plus vus</option>
-            <option value="added" ${sort === 'added' ? 'selected' : ''}>Ajouts récents</option>
-            <option value="recent" ${sort === 'recent' ? 'selected' : ''}>Récemment lus</option>
-            <option value="duration" ${sort === 'duration' ? 'selected' : ''}>Plus longs</option>
-          </select>
-        </div>
-
-        <div class="poster-grid" id="media-grid" style="margin-top: 1.5rem;">
-          <div class="poster-card skeleton" style="height: 280px;"></div>
-          <div class="poster-card skeleton" style="height: 280px;"></div>
-          <div class="poster-card skeleton" style="height: 280px;"></div>
-          <div class="poster-card skeleton" style="height: 280px;"></div>
-          <div class="poster-card skeleton" style="height: 280px;"></div>
-          <div class="poster-card skeleton" style="height: 280px;"></div>
-        </div>
-
-        <div class="pager" id="media-pagination" style="margin-top: 2rem;">
-          <button class="btn btn-secondary btn-sm" id="media-page-prev" disabled>← Précédent</button>
-          <span class="pager-info" id="media-page-info">Page 1</span>
-          <button class="btn btn-secondary btn-sm" id="media-page-next">Suivant →</button>
-        </div>
-      `;
-
-      let currentOffset = 0;
-      const limit = 24;
-
-      const loadMedia = async () => {
-        const grid = document.getElementById('media-grid');
-        const searchInput = document.getElementById('media-search-input');
-        const sortSelect = document.getElementById('media-sort-select');
-        const searchVal = searchInput ? searchInput.value.trim() : q;
-        const sortVal = sortSelect ? sortSelect.value : sort;
-        let url = `/api/media?limit=${limit}&offset=${currentOffset}&type=${encodeURIComponent(type)}&q=${encodeURIComponent(searchVal)}&sort=${sortVal}`;
-        if (artist) {
-          url += `&artist=${encodeURIComponent(artist)}`;
-        }
-
-        try {
-          const res = await API.getJSON(url);
-          if (!res.items || res.items.length === 0) {
-            grid.innerHTML = `
-              <div class="empty-state" style="grid-column: 1/-1;">
-                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
-                <span class="empty-state-title">Aucun média trouvé</span>
-                <span>Essayez de modifier vos filtres ou vos critères de recherche.</span>
-              </div>`;
-            return;
-          }
-
-          grid.innerHTML = res.items.map((m) => {
-            const typeClass = m.type ? `poster-type-${m.type}` : 'poster-type-default';
-            return `
-              <a href="/media/${m.id}" data-link class="poster-card-link">
-                <div class="poster-image-wrap">
-                  ${m.jellyfinMediaId
-                    ? `<img src="/api/jellyfin/image?id=${m.jellyfinMediaId}&type=Primary&maxWidth=340" loading="lazy" alt="${Utils.escapeHtml(m.title)}">`
-                    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--surface-nested);color:var(--muted-foreground);font-size:1.8rem;">🎬</div>`}
-                  <div class="poster-badge-tr">
-                    <span class="poster-type-badge ${typeClass}">${Utils.escapeHtml(m.type || 'Média')}</span>
-                  </div>
-                  <div class="poster-overlay">
-                    <div class="poster-overlay-title">${Utils.escapeHtml(m.title)}</div>
-                    <div class="poster-overlay-sub">${m.durationMs ? Utils.formatMs(m.durationMs) : (m.library || '')}</div>
-                  </div>
-                  <div class="poster-bottom-gradient"></div>
-                </div>
-                <div class="poster-title-below">${Utils.escapeHtml(m.title)}</div>
-                <div class="poster-meta-below">
-                  ${m.library ? Utils.escapeHtml(m.library) : ''}
-                  ${m.durationMs ? ` • ${Utils.formatMs(m.durationMs)}` : ''}
-                </div>
-              </a>
-            `;
-          }).join('');
-
-          // Pagination update
-          const pageNum = Math.floor(currentOffset / limit) + 1;
-          const totalPages = Math.ceil((res.total || 1) / limit) || 1;
-          const pageInfo = document.getElementById('media-page-info');
-          if (pageInfo) pageInfo.textContent = `Page ${pageNum} sur ${totalPages} (${res.total || 0} titres)`;
-          const prevBtn = document.getElementById('media-page-prev');
-          const nextBtn = document.getElementById('media-page-next');
-          if (prevBtn) prevBtn.disabled = currentOffset === 0;
-          if (nextBtn) nextBtn.disabled = currentOffset + limit >= (res.total || 0);
-        } catch (e) {
-          Toast.error(e.message);
-        }
-      };
-
-      document.querySelectorAll('#media-type-filter .segment-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          type = btn.getAttribute('data-type');
-          document.querySelectorAll('#media-type-filter .segment-btn').forEach((b) => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentOffset = 0;
-          loadMedia();
-        });
+    async mediaPage(path = window.location.pathname) {
+      return window.MediaUI.render(document.getElementById('app-main'), path, {
+        API, State, Utils, I18n, Router, Toast, ChartHelper, Modal,
+        mediaNav: active => Pages.mediaNav(active),
       });
-
-      document.getElementById('btn-clear-artist')?.addEventListener('click', () => {
-        Router.navigate('/media');
-      });
-
-      document.getElementById('media-search-input')?.addEventListener('input', Utils.debounce(() => {
-        currentOffset = 0;
-        loadMedia();
-      }, 300));
-
-      document.getElementById('media-sort-select')?.addEventListener('change', () => {
-        currentOffset = 0;
-        loadMedia();
-      });
-
-      document.getElementById('media-page-prev')?.addEventListener('click', () => {
-        if (currentOffset >= limit) {
-          currentOffset -= limit;
-          loadMedia();
-        }
-      });
-
-      document.getElementById('media-page-next')?.addEventListener('click', () => {
-        currentOffset += limit;
-        loadMedia();
-      });
-
-      await loadMedia();
-    },
-
-    // 11. Media Detail Page
-    async mediaDetail(mediaId) {
-      const main = document.getElementById('app-main');
-      main.innerHTML = `${Pages.mediaNav('')}<div class="skeleton" style="height: 380px; border-radius: var(--radius-xl);"></div>`;
-
-      try {
-        const m = await API.getJSON(`/api/media/${encodeURIComponent(mediaId)}`);
-        main.innerHTML = `
-          ${Pages.mediaNav('')}
-          <div class="card" style="display: flex; gap: 2.25rem; flex-wrap: wrap; padding: 2rem;">
-            <div style="width: 240px; aspect-ratio: 2/3; border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-nested); flex-shrink: 0; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
-              ${m.jellyfinMediaId
-                ? `<img src="/api/jellyfin/image?id=${m.jellyfinMediaId}&type=Primary&maxWidth=480" style="width:100%; height:100%; object-fit:cover;">`
-                : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:2.5rem; background:var(--surface-nested);">🎬</div>`}
-            </div>
-
-            <div style="flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 0.85rem;">
-              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                <span class="badge badge-primary">${Utils.escapeHtml(m.type || 'Média')}</span>
-                ${m.resolution ? `<span class="badge badge-secondary">${Utils.escapeHtml(m.resolution)}</span>` : ''}
-                ${m.library ? `<span class="chip">📁 ${Utils.escapeHtml(m.library)}</span>` : ''}
-              </div>
-
-              <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; line-height: 1.2;">
-                ${Utils.escapeHtml(m.title)}
-              </h1>
-
-              <div style="display: flex; gap: 1.5rem; font-size: 0.88rem; color: var(--muted-foreground); flex-wrap: wrap; padding: 0.5rem 0;">
-                <span>⏱️ <b>${Utils.formatMs(m.durationMs)}</b></span>
-                <span>▶️ <b>${m.totalPlays || 0}</b> lectures</span>
-                <span>⌛ <b>${Utils.formatMs(m.totalDurationMs)}</b> visionnés au total</span>
-              </div>
-
-              ${m.genres && m.genres.length > 0 ? `
-                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem;">
-                  ${m.genres.map((g) => `<span class="chip" style="font-size:0.75rem;">${Utils.escapeHtml(g)}</span>`).join('')}
-                </div>
-              ` : ''}
-
-              ${m.directors && m.directors.length > 0 ? `
-                <div style="font-size: 0.85rem; color: var(--muted-foreground); margin-top: 0.5rem; line-height: 1.5;">
-                  <b style="color:var(--foreground);">Réalisation :</b> ${m.directors.map(Utils.escapeHtml).join(', ')}
-                </div>
-              ` : ''}
-
-              ${m.actors && m.actors.length > 0 ? `
-                <div style="font-size: 0.85rem; color: var(--muted-foreground); line-height: 1.5;">
-                  <b style="color:var(--foreground);">Distribution :</b> ${m.actors.slice(0, 8).map(Utils.escapeHtml).join(', ')}
-                </div>
-              ` : ''}
-
-              ${State.user && State.user.isAdmin ? `
-                <div style="margin-top: auto; padding-top: 1.25rem;">
-                  <button class="btn btn-secondary btn-sm" id="btn-rotate-poster" style="display:flex;align-items:center;gap:0.4rem;">
-                    <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                    Faire pivoter la jaquette
-                  </button>
-                </div>
-              ` : ''}
-            </div>
-
-            ${m.recentActivity && m.recentActivity.length > 0 ? `
-              <div style="margin-top: 1.75rem; width: 100%;">
-                <div class="card-title-group" style="margin-bottom: 0.85rem;">
-                  <div class="card-title">Dernières lectures de ce titre</div>
-                  <div class="card-subtitle">Historique des utilisateurs ayant regardé ce média</div>
-                </div>
-                <div class="table-wrapper">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>Utilisateur</th>
-                        <th>Durée</th>
-                        <th>Méthode</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${m.recentActivity.map((r) => `
-                        <tr>
-                          <td><a href="/users/${r.userId || r.username}" data-link style="font-weight:600;">${Utils.escapeHtml(r.username || 'Inconnu')}</a></td>
-                          <td style="white-space: nowrap;">${Utils.formatMs(r.durationMs)}</td>
-                          <td><span class="badge ${r.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}">${Utils.escapeHtml(r.playMethod || 'Stream')}</span></td>
-                          <td style="white-space: nowrap; font-size: 0.85rem; color: var(--muted-foreground);">
-                            ${Utils.formatDateTime(r.startedAt)} <span style="font-size:0.75rem;">(${Utils.timeAgo(r.startedAt)})</span>
-                          </td>
-                        </tr>
-                      `).join('')}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ` : ''}
-          </div>
-        `;
-
-        document.getElementById('btn-rotate-poster')?.addEventListener('click', async () => {
-          try {
-            await API.postJSON(`/api/media/${encodeURIComponent(mediaId)}/poster-rotator/rotate`, {});
-            Toast.success('Jaquette mise à jour !');
-            Router.renderCurrent();
-          } catch (e) {
-            Toast.error(e.message);
-          }
-        });
-      } catch (e) {
-        main.innerHTML = `${Pages.mediaNav('')}<div class="empty-state"><h1>Média introuvable</h1><p>${Utils.escapeHtml(e.message)}</p></div>`;
-      }
-    },
-
-    // 12. Collections
-    async collections() {
-      const main = document.getElementById('app-main');
-      main.innerHTML = `
-        ${Pages.mediaNav('collections')}
-        <div class="page-header">
-          <div>
-            <h1 class="page-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.9a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
-              ${I18n.t('nav.collections') || 'Collections & Bibliothèques'}
-            </h1>
-            <p class="page-subtitle">Volumes et proportions par bibliothèque Jellyfin.</p>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 1.25rem;" id="collections-grid">
-          <div class="card skeleton" style="height: 180px;"></div>
-          <div class="card skeleton" style="height: 180px;"></div>
-          <div class="card skeleton" style="height: 180px;"></div>
-        </div>
-      `;
-
-      try {
-        const data = await API.getJSON('/api/media/collections');
-        const grid = document.getElementById('collections-grid');
-        if (!data.collections || data.collections.length === 0) {
-          grid.innerHTML = `
-            <div class="empty-state" style="grid-column: 1/-1;">
-              <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"/></svg>
-              <span class="empty-state-title">Aucune collection trouvée</span>
-              <span>Vérifiez la synchronisation de vos serveurs multimédias.</span>
-            </div>`;
-          return;
-        }
-
-        grid.innerHTML = data.collections.map((c) => `
-          <div class="card" style="display: flex; flex-direction: column; gap: 0.9rem;">
-            <div class="card-header" style="padding-bottom: 0;">
-              <div class="card-title" style="display:flex;align-items:center;gap:0.5rem;font-size:1.15rem;">
-                <span style="font-size:1.3rem;">📁</span>
-                ${Utils.escapeHtml(c.name)}
-              </div>
-              <span class="badge badge-primary">${Utils.formatNumber(c.totalItems)} titres</span>
-            </div>
-            <div style="font-size: 0.88rem; color: var(--muted-foreground); display:flex; align-items:center; gap:0.4rem;">
-              <span>⏱️</span>
-              <span>Durée totale : <b style="color:var(--foreground);">${Math.round(c.totalHours || 0)} heures</b></span>
-            </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: auto; padding-top: 0.6rem; border-top: 1px solid var(--border-subtle);">
-              ${(c.types || []).map((t) => `
-                <span class="chip" style="font-size:0.74rem;">${Utils.escapeHtml(t.type)}: <b>${t.count}</b></span>
-              `).join('')}
-            </div>
-          </div>
-        `).join('');
-      } catch (e) {
-        Toast.error(e.message);
-      }
-    },
-
-    // 13. Deep Analysis
-    async analysis() {
-      const main = document.getElementById('app-main');
-      main.innerHTML = `
-        ${Pages.mediaNav('analysis')}
-        <div class="page-header">
-          <div>
-            <h1 class="page-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-              ${I18n.t('nav.analysis') || 'Analyses Approfondies'}
-            </h1>
-            <p class="page-subtitle">Réalisateurs, acteurs, studios et tendances de consommation.</p>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1.5rem;">
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="card-title">🎬 Top Réalisateurs</div>
-                <div class="card-subtitle">Cinéastes les plus présents dans vos lectures</div>
-              </div>
-            </div>
-            <div id="analysis-directors" style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <div class="skeleton" style="height: 120px;"></div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="card-title">⭐ Top Acteurs & Actrices</div>
-                <div class="card-subtitle">Interprètes les plus regardés</div>
-              </div>
-            </div>
-            <div id="analysis-actors" style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <div class="skeleton" style="height: 120px;"></div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <div class="card-title">🏢 Top Studios</div>
-                <div class="card-subtitle">Maisons de production favorites</div>
-              </div>
-            </div>
-            <div id="analysis-studios" style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <div class="skeleton" style="height: 120px;"></div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      try {
-        const stats = await API.getJSON('/api/stats/deep');
-        const renderList = (containerId, items) => {
-          const el = document.getElementById(containerId);
-          if (!el) return;
-          if (!items || items.length === 0) {
-            el.innerHTML = '<p class="empty-state" style="padding:1.5rem;">Données insuffisantes.</p>';
-            return;
-          }
-          el.innerHTML = items.map((it, idx) => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.85rem; background: var(--surface-soft); border-radius: var(--radius-md); font-size: 0.86rem; border: 1px solid var(--border-subtle); transition: border-color 0.15s;">
-              <div style="display:flex; align-items:center; gap:0.6rem;">
-                <span class="user-card-avatar" style="width:26px; height:26px; font-size:0.75rem; background:${idx === 0 ? 'var(--primary)' : 'var(--surface-nested)'}; color:${idx === 0 ? 'white' : 'var(--muted-foreground)'}; border:none;">#${idx + 1}</span>
-                <span style="font-weight:600;">${Utils.escapeHtml(it.name)}</span>
-              </div>
-              <span class="badge badge-primary">${it.count} titres</span>
-            </div>
-          `).join('');
-        };
-
-        renderList('analysis-directors', stats.topDirectors);
-        renderList('analysis-actors', stats.topActors);
-        renderList('analysis-studios', stats.topStudios);
-      } catch (e) {
-        Toast.error(e.message);
-      }
     },
 
     // 14. Logs
@@ -6298,8 +6014,8 @@
         if (!button) return;
         const data = button.dataset;
         if (data.streamAction && State.user?.isAdmin) {
-          if (data.streamAction === 'message') window.openSendMessageModal?.(data.sessionId, data.userName, data.mediaTitle);
-          if (data.streamAction === 'kill') window.confirmKillStream?.(data.sessionId, data.mediaTitle);
+          if (data.streamAction === 'message') window.openSendMessageModal?.(data.sessionId, data.userName, data.mediaTitle, data.serverId);
+          if (data.streamAction === 'kill') window.confirmKillStream?.(data.sessionId, data.mediaTitle, data.serverId);
         }
         if (data.cannedMessage !== undefined) {
           const input = document.getElementById('send-msg-text');
@@ -6409,7 +6125,7 @@
       } else if (path === '/about') {
         Pages.about();
       } else if (path === '/recent') {
-        Pages.media({ sort: 'added' });
+        Pages.mediaPage(path);
       } else if (path === '/newsletter') {
         Pages.newsletter();
       } else if (path === '/users') {
@@ -6420,20 +6136,8 @@
       } else if (path.startsWith('/wrapped/')) {
         const id = path.split('/')[2];
         Pages.wrapped(id);
-      } else if (path === '/media' || path === '/media/all') {
-        Pages.media();
-      } else if (path === '/media/popular') {
-        Pages.media({ sort: 'popular' });
-      } else if (path === '/media/collections') {
-        Pages.collections();
-      } else if (path === '/media/analysis') {
-        Pages.analysis();
-      } else if (path.startsWith('/media/artist/')) {
-        const artist = decodeURIComponent(path.slice('/media/artist/'.length));
-        Pages.media({ artist });
-      } else if (path.startsWith('/media/')) {
-        const id = path.split('/')[2];
-        Pages.mediaDetail(id);
+      } else if (path === '/media' || path.startsWith('/media/')) {
+        Pages.mediaPage(path);
       } else if (path === '/logs') {
         window.JellyTrackHistory.mount({ main: document.getElementById('app-main'), api: API, utils: Utils, i18n: I18n, signal: State.pageController.signal, user: State.user, openSystemLogs: () => Pages.systemLogs() });
       } else if (path.startsWith('/settings')) {
@@ -6459,6 +6163,7 @@
       user: () => State.user, context: () => State.navigation, locale: () => State.locale,
       t: (key, params) => I18n.t(key, params), escape: Utils.escapeHtml,
       getJSON: url => API.getJSON(url), postJSON: (url, body) => API.postJSON(url, body),
+      navigate: path => Router.navigate(path),
       refreshContext: async () => { State.navigation = await API.getJSON('/api/navigation'); }, changeLocale: locale => I18n.changeLocale(locale),
     });
     Theme.init();

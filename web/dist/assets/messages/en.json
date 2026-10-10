@@ -229,7 +229,11 @@
     "view": "view",
     "viewers": "viewers",
     "views": "views",
-    "directStream": "Direct stream"
+    "directStream": "Direct stream",
+    "downloaded": "Download completed",
+    "exported": "Export completed",
+    "copied": "Copied",
+    "filter": "Filter"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -621,14 +625,34 @@
       "colMessage": "Message",
       "colUser": "Actor",
       "typeAudit": "Audit",
-      "typeHealth": "Health"
+      "typeHealth": "Health",
+      "fileCount": "Log files",
+      "availableFiles": "Available files",
+      "diskUsed": "Disk space used",
+      "totalSize": "Total log size",
+      "retention": "Configured retention",
+      "unlimited": "Unlimited",
+      "editSettings": "Change in settings",
+      "searchFiles": "Search a log file...",
+      "downloadActive": "Download active log",
+      "file": "Log file",
+      "lastModified": "Last modified",
+      "size": "Size",
+      "lines": "Lines",
+      "active": "Main (Active)",
+      "daily": "Daily log",
+      "plainText": "Plain text format (.log)",
+      "noFiles": "No log files found.",
+      "audit": "Audit log"
     },
     "quickPresets": "Quick filters",
     "quickAll": "All",
     "quickTranscodes": "Transcodes",
     "quickDirectPlay": "Direct Play",
     "quick4K": "4K UHD",
-    "quickZapped": "Zapped < 1 min"
+    "quickZapped": "Zapped < 1 min",
+    "smartAlertsWindow": "Disappears after 24 hours without abnormal activity (rolling window)",
+    "reconnection": "Reconnection"
   },
   "media": {
     "1080pLabel": "1080p FHD",

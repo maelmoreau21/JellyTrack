@@ -54,7 +54,7 @@ func mediaTypeCondition(kind, alias string) string {
 		return alias + `."type" = 'Movie'`
 	case "series", "episode", "season":
 		return alias + `."type" IN ('Series','Episode','Season')`
-	case "audio", "music":
+	case "audio", "music", "musicalbum", "track":
 		return alias + `."type" IN ('Audio','Track','MusicAlbum')`
 	case "book", "audiobook":
 		return alias + `."type" IN ('Book','AudioBook')`
@@ -81,6 +81,9 @@ func analyticsConditions(filter DashboardFilter, now time.Time) ([]string, []any
 	if clause := mediaTypeCondition(filter.MediaType, "m"); clause != "" {
 		clauses = append(clauses, clause)
 	}
+	extraClauses, extraArgs := filterExclusionConditions(filter)
+	clauses = append(clauses, extraClauses...)
+	args = append(args, extraArgs...)
 	if len(filter.ServerIDs) > 0 {
 		marks := make([]string, len(filter.ServerIDs))
 		for i, id := range filter.ServerIDs {
@@ -90,6 +93,21 @@ func analyticsConditions(filter DashboardFilter, now time.Time) ([]string, []any
 		clauses = append(clauses, `p."serverId" IN (`+strings.Join(marks, ",")+`)`)
 	}
 	return clauses, args, start, days, nil
+}
+
+func filterExclusionConditions(filter DashboardFilter) ([]string, []any) {
+	clauses := []string{}
+	args := []any{}
+	for _, kind := range filter.ExcludedTypes {
+		if clause := mediaTypeCondition(kind, "m"); clause != "" {
+			clauses = append(clauses, "NOT ("+clause+")")
+		}
+	}
+	for _, library := range filter.ExcludedLibraries {
+		clauses = append(clauses, `(m."libraryName" IS NULL OR m."libraryName"<>?)`)
+		args = append(args, library)
+	}
+	return clauses, args
 }
 
 // PlaybackConditions supplies the same period/media/server clauses to chart

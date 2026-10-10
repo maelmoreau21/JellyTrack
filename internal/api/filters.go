@@ -24,5 +24,15 @@ func dashboardFilter(r *http.Request, defaultDays int) (stats.DashboardFilter, e
 	} else if strings.EqualFold(rangeName, "custom") {
 		return stats.DashboardFilter{}, fmt.Errorf("Dates de début et de fin requises.")
 	}
-	return stats.DashboardFilter{TimeRange: rangeName, Days: boundedInt(q.Get("days"), defaultDays, 1, 3650), From: from, To: to, MediaType: q.Get("type"), ServerIDs: getServerScope(r)}, nil
+	return stats.DashboardFilter{TimeRange: rangeName, Days: boundedInt(q.Get("days"), defaultDays, 1, 3650), From: from, To: to, MediaType: q.Get("type"), ServerIDs: getServerScope(r), ExcludedTypes: splitFilterValues(q.Get("excludeTypes")), ExcludedLibraries: splitFilterValues(q.Get("excludeLibs"))}, nil
+}
+
+func splitFilterValues(raw string) []string {
+	result := []string{}
+	for _, value := range strings.Split(raw, ",") {
+		if value = strings.TrimSpace(value); value != "" {
+			result = append(result, value)
+		}
+	}
+	return result
 }

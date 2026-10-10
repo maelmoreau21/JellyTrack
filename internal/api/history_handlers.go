@@ -10,6 +10,7 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/auth"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/history"
+	"github.com/maelmoreau21/jellytrack/internal/stats"
 )
 
 func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
@@ -55,21 +56,38 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		clauses = append(clauses, `(u."id"=? OR u."jellyfinUserId"=?)`)
 		args = append(args, id, id)
 	}
-	if text := strings.TrimSpace(q.Get("q")); text != "" {
-		clauses = append(clauses, `(LOWER(m."title") LIKE LOWER(?) OR LOWER(u."username") LIKE LOWER(?))`)
-		args = append(args, "%"+text+"%", "%"+text+"%")
+	if text := strings.TrimSpace(first(q.Get("q"), q.Get("query"))); text != "" {
+		clauses = append(clauses, `(LOWER(m."title") LIKE LOWER(?) OR LOWER(u."username") LIKE LOWER(?) OR LOWER(p."ipAddress") LIKE LOWER(?) OR LOWER(p."clientName") LIKE LOWER(?))`)
+		for i := 0; i < 4; i++ {
+			args = append(args, "%"+text+"%")
+		}
 	}
 	if kind := q.Get("type"); kind != "" {
-		switch strings.ToLower(kind) {
-		case "series":
-			clauses = append(clauses, `m."type" IN ('Series','Season','Episode')`)
-		case "audio", "music":
-			clauses = append(clauses, `m."type" IN ('Audio','Track','MusicAlbum')`)
-		case "book":
-			clauses = append(clauses, `m."type" IN ('Book','AudioBook')`)
-		default:
-			clauses = append(clauses, `m."type"=?`)
-			args = append(args, kind)
+		if strings.Contains(kind, ",") {
+			marks := []string{}
+			for _, part := range strings.Split(kind, ",") {
+				if part = strings.TrimSpace(part); part != "" {
+					marks = append(marks, "?")
+					args = append(args, part)
+				}
+			}
+			if len(marks) > 0 {
+				clauses = append(clauses, `m."type" IN (`+strings.Join(marks, ",")+`)`)
+			}
+		} else {
+			switch strings.ToLower(kind) {
+			case "series", "tvshows":
+				clauses = append(clauses, `m."type" IN ('Series','Season','Episode')`)
+			case "audio", "music":
+				clauses = append(clauses, `m."type" IN ('Audio','Track','MusicAlbum')`)
+			case "book", "books":
+				clauses = append(clauses, `m."type" IN ('Book','AudioBook')`)
+			case "movies":
+				clauses = append(clauses, `m."type"='Movie'`)
+			default:
+				clauses = append(clauses, `m."type"=?`)
+				args = append(args, kind)
+			}
 		}
 	}
 	if method := q.Get("playMethod"); method != "" {
@@ -79,6 +97,50 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	if client := q.Get("client"); client != "" {
 		clauses = append(clauses, `LOWER(p."clientName") LIKE LOWER(?)`)
 		args = append(args, "%"+client+"%")
+	}
+	if device := q.Get("device"); device != "" {
+		clauses = append(clauses, `p."deviceName"=?`)
+		args = append(args, device)
+	}
+	if library := q.Get("library"); library != "" {
+		clauses = append(clauses, `COALESCE(m."libraryName",m."collectionType",m."type")=?`)
+		args = append(args, library)
+	}
+	if category := q.Get("libraryCategory"); category != "" {
+		clauses = append(clauses, `LOWER(REPLACE(REPLACE(REPLACE(COALESCE(NULLIF(m."collectionType",''),NULLIF(m."libraryName",''),m."type"),' ',''),'_',''),'-','')) IN (`+historyLibraryCategory(category, &args)+`)`)
+	}
+	for _, exclusion := range []struct{ key, column string }{{"excludeTypes", "type"}, {"excludeLibs", "libraryName"}} {
+		if value := q.Get(exclusion.key); value != "" {
+			marks := []string{}
+			for _, part := range strings.Split(value, ",") {
+				if part = strings.TrimSpace(part); part != "" {
+					marks = append(marks, "?")
+					args = append(args, part)
+				}
+			}
+			if len(marks) > 0 {
+				clauses = append(clauses, `(m."`+exclusion.column+`" IS NULL OR m."`+exclusion.column+`" NOT IN (`+strings.Join(marks, ",")+`))`)
+			}
+		}
+	}
+	if completion := q.Get("completion"); completion != "" {
+		clause, err := stats.CompletionFilterClause("p", "m", completion, "", q.Get("hideZapped") != "false")
+		if err != nil {
+			jsonError(w, 400, "Complétion invalide.")
+			return
+		}
+		clauses = append(clauses, clause)
+	}
+	if resolution := q.Get("resolution"); resolution != "" {
+		clauses = append(clauses, `LOWER(m."resolution") LIKE LOWER(?)`)
+		args = append(args, "%"+resolution+"%")
+	}
+	for _, filter := range []struct{ key, a, b string }{{"audio", "audioCodec", "audioLanguage"}, {"subtitle", "subtitleCodec", "subtitleLanguage"}} {
+		if value := strings.TrimSpace(q.Get(filter.key)); value != "" {
+			clause, values := historyTrackFilter(filter.key, filter.a, filter.b, value)
+			clauses = append(clauses, clause)
+			args = append(args, values...)
+		}
 	}
 	if raw := q.Get("hour"); raw != "" {
 		hour, err := strconv.Atoi(raw)
@@ -117,7 +179,7 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	case "duration_asc":
 		order = `p."durationWatched" ASC,p."id" ASC`
 	}
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."endedAt",p."durationWatched",COALESCE(p."playMethod",''),u."username",m."title",m."type",m."libraryName",m."id",COALESCE(u."id",''),m."jellyfinMediaId",p."serverId",p."clientName",p."deviceName"`+base+` ORDER BY `+order+` LIMIT ? OFFSET ?`, h.driver), pageArgs...)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."endedAt",p."durationWatched",COALESCE(p."playMethod",''),u."username",m."title",m."type",m."libraryName",m."id",COALESCE(u."id",''),m."jellyfinMediaId",p."serverId",p."clientName",p."deviceName",p."ipAddress",p."country",p."city",p."audioCodec",p."audioLanguage",p."subtitleCodec",p."subtitleLanguage",p."bitrate",p."pauseCount",p."audioChanges",p."subtitleChanges",p."seekCount",p."rewatchCount",p."speedChangeCount",p."eventSource",m."resolution",COALESCE(m."durationMs",0),m."parentId",m."artist",EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."serverId"=p."serverId" AND a."userId"=p."userId" AND a."mediaId"=p."mediaId" AND (a."playbackId"=p."id" OR (a."playbackId" IS NULL AND p."endedAt" IS NULL)))`+base+` ORDER BY `+order+` LIMIT ? OFFSET ?`, h.driver), pageArgs...)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger l’historique.")
 		return
@@ -127,19 +189,50 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var id, started, method, title, kind, mid, uid, sid string
 		var ended, user, library, jid, client, device sql.NullString
-		var duration int64
-		if err := rows.Scan(&id, &started, &ended, &duration, &method, &user, &title, &kind, &library, &mid, &uid, &jid, &sid, &client, &device); err != nil {
+		var ip, country, city, acodec, alang, scodec, slang, resolution, parent, artist sql.NullString
+		var bitrate sql.NullInt64
+		var duration, mediaDuration int64
+		var pauses, audioChanges, subtitleChanges, seeks, rewatches, speedChanges int
+		var source string
+		var active bool
+		if err := rows.Scan(&id, &started, &ended, &duration, &method, &user, &title, &kind, &library, &mid, &uid, &jid, &sid, &client, &device, &ip, &country, &city, &acodec, &alang, &scodec, &slang, &bitrate, &pauses, &audioChanges, &subtitleChanges, &seeks, &rewatches, &speedChanges, &source, &resolution, &mediaDuration, &parent, &artist, &active); err != nil {
 			jsonError(w, 500, "Historique illisible.")
 			return
 		}
-		out = append(out, map[string]any{"id": id, "mediaId": mid, "userId": uid, "serverId": sid, "jellyfinMediaId": nullable(jid), "startedAt": started, "endedAt": nullable(ended), "durationMs": duration * 1000, "playMethod": method, "username": nullable(user), "title": title, "type": kind, "library": nullable(library), "clientName": nullable(client), "deviceName": nullable(device)})
+		var rate any
+		if bitrate.Valid && bitrate.Int64 > 0 {
+			value := float64(bitrate.Int64)
+			if value >= 10000 {
+				value /= 1000
+			}
+			rate = value
+		}
+		out = append(out, map[string]any{"id": id, "mediaId": mid, "userId": uid, "serverId": sid, "jellyfinMediaId": nullable(jid), "startedAt": started, "endedAt": nullable(ended), "durationMs": duration * 1000, "durationWatched": duration, "mediaDurationMs": mediaDuration, "playMethod": method, "username": nullable(user), "title": title, "type": kind, "library": nullable(library), "clientName": nullable(client), "deviceName": nullable(device), "ipAddress": nullable(ip), "country": nullable(country), "city": nullable(city), "audioCodec": nullable(acodec), "audioLanguage": nullable(alang), "subtitleCodec": nullable(scodec), "subtitleLanguage": nullable(slang), "bitrate": rate, "pauseCount": pauses, "audioChanges": audioChanges, "subtitleChanges": subtitleChanges, "seekCount": seeks, "rewatchCount": rewatches, "speedChangeCount": speedChanges, "eventSource": source, "resolution": nullable(resolution), "parentId": nullable(parent), "artist": nullable(artist), "isActuallyActive": active})
 	}
 	if rows.Err() != nil {
 		jsonError(w, 500, "Historique illisible.")
 		return
 	}
-	jsonResponse(w, 200, map[string]any{"items": out, "total": total, "limit": limit, "offset": offset, "periodDays": days})
+	// Release rows before enrichment: SQLite uses a single connection.
+	rows.Close()
+	markProfileReconnections(out)
+	if err := h.enrichHistory(r, out); err != nil {
+		jsonError(w, 500, "Impossible de charger la chronologie.")
+		return
+	}
+	response := map[string]any{"items": out, "total": total, "limit": limit, "offset": offset, "periodDays": days}
+	if principal, ok := auth.PrincipalFromContext(r.Context()); ok && principal.IsAdmin() {
+		alerts, ips, err := h.historyAlerts(r, out)
+		if err != nil {
+			jsonError(w, 500, "Impossible de charger les alertes.")
+			return
+		}
+		response["newCountryAlerts"], response["topHotIps"] = alerts, ips
+	}
+	jsonResponse(w, 200, response)
 }
+
+func firstStringValue(value any) string { text, _ := value.(string); return text }
 
 // Old sessions did not store a server identity. Resolve them only when exactly
 // one compatible account exists; neither UI filters nor a shared display name

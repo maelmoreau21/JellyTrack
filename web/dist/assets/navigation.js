@@ -92,7 +92,11 @@
         }
       });
       document.getElementById('sidebar-close-btn').addEventListener('click', () => this.closeMobile());
-      document.getElementById('wrapped-close-btn').addEventListener('click', () => window.history.back());
+      document.getElementById('wrapped-close-btn').addEventListener('click', () => {
+        const userId = window.location.pathname.split('/')[2];
+        if (userId && config.navigate) config.navigate('/users/' + userId);
+        else window.history.back();
+      });
       window.addEventListener('resize', () => this.updateRoute());
       const tooltip=document.createElement('div'); tooltip.id='navigation-tooltip'; tooltip.hidden=true; tooltip.setAttribute('role','tooltip'); document.body.appendChild(tooltip);
       const showTooltip=event=>{

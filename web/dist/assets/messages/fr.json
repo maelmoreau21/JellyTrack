@@ -229,7 +229,11 @@
     "view": "vue",
     "viewers": "spectateurs",
     "views": "vues",
-    "directStream": "Direct stream"
+    "directStream": "Direct stream",
+    "downloaded": "Téléchargement terminé",
+    "exported": "Export terminé",
+    "copied": "Copié",
+    "filter": "Filtrer"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -621,14 +625,34 @@
       "colMessage": "Message",
       "colUser": "Acteur",
       "typeAudit": "Audit",
-      "typeHealth": "Santé"
+      "typeHealth": "Santé",
+      "fileCount": "Fichiers de logs",
+      "availableFiles": "Fichiers disponibles",
+      "diskUsed": "Espace disque utilisé",
+      "totalSize": "Taille totale des journaux",
+      "retention": "Rétention configurée",
+      "unlimited": "Illimitée",
+      "editSettings": "Modifier dans les paramètres",
+      "searchFiles": "Rechercher un fichier de log...",
+      "downloadActive": "Télécharger le journal actif",
+      "file": "Fichier de log",
+      "lastModified": "Dernière modification",
+      "size": "Taille",
+      "lines": "Lignes",
+      "active": "Principal (Actif)",
+      "daily": "Journal du jour",
+      "plainText": "Format texte brut (.log)",
+      "noFiles": "Aucun fichier de log trouvé.",
+      "audit": "Journal d’audit"
     },
     "quickPresets": "Filtres rapides",
     "quickAll": "Tous",
     "quickTranscodes": "Transcodes",
     "quickDirectPlay": "Direct Play",
     "quick4K": "4K UHD",
-    "quickZapped": "Zappés < 1 min"
+    "quickZapped": "Zappés < 1 min",
+    "smartAlertsWindow": "Disparaît automatiquement après 24h sans activité anormale (fenêtre glissante)",
+    "reconnection": "Reconnexion"
   },
   "media": {
     "1080pLabel": "1080p FHD",

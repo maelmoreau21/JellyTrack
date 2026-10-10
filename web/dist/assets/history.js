@@ -1,230 +1,145 @@
-/** Playback history uses the existing Go endpoints and owns its page lifetime. */
+/* Historical logs composition. Go additions remain below the restored controls. */
 (function () {
   'use strict';
-
+  const ALL = ['date', 'startedAt', 'endedAt', 'user', 'media', 'client', 'ip', 'country', 'status', 'resolution', 'audioBitrate', 'codecs', 'duration', 'pauseCount', 'audioChanges', 'subtitleChanges'];
+  const DEFAULT = ['date', 'user', 'media', 'client', 'resolution', 'audioBitrate', 'status', 'duration'];
+  const WIDTHS = { date: 180, startedAt: 160, endedAt: 160, user: 130, media: 360, client: 150, ip: 150, country: 140, status: 130, resolution: 90, audioBitrate: 100, codecs: 170, duration: 100, pauseCount: 70, audioChanges: 90, subtitleChanges: 110 };
   window.JellyTrackHistory = {
     async mount({ main, api, utils, i18n, signal, user }) {
       const esc = value => utils.escapeHtml(value == null ? '' : String(value));
-      const t = (key, fallback, params = {}) => i18n.t(key, params) || fallback;
-      const isAdmin = Boolean(user && (user.isAdmin || String(user.role).toLowerCase() === 'admin'));
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('query') && !params.has('q')) params.set('q', params.get('query'));
-      const requestedOffset = Number(params.get('offset')) || ((Number(params.get('page')) || 1) - 1) * 50;
-      let offset = Number.isFinite(requestedOffset) ? Math.max(0, Math.floor(requestedOffset)) : 0;
-      let requestID = 0;
-      let currentItems = [];
-      main.innerHTML = `
-        <section id="playback-history-page">
-          <div class="page-header"><div><h1 class="page-title">${esc(t('nav.logs', 'Journaux'))}</h1>
-            <p class="page-subtitle">${esc(t('logs.description', 'Historique complet des lectures et événements de télémétrie.'))}</p></div></div>
-          <div class="segmented-control" role="tablist" aria-label="${esc(t('nav.logs', 'Journaux'))}">
-            <button type="button" class="segment-btn active" id="history-tab-playback" role="tab" aria-selected="true">${esc(t('logs.tabApplication', 'Lectures'))}</button>
-            ${isAdmin ? `<button type="button" class="segment-btn" id="history-tab-system" role="tab" aria-selected="false">${esc(t('logs.tabSystem', 'Système'))}</button>` : ''}
-          </div>
-          <div id="history-playback-panel" role="tabpanel">
-            <form id="history-filters" class="card history-filters">
-              <label>${esc(t('common.search', 'Rechercher'))}<input name="q" class="form-input" type="search" value="${esc(params.get('q'))}" placeholder="${esc(t('logs.searchPlaceholder', 'Chercher par utilisateur, titre, IP...'))}"></label>
-              <label>${esc(t('common.type', 'Type'))}<select name="type" class="form-select">
-                <option value="">${esc(t('common.all', 'Tout'))}</option>
-                <option value="Movie">${esc(t('logs.moviesFilter', 'Films'))}</option>
-                <option value="Episode">${esc(t('logs.seriesFilter', 'Épisodes'))}</option>
-                <option value="Audio">${esc(t('logs.musicFilter', 'Musique'))}</option>
-                <option value="Book">${esc(t('logs.booksFilter', 'Livres'))}</option>
-              </select></label>
-              <label>${esc(t('logs.colClient', 'Application'))}<input name="client" class="form-input" value="${esc(params.get('client'))}"></label>
-              <label>${esc(t('logs.colStatus', 'Méthode'))}<select name="playMethod" class="form-select"><option value="">${esc(t('common.all', 'Tout'))}</option><option>DirectPlay</option><option>DirectStream</option><option>Transcode</option><option>Download</option></select></label>
-              <label>${esc(t('logs.dateFrom', 'Date (Depuis)'))}<input name="dateFrom" class="form-input" type="date" value="${esc(params.get('dateFrom'))}"></label>
-              <label>${esc(t('logs.dateTo', "Date (Jusqu'au)"))}<input name="dateTo" class="form-input" type="date" value="${esc(params.get('dateTo'))}"></label>
-              <label>${esc(t('charts.hours', 'Heures'))} (UTC)<select name="hour" class="form-select"><option value="">${esc(t('common.all', 'Tout'))}</option>${Array.from({ length: 24 }, (_, h) => `<option value="${h}">${String(h).padStart(2, '0')}:00</option>`).join('')}</select></label>
-              <label>${esc(t('logs.sortBy', 'Trier'))}<select name="sort" class="form-select"><option value="date_desc">${esc(t('logs.sortDateDesc', 'Date décroissante'))}</option><option value="date_asc">${esc(t('logs.sortDateAsc', 'Date croissante'))}</option><option value="duration_desc">${esc(t('logs.sortDurationDesc', 'Durée décroissante'))}</option><option value="duration_asc">${esc(t('logs.sortDurationAsc', 'Durée croissante'))}</option></select></label>
-              <label class="history-checkbox"><input type="checkbox" name="hideZapped" ${params.get('hideZapped') !== 'false' ? 'checked' : ''}>${esc(t('logs.hideZapped', 'Masquer Zappés (< 1m)'))}</label>
-              <div class="page-actions"><button class="btn btn-primary" type="submit">${esc(t('common.apply', 'Appliquer'))}</button><button class="btn btn-secondary" id="history-reset" type="button">${esc(t('common.reset', 'Réinitialiser'))}</button></div>
-            </form>
-            <div class="page-actions history-pagination"><span id="history-summary" aria-live="polite"></span><button class="btn btn-secondary btn-sm" id="history-export" type="button" disabled>${esc(t('logs.exportPage', 'Exporter cette page (CSV)'))}</button></div>
-            <div class="card table-wrapper"><table class="table"><thead><tr>
-              <th>${esc(t('logs.colMedia', 'Média'))}</th><th>${esc(t('logs.colUser', 'Utilisateur'))}</th><th>${esc(t('logs.colClient', 'Application'))}</th><th>${esc(t('logs.colDuration', 'Durée'))}</th><th>${esc(t('logs.colStatus', 'Méthode'))}</th><th>${esc(t('logs.colDate', 'Date'))}</th><th>${esc(t('common.details', 'Détails'))}</th>
-            </tr></thead><tbody id="history-rows"></tbody></table></div>
-            <div class="page-actions history-pagination"><button id="history-prev" class="btn btn-secondary" type="button">${esc(t('common.previous', 'Précédent'))}</button><span id="history-page-number"></span><button id="history-next" class="btn btn-secondary" type="button">${esc(t('common.next', 'Suivant'))}</button></div>
-          </div>
-          <div id="history-system-panel" role="tabpanel" hidden></div>
-        </section>`;
+      const t = (key, fallback, args = {}) => { const value = i18n.t(key, args); return value && value !== key ? value : fallback; };
+      const tl = (key, fallback) => t('logs.' + key, fallback);
+      const admin = Boolean(user && (user.isAdmin || String(user.role).toLowerCase() === 'admin'));
+      const params = new URLSearchParams(location.search);
+      if (params.has('q') && !params.has('query')) params.set('query', params.get('q'));
+      let offset = Math.max(0, Number(params.get('offset')) || ((Number(params.get('page')) || 1) - 1) * 50);
+      let sequence = 0, items = [], total = 0, files = [], systemData = null, playbackLoaded = false;
+      let columns = (params.get('cols') || DEFAULT.join(',')).split(',').filter(key => ALL.includes(key));
+      columns = [...new Set(columns)];
+      if (columns.length < 2) columns = DEFAULT.slice();
+      const widths = { ...WIDTHS };
+      const storageKey = 'jellytrack.logs.columns.v1';
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+        if (Array.isArray(saved)) {
+          const order = saved.map(column => column.key).filter(key => columns.includes(key));
+          columns = [...new Set([...order, ...columns])];
+          saved.forEach(column => { if (ALL.includes(column.key)) widths[column.key] = Math.max(60, Math.min(1200, Number(column.width) || WIDTHS[column.key])); });
+        }
+      } catch (_) { /* Browser storage is optional. */ }
+      if (params.has('colsState')) params.get('colsState').split(',').forEach(entry => { const [key, width] = entry.split(':'); if (ALL.includes(key)) widths[key] = Math.max(60, Math.min(1200, Number(width) || WIDTHS[key])); });
+      const names = { date: tl('colDate', 'Date'), startedAt: tl('colStartedAt', 'Début'), endedAt: tl('colEndedAt', 'Fin'), user: tl('colUser', 'Utilisateur'), media: tl('colMedia', 'Média'), client: tl('colClient', 'Client'), ip: tl('colIp', 'IP'), country: tl('colCountry', 'Pays'), status: tl('colStatus', 'Statut'), resolution: tl('colResolution', 'Résolution'), audioBitrate: tl('colAudioBitrate', 'Débit audio'), codecs: tl('colCodecs', 'Codecs'), duration: tl('colDuration', 'Durée'), pauseCount: tl('colPauseCount', 'Pauses'), audioChanges: tl('colAudioChanges', 'Audio'), subtitleChanges: tl('colSubtitleChanges', 'Sous-titres') };
+      main.innerHTML = `<section id="playback-history-page" class="history-recovery">
+        <header class="history-header"><div><h1 class="page-title">⌘ ${esc(tl('title', 'Journaux'))}</h1><p class="page-subtitle">${esc(tl('description', 'Historique complet des lectures et événements de télémétrie.'))}<span id="history-summary"></span></p></div>
+          <div class="segmented-control" role="tablist"><button type="button" id="history-tab-playback" class="segment-btn active" role="tab" aria-controls="history-playback-panel" aria-selected="true">▷ ${esc(tl('tabApplication', 'Lectures'))}</button>${admin ? `<button type="button" id="history-tab-system" class="segment-btn" role="tab" aria-controls="history-system-panel" aria-selected="false">⌘ ${esc(tl('tabSystem', 'Système'))}</button>` : ''}</div></header>
+        <div id="history-playback-panel" role="tabpanel" aria-labelledby="history-tab-playback">
+          <div id="history-smart-alerts" hidden></div>
+          <form id="history-filters" class="card history-filter-card">
+            <div class="history-search-toolbar"><input name="query" type="search" class="form-input" aria-label="${esc(t('common.search', 'Rechercher'))}" placeholder="${esc(tl('searchPlaceholder', 'Chercher par utilisateur, titre, IP...'))}" value="${esc(params.get('query'))}"><button type="button" class="btn btn-secondary" id="history-saved">${esc(t('common.savedFilters', 'Filtres sauvegardés'))}</button><button type="button" class="btn btn-secondary" id="history-columns">${esc(tl('columns', 'Colonnes'))}</button></div>
+            <div id="history-server-filter" hidden></div>
+            <div class="history-filter-toolbar"><label class="history-checkbox"><input name="hideZapped" type="checkbox" ${params.get('hideZapped') !== 'false' ? 'checked' : ''}>${esc(tl('hideZapped', 'Masquer Zappés (< 1m)'))}</label><button type="button" class="btn btn-secondary" id="history-advanced-toggle" aria-expanded="false" aria-controls="history-advanced">☷ ${esc(t('common.filters', 'Filtres'))}</button><button type="button" class="btn btn-secondary" id="history-reset">↶ ${esc(t('common.reset', 'Réinitialiser'))}</button><select name="sort" class="form-select" aria-label="${esc(tl('sortBy', 'Trier'))}">${[['date_desc', 'sortDateDesc', 'Date décroissante'], ['date_asc', 'sortDateAsc', 'Date croissante'], ['duration_desc', 'sortDurationDesc', 'Durée décroissante'], ['duration_asc', 'sortDurationAsc', 'Durée croissante']].map(([value, key, text]) => `<option value="${value}">${esc(tl(key, text))}</option>`).join('')}</select><button class="btn btn-primary" type="submit">${esc(t('common.search', 'Rechercher'))}</button><div class="history-exports"><button type="button" data-export="csv">↓ CSV</button><button type="button" data-export="json">↓ JSON</button></div></div>
+            <div id="history-advanced" class="history-advanced" hidden><div><label>${esc(tl('quickPresets', 'Filtres rapides'))}</label><div class="history-chips">${[['all','quickAll','Tout'], ['transcode','quickTranscodes','Transcodages'], ['directPlay','quickDirectPlay','DirectPlay'], ['4k','quick4K','4K'], ['zapped','quickZapped','Zappés']].map(([value,key,text]) => `<button type="button" class="btn btn-secondary btn-sm" data-preset="${value}">${esc(tl(key,text))}</button>`).join('')}</div></div>
+              <div><label>${esc(tl('typeFilter', 'Type de média'))}</label><div class="history-chips">${[['','all','Tout'], ['Movie','moviesFilter','Films'], ['Episode','seriesFilter','Séries'], ['Audio','musicFilter','Musique'], ['AudioBook','booksFilter','Livres']].map(([value,key,text]) => `<button type="button" class="btn btn-secondary btn-sm" data-type="${value}">${esc(value ? tl(key,text) : t('common.all',text))}</button>`).join('')}</div></div>
+              <div class="history-advanced-fields">${[['client',tl('clientFilter','Client / App'),'text','ex: Jellyfin Web, Android'],['audio',tl('audioFilter','Audio'),'text','ex: aac, fre, eng'],['subtitle',tl('subtitleFilter','Sous-titres'),'text','ex: subrip, eng, fre'],['dateFrom',tl('dateFrom','Date (Depuis)'),'date',''],['dateTo',tl('dateTo',"Date (Jusqu’au)"),'date','']].map(([name,label,type,placeholder]) => `<label>${esc(label)}<input name="${name}" type="${type}" class="form-input" value="${esc(params.get(name))}" placeholder="${esc(placeholder)}"></label>`).join('')}</div>
+              <details class="history-go-filters"><summary>${esc(t('nav.goAdditions','Compléments Go'))}</summary><div class="history-advanced-fields"><label>${esc(names.status)}<select name="playMethod" class="form-select"><option value="">${esc(t('common.all','Tout'))}</option>${['DirectPlay','DirectStream','Transcode','Download'].map(value=>`<option>${value}</option>`).join('')}</select></label><label>${esc(names.resolution)}<input name="resolution" class="form-input" value="${esc(params.get('resolution'))}"></label><label>${esc(t('charts.hours','Heures'))} (UTC)<select name="hour" class="form-select"><option value="">${esc(t('common.all','Tout'))}</option>${Array.from({length:24},(_,h)=>`<option value="${h}">${String(h).padStart(2,'0')}:00</option>`).join('')}</select></label></div></details></div>
+          </form><div id="history-status" role="status" aria-live="polite"></div><div id="history-table" class="history-table"></div><nav id="history-pagination" class="history-pagination" aria-label="Pagination"></nav>
+        </div><div id="history-system-panel" role="tabpanel" aria-labelledby="history-tab-system" hidden></div></section>`;
       const root = main.querySelector('#playback-history-page');
-      const alive = () => !(signal && signal.aborted) && main.contains(root);
       const find = selector => root.querySelector(selector);
-      const listen = (element, name, callback) => element && element.addEventListener(name, callback, signal ? { signal } : undefined);
-      const get = async url => {
-        const response = await api.request(url, signal ? { signal } : {});
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.error || `HTTP ${response.status}`);
-        }
-        return response.json();
-      };
+      const alive = () => !(signal && signal.aborted) && main.contains(root);
+      const listen = (element, name, handler) => element && element.addEventListener(name, handler, signal ? { signal } : undefined);
+      const get = async url => { const response = await api.request(url, signal ? { signal } : {}); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`); return data; };
       const form = find('#history-filters');
-      for (const name of ['dateFrom', 'dateTo']) {
-        listen(form.elements.namedItem(name), 'input', () => form.elements.namedItem('dateTo').setCustomValidity(''));
-      }
-      for (const key of ['type', 'playMethod', 'hour', 'sort']) {
-        if (params.has(key)) form.elements.namedItem(key).value = params.get(key);
-      }
-      const writeURL = () => {
-        params.delete('page');
-        params.delete('query');
-        params.set('offset', String(offset));
-        window.history.replaceState({}, '', '/logs?' + params.toString());
+      for (const key of ['sort','playMethod','hour']) form.elements.namedItem(key).value = params.get(key) || (key === 'sort' ? 'date_desc' : '');
+      const writeURL = () => { params.delete('q'); params.delete('page'); params.set('offset', String(offset)); window.history.replaceState({}, '', '/logs?' + params.toString()); };
+      const number = value => Math.max(0, Number(value) || 0);
+      const stamp = ms => { const seconds = Math.floor(number(ms) / 1000); return `${Math.floor(seconds/3600) ? Math.floor(seconds/3600)+':' : ''}${String(Math.floor(seconds/60)%60).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`; };
+      const badge = (value, kind = '') => `<span class="badge ${kind}">${esc(value)}</span>`;
+      const mediaLink = item => '/media/' + encodeURIComponent(item.mediaId || item.jellyfinMediaId) + (item.serverId ? '?serverId=' + encodeURIComponent(item.serverId) : '');
+      const cell = (key,item,index) => {
+        switch(key) {
+          case 'date': return `<button type="button" class="history-expand" data-expand="${index}" aria-expanded="false" aria-label="${esc(t('common.details','Détails'))}">›</button>${esc(utils.formatDateTime(item.startedAt))}${item.anomalyFlags?.includes('new_country') ? badge(tl('smartNewCountryTag','Nouveau pays'),'badge-warning') : ''}`;
+          case 'startedAt': return esc(utils.formatDateTime(item.startedAt));
+          case 'endedAt': return item.endedAt ? esc(utils.formatDateTime(item.endedAt)) : esc(item.isActuallyActive ? tl('inProgress','En cours') : '—');
+          case 'user': return item.userId ? `<a href="/users/${encodeURIComponent(item.userId)}" data-link>${esc(item.username || t('common.deletedUser','Utilisateur supprimé'))}</a>` : esc(t('common.deletedUser','Utilisateur supprimé'));
+          case 'media': return `<div class="history-media">${item.jellyfinMediaId ? `<img loading="lazy" alt="" src="/api/jellyfin/image?itemId=${encodeURIComponent(item.jellyfinMediaId)}&serverId=${encodeURIComponent(item.serverId || '')}&type=Primary&maxWidth=100${item.parentId ? '&fallbackId='+encodeURIComponent(item.parentId) : ''}" class="${['Audio','Track','MusicAlbum'].includes(item.type) ? 'history-audio-cover' : item.type==='Episode' ? 'history-episode-cover' : ''}">` : ''}<div><a href="${mediaLink(item)}" data-link>${esc(item.title)}</a><div class="text-muted-foreground text-xs">${esc(item.mediaSubtitle || item.library || '')}</div>${item.versionName ? badge(item.versionName,'badge-info') : ''}<div class="history-mobile-info">${esc([item.resolution,item.playMethod,utils.formatMs(item.durationMs),item.clientName].filter(Boolean).join(' · '))}</div></div></div>`;
+          case 'client': return esc([item.clientName,item.deviceName].filter(Boolean).join(' · ') || '—');
+          case 'ip': return `<span class="history-mono">${esc(item.ipAddress || '—')}</span>${item.anomalyFlags?.includes('ip_burst') ? badge(tl('smartIpBurstTag','Activité IP élevée'),'badge-warning') : ''}`;
+          case 'country': return esc([item.city,item.country].filter(value=>value&&value!=='Unknown').join(', ') || '—');
+          case 'status': return `${badge(item.eventSource==='download' ? tl('timeline.label.download','Téléchargement') : item.playMethod || '—',item.playMethod==='DirectPlay'?'badge-success':item.playMethod==='Transcode'?'badge-warning':'badge-secondary')}${item.isReconnection ? badge(tl('reconnection','Reconnexion'),'badge-info') : ''}${number(item.pauseCount)>=2?badge(`${tl('colPauseCount','Pauses')} (${item.pauseCount})`,'badge-warning'):''}`;
+          case 'resolution': return esc(['Audio','Track','AudioBook'].includes(item.type) ? '—' : item.resolution || '—');
+          case 'audioBitrate': return item.bitrate ? esc(`${Math.round(number(item.bitrate))} kbps`) : '—';
+          case 'codecs': return esc([item.audioCodec && `${item.audioCodec} ${item.audioLanguage||''}`,item.subtitleCodec && `${item.subtitleCodec} ${item.subtitleLanguage||''}`].filter(Boolean).join(' / ') || '—');
+          case 'duration': return item.isActuallyActive ? badge(tl('inProgress','En cours'),'badge-warning') : esc(utils.formatMs(item.durationMs));
+          default: return esc(number(item[key]));
+        }
       };
+      const timeline = (item,modal=false) => {
+        const runtime=number(item.mediaDurationMs), watched=number(item.durationMs);
+        const events=(item.telemetryEvents||[]).map(event=>{let position=number(event.positionMs); if(runtime&&position>runtime)position=Math.floor(position/10000)<=runtime?Math.floor(position/10000):runtime; return {...event,positionMs:position};}).sort((a,b)=>a.positionMs-b.positionMs);
+        const length=runtime||Math.max(watched,...events.map(event=>event.positionMs),1), groups=new Map();
+        events.forEach(event=>{const key=modal?Math.floor(event.positionMs/1500):event.positionMs;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(event);});
+        const grouped=[...groups.values()].map(entries=>{const rep=['pause','audio_change','subtitle_change','seek','replay','speed_change','stop'].map(type=>entries.find(event=>event.eventType===type)).find(Boolean)||entries[0];return {...rep,positionMs:Math.floor(entries.reduce((sum,event)=>sum+event.positionMs,0)/entries.length),count:entries.length,entries};});
+        const colors={pause:'#f59e0b',audio_change:'#0ea5e9',subtitle_change:'#10b981',seek:'#f97316',replay:'#22c55e',speed_change:'#3b82f6',download:'#8b5cf6',stop:'#f43f5e'};
+        const label=event=>tl('timeline.label.'+event.eventType,event.eventType), jump=event=>mediaLink(item)+(mediaLink(item).includes('?')?'&':'?')+'t='+Math.floor(event.positionMs/1000);
+        const detail=event=>{let metadata=event.metadata||{};if(typeof metadata==='string'){try{metadata=JSON.parse(metadata);}catch(_){metadata={};}} if(!metadata||typeof metadata!=='object')return '';const side=value=>value==null?'—':typeof value==='object'?(value.language||(value.index!=null?'#'+value.index:'—'))+(value.codec?' ('+value.codec+')':''):String(value);const from=metadata.fromLabel||(metadata.fromMs!=null?stamp(metadata.fromMs):metadata.fromRate!=null?'x'+metadata.fromRate:metadata.from),to=metadata.toLabel||(metadata.toMs!=null?stamp(metadata.toMs):metadata.toRate!=null?'x'+metadata.toRate:metadata.to);return from!=null||to!=null?' · '+esc(side(from))+' → '+esc(side(to)):'';};
+        const counts={};events.forEach(event=>{counts[event.eventType]=(counts[event.eventType]||0)+1;});
+        return `<div class="history-timeline"><div class="history-chips">${[['pause','pauseCount','Pauses'],['audio_change','audioChanges','Audio'],['subtitle_change','subtitleChanges','Sous-titres'],['seek','seekCount','Sauts'],['replay','rewatchCount','Relectures'],['speed_change','speedChangeCount','Vitesses'],['stop','stopCount','Arrêts']].map(([event,key,text])=>badge(`${tl('timeline.label.'+event,text)}: ${counts[event]||number(item[key])}`)).join('')}</div><h4>${esc(tl('timeline.title','Chronologie de lecture'))} · ${stamp(length)}</h4><div class="history-timeline-track"><div class="history-watched-track" style="width:${Math.min(100,watched/length*100)}%"></div>${grouped.map(event=>`<a href="${esc(jump(event))}" target="_blank" rel="noopener" style="left:${Math.max(1,Math.min(99,event.positionMs/length*100))}%;--event-color:${colors[event.eventType]||'#71717a'}" title="${esc(label(event))} · ${stamp(event.positionMs)}">${event.count>1?`<small>${event.count}</small>`:''}</a>`).join('')}</div><div class="history-timeline-ticks">${[0,.25,.5,.75,1].map(part=>`<span>${stamp(length*part)}</span>`).join('')}</div>${grouped.length?`<div class="history-event-list">${grouped.map(event=>`<div><span class="history-event-icon" style="color:${colors[event.eventType]||'#71717a'}">●</span><div><b>${esc(label(event))}${event.count>1?' · '+event.count:''}</b><p>${esc(utils.formatDateTime(event.createdAt))}</p><p>${stamp(event.positionMs)} · ${Math.round(event.positionMs/length*100)}%${event.entries.map(detail).join('')}</p>${modal?`<div class="page-actions"><a href="${esc(jump(event))}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">${esc(tl('timeline.action.jump','Aller à'))}</a><button type="button" data-copy="${esc(jump(event))}" class="btn btn-secondary btn-sm">${esc(tl('timeline.action.copy','Copier le lien'))}</button></div>`:''}</div></div>`).join('')}</div>`:`<p class="text-muted-foreground">${esc(tl('timeline.noEvents','Aucun événement de télémétrie enregistré.'))}</p>`}</div>`;
+      };
+      const dialog = (title,body,className='') => {
+        const element=document.createElement('dialog');element.className='history-session-dialog '+className;element.innerHTML=`<div class="modal-header"><h2 class="modal-title">${esc(title)}</h2><button type="button" class="btn btn-secondary btn-sm" data-close>${esc(t('common.close','Fermer'))}</button></div><div class="modal-body">${body}</div>`;root.appendChild(element);
+        listen(element.querySelector('[data-close]'),'click',()=>element.close());const dismiss=()=>{element.close();element.remove();};if(signal)signal.addEventListener('abort',dismiss,{once:true});element.addEventListener('close',()=>{if(signal)signal.removeEventListener('abort',dismiss);element.remove();},{once:true});listen(element,'click',event=>{if(event.target===element){const box=element.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)element.close();}});element.showModal();return element;
+      };
+      const openSession = item => {
+        const element=dialog(item.title,`<p class="history-session-subtitle">${esc(item.mediaSubtitle||'')}</p><p class="text-muted-foreground">${esc(item.username||'—')} - ${esc(item.clientName||tl('unknown','Inconnu'))}</p>${timeline(item,true)}<details class="history-session-more"><summary>${esc(t('common.details','Détails'))}</summary><dl class="history-session-fields">${[[names.startedAt,utils.formatDateTime(item.startedAt)],[names.endedAt,item.endedAt?utils.formatDateTime(item.endedAt):'—'],[names.duration,utils.formatMs(item.durationMs)],[names.ip,item.ipAddress],[names.country,item.country],[names.resolution,item.resolution]].map(([label,value])=>`<dt>${esc(label)}</dt><dd>${esc(value||'—')}</dd>`).join('')}</dl></details>`);
+        listen(element,'click',async event=>{const button=event.target.closest('[data-copy]');if(!button)return;try{await navigator.clipboard.writeText(location.origin+button.dataset.copy);button.textContent=t('common.copied','Copié');}catch(error){button.textContent=t('common.error','Erreur')+': '+error.message;}});
+      };
+      const parties = () => {
+        const map=new Map(), groups=new Map();items.forEach(item=>{const key=item.serverId+':'+item.mediaId;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(item);});
+        groups.forEach(list=>{list.sort((a,b)=>Date.parse(a.startedAt)-Date.parse(b.startedAt));let start=0;for(let i=1;i<=list.length;i++){if(i===list.length||Date.parse(list[i].startedAt)-Date.parse(list[i-1].startedAt)>300000){const cluster=list.slice(start,i);if(new Set(cluster.map(item=>item.userId)).size>=2){const id=cluster.map(item=>item.id).join(':');cluster.forEach(item=>map.set(item.id,id));}start=i;}}});return map;
+      };
+      const renderRows = () => {
+        const party=parties(),seen=new Set();
+        find('#history-table').innerHTML=`<table class="table"><colgroup>${columns.map(key=>`<col data-column="${key}" style="width:${widths[key]}px">`).join('')}</colgroup><thead><tr>${columns.map(key=>`<th scope="col" draggable="true" data-column="${key}">${esc(names[key])}<span class="history-resizer" data-resize="${key}"></span></th>`).join('')}</tr></thead><tbody>${items.length?items.map((item,index)=>{const group=party.get(item.id);let banner='';if(group&&!seen.has(group)){seen.add(group);banner=`<tr class="history-party"><td colspan="${columns.length}">Watch party: ${esc(item.title)} · ${esc(items.filter(entry=>party.get(entry.id)===group).map(entry=>entry.username).filter(Boolean).join(', '))}</td></tr>`;}return `${banner}<tr data-session="${index}" tabindex="0" aria-label="${esc(t('common.details','Détails')+': '+item.title)}">${columns.map(key=>`<td class="history-col-${key}">${cell(key,item,index)}</td>`).join('')}</tr><tr data-expanded="${index}" class="history-expanded" hidden><td colspan="${columns.length}">${timeline(item)}</td></tr>`;}).join(''):`<tr><td colspan="${columns.length}"><div class="empty-state">${esc(tl('noResults','Aucun log ne correspond à vos critères.'))}</div></td></tr>`}</tbody></table>`;
+        const current=Math.floor(offset/50)+1,pages=Math.max(1,Math.ceil(total/50));
+        const visiblePages=[...new Set([1,pages,...[-2,-1,0,1,2].map(delta=>current+delta).filter(page=>page>0&&page<=pages)])].sort((a,b)=>a-b);
+        find('#history-pagination').innerHTML=`${current>1?`<button type="button" class="btn btn-secondary btn-sm" data-page="${current-1}">‹ ${esc(t('common.previous','Précédent'))}</button>`:''}${visiblePages.map((page,index,array)=>`${index&&page-array[index-1]>1?'<span>…</span>':''}<button type="button" class="btn ${page===current?'btn-primary':'btn-secondary'} btn-sm" data-page="${page}" ${page===current?'aria-current="page"':''}>${page}</button>`).join('')}${current<pages?`<button type="button" class="btn btn-secondary btn-sm" data-page="${current+1}">${esc(t('common.next','Suivant'))} ›</button>`:''}<span>${esc(t('common.page','Page'))} ${current} / ${pages}</span>`;
+      };
+      const queryURL = (limit=50,skip=offset) => {const query=new URLSearchParams(params);if(!query.has('days'))query.set('days','all');query.set('limit',String(limit));query.set('offset',String(skip));return '/api/history?'+query;};
       const load = async () => {
-        const sequence = ++requestID;
-        const query = new URLSearchParams(params);
-        query.set('days', 'all');
-        query.set('limit', '50');
-        query.set('offset', String(offset));
-        find('#history-rows').innerHTML = `<tr><td colspan="7">${esc(t('common.loading', 'Chargement…'))}</td></tr>`;
-        find('#history-next').disabled = true;
-        find('#history-prev').disabled = true;
-        find('#history-export').disabled = true;
-        try {
-          const data = await get('/api/history?' + query.toString());
-          if (!alive() || sequence !== requestID) return;
-          currentItems = Array.isArray(data.items) ? data.items : [];
-          const total = Number.isFinite(Number(data.total)) ? Number(data.total) : null;
-          find('#history-summary').textContent = total === null ? `${offset + currentItems.length} ${t('charts.sessions', 'sessions')}` : `${total} ${t('charts.sessions', 'sessions')}`;
-          find('#history-page-number').textContent = `${Math.floor(offset / 50) + 1}${total !== null ? ' / ' + Math.max(1, Math.ceil(total / 50)) : ''}`;
-          find('#history-prev').disabled = offset === 0;
-          find('#history-next').disabled = total !== null ? offset + currentItems.length >= total : currentItems.length < 50;
-          find('#history-export').disabled = currentItems.length === 0;
-          find('#history-rows').innerHTML = currentItems.length ? currentItems.map((item, index) => `
-            <tr><td><div class="history-media">
-              ${item.jellyfinMediaId ? `<img width="30" height="44" loading="lazy" alt="" src="/api/jellyfin/image?id=${encodeURIComponent(item.jellyfinMediaId)}${item.serverId ? '&serverId=' + encodeURIComponent(item.serverId) : ''}&type=Primary&maxWidth=100">` : ''}
-              <div><a href="/media/${encodeURIComponent(item.mediaId)}" data-link>${esc(item.title)}</a><div class="text-muted-foreground text-xs">${esc(item.library)} · ${esc(item.type)}</div></div></div></td>
-              <td>${item.userId ? `<a href="/users/${encodeURIComponent(item.userId)}" data-link>${esc(item.username || t('common.deletedUser', 'Utilisateur supprimé'))}</a>` : esc(item.username || t('common.deletedUser', 'Utilisateur supprimé'))}</td>
-              <td>${esc(item.clientName || '—')}</td><td>${esc(utils.formatMs(item.durationMs))}</td>
-              <td><span class="badge ${item.playMethod === 'DirectPlay' ? 'badge-success' : item.playMethod === 'Transcode' ? 'badge-warning' : 'badge-secondary'}">${esc(item.playMethod || '—')}</span></td>
-              <td>${esc(utils.formatDateTime(item.startedAt))}</td><td><button class="btn btn-secondary btn-sm" type="button" data-session-index="${index}">${esc(t('common.details', 'Détails'))}</button></td></tr>`).join('') : `<tr><td colspan="7"><div class="empty-state">${esc(t('logs.noResults', 'Aucun log ne correspond à vos critères.'))}</div></td></tr>`;
-        } catch (error) {
-          if (!alive() || sequence !== requestID) return;
-          find('#history-summary').textContent = '';
-          find('#history-rows').innerHTML = `<tr><td colspan="7" role="alert">${esc(error.message)} <button type="button" id="history-retry" class="btn btn-secondary btn-sm">${esc(t('common.retry', 'Réessayer'))}</button></td></tr>`;
-          listen(find('#history-retry'), 'click', load);
-        }
+        const request=++sequence;find('#history-table').setAttribute('aria-busy','true');find('#history-status').textContent=t('common.loading','Chargement…');find('#history-pagination').innerHTML='';root.querySelectorAll('[data-export]').forEach(button=>button.disabled=true);
+        try{const data=await get(queryURL());if(!alive()||request!==sequence)return;items=Array.isArray(data.items)?data.items:[];total=number(data.total);if(offset>=total&&offset>0){offset=Math.max(0,(Math.ceil(total/50)-1)*50);writeURL();return load();}playbackLoaded=true;find('#history-summary').textContent=total?` — ${total} ${tl('totalEntries','entrées au total')}`:'';renderRows();find('#history-status').textContent='';renderAlerts(data);root.querySelectorAll('[data-export]').forEach(button=>button.disabled=total===0);}catch(error){if(!alive()||request!==sequence)return;find('#history-status').innerHTML=`<span role="alert">${esc(error.message)}</span> <button type="button" id="history-retry" class="btn btn-secondary btn-sm">${esc(t('common.retry','Réessayer'))}</button>`;listen(find('#history-retry'),'click',load);}finally{if(alive()&&request===sequence)find('#history-table').setAttribute('aria-busy','false');}
       };
-      listen(form, 'submit', event => {
-        event.preventDefault();
-        const values = new FormData(form);
-        const from = values.get('dateFrom');
-        const to = values.get('dateTo');
-        if (from && to && from > to) {
-          form.elements.namedItem('dateTo').setCustomValidity(t('logs.invalidDates', 'La date de fin doit suivre la date de début.'));
-          form.reportValidity();
-          return;
-        }
-        form.elements.namedItem('dateTo').setCustomValidity('');
-        for (const key of ['q', 'type', 'client', 'playMethod', 'dateFrom', 'dateTo', 'hour', 'sort']) {
-          const value = String(values.get(key) || '').trim();
-          if (value) params.set(key, value); else params.delete(key);
-        }
-        params.set('hideZapped', values.has('hideZapped') ? 'true' : 'false');
-        offset = 0;
-        writeURL();
-        load();
-      });
-      listen(form.elements.namedItem('dateTo'), 'input', () => form.elements.namedItem('dateTo').setCustomValidity(''));
-      listen(find('#history-reset'), 'click', () => {
-        Array.from(params.keys()).forEach(key => params.delete(key));
-        form.reset();
-        for (const key of ['q', 'client', 'dateFrom', 'dateTo', 'type', 'hour', 'playMethod']) form.elements.namedItem(key).value = '';
-        form.elements.namedItem('sort').value = 'date_desc';
-        form.elements.namedItem('hideZapped').checked = true;
-        form.elements.namedItem('dateTo').setCustomValidity('');
-        params.set('hideZapped', 'true');
-        offset = 0;
-        writeURL();
-        load();
-      });
-      listen(find('#history-prev'), 'click', () => { offset = Math.max(0, offset - 50); writeURL(); load(); });
-      listen(find('#history-next'), 'click', () => { offset += 50; writeURL(); load(); });
-      listen(find('#history-export'), 'click', () => {
-        const quote = value => '"' + String(value == null ? '' : value).replace(/^[\t\r\n ]*[=+@-]/, match => "'" + match).replace(/"/g, '""') + '"';
-        const columns = ['title', 'username', 'type', 'clientName', 'durationMs', 'playMethod', 'startedAt', 'endedAt'];
-        const csv = '\uFEFF' + [columns, ...currentItems.map(item => columns.map(column => item[column]))].map(row => row.map(quote).join(',')).join('\r\n');
-        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'jellytrack-history.csv';
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 0);
-      });
-      listen(find('#history-rows'), 'click', async event => {
-        const button = event.target.closest('[data-session-index]');
-        if (!button) return;
-        const item = currentItems[Number(button.dataset.sessionIndex)];
-        if (!item) return;
-        const dialog = document.createElement('dialog');
-        dialog.className = 'history-session-dialog';
-        dialog.innerHTML = `<div class="modal-header"><h2 class="modal-title">${esc(item.title)}</h2><button class="btn btn-secondary btn-sm" type="button">${esc(t('common.close', 'Fermer'))}</button></div>
-          <div class="modal-body"><dl class="history-session-fields">${[
-            [t('logs.colUser', 'Utilisateur'), item.username], [t('logs.colStartedAt', 'Début'), utils.formatDateTime(item.startedAt)],
-            [t('logs.colEndedAt', 'Fin'), item.endedAt ? utils.formatDateTime(item.endedAt) : t('logs.inProgress', 'En cours')],
-            [t('logs.colDuration', 'Durée'), utils.formatMs(item.durationMs)], [t('logs.colClient', 'Application'), item.clientName],
-            [t('logs.colStatus', 'Méthode'), item.playMethod], [t('logs.colResolution', 'Résolution'), item.resolution],
-            [t('logs.colIp', 'Adresse IP'), item.ipAddress],
-          ].filter(([, value]) => value != null && value !== '').map(([label, value]) => `<dt>${esc(label)}</dt><dd>${esc(value)}</dd>`).join('')}</dl>
-          ${isAdmin ? `<h3>${esc(t('logs.telemetry', 'Télémétrie'))}</h3><div class="history-telemetry">${esc(t('common.loading', 'Chargement…'))}</div>` : ''}</div>`;
-        root.appendChild(dialog);
-        dialog.querySelector('button').addEventListener('click', () => dialog.close());
-        const dismissDialog = () => { dialog.close(); dialog.remove(); };
-        dialog.addEventListener('close', () => {
-          if (signal) signal.removeEventListener('abort', dismissDialog);
-          dialog.remove();
-        }, { once: true });
-        if (signal) signal.addEventListener('abort', dismissDialog, { once: true });
-        dialog.showModal();
-        if (isAdmin) {
-          try {
-            const data = await get('/api/streams/telemetry?playbackId=' + encodeURIComponent(item.id));
-            if (!alive() || !dialog.isConnected) return;
-            dialog.querySelector('.history-telemetry').innerHTML = data.events && data.events.length ? `<div class="table-wrapper"><table class="table"><thead><tr><th>${esc(t('logs.timeline.label.default', 'Événement'))}</th><th>${esc(t('logs.position', 'Position'))}</th><th>${esc(t('logs.colDate', 'Date'))}</th></tr></thead><tbody>${data.events.map(e => `<tr><td>${esc(t('logs.timeline.label.' + e.eventType, e.eventType))}</td><td>${esc(utils.formatMs(Number(e.positionMs)))}</td><td>${esc(utils.formatDateTime(e.createdAt))}</td></tr>`).join('')}</tbody></table></div>` : esc(t('logs.noTelemetry', 'Aucun événement de télémétrie enregistré.'));
-          } catch (error) {
-            if (alive() && dialog.isConnected) dialog.querySelector('.history-telemetry').textContent = error.message;
-          }
-        }
-      });
-      let systemLoaded = false;
-      const activateTab = async system => {
-        params.set('tab', system ? 'system' : 'application');
-        window.history.replaceState({}, '', '/logs?' + params.toString());
-        find('#history-playback-panel').hidden = system;
-        find('#history-system-panel').hidden = !system;
-        for (const [id, selected] of [['#history-tab-playback', !system], ['#history-tab-system', system]]) {
-          const button = find(id);
-          if (button) { button.classList.toggle('active', selected); button.setAttribute('aria-selected', String(selected)); }
-        }
-        if (!system || systemLoaded) return;
-        const panel = find('#history-system-panel');
-        panel.textContent = t('common.loading', 'Chargement…');
-        try {
-          const data = await get('/api/logs/system');
-          if (!alive()) return;
-          const logs = data.logs || [];
-          panel.innerHTML = `<div class="page-actions history-pagination">${(data.files || []).map(file => `<a class="btn btn-secondary btn-sm" href="/api/logs/system/download?file=${encodeURIComponent(file.filename || file.name)}" download>${esc(file.filename || file.name)} (${esc(file.formattedSize || '')})</a>`).join('')}<button id="history-clear-system" class="btn btn-danger btn-sm" type="button">${esc(t('logs.clearLogs', 'Vider les logs'))}</button></div><div class="card table-wrapper"><table class="table"><thead><tr><th>${esc(t('logs.system.colAction', 'Action'))}</th><th>${esc(t('logs.system.colUser', 'Acteur'))}</th><th>${esc(t('logs.system.colMessage', 'Message'))}</th><th>${esc(t('logs.colDate', 'Date'))}</th></tr></thead><tbody>${logs.length ? logs.map(log => `<tr><td><span class="badge">${esc(log.action || log.level)}</span></td><td>${esc(log.actor)}</td><td class="history-system-message">${esc(log.details || log.message || log.msg)}</td><td>${esc(utils.formatDateTime(log.createdAt || log.time || log.timestamp))}</td></tr>`).join('') : `<tr><td colspan="4">${esc(t('logs.noResults', 'Aucun journal.'))}</td></tr>`}</tbody></table></div>`;
-          systemLoaded = true;
-          listen(find('#history-clear-system'), 'click', async () => {
-            if (!window.confirm(t('logs.clearLogsConfirm', 'Voulez-vous vraiment effacer tous les journaux système ?'))) return;
-            const button = find('#history-clear-system');
-            button.disabled = true;
-            try {
-              await api.delete('/api/logs/system');
-              if (alive()) { systemLoaded = false; await activateTab(true); }
-            } catch (error) {
-              if (alive()) { button.disabled = false; panel.appendChild(document.createTextNode(error.message)); }
-            }
-          });
-        } catch (error) { if (alive()) panel.textContent = error.message; }
+      const renderAlerts = data => {const box=find('#history-smart-alerts');const count=number(data.newCountryAlerts),ips=data.topHotIps||[];box.hidden=!count&&!ips.length;box.innerHTML=`<h3>⚠ ${esc(tl('smartAlertsTitle','Alertes intelligentes'))}</h3><p>${esc(tl('smartAlertsWindow','Disparaît automatiquement après 24h sans activité anormale (fenêtre glissante)'))}</p><div class="history-chips">${count?badge(`${count} ${tl('smartNewCountryLabel','nouveaux pays')}`,'badge-warning'):''}${ips.map(ip=>`<button type="button" class="btn btn-secondary btn-sm" data-ip="${esc(ip.ipAddress)}">${esc(ip.ipAddress)} (${number(ip.attempts)} req/24h) · ${esc(t('common.filter','Filtrer'))}</button>`).join('')}</div>`;};
+      const syncChips=()=>{root.querySelectorAll('[data-type]').forEach(button=>button.classList.toggle('active',button.dataset.type?(params.get('type')||'').split(',').includes(button.dataset.type):!params.get('type')));root.querySelectorAll('[data-preset]').forEach(button=>{const value=button.dataset.preset;button.classList.toggle('active',value==='all'?!params.get('playMethod')&&!params.get('resolution')&&params.get('hideZapped')!=='false':value==='transcode'?params.get('playMethod')==='Transcode':value==='directPlay'?params.get('playMethod')==='DirectPlay':value==='4k'?params.get('resolution')==='4K':params.get('hideZapped')==='false');});root.querySelectorAll('[data-server]').forEach(button=>button.classList.toggle('active',button.dataset.server?!(params.get('servers')||'')||(params.get('servers')||'').split(',').includes(button.dataset.server):!params.get('servers')));};
+      const submit = () => {const values=new FormData(form),from=values.get('dateFrom'),to=values.get('dateTo');if(from&&to&&from>to){form.elements.dateTo.setCustomValidity(tl('invalidDates','La date de fin doit suivre la date de début.'));form.reportValidity();return;}form.elements.dateTo.setCustomValidity('');for(const key of ['query','client','audio','subtitle','dateFrom','dateTo','sort','playMethod','resolution','hour']){const value=String(values.get(key)||'').trim();if(value)params.set(key,value);else params.delete(key);}params.set('hideZapped',values.has('hideZapped')?'true':'false');offset=0;writeURL();syncChips();load();};
+      listen(form,'submit',event=>{event.preventDefault();submit();});listen(form.elements.hideZapped,'change',submit);listen(form.elements.sort,'change',submit);for(const key of ['dateFrom','dateTo'])listen(form.elements[key],'input',()=>form.elements.dateTo.setCustomValidity(''));
+      listen(find('#history-advanced-toggle'),'click',event=>{const panel=find('#history-advanced');panel.hidden=!panel.hidden;event.currentTarget.setAttribute('aria-expanded',String(!panel.hidden));});
+      listen(find('#history-reset'),'click',()=>{const selected=columns.join(',');Array.from(params.keys()).forEach(key=>params.delete(key));params.set('cols',selected);form.reset();for(const key of ['query','client','audio','subtitle','dateFrom','dateTo','playMethod','resolution','hour'])form.elements[key].value='';form.elements.sort.value='date_desc';form.elements.hideZapped.checked=true;form.elements.dateTo.setCustomValidity('');offset=0;writeURL();syncChips();load();});
+      const persist = () => {const saved=columns.map(key=>({key,width:widths[key]}));try{localStorage.setItem(storageKey,JSON.stringify(saved));}catch(_){}params.set('cols',columns.join(','));params.set('colsState',saved.map(column=>column.key+':'+column.width).join(','));writeURL();};
+      listen(find('#history-columns'),'click',()=>{const element=dialog(tl('columns','Colonnes'),`<div class="history-column-options">${ALL.map(key=>`<label><input type="checkbox" value="${key}" ${columns.includes(key)?'checked':''}>${esc(names[key])}</label>`).join('')}</div><button type="button" class="btn btn-secondary" data-default>${esc(t('common.reset','Réinitialiser'))}</button>`,'history-small-dialog');listen(element,'change',event=>{const input=event.target;if(input.type!=='checkbox')return;if(!input.checked&&columns.length<=2){input.checked=true;return;}columns=input.checked?[...columns,input.value]:columns.filter(key=>key!==input.value);persist();renderRows();});listen(element.querySelector('[data-default]'),'click',()=>{columns=DEFAULT.slice();persist();renderRows();element.close();});});
+      listen(find('#history-saved'),'click',()=>{let saved=[];try{saved=JSON.parse(localStorage.getItem('jellytrack-saved-filters')||'[]');}catch(_){}if(!Array.isArray(saved))saved=[];const element=dialog(t('common.savedFilters','Filtres sauvegardés'),`<div class="history-saved-list"></div><form class="history-save-form"><label><input name="name" class="form-input" maxlength="80" required aria-label="${esc(t('common.filterName','Nom du filtre'))}" placeholder="${esc(t('common.filterName','Nom du filtre'))}"></label><button class="btn btn-primary">${esc(t('common.saveCurrentFilter','Sauvegarder le filtre actuel'))}</button></form>`,'history-small-dialog');const draw=()=>{element.querySelector('.history-saved-list').innerHTML=saved.map((entry,index)=>`<div><button type="button" class="btn btn-secondary" data-load-filter="${index}">${esc(entry.name)}</button><button type="button" class="btn btn-secondary" data-remove-filter="${index}" aria-label="${esc(t('common.delete','Supprimer'))}">×</button></div>`).join('')||`<p>${esc(t('common.noData','Aucune donnée'))}</p>`;};const save=()=>{try{localStorage.setItem('jellytrack-saved-filters',JSON.stringify(saved));}catch(error){find('#history-status').textContent=error.message;}draw();};draw();listen(element.querySelector('form'),'submit',event=>{event.preventDefault();const name=new FormData(event.target).get('name').trim();if(!name)return;saved=[{name,url:'/logs?'+params,createdAt:new Date().toISOString()},...saved].slice(0,10);save();event.target.reset();});listen(element,'click',event=>{const remove=event.target.closest('[data-remove-filter]'),loadButton=event.target.closest('[data-load-filter]');if(remove){saved.splice(Number(remove.dataset.removeFilter),1);save();}if(loadButton){const entry=saved[Number(loadButton.dataset.loadFilter)],url=new URL(entry.url||'/logs',location.origin);if(url.origin===location.origin&&url.pathname==='/logs')location.assign(url.pathname+url.search);}});});
+      let dragged=null;
+      listen(find('#history-table'),'dragstart',event=>{const heading=event.target.closest('th[data-column]');if(heading){dragged=heading.dataset.column;event.dataTransfer.setData('text/plain',dragged);}});listen(find('#history-table'),'dragover',event=>{if(event.target.closest('th'))event.preventDefault();});listen(find('#history-table'),'drop',event=>{event.preventDefault();const heading=event.target.closest('th[data-column]');if(heading&&columns.includes(dragged)&&heading.dataset.column!==dragged){const position=columns.indexOf(heading.dataset.column);columns.splice(columns.indexOf(dragged),1);columns.splice(position,0,dragged);persist();renderRows();}});
+      listen(find('#history-table'),'pointerdown',event=>{const handle=event.target.closest('[data-resize]');if(!handle)return;event.preventDefault();event.stopPropagation();const key=handle.dataset.resize,col=find(`col[data-column="${key}"]`),start=event.clientX,width=widths[key];handle.setPointerCapture(event.pointerId);const move=next=>{widths[key]=Math.max(60,Math.min(1200,width+next.clientX-start));col.style.width=widths[key]+'px';},end=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',end);handle.removeEventListener('pointercancel',end);persist();};handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',end,{once:true});handle.addEventListener('pointercancel',end,{once:true});});
+      listen(find('#history-table'),'click',event=>{const expand=event.target.closest('[data-expand]');if(expand){const row=find(`[data-expanded="${expand.dataset.expand}"]`);row.hidden=!row.hidden;expand.setAttribute('aria-expanded',String(!row.hidden));return;}const row=event.target.closest('[data-session]');if(row&&!event.target.closest('a,button,input'))openSession(items[Number(row.dataset.session)]);});listen(find('#history-table'),'keydown',event=>{const row=event.target.closest('[data-session]');if(row&&event.target===row&&['Enter',' '].includes(event.key)){event.preventDefault();openSession(items[Number(row.dataset.session)]);}});
+      const download = (content,filename,type) => {const url=URL.createObjectURL(new Blob([content],{type})),link=document.createElement('a');link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),0);};
+      const exportHistory = async format => {const button=root.querySelector(`[data-export="${format}"]`);button.disabled=true;try{let all=[],skip=0;do{const data=await get(queryURL(200,skip));if(!alive())return;const batch=data.items||[];all=all.concat(batch);skip+=batch.length;if(!batch.length||skip>=number(data.total))break;}while(true);if(format==='json'){download(JSON.stringify(all,null,2),'jellytrack-history.json','application/json');}else{const keys=['startedAt','endedAt','username','title','type','clientName','deviceName','ipAddress','country','resolution','bitrate','playMethod','durationWatched','audioCodec','audioLanguage','subtitleCodec','subtitleLanguage','pauseCount','audioChanges','subtitleChanges'];const quote=value=>'"'+String(value==null?'':value).replace(/^[\t\r\n ]*[=+@-]/,match=>"'"+match).replace(/"/g,'""')+'"';download('\uFEFF'+[keys,...all.map(item=>keys.map(key=>item[key]))].map(row=>row.map(quote).join(',')).join('\r\n'),'jellytrack-history.csv','text/csv;charset=utf-8');}find('#history-status').textContent=t('common.exported','Export terminé')+` (${all.length})`;}catch(error){if(alive())find('#history-status').textContent=error.message;}finally{if(alive())button.disabled=false;}};
+      listen(root,'click',event=>{const page=event.target.closest('[data-page]'),preset=event.target.closest('[data-preset]'),type=event.target.closest('[data-type]'),server=event.target.closest('[data-server]'),exportButton=event.target.closest('[data-export]'),ip=event.target.closest('[data-ip]');if(page){offset=(Number(page.dataset.page)-1)*50;writeURL();load();}if(preset){params.delete('playMethod');params.delete('resolution');params.set('hideZapped','true');if(preset.dataset.preset==='transcode')params.set('playMethod','Transcode');if(preset.dataset.preset==='directPlay')params.set('playMethod','DirectPlay');if(preset.dataset.preset==='4k')params.set('resolution','4K');if(preset.dataset.preset==='zapped')params.set('hideZapped','false');form.elements.playMethod.value=params.get('playMethod')||'';form.elements.resolution.value=params.get('resolution')||'';form.elements.hideZapped.checked=params.get('hideZapped')!=='false';submit();}if(type){let types=(params.get('type')||'').split(',').filter(Boolean);const value=type.dataset.type;types=value?(types.includes(value)?types.filter(key=>key!==value):[...types,value]):[];if(types.length)params.set('type',types.join(','));else params.delete('type');submit();}if(server){let ids=(params.get('servers')||'').split(',').filter(Boolean);const value=server.dataset.server;ids=value?(ids.includes(value)?ids.filter(key=>key!==value):[...ids,value]):[];if(ids.length)params.set('servers',ids.join(','));else params.delete('servers');submit();}if(exportButton)exportHistory(exportButton.dataset.export);if(ip){form.elements.query.value=ip.dataset.ip;submit();}});
+      const renderSystem = () => {
+        const panel=find('#history-system-panel'),data=systemData||{},days=Number(data.retentionDays),size=number(data.totalSizeBytes);files=Array.isArray(data.files)?data.files:[];
+        panel.innerHTML=`<div class="history-system-stats">${[[tl('system.fileCount','Fichiers de logs'),files.length,tl('system.availableFiles','Fichiers disponibles')],[tl('system.diskUsed','Espace disque utilisé'),size<1024?size+' B':size<1048576?(size/1024).toFixed(1)+' Ko':(size/1048576).toFixed(2)+' Mo',tl('system.totalSize','Taille totale des journaux')],[tl('system.retention','Rétention configurée'),Number.isFinite(days)?(days>0?days+' '+t('common.days','jours'):tl('system.unlimited','Illimitée')):'—',`<a href="/settings/scheduler" data-link>${esc(tl('system.editSettings','Modifier dans les paramètres'))}</a>`]].map(([title,value,subtitle],index)=>`<div class="card"><p>${esc(title)}</p><h3>${esc(value)}</h3><small>${index===2?subtitle:esc(subtitle)}</small></div>`).join('')}</div><div class="card history-system-actions"><input class="form-input" id="history-file-search" type="search" placeholder="${esc(tl('system.searchFiles','Rechercher un fichier de log...'))}" aria-label="${esc(t('common.search','Rechercher'))}"><div class="page-actions"><button type="button" id="history-refresh-system" class="btn btn-secondary">↶ ${esc(t('common.refresh','Actualiser'))}</button><button type="button" id="history-clear-system" class="btn btn-danger">${esc(tl('clearLogs','Vider les logs'))}</button><button type="button" id="history-download-active" class="btn btn-primary" ${files.some(file=>file.isCurrent)?'':'disabled'}>↓ ${esc(tl('system.downloadActive','Télécharger le journal actif'))}</button></div></div><p id="history-system-status" role="status" aria-live="polite"></p><div class="history-table"><table class="table"><thead><tr><th>${esc(tl('system.file','Fichier de log'))}</th><th>${esc(tl('system.lastModified','Dernière modification'))}</th><th>${esc(tl('system.size','Taille'))}</th><th>${esc(tl('system.lines','Lignes'))}</th><th>${esc(t('common.actions','Actions'))}</th></tr></thead><tbody id="history-file-rows"></tbody></table></div><details class="card history-audit-extra"><summary>${esc(t('nav.goAdditions','Compléments Go'))} · ${esc(tl('system.audit','Journal d’audit'))}</summary><div id="history-audit-table" class="table-wrapper"></div><div id="history-audit-pagination" class="history-pagination"></div></details>`;
+        const drawFiles=()=>{const query=find('#history-file-search').value.toLowerCase(),filtered=files.filter(file=>(file.filename||file.name||'').toLowerCase().includes(query));find('#history-file-rows').innerHTML=filtered.length?filtered.map((file,index)=>{const name=file.filename||file.name;return `<tr><td><strong class="history-mono">${esc(name)}</strong> ${file.isCurrent?badge(tl('system.active','Principal (Actif)'),'badge-success'):file.fileRole==='daily'?badge(tl('system.daily','Journal du jour'),'badge-info'):''}<p class="text-muted-foreground text-xs">${esc(tl('system.plainText','Format texte brut (.log)'))}</p></td><td>${esc(utils.formatDateTime(file.updatedAt||file.modifiedAt))}</td><td>${esc(file.formattedSize||'—')}</td><td>${file.lineCount!=null?esc(file.lineCount):'—'}</td><td><button type="button" class="btn btn-secondary btn-sm" data-download-file="${esc(name)}">↓ ${esc(t('common.download','Télécharger'))}</button>${!file.isCurrent?` <button type="button" class="btn btn-danger btn-sm" data-delete-file="${esc(name)}" aria-label="${esc(t('common.delete','Supprimer')+' '+name)}">×</button>`:''}</td></tr>`;}).join(''):`<tr><td colspan="5"><div class="empty-state">${esc(tl('system.noFiles','Aucun fichier de log trouvé.'))}</div></td></tr>`;};drawFiles();drawAudit(data);listen(find('#history-file-search'),'input',drawFiles);listen(find('#history-refresh-system'),'click',loadSystem);listen(find('#history-clear-system'),'click',()=>clearLogs());listen(find('#history-download-active'),'click',()=>{const file=files.find(entry=>entry.isCurrent);if(file)downloadFile(file.filename||file.name);});
       };
-      listen(find('#history-tab-playback'), 'click', () => activateTab(false));
-      listen(find('#history-tab-system'), 'click', () => activateTab(true));
-      if (params.get('tab') === 'system' && isAdmin) await activateTab(true);
-      await load();
-    },
+      const drawAudit = data => {find('#history-audit-table').innerHTML=`<table class="table"><thead><tr><th>${esc(tl('system.colAction','Action'))}</th><th>${esc(tl('system.colUser','Acteur'))}</th><th>${esc(tl('system.colMessage','Message'))}</th><th>${esc(names.date)}</th></tr></thead><tbody>${(data.logs||[]).map(log=>`<tr><td>${badge(log.action||log.level)}</td><td>${esc(log.actor||'—')}</td><td>${esc(log.details||log.message||log.msg)}</td><td>${esc(utils.formatDateTime(log.createdAt||log.time||log.timestamp))}</td></tr>`).join('')||`<tr><td colspan="4">${esc(tl('noResults','Aucun journal.'))}</td></tr>`}</tbody></table>`;const page=number(data.page)||1;find('#history-audit-pagination').innerHTML=`${page>1?`<button class="btn btn-secondary btn-sm" type="button" data-audit-page="${page-1}">‹</button>`:''}<span>${page} / ${Math.max(1,Math.ceil(number(data.total)/(number(data.pageSize)||50)))}</span>${page*(number(data.pageSize)||50)<number(data.total)?`<button class="btn btn-secondary btn-sm" type="button" data-audit-page="${page+1}">›</button>`:''}`;};
+      const loadSystem = async () => {const panel=find('#history-system-panel');panel.setAttribute('aria-busy','true');try{const data=await get('/api/logs/system');if(!alive())return;systemData=data;renderSystem();}catch(error){if(alive()){panel.innerHTML=`<p role="alert">${esc(error.message)}</p><button id="history-system-retry" class="btn btn-secondary" type="button">${esc(t('common.retry','Réessayer'))}</button>`;listen(find('#history-system-retry'),'click',loadSystem);}}finally{if(alive())panel.setAttribute('aria-busy','false');}};
+      const downloadFile = async filename => {const status=find('#history-system-status');status.textContent=t('common.loading','Chargement…');try{const response=await api.request('/api/logs/system/download?file='+encodeURIComponent(filename),signal?{signal}:{});if(!response.ok)throw new Error((await response.json().catch(()=>({}))).error||`HTTP ${response.status}`);const blob=await response.blob();if(!alive())return;download(blob,filename,'text/plain;charset=utf-8');status.textContent=t('common.downloaded','Téléchargement terminé');}catch(error){if(alive())status.textContent=error.message;}};
+      const clearLogs = async filename => {if(!confirm(filename?`${t('common.delete','Supprimer')} « ${filename} » ?`:tl('clearLogsConfirm','Voulez-vous vraiment effacer tous les journaux système ?')))return;const status=find('#history-system-status');try{await api.delete('/api/logs/system'+(filename?'?file='+encodeURIComponent(filename):''));if(alive())await loadSystem();}catch(error){if(alive())status.textContent=error.message;}};
+      listen(find('#history-system-panel'),'click',async event=>{const downloadButton=event.target.closest('[data-download-file]'),deleteButton=event.target.closest('[data-delete-file]'),audit=event.target.closest('[data-audit-page]');if(downloadButton)downloadFile(downloadButton.dataset.downloadFile);if(deleteButton)clearLogs(deleteButton.dataset.deleteFile);if(audit){try{const data=await get('/api/logs/system?page='+audit.dataset.auditPage);if(alive())drawAudit(data);}catch(error){if(alive())find('#history-system-status').textContent=error.message;}}});
+      const activateTab = system => {params.set('tab',system?'system':'application');writeURL();find('#history-playback-panel').hidden=system;find('#history-system-panel').hidden=!system;for(const [id,selected] of [['#history-tab-playback',!system],['#history-tab-system',system]]){const button=find(id);if(button){button.classList.toggle('active',selected);button.setAttribute('aria-selected',String(selected));}}if(system&&!systemData)loadSystem();if(!system&&!playbackLoaded)load();};listen(find('#history-tab-playback'),'click',()=>activateTab(false));listen(find('#history-tab-system'),'click',()=>activateTab(true));
+      syncChips();
+      if(admin){get('/api/settings/jellyfin-servers').then(data=>{if(!alive())return;const servers=data.servers||[];if(servers.length>1){const panel=find('#history-server-filter');panel.hidden=false;panel.innerHTML=`<div class="history-chips"><button class="btn btn-secondary btn-sm" type="button" data-server="">${esc(t('common.all','Tout'))}</button>${servers.map(server=>`<button class="btn btn-secondary btn-sm" type="button" data-server="${esc(server.id)}">${esc(server.name)}</button>`).join('')}</div>`;syncChips();}}).catch(error=>{if(alive())find('#history-status').textContent=error.message;});}
+      if(admin&&params.get('tab')==='system')activateTab(true);else{params.set('tab','application');await load();}
+    }
   };
 })();

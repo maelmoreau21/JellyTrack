@@ -266,6 +266,9 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	_ = db.QueryRowContext(ctx, database.Bind(`SELECT COUNT(*) FROM "User" `+userWhere, driver), userArgs...).Scan(&totalUsers)
 	mediaWhere := []string{media.ExcludedLibrariesClause(driver, "m")}
 	mediaArgs := []any{}
+	extraClauses, extraArgs := filterExclusionConditions(filter)
+	mediaWhere = append(mediaWhere, extraClauses...)
+	mediaArgs = append(mediaArgs, extraArgs...)
 	if clause := mediaTypeCondition(filter.MediaType, "m"); clause != "" {
 		mediaWhere = append(mediaWhere, clause)
 	}
@@ -299,6 +302,8 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		whereClauses = append(whereClauses, `p."startedAt" < ?`)
 		args = append(args, currentEnd.Format(time.RFC3339Nano))
 	}
+	whereClauses = append(whereClauses, extraClauses...)
+	args = append(args, extraArgs...)
 
 	if filter.MediaType != "" {
 		mType := strings.ToLower(filter.MediaType)
@@ -398,6 +403,8 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 			`p."startedAt" < ?`,
 		}
 		prevArgs := []any{previousStart.Format(time.RFC3339Nano), previousEnd.Format(time.RFC3339Nano)}
+		prevWhere = append(prevWhere, extraClauses...)
+		prevArgs = append(prevArgs, extraArgs...)
 		if filter.MediaType != "" {
 			mType := strings.ToLower(filter.MediaType)
 			if mType == "movie" {
@@ -440,15 +447,25 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	}
 
 	// 4. Today statistics
-	todayMidnight := now.Truncate(24 * time.Hour).Format(time.RFC3339Nano)
+	todayScope := filter
+	todayScope.TimeRange = "custom"
+	todayScope.From = now.UTC().Format("2006-01-02")
+	todayScope.To = todayScope.From
+	todayWhere, todayArgs, _, _, err := analyticsConditions(todayScope, now)
+	if err != nil {
+		return FullDashboardResult{}, err
+	}
+	todayWhere = append(todayWhere, excludedLibClause, history.ZappingClause("p"))
 	var todayPlays, todayDurationSec, todayActiveUsers int64
 	todayQ := database.Bind(fmt.Sprintf(`
 		SELECT COUNT(*), COALESCE(SUM(p."durationWatched"), 0), COUNT(DISTINCT p."userId")
 		FROM "PlaybackHistory" p
 		LEFT JOIN "Media" m ON m."id" = p."mediaId"
-		WHERE %s AND p."startedAt" >= ?
-	`, excludedLibClause), driver)
-	_ = db.QueryRowContext(ctx, todayQ, todayMidnight).Scan(&todayPlays, &todayDurationSec, &todayActiveUsers)
+		WHERE %s
+	`, strings.Join(todayWhere, " AND ")), driver)
+	if err := db.QueryRowContext(ctx, todayQ, todayArgs...).Scan(&todayPlays, &todayDurationSec, &todayActiveUsers); err != nil {
+		return FullDashboardResult{}, err
+	}
 	todayHoursFloat := float64(todayDurationSec) / 3600.0
 	todayHoursStr := fmt.Sprintf("%.1f", todayHoursFloat)
 
@@ -509,6 +526,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	platformMap := make(map[string]int64)
 	clientCatMap := make(map[string]int64)
 	monthlyWatchMap := make(map[string]float64)
+	seriesTracker := map[string]map[string]bool{}
 	userDurationMap := make(map[string]struct {
 		uname, jid string
 		sec        int64
@@ -556,22 +574,32 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		if strings.Contains(mType, "movie") {
 			movieViews++
 			movieSec += h.durationWatched
-			tp.MovieVolume = math.Round((tp.MovieVolume+hHours)*100) / 100
+			tp.MovieVolume = tp.MovieVolume + hHours
 			tp.MoviePlays++
 		} else if strings.Contains(mType, "series") || strings.Contains(mType, "episode") {
 			seriesViews++
 			seriesSec += h.durationWatched
-			tp.SeriesVolume = math.Round((tp.SeriesVolume+hHours)*100) / 100
-			tp.SeriesPlays++
+			tp.SeriesVolume = tp.SeriesVolume + hHours
+			if seriesTracker[bucketKey] == nil {
+				seriesTracker[bucketKey] = map[string]bool{}
+			}
+			seriesKey := h.parentId
+			if seriesKey == "" {
+				seriesKey = "unknown"
+			}
+			if !seriesTracker[bucketKey][seriesKey] {
+				tp.SeriesPlays++
+				seriesTracker[bucketKey][seriesKey] = true
+			}
 		} else if strings.Contains(mType, "audio") || strings.Contains(mType, "track") {
 			musicViews++
 			musicSec += h.durationWatched
-			tp.MusicVolume = math.Round((tp.MusicVolume+hHours)*100) / 100
+			tp.MusicVolume = tp.MusicVolume + hHours
 			tp.MusicPlays++
 		} else if strings.Contains(mType, "book") {
 			booksViews++
 			booksSec += h.durationWatched
-			tp.BooksVolume = math.Round((tp.BooksVolume+hHours)*100) / 100
+			tp.BooksVolume = tp.BooksVolume + hHours
 			tp.BooksPlays++
 		}
 
@@ -591,7 +619,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 
 		// Monthly watch time: "YYYY_M" (0-indexed month)
 		mKey := fmt.Sprintf("%d_%d", h.startedAt.Year(), int(h.startedAt.Month())-1)
-		monthlyWatchMap[mKey] = math.Round((monthlyWatchMap[mKey]+hHours)*10) / 10
+		monthlyWatchMap[mKey] = monthlyWatchMap[mKey] + hHours
 
 		// Top users
 		if h.userId != "" {
@@ -602,31 +630,31 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 			userDurationMap[h.userId] = uEntry
 		}
 
-		// Completion
-		if h.mediaDurationMs > 0 {
-			runtimeSec := h.mediaDurationMs / 1000
-			pct := float64(h.durationWatched) / float64(runtimeSec)
-			if pct >= 0.9 {
-				completedCount++
-			} else if pct >= 0.1 {
-				partialCount++
-			} else {
-				abandonedCount++
-			}
-		} else {
-			if h.durationWatched >= 300 {
-				completedCount++
-			} else {
-				partialCount++
-			}
-		}
 	}
 
+	completions, err := getCumulativeCompletion(ctx, db, driver, filter, true)
+	if err != nil {
+		return FullDashboardResult{}, err
+	}
+	for _, entry := range completions {
+		switch entry.Bucket {
+		case "completed":
+			completedCount++
+		case "partial":
+			partialCount++
+		case "abandoned":
+			abandonedCount++
+		}
+	}
 	// Prepare ordered trend points
 	var trendData []DashboardTrendPoint
 	var serverLoadData []DashboardServerLoad
 	for _, k := range trendKeys {
 		p := *trendMap[k]
+		p.MovieVolume = math.Round(p.MovieVolume*100) / 100
+		p.SeriesVolume = math.Round(p.SeriesVolume*100) / 100
+		p.MusicVolume = math.Round(p.MusicVolume*100) / 100
+		p.BooksVolume = math.Round(p.BooksVolume*100) / 100
 		trendData = append(trendData, p)
 		serverLoadData = append(serverLoadData, DashboardServerLoad{
 			Time:        k,
@@ -692,7 +720,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	for mKey, hrs := range monthlyWatchMap {
 		monthlyWatchData = append(monthlyWatchData, DashboardMonthlyPoint{
 			Month: mKey,
-			Hours: hrs,
+			Hours: math.Round(hrs*10) / 10,
 		})
 	}
 	sort.Slice(monthlyWatchData, func(i, j int) bool { return monthlyWatchData[i].Month < monthlyWatchData[j].Month })
@@ -705,16 +733,16 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 
 	var categoryPieData []DashboardNamedValue
 	if movieHours > 0 {
-		categoryPieData = append(categoryPieData, DashboardNamedValue{Name: "movies", Value: movieHours})
+		categoryPieData = append(categoryPieData, DashboardNamedValue{Name: "movies", Value: math.Round(float64(movieSec)*100/3600) / 100})
 	}
 	if seriesHours > 0 {
-		categoryPieData = append(categoryPieData, DashboardNamedValue{Name: "series", Value: seriesHours})
+		categoryPieData = append(categoryPieData, DashboardNamedValue{Name: "series", Value: math.Round(float64(seriesSec)*100/3600) / 100})
 	}
 	if musicHours > 0 {
-		categoryPieData = append(categoryPieData, DashboardNamedValue{Name: "music", Value: musicHours})
+		categoryPieData = append(categoryPieData, DashboardNamedValue{Name: "music", Value: math.Round(float64(musicSec)*100/3600) / 100})
 	}
 	if booksHours > 0 {
-		categoryPieData = append(categoryPieData, DashboardNamedValue{Name: "books", Value: booksHours})
+		categoryPieData = append(categoryPieData, DashboardNamedValue{Name: "books", Value: math.Round(float64(booksSec)*100/3600) / 100})
 	}
 
 	// Completion Data

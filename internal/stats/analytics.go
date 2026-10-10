@@ -84,13 +84,14 @@ type ClientTranscodePoint struct {
 }
 
 type CoupableMediaRow struct {
-	Title       string `json:"title"`
-	FullTitle   string `json:"fullTitle"`
-	Resolution  string `json:"resolution"`
-	Count       int64  `json:"count"`
-	DurationMin int64  `json:"durationMin"`
-	MainReason  string `json:"mainReason"`
-	TopClient   string `json:"topClient"`
+	Title       string   `json:"title"`
+	FullTitle   string   `json:"fullTitle"`
+	Resolution  string   `json:"resolution"`
+	Count       int64    `json:"count"`
+	DurationMin int64    `json:"durationMin"`
+	MainReason  string   `json:"mainReason"`
+	TopClient   string   `json:"topClient"`
+	AllReasons  []string `json:"allReasons"`
 }
 
 // PeakPrediction represents predicted peak sessions.
@@ -110,13 +111,12 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 	if excluded := media.ExcludedLibrariesClause(driver, "m"); excluded != "" {
 		whereClauses = append(whereClauses, excluded)
 	}
-	whereClauses = append(whereClauses, history.ZappingClause("p"))
 
 	q := database.Bind(fmt.Sprintf(`
 		SELECT p."startedAt", p."durationWatched", p."mediaId",
 		       COALESCE(p."audioLanguage", ''), COALESCE(p."subtitleLanguage", ''), COALESCE(p."subtitleCodec", ''),
 		       COALESCE(m."libraryName", COALESCE(m."collectionType", COALESCE(m."type", 'Unknown'))),
-		       COALESCE(m."durationMs", 0), COALESCE(m."title", 'Unknown')
+		       COALESCE(m."durationMs", 0), COALESCE(m."title", 'Unknown'),COALESCE(m."type",'Unknown')
 		FROM "PlaybackHistory" p
 		LEFT JOIN "Media" m ON m."id" = p."mediaId"
 		WHERE %s
@@ -169,9 +169,9 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 	var dropSkipped, dropAbandoned, dropAlmost, dropFinished int64
 
 	for rows.Next() {
-		var startedStr, audioLang, subLang, subCodec, libName, title, mediaID string
+		var startedStr, audioLang, subLang, subCodec, libName, title, mediaID, mediaType string
 		var durSec, mediaDurMs int64
-		if rows.Scan(&startedStr, &durSec, &mediaID, &audioLang, &subLang, &subCodec, &libName, &mediaDurMs, &title) == nil {
+		if rows.Scan(&startedStr, &durSec, &mediaID, &audioLang, &subLang, &subCodec, &libName, &mediaDurMs, &title, &mediaType) == nil {
 			t, pErr := time.Parse(time.RFC3339Nano, startedStr)
 			if pErr != nil {
 				t, pErr = time.Parse("2006-01-02 15:04:05", startedStr)
@@ -202,7 +202,7 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 				dailyKeys = append(dailyKeys, dayKey)
 			}
 			dayEntry["totalPlays"] = dayEntry["totalPlays"].(int64) + 1
-			dayEntry["totalDuration"] = math.Round((dayEntry["totalDuration"].(float64)+durHours)*100) / 100
+			dayEntry["totalDuration"] = dayEntry["totalDuration"].(float64) + durHours
 			libPlayKey := libName + "_plays"
 			libDurKey := libName + "_duration"
 			if curP, ok := dayEntry[libPlayKey].(int64); ok {
@@ -211,9 +211,9 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 				dayEntry[libPlayKey] = int64(1)
 			}
 			if curD, ok := dayEntry[libDurKey].(float64); ok {
-				dayEntry[libDurKey] = math.Round((curD+durHours)*100) / 100
+				dayEntry[libDurKey] = curD + durHours
 			} else {
-				dayEntry[libDurKey] = math.Round(durHours*100) / 100
+				dayEntry[libDurKey] = durHours
 			}
 
 			// Hourly
@@ -224,56 +224,71 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 			heatmapMatrix[dow][hr].views++
 			heatmapMatrix[dow][hr].dur += durSec
 
-			// Audio / Subtitles
-			if audioLang != "" {
-				audioMap[audioLang]++
+			// Historical language normalization; audio/books have no subtitle track.
+			if lang := NormalizeLanguageTag(audioLang); lang != "" {
+				audioMap[lang]++
 			}
-			if subLang != "" {
-				subtitleMap[subLang]++
-			} else if subCodec != "" && subCodec != "none" {
-				subtitleMap["UNKNOWN"]++
-			} else {
-				subtitleMap["OFF"]++
+			if visualTelemetry(mediaType) {
+				lang := NormalizeLanguageTag(subLang)
+				if lang != "" {
+					subtitleMap[lang]++
+				} else if !invalidTelemetryToken(subCodec) {
+					subtitleMap["UNKNOWN"]++
+				} else {
+					subtitleMap["OFF"]++
+				}
 			}
-
-			// Completion
-			completionPct := 50.0
-			if mediaDurMs > 0 {
-				completionPct = math.Min(100.0, (float64(durSec)/float64(mediaDurMs/1000))*100.0)
-			}
-			if completionPct < 10 {
-				dropSkipped++
-			} else if completionPct < 50 {
-				dropAbandoned++
-			} else if completionPct < 85 {
-				dropAlmost++
-			} else {
-				dropFinished++
-			}
-
-			// Library completion
-			lc, lcEx := libCompletionMap[libName]
-			if !lcEx {
-				lc = &struct {
-					tot float64
-					cnt int64
-				}{}
-				libCompletionMap[libName] = lc
-			}
-			lc.tot += completionPct
-			lc.cnt++
-
-			// Media drop off
-			md, mdEx := mediaDropMap[title]
-			if !mdEx {
-				md = &dropInfo{mediaID: mediaID, title: title}
-				mediaDropMap[title] = md
-			}
-			md.totalCompletion += completionPct
-			md.sessions++
 		}
 	}
 
+	if err := rows.Err(); err != nil {
+		return GranularResult{}, err
+	}
+	rows.Close()
+	completions, err := GetCumulativeCompletion(ctx, db, driver, filter)
+	if err != nil {
+		return GranularResult{}, err
+	}
+	for _, entry := range completions {
+		switch entry.Bucket {
+		case "skipped":
+			dropSkipped++
+		case "abandoned":
+			dropAbandoned++
+		case "partial":
+			dropAlmost++
+		case "completed":
+			dropFinished++
+		}
+		lc := libCompletionMap[entry.Library]
+		if lc == nil {
+			lc = &struct {
+				tot float64
+				cnt int64
+			}{}
+			libCompletionMap[entry.Library] = lc
+		}
+		lc.tot += entry.Percent
+		lc.cnt++
+		if entry.Bucket == "completed" || entry.Bucket == "skipped" {
+			continue
+		}
+		key := entry.ServerID + "::" + entry.MediaID
+		md := mediaDropMap[key]
+		if md == nil {
+			md = &dropInfo{mediaID: entry.MediaID, title: entry.Title}
+			mediaDropMap[key] = md
+		}
+		md.totalCompletion += entry.Percent
+		md.sessions++
+	}
+	for _, entry := range dailyMap {
+		for key, value := range entry {
+			if number, ok := value.(float64); ok {
+				entry[key] = math.Round(number*100) / 100
+			}
+		}
+	}
 	var dailyData []map[string]any
 	for _, k := range dailyKeys {
 		if entry, exists := dailyMap[k]; exists {
@@ -294,7 +309,7 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 		hourlyData = append(hourlyData, GranularHourly{
 			Time:     fmt.Sprintf("%02d:00", i),
 			Plays:    hourlyPlays[i],
-			Duration: math.Round(hourlyDur[i]*10) / 10,
+			Duration: math.Round(hourlyDur[i]*100) / 100,
 		})
 	}
 
@@ -328,8 +343,8 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 	for _, md := range mediaDropMap {
 		avgComp := int(math.Round(md.totalCompletion / float64(md.sessions)))
 		shortTitle := md.title
-		if len(shortTitle) > 25 {
-			shortTitle = shortTitle[:25] + "…"
+		if titleRunes := []rune(shortTitle); len(titleRunes) > 25 {
+			shortTitle = string(titleRunes[:25]) + "…"
 		}
 		abandonedList = append(abandonedList, GranularAbandoned{
 			Title:      shortTitle,
@@ -399,7 +414,6 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 	if excluded := media.ExcludedLibrariesClause(driver, "m"); excluded != "" {
 		whereClauses = append(whereClauses, excluded)
 	}
-	whereClauses = append(whereClauses, history.ZappingClause("p"))
 	q := database.Bind(fmt.Sprintf(`
 		SELECT p."id", COALESCE(p."playMethod", 'DirectPlay'), COALESCE(p."clientName", '?'),
 		       COALESCE(p."deviceName", '?'), COALESCE(p."audioCodec", ''),
@@ -428,7 +442,9 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 		count       int64
 		durationSec int64
 		reasons     map[string]int
+		reasonOrder []string
 		clients     map[string]int
+		clientOrder []string
 	}
 	coupableMap := make(map[string]*coupableInfo)
 
@@ -477,19 +493,40 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 				}
 				c.count++
 				c.durationSec += durSec
+				if c.clients[clientName] == 0 {
+					c.clientOrder = append(c.clientOrder, clientName)
+				}
 				c.clients[clientName]++
 
-				// Infer reason
-				reason := "transcodeCodec"
-				subCodecLower := strings.ToLower(subCodec)
-				if subLang != "" && (subCodecLower == "ass" || subCodecLower == "ssa" || subCodecLower == "pgs" || subCodecLower == "pgssub") {
-					reason = "subtitlesBurnIn"
-				} else if audioCodec != "" && (strings.Contains(strings.ToLower(audioCodec), "truehd") || strings.Contains(strings.ToLower(audioCodec), "dts")) {
-					reason = "audioHDNotSupported"
-				} else if c.resolution == "4K" {
-					reason = "resolution4K"
+				// Historical causes are independent, not mutually exclusive.
+				reasons := []string{}
+				codec := strings.ToLower(subCodec)
+				if subLang != "" && subCodec != "" {
+					switch codec {
+					case "ass", "ssa", "pgs", "pgssub", "dvdsub", "dvbsub":
+						reasons = append(reasons, "subtitlesBurnIn")
+					default:
+						reasons = append(reasons, "subtitlesActive")
+					}
 				}
-				c.reasons[reason]++
+				for _, heavy := range []string{"truehd", "dts", "dts-hd", "eac3", "flac"} {
+					if strings.Contains(strings.ToLower(audioCodec), heavy) {
+						reasons = append(reasons, "audioHDNotSupported")
+						break
+					}
+				}
+				if NormalizeResolution(res) == "4K" {
+					reasons = append(reasons, "resolution4K")
+				}
+				if len(reasons) == 0 {
+					reasons = append(reasons, "clientCompat")
+				}
+				for _, reason := range reasons {
+					if c.reasons[reason] == 0 {
+						c.reasonOrder = append(c.reasonOrder, reason)
+					}
+					c.reasons[reason]++
+				}
 
 			} else if strings.Contains(methodLower, "directstream") || strings.Contains(methodLower, "remux") {
 				directStreamSessions++
@@ -522,6 +559,9 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 
 	var clientTranscodeData []ClientTranscodePoint
 	for cName, cData := range clientTranscodeMap {
+		if cData.tot < 2 {
+			continue
+		}
 		pct := 0
 		if cData.tot > 0 {
 			pct = int(math.Round((float64(cData.tc) / float64(cData.tot)) * 100))
@@ -533,7 +573,12 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 			TranscodePercent: pct,
 		})
 	}
-	sort.Slice(clientTranscodeData, func(i, j int) bool { return clientTranscodeData[i].Total > clientTranscodeData[j].Total })
+	sort.Slice(clientTranscodeData, func(i, j int) bool {
+		if clientTranscodeData[i].TranscodePercent == clientTranscodeData[j].TranscodePercent {
+			return clientTranscodeData[i].Name < clientTranscodeData[j].Name
+		}
+		return clientTranscodeData[i].TranscodePercent > clientTranscodeData[j].TranscodePercent
+	})
 	if len(clientTranscodeData) > 8 {
 		clientTranscodeData = clientTranscodeData[:8]
 	}
@@ -541,9 +586,12 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 	var coupableTable []CoupableMediaRow
 	for _, c := range coupableMap {
 		// find most frequent reason
-		mainReason := "transcodeCodec"
+		mainReason := "clientCompat"
 		maxRCount := 0
-		for r, cnt := range c.reasons {
+		allReasons := []string{}
+		for _, r := range c.reasonOrder {
+			cnt := c.reasons[r]
+			allReasons = append(allReasons, fmt.Sprintf("%s (×%d)", r, cnt))
 			if cnt > maxRCount {
 				maxRCount = cnt
 				mainReason = r
@@ -552,7 +600,8 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 		// find top client
 		topClient := "?"
 		maxCClient := 0
-		for cl, cnt := range c.clients {
+		for _, cl := range c.clientOrder {
+			cnt := c.clients[cl]
 			if cnt > maxCClient {
 				maxCClient = cnt
 				topClient = cl
@@ -560,8 +609,8 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 		}
 
 		shortTitle := c.title
-		if len(shortTitle) > 30 {
-			shortTitle = shortTitle[:30] + "…"
+		if titleRunes := []rune(shortTitle); len(titleRunes) > 35 {
+			shortTitle = string(titleRunes[:35]) + "…"
 		}
 
 		coupableTable = append(coupableTable, CoupableMediaRow{
@@ -569,9 +618,10 @@ func GetNetworkAnalysis(ctx context.Context, db *sql.DB, driver string, filter D
 			FullTitle:   c.title,
 			Resolution:  c.resolution,
 			Count:       c.count,
-			DurationMin: c.durationSec / 60,
+			DurationMin: int64(math.Round(float64(c.durationSec) / 60)),
 			MainReason:  mainReason,
 			TopClient:   topClient,
+			AllReasons:  allReasons,
 		})
 	}
 	sort.Slice(coupableTable, func(i, j int) bool { return coupableTable[i].Count > coupableTable[j].Count })
@@ -747,9 +797,12 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 		       p."durationWatched",
 		       COALESCE(m."title", 'Unknown'), COALESCE(m."type", 'Unknown'),
 		       COALESCE(m."resolution", 'Unknown'), COALESCE(m."genres", '[]'),
-		       COALESCE(m."directors", '[]'), COALESCE(m."actors", '[]'), COALESCE(m."studios", '[]')
+		       COALESCE(m."directors", '[]'), COALESCE(m."actors", '[]'), COALESCE(m."studios", '[]'),
+ COALESCE(p."audioCodec",''),COALESCE(p."subtitleCodec",''),COALESCE(parent."title",''),COALESCE(parent."type",''),COALESCE(grandparent."title",''),COALESCE(grandparent."type",'')
 		FROM "PlaybackHistory" p
 		LEFT JOIN "Media" m ON m."id" = p."mediaId"
+ LEFT JOIN "Media" parent ON parent."id"=COALESCE((SELECT "id" FROM "Media" WHERE "serverId"=m."serverId" AND "id"=m."parentId"),(SELECT "id" FROM "Media" WHERE "serverId"=m."serverId" AND "jellyfinMediaId"=m."parentId"))
+ LEFT JOIN "Media" grandparent ON grandparent."id"=COALESCE((SELECT "id" FROM "Media" WHERE "serverId"=parent."serverId" AND "id"=parent."parentId"),(SELECT "id" FROM "Media" WHERE "serverId"=parent."serverId" AND "jellyfinMediaId"=parent."parentId"))
 		WHERE %s
 	`, strings.Join(whereClauses, " AND ")), driver)
 
@@ -777,10 +830,10 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 	stuMap := make(map[string]int)
 
 	for rows.Next() {
-		var method, client, device, audio, sub, title, mType, res, genresStr, dirStr, actStr, stuStr string
+		var method, client, device, audio, sub, title, mType, res, genresStr, dirStr, actStr, stuStr, audioCodec, subCodec, parentTitle, parentType, grandTitle, grandType string
 		var durSec int64
-		if rows.Scan(&method, &client, &device, &audio, &sub, &durSec, &title, &mType, &res, &genresStr, &dirStr, &actStr, &stuStr) == nil {
-			durH := math.Round((float64(durSec)/3600.0)*10) / 10
+		if rows.Scan(&method, &client, &device, &audio, &sub, &durSec, &title, &mType, &res, &genresStr, &dirStr, &actStr, &stuStr, &audioCodec, &subCodec, &parentTitle, &parentType, &grandTitle, &grandType) == nil {
+			durH := float64(durSec) / 3600.0
 			mTypeLower := strings.ToLower(mType)
 
 			// Categorized
@@ -797,17 +850,28 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 				catType = "Book"
 			}
 
-			item, ok := targetCat[title]
+			categoryTitle := title
+			if mType == "Episode" {
+				if parentType == "Season" && grandType == "Series" {
+					categoryTitle = grandTitle
+				} else if parentType == "Series" {
+					categoryTitle = parentTitle
+				}
+			}
+			if (mType == "Audio" || mType == "Track") && parentType == "MusicAlbum" {
+				categoryTitle = parentTitle
+			}
+			item, ok := targetCat[categoryTitle]
 			if !ok {
-				item = &CategorizedItem{Title: title, Name: title, Type: catType}
-				targetCat[title] = item
+				item = &CategorizedItem{Title: categoryTitle, Name: categoryTitle, Type: catType}
+				targetCat[categoryTitle] = item
 			}
 			item.Plays++
-			item.Duration = math.Round((item.Duration+durH)*10) / 10
+			item.Duration += durH
 
 			// Clients, methods, resolutions, devices
 			clientMap[client]++
-			deviceMap[CategorizeClient(client)]++
+			deviceMap[device]++
 
 			cleanMethod := "DirectPlay"
 			if strings.Contains(strings.ToLower(method), "transcode") {
@@ -816,13 +880,26 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 				cleanMethod = "DirectStream"
 			}
 			methodMap[cleanMethod]++
-			resMap[NormalizeResolution(res)]++
-
-			if audio != "" {
-				audioMap[audio]++
-			}
-			if sub != "" {
-				subMap[sub]++
+			if visualTelemetry(mType) {
+				resMap[NormalizeResolution(res)]++
+				lang := NormalizeLanguageTag(audio)
+				if lang != "" {
+					if !invalidTelemetryToken(audioCodec) {
+						lang += " (" + strings.TrimSpace(audioCodec) + ")"
+					}
+					audioMap[lang]++
+				}
+				lang = NormalizeLanguageTag(sub)
+				if lang != "" {
+					if !invalidTelemetryToken(subCodec) {
+						lang += " (" + strings.TrimSpace(subCodec) + ")"
+					}
+					subMap[lang]++
+				} else if !invalidTelemetryToken(subCodec) {
+					subMap[strings.TrimSpace(subCodec)]++
+				} else {
+					subMap["None"]++
+				}
 			}
 
 			// Genres, directors, actors, studios
@@ -833,7 +910,7 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 					genresMap[g] = gItem
 				}
 				gItem.Plays++
-				gItem.Duration = math.Round((gItem.Duration+durH)*10) / 10
+				gItem.Duration += durH
 			}
 			for _, d := range parseList(dirStr) {
 				dirMap[d]++
@@ -850,7 +927,9 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 	sortLimitCat := func(m map[string]*CategorizedItem, limit int) []CategorizedItem {
 		var list []CategorizedItem
 		for _, v := range m {
-			list = append(list, *v)
+			item := *v
+			item.Duration = math.Round(item.Duration*10) / 10
+			list = append(list, item)
 		}
 		sort.Slice(list, func(i, j int) bool { return list[i].Plays > list[j].Plays })
 		if len(list) > limit {
@@ -861,7 +940,9 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 
 	var topGenres []GenreStatItem
 	for _, g := range genresMap {
-		topGenres = append(topGenres, *g)
+		item := *g
+		item.Duration = math.Round(item.Duration*10) / 10
+		topGenres = append(topGenres, item)
 	}
 	sort.Slice(topGenres, func(i, j int) bool { return topGenres[i].Plays > topGenres[j].Plays })
 	if len(topGenres) > 10 {
@@ -919,10 +1000,10 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 		TopGenres:              topGenres,
 		TopClients:             topClients,
 		StreamMethodsChartData: toNamedValue(methodMap, 4),
-		ResolutionChartData:    toNamedValue(resMap, 6),
-		DeviceChartData:        toNamedValue(deviceMap, 6),
-		AudioChartData:         toNamedValue(audioMap, 6),
-		SubtitleChartData:      toNamedValue(subMap, 6),
+		ResolutionChartData:    toNamedValue(resMap, 8),
+		DeviceChartData:        toNamedValue(deviceMap, 8),
+		AudioChartData:         toNamedValue(audioMap, 8),
+		SubtitleChartData:      toNamedValue(subMap, 8),
 		TopDirectors:           sortLimitStringMap(dirMap, 10),
 		TopActors:              sortLimitStringMap(actMap, 10),
 		TopStudios:             sortLimitStringMap(stuMap, 10),

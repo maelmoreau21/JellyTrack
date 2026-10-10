@@ -791,40 +791,26 @@ func getLogDirectory() string {
 
 func (h *Handler) getSystemLogs(w http.ResponseWriter, r *http.Request) {
 	logDir := getLogDirectory()
-	_ = os.MkdirAll(logDir, 0755)
-
-	entries, _ := os.ReadDir(logDir)
-	var files []map[string]any
-	var totalSize int64
-
-	for _, e := range entries {
-		if !e.IsDir() && strings.HasSuffix(e.Name(), ".log") {
-			info, err := e.Info()
-			if err == nil {
-				totalSize += info.Size()
-				files = append(files, map[string]any{
-					"filename":      e.Name(),
-					"name":          e.Name(),
-					"sizeBytes":     info.Size(),
-					"formattedSize": fmt.Sprintf("%.1f Ko", float64(info.Size())/1024),
-					"updatedAt":     info.ModTime().UTC().Format(time.RFC3339),
-					"modifiedAt":    info.ModTime().UTC().Format(time.RFC3339),
-					"isCurrent":     e.Name() == "jellytrack.log",
-				})
-			}
-		}
+	files, totalSize, err := recoveryLogFiles(logDir)
+	if err != nil {
+		jsonError(w, 500, "Impossible de lire les fichiers de journaux.")
+		return
 	}
 
 	p := boundedInt(r.URL.Query().Get("page"), 1, 1, 1000)
 	ps := boundedInt(r.URL.Query().Get("pageSize"), 50, 1, 200)
 	action := strings.TrimSpace(r.URL.Query().Get("action"))
-	auditLogs, totalAudit, _ := logging.GetSystemLogs(r.Context(), h.db, h.driver, p, ps, action)
+	auditLogs, totalAudit, err := logging.GetSystemLogs(r.Context(), h.db, h.driver, p, ps, action)
+	if err != nil {
+		jsonError(w, 500, "Impossible de charger le journal d'audit.")
+		return
+	}
 
 	jsonResponse(w, 200, map[string]any{
 		"success":        true,
 		"files":          files,
 		"totalSizeBytes": totalSize,
-		"retentionDays":  30,
+		"retentionDays":  h.recoveryLogRetention(r),
 		"logs":           auditLogs,
 		"total":          totalAudit,
 		"page":           p,
@@ -837,43 +823,71 @@ func (h *Handler) clearSystemLogs(w http.ResponseWriter, r *http.Request) {
 	fileParam := r.URL.Query().Get("file")
 
 	if fileParam != "" {
-		baseFile := filepath.Base(fileParam)
-		fullPath := filepath.Join(logDir, baseFile)
-		_ = os.Remove(fullPath)
-		_ = security.LogAudit(r.Context(), h.db, h.driver, "Delete Log File", nil, nil, &baseFile, nil, nil)
-		jsonResponse(w, 200, map[string]any{"success": true, "message": fmt.Sprintf("Fichier %s supprimé.", baseFile)})
+		path, err := recoveryLogPath(logDir, fileParam)
+		if err != nil || fileParam == "jellytrack.log" {
+			jsonError(w, 400, "Fichier de journal invalide ou actif.")
+			return
+		}
+		if err = os.Remove(path); err != nil {
+			jsonError(w, 500, "Impossible de supprimer le fichier de journal.")
+			return
+		}
+		_ = security.LogAudit(r.Context(), h.db, h.driver, "Delete Log File", nil, nil, &fileParam, nil, nil)
+		jsonResponse(w, 200, map[string]any{"success": true, "message": fmt.Sprintf("Fichier %s supprimé.", fileParam)})
 		return
 	}
 
-	entries, _ := os.ReadDir(logDir)
+	entries, err := os.ReadDir(logDir)
+	if err != nil && !os.IsNotExist(err) {
+		jsonError(w, 500, "Impossible de lire les journaux.")
+		return
+	}
 	for _, e := range entries {
-		if !e.IsDir() && strings.HasSuffix(e.Name(), ".log") {
-			_ = os.Remove(filepath.Join(logDir, e.Name()))
+		if e.Type().IsRegular() && strings.HasSuffix(e.Name(), ".log") {
+			path := filepath.Join(logDir, e.Name())
+			if e.Name() == "jellytrack.log" {
+				err = os.Truncate(path, 0)
+			} else {
+				err = os.Remove(path)
+			}
+			if err != nil {
+				jsonError(w, 500, "Impossible de réinitialiser un fichier de journal.")
+				return
+			}
 		}
 	}
-	_ = logging.ClearSystemLogs(r.Context(), h.db, h.driver)
+	if err = logging.ClearSystemLogs(r.Context(), h.db, h.driver); err != nil {
+		jsonError(w, 500, "Impossible de réinitialiser le journal d'audit.")
+		return
+	}
 
 	jsonResponse(w, 200, map[string]any{"success": true, "message": "Journaux système effacés avec succès."})
 }
 
 func (h *Handler) downloadSystemLogs(w http.ResponseWriter, r *http.Request) {
 	fileParam := r.URL.Query().Get("file")
-	if fileParam != "" {
-		baseFile := filepath.Base(fileParam)
-		logDir := getLogDirectory()
-		fullPath := filepath.Join(logDir, baseFile)
-
-		data, err := os.ReadFile(fullPath)
-		if err == nil {
-			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-			w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, baseFile))
-			w.WriteHeader(200)
-			_, _ = w.Write(data)
-			return
-		}
+	if fileParam == "" {
+		fileParam = "jellytrack.log"
 	}
-
-	h.exportLogsCSV(w, r)
+	path, err := recoveryLogPath(getLogDirectory(), fileParam)
+	if err != nil {
+		jsonError(w, 404, "Fichier de journal introuvable.")
+		return
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		jsonError(w, 404, "Fichier de journal introuvable.")
+		return
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		jsonError(w, 500, "Fichier de journal illisible.")
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Disposition", recoveryLogDisposition(fileParam))
+	http.ServeContent(w, r, fileParam, info.ModTime(), file)
 }
 
 func (h *Handler) exportLogsCSV(w http.ResponseWriter, r *http.Request) {
