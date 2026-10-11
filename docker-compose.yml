@@ -84,7 +84,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: ${POSTGRES_DB:-JellyTrack}
     volumes:
-      - JellyTrack_pgdata:/var/lib/postgresql/data
+      - JellyTrack_pgdata:/var/lib/postgresql
     networks:
       - JellyTrack_net
     healthcheck:

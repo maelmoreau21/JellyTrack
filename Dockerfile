@@ -20,8 +20,6 @@ ARG TARGETARCH
 RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
     go build -trimpath -ldflags="-s -w -buildid=" -o /out/jellytrack ./cmd/jellytrack
 
-# Prepare data directories
-RUN mkdir -p /tmp/data/backups /tmp/data/logs
 
 # ── STAGE 2: Minimal non-root runner image ──
 FROM alpine:3.24 AS runner
@@ -30,18 +28,19 @@ RUN apk add --no-cache ca-certificates tzdata \
     && addgroup -g 1000 jellytrack \
     && adduser -u 1000 -G jellytrack -s /bin/sh -D jellytrack \
     && mkdir -p /data/backups /data/logs /tmp \
-    && chmod -R 777 /data /tmp
+    && chown -R jellytrack:jellytrack /data \
+    && chmod 770 /data /data/backups /data/logs \
+    && chmod 1777 /tmp
 
 WORKDIR /app
 
-# Copy executable and initial data directory
+# Copy executable
 COPY --from=builder /out/jellytrack /app/jellytrack
-COPY --from=builder /tmp/data /data
-RUN chmod -R 777 /data /tmp
 
 ENV PORT=3000 \
     DATABASE_PATH=/data/jellytrack.db \
     BACKUP_DIR=/data/backups \
+    LOG_DIR=/data/logs \
     TZ=UTC
 
 # OCI labels

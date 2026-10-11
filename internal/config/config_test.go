@@ -153,5 +153,52 @@ func TestLoadAutoDetectsPostgresFromURLOrLegacyEnv(t *testing.T) {
 			t.Fatalf("unexpected constructed postgres URL:\nwant: %s\ngot:  %s", expectedURL, cfg.DatabaseURL)
 		}
 	})
+
+	t.Run("external postgres via DATABASE_URL without POSTGRES_PASSWORD", func(t *testing.T) {
+		t.Setenv("DATABASE_DRIVER", "postgres")
+		t.Setenv("DATABASE_URL", "postgres://ext_user:ext_pass@external-pg18:5432/jellytrack_ext?sslmode=require")
+		t.Setenv("POSTGRES_PASSWORD", "")
+		t.Setenv("POSTGRES_USER", "")
+		t.Setenv("POSTGRES_IP", "")
+		t.Setenv("DB_PASSWORD", "")
+		t.Setenv("DB_USER", "")
+		t.Setenv("DB_HOST", "")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cfg.DatabaseDriver != "postgres" {
+			t.Fatalf("expected postgres driver, got %s", cfg.DatabaseDriver)
+		}
+		if cfg.DatabaseURL != "postgres://ext_user:ext_pass@external-pg18:5432/jellytrack_ext?sslmode=require" {
+			t.Fatalf("unexpected database URL: %s", cfg.DatabaseURL)
+		}
+	})
+
+	t.Run("external postgres via DB_* with custom SSLMODE without POSTGRES_PASSWORD", func(t *testing.T) {
+		t.Setenv("DATABASE_DRIVER", "postgres")
+		t.Setenv("DATABASE_URL", "")
+		t.Setenv("POSTGRES_PASSWORD", "")
+		t.Setenv("POSTGRES_USER", "")
+		t.Setenv("POSTGRES_IP", "")
+		t.Setenv("DB_HOST", "external-pg18")
+		t.Setenv("DB_PORT", "5432")
+		t.Setenv("DB_USER", "ext_admin")
+		t.Setenv("DB_PASSWORD", "ext_secret")
+		t.Setenv("DB_NAME", "jellytrack_prod")
+		t.Setenv("DB_SSLMODE", "verify-full")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cfg.DatabaseDriver != "postgres" {
+			t.Fatalf("expected postgres driver, got %s", cfg.DatabaseDriver)
+		}
+		expectedURL := "postgres://ext_admin:ext_secret@external-pg18:5432/jellytrack_prod?sslmode=verify-full"
+		if cfg.DatabaseURL != expectedURL {
+			t.Fatalf("unexpected database URL:\nwant: %s\ngot:  %s", expectedURL, cfg.DatabaseURL)
+		}
+	})
 }
+
 

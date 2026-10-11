@@ -1,0 +1,46 @@
+# ── STAGE 1: Build static Go executable ──
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+ARG TARGETOS
+ARG TARGETARCH
+
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
+    go build -trimpath -ldflags="-s -w -buildid=" -o /out/jellytrack ./cmd/jellytrack
+
+RUN mkdir -p /tmp/data/backups /tmp/data/logs && chmod -R 770 /tmp/data
+
+# ── STAGE 2: Distroless runner image ──
+FROM gcr.io/distroless/static-debian12:nonroot AS runner
+
+WORKDIR /app
+
+COPY --from=builder /out/jellytrack /app/jellytrack
+COPY --from=builder --chown=65532:65532 /tmp/data /data
+
+ENV PORT=3000 \
+    DATABASE_PATH=/data/jellytrack.db \
+    BACKUP_DIR=/data/backups \
+    LOG_DIR=/data/logs \
+    TZ=UTC
+
+LABEL org.opencontainers.image.source="https://github.com/maelmoreau21/JellyTrack" \
+      org.opencontainers.image.description="JellyTrack — Observability & Analytics for Jellyfin (100% Go)" \
+      org.opencontainers.image.licenses="MIT"
+
+USER 65532:65532
+
+EXPOSE 3000
+
+VOLUME ["/data"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["/app/jellytrack", "healthcheck"]
+
+ENTRYPOINT ["/app/jellytrack"]

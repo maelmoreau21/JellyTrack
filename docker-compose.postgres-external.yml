@@ -1,0 +1,83 @@
+services:
+  JellyTrack:
+    build: .
+    image: ghcr.io/maelmoreau21/jellytrack:latest
+    container_name: JellyTrack_app
+    user: "${PUID:-1000}:${PGID:-1000}"
+    env_file:
+      - .env
+    ports:
+      - "${APP_PORT:-3000}:${PORT:-3000}"
+    environment:
+      # Database: PostgreSQL externe autonome (sans conteneur PostgreSQL local)
+      DATABASE_DRIVER: ${DATABASE_DRIVER:-postgres}
+      DATABASE_URL: ${DATABASE_URL:-}
+      POSTGRES_USER: ${POSTGRES_USER:-}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_IP: ${POSTGRES_IP:-}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-}
+      POSTGRES_SSLMODE: ${POSTGRES_SSLMODE:-}
+      DB_HOST: ${DB_HOST:-}
+      DB_PORT: ${DB_PORT:-}
+      DB_USER: ${DB_USER:-}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      DB_NAME: ${DB_NAME:-}
+      DB_SSLMODE: ${DB_SSLMODE:-}
+      JELLYTRACK_DB_HOST: ${JELLYTRACK_DB_HOST:-}
+      JELLYTRACK_DB_PORT: ${JELLYTRACK_DB_PORT:-}
+      JELLYTRACK_DB_USER: ${JELLYTRACK_DB_USER:-}
+      JELLYTRACK_DB_PASSWORD: ${JELLYTRACK_DB_PASSWORD:-}
+      JELLYTRACK_DB_NAME: ${JELLYTRACK_DB_NAME:-}
+      DATABASE_PATH: ${DATABASE_PATH:-/data/jellytrack.db}
+
+      # Core app
+      TZ: ${TZ:-Europe/Paris}
+      JELLYTRACK_MODE: ${JELLYTRACK_MODE:-single}
+      PORT: ${PORT:-3000}
+      APP_VERSION: ${APP_VERSION:-dev}
+
+      # Jellyfin source
+      JELLYFIN_URL: ${JELLYFIN_URL:-http://jellyfin:8096}
+      JELLYFIN_API_KEY: ${JELLYFIN_API_KEY:?Set JELLYFIN_API_KEY in .env}
+      JELLYFIN_SERVER_ID: ${JELLYFIN_SERVER_ID:-master}
+      JELLYFIN_SERVER_NAME: ${JELLYFIN_SERVER_NAME:-Master Jellyfin}
+
+      # Security
+      JELLYTRACK_SECRET: ${JELLYTRACK_SECRET:?Set JELLYTRACK_SECRET in .env}
+      JELLYTRACK_URL: ${JELLYTRACK_URL:-}
+      JELLYFIN_WEBHOOK_SECRET: ${JELLYFIN_WEBHOOK_SECRET:?Set JELLYFIN_WEBHOOK_SECRET in .env}
+      PLUGIN_KEY_PEPPER: ${PLUGIN_KEY_PEPPER:?Set PLUGIN_KEY_PEPPER in .env}
+
+      # SSO / OIDC (OpenID Connect)
+      OIDC_ENABLED: ${OIDC_ENABLED:-false}
+      OIDC_URL: ${OIDC_URL:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_USER_GROUP: ${OIDC_USER_GROUP:-}
+      OIDC_ADMIN_GROUP: ${OIDC_ADMIN_GROUP:-}
+      OIDC_AUTO_REDIRECT: ${OIDC_AUTO_REDIRECT:-true}
+
+      # Emergency Local Administrator Access
+      JELLYTRACK_LOCAL_ADMIN_USER: ${JELLYTRACK_LOCAL_ADMIN_USER:-${JELLYGATE_LOCAL_ADMIN_USER:-admin}}
+      JELLYTRACK_LOCAL_ADMIN_PASSWORD: ${JELLYTRACK_LOCAL_ADMIN_PASSWORD:-${JELLYGATE_LOCAL_ADMIN_PASSWORD:-}}
+
+      # Backup location
+      BACKUP_DIR: ${BACKUP_DIR:-/data/backups}
+    volumes:
+      - JellyTrack_data:/data
+      - JellyTrack_backups:/data/backups
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "/app/jellytrack", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  JellyTrack_data:
+  JellyTrack_backups:

@@ -1,0 +1,67 @@
+# ── STAGE 1: Build static Go executable ──
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder
+
+RUN apk add --no-cache ca-certificates tzdata
+
+WORKDIR /src
+
+# Download Go modules
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the entire Go source tree (including web/dist and migrations)
+COPY . .
+
+# Target architecture provided by Docker Buildx
+ARG TARGETOS
+ARG TARGETARCH
+
+# Build static binary with optimizations
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
+    go build -trimpath -ldflags="-s -w -buildid=" -o /out/jellytrack ./cmd/jellytrack
+
+# Prepare single rootfs for scratch with exact permissions and essential files
+RUN mkdir -p /rootfs/app \
+             /rootfs/data/backups \
+             /rootfs/data/logs \
+             /rootfs/tmp \
+             /rootfs/etc/ssl/certs \
+             /rootfs/usr/share \
+    && cp /out/jellytrack /rootfs/app/jellytrack \
+    && cp /etc/ssl/certs/ca-certificates.crt /rootfs/etc/ssl/certs/ca-certificates.crt \
+    && cp -r /usr/share/zoneinfo /rootfs/usr/share/zoneinfo \
+    && echo "jellytrack:x:1000:1000:JellyTrack User:/data:/sbin/nologin" > /rootfs/etc/passwd \
+    && echo "jellytrack:x:1000:" > /rootfs/etc/group \
+    && chown -R 1000:1000 /rootfs/app /rootfs/data \
+    && chmod 755 /rootfs/app /rootfs/app/jellytrack \
+    && chmod 1777 /rootfs/tmp \
+    && chmod -R 770 /rootfs/data
+
+# ── STAGE 2: Scratch runner image ──
+FROM scratch AS runner
+
+# Single unified layer containing all binary, data dirs, certs, tzdata, and user config
+COPY --from=builder /rootfs /
+
+WORKDIR /app
+
+ENV PORT=3000 \
+    DATABASE_PATH=/data/jellytrack.db \
+    BACKUP_DIR=/data/backups \
+    LOG_DIR=/data/logs \
+    TZ=UTC
+
+LABEL org.opencontainers.image.source="https://github.com/maelmoreau21/JellyTrack" \
+      org.opencontainers.image.description="JellyTrack — Observability & Analytics for Jellyfin (100% Go)" \
+      org.opencontainers.image.licenses="MIT"
+
+USER 1000:1000
+
+EXPOSE 3000
+
+VOLUME ["/data"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["/app/jellytrack", "healthcheck"]
+
+ENTRYPOINT ["/app/jellytrack"]
