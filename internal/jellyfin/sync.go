@@ -45,7 +45,7 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 			return SyncResult{}, err
 		}
 		if children > 0 {
-			return SyncResult{}, fmt.Errorf("configured server %s changed its Jellyfin identity; refusing to mix existing data", serverID)
+			return SyncResult{}, fmt.Errorf("configured server %s changed its Jellyfin identity (stored=%q, received=%q); refusing to mix existing data", serverID, jellyfinID, info.ID)
 		}
 	}
 	if info.ID != "" && !sameJellyfinServerID(jellyfinID, info.ID) {

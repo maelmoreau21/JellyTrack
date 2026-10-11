@@ -33,8 +33,8 @@
       const names = { date: tl('colDate', 'Date'), startedAt: tl('colStartedAt', 'Début'), endedAt: tl('colEndedAt', 'Fin'), user: tl('colUser', 'Utilisateur'), media: tl('colMedia', 'Média'), client: tl('colClient', 'Client'), ip: tl('colIp', 'IP'), country: tl('colCountry', 'Pays'), status: tl('colStatus', 'Statut'), resolution: tl('colResolution', 'Résolution'), audioBitrate: tl('colAudioBitrate', 'Débit audio'), codecs: tl('colCodecs', 'Codecs'), duration: tl('colDuration', 'Durée'), pauseCount: tl('colPauseCount', 'Pauses'), audioChanges: tl('colAudioChanges', 'Audio'), subtitleChanges: tl('colSubtitleChanges', 'Sous-titres') };
       main.innerHTML = `<section id="playback-history-page" class="history-recovery">
         <header class="history-header"><div><h1 class="page-title">${icon("terminal")} ${esc(tl('title', 'Journaux'))}</h1><p class="page-subtitle">${esc(tl('description', 'Historique complet des lectures et événements de télémétrie.'))}<span id="history-summary"></span></p></div>
-          <div class="segmented-control" role="tablist"><button type="button" id="history-tab-playback" class="segment-btn active" role="tab" aria-controls="history-playback-panel" aria-selected="true">${icon("playCircle")} ${esc(tl('tabApplication', 'Lectures'))}</button></div></header>
-        <div id="history-playback-panel" role="tabpanel" aria-labelledby="history-tab-playback">
+        </header>
+        <div id="history-playback-panel">
           <div id="history-smart-alerts" hidden></div>
           <form id="history-filters" class="card history-filter-card">
             <div class="history-search-toolbar"><input name="query" type="search" class="form-input" aria-label="${esc(t('common.search', 'Rechercher'))}" placeholder="${esc(tl('searchPlaceholder', 'Chercher par utilisateur, titre, IP...'))}" value="${esc(params.get('query'))}"><button type="button" class="btn btn-secondary" id="history-saved">${icon("bookmark")} ${esc(t('common.savedFilters', 'Filtres sauvegardés'))}</button><button type="button" class="btn btn-secondary" id="history-columns">${icon("columns")} ${esc(tl('columns', 'Colonnes'))}</button></div>
