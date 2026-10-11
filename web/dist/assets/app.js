@@ -1293,7 +1293,6 @@
 
           <!-- Predictions Panel at the bottom of Overview -->
           <div id="dash-predictions-container" style="margin-top: 1.5rem;"></div>
-          <details class="dashboard-process-resources"><summary>${State.locale === 'en' ? 'Process resources' : 'Ressources du processus'}</summary><div id="dash-hardware-container"></div></details>
         </div>
 
         <!-- Tab 2: Analytics Tab Content -->
@@ -1475,10 +1474,6 @@
                 <svg class="nav-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
                 <span>${I18n.t('dashboard.lastBackup')}: ${lastBackup}</span>
               </div>
-              <a href="/admin/health" class="btn btn-secondary btn-sm" style="margin-left:auto; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
-                <svg class="nav-icon text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                <span>${I18n.t('dashboard.logHealth') || 'Santé du système'}</span>
-              </a>
             </div>
 
             <div class="stat-grid-4" style="margin-bottom:1rem;">
@@ -1590,7 +1585,8 @@
 
         const countEl = document.getElementById('dash-live-header-info');
         if (countEl) {
-          countEl.textContent = `${liveStreamsData.length} ${I18n.t('dashboard.activeStreams') || 'flux actifs'}${liveStreamsData.length ? ` (${liveBandwidthKnown ? `${liveBandwidth} Mbps` : 'N/A'})` : ''}`;
+          const bwText = (liveStreamsData.length && liveBandwidthKnown && liveBandwidth > 0) ? ` (${liveBandwidth} Mbps)` : '';
+          countEl.textContent = `${liveStreamsData.length} ${I18n.t('dashboard.activeStreams') || 'flux actifs'}${bwText}`;
         }
 
         if (liveStreamsData.length === 0) {
@@ -1969,9 +1965,6 @@
                     </div>
                     <div class="card-subtitle" id="dash-live-header-info">Surveillance active des lectures en cours</div>
                   </div>
-                  <button class="btn btn-secondary btn-sm" id="btn-toggle-live-view" title="Basculer vue Cartes / Chronologie">
-                    ${forceCardsView ? '📊 Chronologie Gantt' : '🗂️ Vue Cartes'}
-                  </button>
                 </div>
               </div>
               <div id="dash-live-streams-body">
@@ -2655,7 +2648,7 @@
                           <div style="font-size:0.72rem; color:var(--muted-foreground);">${item.currentWeekPlays || 0} lectures cette semaine</div>
                         </div>
                         <span class="badge ${item.growthPercent > 0 ? 'badge-success' : 'badge-info'}" style="font-size:0.72rem;">
-                          ${item.growthPercent > 0 ? `+${item.growthPercent}%` : 'Nouveau'}
+                          ${item.growthPercent > 0 ? `+${Math.round(item.growthPercent * 10) / 10}%` : 'Nouveau'}
                         </span>
                       </a>
                     `).join('')}
@@ -2893,7 +2886,7 @@
                   <table class="attendance-table">
                     <thead>
                       <tr>
-                        <th class="attendance-row-lbl"></th>
+                        <th class="attendance-row-lbl" style="width:70px;"></th>
                         ${Array.from({ length: 24 }, (_, h) => `<th class="attendance-th">${h}h</th>`).join('')}
                       </tr>
                     </thead>
