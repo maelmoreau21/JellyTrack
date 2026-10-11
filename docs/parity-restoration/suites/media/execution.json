@@ -4,5 +4,11 @@
     "exitCode": 1,
     "seconds": 93.13,
     "recordedAt": "2026-10-11T14:15:05Z"
+  },
+  {
+    "script": "media-pages-qa/interactions.cjs",
+    "exitCode": 0,
+    "seconds": 22.52,
+    "recordedAt": "2026-10-11T14:15:28Z"
   }
 ]
