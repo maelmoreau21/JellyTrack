@@ -17,6 +17,7 @@ import (
 func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 	for _, tc := range []struct {
 		name, provider                                 string
+		groupClaim                                     any
 		missing, tamper                                bool
 		success                                        bool
 		admin, restricted, unrestricted, requiredGroup bool
@@ -26,6 +27,9 @@ func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 		{name: "local unrestricted", provider: jellyfin.LocalAuthenticationProvider, unrestricted: true, success: true},
 		{name: "admin without groups", provider: jellyfin.LDAPAuthenticationProvider, admin: true, success: true},
 		{name: "Jellyfin admin cannot bypass explicit group", provider: jellyfin.LDAPAuthenticationProvider, admin: true, requiredGroup: true},
+		{name: "signed scalar admin group", provider: jellyfin.LDAPAuthenticationProvider, admin: true, requiredGroup: true, groupClaim: "admins", success: true},
+		{name: "signed array admin group", provider: jellyfin.LDAPAuthenticationProvider, admin: true, requiredGroup: true, groupClaim: []string{"admins"}, success: true},
+		{name: "signed scalar wrong group", provider: jellyfin.LDAPAuthenticationProvider, admin: true, requiredGroup: true, groupClaim: "users,admins"},
 		{name: "missing stable claim", provider: jellyfin.LDAPAuthenticationProvider, missing: true},
 		{name: "invalid signature", provider: jellyfin.LDAPAuthenticationProvider, tamper: true},
 	} {
@@ -73,6 +77,9 @@ func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 				t.Fatal(err)
 			}
 			claims := map[string]any{"iss": issuer, "aud": "test-client", "sub": "immutable-subject", "exp": time.Now().Add(time.Hour).Unix(), "iat": time.Now().Unix(), "nonce": "nonce", "preferred_username": "different-name", "jellyfin_server_id": "s1", "jellyfin_user_id": policyUser(tc.provider, false).ID}
+			if tc.groupClaim != nil {
+				claims["groups"] = tc.groupClaim
+			}
 			if tc.missing {
 				delete(claims, "jellyfin_user_id")
 			}

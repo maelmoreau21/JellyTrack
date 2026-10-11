@@ -119,6 +119,20 @@ func extractGroupsFromClaims(rawClaims map[string]any) []string {
 	candidateKeys := []string{"groups", "user_groups", "roles", "memberOf", "group", "https://goauthentik.io/groups", "groups_list"}
 	for _, key := range candidateKeys {
 		if val, exists := rawClaims[key]; exists && val != nil {
+			// Some providers emit one group as a scalar claim. Treat it as
+			// one exact group name; never split spaces or commas into roles.
+			switch value := val.(type) {
+			case string:
+				if name := strings.TrimSpace(value); name != "" {
+					results = append(results, name)
+				}
+			case []string:
+				for _, group := range value {
+					if name := strings.TrimSpace(group); name != "" {
+						results = append(results, name)
+					}
+				}
+			}
 			if list, ok := val.([]any); ok {
 				for _, item := range list {
 					if str, ok := item.(string); ok && strings.TrimSpace(str) != "" {

@@ -265,7 +265,7 @@ func TestReverseProxyOrigin(t *testing.T) {
 
 func TestExtractGroupsFromClaims(t *testing.T) {
 	claims := map[string]any{
-		"groups": []any{"jellyfin-users", "media"},
+		"groups":                        []any{"jellyfin-users", "media"},
 		"https://goauthentik.io/groups": []any{"authentik-admins"},
 		"realm_access": map[string]any{
 			"roles": []any{"keycloak-user"},
@@ -296,3 +296,28 @@ func TestDetectBaseURL(t *testing.T) {
 	}
 }
 
+func TestGroupClaimsAcceptScalarWithoutInventingMemberships(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		value any
+		want  []string
+	}{
+		{"single group", " admins ", []string{"admins"}},
+		{"name containing spaces", "media admins", []string{"media admins"}},
+		{"comma is part of the name", "users,admins", []string{"users,admins"}},
+		{"typed list", []string{" users ", "admins"}, []string{"users", "admins"}},
+		{"invalid claim", true, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := extractGroupsFromClaims(map[string]any{"groups": tc.value})
+			if len(got) != len(tc.want) {
+				t.Fatalf("groups=%v want=%v", got, tc.want)
+			}
+			for i := range got {
+				if got[i] != tc.want[i] {
+					t.Fatalf("groups=%v want=%v", got, tc.want)
+				}
+			}
+		})
+	}
+}
