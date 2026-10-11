@@ -1,4 +1,5 @@
 /* Read-only checks against the isolated media fixture; never writes settings. */
+require('./robust-evidence.cjs');
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Mael/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const root=path.resolve(__dirname,'../..'),out=path.join(root,'docs/parity-restoration'),captures=path.join(out,'captures');

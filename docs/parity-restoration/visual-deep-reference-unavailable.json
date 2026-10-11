@@ -1,0 +1,6 @@
+{
+  "date": "2026-10-11T13:40:11.180Z",
+  "scope": "Deep analysis lower cards and profile charts, desktop/mobile, dark/light; original main UI with aligned synthetic adapter versus isolated Go API.",
+  "cases": [],
+  "fatal": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3341/media/analysis\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3341/media/analysis\", waiting until \"domcontentloaded\"\u001b[22m\n"
+}

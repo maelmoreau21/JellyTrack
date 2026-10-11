@@ -1,0 +1,44 @@
+{
+  "criterion": "FR-HISTORY-AUDIO",
+  "scope": "Temporary SQLite Go test database, no application fixture changed",
+  "test": "TestHistoryAudioBitrateSeparatesVideoAndExplicitAudioMetadata",
+  "before": {
+    "exitCode": 1,
+    "failures": [
+      "history video600 audio=600, want null",
+      "history low audio=1536, want null",
+      "history audiobook audio=null, want 2160",
+      "profile video600 audio=600, want null",
+      "profile low audio=1536, want null",
+      "profile audiobook audio=null, want 2160"
+    ]
+  },
+  "after": {
+    "exitCode": 0,
+    "elapsedSeconds": 4.867,
+    "command": "go test ./internal/api -run '^Test(HistoryAudioBitrate|RecordedHistoryAudioBitrate|RecoveredHistoryFields|FunctionalParity|User)' -count=1 -timeout 60s",
+    "expectedAudioKbpsInHistoryAndProfile": {
+      "video12000": null,
+      "video600": null,
+      "video1536": null,
+      "video600WithExplicitAudio": 128,
+      "Audio": 256,
+      "AudioBook": 2160,
+      "explicitLatestAudio": 320,
+      "explicitAudioStream": 448
+    }
+  },
+  "exports": {
+    "beforeExitCode": 1,
+    "beforeObservedAudioKbps": { "historicalMovieLive": 256, "video600": 600, "videoWithoutHistoryRate": 512, "explicitAudio384": 12000 },
+    "afterExitCode": 0,
+    "elapsedSeconds": 2.773,
+    "afterObservedAudioKbps": { "historicalMovieLive": null, "video600": null, "videoWithoutHistoryRate": null, "explicitAudio384": 384, "audioLiveFallback": 256 },
+    "formats": ["json", "csv"],
+    "csvColumns": 17,
+    "csvFormulaProtection": "'=Alice",
+    "batchBoundary": { "exportedRows": 501, "requestedLimit": 1, "lastRowAudioKbps": 192 },
+    "tests": ["TestHistoricalExportFiltersFormatsUnitsAndLiveFallback", "TestHistoryExportAudioKeepsUnknownVideoExplicitMetadataAndAudioLiveFallback", "TestHistoryExportEnrichmentPreservesAllRowsPastBatchBoundary"]
+  },
+  "limitation": "Historical main's <=1536 kbps video fallback is deliberately rejected because a combined video bitrate does not identify an audio track. Browser fixture does not contain the new 600 kbps and AudioBook2160 test cases; these are exercised by Go tests only."
+}

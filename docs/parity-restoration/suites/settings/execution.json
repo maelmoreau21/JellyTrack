@@ -2,31 +2,31 @@
   {
     "script": "settings-admin-qa/browser.cjs",
     "exitCode": 0,
-    "seconds": 56.04,
-    "recordedAt": "2026-10-11T08:48:10Z"
+    "seconds": 48.37,
+    "recordedAt": "2026-10-11T13:46:44Z"
   },
   {
     "script": "settings-admin-qa/seed.py",
     "exitCode": 0,
-    "seconds": 0.31,
-    "recordedAt": "2026-10-11T08:48:10Z"
+    "seconds": 0.17,
+    "recordedAt": "2026-10-11T13:46:44Z"
   },
   {
     "script": "settings-admin-qa/forms.cjs",
     "exitCode": 0,
-    "seconds": 13.07,
-    "recordedAt": "2026-10-11T08:48:23Z"
+    "seconds": 13.32,
+    "recordedAt": "2026-10-11T13:46:57Z"
   },
   {
     "script": "settings-admin-qa/admin.cjs",
     "exitCode": 0,
-    "seconds": 11.53,
-    "recordedAt": "2026-10-11T08:48:35Z"
+    "seconds": 10.79,
+    "recordedAt": "2026-10-11T13:47:08Z"
   },
   {
     "script": "settings-admin-qa/modes.cjs",
     "exitCode": 0,
-    "seconds": 3.54,
-    "recordedAt": "2026-10-11T08:48:38Z"
+    "seconds": 2.66,
+    "recordedAt": "2026-10-11T13:47:11Z"
   }
 ]

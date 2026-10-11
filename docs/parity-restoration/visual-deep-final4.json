@@ -1,0 +1,886 @@
+{
+  "date": "2026-10-11T14:00:23.722Z",
+  "scope": "Deep analysis lower cards and profile charts, desktop/mobile, dark/light; original main UI with aligned synthetic adapter versus isolated Go API.",
+  "cases": [
+    {
+      "mode": "main",
+      "route": "/media/analysis",
+      "theme": "dark",
+      "viewport": "desktop",
+      "heading": "Aperçu des statistiques approfondies",
+      "file": "main-deep-final4-analysis-0-desktop-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Contenu Total",
+          "Qualité Vidéo Globale",
+          "Collections",
+          "Diversité de la Bibliothèque (Top Genres)",
+          "Binge-Watching Tracker (Marathons de Séries)",
+          "Suggestions d'Acquisitions & Tendances (Smart Insights)",
+          "Aperçu des statistiques approfondies",
+          "Top Réalisateurs",
+          "Top Acteurs",
+          "Top Studios"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/media/analysis",
+      "theme": "dark",
+      "viewport": "mobile",
+      "heading": "Aperçu des statistiques approfondies",
+      "file": "main-deep-final4-analysis-0-mobile-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Contenu Total",
+          "Qualité Vidéo Globale",
+          "Collections",
+          "Diversité de la Bibliothèque (Top Genres)",
+          "Binge-Watching Tracker (Marathons de Séries)",
+          "Suggestions d'Acquisitions & Tendances (Smart Insights)",
+          "Aperçu des statistiques approfondies",
+          "Top Réalisateurs",
+          "Top Acteurs",
+          "Top Studios"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/media/analysis",
+      "theme": "light",
+      "viewport": "desktop",
+      "heading": "Aperçu des statistiques approfondies",
+      "file": "main-deep-final4-analysis-0-desktop-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Contenu Total",
+          "Qualité Vidéo Globale",
+          "Collections",
+          "Diversité de la Bibliothèque (Top Genres)",
+          "Binge-Watching Tracker (Marathons de Séries)",
+          "Suggestions d'Acquisitions & Tendances (Smart Insights)",
+          "Aperçu des statistiques approfondies",
+          "Top Réalisateurs",
+          "Top Acteurs",
+          "Top Studios"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/media/analysis",
+      "theme": "light",
+      "viewport": "mobile",
+      "heading": "Aperçu des statistiques approfondies",
+      "file": "main-deep-final4-analysis-0-mobile-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Contenu Total",
+          "Qualité Vidéo Globale",
+          "Collections",
+          "Diversité de la Bibliothèque (Top Genres)",
+          "Binge-Watching Tracker (Marathons de Séries)",
+          "Suggestions d'Acquisitions & Tendances (Smart Insights)",
+          "Aperçu des statistiques approfondies",
+          "Top Réalisateurs",
+          "Top Acteurs",
+          "Top Studios"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/users/alice",
+      "theme": "dark",
+      "viewport": "desktop",
+      "heading": "Activité par Jour",
+      "file": "main-deep-final4-profile-0-desktop-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Profil : Alice QA",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/users/alice",
+      "theme": "dark",
+      "viewport": "desktop",
+      "heading": "Genres préférés",
+      "file": "main-deep-final4-profile-1-desktop-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Profil : Alice QA",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/users/alice",
+      "theme": "dark",
+      "viewport": "mobile",
+      "heading": "Activité par Jour",
+      "file": "main-deep-final4-profile-0-mobile-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Profil : Alice QA",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/users/alice",
+      "theme": "dark",
+      "viewport": "mobile",
+      "heading": "Genres préférés",
+      "file": "main-deep-final4-profile-1-mobile-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Profil : Alice QA",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/users/alice",
+      "theme": "light",
+      "viewport": "desktop",
+      "heading": "Activité par Jour",
+      "file": "main-deep-final4-profile-0-desktop-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Profil : Alice QA",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/users/alice",
+      "theme": "light",
+      "viewport": "desktop",
+      "heading": "Genres préférés",
+      "file": "main-deep-final4-profile-1-desktop-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Profil : Alice QA",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/users/alice",
+      "theme": "light",
+      "viewport": "mobile",
+      "heading": "Activité par Jour",
+      "file": "main-deep-final4-profile-0-mobile-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Profil : Alice QA",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "main",
+      "route": "/users/alice",
+      "theme": "light",
+      "viewport": "mobile",
+      "heading": "Genres préférés",
+      "file": "main-deep-final4-profile-1-mobile-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Profil : Alice QA",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/media/analysis",
+      "theme": "dark",
+      "viewport": "desktop",
+      "heading": "Aperçu des statistiques approfondies",
+      "file": "go-deep-final4-analysis-0-desktop-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Contenu Total",
+          "Qualité Vidéo Globale",
+          "Collections",
+          "Diversité de la Bibliothèque (Top Genres)",
+          "Binge-Watching Tracker (Marathons de Séries)",
+          "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+          "Enrichir la collection Drama",
+          "Films & Séries QA",
+          "Compléter la filmographie / discographie de Artiste QA",
+          "Genres dominants en temps de visionnage",
+          "Aperçu des statistiques approfondies",
+          "Top Réalisateurs",
+          "Top Acteurs",
+          "Top Studios"
+        ],
+        "cards": [
+          {
+            "title": "Top Réalisateurs",
+            "iconCount": 3,
+            "text": "Top Réalisateurs\n1\nRéalisateur QA\n110 Top Réalisateurs"
+          },
+          {
+            "title": "Top Acteurs",
+            "iconCount": 3,
+            "text": "Top Acteurs\n1\nActrice QA\n110 Top Acteurs"
+          },
+          {
+            "title": "Top Studios",
+            "iconCount": 3,
+            "text": "Top Studios\n1\nStudio QA\n110 Top Studios"
+          }
+        ]
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/media/analysis",
+      "theme": "dark",
+      "viewport": "mobile",
+      "heading": "Aperçu des statistiques approfondies",
+      "file": "go-deep-final4-analysis-0-mobile-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Contenu Total",
+          "Qualité Vidéo Globale",
+          "Collections",
+          "Diversité de la Bibliothèque (Top Genres)",
+          "Binge-Watching Tracker (Marathons de Séries)",
+          "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+          "Enrichir la collection Drama",
+          "Films & Séries QA",
+          "Compléter la filmographie / discographie de Artiste QA",
+          "Genres dominants en temps de visionnage",
+          "Aperçu des statistiques approfondies",
+          "Top Réalisateurs",
+          "Top Acteurs",
+          "Top Studios"
+        ],
+        "cards": [
+          {
+            "title": "Top Réalisateurs",
+            "iconCount": 3,
+            "text": "Top Réalisateurs\n1\nRéalisateur QA\n110 Top Réalisateurs"
+          },
+          {
+            "title": "Top Acteurs",
+            "iconCount": 3,
+            "text": "Top Acteurs\n1\nActrice QA\n110 Top Acteurs"
+          },
+          {
+            "title": "Top Studios",
+            "iconCount": 3,
+            "text": "Top Studios\n1\nStudio QA\n110 Top Studios"
+          }
+        ]
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/media/analysis",
+      "theme": "light",
+      "viewport": "desktop",
+      "heading": "Aperçu des statistiques approfondies",
+      "file": "go-deep-final4-analysis-0-desktop-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Contenu Total",
+          "Qualité Vidéo Globale",
+          "Collections",
+          "Diversité de la Bibliothèque (Top Genres)",
+          "Binge-Watching Tracker (Marathons de Séries)",
+          "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+          "Enrichir la collection Drama",
+          "Films & Séries QA",
+          "Compléter la filmographie / discographie de Artiste QA",
+          "Genres dominants en temps de visionnage",
+          "Aperçu des statistiques approfondies",
+          "Top Réalisateurs",
+          "Top Acteurs",
+          "Top Studios"
+        ],
+        "cards": [
+          {
+            "title": "Top Réalisateurs",
+            "iconCount": 3,
+            "text": "Top Réalisateurs\n1\nRéalisateur QA\n110 Top Réalisateurs"
+          },
+          {
+            "title": "Top Acteurs",
+            "iconCount": 3,
+            "text": "Top Acteurs\n1\nActrice QA\n110 Top Acteurs"
+          },
+          {
+            "title": "Top Studios",
+            "iconCount": 3,
+            "text": "Top Studios\n1\nStudio QA\n110 Top Studios"
+          }
+        ]
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/media/analysis",
+      "theme": "light",
+      "viewport": "mobile",
+      "heading": "Aperçu des statistiques approfondies",
+      "file": "go-deep-final4-analysis-0-mobile-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Contenu Total",
+          "Qualité Vidéo Globale",
+          "Collections",
+          "Diversité de la Bibliothèque (Top Genres)",
+          "Binge-Watching Tracker (Marathons de Séries)",
+          "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+          "Enrichir la collection Drama",
+          "Films & Séries QA",
+          "Compléter la filmographie / discographie de Artiste QA",
+          "Genres dominants en temps de visionnage",
+          "Aperçu des statistiques approfondies",
+          "Top Réalisateurs",
+          "Top Acteurs",
+          "Top Studios"
+        ],
+        "cards": [
+          {
+            "title": "Top Réalisateurs",
+            "iconCount": 3,
+            "text": "Top Réalisateurs\n1\nRéalisateur QA\n110 Top Réalisateurs"
+          },
+          {
+            "title": "Top Acteurs",
+            "iconCount": 3,
+            "text": "Top Acteurs\n1\nActrice QA\n110 Top Acteurs"
+          },
+          {
+            "title": "Top Studios",
+            "iconCount": 3,
+            "text": "Top Studios\n1\nStudio QA\n110 Top Studios"
+          }
+        ]
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/users/qa-primary-alice",
+      "theme": "dark",
+      "viewport": "desktop",
+      "heading": "Activité par Jour",
+      "file": "go-deep-final4-profile-0-desktop-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Lecture en pause",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/users/qa-primary-alice",
+      "theme": "dark",
+      "viewport": "desktop",
+      "heading": "Genres préférés",
+      "file": "go-deep-final4-profile-1-desktop-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Lecture en pause",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/users/qa-primary-alice",
+      "theme": "dark",
+      "viewport": "mobile",
+      "heading": "Activité par Jour",
+      "file": "go-deep-final4-profile-0-mobile-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Lecture en pause",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/users/qa-primary-alice",
+      "theme": "dark",
+      "viewport": "mobile",
+      "heading": "Genres préférés",
+      "file": "go-deep-final4-profile-1-mobile-dark.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Lecture en pause",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/users/qa-primary-alice",
+      "theme": "light",
+      "viewport": "desktop",
+      "heading": "Activité par Jour",
+      "file": "go-deep-final4-profile-0-desktop-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Lecture en pause",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/users/qa-primary-alice",
+      "theme": "light",
+      "viewport": "desktop",
+      "heading": "Genres préférés",
+      "file": "go-deep-final4-profile-1-desktop-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "headings": [
+          "Lecture en pause",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/users/qa-primary-alice",
+      "theme": "light",
+      "viewport": "mobile",
+      "heading": "Activité par Jour",
+      "file": "go-deep-final4-profile-0-mobile-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Lecture en pause",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    },
+    {
+      "mode": "go",
+      "route": "/users/qa-primary-alice",
+      "theme": "light",
+      "viewport": "mobile",
+      "heading": "Genres préférés",
+      "file": "go-deep-final4-profile-1-mobile-light.png",
+      "errors": [],
+      "metrics": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Lecture en pause",
+          "Temps de lecture",
+          "Session(s)",
+          "Top Genres",
+          "Taux de complétion",
+          "Pic d'Activité",
+          "Meilleure Série",
+          "Contenu Unique",
+          "Format favori",
+          "Le Plus Visionné",
+          "Client favori",
+          "Appareil favori",
+          "Activité sur 30 jours",
+          "Activité par Jour",
+          "Taux de Complétion",
+          "Activité par Heure",
+          "Genres préférés",
+          "Fiche Technique",
+          "Historique de lecture"
+        ],
+        "cards": []
+      }
+    }
+  ],
+  "initialStates": [
+    {
+      "mode": "main",
+      "route": "/media/analysis",
+      "errors": [],
+      "body": "JellyTrack\nMon Compte\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nLANGUAGE\nFrançais\nTHÈME\nSombre\nDéconnexion\nJellyTrack v0.0.0\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nAnalyse Profonde\nTout\nQA principal\nQA secondaire\nContenu Total\nInventaire des bibliothèques\nMédias Totaux\n112\nNombre d'éléments multimédia indexés.\nGenres uniques\n3\nDurée moyenne\n1h 30m\nDurée moyenne des médias.\nQualité Vidéo Globale\nRépartition par résolution certifiée.\n4K UHD\n108\n1440p QHD\n0\n1080p FHD\n0\n720p HD\n0\nStandard / Autre\n0\nCollections\nInventaire des bibliothèques\nFilms QA\n108\nSéries QA\n2\nMusique QA\n2\nDiversité de la Bibliothèque (Top Genres)\nRépartition des médias par genre (catégories principales).\n0\n30\n60\n90\n120\nDrama\nQA\nRock\nBinge-Watching Tracker (Marathons de Séries)\nDétection automatique des séries dévorées d'une traite (sessions de 3 épisodes consécutifs ou plus).\n30 derniers jours\nAucun marathon détecté sur les 30 derniers jours (minimum 3 épisodes consécutifs).\nSuggestions d'Acquisitions & Tendances (Smart Insights)\nRecommandations basées sur les genres, réalisateurs et acteurs les plus consommés pour optimiser vos ajouts dans la bibliothèque.\nIA JellyTrack\nGENRE DOMINANT\nTrès Forte Demande\nEnrichir la collection Drama\n\nReprésente 97% du temps total de visionnage (77.4h). Vos spectateurs en redemandent !\n\nIndice d'intérêt\n99%\nGENRE TENDANCE\nTendance Forte\nFilms & Séries QA\n\nDeuxième genre le plus plébiscité avec 77.4h visionnées sur les 30 derniers jours.\n\nIndice d'intérêt\n85%\nARTISTE / RÉALISATEUR VEDETTE\nFavori Utilisateurs\nCompléter la filmographie / discographie de Artiste QA\n\nCumule 2.6h d'écoute/visionnage sur 54 lectures.\n\nIndice d'intérêt\n92%\nGENRES DOMINANTS EN TEMPS DE VISIONNAGE\nDrama\n77.4h (97%)\nQA\n77.4h (97%)\nRock\n2.6h (3%)\nAperçu des statistiques approfondies\nAnalyses avancées de votre collection multimédia.\nTop Réalisateurs\n1\nRéalisateur QA\n110 Top Réalisateurs\nTop Acteurs\n1\nActrice QA\n110 Top Acteurs\nTop Studios\n1\nStudio QA\n110 Top Studios\nDrama",
+      "deepStatus": 200,
+      "deepBody": "{\"topDirectors\":[{\"name\":\"Réalisateur QA\",\"count\":110}],\"topActors\":[{\"name\":\"Actrice QA\",\"count\":110}],\"topStudios\":[{\"name\":\"Studio QA\",\"count\":110}]}"
+    },
+    {
+      "mode": "main",
+      "route": "/users/alice",
+      "errors": [],
+      "body": "QA\n4K\nTranscode\n1h 20m 00s\n• Finamp\n\t\nFinamp\n\t\n4K\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 20m 00s\n\n10 oct.\n08:35\n\t\nFilm principal QA\n4K\nTranscode\n1h 20m 00s\n• Finamp\n\t\nFinamp\n\t\n4K\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 20m 00s\n\n10 oct.\n06:38\n\t\nÉpisode 2\nSérie principale QA — Saison 1\n1080p\nDirectStream\n30m 00s\n• Android TV\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n10 oct.\n06:38\n\t\nÉpisode 2\nSérie principale QA — Saison 1\n1080p\nDirectStream\n30m 00s\n• Android TV\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n10 oct.\n05:37\n\t\nÉpisode 3\nSérie principale QA — Saison 1\n1080p\nTranscode\n30m 00s\n• Finamp\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n10 oct.\n05:37\n\t\nÉpisode 3\nSérie principale QA — Saison 1\n1080p\nTranscode\n30m 00s\n• Finamp\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n10 oct.\n03:35\n\t\nPiste 2\nArtiste QA — Album principal QA\nDirectStream\n3m 00s\n• Android TV\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 00s\n\n10 oct.\n02:34\n\t\nPiste 3\nArtiste QA — Album principal QA\nTranscode\n2m 00s\n• Finamp\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t2m 00s\n\n9 oct.\n08:37\n\t\nFilm principal QA\n4K\nDirectStream\n1h 20m 00s\n• Android TV\n\t\nAndroid TV\n\t\n4K\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t1h 20m 00s\n\n9 oct.\n07:36\n\t\nÉpisode 1\nSérie principale QA — Saison 1\n1080p\nTranscode\n30m 00s\n• Finamp\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n9 oct.\n05:34\n\t\nÉpisode 3\nSérie principale QA — Saison 1\n1080p\nDirectStream\n30m 00s\n• Android TV\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n9 oct.\n04:38\n\t\nPiste 1\nArtiste QA — Album principal QA\nTranscode\n3m 50s\n• Finamp\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t3m 50s\n\n9 oct.\n02:36\n\t\nPiste 3\nArtiste QA — Album principal QA\nDirectStream\n2m 00s\n• Android TV\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t2m 00s\n\n9 oct.\n01:35\n\t\nLivre principal QA\nTranscode\n1h 23m 20s\n• Finamp\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 23m 20s\n\n8 oct.\n07:38\n\t\nÉpisode 1\nSérie principale QA — Saison 1\n1080p\nDirectStream\n30m 00s\n• Android TV\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n8 oct.\n06:37\n\t\nÉpisode 2\nSérie principale QA — Saison 1\n1080p\nTranscode\n30m 00s\n• Finamp\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n8 oct.\n04:35\n\t\nPiste 1\nArtiste QA — Album principal QA\nDirectStream\n3m 50s\n• Android TV\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 50s\n\n8 oct.\n03:34\n\t\nPiste 2\nArtiste QA — Album principal QA\nTranscode\n3m 00s\n• Finamp\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t3m 00s\n\n8 oct.\n01:37\n\t\nLivre principal QA\nDirectStream\n1h 23m 20s\n• Android TV\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t1h 23m 20s\n\n7 oct.\n08:36\n\t\nFilm principal QA\n4K\nTranscode\n1h 20m 00s\n• Finamp\n\t\nFinamp\n\t\n4K\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 20m 00s\n\n7 oct.\n06:34\n\t\nÉpisode 2\nSérie principale QA — Saison 1\n1080p\nDirectStream\n30m 00s\n• Android TV\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n7 oct.\n05:38\n\t\nÉpisode 3\nSérie principale QA — Saison 1\n1080p\nTranscode\n30m 00s\n• Finamp\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n7 oct.\n03:36\n\t\nPiste 2\nArtiste QA — Album principal QA\nDirectStream\n3m 00s\n• Android TV\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 00s\n\n7 oct.\n02:35\n\t\nPiste 3\nArtiste QA — Album principal QA\nTranscode\n2m 00s\n• Finamp\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t2m 00s\n\n6 oct.\n08:38\n\t\nFilm principal QA\n4K\nDirectStream\n1h 20m 00s\n• Android TV\n\t\nAndroid TV\n\t\n4K\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t1h 20m 00s\n\n6 oct.\n07:37\n\t\nÉpisode 1\nSérie principale QA — Saison 1\n1080p\nTranscode\n30m 00s\n• Finamp\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n6 oct.\n05:35\n\t\nÉpisode 3\nSérie principale QA — Saison 1\n1080p\nDirectStream\n30m 00s\n• Android TV\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n6 oct.\n04:34\n\t\nPiste 1\nArtiste QA — Album principal QA\nTranscode\n3m 50s\n• Finamp\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t3m 50s\n\n6 oct.\n02:37\n\t\nPiste 3\nArtiste QA — Album principal QA\nDirectStream\n2m 00s\n• Android TV\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t2m 00s\n\n6 oct.\n01:36\n\t\nLivre principal QA\nTranscode\n1h 23m 20s\n• Finamp\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 23m 20s\n\n5 oct.\n07:34\n\t\nÉpisode 1\nSérie principale QA — Saison 1\n1080p\nDirectStream\n30m 00s\n• Android TV\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n5 oct.\n06:38\n\t\nÉpisode 2\nSérie principale QA — Saison 1\n1080p\nTranscode\n30m 00s\n• Finamp\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n5 oct.\n04:36\n\t\nPiste 1\nArtiste QA — Album principal QA\nDirectStream\n3m 50s\n• Android TV\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 50s\n\n5 oct.\n03:35\n\t\nPiste 2\nArtiste QA — Album principal QA\nTranscode\n3m 00s\n• Finamp\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t3m 00s\n\n5 oct.\n01:38\n\t\nLivre principal QA\nDirectStream\n1h 23m 20s\n• Android TV\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t1h 23m 20s\n\n4 oct.\n08:37\n\t\nFilm principal QA\n4K\nTranscode\n1h 20m 00s\n• Finamp\n\t\nFinamp\n\t\n4K\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t1h 20m 00s\n\n4 oct.\n06:35\n\t\nÉpisode 2\nSérie principale QA — Saison 1\n1080p\nDirectStream\n30m 00s\n• Android TV\n\t\nAndroid TV\n\t\n1080p\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t30m 00s\n\n4 oct.\n05:34\n\t\nÉpisode 3\nSérie principale QA — Saison 1\n1080p\nTranscode\n30m 00s\n• Finamp\n\t\nFinamp\n\t\n1080p\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t30m 00s\n\n4 oct.\n03:37\n\t\nPiste 2\nArtiste QA — Album principal QA\nDirectStream\n3m 00s\n• Android TV\n\t\nAndroid TV\n\t\n—\n\t\n12 kbps\n\t\nDirectStream\n⏸ Pauses (2)\n\t3m 00s\n\n4 oct.\n02:36\n\t\nPiste 3\nArtiste QA — Album principal QA\nTranscode\n2m 00s\n• Finamp\n\t\nFinamp\n\t\n—\n\t\n12 kbps\n\t\nAudio Transcodé\n⏸ Pauses (2)\n\t2m 00s\n1\n2\nPage 1 / 2\n4",
+      "deepBody": null
+    },
+    {
+      "mode": "go",
+      "route": "/media/analysis",
+      "errors": [],
+      "body": "JellyTrack\nTableau de bord\nAjoutés récemment\nBibliothèque\nUtilisateurs\nSanté\nJournaux\nParamètres\nComparaison de serveurs\nCompléments Go\nLANGUAGE\n Français\nTHÈME\nSombre\nDéconnexion\nJellyTrack v2.1.1\nTous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nAnalyse Profonde\nTout\nQA principal\nQA secondaire\nContenu Total\n\nInventaire des bibliothèques\n\nMédias Totaux\n112\nNombre d'éléments multimédia indexés.\nGenres uniques\n3\nDurée moyenne\n1h 30m\nDurée moyenne des médias.\nQualité Vidéo Globale\n\nRépartition par résolution certifiée.\n\n4K UHD\n108\n1440p QHD\n0\n1080p FHD\n2\n720p HD\n0\nStandard / Autre\n0\nCollections\n\nInventaire des bibliothèques\n\nFilms QA\n108\nMusique QA\n2\nSéries QA\n2\nDiversité de la Bibliothèque (Top Genres)\n\nRépartition des médias par genre (catégories principales).\n\nBinge-Watching Tracker (Marathons de Séries)\n\nDétection automatique des séries dévorées d’une traite (sessions de 3 épisodes consécutifs ou plus).\n\n30 derniers jours\nAucun marathon détecté sur les 30 derniers jours (minimum 3 épisodes consécutifs).\nSuggestions d’Acquisitions & Tendances (Smart Insights)\n\nRecommandations basées sur les genres, réalisateurs et acteurs les plus consommés pour optimiser vos ajouts dans la bibliothèque.\n\nIA JellyTrack\nGENRE DOMINANT\nTrès Forte Demande\nEnrichir la collection Drama\n\nReprésente 97% du temps total de visionnage (77.4h). Vos spectateurs en redemandent !\n\nIndice d’intérêt\n99%\nGENRE TENDANCE\nTendance Forte\nFilms & Séries QA\n\nDeuxième genre le plus plébiscité avec 77.4h visionnées sur les 30 derniers jours.\n\nIndice d’intérêt\n85%\nARTISTE / RÉALISATEUR VEDETTE\nFavori Utilisateurs\nCompléter la filmographie / discographie de Artiste QA\n\nCumule 2.7h d'écoute/visionnage sur 54 lectures.\n\nIndice d’intérêt\n92%\nGENRES DOMINANTS EN TEMPS DE VISIONNAGE\nDrama\n77,4h (96,7%)\nQA\n77,4h (96,7%)\nRock\n2,7h (3,3%)\nAperçu des statistiques approfondies\n\nAnalyses avancées de votre collection multimédia.\n\nTop Réalisateurs\n1\nRéalisateur QA\n110 Top Réalisateurs\nTop Acteurs\n1\nActrice QA\n110 Top Acteurs\nTop Studios\n1\nStudio QA\n110 Top Studios",
+      "deepStatus": 200,
+      "deepBody": "{\"topActors\":[{\"name\":\"Actrice QA\",\"count\":110}],\"topDirectors\":[{\"name\":\"Réalisateur QA\",\"count\":110}],\"topStudios\":[{\"name\":\"Studio QA\",\"count\":110}]}\n"
+    },
+    {
+      "mode": "go",
+      "route": "/users/qa-primary-alice",
+      "errors": [],
+      "body": "eam\n⏸ 2\n🔊 1\nCC 1\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n10 oct.\n\n05:37\n\n\t\n▶\nÉpisode 3\n\nSérie principale QA — Saison 1\n\n1080p\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n30 min\nFinamp\n\tFinamp\t1080p\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n10 oct.\n\n05:37\n\n\t\n▶\nÉpisode 3\n\nSérie principale QA — Saison 1\n\n1080p\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n30 min\nFinamp\n\tFinamp\t1080p\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n10 oct.\n\n03:35\n\n\t\n♫\nPiste 2\n\nArtiste QA — Album principal QA\n\n—\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n3 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t3 min\n\n⌄\n10 oct.\n\n02:34\n\n\t\n♫\nPiste 3\n\nArtiste QA — Album principal QA\n\n—\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n2 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t2 min\n\n⌄\n9 oct.\n\n08:37\n\n\t\n▶\nFilm principal QA\n4K\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n1h 20m\nAndroid TV\n\tAndroid TV\t4K\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t1h 20m\n\n⌄\n9 oct.\n\n07:36\n\n\t\n▶\nÉpisode 1\n\nSérie principale QA — Saison 1\n\n1080p\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n30 min\nFinamp\n\tFinamp\t1080p\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n9 oct.\n\n05:34\n\n\t\n▶\nÉpisode 3\n\nSérie principale QA — Saison 1\n\n1080p\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n9 oct.\n\n04:38\n\n\t\n♫\nPiste 1\n\nArtiste QA — Album principal QA\n\n—\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n3 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t3 min\n\n⌄\n9 oct.\n\n02:36\n\n\t\n♫\nPiste 3\n\nArtiste QA — Album principal QA\n\n—\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n2 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t2 min\n\n⌄\n9 oct.\n\n01:35\n\n\t\n▶\nLivre principal QA\n—\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n1h 23m\nFinamp\n\tFinamp\t—\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t1h 23m\n\n⌄\n8 oct.\n\n07:38\n\n\t\n▶\nÉpisode 1\n\nSérie principale QA — Saison 1\n\n1080p\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n8 oct.\n\n06:37\n\n\t\n▶\nÉpisode 2\n\nSérie principale QA — Saison 1\n\n1080p\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n30 min\nFinamp\n\tFinamp\t1080p\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n8 oct.\n\n04:35\n\n\t\n♫\nPiste 1\n\nArtiste QA — Album principal QA\n\n—\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n3 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t3 min\n\n⌄\n8 oct.\n\n03:34\n\n\t\n♫\nPiste 2\n\nArtiste QA — Album principal QA\n\n—\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n3 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t3 min\n\n⌄\n8 oct.\n\n01:37\n\n\t\n▶\nLivre principal QA\n—\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n1h 23m\nAndroid TV\n\tAndroid TV\t—\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t1h 23m\n\n⌄\n7 oct.\n\n08:36\n\n\t\n▶\nFilm principal QA\n4K\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n1h 20m\nFinamp\n\tFinamp\t4K\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t1h 20m\n\n⌄\n7 oct.\n\n06:34\n\n\t\n▶\nÉpisode 2\n\nSérie principale QA — Saison 1\n\n1080p\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n7 oct.\n\n05:38\n\n\t\n▶\nÉpisode 3\n\nSérie principale QA — Saison 1\n\n1080p\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n30 min\nFinamp\n\tFinamp\t1080p\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n7 oct.\n\n03:36\n\n\t\n♫\nPiste 2\n\nArtiste QA — Album principal QA\n\n—\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n3 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t3 min\n\n⌄\n7 oct.\n\n02:35\n\n\t\n♫\nPiste 3\n\nArtiste QA — Album principal QA\n\n—\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n2 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t2 min\n\n⌄\n6 oct.\n\n08:38\n\n\t\n▶\nFilm principal QA\n4K\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n1h 20m\nAndroid TV\n\tAndroid TV\t4K\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t1h 20m\n\n⌄\n6 oct.\n\n07:37\n\n\t\n▶\nÉpisode 1\n\nSérie principale QA — Saison 1\n\n1080p\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n30 min\nFinamp\n\tFinamp\t1080p\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n6 oct.\n\n05:35\n\n\t\n▶\nÉpisode 3\n\nSérie principale QA — Saison 1\n\n1080p\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n6 oct.\n\n04:34\n\n\t\n♫\nPiste 1\n\nArtiste QA — Album principal QA\n\n—\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n3 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t3 min\n\n⌄\n6 oct.\n\n02:37\n\n\t\n♫\nPiste 3\n\nArtiste QA — Album principal QA\n\n—\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n2 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t2 min\n\n⌄\n6 oct.\n\n01:36\n\n\t\n▶\nLivre principal QA\n—\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n1h 23m\nFinamp\n\tFinamp\t—\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t1h 23m\n\n⌄\n5 oct.\n\n07:34\n\n\t\n▶\nÉpisode 1\n\nSérie principale QA — Saison 1\n\n1080p\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n5 oct.\n\n06:38\n\n\t\n▶\nÉpisode 2\n\nSérie principale QA — Saison 1\n\n1080p\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n30 min\nFinamp\n\tFinamp\t1080p\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n5 oct.\n\n04:36\n\n\t\n♫\nPiste 1\n\nArtiste QA — Album principal QA\n\n—\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n3 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t3 min\n\n⌄\n5 oct.\n\n03:35\n\n\t\n♫\nPiste 2\n\nArtiste QA — Album principal QA\n\n—\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n3 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t3 min\n\n⌄\n5 oct.\n\n01:38\n\n\t\n▶\nLivre principal QA\n—\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n1h 23m\nAndroid TV\n\tAndroid TV\t—\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t1h 23m\n\n⌄\n4 oct.\n\n08:37\n\n\t\n▶\nFilm principal QA\n4K\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n1h 20m\nFinamp\n\tFinamp\t4K\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t1h 20m\n\n⌄\n4 oct.\n\n06:35\n\n\t\n▶\nÉpisode 2\n\nSérie principale QA — Saison 1\n\n1080p\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n30 min\nAndroid TV\n\tAndroid TV\t1080p\t—\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n4 oct.\n\n05:34\n\n\t\n▶\nÉpisode 3\n\nSérie principale QA — Saison 1\n\n1080p\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n30 min\nFinamp\n\tFinamp\t1080p\t—\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t30 min\n\n⌄\n4 oct.\n\n03:37\n\n\t\n♫\nPiste 2\n\nArtiste QA — Album principal QA\n\n—\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n3 min\nAndroid TV\n\tAndroid TV\t—\t12 000 kbps\t\nDirectStream\n⏸ 2\n🔊 1\nCC 1\n\t3 min\n\n⌄\n4 oct.\n\n02:36\n\n\t\n♫\nPiste 3\n\nArtiste QA — Album principal QA\n\n—\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n2 min\nFinamp\n\tFinamp\t—\t12 000 kbps\t\nAudio Transcodé\n⏸ 2\n🔊 1\nCC 1\n\t2 min\n1\n2\n›\nPage 1 / 2",
+      "deepBody": null
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-11T08:47:38.404Z",
+  "date": "2026-10-11T14:13:26.400Z",
   "scope": "Isolated real Go server and synthetic QA SQLite; no fixture API substitutions, settings save, media mutation or deletion. Source comparison and Go runtime checks; direct main captures are handled by the visual agent.",
   "checks": [
     {
@@ -2524,7 +2524,23 @@
     },
     {
       "name": "Catalogue search navigates and renders",
-      "ok": false
+      "ok": true
+    },
+    {
+      "name": "Historical server filter pills replace checkbox fieldset",
+      "ok": true
+    },
+    {
+      "name": "Server pill from Tout selects just one server",
+      "ok": true
+    },
+    {
+      "name": "Server pill multi-selection preserved",
+      "ok": true
+    },
+    {
+      "name": "Server Tout restores complete scope",
+      "ok": true
     },
     {
       "name": "/recent renders content without error",
@@ -4540,50 +4556,50 @@
         "fallbacks": [
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 64,
+            "height": 36,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           }
         ],
@@ -4596,50 +4612,50 @@
       "details": [
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 64,
+          "height": 36,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         }
       ]
@@ -4654,50 +4670,50 @@
         "fallbacks": [
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 64,
+            "height": 36,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           }
         ],
@@ -4710,50 +4726,50 @@
       "details": [
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 64,
+          "height": 36,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         }
       ]
@@ -4768,50 +4784,50 @@
         "fallbacks": [
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 64,
+            "height": 36,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           }
         ],
@@ -4824,50 +4840,50 @@
       "details": [
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 64,
+          "height": 36,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         }
       ]
@@ -4882,50 +4898,50 @@
         "fallbacks": [
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 64,
+            "height": 36,
             "text": ""
           },
           {
             "svg": true,
-            "width": 40,
-            "height": 60,
+            "width": 48,
+            "height": 64,
             "text": ""
           }
         ],
@@ -4938,53 +4954,85 @@
       "details": [
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 64,
+          "height": 36,
           "text": ""
         },
         {
           "svg": true,
-          "width": 40,
-          "height": 60,
+          "width": 48,
+          "height": 64,
           "text": ""
         }
       ]
+    },
+    {
+      "name": "Collection main geometry Card170 gap24 value40 and aligned247/312",
+      "ok": true,
+      "details": {
+        "cardHeight": 170,
+        "cardY": 247,
+        "cardX": 312,
+        "gap": "24px",
+        "valueLine": "40px",
+        "titleWeight": "700",
+        "cardBackground": "rgb(240, 244, 249)",
+        "collectionGradient": "linear-gradient(color(srgb 0.231373 0.509804 0.964706 / 0.1), rgba(0, 0, 0, 0) 128px), none"
+      }
+    },
+    {
+      "name": "Collection real computed surfaces and type gradient",
+      "ok": true,
+      "details": {
+        "cardHeight": 170,
+        "cardY": 247,
+        "cardX": 312,
+        "gap": "24px",
+        "valueLine": "40px",
+        "titleWeight": "700",
+        "cardBackground": "rgb(240, 244, 249)",
+        "collectionGradient": "linear-gradient(color(srgb 0.231373 0.509804 0.964706 / 0.1), rgba(0, 0, 0, 0) 128px), none"
+      }
+    },
+    {
+      "name": "Collection historical Library/Info KPI and inline library badges",
+      "ok": true
     },
     {
       "name": "Collection cards equal normalized API groups",
@@ -5147,6 +5195,78 @@
       "ok": true
     },
     {
+      "name": "Analysis real API",
+      "ok": true
+    },
+    {
+      "name": "Analysis historical genre horizontal bars, 20px width and 300px canvas",
+      "ok": true
+    },
+    {
+      "name": "Analysis genre labels and counts match real catalogue API",
+      "ok": true
+    },
+    {
+      "name": "Analysis library card restores historical subtitle",
+      "ok": true
+    },
+    {
+      "name": "Catalogue deep API is available",
+      "ok": true
+    },
+    {
+      "name": "Deep catalogue topDirectors measured counts match UI",
+      "ok": true
+    },
+    {
+      "name": "Deep catalogue topActors measured counts match UI",
+      "ok": true
+    },
+    {
+      "name": "Deep catalogue topStudios measured counts match UI",
+      "ok": true
+    },
+    {
+      "name": "Deep analysis three historical titled cards and icons",
+      "ok": true
+    },
+    {
+      "name": "Deep analysis ranks and rows equal real API",
+      "ok": true
+    },
+    {
+      "name": "Deep analysis person button opens real searchable modal",
+      "ok": true
+    },
+    {
+      "name": "Deep analysis modal Escape closes and returns focus",
+      "ok": true
+    },
+    {
+      "name": "Binge summary reflects real leader or explicit empty state",
+      "ok": true
+    },
+    {
+      "name": "Binge ranked rows retain measured series",
+      "ok": true
+    },
+    {
+      "name": "Smart Insights single historical card and measured suggestions",
+      "ok": true
+    },
+    {
+      "name": "Smart Insights dominant genre proportional bars",
+      "ok": true
+    },
+    {
+      "name": "Historical horizontal genre bar click drills into real catalogue",
+      "ok": true
+    },
+    {
+      "name": "Binge empty real server scope does not fabricate zero KPIs",
+      "ok": true
+    },
+    {
       "name": "/media/qa-primary-movie renders content without error",
       "ok": true
     },
@@ -5190,8 +5310,8 @@
         "fallbacks": [
           {
             "svg": true,
-            "width": 180,
-            "height": 270,
+            "width": 192,
+            "height": 288,
             "text": ""
           }
         ],
@@ -5204,8 +5324,8 @@
       "details": [
         {
           "svg": true,
-          "width": 180,
-          "height": 270,
+          "width": 192,
+          "height": 288,
           "text": ""
         }
       ]
@@ -5250,8 +5370,8 @@
         "fallbacks": [
           {
             "svg": true,
-            "width": 180,
-            "height": 270,
+            "width": 192,
+            "height": 288,
             "text": ""
           }
         ],
@@ -5264,264 +5384,51 @@
       "details": [
         {
           "svg": true,
-          "width": 180,
-          "height": 270,
+          "width": 192,
+          "height": 288,
           "text": ""
         }
       ]
     },
     {
-      "name": "/media/qa-primary-episode1 renders content without error",
+      "name": "/media/qa-primary-movie historical timeline50 buckets8 pills5 extent ticks",
       "ok": true
     },
     {
-      "name": "/media/qa-primary-episode1 desktop dark no overflow",
-      "ok": true,
+      "name": "/media/qa-primary-movie historical140 chart260 scroll30 lanes4px marks with real surface",
+      "ok": false,
       "details": {
-        "width": 1440,
-        "scrollWidth": 1440,
-        "columns": null,
-        "fallbacks": [
-          {
-            "svg": true,
-            "width": 320,
-            "height": 180,
-            "text": ""
-          }
+        "height": 140,
+        "maxHeight": "260px",
+        "rows": 1,
+        "marks": [
+          "4px",
+          "4px",
+          "4px"
         ],
-        "title": "Épisode 1"
+        "background": "none"
       }
     },
     {
-      "name": "/media/qa-primary-episode1 desktop dark fallback SVG has nonzero dimensions",
-      "ok": true,
-      "details": [
-        {
-          "svg": true,
-          "width": 320,
-          "height": 180,
-          "text": ""
-        }
-      ]
-    },
-    {
-      "name": "/media/qa-primary-episode1 mobile dark no overflow",
-      "ok": true,
-      "details": {
-        "width": 390,
-        "scrollWidth": 390,
-        "columns": null,
-        "fallbacks": [
-          {
-            "svg": true,
-            "width": 316,
-            "height": 177.75,
-            "text": ""
-          }
-        ],
-        "title": "Épisode 1"
-      }
-    },
-    {
-      "name": "/media/qa-primary-episode1 mobile dark fallback SVG has nonzero dimensions",
-      "ok": true,
-      "details": [
-        {
-          "svg": true,
-          "width": 316,
-          "height": 177.75,
-          "text": ""
-        }
-      ]
-    },
-    {
-      "name": "/media/qa-primary-episode1 desktop light no overflow",
-      "ok": true,
-      "details": {
-        "width": 1440,
-        "scrollWidth": 1440,
-        "columns": null,
-        "fallbacks": [
-          {
-            "svg": true,
-            "width": 320,
-            "height": 180,
-            "text": ""
-          }
-        ],
-        "title": "Épisode 1"
-      }
-    },
-    {
-      "name": "/media/qa-primary-episode1 desktop light fallback SVG has nonzero dimensions",
-      "ok": true,
-      "details": [
-        {
-          "svg": true,
-          "width": 320,
-          "height": 180,
-          "text": ""
-        }
-      ]
-    },
-    {
-      "name": "/media/qa-primary-episode1 mobile light no overflow",
-      "ok": true,
-      "details": {
-        "width": 390,
-        "scrollWidth": 390,
-        "columns": null,
-        "fallbacks": [
-          {
-            "svg": true,
-            "width": 316,
-            "height": 177.75,
-            "text": ""
-          }
-        ],
-        "title": "Épisode 1"
-      }
-    },
-    {
-      "name": "/media/qa-primary-episode1 mobile light fallback SVG has nonzero dimensions",
-      "ok": true,
-      "details": [
-        {
-          "svg": true,
-          "width": 316,
-          "height": 177.75,
-          "text": ""
-        }
-      ]
-    },
-    {
-      "name": "/media/qa-primary-album renders content without error",
+      "name": "/media/qa-primary-movie buckets match actual recorded positions and counts",
       "ok": true
     },
     {
-      "name": "/media/qa-primary-album desktop dark no overflow",
-      "ok": true,
-      "details": {
-        "width": 1440,
-        "scrollWidth": 1440,
-        "columns": null,
-        "fallbacks": [
-          {
-            "svg": true,
-            "width": 192,
-            "height": 192,
-            "text": ""
-          }
-        ],
-        "title": "Album principal QA"
-      }
+      "name": "/media/qa-primary-movie historical type toggle removes bucket segments and marks",
+      "ok": true
     },
     {
-      "name": "/media/qa-primary-album desktop dark fallback SVG has nonzero dimensions",
-      "ok": true,
-      "details": [
-        {
-          "svg": true,
-          "width": 192,
-          "height": 192,
-          "text": ""
-        }
-      ]
+      "name": "/media/qa-primary-movie historical type toggle restores counts",
+      "ok": true
     },
     {
-      "name": "/media/qa-primary-album mobile dark no overflow",
-      "ok": true,
-      "details": {
-        "width": 390,
-        "scrollWidth": 390,
-        "columns": null,
-        "fallbacks": [
-          {
-            "svg": true,
-            "width": 180,
-            "height": 180,
-            "text": ""
-          }
-        ],
-        "title": "Album principal QA"
-      }
+      "name": "/media/qa-primary-movie historical bucket opens recorded event details",
+      "ok": true
     },
     {
-      "name": "/media/qa-primary-album mobile dark fallback SVG has nonzero dimensions",
-      "ok": true,
-      "details": [
-        {
-          "svg": true,
-          "width": 180,
-          "height": 180,
-          "text": ""
-        }
-      ]
-    },
-    {
-      "name": "/media/qa-primary-album desktop light no overflow",
-      "ok": true,
-      "details": {
-        "width": 1440,
-        "scrollWidth": 1440,
-        "columns": null,
-        "fallbacks": [
-          {
-            "svg": true,
-            "width": 192,
-            "height": 192,
-            "text": ""
-          }
-        ],
-        "title": "Album principal QA"
-      }
-    },
-    {
-      "name": "/media/qa-primary-album desktop light fallback SVG has nonzero dimensions",
-      "ok": true,
-      "details": [
-        {
-          "svg": true,
-          "width": 192,
-          "height": 192,
-          "text": ""
-        }
-      ]
-    },
-    {
-      "name": "/media/qa-primary-album mobile light no overflow",
-      "ok": true,
-      "details": {
-        "width": 390,
-        "scrollWidth": 390,
-        "columns": null,
-        "fallbacks": [
-          {
-            "svg": true,
-            "width": 180,
-            "height": 180,
-            "text": ""
-          }
-        ],
-        "title": "Album principal QA"
-      }
-    },
-    {
-      "name": "/media/qa-primary-album mobile light fallback SVG has nonzero dimensions",
-      "ok": true,
-      "details": [
-        {
-          "svg": true,
-          "width": 180,
-          "height": 180,
-          "text": ""
-        }
-      ]
-    },
-    {
-      "name": "No JavaScript runtime exceptions",
-      "ok": true,
-      "details": []
+      "name": "Media runtime suite completes",
+      "ok": false,
+      "details": "locator.hover: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#app-main').locator('.mr-hist-mark').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mr-hist-mark\" data-type=\"audio_change\" title=\"Audio Changement Audio↵eng -> fre↵@ 2:00\" data-hist-events=\"[\"qa-primary-play0-audio_change\"]\" aria-label=\"Audio Changement Audio↵eng -> fre↵@ 2:00\"></button>\u001b[22m\n\u001b[2m  - attempting hover action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and stable\u001b[22m\n\u001b[2m      - element is visible and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <button type=\"button\" data-type=\"seek\" class=\"mr-hist-mark\" data-hist-events=\"[\"qa-primary-play0-seek\"]\" title=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\" aria-label=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\"></button> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying hover action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    - waiting for element to be visible and stable\u001b[22m\n\u001b[2m    - element is visible and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <button type=\"button\" data-type=\"seek\" class=\"mr-hist-mark\" data-hist-events=\"[\"qa-primary-play0-seek\"]\" title=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\" aria-label=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\"></button> intercepts pointer events\u001b[22m\n\u001b[2m  2 × retrying hover action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m      - waiting for element to be visible and stable\u001b[22m\n\u001b[2m      - element is visible and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <a href=\"/\" data-link=\"\" class=\"mobile-brand-link\">…</a> from <header class=\"topbar\">…</header> subtree intercepts pointer events\u001b[22m\n\u001b[2m  14 × retrying hover action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible and stable\u001b[22m\n\u001b[2m       - element is visible and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <button type=\"button\" data-type=\"seek\" class=\"mr-hist-mark\" data-hist-events=\"[\"qa-primary-play0-seek\"]\" title=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\" aria-label=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\"></button> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying hover action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible and stable\u001b[22m\n\u001b[2m       - element is visible and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <button type=\"button\" data-type=\"seek\" class=\"mr-hist-mark\" data-hist-events=\"[\"qa-primary-play0-seek\"]\" title=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\" aria-label=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\"></button> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying hover action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible and stable\u001b[22m\n\u001b[2m       - element is visible and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <a href=\"/\" data-link=\"\" class=\"mobile-brand-link\">…</a> from <header class=\"topbar\">…</header> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying hover action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible and stable\u001b[22m\n\u001b[2m       - element is visible and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <a href=\"/\" data-link=\"\" class=\"mobile-brand-link\">…</a> from <header class=\"topbar\">…</header> subtree intercepts pointer events\u001b[22m\n\u001b[2m  - retrying hover action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n"
     }
   ],
   "pages": [
@@ -7813,50 +7720,50 @@
             "fallbacks": [
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 64,
+                "height": 36,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               }
             ],
@@ -7874,50 +7781,50 @@
             "fallbacks": [
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 64,
+                "height": 36,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               }
             ],
@@ -7935,50 +7842,50 @@
             "fallbacks": [
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 64,
+                "height": 36,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               }
             ],
@@ -7996,50 +7903,50 @@
             "fallbacks": [
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 64,
+                "height": 36,
                 "text": ""
               },
               {
                 "svg": true,
-                "width": 40,
-                "height": 60,
+                "width": 48,
+                "height": 64,
                 "text": ""
               }
             ],
@@ -8153,250 +8060,11 @@
           }
         }
       ]
-    },
-    {
-      "route": "/media/qa-primary-movie",
-      "variants": [
-        {
-          "variant": "desktop",
-          "theme": "dark",
-          "file": "media-restored-media-qa-primary-movie-desktop-dark.png",
-          "metrics": {
-            "width": 1440,
-            "scrollWidth": 1440,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 192,
-                "height": 288,
-                "text": ""
-              }
-            ],
-            "title": "Film principal QA"
-          }
-        },
-        {
-          "variant": "mobile",
-          "theme": "dark",
-          "file": "media-restored-media-qa-primary-movie-mobile-dark.png",
-          "metrics": {
-            "width": 390,
-            "scrollWidth": 390,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 180,
-                "height": 270,
-                "text": ""
-              }
-            ],
-            "title": "Film principal QA"
-          }
-        },
-        {
-          "variant": "desktop",
-          "theme": "light",
-          "file": "media-restored-media-qa-primary-movie-desktop-light.png",
-          "metrics": {
-            "width": 1440,
-            "scrollWidth": 1440,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 192,
-                "height": 288,
-                "text": ""
-              }
-            ],
-            "title": "Film principal QA"
-          }
-        },
-        {
-          "variant": "mobile",
-          "theme": "light",
-          "file": "media-restored-media-qa-primary-movie-mobile-light.png",
-          "metrics": {
-            "width": 390,
-            "scrollWidth": 390,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 180,
-                "height": 270,
-                "text": ""
-              }
-            ],
-            "title": "Film principal QA"
-          }
-        }
-      ]
-    },
-    {
-      "route": "/media/qa-primary-episode1",
-      "variants": [
-        {
-          "variant": "desktop",
-          "theme": "dark",
-          "file": "media-restored-media-qa-primary-episode1-desktop-dark.png",
-          "metrics": {
-            "width": 1440,
-            "scrollWidth": 1440,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 320,
-                "height": 180,
-                "text": ""
-              }
-            ],
-            "title": "Épisode 1"
-          }
-        },
-        {
-          "variant": "mobile",
-          "theme": "dark",
-          "file": "media-restored-media-qa-primary-episode1-mobile-dark.png",
-          "metrics": {
-            "width": 390,
-            "scrollWidth": 390,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 316,
-                "height": 177.75,
-                "text": ""
-              }
-            ],
-            "title": "Épisode 1"
-          }
-        },
-        {
-          "variant": "desktop",
-          "theme": "light",
-          "file": "media-restored-media-qa-primary-episode1-desktop-light.png",
-          "metrics": {
-            "width": 1440,
-            "scrollWidth": 1440,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 320,
-                "height": 180,
-                "text": ""
-              }
-            ],
-            "title": "Épisode 1"
-          }
-        },
-        {
-          "variant": "mobile",
-          "theme": "light",
-          "file": "media-restored-media-qa-primary-episode1-mobile-light.png",
-          "metrics": {
-            "width": 390,
-            "scrollWidth": 390,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 316,
-                "height": 177.75,
-                "text": ""
-              }
-            ],
-            "title": "Épisode 1"
-          }
-        }
-      ]
-    },
-    {
-      "route": "/media/qa-primary-album",
-      "variants": [
-        {
-          "variant": "desktop",
-          "theme": "dark",
-          "file": "media-restored-media-qa-primary-album-desktop-dark.png",
-          "metrics": {
-            "width": 1440,
-            "scrollWidth": 1440,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 192,
-                "height": 192,
-                "text": ""
-              }
-            ],
-            "title": "Album principal QA"
-          }
-        },
-        {
-          "variant": "mobile",
-          "theme": "dark",
-          "file": "media-restored-media-qa-primary-album-mobile-dark.png",
-          "metrics": {
-            "width": 390,
-            "scrollWidth": 390,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 180,
-                "height": 180,
-                "text": ""
-              }
-            ],
-            "title": "Album principal QA"
-          }
-        },
-        {
-          "variant": "desktop",
-          "theme": "light",
-          "file": "media-restored-media-qa-primary-album-desktop-light.png",
-          "metrics": {
-            "width": 1440,
-            "scrollWidth": 1440,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 192,
-                "height": 192,
-                "text": ""
-              }
-            ],
-            "title": "Album principal QA"
-          }
-        },
-        {
-          "variant": "mobile",
-          "theme": "light",
-          "file": "media-restored-media-qa-primary-album-mobile-light.png",
-          "metrics": {
-            "width": 390,
-            "scrollWidth": 390,
-            "columns": null,
-            "fallbacks": [
-              {
-                "svg": true,
-                "width": 180,
-                "height": 180,
-                "text": ""
-              }
-            ],
-            "title": "Album principal QA"
-          }
-        }
-      ]
     }
   ],
-  "errors": []
+  "errors": [
+    {
+      "fatal": "locator.hover: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#app-main').locator('.mr-hist-mark').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mr-hist-mark\" data-type=\"audio_change\" title=\"Audio Changement Audio↵eng -> fre↵@ 2:00\" data-hist-events=\"[\"qa-primary-play0-audio_change\"]\" aria-label=\"Audio Changement Audio↵eng -> fre↵@ 2:00\"></button>\u001b[22m\n\u001b[2m  - attempting hover action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and stable\u001b[22m\n\u001b[2m      - element is visible and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <button type=\"button\" data-type=\"seek\" class=\"mr-hist-mark\" data-hist-events=\"[\"qa-primary-play0-seek\"]\" title=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\" aria-label=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\"></button> intercepts pointer events\u001b[22m\n\u001b[2m    - retrying hover action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    - waiting for element to be visible and stable\u001b[22m\n\u001b[2m    - element is visible and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <button type=\"button\" data-type=\"seek\" class=\"mr-hist-mark\" data-hist-events=\"[\"qa-primary-play0-seek\"]\" title=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\" aria-label=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\"></button> intercepts pointer events\u001b[22m\n\u001b[2m  2 × retrying hover action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m      - waiting for element to be visible and stable\u001b[22m\n\u001b[2m      - element is visible and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <a href=\"/\" data-link=\"\" class=\"mobile-brand-link\">…</a> from <header class=\"topbar\">…</header> subtree intercepts pointer events\u001b[22m\n\u001b[2m  14 × retrying hover action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible and stable\u001b[22m\n\u001b[2m       - element is visible and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <button type=\"button\" data-type=\"seek\" class=\"mr-hist-mark\" data-hist-events=\"[\"qa-primary-play0-seek\"]\" title=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\" aria-label=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\"></button> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying hover action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible and stable\u001b[22m\n\u001b[2m       - element is visible and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <button type=\"button\" data-type=\"seek\" class=\"mr-hist-mark\" data-hist-events=\"[\"qa-primary-play0-seek\"]\" title=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\" aria-label=\"Skip Passage sauté↵0:30 -> 1:30↵@ 1:30\"></button> intercepts pointer events\u001b[22m\n\u001b[2m     - retrying hover action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible and stable\u001b[22m\n\u001b[2m       - element is visible and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <a href=\"/\" data-link=\"\" class=\"mobile-brand-link\">…</a> from <header class=\"topbar\">…</header> subtree intercepts pointer events\u001b[22m\n\u001b[2m     - retrying hover action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\u001b[2m       - waiting for element to be visible and stable\u001b[22m\n\u001b[2m       - element is visible and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - <a href=\"/\" data-link=\"\" class=\"mobile-brand-link\">…</a> from <header class=\"topbar\">…</header> subtree intercepts pointer events\u001b[22m\n\u001b[2m  - retrying hover action\u001b[22m\n\u001b[2m    - waiting 500ms\u001b[22m\n"
+    }
+  ]
 }

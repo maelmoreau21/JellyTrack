@@ -1,0 +1,5444 @@
+{
+  "date": "2026-10-11T14:01:09.806Z",
+  "phase": "final-media",
+  "head": "9d83cb936bfe8aafc8d13a5eb57a9f5a723bb771",
+  "historical": [
+    "/about",
+    "/admin/cleanup",
+    "/admin/health",
+    "/admin/log-health",
+    "/admin/plugin-health",
+    "/admin/server-compare",
+    "/login",
+    "/logs",
+    "/media/[id]",
+    "/media/all",
+    "/media/analysis",
+    "/media/artist/[name]",
+    "/media/collections",
+    "/media",
+    "/media/popular",
+    "/newsletter",
+    "/",
+    "/recent",
+    "/settings/analytics",
+    "/settings/dataBackups",
+    "/settings/jellyfin",
+    "/settings/media",
+    "/settings/network",
+    "/settings/notifications",
+    "/settings/overview",
+    "/settings",
+    "/settings/plugin",
+    "/settings/plugin/security",
+    "/settings/scheduler",
+    "/settings/scheduler/schedules",
+    "/settings/scheduler/tasks",
+    "/settings/sso",
+    "/setup",
+    "/users/[id]",
+    "/users",
+    "/wrapped/[userId]"
+  ],
+  "additions": [
+    "/wrapped",
+    "/dashboard",
+    "/media/qa-primary-series",
+    "/media/qa-primary-episode1",
+    "/media/qa-primary-album",
+    "/media/qa-primary-book"
+  ],
+  "limits": [
+    "DOM accessible-name heuristics; no WCAG certification or screen reader.",
+    "Anonymous authentication redirects are not anonymous rendering of protected pages.",
+    "Responsive metrics are Go-only; historical visual comparison is another independent task.",
+    "Fixture has admin and standard user; no additional admin-source role fabricated."
+  ],
+  "cases": [
+    {
+      "role": "admin",
+      "canonical": "/media/[id]",
+      "route": "/media/qa-primary-movie",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (2)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 52,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (2)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 52,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 404,
+          "mainClient": 390,
+          "mainOverflow": true,
+          "overflow": [
+            {
+              "tag": "CANVAS",
+              "id": "mr-completion",
+              "cls": "",
+              "text": "",
+              "left": 36.1875,
+              "right": 403.78125
+            },
+            {
+              "tag": "CANVAS",
+              "id": "mr-counters",
+              "cls": "",
+              "text": "",
+              "left": 36.1875,
+              "right": 403.78125
+            }
+          ],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (2)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 52,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)",
+          "capture": "final-media--media--id--390-dark.png"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (2)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 52,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (2)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 52,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (2)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 52,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (2)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 52,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (2)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 52,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/media/qa-primary-movie",
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nBibliothèque\nFilm principal QA\nFilm principal QA\nMovie\n4K\nDRAMA\nQA\n\nQA principal · 1h 30m · 100 MiB\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nTemps Total\n22.7h\nCumulé\nVues\n17\nSessions uniques\nDurée Moyenne\n80 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n34\nPassages sautés\n17\nPassages revus\n0\nChangements de vitesse\n17\nModif. Audio\n17\nModif. Sous-titres\n17\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 1 sessions\n1\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 1 sessions\n1\nPériodes de langue\neng (aac) · 0–4800 s · 16 sessions\n16\neng (aac) · 0–120 s · 1 sessions\n1\nfre · 120–4800 s · 1 sessions\n1\nSpectateurs (2)\n\nUtilisateurs ayant visionné ce média.\n\nAlice QA\n11 sessions\n14.7h\nBob QA\n6 sessions\n8.0h\nLangues Audio\neng (aac)\n17\nSous-titres\nAucun\n17\nDistribution de la Complétion\n\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\n\nChronologie Profonde\nUtilisateur\nTous les Utilisateurs\nAlice QA\nBob QA\nSession\nToutes les sessions\nBob QA · qa-primary-p\nAlice QA · 10 oct. 2026, 10:35\nAlice QA · 9 oct. 2026, 10:37\nBob QA · 8 oct. 2026"
+    },
+    {
+      "role": "admin",
+      "canonical": "/media/all",
+      "route": "/media/all",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 66,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 66,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 66,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 66,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 66,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 66,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 66,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 66,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/media/all",
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTous les Médias\nTout\nQA principal\nQA secondaire\nTout\nFilms\nSéries\nMusique\nAutres contenus\n3495 KBPS\nAlbum principal QA\n51 vue(s)2.5h\n1080P\nSérie principale QA\n51 vue(s)25.5h\n4K UHD\nFilm principal QA\n17 vue(s)22.7h\n1080P\nSérie principale QA\n6 vue(s)3h\n3495 KBPS\nAlbum principal QA\n3 vue(s)0.1h\n4K UHD\nFilm principal QA\n2 vue(s)2.7h\n4K UHD\nFilm QA 00\n0 vue(s)\n4K UHD\nFilm QA 00\n0 vue(s)\n4K UHD\nFilm QA 01\n0 vue(s)\n4K UHD\nFilm QA 01\n0 vue(s)\n4K UHD\nFilm QA 02\n0 vue(s)\n4K UHD\nFilm QA 02\n0 vue(s)\n4K UHD\nFilm QA 03\n0 vue(s)\n4K UHD\nFilm QA 03\n0 vue(s)\n4K UHD\nFilm QA 04\n0 vue(s)\n4K UHD\nFilm QA 04\n0 vue(s)\n4K UHD\nFilm QA 05\n0 vue(s)\n4K UHD\nFilm QA 05\n0 vue(s)\n4K UHD\nFilm QA 06\n0 vue(s)\n4K UHD\nFilm QA 06\n0 vue(s)\n4K UHD\nFilm QA 07\n0 vue(s)\n4K UHD\nFilm QA 07\n0 vue(s)\n4K UHD\nFilm QA 08\n0 vue(s)\n4K UHD\nFilm QA 08\n0 vue(s)\n4K UHD\nFilm QA 09\n0 vue(s)\n4K UHD\nFilm QA 09\n0 vue(s)\n4K UHD\nFilm QA 10\n0 vue(s)\n4K UHD\nFilm QA 10\n0 vue(s)\n4K UHD\nFilm QA 11\n0 vue(s)\n4K UHD\nFilm QA 11\n0 vue(s)\n4K UHD\nFilm QA 12\n0 vue(s)\n4K UHD\nFilm QA 12\n0 vue(s)\n4K UHD\nFilm QA 13\n0 vue(s)\n4K UHD\nFilm QA 13\n0 vue(s)\n4K UHD\nFilm QA 14\n0 vue(s)\n4K UHD\nFilm QA 14\n0 vue(s)\n4K UHD\nFilm QA 15\n0 vue(s)\n4K UHD\nFilm QA 15\n0 vue(s)\n4K UHD\nFilm QA 16\n0 vue(s)\n4K UHD\nFilm QA 16\n0 vue(s)\n4K UHD\nFilm QA 17\n0 vue(s)\n4K UHD\nFilm QA 17\n0 vue(s)\n4K UHD\nFilm QA 18\n0 vue(s)\n4K UHD\nFilm QA"
+    },
+    {
+      "role": "admin",
+      "canonical": "/media/analysis",
+      "route": "/media/analysis",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 15,
+          "visibleHeadings": [
+            "Analyse Profonde",
+            "Contenu Total",
+            "Qualité Vidéo Globale",
+            "Collections",
+            "Diversité de la Bibliothèque (Top Genres)",
+            "Binge-Watching Tracker (Marathons de Séries)",
+            "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+            "Enrichir la collection Drama",
+            "Films & Séries QA",
+            "Compléter la filmographie / discographie de Artiste QA",
+            "Genres dominants en temps de visionnage",
+            "Aperçu des statistiques approfondies",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 24,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 526,
+          "mainClient": 512,
+          "mainOverflow": true,
+          "overflow": [
+            {
+              "tag": "SPAN",
+              "id": "",
+              "cls": "badge",
+              "text": "Favori Utilisateurs",
+              "left": 702.984375,
+              "right": 782.140625
+            }
+          ],
+          "headingCount": 15,
+          "visibleHeadings": [
+            "Analyse Profonde",
+            "Contenu Total",
+            "Qualité Vidéo Globale",
+            "Collections",
+            "Diversité de la Bibliothèque (Top Genres)",
+            "Binge-Watching Tracker (Marathons de Séries)",
+            "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+            "Enrichir la collection Drama",
+            "Films & Séries QA",
+            "Compléter la filmographie / discographie de Artiste QA",
+            "Genres dominants en temps de visionnage",
+            "Aperçu des statistiques approfondies",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 24,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)",
+          "capture": "final-media--media-analysis-768-dark.png"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 15,
+          "visibleHeadings": [
+            "Analyse Profonde",
+            "Contenu Total",
+            "Qualité Vidéo Globale",
+            "Collections",
+            "Diversité de la Bibliothèque (Top Genres)",
+            "Binge-Watching Tracker (Marathons de Séries)",
+            "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+            "Enrichir la collection Drama",
+            "Films & Séries QA",
+            "Compléter la filmographie / discographie de Artiste QA",
+            "Genres dominants en temps de visionnage",
+            "Aperçu des statistiques approfondies",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 24,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 15,
+          "visibleHeadings": [
+            "Analyse Profonde",
+            "Contenu Total",
+            "Qualité Vidéo Globale",
+            "Collections",
+            "Diversité de la Bibliothèque (Top Genres)",
+            "Binge-Watching Tracker (Marathons de Séries)",
+            "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+            "Enrichir la collection Drama",
+            "Films & Séries QA",
+            "Compléter la filmographie / discographie de Artiste QA",
+            "Genres dominants en temps de visionnage",
+            "Aperçu des statistiques approfondies",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 24,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 15,
+          "visibleHeadings": [
+            "Analyse Profonde",
+            "Contenu Total",
+            "Qualité Vidéo Globale",
+            "Collections",
+            "Diversité de la Bibliothèque (Top Genres)",
+            "Binge-Watching Tracker (Marathons de Séries)",
+            "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+            "Enrichir la collection Drama",
+            "Films & Séries QA",
+            "Compléter la filmographie / discographie de Artiste QA",
+            "Genres dominants en temps de visionnage",
+            "Aperçu des statistiques approfondies",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 24,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 526,
+          "mainClient": 512,
+          "mainOverflow": true,
+          "overflow": [
+            {
+              "tag": "SPAN",
+              "id": "",
+              "cls": "badge",
+              "text": "Favori Utilisateurs",
+              "left": 702.984375,
+              "right": 782.140625
+            }
+          ],
+          "headingCount": 15,
+          "visibleHeadings": [
+            "Analyse Profonde",
+            "Contenu Total",
+            "Qualité Vidéo Globale",
+            "Collections",
+            "Diversité de la Bibliothèque (Top Genres)",
+            "Binge-Watching Tracker (Marathons de Séries)",
+            "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+            "Enrichir la collection Drama",
+            "Films & Séries QA",
+            "Compléter la filmographie / discographie de Artiste QA",
+            "Genres dominants en temps de visionnage",
+            "Aperçu des statistiques approfondies",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 24,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)",
+          "capture": "final-media--media-analysis-768-light.png"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 15,
+          "visibleHeadings": [
+            "Analyse Profonde",
+            "Contenu Total",
+            "Qualité Vidéo Globale",
+            "Collections",
+            "Diversité de la Bibliothèque (Top Genres)",
+            "Binge-Watching Tracker (Marathons de Séries)",
+            "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+            "Enrichir la collection Drama",
+            "Films & Séries QA",
+            "Compléter la filmographie / discographie de Artiste QA",
+            "Genres dominants en temps de visionnage",
+            "Aperçu des statistiques approfondies",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 24,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 15,
+          "visibleHeadings": [
+            "Analyse Profonde",
+            "Contenu Total",
+            "Qualité Vidéo Globale",
+            "Collections",
+            "Diversité de la Bibliothèque (Top Genres)",
+            "Binge-Watching Tracker (Marathons de Séries)",
+            "Suggestions d’Acquisitions & Tendances (Smart Insights)",
+            "Enrichir la collection Drama",
+            "Films & Séries QA",
+            "Compléter la filmographie / discographie de Artiste QA",
+            "Genres dominants en temps de visionnage",
+            "Aperçu des statistiques approfondies",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 24,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/media/analysis",
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nAnalyse Profonde\nTout\nQA principal\nQA secondaire\nContenu Total\n\nInventaire des bibliothèques\n\nMédias Totaux\n112\nNombre d'éléments multimédia indexés.\nGenres uniques\n3\nDurée moyenne\n1h 30m\nDurée moyenne des médias.\nQualité Vidéo Globale\n\nRépartition par résolution certifiée.\n\n4K UHD\n108\n1440p QHD\n0\n1080p FHD\n2\n720p HD\n0\nStandard / Autre\n0\nCollections\n\nInventaire des bibliothèques\n\nFilms QA\n108\nMusique QA\n2\nSéries QA\n2\nDiversité de la Bibliothèque (Top Genres)\n\nRépartition des médias par genre (catégories principales).\n\nBinge-Watching Tracker (Marathons de Séries)\n\nDétection automatique des séries dévorées d’une traite (sessions de 3 épisodes consécutifs ou plus).\n\n30 derniers jours\nAucun marathon détecté sur les 30 derniers jours (minimum 3 épisodes consécutifs).\nSuggestions d’Acquisitions & Tendances (Smart Insights)\n\nRecommandations basées sur les genres, réalisateurs et acteurs les plus consommés pour optimiser vos ajouts dans la bibliothèque.\n\nIA JellyTrack\nGENRE DOMINANT\nTrès Forte Demande\nEnrichir la collection Drama\n\nReprésente 97% du temps total de visionnage (77.4h). Vos spectateurs en redemandent !\n\nIndice d’intérêt\n99%\nGENRE TENDANCE\nTendance Forte\nFilms & Séries QA\n\nDeuxième genre le plus plébiscité avec 77.4h visionnées sur les 30 derniers jours.\n\nIndice d’intérêt\n85%\nARTISTE / RÉALISATEUR VEDETTE\nFavori Utilis"
+    },
+    {
+      "role": "admin",
+      "canonical": "/media/collections",
+      "route": "/media/collections",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 20,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 20,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 20,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 20,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 20,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 20,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 20,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 20,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/media/collections",
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nCollections\nTout\nQA principal\nQA secondaire\nVOLUME DU DISQUE\n11.9 Go\nEspace total utilisé\nCONTENU TOTAL\n108 films, 2 séries, 6 musique, 2 livres\nInventaire des bibliothèques\nTEMPS TOTAL\n7j 1h\nDurée cumulée des médias\nDétails par Collection\n\n4 collections total\n\nFilms\nFilms QA\n10.5 Go\n108 films\n6j 18h\nLEADER\nFilm principal QA\n17 vue(s)\nNOUVEAUTÉ\nFilm QA 49\n11/10/2026\nLivres\nLivres QA\n0.2 Go\n2 livres\n0j 4h\nLEADER\nLivre principal QA\n16 vue(s)\nNOUVEAUTÉ\nLivre principal QA\n01/10/2026\nMusique\nMusique QA\n0.6 Go\n6 musique\n0j 0h\n6 Piste\nLEADER\nPiste 1\n17 vue(s)\nNOUVEAUTÉ\nAlbum principal QA\n05/10/2026\nSéries\nSéries QA\n0.6 Go\n2 séries\n0j 3h\n6 Épisode\nLEADER\nÉpisode 1\n17 vue(s)\nNOUVEAUTÉ\nSérie principale QA\n10/10/2026"
+    },
+    {
+      "role": "admin",
+      "canonical": "/media/popular",
+      "route": "/media/popular",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/media/popular",
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTop Contenus\nTout\nQA principal\nQA secondaire\n\nLes films, séries et musiques les plus populaires de votre serveur.\n\nTop Films\n\nLes films les plus visionnés.\n\n#1\nFilm principal QA\n17 lectures\n22.7h\n#2\nFilm principal QA\n2 lectures\n2.7h\nTop Séries\n\nLes séries les plus suivies.\n\n#1\nSérie principale QA\n51 lectures\n25.5h\n#2\nSérie principale QA\n6 lectures\n3h\nTop Titres Musicaux\n\nLes musiques les plus écoutées.\n\n#1\nPiste 1\n17 lectures\n1.1h\n#2\nPiste 2\n17 lectures\n0.8h\n#3\nPiste 3\n17 lectures\n0.6h\n#4\nPiste 1\n1 lecture\n0.1h\n#5\nPiste 2\n1 lecture\n0.1h\nTop Réalisateurs\n\nLes réalisateurs les plus visionnés.\n\n#1\nRéalisateur QA\n76 lectures\n53.8h\nTop Acteurs\n\nLes acteurs les plus visionnés.\n\n#1\nActrice QA\n76 lectures\n53.8h\nTop Studios\n\nLes studios les plus populaires.\n\n#1\nStudio QA\n76 lectures\n53.8h"
+    },
+    {
+      "role": "admin",
+      "canonical": "/recent",
+      "route": "/recent",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/recent",
+      "body": "Ajouts récents\n112 médias\nTout\nQA principal\nQA secondaire\nAutres contenus\nNOUVEAU\nFilm\nFilm QA 49\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 49\n11 oct.\nNOUVEAU\nFilm\nFilm QA 37\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 37\n11 oct.\nNOUVEAU\nFilm\nFilm QA 25\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 25\n11 oct.\nNOUVEAU\nFilm\nFilm QA 13\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 13\n11 oct.\nNOUVEAU\nFilm\nFilm QA 01\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 01\n11 oct.\nNOUVEAU\nFilm\nFilm principal QA\n11 oct. 2026, 10:38\n2 vue(s)\nDrama · QA\n4K\nFilm principal QA\n11 oct. · 2 vue(s)\nNOUVEAU\nFilm\nFilm QA 49\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 49\n11 oct.\nNOUVEAU\nFilm\nFilm QA 37\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 37\n11 oct.\nNOUVEAU\nFilm\nFilm QA 25\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 25\n11 oct.\nNOUVEAU\nFilm\nFilm QA 13\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 13\n11 oct.\nNOUVEAU\nFilm\nFilm QA 01\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 01\n11 oct.\nNOUVEAU\nFilm\nFilm principal QA\n11 oct. 2026, 10:38\n17 vue(s)\nDrama · QA\n4K\nFilm principal QA\n11 oct. · 17 vue(s)\nNOUVEAU\nSérie\nSérie principale QA\n10 oct. 2026, 10:38\n6 vue(s)\nDrama · QA\n1080P\nSérie principale QA\n10 oct. · 6 vue(s)\nNOUVEAU\nFilm\nFilm QA 50\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 50\n10 oct.\nNOUVEAU\nFilm\nFilm QA 38\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 38\n10 oct.\nNOUVEAU\nFilm\nFilm QA 26\n10 oct. 2026, 10:38\nDrama · QA\n4K\nF"
+    },
+    {
+      "role": "admin",
+      "canonical": "/users/[id]",
+      "route": "/users/qa-primary-alice",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/user-image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 116,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 116,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 116,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 116,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 116,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 116,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 116,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 116,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/users/qa-primary-alice",
+      "body": "AQ\nProfil : Alice QA\n\nID Jellyfin : alice\n\n🎁 Voir le JellyTrack Wrapped\nLECTURE EN PAUSE\nFilm principal QA\n\nSur Jellyfin Web (QA browser) • Lecture Directe\n\nEn pause\n0%\nTemps de lecture\n53.5h\n\nCumul total\n\nDernière Act.: 11 oct. 2026, 10:07\n\nSession(s)\n98\n\n~33 min / session\n\nTop Genres\nDrama, QA, Rock\n\nPréférences principales\n\nTaux de complétion\n95%\n\nComplétion moyenne\n\nPic d'Activité\nDim · 6h\n\nHeure la plus active\n\nMeilleure Série\n17 jours\n\nJours d'activité consécutifs\n\nContenu Unique\n7\n\n🎬 1 · 📺 3 · 🎵 3\n\nFormat favori\nEpisode\n\nType de média principal\n\nLe Plus Visionné\nLivre principal QA\n\n12 sessions · 1000 min\n\nClient favori\nAndroid TV\n\nApplication la plus utilisée\n\nAppareil favori\nTV\n\nPlateforme la plus utilisée\n\nActivité sur 30 jours\n\nVue sur le volume quotidien de lecture de cet utilisateur.\n\nActivité par Jour\n\nNombre de sessions par jour de la semaine.\n\nTaux de Complétion\n\nRatio sessions terminées vs abandonnées vs partielles.\n\nPartiel\nTerminé\nActivité par Heure\n\nHeure de début des sessions sur la période.\n\nGenres préférés\n\nRépartition des genres les plus visionnés par cet utilisateur.\n\nFiche Technique\n\nIndicateurs de lecture et appareils préférés de l'utilisateur.\n\nAppareil ou client le plus utilisé\n\nAndroid TV\n\nDirect Play\n\n0%\n\nDébit moyen\n\n12.0 Mbps\nHistorique de lecture\n\nHistorique complet agrégé des sessions démarrées. — 98 sessions\n\nFiltres sauvegardés\nColonnes\n↓"
+    },
+    {
+      "role": "admin",
+      "canonical": "/wrapped/[userId]",
+      "route": "/wrapped/qa-primary-alice",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1440,
+          "mainClient": 1440,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 768,
+          "mainClient": 768,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1440,
+          "mainClient": 1440,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 768,
+          "mainClient": 768,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/wrapped/qa-primary-alice",
+      "body": "LE RÉCAP DE ALICE QA\nJellyTrack Wrapped 2026\n\nPrêt à découvrir votre année en médias ?\n\nPersonnaliser\nRetour\n2026 • GENERAL\n1 / 18\nPersonnaliser\nSuivant"
+    },
+    {
+      "role": "standard",
+      "canonical": "/media/[id]",
+      "route": "/media/qa-primary-movie",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (1)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 35,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (1)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 35,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (1)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 35,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (1)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 35,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (1)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 35,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (1)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 35,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (1)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 35,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Film principal QA",
+            "Résumé Télémétrie",
+            "Analyse des passages",
+            "Passages sautés / revus",
+            "Vitesses de lecture",
+            "Changements audio / sous-titres",
+            "Périodes de langue",
+            "Spectateurs (1)",
+            "Langues Audio",
+            "Sous-titres",
+            "Distribution de la Complétion",
+            "Chronologie Profonde",
+            "Télémétrie par Session",
+            "Historique Détaillé"
+          ],
+          "controls": 35,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/media/qa-primary-movie",
+      "body": "Tous les Médias\nPopulaires\ncollections\nBibliothèque\nFilm principal QA\nFilm principal QA\nMovie\n4K\nDRAMA\nQA\n\nQA principal · 1h 30m · 100 MiB\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nTemps Total\n14.7h\nCumulé\nVues\n11\nSessions uniques\nDurée Moyenne\n80 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n22\nPassages sautés\n11\nPassages revus\n0\nChangements de vitesse\n11\nModif. Audio\n11\nModif. Sous-titres\n11\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nAucun signal détaillé pour l'instant.\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\nAucun signal détaillé pour l'instant.\nPériodes de langue\neng (aac) · 0–4800 s · 11 sessions\n11\nSpectateurs (1)\n\nUtilisateurs ayant visionné ce média.\n\nAlice QA\n11 sessions\n14.7h\nLangues Audio\neng (aac)\n11\nSous-titres\nAucun\n11\nDistribution de la Complétion\n\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\n\nChronologie Profonde\nUtilisateur\nTous les Utilisateurs\nAlice QA\nSession\nToutes les sessions\nAlice QA · 10 oct. 2026, 10:35\nAlice QA · 9 oct. 2026, 10:37\nAlice QA · 7 oct. 2026, 10:36\nAlice QA · 6 oct. 2026, 10:38\nAlice QA · 4 oct. 2026, 10:37\nAlice QA · 3 oct. 2026, 10:34\nAlice QA · 1 oct. 2026, 10"
+    },
+    {
+      "role": "standard",
+      "canonical": "/media/all",
+      "route": "/media/all",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 65,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 65,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 65,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 65,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 65,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 65,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 65,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Tous les Médias"
+          ],
+          "controls": 65,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/media/all",
+      "body": "Tous les Médias\nPopulaires\ncollections\nTous les Médias\nTout\nQA principal\nQA secondaire\nTout\nFilms\nSéries\nMusique\nAutres contenus\n3495 KBPS\nAlbum principal QA\n34 vue(s)1.7h\n1080P\nSérie principale QA\n34 vue(s)17h\n4K UHD\nFilm principal QA\n11 vue(s)14.7h\n3495 KBPS\nAlbum principal QA\n0 vue(s)\n4K UHD\nFilm QA 00\n0 vue(s)\n4K UHD\nFilm QA 00\n0 vue(s)\n4K UHD\nFilm QA 01\n0 vue(s)\n4K UHD\nFilm QA 01\n0 vue(s)\n4K UHD\nFilm QA 02\n0 vue(s)\n4K UHD\nFilm QA 02\n0 vue(s)\n4K UHD\nFilm QA 03\n0 vue(s)\n4K UHD\nFilm QA 03\n0 vue(s)\n4K UHD\nFilm QA 04\n0 vue(s)\n4K UHD\nFilm QA 04\n0 vue(s)\n4K UHD\nFilm QA 05\n0 vue(s)\n4K UHD\nFilm QA 05\n0 vue(s)\n4K UHD\nFilm QA 06\n0 vue(s)\n4K UHD\nFilm QA 06\n0 vue(s)\n4K UHD\nFilm QA 07\n0 vue(s)\n4K UHD\nFilm QA 07\n0 vue(s)\n4K UHD\nFilm QA 08\n0 vue(s)\n4K UHD\nFilm QA 08\n0 vue(s)\n4K UHD\nFilm QA 09\n0 vue(s)\n4K UHD\nFilm QA 09\n0 vue(s)\n4K UHD\nFilm QA 10\n0 vue(s)\n4K UHD\nFilm QA 10\n0 vue(s)\n4K UHD\nFilm QA 11\n0 vue(s)\n4K UHD\nFilm QA 11\n0 vue(s)\n4K UHD\nFilm QA 12\n0 vue(s)\n4K UHD\nFilm QA 12\n0 vue(s)\n4K UHD\nFilm QA 13\n0 vue(s)\n4K UHD\nFilm QA 13\n0 vue(s)\n4K UHD\nFilm QA 14\n0 vue(s)\n4K UHD\nFilm QA 14\n0 vue(s)\n4K UHD\nFilm QA 15\n0 vue(s)\n4K UHD\nFilm QA 15\n0 vue(s)\n4K UHD\nFilm QA 16\n0 vue(s)\n4K UHD\nFilm QA 16\n0 vue(s)\n4K UHD\nFilm QA 17\n0 vue(s)\n4K UHD\nFilm QA 17\n0 vue(s)\n4K UHD\nFilm QA 18\n0 vue(s)\n4K UHD\nFilm QA 18\n0 vue(s)\n4K UHD\nFilm QA 19\n0 vue(s)\n4K UHD\nFilm QA 19\n0 vue(s)\n4K UHD\nFilm QA 20\n0 vue(s)\n4K U"
+    },
+    {
+      "role": "standard",
+      "canonical": "/media/analysis",
+      "route": "/media/analysis",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/user-image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/users/alice",
+      "body": "AQ\nProfil : Alice QA\n\nID Jellyfin : alice\n\n🎁 Voir le JellyTrack Wrapped\nLECTURE EN PAUSE\nFilm principal QA\n\nSur Jellyfin Web (QA browser) • Lecture Directe\n\nEn pause\n0%\nTemps de lecture\n48.6h\n\nCumul total\n\nDernière Act.: 11 oct. 2026, 10:07\n\nSession(s)\n90\n\n~32 min / session\n\nTop Genres\nDrama, QA, Rock\n\nPréférences principales\n\nTaux de complétion\n100%\n\nComplétion moyenne\n\nPic d'Activité\nDim · 6h\n\nHeure la plus active\n\nMeilleure Série\n17 jours\n\nJours d'activité consécutifs\n\nContenu Unique\n7\n\n🎬 1 · 📺 3 · 🎵 3\n\nFormat favori\nEpisode\n\nType de média principal\n\nLe Plus Visionné\nLivre principal QA\n\n11 sessions · 917 min\n\nClient favori\nAndroid TV\n\nApplication la plus utilisée\n\nAppareil favori\nTV\n\nPlateforme la plus utilisée\n\nActivité sur 30 jours\n\nVue sur le volume quotidien de lecture de cet utilisateur.\n\nActivité par Jour\n\nNombre de sessions par jour de la semaine.\n\nTaux de Complétion\n\nRatio sessions terminées vs abandonnées vs partielles.\n\nTerminé\nActivité par Heure\n\nHeure de début des sessions sur la période.\n\nGenres préférés\n\nRépartition des genres les plus visionnés par cet utilisateur.\n\nFiche Technique\n\nIndicateurs de lecture et appareils préférés de l'utilisateur.\n\nAppareil ou client le plus utilisé\n\nAndroid TV\n\nDirect Play\n\n0%\n\nDébit moyen\n\n12.0 Mbps\nHistorique de lecture\n\nHistorique complet agrégé des sessions démarrées. — 90 sessions\n\nFiltres sauvegardés\nColonnes\n↓ CSV\n↓ J"
+    },
+    {
+      "role": "standard",
+      "canonical": "/media/collections",
+      "route": "/media/collections",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 14,
+          "visibleHeadings": [
+            "Collections",
+            "Détails par Collection",
+            "Films",
+            "Leader",
+            "Nouveauté",
+            "Livres",
+            "Leader",
+            "Nouveauté",
+            "Musique",
+            "Leader",
+            "Nouveauté",
+            "Séries",
+            "Leader",
+            "Nouveauté"
+          ],
+          "controls": 19,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/media/collections",
+      "body": "Tous les Médias\nPopulaires\ncollections\nCollections\nTout\nQA principal\nQA secondaire\nVOLUME DU DISQUE\n11.9 Go\nEspace total utilisé\nCONTENU TOTAL\n108 films, 2 séries, 6 musique, 2 livres\nInventaire des bibliothèques\nTEMPS TOTAL\n7j 1h\nDurée cumulée des médias\nDétails par Collection\n\n4 collections total\n\nFilms\nFilms QA\n10.5 Go\n108 films\n6j 18h\nLEADER\nFilm principal QA\n11 vue(s)\nNOUVEAUTÉ\nFilm QA 49\n11/10/2026\nLivres\nLivres QA\n0.2 Go\n2 livres\n0j 4h\nLEADER\nLivre principal QA\n11 vue(s)\nNOUVEAUTÉ\nLivre principal QA\n01/10/2026\nMusique\nMusique QA\n0.6 Go\n6 musique\n0j 0h\n6 Piste\nLEADER\nPiste 2\n12 vue(s)\nNOUVEAUTÉ\nAlbum principal QA\n05/10/2026\nSéries\nSéries QA\n0.6 Go\n2 séries\n0j 3h\n6 Épisode\nLEADER\nÉpisode 2\n12 vue(s)\nNOUVEAUTÉ\nSérie principale QA\n10/10/2026"
+    },
+    {
+      "role": "standard",
+      "canonical": "/media/popular",
+      "route": "/media/popular",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 14,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 14,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 14,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 14,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 14,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 14,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 14,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 7,
+          "visibleHeadings": [
+            "Top Contenus",
+            "Top Films",
+            "Top Séries",
+            "Top Titres Musicaux",
+            "Top Réalisateurs",
+            "Top Acteurs",
+            "Top Studios"
+          ],
+          "controls": 14,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/media/popular",
+      "body": "Tous les Médias\nPopulaires\ncollections\nTop Contenus\nTout\nQA principal\nQA secondaire\n\nLes films, séries et musiques les plus populaires de votre serveur.\n\nTop Films\n\nLes films les plus visionnés.\n\n#1\nFilm principal QA\n11 lectures\n14.7h\nTop Séries\n\nLes séries les plus suivies.\n\n#1\nSérie principale QA\n34 lectures\n17h\nTop Titres Musicaux\n\nLes musiques les plus écoutées.\n\n#1\nPiste 2\n12 lectures\n0.6h\n#2\nPiste 1\n11 lectures\n0.7h\n#3\nPiste 3\n11 lectures\n0.4h\nTop Réalisateurs\n\nLes réalisateurs les plus visionnés.\n\n#1\nRéalisateur QA\n45 lectures\n31.7h\nTop Acteurs\n\nLes acteurs les plus visionnés.\n\n#1\nActrice QA\n45 lectures\n31.7h\nTop Studios\n\nLes studios les plus populaires.\n\n#1\nStudio QA\n45 lectures\n31.7h"
+    },
+    {
+      "role": "standard",
+      "canonical": "/recent",
+      "route": "/recent",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        },
+        {
+          "path": "/api/jellyfin/image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Ajouts récents"
+          ],
+          "controls": 46,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/recent",
+      "body": "Ajouts récents\n112 médias\nTout\nQA principal\nQA secondaire\nAutres contenus\nNOUVEAU\nFilm\nFilm QA 49\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 49\n11 oct.\nNOUVEAU\nFilm\nFilm QA 37\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 37\n11 oct.\nNOUVEAU\nFilm\nFilm QA 25\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 25\n11 oct.\nNOUVEAU\nFilm\nFilm QA 13\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 13\n11 oct.\nNOUVEAU\nFilm\nFilm QA 01\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 01\n11 oct.\nNOUVEAU\nFilm\nFilm principal QA\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm principal QA\n11 oct.\nNOUVEAU\nFilm\nFilm QA 49\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 49\n11 oct.\nNOUVEAU\nFilm\nFilm QA 37\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 37\n11 oct.\nNOUVEAU\nFilm\nFilm QA 25\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 25\n11 oct.\nNOUVEAU\nFilm\nFilm QA 13\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 13\n11 oct.\nNOUVEAU\nFilm\nFilm QA 01\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 01\n11 oct.\nNOUVEAU\nFilm\nFilm principal QA\n11 oct. 2026, 10:38\n11 vue(s)\nDrama · QA\n4K\nFilm principal QA\n11 oct. · 11 vue(s)\nNOUVEAU\nSérie\nSérie principale QA\n10 oct. 2026, 10:38\nDrama · QA\n1080P\nSérie principale QA\n10 oct.\nNOUVEAU\nFilm\nFilm QA 50\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 50\n10 oct.\nNOUVEAU\nFilm\nFilm QA 38\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 38\n10 oct.\nNOUVEAU\nFilm\nFilm QA 26\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 26\n10 oct.\nNOUVEAU\nFilm\nFilm QA 0"
+    },
+    {
+      "role": "standard",
+      "canonical": "/users/[id]",
+      "route": "/users/qa-primary-alice",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/jellyfin/user-image",
+          "status": 404
+        }
+      ],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1184,
+          "mainClient": 1184,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 512,
+          "mainClient": 512,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 20,
+          "visibleHeadings": [
+            "Profil : Alice QA",
+            "Lecture en pause",
+            "Temps de lecture",
+            "Session(s)",
+            "Top Genres",
+            "Taux de complétion",
+            "Pic d'Activité",
+            "Meilleure Série",
+            "Contenu Unique",
+            "Format favori",
+            "Le Plus Visionné",
+            "Client favori",
+            "Appareil favori",
+            "Activité sur 30 jours",
+            "Activité par Jour",
+            "Taux de Complétion",
+            "Activité par Heure",
+            "Genres préférés",
+            "Fiche Technique",
+            "Historique de lecture"
+          ],
+          "controls": 115,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/users/alice",
+      "body": "AQ\nProfil : Alice QA\n\nID Jellyfin : alice\n\n🎁 Voir le JellyTrack Wrapped\nLECTURE EN PAUSE\nFilm principal QA\n\nSur Jellyfin Web (QA browser) • Lecture Directe\n\nEn pause\n0%\nTemps de lecture\n48.6h\n\nCumul total\n\nDernière Act.: 11 oct. 2026, 10:07\n\nSession(s)\n90\n\n~32 min / session\n\nTop Genres\nDrama, QA, Rock\n\nPréférences principales\n\nTaux de complétion\n100%\n\nComplétion moyenne\n\nPic d'Activité\nDim · 6h\n\nHeure la plus active\n\nMeilleure Série\n17 jours\n\nJours d'activité consécutifs\n\nContenu Unique\n7\n\n🎬 1 · 📺 3 · 🎵 3\n\nFormat favori\nEpisode\n\nType de média principal\n\nLe Plus Visionné\nLivre principal QA\n\n11 sessions · 917 min\n\nClient favori\nAndroid TV\n\nApplication la plus utilisée\n\nAppareil favori\nTV\n\nPlateforme la plus utilisée\n\nActivité sur 30 jours\n\nVue sur le volume quotidien de lecture de cet utilisateur.\n\nActivité par Jour\n\nNombre de sessions par jour de la semaine.\n\nTaux de Complétion\n\nRatio sessions terminées vs abandonnées vs partielles.\n\nTerminé\nActivité par Heure\n\nHeure de début des sessions sur la période.\n\nGenres préférés\n\nRépartition des genres les plus visionnés par cet utilisateur.\n\nFiche Technique\n\nIndicateurs de lecture et appareils préférés de l'utilisateur.\n\nAppareil ou client le plus utilisé\n\nAndroid TV\n\nDirect Play\n\n0%\n\nDébit moyen\n\n12.0 Mbps\nHistorique de lecture\n\nHistorique complet agrégé des sessions démarrées. — 90 sessions\n\nFiltres sauvegardés\nColonnes\n↓ CSV\n↓ J"
+    },
+    {
+      "role": "standard",
+      "canonical": "/wrapped/[userId]",
+      "route": "/wrapped/qa-primary-alice",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1440,
+          "mainClient": 1440,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "dark",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 768,
+          "mainClient": 768,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "dark",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 1440,
+          "viewport": 1440,
+          "rootOverflow": false,
+          "mainWidth": 1440,
+          "mainClient": 1440,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 768,
+          "height": 900,
+          "theme": "light",
+          "rootWidth": 768,
+          "viewport": 768,
+          "rootOverflow": false,
+          "mainWidth": 768,
+          "mainClient": 768,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        },
+        {
+          "width": 320,
+          "height": 700,
+          "theme": "light",
+          "rootWidth": 320,
+          "viewport": 320,
+          "rootOverflow": false,
+          "mainWidth": 320,
+          "mainClient": 320,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 2,
+          "visibleHeadings": [
+            "Le Récap de Alice QA",
+            "JellyTrack Wrapped 2026"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "",
+          "bodyBackground": "rgb(227, 234, 243)"
+        }
+      ],
+      "actual": "/wrapped/qa-primary-alice",
+      "body": "LE RÉCAP DE ALICE QA\nJellyTrack Wrapped 2026\n\nPrêt à découvrir votre année en médias ?\n\nPersonnaliser\nRetour\n2026 • GENERAL\n1 / 18\nPersonnaliser\nSuivant"
+    },
+    {
+      "role": "anonymous",
+      "canonical": "/media/[id]",
+      "route": "/media/qa-primary-movie",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/auth/me",
+          "status": 401
+        }
+      ],
+      "variants": [
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Connexion JellyTrack"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        }
+      ],
+      "actual": "/login",
+      "body": "Connexion JellyTrack\nCONNEXION LOCALE (ADMIN)\nNom d'utilisateur\nMot de passe\nSe souvenir de moi\nRester connecté 30 jours sur cet appareil.\nSe connecter\nFrançais\nEnglish\nDeutsch\nEspañol\nItaliano\nNederlands\nPolski\nPortuguês\nРусский\n中文\nTHÈME\nSombre"
+    },
+    {
+      "role": "anonymous",
+      "canonical": "/media/all",
+      "route": "/media/all",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/auth/me",
+          "status": 401
+        }
+      ],
+      "variants": [
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Connexion JellyTrack"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        }
+      ],
+      "actual": "/login",
+      "body": "Connexion JellyTrack\nCONNEXION LOCALE (ADMIN)\nNom d'utilisateur\nMot de passe\nSe souvenir de moi\nRester connecté 30 jours sur cet appareil.\nSe connecter\nFrançais\nEnglish\nDeutsch\nEspañol\nItaliano\nNederlands\nPolski\nPortuguês\nРусский\n中文\nTHÈME\nSombre"
+    },
+    {
+      "role": "anonymous",
+      "canonical": "/media/analysis",
+      "route": "/media/analysis",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/auth/me",
+          "status": 401
+        }
+      ],
+      "variants": [
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Connexion JellyTrack"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        }
+      ],
+      "actual": "/login",
+      "body": "Connexion JellyTrack\nCONNEXION LOCALE (ADMIN)\nNom d'utilisateur\nMot de passe\nSe souvenir de moi\nRester connecté 30 jours sur cet appareil.\nSe connecter\nFrançais\nEnglish\nDeutsch\nEspañol\nItaliano\nNederlands\nPolski\nPortuguês\nРусский\n中文\nTHÈME\nSombre"
+    },
+    {
+      "role": "anonymous",
+      "canonical": "/media/collections",
+      "route": "/media/collections",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/auth/me",
+          "status": 401
+        }
+      ],
+      "variants": [
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Connexion JellyTrack"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        }
+      ],
+      "actual": "/login",
+      "body": "Connexion JellyTrack\nCONNEXION LOCALE (ADMIN)\nNom d'utilisateur\nMot de passe\nSe souvenir de moi\nRester connecté 30 jours sur cet appareil.\nSe connecter\nFrançais\nEnglish\nDeutsch\nEspañol\nItaliano\nNederlands\nPolski\nPortuguês\nРусский\n中文\nTHÈME\nSombre"
+    },
+    {
+      "role": "anonymous",
+      "canonical": "/media/popular",
+      "route": "/media/popular",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/auth/me",
+          "status": 401
+        }
+      ],
+      "variants": [
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Connexion JellyTrack"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        }
+      ],
+      "actual": "/login",
+      "body": "Connexion JellyTrack\nCONNEXION LOCALE (ADMIN)\nNom d'utilisateur\nMot de passe\nSe souvenir de moi\nRester connecté 30 jours sur cet appareil.\nSe connecter\nFrançais\nEnglish\nDeutsch\nEspañol\nItaliano\nNederlands\nPolski\nPortuguês\nРусский\n中文\nTHÈME\nSombre"
+    },
+    {
+      "role": "anonymous",
+      "canonical": "/recent",
+      "route": "/recent",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/auth/me",
+          "status": 401
+        }
+      ],
+      "variants": [
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Connexion JellyTrack"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        }
+      ],
+      "actual": "/login",
+      "body": "Connexion JellyTrack\nCONNEXION LOCALE (ADMIN)\nNom d'utilisateur\nMot de passe\nSe souvenir de moi\nRester connecté 30 jours sur cet appareil.\nSe connecter\nFrançais\nEnglish\nDeutsch\nEspañol\nItaliano\nNederlands\nPolski\nPortuguês\nРусский\n中文\nTHÈME\nSombre"
+    },
+    {
+      "role": "anonymous",
+      "canonical": "/users/[id]",
+      "route": "/users/qa-primary-alice",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/auth/me",
+          "status": 401
+        }
+      ],
+      "variants": [
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Connexion JellyTrack"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        }
+      ],
+      "actual": "/login",
+      "body": "Connexion JellyTrack\nCONNEXION LOCALE (ADMIN)\nNom d'utilisateur\nMot de passe\nSe souvenir de moi\nRester connecté 30 jours sur cet appareil.\nSe connecter\nFrançais\nEnglish\nDeutsch\nEspañol\nItaliano\nNederlands\nPolski\nPortuguês\nРусский\n中文\nTHÈME\nSombre"
+    },
+    {
+      "role": "anonymous",
+      "canonical": "/wrapped/[userId]",
+      "route": "/wrapped/qa-primary-alice",
+      "errors": [],
+      "httpErrors": [
+        {
+          "path": "/api/auth/me",
+          "status": 401
+        }
+      ],
+      "variants": [
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "rootWidth": 390,
+          "viewport": 390,
+          "rootOverflow": false,
+          "mainWidth": 390,
+          "mainClient": 390,
+          "mainOverflow": false,
+          "overflow": [],
+          "headingCount": 1,
+          "visibleHeadings": [
+            "Connexion JellyTrack"
+          ],
+          "controls": 6,
+          "unnamed": [],
+          "hiddenSections": [],
+          "themeClass": "dark",
+          "bodyBackground": "rgb(8, 17, 31)"
+        }
+      ],
+      "actual": "/login",
+      "body": "Connexion JellyTrack\nCONNEXION LOCALE (ADMIN)\nNom d'utilisateur\nMot de passe\nSe souvenir de moi\nRester connecté 30 jours sur cet appareil.\nSe connecter\nFrançais\nEnglish\nDeutsch\nEspañol\nItaliano\nNederlands\nPolski\nPortuguês\nРусский\n中文\nTHÈME\nSombre"
+    }
+  ],
+  "keyboard": [
+    {
+      "name": "mobile menu keyboard open",
+      "expanded": "true",
+      "focus": "sidebar-close-btn"
+    },
+    {
+      "name": "mobile menu focus progression",
+      "sequence": [
+        {
+          "id": "nav-search-input",
+          "tag": "INPUT",
+          "text": "",
+          "inside": true
+        },
+        {
+          "id": "go-extras-label",
+          "tag": "SUMMARY",
+          "text": "Compléments Go",
+          "inside": true
+        },
+        {
+          "id": "language-trigger",
+          "tag": "BUTTON",
+          "text": "Language Français",
+          "inside": true
+        },
+        {
+          "id": "btn-theme-toggle",
+          "tag": "BUTTON",
+          "text": "ThèmeSombre",
+          "inside": true
+        },
+        {
+          "id": "btn-logout",
+          "tag": "BUTTON",
+          "text": "Déconnexion",
+          "inside": true
+        },
+        {
+          "id": "nav-version",
+          "tag": "A",
+          "text": "JellyTrack v2.1.1",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "JellyTrack",
+          "inside": true
+        },
+        {
+          "id": "sidebar-close-btn",
+          "tag": "BUTTON",
+          "text": "",
+          "inside": true
+        },
+        {
+          "id": "nav-search-input",
+          "tag": "INPUT",
+          "text": "",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Tableau de bord",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Ajoutés récemment",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Bibliothèque",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Utilisateurs",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Santé",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Journaux",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Paramètres",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Comparaison de serveurs",
+          "inside": true
+        },
+        {
+          "id": "go-extras-label",
+          "tag": "SUMMARY",
+          "text": "Compléments Go",
+          "inside": true
+        },
+        {
+          "id": "language-trigger",
+          "tag": "BUTTON",
+          "text": "Language Français",
+          "inside": true
+        },
+        {
+          "id": "btn-theme-toggle",
+          "tag": "BUTTON",
+          "text": "ThèmeSombre",
+          "inside": true
+        },
+        {
+          "id": "btn-logout",
+          "tag": "BUTTON",
+          "text": "Déconnexion",
+          "inside": true
+        },
+        {
+          "id": "nav-version",
+          "tag": "A",
+          "text": "JellyTrack v2.1.1",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "JellyTrack",
+          "inside": true
+        },
+        {
+          "id": "sidebar-close-btn",
+          "tag": "BUTTON",
+          "text": "",
+          "inside": true
+        },
+        {
+          "id": "nav-search-input",
+          "tag": "INPUT",
+          "text": "",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Tableau de bord",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Ajoutés récemment",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Bibliothèque",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Utilisateurs",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Santé",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Journaux",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Paramètres",
+          "inside": true
+        },
+        {
+          "id": "",
+          "tag": "A",
+          "text": "Comparaison de serveurs",
+          "inside": true
+        },
+        {
+          "id": "go-extras-label",
+          "tag": "SUMMARY",
+          "text": "Compléments Go",
+          "inside": true
+        },
+        {
+          "id": "language-trigger",
+          "tag": "BUTTON",
+          "text": "Language Français",
+          "inside": true
+        }
+      ]
+    },
+    {
+      "name": "mobile menu Escape",
+      "expanded": "false",
+      "focus": "mobile-menu-btn"
+    },
+    {
+      "name": "search keyboard shortcut",
+      "focus": "nav-search-input",
+      "expanded": "true"
+    },
+    {
+      "name": "language ArrowDown opens and focuses",
+      "visible": true,
+      "focused": "fr"
+    },
+    {
+      "name": "language Escape closes",
+      "visible": false,
+      "focus": "mobile-menu-btn"
+    },
+    {
+      "name": null,
+      "open": 1,
+      "focusInside": true,
+      "labelledby": "history-dialog-title"
+    },
+    {
+      "name": "history modal Escape restores focus",
+      "open": 0,
+      "focus": "history-columns"
+    }
+  ],
+  "adminIdentity": {
+    "status": 200,
+    "data": {
+      "username": "mediaadmin",
+      "role": "admin",
+      "csrfToken": "f860e0a3d7702bddb0f10a3d095e1226dcdce141f5c3126ff0402596026b8072",
+      "jellyfinUserId": "local-admin",
+      "identityVersion": 1,
+      "authServerName": "Local Admin",
+      "authServerIsPrimary": true
+    }
+  },
+  "standardIdentity": {
+    "status": 200,
+    "data": {
+      "username": "Alice QA",
+      "role": "user",
+      "csrfToken": "4985039bd2e52366765201222f777010948006dbc7f4e5efed40c0eec2c25ad1",
+      "jellyfinUserId": "alice",
+      "authServerId": "qa-primary",
+      "identityVersion": 1,
+      "authServerName": "QA principal",
+      "authServerIsPrimary": true
+    }
+  },
+  "anonymousIdentity": {
+    "status": 401,
+    "data": {
+      "error": "Session requise."
+    }
+  }
+}

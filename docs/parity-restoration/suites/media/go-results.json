@@ -549,12 +549,9 @@
       "ok": true
     },
     {
-      "name": "Telemetry event modal visible",
-      "ok": true
-    },
-    {
-      "name": "Timeline user URL retained",
-      "ok": true
+      "name": "Details telemetry filters and modal",
+      "ok": false,
+      "details": "locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-event-id]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mr-event mr-event-pause\" data-event-id=\"qa-primary-play0-pause\" title=\"Pause · 0 min / Passage sauté · 1 min / Audio · 2 min\" aria-label=\"Pause · 0 min / Passage sauté · 1 min / Audio · 2 min\" data-event-ids=\"[\"qa-primary-play0-pause\",\"qa-primary-play0-seek\",\"qa-primary-play0-audio_change\"]\">3</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    19 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
     },
     {
       "name": "50 rows per historical page",
@@ -980,7 +977,7 @@
           "text": "▶"
         }
       ],
-      "body": "Tableau de bord\nTout\nFilms\nSéries\nMusique\nLivres\nTout\nQA principal\nQA secondaire\nDernières 24h\n7 derniers jours\n30 derniers jours\nTout temps\nPersonnalisé\n90j\n1 an\nMoniteur actif\nDernier poll: Jamais\nDernière synchro: Jamais\nDernière sauvegarde: Jamais\nSanté\nFlux Actifs\n2\nLectures orphelines ouvertes\n0\nBibliothèques exclues\n0\nAujourd'hui\n16\nlectures\n8.7h\nvisionnées\n4\nutilisateur(s) actif(s)\nVue d'ensemble\nAnalyses détaillées\nRéseau\nModifier l'ordre\nFlux Actifs\n2\nActuellement géré par le serveur\nLectures Totales\n76\n+35.7%\nvs 56 période préc.\nLecture Directe\n34%DP\nLecture sans transcodage (Période)\nTemps Visionnage\n42,2h\n+37.9%\nvs 30.6h période préc.\nUtilisateurs actifs\n4\n+100.0%\nvs 2 période préc.\nFilms\n10 vues\n13.3h visionnés\nSéries & Épisodes\n30 lectures\n15h marathonnés\nMusique\n27 titres\n1.3h écoutés\nLivres & Audiobooks\n9 ouvertures\n12.5h passés\nVolume Temporel\nÉvolution des heures de visionnage par bibliothèque.\nRépartition par Catégorie\nPart du volume total de lecture (Heures).\nLectures par Bibliothèque\nNombre de lectures quotidiennes par type. Cliquez pour isoler.\nActivité Annuelle\n147 sessions enregistrées en 2026\n◀\n2026\n▶\nTout\nAudio\nBook\nMovie\nSeries\n\t\tJan\tFév\tMar\tAvr\tMai\tJuin\tJuil\tAoû\tSep\tOct\tNov\tDéc\nL\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nM\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nM\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nJ\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nV\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nS\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nD\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\nMoins\nPlus\nPlus Grands Fans\nUtilisateurs les plus actifs.\n#1\nAlice QA\n22.4h\n#2\nBob QA\n12.6h\n#3\nAlice QA\n4.8h\n#4\nBob QA\n2.4h\nÉcosystème Clients\nDistribution des plateformes de lecture (Top 8).\nFlux en direct\n2 Flux Actifs (24 Mbps)\n🗂️ Vue Cartes\nFilm principal QA\n⏸ En pause\n👤 Alice QA\n📱 QA browser\nDirectPlay\n🔊 AAC (fre)\n💬 Message\nArrêter\nFilm principal QA\n⏸ En pause\n👤 Alice QA\n📱 QA browser\nDirectPlay\n🔊 AAC (fre)\n💬 Message\nArrêter\nActivité par Heure\nHeure de début des sessions sur la période.\nActivité par Jour\nNombre de sessions par jour de la semaine.\nTemps Mensuel\nHeures de visionnage par mois (12 derniers mois).\n◀\n2026\n▶\nTaux de Complétion\nRatio sessions terminées vs abandonnées vs partielles.\nFamilles de Clients\nTV, Web, Mobile, Desktop — catégorisation automatique.\nCharge du Serveur (Flux Simultanés)\nÉvolution temporelle du nombre de flux actifs simultanés enregistrés.\nTendances émergentes\nContenus en hausse cette semaine vs la semaine précédente.\n#1\nLivre principal QA\n7 lectures cette semaine\nNouveau\n#2\nÉpisode 1\n7 lectures cette semaine\nNouveau\n#3\nÉpisode 2\n7 lectures cette semaine\nNouveau\n#4\nÉpisode 3\n7 lectures cette semaine\nNouveau\n#5\nFilm principal QA\n7 lectures cette semaine\nNouveau\n#6\nPiste 1\n7 lectures cette semaine\nNouveau\n#7\nPiste 2\n7 lectures cette semaine\nNouveau\n#8\nPiste 3\n7 lectures cette semaine\nNouveau\nPrévisions des pics d'affluence\nPics de sessions prévus basés sur les 4 dernières semaines.\nSam\n08h\n~1 flux\n65%\nSam\n06h\n~1 flux\n65%\nSam\n07h\n~1 flux\n65%\nSam\n05h\n~1 flux\n65%\nDim\n07h\n~1 flux\n65%\nDim\n03h\n~1 flux\n65%\nDim\n01h\n~1 flux\n65%\nDim\n06h\n~1 flux\n65%\nDim\n08h\n~1 flux\n65%\nDim\n02h\n~1 flux\n65%\n\nBasé sur l'historique des 4 dernières semaines\n\nRessources du processus"
+      "body": "Tableau de bord\nTout\nFilms\nSéries\nMusique\nLivres\nTout\nQA principal\nQA secondaire\nDernières 24h\n7 derniers jours\n30 derniers jours\nTout temps\nPersonnalisé\n90j\n1 an\nMoniteur actif\nDernier poll: Jamais\nDernière synchro: Jamais\nDernière sauvegarde: Jamais\nSanté\nFlux Actifs\n2\nLectures orphelines ouvertes\n0\nBibliothèques exclues\n0\nAujourd'hui\n16\nlectures\n8.7h\nvisionnées\n4\nutilisateur(s) actif(s)\nVue d'ensemble\nAnalyses détaillées\nRéseau\nModifier l'ordre\nFlux Actifs\n2\nActuellement géré par le serveur\nLectures Totales\n76\n+35.7%\nvs 56 période préc.\nLecture Directe\n34%DP\nLecture sans transcodage (Période)\nTemps Visionnage\n42,2h\n+37.9%\nvs 30.6h période préc.\nUtilisateurs actifs\n4\n+100.0%\nvs 2 période préc.\nFilms\n10 vues\n13.3h visionnés\nSéries & Épisodes\n30 lectures\n15h marathonnés\nMusique\n27 titres\n1.3h écoutés\nLivres & Audiobooks\n9 ouvertures\n12.5h passés\nVolume Temporel\nÉvolution des heures de visionnage par bibliothèque.\nRépartition par Catégorie\nPart du volume total de lecture (Heures).\nLectures par Bibliothèque\nNombre de lectures quotidiennes par type. Cliquez pour isoler.\nActivité Annuelle\n147 sessions enregistrées en 2026\n◀\n2026\n▶\nTout\nAudio\nBook\nMovie\nSeries\n\t\tJan\tFév\tMar\tAvr\tMai\tJuin\tJuil\tAoû\tSep\tOct\tNov\tDéc\nL\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nM\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nM\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nJ\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nV\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nS\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nD\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\nMoins\nPlus\nPlus Grands Fans\nUtilisateurs les plus actifs.\n#1\nAlice QA\n22.4h\n#2\nBob QA\n12.6h\n#3\nAlice QA\n4.8h\n#4\nBob QA\n2.4h\nÉcosystème Clients\nDistribution des plateformes de lecture (Top 8).\nFlux en direct\n2 Flux Actifs (24 Mbps)\n🗂️ Vue Cartes\nFilm principal QA\n⏸ En pause\n👤 Alice QA\n📱 QA browser\nDirectPlay\n🔊 AAC (fre)\n💬 Message\nArrêter\nFilm principal QA\n⏸ En pause\n👤 Alice QA\n📱 QA browser\nDirectPlay\n🔊 AAC (fre)\n💬 Message\nArrêter\nActivité par Heure\nHeure de début des sessions sur la période.\nActivité par Jour\nNombre de sessions par jour de la semaine.\nTemps Mensuel\nHeures de visionnage par mois (12 derniers mois).\n◀\n2026\n▶\nTaux de Complétion\nRatio sessions terminées vs abandonnées vs partielles.\nFamilles de Clients\nTV, Web, Mobile, Desktop — catégorisation automatique.\nCharge du Serveur (Flux Simultanés)\nÉvolution temporelle du nombre de flux actifs simultanés enregistrés.\nTendances émergentes\nContenus en hausse cette semaine vs la semaine précédente.\n#1\nLivre principal QA\n7 lectures cette semaine\nNouveau\n#2\nÉpisode 1\n7 lectures cette semaine\nNouveau\n#3\nÉpisode 2\n7 lectures cette semaine\nNouveau\n#4\nÉpisode 3\n7 lectures cette semaine\nNouveau\n#5\nFilm principal QA\n7 lectures cette semaine\nNouveau\n#6\nPiste 1\n7 lectures cette semaine\nNouveau\n#7\nPiste 2\n7 lectures cette semaine\nNouveau\n#8\nPiste 3\n7 lectures cette semaine\nNouveau\nPrévisions des pics d'affluence\nPics de sessions prévus basés sur les 4 dernières semaines.\nDim\n03h\n~1 flux\n65%\nSam\n05h\n~1 flux\n65%\nDim\n01h\n~1 flux\n65%\nDim\n07h\n~1 flux\n65%\nSam\n06h\n~1 flux\n65%\nDim\n02h\n~1 flux\n65%\nDim\n04h\n~1 flux\n65%\nDim\n06h\n~1 flux\n65%\nSam\n08h\n~1 flux\n65%\nDim\n08h\n~1 flux\n65%\n\nBasé sur l'historique des 4 dernières semaines\n\nRessources du processus"
     },
     {
       "route": "/recent",
@@ -992,16 +989,22 @@
       "charts": [],
       "controls": [
         {
-          "tag": "INPUT",
+          "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": ""
+          "text": "Tout"
         },
         {
-          "tag": "INPUT",
+          "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": ""
+          "text": "QA principal"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "QA secondaire"
         },
         {
           "tag": "SELECT",
@@ -1022,7 +1025,7 @@
           "text": "Suivant →"
         }
       ],
-      "body": "Ajouts récents\n112 médias\nServeurs\nQA principal\nQA secondaire\nAutres contenus\nNOUVEAU\nFilm\nFilm QA 49\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 49\n11 oct.\nNOUVEAU\nFilm\nFilm QA 37\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 37\n11 oct.\nNOUVEAU\nFilm\nFilm QA 25\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 25\n11 oct.\nNOUVEAU\nFilm\nFilm QA 13\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 13\n11 oct.\nNOUVEAU\nFilm\nFilm QA 01\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 01\n11 oct.\nNOUVEAU\nFilm\nFilm principal QA\n11 oct. 2026, 10:38\n2 vue(s)\nDrama · QA\n4K\nFilm principal QA\n11 oct. · 2 vue(s)\nNOUVEAU\nFilm\nFilm QA 49\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 49\n11 oct.\nNOUVEAU\nFilm\nFilm QA 37\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 37\n11 oct.\nNOUVEAU\nFilm\nFilm QA 25\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 25\n11 oct.\nNOUVEAU\nFilm\nFilm QA 13\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 13\n11 oct.\nNOUVEAU\nFilm\nFilm QA 01\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 01\n11 oct.\nNOUVEAU\nFilm\nFilm principal QA\n11 oct. 2026, 10:38\n17 vue(s)\nDrama · QA\n4K\nFilm principal QA\n11 oct. · 17 vue(s)\nNOUVEAU\nSérie\nSérie principale QA\n10 oct. 2026, 10:38\n6 vue(s)\nDrama · QA\n1080P\nSérie principale QA\n10 oct. · 6 vue(s)\nNOUVEAU\nFilm\nFilm QA 50\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 50\n10 oct.\nNOUVEAU\nFilm\nFilm QA 38\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 38\n10 oct.\nNOUVEAU\nFilm\nFilm QA 26\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 26\n10 oct.\nNOUVEAU\nFilm\nFilm QA 02\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 02\n10 oct.\nNOUVEAU\nFilm\nFilm QA 14\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 14\n10 oct.\nNOUVEAU\nSérie\nSérie principale QA\n10 oct. 2026, 10:38\n51 vue(s)\nDrama · QA\n1080P\nSérie principale QA\n10 oct. · 51 vue(s)\nNOUVEAU\nFilm\nFilm QA 50\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 50\n10 oct.\nNOUVEAU\nFilm\nFilm QA 38\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 38\n10 oct.\nNOUVEAU\nFilm\nFilm QA 26\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 26\n10 oct.\nNOUVEAU\nFilm\nFilm QA 02\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 02\n10 oct.\nNOUVEAU\nFilm\nFilm QA 14\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 14\n10 oct.\nNOUVEAU\nFilm\nFilm QA 51\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 51\n9 oct.\nNOUVEAU\nFilm\nFilm QA 39\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 39\n9 oct.\nNOUVEAU\nFilm\nFilm QA 03\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 03\n9 oct.\nNOUVEAU\nFilm\nFilm QA 27\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 27\n9 oct.\nNOUVEAU\nFilm\nFilm QA 15\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 15\n9 oct.\nNOUVEAU\nFilm\nFilm QA 51\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 51\n9 oct.\nNOUVEAU\nFilm\nFilm QA 39\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 39\n9 oct.\nNOUVEAU\nFilm\nFilm QA 03\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 03\n9 oct.\nNOUVEAU\nFilm\nFilm QA 27\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 27\n9 oct.\nNOUVEAU\nFilm\nFilm QA 15\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 15\n9 oct.\nNOUVEAU\nFilm\nFilm QA 52\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 52\n8 oct.\nNOUVEAU\nFilm\nFilm QA 40\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 40\n8 oct.\nNOUVEAU\nFilm\nFilm QA 04\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 04\n8 oct.\nNOUVEAU\nFilm\nFilm QA 28\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 28\n8 oct.\nNOUVEAU\nFilm\nFilm QA 16\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 16\n8 oct.\nNOUVEAU\nFilm\nFilm QA 52\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 52\n8 oct.\n← Précédent\nPage 1 sur 3\nSuivant →"
+      "body": "Ajouts récents\n112 médias\nTout\nQA principal\nQA secondaire\nAutres contenus\nNOUVEAU\nFilm\nFilm QA 49\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 49\n11 oct.\nNOUVEAU\nFilm\nFilm QA 37\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 37\n11 oct.\nNOUVEAU\nFilm\nFilm QA 25\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 25\n11 oct.\nNOUVEAU\nFilm\nFilm QA 13\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 13\n11 oct.\nNOUVEAU\nFilm\nFilm QA 01\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 01\n11 oct.\nNOUVEAU\nFilm\nFilm principal QA\n11 oct. 2026, 10:38\n2 vue(s)\nDrama · QA\n4K\nFilm principal QA\n11 oct. · 2 vue(s)\nNOUVEAU\nFilm\nFilm QA 49\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 49\n11 oct.\nNOUVEAU\nFilm\nFilm QA 37\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 37\n11 oct.\nNOUVEAU\nFilm\nFilm QA 25\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 25\n11 oct.\nNOUVEAU\nFilm\nFilm QA 13\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 13\n11 oct.\nNOUVEAU\nFilm\nFilm QA 01\n11 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 01\n11 oct.\nNOUVEAU\nFilm\nFilm principal QA\n11 oct. 2026, 10:38\n17 vue(s)\nDrama · QA\n4K\nFilm principal QA\n11 oct. · 17 vue(s)\nNOUVEAU\nSérie\nSérie principale QA\n10 oct. 2026, 10:38\n6 vue(s)\nDrama · QA\n1080P\nSérie principale QA\n10 oct. · 6 vue(s)\nNOUVEAU\nFilm\nFilm QA 50\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 50\n10 oct.\nNOUVEAU\nFilm\nFilm QA 38\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 38\n10 oct.\nNOUVEAU\nFilm\nFilm QA 26\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 26\n10 oct.\nNOUVEAU\nFilm\nFilm QA 02\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 02\n10 oct.\nNOUVEAU\nFilm\nFilm QA 14\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 14\n10 oct.\nNOUVEAU\nSérie\nSérie principale QA\n10 oct. 2026, 10:38\n51 vue(s)\nDrama · QA\n1080P\nSérie principale QA\n10 oct. · 51 vue(s)\nNOUVEAU\nFilm\nFilm QA 50\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 50\n10 oct.\nNOUVEAU\nFilm\nFilm QA 38\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 38\n10 oct.\nNOUVEAU\nFilm\nFilm QA 26\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 26\n10 oct.\nNOUVEAU\nFilm\nFilm QA 02\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 02\n10 oct.\nNOUVEAU\nFilm\nFilm QA 14\n10 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 14\n10 oct.\nNOUVEAU\nFilm\nFilm QA 51\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 51\n9 oct.\nNOUVEAU\nFilm\nFilm QA 39\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 39\n9 oct.\nNOUVEAU\nFilm\nFilm QA 03\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 03\n9 oct.\nNOUVEAU\nFilm\nFilm QA 27\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 27\n9 oct.\nNOUVEAU\nFilm\nFilm QA 15\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 15\n9 oct.\nNOUVEAU\nFilm\nFilm QA 51\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 51\n9 oct.\nNOUVEAU\nFilm\nFilm QA 39\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 39\n9 oct.\nNOUVEAU\nFilm\nFilm QA 03\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 03\n9 oct.\nNOUVEAU\nFilm\nFilm QA 27\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 27\n9 oct.\nNOUVEAU\nFilm\nFilm QA 15\n9 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 15\n9 oct.\nNOUVEAU\nFilm\nFilm QA 52\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 52\n8 oct.\nNOUVEAU\nFilm\nFilm QA 40\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 40\n8 oct.\nNOUVEAU\nFilm\nFilm QA 04\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 04\n8 oct.\nNOUVEAU\nFilm\nFilm QA 28\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 28\n8 oct.\nNOUVEAU\nFilm\nFilm QA 16\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 16\n8 oct.\nNOUVEAU\nFilm\nFilm QA 52\n8 oct. 2026, 10:38\nDrama · QA\n4K\nFilm QA 52\n8 oct.\n← Précédent\nPage 1 sur 3\nSuivant →"
     },
     {
       "route": "/media/all",
@@ -1034,16 +1037,22 @@
       "charts": [],
       "controls": [
         {
-          "tag": "INPUT",
+          "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": ""
+          "text": "Tout"
         },
         {
-          "tag": "INPUT",
+          "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": ""
+          "text": "QA principal"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "QA secondaire"
         },
         {
           "tag": "BUTTON",
@@ -1106,7 +1115,7 @@
           "text": "Suivant →"
         }
       ],
-      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTous les Médias\nServeurs\nQA principal\nQA secondaire\nTout\nFilms\nSéries\nMusique\nAutres contenus\n3495 KBPS\nAlbum principal QA\n51 vue(s)2.5h\n1080P\nSérie principale QA\n51 vue(s)25.5h\n4K UHD\nFilm principal QA\n17 vue(s)22.7h\n1080P\nSérie principale QA\n6 vue(s)3h\n3495 KBPS\nAlbum principal QA\n3 vue(s)0.1h\n4K UHD\nFilm principal QA\n2 vue(s)2.7h\n4K UHD\nFilm QA 00\n0 vue(s)\n4K UHD\nFilm QA 00\n0 vue(s)\n4K UHD\nFilm QA 01\n0 vue(s)\n4K UHD\nFilm QA 01\n0 vue(s)\n4K UHD\nFilm QA 02\n0 vue(s)\n4K UHD\nFilm QA 02\n0 vue(s)\n4K UHD\nFilm QA 03\n0 vue(s)\n4K UHD\nFilm QA 03\n0 vue(s)\n4K UHD\nFilm QA 04\n0 vue(s)\n4K UHD\nFilm QA 04\n0 vue(s)\n4K UHD\nFilm QA 05\n0 vue(s)\n4K UHD\nFilm QA 05\n0 vue(s)\n4K UHD\nFilm QA 06\n0 vue(s)\n4K UHD\nFilm QA 06\n0 vue(s)\n4K UHD\nFilm QA 07\n0 vue(s)\n4K UHD\nFilm QA 07\n0 vue(s)\n4K UHD\nFilm QA 08\n0 vue(s)\n4K UHD\nFilm QA 08\n0 vue(s)\n4K UHD\nFilm QA 09\n0 vue(s)\n4K UHD\nFilm QA 09\n0 vue(s)\n4K UHD\nFilm QA 10\n0 vue(s)\n4K UHD\nFilm QA 10\n0 vue(s)\n4K UHD\nFilm QA 11\n0 vue(s)\n4K UHD\nFilm QA 11\n0 vue(s)\n4K UHD\nFilm QA 12\n0 vue(s)\n4K UHD\nFilm QA 12\n0 vue(s)\n4K UHD\nFilm QA 13\n0 vue(s)\n4K UHD\nFilm QA 13\n0 vue(s)\n4K UHD\nFilm QA 14\n0 vue(s)\n4K UHD\nFilm QA 14\n0 vue(s)\n4K UHD\nFilm QA 15\n0 vue(s)\n4K UHD\nFilm QA 15\n0 vue(s)\n4K UHD\nFilm QA 16\n0 vue(s)\n4K UHD\nFilm QA 16\n0 vue(s)\n4K UHD\nFilm QA 17\n0 vue(s)\n4K UHD\nFilm QA 17\n0 vue(s)\n4K UHD\nFilm QA 18\n0 vue(s)\n4K UHD\nFilm QA 18\n0 vue(s)\n4K UHD\nFilm QA 19\n0 vue(s)\n4K UHD\nFilm QA 19\n0 vue(s)\n4K UHD\nFilm QA 20\n0 vue(s)\n4K UHD\nFilm QA 20\n0 vue(s)\n4K UHD\nFilm QA 21\n0 vue(s)\n4K UHD\nFilm QA 21\n0 vue(s)\n← Précédent\nPage 1 sur 3\nSuivant →"
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTous les Médias\nTout\nQA principal\nQA secondaire\nTout\nFilms\nSéries\nMusique\nAutres contenus\n3495 KBPS\nAlbum principal QA\n51 vue(s)2.5h\n1080P\nSérie principale QA\n51 vue(s)25.5h\n4K UHD\nFilm principal QA\n17 vue(s)22.7h\n1080P\nSérie principale QA\n6 vue(s)3h\n3495 KBPS\nAlbum principal QA\n3 vue(s)0.1h\n4K UHD\nFilm principal QA\n2 vue(s)2.7h\n4K UHD\nFilm QA 00\n0 vue(s)\n4K UHD\nFilm QA 00\n0 vue(s)\n4K UHD\nFilm QA 01\n0 vue(s)\n4K UHD\nFilm QA 01\n0 vue(s)\n4K UHD\nFilm QA 02\n0 vue(s)\n4K UHD\nFilm QA 02\n0 vue(s)\n4K UHD\nFilm QA 03\n0 vue(s)\n4K UHD\nFilm QA 03\n0 vue(s)\n4K UHD\nFilm QA 04\n0 vue(s)\n4K UHD\nFilm QA 04\n0 vue(s)\n4K UHD\nFilm QA 05\n0 vue(s)\n4K UHD\nFilm QA 05\n0 vue(s)\n4K UHD\nFilm QA 06\n0 vue(s)\n4K UHD\nFilm QA 06\n0 vue(s)\n4K UHD\nFilm QA 07\n0 vue(s)\n4K UHD\nFilm QA 07\n0 vue(s)\n4K UHD\nFilm QA 08\n0 vue(s)\n4K UHD\nFilm QA 08\n0 vue(s)\n4K UHD\nFilm QA 09\n0 vue(s)\n4K UHD\nFilm QA 09\n0 vue(s)\n4K UHD\nFilm QA 10\n0 vue(s)\n4K UHD\nFilm QA 10\n0 vue(s)\n4K UHD\nFilm QA 11\n0 vue(s)\n4K UHD\nFilm QA 11\n0 vue(s)\n4K UHD\nFilm QA 12\n0 vue(s)\n4K UHD\nFilm QA 12\n0 vue(s)\n4K UHD\nFilm QA 13\n0 vue(s)\n4K UHD\nFilm QA 13\n0 vue(s)\n4K UHD\nFilm QA 14\n0 vue(s)\n4K UHD\nFilm QA 14\n0 vue(s)\n4K UHD\nFilm QA 15\n0 vue(s)\n4K UHD\nFilm QA 15\n0 vue(s)\n4K UHD\nFilm QA 16\n0 vue(s)\n4K UHD\nFilm QA 16\n0 vue(s)\n4K UHD\nFilm QA 17\n0 vue(s)\n4K UHD\nFilm QA 17\n0 vue(s)\n4K UHD\nFilm QA 18\n0 vue(s)\n4K UHD\nFilm QA 18\n0 vue(s)\n4K UHD\nFilm QA 19\n0 vue(s)\n4K UHD\nFilm QA 19\n0 vue(s)\n4K UHD\nFilm QA 20\n0 vue(s)\n4K UHD\nFilm QA 20\n0 vue(s)\n4K UHD\nFilm QA 21\n0 vue(s)\n4K UHD\nFilm QA 21\n0 vue(s)\n← Précédent\nPage 1 sur 3\nSuivant →"
     },
     {
       "route": "/media/popular",
@@ -1124,19 +1133,25 @@
       "charts": [],
       "controls": [
         {
-          "tag": "INPUT",
+          "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": ""
+          "text": "Tout"
         },
         {
-          "tag": "INPUT",
+          "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": ""
+          "text": "QA principal"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "QA secondaire"
         }
       ],
-      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTop Contenus\nServeurs\nQA principal\nQA secondaire\n\nLes films, séries et musiques les plus populaires de votre serveur.\n\nTop Films\n\nLes films les plus visionnés.\n\n#1\nFilm principal QA\n17 lectures\n22.7h\n#2\nFilm principal QA\n2 lectures\n2.7h\nTop Séries\n\nLes séries les plus suivies.\n\n#1\nSérie principale QA\n51 lectures\n25.5h\n#2\nSérie principale QA\n6 lectures\n3h\nTop Titres Musicaux\n\nLes musiques les plus écoutées.\n\n#1\nPiste 1\n17 lectures\n1.1h\n#2\nPiste 2\n17 lectures\n0.8h\n#3\nPiste 3\n17 lectures\n0.6h\n#4\nPiste 1\n1 lecture\n0.1h\n#5\nPiste 2\n1 lecture\n0.1h\nTop Réalisateurs\n\nLes réalisateurs les plus visionnés.\n\n#1\nRéalisateur QA\n76 lectures\n53.8h\nTop Acteurs\n\nLes acteurs les plus visionnés.\n\n#1\nActrice QA\n76 lectures\n53.8h\nTop Studios\n\nLes studios les plus populaires.\n\n#1\nStudio QA\n76 lectures\n53.8h"
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTop Contenus\nTout\nQA principal\nQA secondaire\n\nLes films, séries et musiques les plus populaires de votre serveur.\n\nTop Films\n\nLes films les plus visionnés.\n\n#1\nFilm principal QA\n17 lectures\n22.7h\n#2\nFilm principal QA\n2 lectures\n2.7h\nTop Séries\n\nLes séries les plus suivies.\n\n#1\nSérie principale QA\n51 lectures\n25.5h\n#2\nSérie principale QA\n6 lectures\n3h\nTop Titres Musicaux\n\nLes musiques les plus écoutées.\n\n#1\nPiste 1\n17 lectures\n1.1h\n#2\nPiste 2\n17 lectures\n0.8h\n#3\nPiste 3\n17 lectures\n0.6h\n#4\nPiste 1\n1 lecture\n0.1h\n#5\nPiste 2\n1 lecture\n0.1h\nTop Réalisateurs\n\nLes réalisateurs les plus visionnés.\n\n#1\nRéalisateur QA\n76 lectures\n53.8h\nTop Acteurs\n\nLes acteurs les plus visionnés.\n\n#1\nActrice QA\n76 lectures\n53.8h\nTop Studios\n\nLes studios les plus populaires.\n\n#1\nStudio QA\n76 lectures\n53.8h"
     },
     {
       "route": "/media/collections",
@@ -1161,16 +1176,22 @@
       "charts": [],
       "controls": [
         {
-          "tag": "INPUT",
+          "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": ""
+          "text": "Tout"
         },
         {
-          "tag": "INPUT",
+          "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": ""
+          "text": "QA principal"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "QA secondaire"
         },
         {
           "tag": "INPUT",
@@ -1179,7 +1200,7 @@
           "text": ""
         }
       ],
-      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nCollections\nServeurs\nQA principal\nQA secondaire\nVOLUME DU DISQUE\n11.9 Go\nEspace total utilisé\nCONTENU TOTAL\n108 Films, 2 Séries, 6 Musique, 2 Livres\nInventaire des bibliothèques\nTEMPS TOTAL\n7j 1h\nDurée cumulée des médias\nDétails par Collection\n\n4 collections total\n\nFilms\nFilms QA\n10.5 Go\n108 Film\n6j 18h\nLEADER\nFilm principal QA\n17 vue(s)\nNOUVEAUTÉ\nFilm QA 49\n11/10/2026\nLivres\nLivres QA\n0.2 Go\n2 Book\n0j 4h\nLEADER\nLivre principal QA\n16 vue(s)\nNOUVEAUTÉ\nLivre principal QA\n01/10/2026\nMusique\nMusique QA\n0.6 Go\n6 Album\n0j 0h\n6 Piste\nLEADER\nPiste 1\n17 vue(s)\nNOUVEAUTÉ\nAlbum principal QA\n05/10/2026\nSéries\nSéries QA\n0.6 Go\n2 Série\n0j 3h\n6 Épisode\nLEADER\nÉpisode 1\n17 vue(s)\nNOUVEAUTÉ\nSérie principale QA\n10/10/2026"
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nCollections\nTout\nQA principal\nQA secondaire\nVOLUME DU DISQUE\n11.9 Go\n\nEspace total utilisé\n\nCONTENU TOTAL\n108 films, 2 séries, 6 musique, 2 livres\n\nInventaire des bibliothèques\n\nTEMPS TOTAL\n7j 1h\n\nDurée cumulée des médias\n\nDétails par Collection\n\n4 collections total\n\nFilms\nFilms QA\n10.5 Go\n108 films\n6j 18h\nLEADER\nFilm principal QA\n17 vue(s)\nNOUVEAUTÉ\nFilm QA 49\n11/10/2026\nLivres\nLivres QA\n0.2 Go\n2 livres\n0j 4h\nLEADER\nLivre principal QA\n16 vue(s)\nNOUVEAUTÉ\nLivre principal QA\n01/10/2026\nMusique\nMusique QA\n0.6 Go\n6 musique\n0j 0h\n6 piste\nLEADER\nPiste 1\n17 vue(s)\nNOUVEAUTÉ\nAlbum principal QA\n05/10/2026\nSéries\nSéries QA\n0.6 Go\n2 séries\n0j 3h\n6 épisode\nLEADER\nÉpisode 1\n17 vue(s)\nNOUVEAUTÉ\nSérie principale QA\n10/10/2026"
     },
     {
       "route": "/media/analysis",
@@ -1190,16 +1211,16 @@
         "Qualité Vidéo Globale",
         "Collections",
         "Diversité de la Bibliothèque (Top Genres)",
-        "Binge-watching",
-        "Suggestions d'acquisition",
+        "Binge-Watching Tracker (Marathons de Séries)",
+        "Suggestions d’Acquisitions & Tendances (Smart Insights)",
         "Enrichir la collection Drama",
         "Films & Séries QA",
         "Compléter la filmographie / discographie de Artiste QA",
-        "Tendances sur 30 jours",
+        "Genres dominants en temps de visionnage",
         "Aperçu des statistiques approfondies",
         "Top Réalisateurs",
-        "Acteurs",
-        "Studios"
+        "Top Acteurs",
+        "Top Studios"
       ],
       "errors": [],
       "charts": [
@@ -1212,37 +1233,43 @@
       ],
       "controls": [
         {
-          "tag": "INPUT",
+          "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": ""
-        },
-        {
-          "tag": "INPUT",
-          "id": "",
-          "name": "",
-          "text": ""
+          "text": "Tout"
         },
         {
           "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": "Réalisateur QA147 vue(s)"
+          "text": "QA principal"
         },
         {
           "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": "Actrice QA147 vue(s)"
+          "text": "QA secondaire"
         },
         {
           "tag": "BUTTON",
           "id": "",
           "name": "",
-          "text": "Studio QA147 vue(s)"
+          "text": "1Réalisateur QA110 Top Réalisateurs"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "1Actrice QA110 Top Acteurs"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "1Studio QA110 Top Studios"
         }
       ],
-      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nAnalyse Profonde\nServeurs\nQA principal\nQA secondaire\nContenu Total\n\nInventaire des bibliothèques\n\nMédias Totaux\n112\nNombre d'éléments multimédia indexés.\nGenres uniques\n3\nDurée moyenne\n1h 30m\nDurée moyenne des médias.\nQualité Vidéo Globale\n\nRépartition par résolution certifiée.\n\n4K UHD\n108\n1440p QHD\n0\n1080p FHD\n2\n720p HD\n0\nStandard / Autre\n0\nCollections\nFilms QA\n108\nMusique QA\n2\nSéries QA\n2\nDiversité de la Bibliothèque (Top Genres)\n\nRépartition des médias par genre (catégories principales).\n\nBinge-watching\n\nAu moins 3 épisodes de la même série, séparés de 45 minutes maximum.\n\nSessions sur 30 jours\n0\nÉpisodes par session\n0\nRecord\n0\nSpectateur leader\nAucune lecture\nAucune lecture\nSuggestions d'acquisition\nTrès Forte Demande · 99% · Score indicatif\nEnrichir la collection Drama\n\nReprésente 97% du temps total de visionnage (77.4h). Vos spectateurs en redemandent !\n\nTendance Forte · 85% · Score indicatif\nFilms & Séries QA\n\nDeuxième genre le plus plébiscité avec 77.4h visionnées sur les 30 derniers jours.\n\nFavori Utilisateurs · 92% · Score indicatif\nCompléter la filmographie / discographie de Artiste QA\n\nCumule 2.7h d'écoute/visionnage sur 54 lectures.\n\nTendances sur 30 jours\nDrama\n77h 26m · 97%\nQA\n77h 26m · 97%\nRock\n2h 39m · 3%\nAperçu des statistiques approfondies\n\nAnalyses avancées de votre collection multimédia.\n\nTop Réalisateurs\nRéalisateur QA\n147 vue(s)\nActeurs\nActrice QA\n147 vue(s)\nStudios\nStudio QA\n147 vue(s)"
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nAnalyse Profonde\nTout\nQA principal\nQA secondaire\nContenu Total\n\nInventaire des bibliothèques\n\nMédias Totaux\n112\nNombre d'éléments multimédia indexés.\nGenres uniques\n3\nDurée moyenne\n1h 30m\nDurée moyenne des médias.\nQualité Vidéo Globale\n\nRépartition par résolution certifiée.\n\n4K UHD\n108\n1440p QHD\n0\n1080p FHD\n2\n720p HD\n0\nStandard / Autre\n0\nCollections\n\nInventaire des bibliothèques\n\nFilms QA\n108\nMusique QA\n2\nSéries QA\n2\nDiversité de la Bibliothèque (Top Genres)\n\nRépartition des médias par genre (catégories principales).\n\nBinge-Watching Tracker (Marathons de Séries)\n\nDétection automatique des séries dévorées d’une traite (sessions de 3 épisodes consécutifs ou plus).\n\n30 derniers jours\nAucun marathon détecté sur les 30 derniers jours (minimum 3 épisodes consécutifs).\nSuggestions d’Acquisitions & Tendances (Smart Insights)\n\nRecommandations basées sur les genres, réalisateurs et acteurs les plus consommés pour optimiser vos ajouts dans la bibliothèque.\n\nIA JellyTrack\nGENRE DOMINANT\nTrès Forte Demande\nEnrichir la collection Drama\n\nReprésente 97% du temps total de visionnage (77.4h). Vos spectateurs en redemandent !\n\nIndice d’intérêt\n99%\nGENRE TENDANCE\nTendance Forte\nFilms & Séries QA\n\nDeuxième genre le plus plébiscité avec 77.4h visionnées sur les 30 derniers jours.\n\nIndice d’intérêt\n85%\nARTISTE / RÉALISATEUR VEDETTE\nFavori Utilisateurs\nCompléter la filmographie / discographie de Artiste QA\n\nCumule 2.7h d'écoute/visionnage sur 54 lectures.\n\nIndice d’intérêt\n92%\nGENRES DOMINANTS EN TEMPS DE VISIONNAGE\nDrama\n77,4h (96,7%)\nQA\n77,4h (96,7%)\nRock\n2,7h (3,3%)\nAperçu des statistiques approfondies\n\nAnalyses avancées de votre collection multimédia.\n\nTop Réalisateurs\n1\nRéalisateur QA\n110 Top Réalisateurs\nTop Acteurs\n1\nActrice QA\n110 Top Acteurs\nTop Studios\n1\nStudio QA\n110 Top Studios"
     },
     {
       "route": "/media/qa-primary-movie",
@@ -1260,6 +1287,7 @@
         "Sous-titres",
         "Distribution de la Complétion",
         "Chronologie Profonde",
+        "Détail de la Session (1)Positions des événements par utilisateur",
         "Télémétrie par Session",
         "Historique Détaillé"
       ],
@@ -1296,6 +1324,378 @@
           "id": "",
           "name": "",
           "text": "Actrice QA"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Stop"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "DL"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Pause"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Skip"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Replay"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Vitesse"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Audio"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Sous-titres"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Bob QA"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
         },
         {
           "tag": "SELECT",
@@ -1436,7 +1836,7 @@
           "text": "Suivant →"
         }
       ],
-      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nFilms QA\n›\nFilm principal QA\nFilm principal QA\nFilm\n4K\nDRAMA\nQA\n\nQA principal · 1h 30m · 100 MiB\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nTemps Total\n22.7h\nCumulé\nVues\n17\nSessions uniques\nDurée Moyenne\n80 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n34\nSauts\n17\nRetours\n0\nChangements de vitesse\n17\nModif. Audio\n17\nModif. Sous-titres\n17\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 1 sessions\n1\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 1 sessions\n1\nPériodes de langue\neng (aac) · 0–4800 s · 16 sessions\n16\neng (aac) · 0–120 s · 1 sessions\n1\nfre · 120–4800 s · 1 sessions\n1\nSpectateurs (2)\nAlice QA\n11 Sessions · 14h 40m\nBob QA\n6 Sessions · 8h\nLangues Audio\neng (aac)\n17\nSous-titres\nAucun\n17\nDistribution de la Complétion\n\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\n\nChronologie Profonde\nUtilisateur\nTous les Utilisateurs\nAlice QA\nBob QA\nSession\nToutes les sessions\nBob QA · qa-primary-p\nAlice QA · 10 oct. 2026, 10:35\nAlice QA · 9 oct. 2026, 10:37\nBob QA · 8 oct. 2026, 10:34\nAlice QA · 7 oct. 2026, 10:36\nAlice QA · 6 oct. 2026, 10:38\nBob QA · 5 oct. 2026, 10:35\nAlice QA · 4 oct. 2026, 10:37\nAlice QA · 3 oct. 2026, 10:34\nBob QA · 2 oct. 2026, 10:36\nAlice QA · 1 oct. 2026, 10:38\nAlice QA · 30 sept. 2026, 10:35\nBob QA · 29 sept. 2026, 10:37\nAlice QA · 28 sept. 2026, 10:34\nAlice QA · 27 sept. 2026, 10:36\nBob QA · 26 sept. 2026, 10:38\nAlice QA · 25 sept. 2026, 10:35\nBob QA\nqa-primary-p\n3\n0\n45 min\n1h 30m\nTélémétrie par Session\n\nPauses, changements d'audio et de sous-titres au fil du temps.\n\nHistorique Détaillé\nUTILISATEUR\tDATE\tMÉTHODE\tAUDIO\tSOUS-TITRES\tPAUSES\tSAUTS\tRETOURS\tVITESSE MAX\tDURÉE\nBob QA\t11 oct. 2026, 10:38\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t10 oct. 2026, 10:35\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t9 oct. 2026, 10:37\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t8 oct. 2026, 10:34\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t7 oct. 2026, 10:36\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t6 oct. 2026, 10:38\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t5 oct. 2026, 10:35\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t4 oct. 2026, 10:37\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t3 oct. 2026, 10:34\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t2 oct. 2026, 10:36\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t1 oct. 2026, 10:38\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t30 sept. 2026, 10:35\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t29 sept. 2026, 10:37\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t28 sept. 2026, 10:34\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t27 sept. 2026, 10:36\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t26 sept. 2026, 10:38\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t25 sept. 2026, 10:35\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\n← Précédent\nPage 1 sur 1\nSuivant →"
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nBibliothèque\nFilm principal QA\nFilm principal QA\nMovie\n4K\nDRAMA\nQA\n\nQA principal · 1h 30m · 100 MiB\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nTemps Total\n22.7h\nCumulé\nVues\n17\nSessions uniques\nDurée Moyenne\n80 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n34\nPassages sautés\n17\nPassages revus\n0\nChangements de vitesse\n17\nModif. Audio\n17\nModif. Sous-titres\n17\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 1 sessions\n1\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 1 sessions\n1\nPériodes de langue\neng (aac) · 0–4800 s · 16 sessions\n16\neng (aac) · 0–120 s · 1 sessions\n1\nfre · 120–4800 s · 1 sessions\n1\nSpectateurs (2)\n\nUtilisateurs ayant visionné ce média.\n\nAlice QA\n11 sessions\n14.7h\nBob QA\n6 sessions\n8.0h\nLangues Audio\neng (aac)\n17\nSous-titres\nAucun\n17\nDistribution de la Complétion\n\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\n\nChronologie Profonde\n\nChronologie détaillée des événements pour cette session.\n\nStop\nDL\nPause\nSkip\nReplay\nVitesse\nAudio\nSous-titres\n0:00\n22:30\n45:00\n1:07:30\n1:30:00\nDÉTAIL DE LA SESSION (1)\nPositions des événements par utilisateur\nBob QA\n80m\nExplorer les événements (détails et filtres avancés)\nTélémétrie par Session\n\nPauses, changements d'audio et de sous-titres au fil du temps.\n\nHistorique Détaillé\n\n17 sessions au total.\n\nUTILISATEUR\tDATE\tMÉTHODE\tAUDIO\tSOUS-TITRES\tPAUSES\tSAUTS\tRETOURS\tVITESSE MAX\tDURÉE\nBob QA\t11 oct. 2026, 10:38\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t10 oct. 2026, 10:35\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t9 oct. 2026, 10:37\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t8 oct. 2026, 10:34\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t7 oct. 2026, 10:36\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t6 oct. 2026, 10:38\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t5 oct. 2026, 10:35\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t4 oct. 2026, 10:37\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t3 oct. 2026, 10:34\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t2 oct. 2026, 10:36\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t1 oct. 2026, 10:38\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t30 sept. 2026, 10:35\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t29 sept. 2026, 10:37\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t28 sept. 2026, 10:34\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t27 sept. 2026, 10:36\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t26 sept. 2026, 10:38\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t25 sept. 2026, 10:35\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\n← Précédent\nPage 1 sur 1\nSuivant →"
     },
     {
       "route": "/media/qa-primary-series",
@@ -1732,7 +2132,7 @@
           "text": "Suivant →"
         }
       ],
-      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nSéries QA\n›\nSérie principale QA\nSérie principale QA\nSérie\n1080p\nDRAMA\nQA\n\nQA principal\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nSaisons (1)\n#\tTITRE\tTYPE\tRÉSOLUTION\tSESSIONS\tTEMPS TOTAL\n1\tSaison 1\tSaison\t1080p\t51\t25h 30m\nTemps Total\n25.5h\nCumulé\nVues\n51\nSessions uniques\nDurée Moyenne\n30 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n102\nSauts\n51\nRetours\n0\nChangements de vitesse\n51\nModif. Audio\n51\nModif. Sous-titres\n51\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 3 sessions\n3\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 3 sessions\n3\nPériodes de langue\neng (subrip) · 0–1800 s · 34 sessions\n34\nfre (aac) · 0–1800 s · 32 sessions\n32\neng (aac) · 0–1800 s · 16 sessions\n16\nfre · 120–1800 s · 3 sessions\n3\nfre (aac) · 0–120 s · 2 sessions\n2\neng (aac) · 0–120 s · 1 sessions\n1\nSpectateurs (2)\nAlice QA\n34 Sessions · 17h\nBob QA\n17 Sessions · 8h 30m\nLangues Audio\nfre (aac)\n34\neng (aac)\n17\nSous-titres\neng (subrip)\n34\nAucun\n17\nChronologie Profonde\nUtilisateur\nTous les Utilisateurs\nAlice QA\nBob QA\nSession\nToutes les sessions\nAlice QA · qa-primary-p\nAlice QA · qa-primary-p\nBob QA · qa-primary-p\nBob QA · 10 oct. 2026, 09:34\nAlice QA · 10 oct. 2026, 08:38\nAlice QA · 10 oct. 2026, 07:37\nAlice QA · 9 oct. 2026, 09:36\nBob QA · 9 oct. 2026, 08:35\nAlice QA · 9 oct. 2026, 07:34\nAlice QA · 8 oct. 2026, 09:38\nAlice QA · 8 oct. 2026, 08:37\nBob QA · 8 oct. 2026, 07:36\nBob QA · 7 oct. 2026, 09:35\nAlice QA · 7 oct. 2026, 08:34\nAlice QA · 7 oct. 2026, 07:38\nAlice QA · 6 oct. 2026, 09:37\nBob QA · 6 oct. 2026, 08:36\nAlice QA · 6 oct. 2026, 07:35\nAlice QA · 5 oct. 2026, 09:34\nAlice QA · 5 oct. 2026, 08:38\nBob QA · 5 oct. 2026, 07:37\nBob QA · 4 oct. 2026, 09:36\nAlice QA · 4 oct. 2026, 08:35\nAlice QA · 4 oct. 2026, 07:34\nAlice QA · 3 oct. 2026, 09:38\nBob QA\nqa-primary-p\nAlice QA\nqa-primary-p\nAlice QA\nqa-primary-p\n0\n1 min\n2 min\nTélémétrie par Session\n\nPauses, changements d'audio et de sous-titres au fil du temps.\n\nHistorique Détaillé\nUTILISATEUR\tDATE\tMÉTHODE\tAUDIO\tSOUS-TITRES\tPAUSES\tSAUTS\tRETOURS\tVITESSE MAX\tDURÉE\nAlice QA\t11 oct. 2026, 09:37\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t11 oct. 2026, 08:36\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nBob QA\t11 oct. 2026, 07:35\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t10 oct. 2026, 09:34\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t10 oct. 2026, 08:38\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t10 oct. 2026, 07:37\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t9 oct. 2026, 09:36\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t9 oct. 2026, 08:35\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t9 oct. 2026, 07:34\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t8 oct. 2026, 09:38\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t8 oct. 2026, 08:37\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nBob QA\t8 oct. 2026, 07:36\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t7 oct. 2026, 09:35\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t7 oct. 2026, 08:34\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t7 oct. 2026, 07:38\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t6 oct. 2026, 09:37\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t6 oct. 2026, 08:36\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t6 oct. 2026, 07:35\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t5 oct. 2026, 09:34\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t5 oct. 2026, 08:38\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nBob QA\t5 oct. 2026, 07:37\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t4 oct. 2026, 09:36\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t4 oct. 2026, 08:35\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t4 oct. 2026, 07:34\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t3 oct. 2026, 09:38\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\n← Précédent\nPage 1 sur 3\nSuivant →"
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nBibliothèque\nSérie principale QA\nSérie principale QA\nSeries\n1080p\nDRAMA\nQA\n\nQA principal\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nSaisons (1)\n\nSaisons de cette série avec statistiques agrégées.\n\n#\tTITRE\tTYPE\tRÉSOLUTION\tSESSIONS\tTEMPS TOTAL\n1\t\nSaison 1\n\tSeason\t—\t51\t25h 30m\nTemps Total\n25.5h\nCumulé\nVues\n51\nSessions uniques\nDurée Moyenne\n30 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n102\nPassages sautés\n51\nPassages revus\n0\nChangements de vitesse\n51\nModif. Audio\n51\nModif. Sous-titres\n51\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 3 sessions\n3\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 3 sessions\n3\nPériodes de langue\neng (subrip) · 0–1800 s · 34 sessions\n34\nfre (aac) · 0–1800 s · 32 sessions\n32\neng (aac) · 0–1800 s · 16 sessions\n16\nfre · 120–1800 s · 3 sessions\n3\nfre (aac) · 0–120 s · 2 sessions\n2\neng (aac) · 0–120 s · 1 sessions\n1\nSpectateurs (2)\n\nUtilisateurs ayant visionné ce média.\n\nAlice QA\n34 sessions\n17.0h\nBob QA\n17 sessions\n8.5h\nLangues Audio\nfre (aac)\n34\neng (aac)\n17\nSous-titres\neng (subrip)\n34\nAucun\n17\nChronologie Profonde\n\nChronologie détaillée des événements pour cette session.\n\nAucune donnée\nExplorer les événements (détails et filtres avancés)\nTélémétrie par Session\n\nPauses, changements d'audio et de sous-titres au fil du temps.\n\nHistorique Détaillé\n\n51 sessions au total.\n\nUTILISATEUR\tDATE\tMÉTHODE\tAUDIO\tSOUS-TITRES\tPAUSES\tSAUTS\tRETOURS\tVITESSE MAX\tDURÉE\nAlice QA\t11 oct. 2026, 09:37\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t11 oct. 2026, 08:36\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nBob QA\t11 oct. 2026, 07:35\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t10 oct. 2026, 09:34\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t10 oct. 2026, 08:38\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t10 oct. 2026, 07:37\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t9 oct. 2026, 09:36\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t9 oct. 2026, 08:35\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t9 oct. 2026, 07:34\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t8 oct. 2026, 09:38\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t8 oct. 2026, 08:37\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nBob QA\t8 oct. 2026, 07:36\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t7 oct. 2026, 09:35\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t7 oct. 2026, 08:34\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t7 oct. 2026, 07:38\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t6 oct. 2026, 09:37\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t6 oct. 2026, 08:36\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t6 oct. 2026, 07:35\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t5 oct. 2026, 09:34\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t5 oct. 2026, 08:38\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nBob QA\t5 oct. 2026, 07:37\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t4 oct. 2026, 09:36\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t4 oct. 2026, 08:35\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t4 oct. 2026, 07:34\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t3 oct. 2026, 09:38\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\n← Précédent\nPage 1 sur 3\nSuivant →"
     },
     {
       "route": "/media/qa-primary-episode1",
@@ -1750,6 +2150,7 @@
         "Sous-titres",
         "Distribution de la Complétion",
         "Chronologie Profonde",
+        "Détail de la Session (1)Positions des événements par utilisateur",
         "Télémétrie par Session",
         "Historique Détaillé"
       ],
@@ -1786,6 +2187,378 @@
           "id": "",
           "name": "",
           "text": "Actrice QA"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Stop"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "DL"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Pause"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Skip"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Replay"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Vitesse"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Audio"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Sous-titres"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Alice QA"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
         },
         {
           "tag": "SELECT",
@@ -1926,7 +2699,7 @@
           "text": "Suivant →"
         }
       ],
-      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nSéries QA\n›\nSérie principale QA\n›\nSaison 1\n›\nÉpisode 1\nSérie: Série principale QA\nSaison: Saison 1\nÉpisode 1\nÉpisode\n1080p\n\nSaison 1\n\nDRAMA\nQA\n\nQA principal · 30 min · 100 MiB\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nTemps Total\n8.5h\nCumulé\nVues\n17\nSessions uniques\nDurée Moyenne\n30 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n34\nSauts\n17\nRetours\n0\nChangements de vitesse\n17\nModif. Audio\n17\nModif. Sous-titres\n17\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 1 sessions\n1\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 1 sessions\n1\nPériodes de langue\neng (subrip) · 0–1800 s · 17 sessions\n17\nfre (aac) · 0–1800 s · 16 sessions\n16\nfre (aac) · 0–120 s · 1 sessions\n1\nfre · 120–1800 s · 1 sessions\n1\nSpectateurs (2)\nAlice QA\n11 Sessions · 5h 30m\nBob QA\n6 Sessions · 3h\nLangues Audio\nfre (aac)\n17\nSous-titres\neng (subrip)\n17\nDistribution de la Complétion\n\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\n\nChronologie Profonde\nUtilisateur\nTous les Utilisateurs\nAlice QA\nBob QA\nSession\nToutes les sessions\nAlice QA · qa-primary-p\nBob QA · 10 oct. 2026, 09:34\nAlice QA · 9 oct. 2026, 09:36\nAlice QA · 8 oct. 2026, 09:38\nBob QA · 7 oct. 2026, 09:35\nAlice QA · 6 oct. 2026, 09:37\nAlice QA · 5 oct. 2026, 09:34\nBob QA · 4 oct. 2026, 09:36\nAlice QA · 3 oct. 2026, 09:38\nAlice QA · 2 oct. 2026, 09:35\nBob QA · 1 oct. 2026, 09:37\nAlice QA · 30 sept. 2026, 09:34\nAlice QA · 29 sept. 2026, 09:36\nBob QA · 28 sept. 2026, 09:38\nAlice QA · 27 sept. 2026, 09:35\nAlice QA · 26 sept. 2026, 09:37\nBob QA · 25 sept. 2026, 09:34\nAlice QA\nqa-primary-p\n3\n0\n15 min\n30 min\nTélémétrie par Session\n\nPauses, changements d'audio et de sous-titres au fil du temps.\n\nHistorique Détaillé\nUTILISATEUR\tDATE\tMÉTHODE\tAUDIO\tSOUS-TITRES\tPAUSES\tSAUTS\tRETOURS\tVITESSE MAX\tDURÉE\nAlice QA\t11 oct. 2026, 09:37\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t10 oct. 2026, 09:34\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t9 oct. 2026, 09:36\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t8 oct. 2026, 09:38\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t7 oct. 2026, 09:35\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t6 oct. 2026, 09:37\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t5 oct. 2026, 09:34\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t4 oct. 2026, 09:36\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t3 oct. 2026, 09:38\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t2 oct. 2026, 09:35\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t1 oct. 2026, 09:37\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t30 sept. 2026, 09:34\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t29 sept. 2026, 09:36\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t28 sept. 2026, 09:38\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t27 sept. 2026, 09:35\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t26 sept. 2026, 09:37\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t25 sept. 2026, 09:34\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\n← Précédent\nPage 1 sur 1\nSuivant →"
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nBibliothèque\nSérie principale QA\nSaison 1\nÉpisode 1\nVoir la série : Série principale QA\nSaison 1\nÉpisode 1\nEpisode\n1080p\n\nSaison 1\n\nDRAMA\nQA\n\nQA principal · 30 min · 100 MiB\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nTemps Total\n8.5h\nCumulé\nVues\n17\nSessions uniques\nDurée Moyenne\n30 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n34\nPassages sautés\n17\nPassages revus\n0\nChangements de vitesse\n17\nModif. Audio\n17\nModif. Sous-titres\n17\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 1 sessions\n1\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 1 sessions\n1\nPériodes de langue\neng (subrip) · 0–1800 s · 17 sessions\n17\nfre (aac) · 0–1800 s · 16 sessions\n16\nfre (aac) · 0–120 s · 1 sessions\n1\nfre · 120–1800 s · 1 sessions\n1\nSpectateurs (2)\n\nUtilisateurs ayant visionné ce média.\n\nAlice QA\n11 sessions\n5.5h\nBob QA\n6 sessions\n3.0h\nLangues Audio\nfre (aac)\n17\nSous-titres\neng (subrip)\n17\nDistribution de la Complétion\n\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\n\nChronologie Profonde\n\nChronologie détaillée des événements pour cette session.\n\nStop\nDL\nPause\nSkip\nReplay\nVitesse\nAudio\nSous-titres\n0:00\n7:30\n15:00\n22:30\n30:00\nDÉTAIL DE LA SESSION (1)\nPositions des événements par utilisateur\nAlice QA\n30m\nExplorer les événements (détails et filtres avancés)\nTélémétrie par Session\n\nPauses, changements d'audio et de sous-titres au fil du temps.\n\nHistorique Détaillé\n\n17 sessions au total.\n\nUTILISATEUR\tDATE\tMÉTHODE\tAUDIO\tSOUS-TITRES\tPAUSES\tSAUTS\tRETOURS\tVITESSE MAX\tDURÉE\nAlice QA\t11 oct. 2026, 09:37\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t10 oct. 2026, 09:34\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t9 oct. 2026, 09:36\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t8 oct. 2026, 09:38\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t7 oct. 2026, 09:35\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t6 oct. 2026, 09:37\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t5 oct. 2026, 09:34\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t4 oct. 2026, 09:36\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t3 oct. 2026, 09:38\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t2 oct. 2026, 09:35\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t1 oct. 2026, 09:37\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t30 sept. 2026, 09:34\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t29 sept. 2026, 09:36\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t28 sept. 2026, 09:38\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t27 sept. 2026, 09:35\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t26 sept. 2026, 09:37\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t25 sept. 2026, 09:34\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\n← Précédent\nPage 1 sur 1\nSuivant →"
     },
     {
       "route": "/media/artist/Artiste%20QA",
@@ -2493,7 +3266,7 @@
           "text": "Suivant ›"
         }
       ],
-      "body": "Journaux\n\nHistorique complet des lectures et événements de télémétrie. — 147 entrées au total\n\nApplication\nSystème\nAlertes smart\n\nDisparaît automatiquement après 24h sans activité anormale (fenêtre glissante)\n\n2 Connexions depuis un nouveau pays\nFiltres sauvegardés\nColonnes\nTout\nQA principal\nQA secondaire\nMasquer Zappés (< 1m)\nFiltres\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nRechercher\nCSV\nJSON\nDATE\n\tUTILISATEUR\n\tMÉDIA\n\tAPPLICATION\n\tRÉSOLUTION\n\tBITRATE AUDIO\n\tSTATUT\n\tDURÉE\n\n\n11 oct.\n10:38\n\tBob QA\t\nFilm principal QA\nFilms QA\n\tJellyfin Web · Browser\t4K\t12000 kbps\tDirectPlayPauses (2)\t1h 20m\n\n11 oct.\n10:38\n\tBob QA\t\nFilm principal QA\nFilms QA\n\tJellyfin Web · Browser\t4K\t12000 kbps\tDirectPlayPauses (2)\t1h 20m\n\n11 oct.\n09:37\n\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n\n11 oct.\n09:37\n\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n\n11 oct.\n08:36\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n\n11 oct.\n08:36\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n\n11 oct.\n07:35\n\tBob QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n\n11 oct.\n07:35\n\tBob QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n\n11 oct.\n06:34\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n\n11 oct.\n06:34\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n\n11 oct.\n05:38\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n\n11 oct.\n05:38\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n\n11 oct.\n04:37\n\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t2 min\n\n11 oct.\n04:37\n\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t2 min\n\n11 oct.\n03:36\n\tAlice QA\t\nLivre principal QA\nLivres QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t1h 23m\n\n11 oct.\n03:36\n\tAlice QA\t\nLivre principal QA\nLivres QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t1h 23m\n\n10 oct.\n10:35\n\tAlice QA\t\nFilm principal QA\nFilms QA\n\tFinamp · Phone\t4K\t12000 kbps\tTranscodePauses (2)\t1h 20m\n\n10 oct.\n10:35\n\tAlice QA\t\nFilm principal QA\nFilms QA\n\tFinamp · Phone\t4K\t12000 kbps\tTranscodePauses (2)\t1h 20m\n\n10 oct.\n09:34\nNouveau pays\n\tBob QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n\n10 oct.\n09:34\n\tBob QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n\n10 oct.\n08:38\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n\n10 oct.\n08:38\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n\n10 oct.\n07:37\nNouveau pays\n\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n\n10 oct.\n07:37\n\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n\n10 oct.\n06:36\n\tBob QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t3 min\n\n10 oct.\n05:35\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n\n10 oct.\n04:34\n\tAlice QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t2 min\n\n10 oct.\n03:38\n\tBob QA\t\nLivre principal QA\nLivres QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t1h 23m\n\n9 oct.\n10:37\n\tAlice QA\t\nFilm principal QA\nFilms QA\n\tAndroid TV · TV\t4K\t12000 kbps\tDirectStreamPauses (2)\t1h 20m\n\n9 oct.\n09:36\n\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n\n9 oct.\n08:35\n\tBob QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n\n9 oct.\n07:34\n\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n\n9 oct.\n06:38\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n\n9 oct.\n05:37\n\tBob QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t3 min\n\n9 oct.\n04:36\n\tAlice QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t2 min\n\n9 oct.\n03:35\n\tAlice QA\t\nLivre principal QA\nLivres QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t1h 23m\n\n8 oct.\n10:34\n\tBob QA\t\nFilm principal QA\nFilms QA\n\tJellyfin Web · Browser\t4K\t12000 kbps\tDirectPlayPauses (2)\t1h 20m\n\n8 oct.\n09:38\n\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n\n8 oct.\n08:37\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n\n8 oct.\n07:36\n\tBob QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n\n8 oct.\n06:35\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n\n8 oct.\n05:34\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n\n8 oct.\n04:38\n\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t2 min\n\n8 oct.\n03:37\n\tAlice QA\t\nLivre principal QA\nLivres QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t1h 23m\n\n7 oct.\n10:36\n\tAlice QA\t\nFilm principal QA\nFilms QA\n\tFinamp · Phone\t4K\t12000 kbps\tTranscodePauses (2)\t1h 20m\n\n7 oct.\n09:35\n\tBob QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n\n7 oct.\n08:34\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n\n7 oct.\n07:38\n\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n\n7 oct.\n06:37\n\tBob QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t3 min\n\n7 oct.\n05:36\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n1\n2\n3\nSuivant ›\nPage 1 / 3"
+      "body": "Journaux\n\nHistorique complet des lectures et événements de télémétrie. — 147 entrées au total\n\nApplication\nSystème\nAlertes smart\n\nDisparaît automatiquement après 24h sans activité anormale (fenêtre glissante)\n\n2 Connexions depuis un nouveau pays\nFiltres sauvegardés\nColonnes\nTout\nQA principal\nQA secondaire\nMasquer Zappés (< 1m)\nFiltres\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nRechercher\nCSV\nJSON\nDATE\n\tUTILISATEUR\n\tMÉDIA\n\tAPPLICATION\n\tRÉSOLUTION\n\tBITRATE AUDIO\n\tSTATUT\n\tDURÉE\n\n\n11 oct.\n10:38\n\tBob QA\t\nFilm principal QA\nFilms QA\n\tJellyfin Web · Browser\t4K\t—\tDirectPlayPauses (2)\t1h 20m\n\n11 oct.\n10:38\n\tBob QA\t\nFilm principal QA\nFilms QA\n\tJellyfin Web · Browser\t4K\t—\tDirectPlayPauses (2)\t1h 20m\n\n11 oct.\n09:37\n\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t—\tDirectStreamPauses (2)\t30 min\n\n11 oct.\n09:37\n\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t—\tDirectStreamPauses (2)\t30 min\n\n11 oct.\n08:36\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t—\tTranscodePauses (2)\t30 min\n\n11 oct.\n08:36\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t—\tTranscodePauses (2)\t30 min\n\n11 oct.\n07:35\n\tBob QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t—\tDirectPlayPauses (2)\t30 min\n\n11 oct.\n07:35\n\tBob QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t—\tDirectPlayPauses (2)\t30 min\n\n11 oct.\n06:34\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n\n11 oct.\n06:34\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n\n11 oct.\n05:38\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n\n11 oct.\n05:38\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n\n11 oct.\n04:37\n\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t2 min\n\n11 oct.\n04:37\n\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t2 min\n\n11 oct.\n03:36\n\tAlice QA\t\nLivre principal QA\nLivres QA\n\tAndroid TV · TV\t—\t—\tDirectStreamPauses (2)\t1h 23m\n\n11 oct.\n03:36\n\tAlice QA\t\nLivre principal QA\nLivres QA\n\tAndroid TV · TV\t—\t—\tDirectStreamPauses (2)\t1h 23m\n\n10 oct.\n10:35\n\tAlice QA\t\nFilm principal QA\nFilms QA\n\tFinamp · Phone\t4K\t—\tTranscodePauses (2)\t1h 20m\n\n10 oct.\n10:35\n\tAlice QA\t\nFilm principal QA\nFilms QA\n\tFinamp · Phone\t4K\t—\tTranscodePauses (2)\t1h 20m\n\n10 oct.\n09:34\nNouveau pays\n\tBob QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t—\tDirectPlayPauses (2)\t30 min\n\n10 oct.\n09:34\n\tBob QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t—\tDirectPlayPauses (2)\t30 min\n\n10 oct.\n08:38\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t—\tDirectStreamPauses (2)\t30 min\n\n10 oct.\n08:38\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t—\tDirectStreamPauses (2)\t30 min\n\n10 oct.\n07:37\nNouveau pays\n\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t—\tTranscodePauses (2)\t30 min\n\n10 oct.\n07:37\n\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t—\tTranscodePauses (2)\t30 min\n\n10 oct.\n06:36\n\tBob QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t3 min\n\n10 oct.\n05:35\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n\n10 oct.\n04:34\n\tAlice QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t2 min\n\n10 oct.\n03:38\n\tBob QA\t\nLivre principal QA\nLivres QA\n\tJellyfin Web · Browser\t—\t—\tDirectPlayPauses (2)\t1h 23m\n\n9 oct.\n10:37\n\tAlice QA\t\nFilm principal QA\nFilms QA\n\tAndroid TV · TV\t4K\t—\tDirectStreamPauses (2)\t1h 20m\n\n9 oct.\n09:36\n\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t—\tTranscodePauses (2)\t30 min\n\n9 oct.\n08:35\n\tBob QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t—\tDirectPlayPauses (2)\t30 min\n\n9 oct.\n07:34\n\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t—\tDirectStreamPauses (2)\t30 min\n\n9 oct.\n06:38\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n\n9 oct.\n05:37\n\tBob QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t3 min\n\n9 oct.\n04:36\n\tAlice QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t2 min\n\n9 oct.\n03:35\n\tAlice QA\t\nLivre principal QA\nLivres QA\n\tFinamp · Phone\t—\t—\tTranscodePauses (2)\t1h 23m\n\n8 oct.\n10:34\n\tBob QA\t\nFilm principal QA\nFilms QA\n\tJellyfin Web · Browser\t4K\t—\tDirectPlayPauses (2)\t1h 20m\n\n8 oct.\n09:38\n\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t—\tDirectStreamPauses (2)\t30 min\n\n8 oct.\n08:37\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t—\tTranscodePauses (2)\t30 min\n\n8 oct.\n07:36\n\tBob QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t—\tDirectPlayPauses (2)\t30 min\n\n8 oct.\n06:35\n\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n\n8 oct.\n05:34\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n\n8 oct.\n04:38\n\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t2 min\n\n8 oct.\n03:37\n\tAlice QA\t\nLivre principal QA\nLivres QA\n\tAndroid TV · TV\t—\t—\tDirectStreamPauses (2)\t1h 23m\n\n7 oct.\n10:36\n\tAlice QA\t\nFilm principal QA\nFilms QA\n\tFinamp · Phone\t4K\t—\tTranscodePauses (2)\t1h 20m\n\n7 oct.\n09:35\n\tBob QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t—\tDirectPlayPauses (2)\t30 min\n\n7 oct.\n08:34\n\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t—\tDirectStreamPauses (2)\t30 min\n\n7 oct.\n07:38\n\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t—\tTranscodePauses (2)\t30 min\n\n7 oct.\n06:37\n\tBob QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t3 min\n\n7 oct.\n05:36\n\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n1\n2\n3\nSuivant ›\nPage 1 / 3"
     },
     {
       "route": "/newsletter",
@@ -2573,7 +3346,7 @@
           "text": "Suivant"
         }
       ],
-      "body": "LE RÉCAP DE ALICE QA\nJellyTrack Wrapped 2026\n\nPrêt à découvrir votre année en médias ?\n\nPersonnaliser\nRetour\n2026 • Tout\n1 / 18\nPersonnaliser\nSuivant"
+      "body": "LE RÉCAP DE ALICE QA\nJellyTrack Wrapped 2026\n\nPrêt à découvrir votre année en médias ?\n\nPersonnaliser\nRetour\n2026 • GENERAL\n1 / 18\nPersonnaliser\nSuivant"
     },
     {
       "route": "/analytics",
@@ -2671,8 +3444,8 @@
     {
       "file": "app.js",
       "status": 200,
-      "sha256": "422bea618401c8c01b94ffb37f19daa2ff72314b2379095f518dcc123e6bb765",
-      "source": "422bea618401c8c01b94ffb37f19daa2ff72314b2379095f518dcc123e6bb765"
+      "sha256": "0bed4eae2c396324f674cc78814cd446f67345d040fedef90a6d2ccde4fc45bb",
+      "source": "0bed4eae2c396324f674cc78814cd446f67345d040fedef90a6d2ccde4fc45bb"
     },
     {
       "file": "app.css",
@@ -2683,8 +3456,8 @@
     {
       "file": "navigation.js",
       "status": 200,
-      "sha256": "aa714ea01d4c51ecd99b01e22408adca15268d23dc4c0e2e3371a07887f7743e",
-      "source": "aa714ea01d4c51ecd99b01e22408adca15268d23dc4c0e2e3371a07887f7743e"
+      "sha256": "abee153d5f11bb647bcc6e489c1f9bec0119dbb339e9fcf8f3b1dba2d839baac",
+      "source": "abee153d5f11bb647bcc6e489c1f9bec0119dbb339e9fcf8f3b1dba2d839baac"
     },
     {
       "file": "navigation.css",
@@ -2695,8 +3468,8 @@
     {
       "file": "history.js",
       "status": 200,
-      "sha256": "31ad8cb5d4edd4a41991333acaac76900e22f28958ddf5c326748594c083b4ce",
-      "source": "31ad8cb5d4edd4a41991333acaac76900e22f28958ddf5c326748594c083b4ce"
+      "sha256": "a24d77cc66427b51bbcbc6082e0cb003e0439359f5cec1467ce6c58a15edd205",
+      "source": "a24d77cc66427b51bbcbc6082e0cb003e0439359f5cec1467ce6c58a15edd205"
     },
     {
       "file": "history-recovery.css",
@@ -2707,14 +3480,14 @@
     {
       "file": "media-recovery.js",
       "status": 200,
-      "sha256": "383e9c5febabc5669b2f56c75f09c33bb89976ff66b42a3444f1035c577cb060",
-      "source": "383e9c5febabc5669b2f56c75f09c33bb89976ff66b42a3444f1035c577cb060"
+      "sha256": "7f6f2a2db9528b5ddb3d71f8edc8c79dbc0cdea567b7903af3858375e63e6438",
+      "source": "7f6f2a2db9528b5ddb3d71f8edc8c79dbc0cdea567b7903af3858375e63e6438"
     },
     {
       "file": "media-recovery.css",
       "status": 200,
-      "sha256": "ee54c711c5d2ca467da0060d7a2efecf9180a3c21a82f366139b487cb7a99f34",
-      "source": "ee54c711c5d2ca467da0060d7a2efecf9180a3c21a82f366139b487cb7a99f34"
+      "sha256": "0afbcd672f442e57e9a02d0bf259f4b85853d8b201d49a76fef26aad78042fea",
+      "source": "0afbcd672f442e57e9a02d0bf259f4b85853d8b201d49a76fef26aad78042fea"
     },
     {
       "file": "analytics-recovery.css",

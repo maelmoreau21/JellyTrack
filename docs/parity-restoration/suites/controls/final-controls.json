@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-11T08:47:25.742Z",
+  "date": "2026-10-11T13:39:57.020Z",
   "checks": [
     {
       "name": "Anonymous callback retains path and query",
@@ -75,5 +75,5 @@
     }
   ],
   "errors": [],
-  "wrappedText": "LE RÉCAP DE ALICE QA\nJellyTrack Wrapped 2026\n\nPrêt à découvrir votre année en médias ?\n\nPersonnaliser\nRetour\n2026 • Tout\n1 / 18\nPersonnaliser\nSuivant"
+  "wrappedText": "LE RÉCAP DE ALICE QA\nJellyTrack Wrapped 2026\n\nPrêt à découvrir votre année en médias ?\n\nPersonnaliser\nRetour\n2026 • GENERAL\n1 / 18\nPersonnaliser\nSuivant"
 }

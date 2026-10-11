@@ -2,49 +2,49 @@
   {
     "script": "users-qa/seed-users.py",
     "exitCode": 0,
-    "seconds": 0.88,
-    "recordedAt": "2026-10-11T08:47:05Z"
+    "seconds": 2.2,
+    "recordedAt": "2026-10-11T13:39:57Z"
   },
   {
     "script": "users-qa/browser-users.cjs",
     "exitCode": 0,
-    "seconds": 32.49,
-    "recordedAt": "2026-10-11T08:47:37Z"
+    "seconds": 72.98,
+    "recordedAt": "2026-10-11T13:41:10Z"
   },
   {
     "script": "users-qa/profile-controls.cjs",
     "exitCode": 0,
-    "seconds": 32.65,
-    "recordedAt": "2026-10-11T08:48:10Z"
+    "seconds": 33.77,
+    "recordedAt": "2026-10-11T13:41:44Z"
   },
   {
     "script": "users-qa/list-pagination.cjs",
     "exitCode": 0,
-    "seconds": 5.61,
-    "recordedAt": "2026-10-11T08:48:15Z"
+    "seconds": 6.86,
+    "recordedAt": "2026-10-11T13:41:51Z"
   },
   {
     "script": "users-qa/historical-preferences.cjs",
     "exitCode": 0,
-    "seconds": 2.83,
-    "recordedAt": "2026-10-11T08:48:18Z"
+    "seconds": 3.68,
+    "recordedAt": "2026-10-11T13:41:54Z"
   },
   {
     "script": "users-qa/audiobook.cjs",
     "exitCode": 0,
-    "seconds": 2.33,
-    "recordedAt": "2026-10-11T08:48:20Z"
+    "seconds": 3.59,
+    "recordedAt": "2026-10-11T13:41:58Z"
   },
   {
     "script": "users-qa/telemetry.cjs",
     "exitCode": 0,
-    "seconds": 2.63,
-    "recordedAt": "2026-10-11T08:48:23Z"
+    "seconds": 4.12,
+    "recordedAt": "2026-10-11T13:42:02Z"
   },
   {
     "script": "users-qa/wrapped-theme.cjs",
     "exitCode": 0,
-    "seconds": 5.32,
-    "recordedAt": "2026-10-11T08:48:28Z"
+    "seconds": 18.84,
+    "recordedAt": "2026-10-11T13:42:21Z"
   }
 ]

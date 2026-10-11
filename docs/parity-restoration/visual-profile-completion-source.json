@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-11T13:47:32.920Z",
+  "scope": "Read-only aligned fixture cumulative completion, source reproduction; groups keep user IDs and media IDs. Main UserStatsCharts omits collectionType, and normalizeLibraryKey lacks Audio/Track/MusicAlbum aliases, causing the default 80/20/10 rule for these audio items. Go deliberately uses 60/30/12 music rules.",
+  "counts": {
+    "completed": 13,
+    "partial": 2
+  },
+  "groups": [
+    {
+      "key": "qa-primary-alice::server::qa-primary-episode1",
+      "type": "Episode",
+      "watched": 19800,
+      "runtime": 1800000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-primary-alice::server::qa-primary-episode2",
+      "type": "Episode",
+      "watched": 21600,
+      "runtime": 1800000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-primary-alice::server::qa-primary-track1",
+      "type": "Audio",
+      "watched": 2530,
+      "runtime": 240000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-primary-alice::server::qa-primary-track2",
+      "type": "Audio",
+      "watched": 2160,
+      "runtime": 240000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-primary-alice::server::qa-primary-book",
+      "type": "Book",
+      "watched": 55000,
+      "runtime": 7200000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-primary-alice::server::qa-primary-movie",
+      "type": "Movie",
+      "watched": 52800,
+      "runtime": 5400000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-primary-alice::server::qa-primary-episode3",
+      "type": "Episode",
+      "watched": 19800,
+      "runtime": 1800000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-primary-alice::server::qa-primary-track3",
+      "type": "Audio",
+      "watched": 1320,
+      "runtime": 240000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-secondary-alice::server::qa-secondary-episode1",
+      "type": "Episode",
+      "watched": 1800,
+      "runtime": 1800000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-secondary-alice::server::qa-secondary-episode2",
+      "type": "Episode",
+      "watched": 3600,
+      "runtime": 1800000,
+      "percent": 100,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-secondary-alice::server::qa-secondary-track1",
+      "type": "Audio",
+      "watched": 230,
+      "runtime": 240000,
+      "percent": 95.83333333333333,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-secondary-alice::server::qa-secondary-track2",
+      "type": "Audio",
+      "watched": 180,
+      "runtime": 240000,
+      "percent": 75,
+      "bucket": "partial"
+    },
+    {
+      "key": "qa-secondary-alice::server::qa-secondary-book",
+      "type": "Book",
+      "watched": 5000,
+      "runtime": 7200000,
+      "percent": 69.44444444444444,
+      "bucket": "partial"
+    },
+    {
+      "key": "qa-secondary-alice::server::qa-secondary-movie",
+      "type": "Movie",
+      "watched": 4800,
+      "runtime": 5400000,
+      "percent": 88.88888888888889,
+      "bucket": "completed"
+    },
+    {
+      "key": "qa-secondary-alice::server::qa-secondary-episode3",
+      "type": "Episode",
+      "watched": 1800,
+      "runtime": 1800000,
+      "percent": 100,
+      "bucket": "completed"
+    }
+  ]
+}

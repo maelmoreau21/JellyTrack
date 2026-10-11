@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-11T14:00:27.140Z",
+  "mainSourceGeometry": {
+    "innerRadius": 60,
+    "outerRadius": 90
+  },
+  "go": {
+    "labels": [
+      "Partiel",
+      "Terminé"
+    ],
+    "values": [
+      1,
+      14
+    ],
+    "cutout": "66.6666667%",
+    "radius": 90,
+    "arcs": [
+      {
+        "innerRadius": 60.00000002999999,
+        "outerRadius": 90,
+        "startAngle": 0,
+        "endAngle": 0.41887902047863906
+      },
+      {
+        "innerRadius": 60.00000002999999,
+        "outerRadius": 90,
+        "startAngle": 0.41887902047863906,
+        "endAngle": 6.283185307179586
+      }
+    ]
+  }
+}

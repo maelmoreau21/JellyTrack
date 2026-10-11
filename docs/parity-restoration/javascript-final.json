@@ -1,0 +1,98 @@
+[
+  {
+    "file": "scripts/parity-restoration/core.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/media.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/robust-evidence.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/users-settings-reference.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/users-settings.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/visual-captures-final.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/visual-captures.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/visual-collections-metrics.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/visual-completion.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/visual-deep.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/visual-interactions.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/visual-profile-geometry.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/visual-profile.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "scripts/parity-restoration/visual-wrapped.cjs",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/about-recovery.js",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/admin.js",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/app.js",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/chart.min.js",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/history.js",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/media-recovery.js",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/navigation.js",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/profile.js",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/settings.js",
+    "exitCode": 0
+  },
+  {
+    "file": "web/dist/assets/users.js",
+    "exitCode": 0
+  }
+]

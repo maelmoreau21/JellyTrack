@@ -1925,6 +1925,22 @@
           "disabled": false
         },
         {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Restaurer",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "Supprimer",
+          "disabled": false
+        },
+        {
           "tag": "INPUT",
           "type": "file",
           "id": "",
@@ -2637,30 +2653,37 @@
         "Qualité Vidéo Globale",
         "Collections",
         "Diversité de la Bibliothèque (Top Genres)",
-        "Binge-watching",
-        "Suggestions d'acquisition",
-        "Tendances sur 30 jours",
+        "Binge-Watching Tracker (Marathons de Séries)",
+        "Suggestions d’Acquisitions & Tendances (Smart Insights)",
         "Aperçu des statistiques approfondies",
         "Top Réalisateurs",
-        "Acteurs",
-        "Studios"
+        "Top Acteurs",
+        "Top Studios"
       ],
       "httpErrors": [],
       "controls": [
         {
-          "tag": "INPUT",
-          "type": "checkbox",
+          "tag": "BUTTON",
+          "type": "button",
           "id": "",
           "name": "",
-          "text": "",
+          "text": "Tout",
           "disabled": false
         },
         {
-          "tag": "INPUT",
-          "type": "checkbox",
+          "tag": "BUTTON",
+          "type": "button",
           "id": "",
           "name": "",
-          "text": "",
+          "text": "QA principal modifié",
+          "disabled": false
+        },
+        {
+          "tag": "BUTTON",
+          "type": "button",
+          "id": "",
+          "name": "",
+          "text": "QA secondaire",
           "disabled": false
         }
       ]
@@ -3545,7 +3568,7 @@
   "embeddedAssets": [
     {
       "file": "app.js",
-      "sha256": "422bea618401c8c01b94ffb37f19daa2ff72314b2379095f518dcc123e6bb765",
+      "sha256": "b411c341666110690a81d24bb8408018b69555d3f6f5e765282869f3b6086542",
       "status": 200
     },
     {
@@ -3555,7 +3578,7 @@
     },
     {
       "file": "navigation.js",
-      "sha256": "aa714ea01d4c51ecd99b01e22408adca15268d23dc4c0e2e3371a07887f7743e",
+      "sha256": "abee153d5f11bb647bcc6e489c1f9bec0119dbb339e9fcf8f3b1dba2d839baac",
       "status": 200
     },
     {

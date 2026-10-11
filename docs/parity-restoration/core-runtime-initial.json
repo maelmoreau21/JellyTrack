@@ -1,0 +1,779 @@
+{
+  "date": "2026-10-11T13:39:39.824Z",
+  "scope": "Real isolated Go API, real standard/admin sessions, recorded SQLite fixture. No intercepted responses, no external send, no production data edits.",
+  "checks": [
+    {
+      "name": "Embedded app.js matches current source",
+      "ok": true
+    },
+    {
+      "name": "Embedded app.css matches current source",
+      "ok": true
+    },
+    {
+      "name": "Embedded history.js matches current source",
+      "ok": true
+    },
+    {
+      "name": "Embedded history-recovery.css matches current source",
+      "ok": true
+    },
+    {
+      "name": "Embedded wrapped-recovery.css matches current source",
+      "ok": true
+    },
+    {
+      "name": "Genuine ordinary-user identity",
+      "ok": true
+    },
+    {
+      "name": "Ordinary user newsletter GET 200",
+      "ok": true
+    },
+    {
+      "name": "Ordinary user Discord POST403 with valid CSRF",
+      "ok": true
+    },
+    {
+      "name": "Anonymous newsletter GET401",
+      "ok": true
+    },
+    {
+      "name": "Newsletter access and PNG",
+      "ok": false,
+      "details": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3350/newsletter\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "Login language and theme",
+      "ok": false,
+      "details": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3350/login\", waiting until \"networkidle\"\u001b[22m\n"
+    },
+    {
+      "name": "Wrapped eighteen fixture slides",
+      "ok": true
+    },
+    {
+      "name": "Wrapped global close button visible on intro",
+      "ok": true
+    },
+    {
+      "name": "Wrapped type filter order matches main",
+      "ok": true
+    },
+    {
+      "name": "Wrapped favourite device is recorded client ranked by watched time",
+      "ok": true,
+      "details": {
+        "favourite": "Android TV",
+        "topDevice": "Android TV",
+        "topPhysicalDevice": "TV",
+        "clients": {
+          "Android TV": 96490,
+          "Finamp": 95930
+        }
+      }
+    },
+    {
+      "name": "Wrapped twelve monthly bars reflect real hours",
+      "ok": true,
+      "details": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        56.1335,
+        100,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Wrapped genre names/counts match stored API metadata",
+      "ok": true
+    },
+    {
+      "name": "Wrapped genre bars use historical count proportions",
+      "ok": true,
+      "details": [
+        {
+          "name": "Drama",
+          "count": 56,
+          "width": 100
+        },
+        {
+          "name": "QA",
+          "count": 56,
+          "width": 100
+        },
+        {
+          "name": "Rock",
+          "count": 34,
+          "width": 61
+        }
+      ]
+    },
+    {
+      "name": "Wrapped podium consumes API ranking and time proportions",
+      "ok": true,
+      "details": [
+        {
+          "title": "Livre principal QA",
+          "width": 100
+        },
+        {
+          "title": "Film principal QA",
+          "width": 96
+        },
+        {
+          "title": "Épisode 2",
+          "width": 39
+        },
+        {
+          "title": "Épisode 1",
+          "width": 36
+        },
+        {
+          "title": "Épisode 3",
+          "width": 36
+        }
+      ]
+    },
+    {
+      "name": "Wrapped charts and day Clock ring encountered",
+      "ok": true,
+      "details": {
+        "genreSeen": true,
+        "rankSeen": true,
+        "monthlySeen": true,
+        "dayRingSeen": true
+      }
+    },
+    {
+      "name": "Wrapped favourite client is actually rendered on its slide",
+      "ok": true
+    },
+    {
+      "name": "Wrapped global close visible on final slide",
+      "ok": true
+    },
+    {
+      "name": "Wrapped close returns to same profile",
+      "ok": true
+    },
+    {
+      "name": "Logs reset absent without active filters",
+      "ok": true
+    },
+    {
+      "name": "Logs date and time occupy two lines",
+      "ok": true,
+      "details": {
+        "date": "11 oct.",
+        "time": "08:38",
+        "dateY": 520.75,
+        "timeY": 540.25,
+        "direction": "column"
+      }
+    },
+    {
+      "name": "Logs expose unknown audio independently of known video bitrate",
+      "ok": true,
+      "details": [
+        {
+          "id": "qa-secondary-play0",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play0",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-secondary-play1",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play1",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-secondary-play2",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play2",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-secondary-play3",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play3",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-secondary-play7",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play7",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-secondary-play8",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play8",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-secondary-play9",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play9",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-secondary-play10",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play10",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-secondary-play11",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play11",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play15",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play16",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play17",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play18",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play19",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play23",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play24",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play25",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play26",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play27",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play31",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play32",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play33",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play34",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play35",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        }
+      ]
+    },
+    {
+      "name": "Logs unknown audio renders em dash instead of combined video bitrate",
+      "ok": true
+    },
+    {
+      "name": "Logs reset shown for search/sort filters",
+      "ok": true
+    },
+    {
+      "name": "Logs reset clears filters and default search",
+      "ok": true
+    },
+    {
+      "name": "Dashboard custom dates update URL",
+      "ok": true
+    },
+    {
+      "name": "Dashboard has live Chart instances with recorded values",
+      "ok": true,
+      "details": [
+        {
+          "id": "chart-composed-trend",
+          "type": "line",
+          "values": [
+            1.33,
+            1.33,
+            1.33,
+            1.33,
+            1.33,
+            1.33,
+            2.67,
+            2.67
+          ]
+        },
+        {
+          "id": "chart-category-pie",
+          "type": "doughnut",
+          "values": [
+            13.33,
+            15,
+            1.33,
+            12.5
+          ]
+        },
+        {
+          "id": "chart-library-plays",
+          "type": "line",
+          "values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2
+          ]
+        },
+        {
+          "id": "chart-platform-dist",
+          "type": "doughnut",
+          "values": [
+            26,
+            25,
+            25
+          ]
+        },
+        {
+          "id": "chart-activity-by-hour",
+          "type": "bar",
+          "values": [
+            0,
+            9,
+            9,
+            9,
+            9,
+            10,
+            10,
+            10,
+            10,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "chart-day-of-week",
+          "type": "bar",
+          "values": [
+            8,
+            8,
+            8,
+            8,
+            8,
+            12,
+            24
+          ]
+        },
+        {
+          "id": "chart-monthly-watch",
+          "type": "bar",
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            42.2,
+            0,
+            0
+          ]
+        },
+        {
+          "id": "chart-completion-ratio",
+          "type": "doughnut",
+          "values": [
+            25,
+            2
+          ]
+        },
+        {
+          "id": "chart-client-category",
+          "type": "bar",
+          "values": [
+            25,
+            26,
+            25
+          ]
+        },
+        {
+          "id": "chart-server-load",
+          "type": "line",
+          "values": [
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            2,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Analytics audio arc opens actual filtered history",
+      "ok": true,
+      "details": {
+        "label": "FR (aac)",
+        "url": "http://localhost:3350/logs?hideZapped=true&audio=FR+%28aac%29&days=all&dateFrom=2026-10-01&dateTo=2026-10-11"
+      }
+    },
+    {
+      "name": "Analytics plotted segment count equals actual filtered histories",
+      "ok": true,
+      "details": {
+        "expected": 26,
+        "total": 26
+      }
+    },
+    {
+      "name": "No uncaught browser JavaScript errors",
+      "ok": true,
+      "details": []
+    }
+  ],
+  "pageErrors": [],
+  "assets": [
+    {
+      "asset": "app.js",
+      "status": 200,
+      "same": true
+    },
+    {
+      "asset": "app.css",
+      "status": 200,
+      "same": true
+    },
+    {
+      "asset": "history.js",
+      "status": 200,
+      "same": true
+    },
+    {
+      "asset": "history-recovery.css",
+      "status": 200,
+      "same": true
+    },
+    {
+      "asset": "wrapped-recovery.css",
+      "status": 200,
+      "same": true
+    }
+  ],
+  "wrappedSlides": [
+    {
+      "index": 1,
+      "title": "JellyTrack Wrapped 2026"
+    },
+    {
+      "index": 2,
+      "title": "Maître du Temps"
+    },
+    {
+      "index": 3,
+      "title": "2 jours et 1 heures"
+    },
+    {
+      "index": 4,
+      "title": "Vitesse de Croisière"
+    },
+    {
+      "index": 5,
+      "title": "Heure de Pointe"
+    },
+    {
+      "index": 6,
+      "title": "Votre appareil favori"
+    },
+    {
+      "index": 7,
+      "title": "Explorateur de Genres"
+    },
+    {
+      "index": 8,
+      "title": "Le Grand Jour"
+    },
+    {
+      "index": 9,
+      "title": "Le Panthéon"
+    },
+    {
+      "index": 10,
+      "title": "Binge-Watcher"
+    },
+    {
+      "index": 11,
+      "title": "Votre univers sonore"
+    },
+    {
+      "index": 12,
+      "title": "Top Artistes"
+    },
+    {
+      "index": 13,
+      "title": "Top Albums"
+    },
+    {
+      "index": 14,
+      "title": "Cinéphile"
+    },
+    {
+      "index": 15,
+      "title": "Accro aux Séries"
+    },
+    {
+      "index": 16,
+      "title": "Audiophile"
+    },
+    {
+      "index": 17,
+      "title": "Rat de Bibliothèque"
+    },
+    {
+      "index": 18,
+      "title": "Partagez votre récap"
+    }
+  ],
+  "dashboardCharts": [
+    {
+      "id": "chart-composed-trend",
+      "type": "line",
+      "values": [
+        1.33,
+        1.33,
+        1.33,
+        1.33,
+        1.33,
+        1.33,
+        2.67,
+        2.67
+      ]
+    },
+    {
+      "id": "chart-category-pie",
+      "type": "doughnut",
+      "values": [
+        13.33,
+        15,
+        1.33,
+        12.5
+      ]
+    },
+    {
+      "id": "chart-library-plays",
+      "type": "line",
+      "values": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        2
+      ]
+    },
+    {
+      "id": "chart-platform-dist",
+      "type": "doughnut",
+      "values": [
+        26,
+        25,
+        25
+      ]
+    },
+    {
+      "id": "chart-activity-by-hour",
+      "type": "bar",
+      "values": [
+        0,
+        9,
+        9,
+        9,
+        9,
+        10,
+        10,
+        10,
+        10,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "chart-day-of-week",
+      "type": "bar",
+      "values": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        12,
+        24
+      ]
+    },
+    {
+      "id": "chart-monthly-watch",
+      "type": "bar",
+      "values": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        42.2,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "chart-completion-ratio",
+      "type": "doughnut",
+      "values": [
+        25,
+        2
+      ]
+    },
+    {
+      "id": "chart-client-category",
+      "type": "bar",
+      "values": [
+        25,
+        26,
+        25
+      ]
+    },
+    {
+      "id": "chart-server-load",
+      "type": "line",
+      "values": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        4
+      ]
+    }
+  ]
+}

@@ -1,2 +1,20 @@
-{"checks":155,"failed":[],"pageErrors":[]}
+FAIL Details telemetry filters and modal: locator.click: Timeout 10000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-event-id]').first()[22m
+[2m    - locator resolved to <button type="button" class="mr-event mr-event-pause" data-event-id="qa-primary-play0-pause" title="Pause · 0 min / Passage sauté · 1 min / Audio · 2 min" aria-label="Pause · 0 min / Passage sauté · 1 min / Audio · 2 min" data-event-ids="["qa-primary-play0-pause","qa-primary-play0-seek","qa-primary-play0-audio_change"]">3</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not visible[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not visible[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    19 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not visible[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+{"checks":154,"failed":[{"name":"Details telemetry filters and modal","ok":false,"details":"locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-event-id]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"mr-event mr-event-pause\" data-event-id=\"qa-primary-play0-pause\" title=\"Pause · 0 min / Passage sauté · 1 min / Audio · 2 min\" aria-label=\"Pause · 0 min / Passage sauté · 1 min / Audio · 2 min\" data-event-ids=\"[\"qa-primary-play0-pause\",\"qa-primary-play0-seek\",\"qa-primary-play0-audio_change\"]\">3</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    19 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"}],"pageErrors":[]}
 

@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-11T14:03:12.275Z",
+  "binairePid": 52200,
+  "scope": "Intermediate final4 proof before subsequent primary timeline restoration; all other targeted panels verified.",
+  "goCases": 5,
+  "goVariants": 20,
+  "goRendered": true,
+  "goErrors": [],
+  "embeddedAssetsMatch": 16,
+  "embeddedAssets": 16,
+  "mainSourceFiles": 145,
+  "mainSourceUnchanged": true,
+  "deepCases": 24,
+  "deepErrors": [],
+  "deepCountsGo": [
+    {
+      "theme": "dark",
+      "viewport": "desktop",
+      "counts": [
+        110,
+        110,
+        110
+      ]
+    },
+    {
+      "theme": "dark",
+      "viewport": "mobile",
+      "counts": [
+        110,
+        110,
+        110
+      ]
+    },
+    {
+      "theme": "light",
+      "viewport": "desktop",
+      "counts": [
+        110,
+        110,
+        110
+      ]
+    },
+    {
+      "theme": "light",
+      "viewport": "mobile",
+      "counts": [
+        110,
+        110,
+        110
+      ]
+    }
+  ],
+  "wrappedCases": 28,
+  "wrappedProgressCorrect": true,
+  "overflow": 0
+}

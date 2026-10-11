@@ -1,0 +1,6 @@
+{
+  "date": "2026-10-11T13:39:53.133Z",
+  "scope": "Real annual retrospective slides; clicks on historical next controls, isolated shared synthetic media histories.",
+  "cases": [],
+  "fatal": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3341/wrapped/alice\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3341/wrapped/alice\", waiting until \"domcontentloaded\"\u001b[22m\n"
+}
