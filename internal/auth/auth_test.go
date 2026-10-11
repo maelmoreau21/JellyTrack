@@ -262,3 +262,37 @@ func TestReverseProxyOrigin(t *testing.T) {
 		t.Fatal("expected sameOrigin to return true for matching X-Forwarded-Host origin")
 	}
 }
+
+func TestExtractGroupsFromClaims(t *testing.T) {
+	claims := map[string]any{
+		"groups": []any{"jellyfin-users", "media"},
+		"https://goauthentik.io/groups": []any{"authentik-admins"},
+		"realm_access": map[string]any{
+			"roles": []any{"keycloak-user"},
+		},
+	}
+	extracted := extractGroupsFromClaims(claims)
+	wantMap := map[string]bool{"jellyfin-users": true, "media": true, "authentik-admins": true, "keycloak-user": true}
+	for _, g := range extracted {
+		delete(wantMap, g)
+	}
+	if len(wantMap) != 0 {
+		t.Fatalf("missing extracted groups: %+v (extracted: %+v)", wantMap, extracted)
+	}
+}
+
+func TestDetectBaseURL(t *testing.T) {
+	t.Setenv("JELLYTRACK_URL", "https://custom.jellytrack.io")
+	if u := detectBaseURL(nil); u != "https://custom.jellytrack.io" {
+		t.Fatalf("expected custom URL, got %s", u)
+	}
+
+	t.Setenv("JELLYTRACK_URL", "http://localhost:3000")
+	req := httptest.NewRequest("GET", "/api/auth/oidc/start", nil)
+	req.Header.Set("X-Forwarded-Host", "jellytrack.nas.lan")
+	req.Header.Set("X-Forwarded-Proto", "https")
+	if u := detectBaseURL(req); u != "https://jellytrack.nas.lan" {
+		t.Fatalf("expected proxy forwarded URL, got %s", u)
+	}
+}
+

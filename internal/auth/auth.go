@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -80,22 +81,26 @@ const oidcFlowCookie = "jellytrack_oidc_flow"
 func (m *Manager) oidcStart(w http.ResponseWriter, r *http.Request) {
 	cfg := m.resolveOIDC(r.Context())
 	if !cfg.enabled || m.secret == "" {
+		slog.Warn("OIDC start rejected", "enabled", cfg.enabled, "hasSecret", m.secret != "")
 		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
-	provider, oauth, err := m.oidcConfigWith(r.Context(), cfg)
+	provider, oauth, err := m.oidcConfigWith(r.Context(), cfg, r)
 	if err != nil {
+		slog.Error("OIDC provider initialization failed", "issuer", cfg.issuer, "error", err)
 		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
 	_ = provider
 	state, err := randomValue(32)
 	if err != nil {
+		slog.Error("OIDC state generation failed", "error", err)
 		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
 	nonce, err := randomValue(32)
 	if err != nil {
+		slog.Error("OIDC nonce generation failed", "error", err)
 		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
@@ -106,6 +111,39 @@ func (m *Manager) oidcStart(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, oauth.AuthCodeURL(state, query, oauth2.S256ChallengeOption(verifier)), http.StatusFound)
 }
 
+func extractGroupsFromClaims(rawClaims map[string]any) []string {
+	var results []string
+	candidateKeys := []string{"groups", "user_groups", "roles", "memberOf", "group", "https://goauthentik.io/groups", "groups_list"}
+	for _, key := range candidateKeys {
+		if val, exists := rawClaims[key]; exists && val != nil {
+			if list, ok := val.([]any); ok {
+				for _, item := range list {
+					if str, ok := item.(string); ok && strings.TrimSpace(str) != "" {
+						results = append(results, strings.TrimSpace(str))
+					} else if obj, ok := item.(map[string]any); ok {
+						for _, prop := range []string{"name", "value", "id"} {
+							if name, ok := obj[prop].(string); ok && strings.TrimSpace(name) != "" {
+								results = append(results, strings.TrimSpace(name))
+								break
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if realmAccess, ok := rawClaims["realm_access"].(map[string]any); ok {
+		if roles, ok := realmAccess["roles"].([]any); ok {
+			for _, item := range roles {
+				if str, ok := item.(string); ok && strings.TrimSpace(str) != "" {
+					results = append(results, strings.TrimSpace(str))
+				}
+			}
+		}
+	}
+	return results
+}
+
 func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 	clearFlow := func() {
 		http.SetCookie(w, &http.Cookie{Name: oidcFlowCookie, Value: "", Path: "/api/auth", MaxAge: -1, HttpOnly: true, Secure: m.secure, SameSite: http.SameSiteLaxMode})
@@ -113,102 +151,126 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 	cfg := m.resolveOIDC(r.Context())
 	if !cfg.enabled || m.secret == "" {
 		clearFlow()
+		slog.Warn("OIDC callback rejected: disabled or secret missing")
 		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
 	cookie, err := r.Cookie(oidcFlowCookie)
 	if err != nil {
 		clearFlow()
+		slog.Warn("OIDC callback missing flow cookie", "error", err)
 		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
 		return
 	}
 	parts := strings.Split(cookie.Value, ".")
 	if len(parts) != 3 || !constantStringEqual(parts[0], r.URL.Query().Get("state")) || r.URL.Query().Get("code") == "" {
 		clearFlow()
+		slog.Warn("OIDC state mismatch or code missing")
 		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
 		return
 	}
-	if provider, oauth, e := m.oidcConfigWith(r.Context(), cfg); e == nil {
-		ctx, cancel := context.WithTimeout(r.Context(), m.oidcTimeout)
-		defer cancel()
-		token, e := oauth.Exchange(ctx, r.URL.Query().Get("code"), oauth2.VerifierOption(parts[2]))
-		if e != nil {
-			clearFlow()
-			http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
-			return
-		}
-		raw, ok := token.Extra("id_token").(string)
-		if !ok {
-			clearFlow()
-			http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
-			return
-		}
-		idToken, e := provider.Verifier(&oidc.Config{ClientID: cfg.clientID}).Verify(ctx, raw)
-		if e != nil {
-			clearFlow()
-			http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
-			return
-		}
-		var claims struct {
-			Nonce    string   `json:"nonce"`
-			Subject  string   `json:"sub"`
-			Username string   `json:"preferred_username"`
-			Name     string   `json:"name"`
-			Email    string   `json:"email"`
-			Groups   []string `json:"groups"`
-		}
-		if e = idToken.Claims(&claims); e != nil || !constantStringEqual(claims.Nonce, parts[1]) {
-			clearFlow()
-			http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
-			return
-		}
-		username := first(claims.Username, claims.Email, claims.Name, claims.Subject)
-		if username == "" {
-			clearFlow()
-			http.Redirect(w, r, "/login?error=AccessDenied", http.StatusSeeOther)
-			return
-		}
-		role := ""
-		for _, group := range claims.Groups {
-			if cfg.adminGroup != "" && group == cfg.adminGroup {
-				role = "admin"
-				break
-			}
-			if cfg.userGroup != "" && group == cfg.userGroup {
-				role = "user"
-			}
-		}
-		if role == "" {
-			clearFlow()
-			ip := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
-			_ = security.LogAudit(r.Context(), m.db, m.driver, "SSO Login Denied (Unauthorized Group)", nil, &username, nil, &ip, map[string]any{
-				"userGroups":         claims.Groups,
-				"requiredUserGroup":  cfg.userGroup,
-				"requiredAdminGroup": cfg.adminGroup,
-			})
-			http.Redirect(w, r, "/login?error=AccessDeniedGroup", http.StatusSeeOther)
-			return
-		}
-		resolvedJfID, resolvedServerID := m.resolveOIDCAccount(r.Context(), username, claims.Subject)
-		if _, e = m.createSessionIdentity(w, r, Principal{Username: username, Role: role, JellyfinUserID: resolvedJfID, AuthServerID: resolvedServerID}, false); e != nil {
-			clearFlow()
-			http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
-			return
-		}
-
-		ip := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
-		_ = security.LogAudit(r.Context(), m.db, m.driver, "SSO Login successful", &resolvedJfID, &username, nil, &ip, map[string]any{
-			"isAdmin":  role == "admin",
-			"groups":   claims.Groups,
-			"provider": "oidc",
-		})
-
+	provider, oauth, e := m.oidcConfigWith(r.Context(), cfg, r)
+	if e != nil {
 		clearFlow()
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		slog.Error("OIDC provider re-init failed on callback", "error", e)
+		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
+	ctx, cancel := context.WithTimeout(r.Context(), m.oidcTimeout)
+	defer cancel()
+	token, e := oauth.Exchange(ctx, r.URL.Query().Get("code"), oauth2.VerifierOption(parts[2]))
+	if e != nil {
+		clearFlow()
+		slog.Error("OIDC code exchange failed", "error", e)
+		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
+		return
+	}
+	raw, ok := token.Extra("id_token").(string)
+	if !ok {
+		clearFlow()
+		slog.Error("OIDC missing id_token in token response")
+		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
+		return
+	}
+	idToken, e := provider.Verifier(&oidc.Config{ClientID: cfg.clientID}).Verify(ctx, raw)
+	if e != nil {
+		clearFlow()
+		slog.Error("OIDC id_token verification failed", "error", e)
+		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
+		return
+	}
+	var rawClaims map[string]any
+	if e = idToken.Claims(&rawClaims); e != nil {
+		clearFlow()
+		slog.Error("OIDC claims decoding failed", "error", e)
+		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
+		return
+	}
+	nonce, _ := rawClaims["nonce"].(string)
+	if !constantStringEqual(nonce, parts[1]) {
+		clearFlow()
+		slog.Warn("OIDC nonce mismatch")
+		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
+		return
+	}
+	usernameStr, _ := rawClaims["preferred_username"].(string)
+	emailStr, _ := rawClaims["email"].(string)
+	nameStr, _ := rawClaims["name"].(string)
+	subStr, _ := rawClaims["sub"].(string)
+	username := first(usernameStr, emailStr, nameStr, subStr)
+	if username == "" {
+		clearFlow()
+		slog.Warn("OIDC missing username claim in token")
+		http.Redirect(w, r, "/login?error=AccessDenied", http.StatusSeeOther)
+		return
+	}
+
+	groups := extractGroupsFromClaims(rawClaims)
+
+	role := ""
+	for _, group := range groups {
+		if cfg.adminGroup != "" && strings.EqualFold(group, cfg.adminGroup) {
+			role = "admin"
+			break
+		}
+		if cfg.userGroup != "" && strings.EqualFold(group, cfg.userGroup) {
+			role = "user"
+		}
+	}
+	if role == "" && cfg.adminGroup == "" && cfg.userGroup == "" {
+		role = "user"
+	}
+
+	if role == "" {
+		clearFlow()
+		ip := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
+		_ = security.LogAudit(r.Context(), m.db, m.driver, "SSO Login Denied (Unauthorized Group)", nil, &username, nil, &ip, map[string]any{
+			"userGroups":         groups,
+			"requiredUserGroup":  cfg.userGroup,
+			"requiredAdminGroup": cfg.adminGroup,
+		})
+		slog.Warn("OIDC SSO Login Denied: user not in required group", "username", username, "userGroups", groups, "requiredUserGroup", cfg.userGroup, "requiredAdminGroup", cfg.adminGroup)
+		http.Redirect(w, r, "/login?error=AccessDeniedGroup", http.StatusSeeOther)
+		return
+	}
+	resolvedJfID, resolvedServerID := m.resolveOIDCAccount(r.Context(), username, subStr)
+	if _, e = m.createSessionIdentity(w, r, Principal{Username: username, Role: role, JellyfinUserID: resolvedJfID, AuthServerID: resolvedServerID}, false); e != nil {
+		clearFlow()
+		slog.Error("OIDC session identity creation failed", "error", e)
+		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
+		return
+	}
+
+	ip := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
+	_ = security.LogAudit(r.Context(), m.db, m.driver, "SSO Login successful", &resolvedJfID, &username, nil, &ip, map[string]any{
+		"isAdmin":  role == "admin",
+		"groups":   groups,
+		"provider": "oidc",
+	})
+	slog.Info("OIDC SSO Login successful", "username", username, "role", role, "jellyfinUserId", resolvedJfID)
+
 	clearFlow()
-	http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 type resolvedOIDCConfig struct {
@@ -272,7 +334,41 @@ func (m *Manager) resolveOIDC(ctx context.Context) resolvedOIDCConfig {
 	return cfg
 }
 
-func (m *Manager) oidcConfigWith(ctx context.Context, cfg resolvedOIDCConfig) (*oidc.Provider, *oauth2.Config, error) {
+func detectBaseURL(r *http.Request) string {
+	base := strings.TrimRight(strings.TrimSpace(first(os.Getenv("JELLYTRACK_URL"), os.Getenv("AUTH_URL"), os.Getenv("NEXTAUTH_URL"))), "/")
+	if base != "" && !strings.Contains(base, "localhost:3000") && !strings.Contains(base, "127.0.0.1:3000") {
+		return base
+	}
+	if r != nil {
+		host := strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))
+		if host == "" {
+			host = r.Host
+		}
+		if idx := strings.Index(host, ","); idx != -1 {
+			host = strings.TrimSpace(host[:idx])
+		}
+		proto := strings.TrimSpace(r.Header.Get("X-Forwarded-Proto"))
+		if proto == "" {
+			if r.TLS != nil {
+				proto = "https"
+			} else {
+				proto = "http"
+			}
+		}
+		if idx := strings.Index(proto, ","); idx != -1 {
+			proto = strings.TrimSpace(proto[:idx])
+		}
+		if host != "" {
+			return proto + "://" + host
+		}
+	}
+	if base != "" {
+		return base
+	}
+	return "http://localhost:3000"
+}
+
+func (m *Manager) oidcConfigWith(ctx context.Context, cfg resolvedOIDCConfig, req ...*http.Request) (*oidc.Provider, *oauth2.Config, error) {
 	if cfg.issuer == "" {
 		return nil, nil, sql.ErrNoRows
 	}
@@ -282,10 +378,11 @@ func (m *Manager) oidcConfigWith(ctx context.Context, cfg resolvedOIDCConfig) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	base := strings.TrimRight(strings.TrimSpace(first(os.Getenv("JELLYTRACK_URL"), os.Getenv("AUTH_URL"))), "/")
-	if base == "" {
-		base = "http://localhost:3000"
+	var r *http.Request
+	if len(req) > 0 {
+		r = req[0]
 	}
+	base := detectBaseURL(r)
 	parsed, err := url.Parse(base)
 	if err != nil || parsed.Host == "" || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.User != nil {
 		return nil, nil, fmt.Errorf("JELLYTRACK_URL must be an absolute HTTP(S) URL")
