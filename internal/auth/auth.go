@@ -307,7 +307,7 @@ func (m *Manager) resolveOIDC(ctx context.Context) resolvedOIDCConfig {
 				}
 				{
 					if u, ok := dbMap["url"].(string); ok && first(os.Getenv("OIDC_ISSUER"), os.Getenv("OIDC_URL"), os.Getenv("AUTHENTIK_URL"), os.Getenv("JELLYTRACK_AUTHENTIK_URL")) == "" {
-						cfg.issuer = strings.TrimRight(strings.TrimSpace(u), "/")
+						cfg.issuer = strings.TrimSpace(u)
 					}
 					if cid, ok := dbMap["clientId"].(string); ok && os.Getenv("OIDC_CLIENT_ID") == "" {
 						cfg.clientID = strings.TrimSpace(cid)
@@ -376,7 +376,20 @@ func (m *Manager) oidcConfigWith(ctx context.Context, cfg resolvedOIDCConfig, re
 	defer cancel()
 	provider, err := oidc.NewProvider(ctx, cfg.issuer)
 	if err != nil {
-		return nil, nil, err
+		// Tolerant fallback: Authentik and some OIDC providers strictly differentiate
+		// between with/without trailing slash (e.g. "/path" vs "/path/").
+		altIssuer := cfg.issuer
+		if strings.HasSuffix(altIssuer, "/") {
+			altIssuer = strings.TrimRight(altIssuer, "/")
+		} else {
+			altIssuer = altIssuer + "/"
+		}
+		if altProvider, altErr := oidc.NewProvider(ctx, altIssuer); altErr == nil {
+			provider = altProvider
+			err = nil
+		} else {
+			return nil, nil, err
+		}
 	}
 	var r *http.Request
 	if len(req) > 0 {
@@ -470,7 +483,7 @@ func New(db *sql.DB, driver string) *Manager {
 		username:         username,
 		passwordHash:     hash,
 		secure:           true,
-		oidcIssuer:       strings.TrimRight(issuer, "/"),
+		oidcIssuer:       strings.TrimSpace(issuer),
 		oidcClientID:     clientID,
 		oidcClientSecret: os.Getenv("OIDC_CLIENT_SECRET"),
 		oidcUserGroup:    strings.TrimSpace(os.Getenv("OIDC_USER_GROUP")),
