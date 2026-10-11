@@ -1,0 +1,277 @@
+{
+  "date": "2026-10-11T08:47:01.947Z",
+  "scope": "Dashboard tabs and mobile menu. Isolated real APIs; no browser responses or persisted configuration replaced.",
+  "checks": [
+    {
+      "mode": "go",
+      "name": "Dashboard overview",
+      "ok": true,
+      "metrics": {
+        "headings": [
+          "Tableau de bord",
+          "Volume Temporel",
+          "Répartition par Catégorie",
+          "Lectures par Bibliothèque",
+          "Activité Annuelle",
+          "Plus Grands Fans",
+          "Écosystème Clients",
+          "Flux en direct",
+          "Activité par Heure",
+          "Activité par Jour",
+          "Temps Mensuel",
+          "Taux de Complétion",
+          "Familles de Clients",
+          "Charge du Serveur (Flux Simultanés)",
+          "Tendances émergentes",
+          "Prévisions des pics d'affluence"
+        ],
+        "visibleCharts": 10
+      }
+    },
+    {
+      "mode": "go",
+      "name": "Dashboard analytics",
+      "ok": true,
+      "metrics": {
+        "headings": [
+          "Tableau de bord",
+          "Top Films",
+          "Top Séries",
+          "Top Albums",
+          "Top Livres",
+          "Top Genres",
+          "Top Clients",
+          "Méthodes de Flux",
+          "Matrice des Résolutions",
+          "Écosystème Appareils",
+          "Répartition Audio",
+          "Sous-titres",
+          "Acteurs, réalisateurs et studios phares",
+          "Lectures par Jour",
+          "Durée par Jour",
+          "Lectures par Bibliothèque",
+          "Durée par Bibliothèque",
+          "Lectures (Moy. Horaire)",
+          "Durée (Moy. Horaire)",
+          "Carte de Fréquentation",
+          "Taux de Complétion Moyen par Biblio",
+          "Segments d'Abandon",
+          "Pires Taux de Complétion",
+          "Répartition Audio",
+          "Sous-titres"
+        ],
+        "visibleCharts": 15
+      }
+    },
+    {
+      "mode": "go",
+      "name": "Dashboard network",
+      "ok": true,
+      "metrics": {
+        "headings": [
+          "Tableau de bord",
+          "DirectPlay vs Transcode (par Heure)",
+          "Profil Transcode par Client",
+          "Media les plus transcoder — Tableau des Coupables",
+          "🌍 Origine géographique des connexions"
+        ],
+        "visibleCharts": 2
+      }
+    },
+    {
+      "mode": "go",
+      "name": "Mobile menu dark",
+      "ok": true,
+      "links": [
+        {
+          "href": "/",
+          "text": "JellyTrack"
+        },
+        {
+          "href": "/",
+          "text": "Tableau de bord"
+        },
+        {
+          "href": "/recent",
+          "text": "Ajoutés récemment"
+        },
+        {
+          "href": "/media",
+          "text": "Bibliothèque"
+        },
+        {
+          "href": "/users",
+          "text": "Utilisateurs"
+        },
+        {
+          "href": "/admin/health",
+          "text": "Santé"
+        },
+        {
+          "href": "/logs",
+          "text": "Journaux"
+        },
+        {
+          "href": "/settings",
+          "text": "Paramètres"
+        },
+        {
+          "href": "/admin/server-compare",
+          "text": "Comparaison de serveurs"
+        },
+        {
+          "href": "/settings/plugin",
+          "text": "Configuration du plugin"
+        },
+        {
+          "href": "/settings/go-network",
+          "text": "Réseau"
+        },
+        {
+          "href": "/admin/system-health",
+          "text": "Diagnostic système Go"
+        },
+        {
+          "href": "/admin/cleanup",
+          "text": "Nettoyage"
+        },
+        {
+          "href": "/admin/log-diagnostics",
+          "text": "Diagnostic des journaux Go"
+        },
+        {
+          "href": "/admin/plugin-diagnostics",
+          "text": "Santé du plugin"
+        },
+        {
+          "href": "/newsletter",
+          "text": "Newsletter"
+        },
+        {
+          "href": "/setup/go",
+          "text": "Assistant de configuration Go"
+        },
+        {
+          "href": "/about",
+          "text": "JellyTrack v2.1.1"
+        }
+      ]
+    },
+    {
+      "mode": "go",
+      "name": "Mobile menu light",
+      "ok": true,
+      "links": [
+        {
+          "href": "/",
+          "text": "JellyTrack"
+        },
+        {
+          "href": "/",
+          "text": "Tableau de bord"
+        },
+        {
+          "href": "/recent",
+          "text": "Ajoutés récemment"
+        },
+        {
+          "href": "/media",
+          "text": "Bibliothèque"
+        },
+        {
+          "href": "/users",
+          "text": "Utilisateurs"
+        },
+        {
+          "href": "/admin/health",
+          "text": "Santé"
+        },
+        {
+          "href": "/logs",
+          "text": "Journaux"
+        },
+        {
+          "href": "/settings",
+          "text": "Paramètres"
+        },
+        {
+          "href": "/admin/server-compare",
+          "text": "Comparaison de serveurs"
+        },
+        {
+          "href": "/settings/go-overview",
+          "text": "Vue d’ensemble Go"
+        },
+        {
+          "href": "/settings/plugin",
+          "text": "Configuration du plugin"
+        },
+        {
+          "href": "/settings/go-network",
+          "text": "Réseau"
+        },
+        {
+          "href": "/admin/system-health",
+          "text": "Diagnostic système Go"
+        },
+        {
+          "href": "/admin/cleanup",
+          "text": "Nettoyage"
+        },
+        {
+          "href": "/admin/log-diagnostics",
+          "text": "Diagnostic des journaux Go"
+        },
+        {
+          "href": "/admin/plugin-diagnostics",
+          "text": "Santé du plugin"
+        },
+        {
+          "href": "/newsletter",
+          "text": "Newsletter"
+        },
+        {
+          "href": "/setup/go",
+          "text": "Assistant de configuration Go"
+        },
+        {
+          "href": "/about",
+          "text": "JellyTrack v2.1.1"
+        }
+      ]
+    },
+    {
+      "mode": "go",
+      "name": "No JavaScript errors",
+      "ok": true,
+      "errors": []
+    }
+  ],
+  "screenshots": [
+    {
+      "mode": "go",
+      "tab": "overview",
+      "file": "go-final-dashboard-overview-charts-desktop-dark.png"
+    },
+    {
+      "mode": "go",
+      "tab": "analytics",
+      "file": "go-final-dashboard-analytics-charts-desktop-dark.png"
+    },
+    {
+      "mode": "go",
+      "tab": "network",
+      "file": "go-final-dashboard-network-charts-desktop-dark.png"
+    },
+    {
+      "mode": "go",
+      "theme": "dark",
+      "file": "go-final-navigation-open-mobile-dark.png"
+    },
+    {
+      "mode": "go",
+      "theme": "light",
+      "file": "go-final-navigation-open-mobile-light.png"
+    }
+  ]
+}

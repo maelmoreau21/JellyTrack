@@ -1,5 +1,5 @@
 # ── STAGE 1: Build static Go executable ──
-FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder
 
 RUN apk add --no-cache ca-certificates tzdata
 
@@ -24,7 +24,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
 RUN mkdir -p /tmp/data/backups /tmp/data/logs
 
 # ── STAGE 2: Minimal non-root runner image ──
-FROM alpine:3.21 AS runner
+FROM alpine:3.24 AS runner
 
 RUN apk add --no-cache ca-certificates tzdata \
     && addgroup -g 1000 jellytrack \

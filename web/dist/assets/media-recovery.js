@@ -10,8 +10,17 @@
     Movie: svg('<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M17 8h4M3 16h4M17 16h4"/>'),
     Series: svg('<rect x="3" y="6" width="18" height="14" rx="2"/><path d="m8 2 4 4 4-4"/>'),
     MusicAlbum: svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/>'),
+    music: svg('<path d="M9 18V5l12-2v13M9 8l12-2"/><ellipse cx="6" cy="18" rx="3" ry="3"/><ellipse cx="18" cy="16" rx="3" ry="3"/>'),
+    person: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'),
+    play: svg('<path d="m6 3 15 9-15 9V3Z"/>'),
+    directors: svg('<path d="m4 5 16-3 1 5-18 3-1-5ZM5 10v10h16V7M7 4l4 4M14 3l4 4"/>'),
+    actors: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/>'),
+    server: svg('<rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/>'),
+    studios: svg('<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01"/>'),
+    database: svg('<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 4 18 4 18 0V5M3 12c0 4 18 4 18 0"/>'),
+    drive: svg('<path d="M5 4h14l3 11H2L5 4Z"/><rect x="2" y="15" width="20" height="6" rx="2"/><path d="M17 18h.01M13 18h.01"/>'),
     Book: svg('<path d="M4 3h13a2 2 0 0 1 2 2v16H6a2 2 0 0 1-2-2V3Zm0 14h15"/>'),
-    all: svg('<path d="M3 5h18M6 12h12M9 19h6"/>'),
+    all: svg('<path d="M4 3h16l-6 9v7l-4 2v-9L4 3Z"/>'),
     search: svg('<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>'),
     recent: svg('<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z"/>'),
   };
@@ -25,6 +34,8 @@
     movies: ['Films', 'Movies'], series: ['Séries', 'Series'], music: ['Musique', 'Music'], directors: ['Réalisateurs', 'Directors'], actors: ['Acteurs', 'Actors'], studios: ['Studios', 'Studios'],
     albums: ['Albums', 'Albums'], tracks: ['Pistes', 'Tracks'], artist: ['Artiste', 'Artist'], listened: ['Temps écouté', 'Listening time'],
     popularTitle: ['Top Contenus', 'Top Content'], popularMusicTitle: ['Top Titres Musicaux', 'Top Music Tracks'], popularMusicDesc: ['Les musiques les plus écoutées.', 'The most played music tracks.'], popularMoviesDesc: ['Les films les plus visionnés.', 'The most watched films.'], popularSeriesDesc: ['Les séries les plus suivies.', 'The most watched series.'], popularDirectorsDesc: ['Les réalisateurs les plus visionnés.', 'The most watched directors.'], popularActorsDesc: ['Les acteurs les plus visionnés.', 'The most watched actors.'], popularStudiosDesc: ['Les studios les plus populaires.', 'The most popular studios.'], heuristic: ['Score indicatif', 'Heuristic score'],
+    popularSubtitle: ['Les films, séries et musiques les plus populaires de votre serveur.', 'The most popular movies, series and music on your server.'],
+    playSingular: ['lecture', 'play'], playsPlural: ['lectures', 'plays'],
     viewAll: ['Voir tous les résultats', 'View all results'], close: ['Fermer', 'Close'], tracksPerPage: ['Pistes par page', 'Tracks per page'],
     sourceLimit: ['Portraits, rôles et éditions non disponibles dans les métadonnées enregistrées.', 'Portraits, roles and editions are unavailable in recorded metadata.'],
     telemetryLimit: ['{shown} événements affichés sur {total}. Filtrez une session pour affiner.', '{shown} of {total} events shown. Select a session to narrow the results.'],
@@ -71,7 +82,7 @@
       Object.entries(updates).forEach(([k, v]) => v === '' || v == null ? p.delete(k) : p.set(k, String(v)));
       return `${path}${p.size ? `?${p}` : ''}`;
     };
-    const image = (m, imageType = 'Primary', width = 360) => `/api/jellyfin/image?${new URLSearchParams({ id: m.jellyfinMediaId || m.id || '', serverId: m.serverId || '', type: imageType, maxWidth: width })}`;
+    const image = (m, imageType = 'Primary', width = 360) => `/api/jellyfin/image?${new URLSearchParams({ id: m.jellyfinMediaId || m.id || '', serverId: m.serverId || '', type: imageType, maxWidth: width, fallback: 'none' })}`;
     const empty = (key = 'common.noData') => `<div class="mr-empty">${e(t(key, {}, t('noResults')))}</div>`;
     const section = (key, body, desc = '', attrs = '') => `<section class="card mr-section" ${attrs}><div class="mr-section-heading"><h2>${e(t(key))}</h2>${desc ? `<p>${e(desc)}</p>` : ''}</div>${body}</section>`;
     const stat = (label, value, sub = '', icon = '') => `<div class="card mr-stat"><span>${e(t(label))}${icon ? `<i class="mr-stat-icon">${icons[icon] || ''}</i>` : ''}</span><strong>${e(value)}</strong>${sub ? `<small>${e(sub)}</small>` : ''}</div>`;
@@ -84,7 +95,7 @@
     if (typeof s.ctx.mediaNav === 'function') return s.ctx.mediaNav(active);
     return window.JellyTrackNavigation?.mediaTabs?.(active) || '';
   }
-  function header(s, title, total = null, icon = icons.Movie) {
+  function header(s, title, total = null, icon = '') {
     return `<div class="page-header mr-header"><h1 class="page-title">${icon}${s.e(s.t(title))}</h1>${total != null ? `<span class="badge mr-header-count" id="mr-total">${s.count(total)} ${s.e(s.t('recent.mediaCount'))}</span>` : ''}</div><div id="mr-server-filter"></div>`;
   }
   function pager(s, page, pages, key = 'page') {
@@ -96,7 +107,11 @@
   function wireImages(s, main) {
     main.querySelectorAll('img[data-mr-image]').forEach((img) => img.addEventListener('error', () => {
       img.hidden = true;
-      const unavailable = document.createElement('span'); unavailable.className = 'mr-image-unavailable'; unavailable.textContent = s.t('noImage');
+      if (img.closest('.mr-ranking')) return;
+      const unavailable = document.createElement('span'); unavailable.className = 'mr-image-unavailable'; unavailable.setAttribute('role', 'img'); unavailable.setAttribute('aria-label', img.alt || s.t('noImage'));
+      const fallback = img.dataset.mrFallback || (img.closest('.mr-square,.mr-music-hero') ? 'music' : img.closest('.mr-cast-person,.mr-artist-image') ? 'person' : 'Movie');
+      unavailable.innerHTML = icons[fallback] || icons.Movie;
+      if (!img.closest('.mr-poster-image,.mr-hero-poster,.mr-artist-image,.mr-cast-person')) { unavailable.classList.add('mr-image-inline'); unavailable.style.width = `${img.width || 40}px`; unavailable.style.height = `${img.height || 60}px`; }
       img.parentNode.insertBefore(unavailable, img);
     }, { once: true }));
   }
@@ -107,21 +122,28 @@
       if (currentGeneration !== generation) return;
       const options = data.servers || []; if (options.length < 2) return;
       const requested = s.query().get('servers');
-      const selected = requested === 'all' ? [] : requested ? requested.split(',') : data.selectedServers || [];
+      const valid = new Set(options.map((server) => server.id));
+      const selected = (requested === 'all' ? [] : requested ? requested.split(',') : data.selectedServers || []).filter((id) => valid.has(id));
+      const allSelected = selected.length === 0;
       const holder = main.querySelector('#mr-server-filter'); if (!holder) return;
-      holder.innerHTML = `<fieldset class="mr-server-options"><legend>${s.e(s.t('servers'))}</legend>${options.map((server) => `<label><input type="checkbox" value="${s.e(server.id)}" ${!selected[0] || selected.includes(server.id) ? 'checked' : ''}>${s.e(server.name)}</label>`).join('')}</fieldset>`;
-      holder.addEventListener('change', () => {
-        const ids = Array.from(holder.querySelectorAll('input:checked'), (el) => el.value);
-        s.ctx.Router.navigate(s.link(window.location.pathname, { servers: ids.length === options.length || !ids.length ? 'all' : ids.join(','), page: '', tracksPage: '', historyPage: '' }, true));
-      });
+      holder.innerHTML = `<div class="mr-server-options" role="group" aria-label="${s.e(s.t('servers'))}"><div class="mr-server-buttons"><button type="button" class="mr-server-button ${allSelected ? 'active' : ''}" data-mr-server="all" aria-pressed="${allSelected}">${icons.all}${s.e(s.t('common.all'))}</button>${options.map((server) => `<button type="button" class="mr-server-button ${allSelected || selected.includes(server.id) ? 'active' : ''}" data-mr-server="${s.e(server.id)}" aria-pressed="${allSelected || selected.includes(server.id)}">${icons.server}${s.e(server.name)}</button>`).join('')}</div></div>`;
+      holder.querySelectorAll('[data-mr-server]').forEach((button) => button.addEventListener('click', () => {
+        const id = button.dataset.mrServer;
+        const ids = id === 'all' ? [] : allSelected ? [id] : selected.includes(id) ? selected.filter((value) => value !== id) : [...selected, id];
+        s.ctx.Router.navigate(s.link(window.location.pathname, { servers: ids.length ? ids.join(',') : 'all', page: '', tracksPage: '', historyPage: '' }, true));
+      }));
     } catch (err) { if (err.name !== 'AbortError' && currentGeneration === generation) main.querySelector('#mr-server-filter')?.remove(); }
   }
   function poster(s, m, recent = false, badges = true) {
     const kind = ['MusicAlbum', 'Audio', 'Track'].includes(m.type) ? 'square' : m.type === 'Episode' ? 'wide' : 'portrait';
-    const fresh = recent && m.dateAdded && Date.now() - Date.parse(m.dateAdded) >= 0 && Date.now() - Date.parse(m.dateAdded) < 7 * 86400000;
+    const freshStamp = Date.parse(m.dateAdded || m.createdAt); const fresh = recent && freshStamp && Date.now() - freshStamp >= 0 && Date.now() - freshStamp < 7 * 86400000;
     const subtitle = m.artist || m.parentTitle || '';
-    const res = m.displayResolution || m.resolution || (m.type === 'MusicAlbum' && m.bitrateKbps > 0 ? `${Math.round(m.bitrateKbps)} kbps` : m.type === 'Series' && m.directPlayPercent != null ? `${Math.round(m.directPlayPercent)}% DirectPlay` : '');
-    return `<a data-link class="mr-poster" href="${s.e(s.mediaLink(m))}"><div class="mr-poster-image mr-${kind}"><img data-mr-image src="${s.e(s.image(m))}" loading="lazy" alt="${s.e(m.title)}">${fresh ? `<span class="mr-new badge">${s.e(s.t('recent.newBadge'))}</span>` : ''}<span class="mr-kind badge">${icons[m.type] || icons.Movie}${s.e(s.type(m.type))}</span>${badges && res ? `<span class="mr-quality badge">${s.e(res)}</span>` : ''}<div class="mr-poster-overlay"><strong>${s.e(m.title)}</strong>${subtitle ? `<span>${s.e(subtitle)}</span>` : ''}<span>${s.count(m.plays)} ${s.e(s.t('recent.viewsCount'))} · ${s.e(s.ms(m.watchTimeMs))}</span>${recent ? `<span>${s.e(s.relative(m.dateAdded))}</span>` : ''}<span>${s.e((m.genres || []).slice(0, 3).join(' · '))}</span></div></div><strong class="mr-poster-title">${s.e(m.title)}</strong>${recent && subtitle ? `<span class="mr-poster-sub">${s.e(subtitle)}</span>` : ''}<small>${recent ? `${s.e(s.relative(m.dateAdded))} · ` : ''}${s.count(m.plays)} ${s.e(s.t('recent.viewsCount'))}${!recent ? ` · ${s.e(s.ms(m.watchTimeMs))}` : ''}</small></a>`;
+    const resolution = m.displayResolution || m.resolution || '';
+    const res = m.type === 'MusicAlbum' ? m.bitrateKbps > 0 ? `${Math.round(m.bitrateKbps)} KBPS` : '' : resolution && resolution !== 'Unknown' ? resolution === '4K' ? '4K UHD' : resolution : m.type === 'Series' && m.plays > 0 ? `DP ${Math.round(m.directPlayPercent || 0)}%` : '';
+    const dateAdded = m.dateAdded || m.createdAt;
+    const addedDate = dateAdded && !Number.isNaN(Date.parse(dateAdded)) ? new Date(dateAdded).toLocaleDateString(s.ctx.State.locale, { day: 'numeric', month: 'short' }) : s.t('unknown');
+    const quality = m.type === 'MusicAlbum' ? 'music' : resolution === '4K' ? 'uhd' : resolution === '1080p' ? 'hd' : res.startsWith('DP') ? m.directPlayPercent >= 80 ? 'good' : m.directPlayPercent >= 50 ? 'medium' : 'poor' : 'other';
+    return `<a data-link class="mr-poster" href="${s.e(s.mediaLink(m))}"><div class="mr-poster-image mr-${kind}"><img data-mr-image src="${s.e(s.image(m))}" loading="lazy" alt="${s.e(m.title)}">${fresh ? `<span class="mr-new badge">${s.e(s.t('recent.newBadge'))}</span>` : ''}${recent ? `<span class="mr-kind mr-kind-${s.e(m.type)} badge">${icons[m.type] || icons.Movie}${s.e(s.type(m.type))}</span>` : ''}${!recent && badges && res ? `<span class="mr-quality mr-quality-${quality} badge">${s.e(res)}</span>` : ''}${recent ? `<div class="mr-poster-overlay"><strong>${s.e(m.title)}</strong>${subtitle ? `<span>${s.e(subtitle)}</span>` : ''}<span>${icons.clock}${s.e(s.date(dateAdded))}</span>${m.plays > 0 ? `<span>${s.count(m.plays)} ${s.e(s.t('recent.viewsCount'))}</span>` : ''}<span>${s.e((m.genres || []).slice(0, 3).join(' · '))}</span>${resolution ? `<span class="mr-quality badge">${s.e(resolution)}</span>` : ''}</div>` : ''}</div><strong class="mr-poster-title">${s.e(m.title)}</strong>${recent && subtitle ? `<span class="mr-poster-sub">${s.e(subtitle)}</span>` : ''}<small class="mr-poster-meta">${recent ? `${icons.clock}<span>${s.e(addedDate)}${m.plays > 0 ? ` · ${s.count(m.plays)} ${s.e(s.t('recent.viewsCount'))}` : ''}</span>` : `<span>${s.count(m.plays)} ${s.e(s.t('recent.viewsCount'))}</span>${m.watchTimeMs > 0 ? `<span>${s.e(s.hours(m.watchTimeMs))}</span>` : ''}`}</small></a>`;
   }
   function bar(s, id, rows, label, value = 'count', onclick = null) {
     if (!rows.length || !rows.some((row) => Number(row[value]) > 0)) { s.ctx.ChartHelper.showEmpty(id, s.t('common.noData', {}, s.t('noResults'))); return; }
@@ -131,11 +153,11 @@
 
   async function catalogue(s, main, path, version) {
     const recent = path === '/recent'; const params = s.query();
-    main.innerHTML = `${recent ? '' : nav(s, 'media')}${header(s, recent ? 'recent.title' : 'media.allMedia', 0, recent ? icons.recent : icons.Movie)}<div id="mr-catalogue-controls"></div><div id="mr-list" class="mr-grid ${recent ? 'mr-recent-grid' : ''}"><div class="skeleton mr-grid-loading" aria-label="${s.e(s.t('loading'))}"></div></div><div id="mr-pagination"></div>`;
+    main.innerHTML = `${recent ? '' : nav(s, 'media')}${header(s, recent ? 'recent.title' : 'media.allMedia', recent ? 0 : null, recent ? icons.recent : '')}<div id="mr-catalogue-controls"></div><div id="mr-list" class="mr-grid ${recent ? 'mr-recent-grid' : ''}"><div class="skeleton mr-grid-loading" aria-label="${s.e(s.t('loading'))}"></div></div><div id="mr-pagination"></div>`;
     const excluded = (params.get('excludeTypes') || '').split(',').filter(Boolean);
     const categories = [['all', 'common.all'], ['Movie', 'common.movies'], ['Series', 'common.series'], ['MusicAlbum', 'common.music']];
     const extras = params.get('types') === 'all' || params.get('type');
-    main.querySelector('#mr-catalogue-controls').innerHTML = `${!recent ? `<div class="mr-control-row"><div class="segmented-control mr-categories">${categories.map(([id, key]) => `<button type="button" data-category="${id}" class="segment-btn ${id === 'all' ? !excluded.length && !extras ? 'active' : '' : !extras && !excluded.includes(id) ? 'active' : ''}" aria-pressed="${id === 'all' ? !excluded.length && !extras : !extras && !excluded.includes(id)}" title="${s.e(s.t(key))}">${icons[id]}<span>${s.e(s.t(key))}</span></button>`).join('')}</div><div class="mr-search">${icons.search}<input type="search" id="mr-search" value="${s.e(params.get('q') || '')}" placeholder="${s.e(s.t('search'))}" aria-label="${s.e(s.t('search'))}"><button type="button" id="mr-search-clear" aria-label="${s.e(s.t('clear'))}" ${params.get('q') ? '' : 'hidden'}>✕</button></div></div>` : ''}<div class="mr-secondary-controls">${!recent ? `<label>${s.e(s.t('media.sortBy'))} <select id="mr-sort" class="form-select">${[['plays', 'media.sortPopularity'], ['watchTime', 'media.sortWatchTime'], ['quality', 'quality'], ['title', 'title'], ['added', 'added'], ['recent', 'played'], ['duration', 'duration']].map(([v, key]) => `<option value="${v}" ${v === (params.get('sortBy') || params.get('sort') || 'plays') ? 'selected' : ''}>${s.e(s.t(key))}</option>`).join('')}</select></label>` : ''}<details class="mr-extra-filters" ${extras ? 'open' : ''}><summary>${s.e(s.t('extras'))}</summary><select class="form-select" id="mr-extra-types" aria-label="${s.e(s.t('extras'))}"><option value="" ${!extras ? 'selected' : ''}>${s.e(s.t('parents'))}</option><option value="all" ${params.get('types') === 'all' ? 'selected' : ''}>${s.e(s.t('allTypes'))}</option>${['Book', 'AudioBook', 'Episode', 'Audio', 'Season'].map((kind) => `<option value="${kind}" ${params.get('type') === kind ? 'selected' : ''}>${s.e(s.type(kind))}</option>`).join('')}</select></details>${['genre', 'resolution', 'library', 'artist'].filter((key) => params.get(key)).map((key) => `<button class="badge mr-filter-chip" type="button" data-remove-filter="${key}">${s.e(params.get(key))} ✕</button>`).join('')}</div>`;
+    main.querySelector('#mr-catalogue-controls').innerHTML = `${!recent ? `<div class="mr-control-row"><div class="segmented-control mr-categories">${categories.map(([id, key]) => `<button type="button" data-category="${id}" class="segment-btn ${id === 'all' ? !excluded.length && !extras ? 'active' : '' : !extras && !excluded.includes(id) ? 'active' : ''}" aria-pressed="${id === 'all' ? !excluded.length && !extras : !extras && !excluded.includes(id)}" title="${s.e(s.t(key))}">${icons[id === 'MusicAlbum' ? 'music' : id]}<span>${s.e(s.t(key))}</span></button>`).join('')}</div><div class="mr-search">${icons.search}<input type="search" id="mr-search" value="${s.e(params.get('q') || '')}" placeholder="${s.e(s.t('search'))}" aria-label="${s.e(s.t('search'))}"><button type="button" id="mr-search-clear" aria-label="${s.e(s.t('clear'))}" ${params.get('q') ? '' : 'hidden'}>✕</button></div></div>` : ''}<div class="mr-secondary-controls">${!recent ? `<label>${s.e(s.t('media.sortBy'))} <select id="mr-sort" class="form-select">${[['plays', 'media.sortPopularity'], ['watchTime', 'media.sortWatchTime'], ['quality', 'quality'], ['title', 'title'], ['added', 'added'], ['recent', 'played'], ['duration', 'media.sortWatchTime'], ['runtime', 'duration'], ['resolution', 'quality']].map(([v, key]) => `<option value="${v}" ${v === (params.get('sortBy') || params.get('sort') || 'plays') ? 'selected' : ''}>${s.e(s.t(key))}</option>`).join('')}</select></label>` : ''}<details class="mr-extra-filters" ${extras ? 'open' : ''}><summary>${s.e(s.t('extras'))}</summary><select class="form-select" id="mr-extra-types" aria-label="${s.e(s.t('extras'))}"><option value="" ${!extras ? 'selected' : ''}>${s.e(s.t('parents'))}</option><option value="all" ${params.get('types') === 'all' ? 'selected' : ''}>${s.e(s.t('allTypes'))}</option>${['Book', 'AudioBook', 'Episode', 'Audio', 'Season'].map((kind) => `<option value="${kind}" ${params.get('type') === kind ? 'selected' : ''}>${s.e(s.type(kind))}</option>`).join('')}</select></details>${['genre', 'resolution', 'library', 'artist'].filter((key) => params.get(key)).map((key) => `<button class="badge mr-filter-chip" type="button" data-remove-filter="${key}">${s.e(params.get(key))} ✕</button>`).join('')}</div>`;
     const navigate = (updates) => s.ctx.Router.navigate(s.link(path, { ...updates, page: '' }, true));
     main.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => {
       const id = button.dataset.category; let next = excluded.slice();
@@ -143,6 +165,11 @@
       if (next.length >= 3) next = [];
       navigate({ excludeTypes: next.join(','), type: '', types: '' });
     }));
+    // Keep the historical controls row intact. Additional Go controls remain
+    // reachable in the expandable panel, including all existing sort modes.
+    const extraPanel = main.querySelector('.mr-extra-filters');
+    const sortControl = main.querySelector('#mr-sort')?.closest('label');
+    if (sortControl) extraPanel.append(sortControl);
     let timer;
     const search = main.querySelector('#mr-search');
     search?.addEventListener('input', () => {
@@ -155,10 +182,10 @@
     main.querySelectorAll('[data-remove-filter]').forEach((button) => button.addEventListener('click', () => navigate({ [button.dataset.removeFilter]: '' })));
     const api = new URLSearchParams(params); api.set('limit', recent ? 40 : 50); api.set('parents', extras ? 'false' : 'true'); api.set('sortBy', recent ? 'added' : params.get('sortBy') || params.get('sort') || 'plays');
     const result = await s.ctx.API.getJSON(`/api/media?${api}`); if (version !== generation) return;
-    main.querySelector('#mr-total').textContent = `${s.count(result.total)} ${s.t('recent.mediaCount')}`;
+    if (main.querySelector('#mr-total')) main.querySelector('#mr-total').textContent = `${s.count(result.total)} ${s.t('recent.mediaCount')}`;
     main.querySelector('#mr-list').innerHTML = result.items.length ? result.items.map((m) => poster(s, m, recent, result.showLibraryMediaBadges)).join('') : `<div class="mr-grid-empty"><h2>${s.e(s.t('recent.noMedia'))}</h2><p>${s.e(s.t(recent ? 'recent.noMediaDesc' : 'noResults'))}</p></div>`;
     const current = Math.floor(result.offset / result.limit) + 1; const pages = Math.max(1, Math.ceil(result.total / result.limit));
-    main.querySelector('#mr-pagination').innerHTML = pager(s, current, pages); bindPager(s, main); wireImages(s, main);
+    main.querySelector('#mr-pagination').innerHTML = pages > 1 ? pager(s, current, pages) : ''; bindPager(s, main); wireImages(s, main);
     serverFilter(s, main, version);
   }
 
@@ -166,27 +193,39 @@
     main.innerHTML = `${nav(s, 'collections')}${header(s, 'media.libraryCollections')}<div class="skeleton mr-loading" aria-label="${s.e(s.t('loading'))}"></div>`;
     const result = await s.ctx.API.getJSON(`/api/media/collections?${s.query()}`); if (version !== generation) return;
     const data = result.collections || []; const totals = result.totals || {};
-    main.querySelector('.mr-loading').outerHTML = `<div class="mr-stats mr-collections-stats">${s.stat('media.statsVolume', s.bytes(totals.sizeBytes), s.t('media.statsVolumeDesc'))}${s.stat('media.statsContent', s.count(totals.items), s.t('media.statsContentDesc'))}${s.stat('media.statsTime', s.ms(totals.durationMs), s.t('media.statsTimeDesc'))}</div><div class="mr-library-heading"><h2>${s.e(s.t('media.libraryDetailsTitle'))} <span class="badge">${data.length}</span></h2><input id="mr-library-search" class="form-input" type="search" placeholder="${s.e(s.t('media.searchLibrary'))}" aria-label="${s.e(s.t('media.searchLibrary'))}"></div><div id="mr-collections" class="mr-collection-grid"></div>`;
+    const librarySize = (value) => { const n = Number(value || 0); return n >= 1024 ** 4 ? `${(n / 1024 ** 4).toFixed(2)} To` : `${(n / 1024 ** 3).toFixed(1)} Go`; };
+    const libraryDuration = (value) => `${Math.floor(Number(value || 0) / 86400000)}${s.ctx.State.locale === 'en' ? 'd' : 'j'} ${Math.floor(Number(value || 0) % 86400000 / 3600000)}h`;
+
+    const content = ['Movie', 'Series', 'MusicAlbum', 'Book'].map((kind) => ({ kind, count: data.reduce((sum, item) => sum + (item.types || []).filter((row) => row.type === kind || kind === 'Book' && row.type === 'AudioBook').reduce((n, row) => n + Number(row.count || 0), 0), 0) })).filter((row) => row.count > 0);
+    const contentLabel = content.map((row) => `<span class="mr-content-${row.kind}">${s.count(row.count)} ${s.e(s.t(({ Movie: 'movies', Series: 'series', MusicAlbum: 'music', Book: 'books', AudioBook: 'books' })[row.kind]).toLocaleLowerCase(s.ctx.State.locale))}</span>`).join('<span>, </span>');
+    const days = Math.floor(Number(totals.durationMs || 0) / 86400000); const hours = Math.floor(Number(totals.durationMs || 0) % 86400000 / 3600000);
+    main.querySelector('.mr-loading').outerHTML = `<div class="mr-stats mr-collections-stats">${s.stat('media.statsVolume', librarySize(totals.sizeBytes), s.t('media.statsVolumeDesc'), 'drive')}${s.stat('media.statsContent', '', s.t('media.statsContentDesc'), 'database').replace('<strong></strong>', `<strong class="mr-content-total">${contentLabel || s.count(totals.items)}</strong>`)}${s.stat('media.statsTime', `${days}${s.ctx.State.locale === 'en' ? 'd' : 'j'} ${hours}h`, s.t('media.statsTimeDesc'), 'clock')}</div><div class="mr-library-heading"><div><h2>${icons.database}${s.e(s.t('media.libraryDetailsTitle'))}</h2><p>${s.count(data.length)} ${s.e(s.t('media.libraries'))} total</p></div><div class="mr-library-search">${icons.search}<input id="mr-library-search" class="form-input" type="search" placeholder="${s.e(s.t('media.searchLibrary'))}" aria-label="${s.e(s.t('media.searchLibrary'))}"></div></div><div id="mr-collections" class="mr-collection-grid"></div>`;
     const libraryName = (item) => {
-      const normalized = String(item.collectionType || item.name).toLowerCase(); const keys = { movies: 'common.movies', tvshows: 'common.series', music: 'common.music', books: 'books', audiobooks: 'common.audiobook' };
-      return keys[normalized] ? s.t(keys[normalized]) : item.name || s.t('unknown');
+      const normalized = String(item.collectionType || item.key || item.name).toLowerCase(); const keys = { movies: 'common.movies', tvshows: 'common.series', music: 'common.music', books: 'books', filmsuhd: 'common.filmsuhd', seriesuhd: 'common.seriesuhd' };
+      const localized = keys[normalized] ? s.t(keys[normalized], {}, '') : '';
+      return localized && !localized.includes('.') ? localized : String(item.name || s.t('unknown')).replace(/[_-]+/g, ' ').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/\b\w/g, (letter) => letter.toUpperCase());
     };
     const render = (search = '') => {
-      const filtered = data.filter((item) => `${libraryName(item)} ${item.name} ${item.server}`.toLocaleLowerCase(s.ctx.State.locale).includes(search.toLocaleLowerCase(s.ctx.State.locale))).sort((a, b) => libraryName(a).localeCompare(libraryName(b), s.ctx.State.locale));
+      const filtered = data.filter((item) => `${libraryName(item)} ${item.name} ${(item.scopes || []).map((scope) => `${scope.name} ${scope.server}`).join(' ')} ${(item.types || []).map((row) => `${row.count} ${s.type(row.type)}`).join(' ')}`.toLocaleLowerCase(s.ctx.State.locale).includes(search.toLocaleLowerCase(s.ctx.State.locale))).sort((a, b) => libraryName(a).localeCompare(libraryName(b), s.ctx.State.locale));
       main.querySelector('#mr-collections').innerHTML = filtered.map((item) => {
         const name = libraryName(item); const icon = (item.types || []).find((type) => icons[type.type])?.type || 'Movie';
-        const preview = (key, title) => `<div class="mr-library-preview"><h3>${s.e(s.t(title))}</h3>${item[key] ? `<a data-link href="${s.e(s.mediaLink(item[key]))}"><img data-mr-image src="${s.e(s.image(item[key], 'Primary', 120))}" alt="${s.e(item[key].title)}" loading="lazy"><div><strong>${s.e(item[key].title)}</strong><small>${key === 'topItem' ? `${s.count(item[key].plays)} ${s.e(s.t('recent.viewsCount'))}` : s.e(s.relative(item[key].dateAdded))}</small></div></a>` : `<p>${s.e(s.t(key === 'topItem' ? 'media.noPlays' : 'media.noContentAdded'))}</p>`}</div>`;
-        return `<article class="card mr-library-card mr-library-${icon}"><div class="mr-library-title">${icons[icon]}<div><h3><a data-link href="${s.e(s.link('/media/all', { library: item.name, servers: item.serverId }))}">${s.e(name)}</a></h3>${name !== item.name ? `<small>${s.e(item.name)}</small>` : ''}<small>${s.e(item.server)}</small></div><span class="badge">${s.e(s.bytes(item.sizeBytes))}</span></div><div class="mr-library-counts">${(item.types || []).filter((row) => !['Episode', 'Season', 'Audio', 'Track'].includes(row.type)).map((row) => `<span>${s.count(row.count)} ${s.e(s.type(row.type))}</span>`).join('')}<span>${s.e(s.ms(item.durationMs))}</span></div><div class="mr-library-previews">${preview('topItem', 'media.topContent')}${preview('lastAdded', 'media.lastAdded')}</div>${item.ignoredCounts?.length ? `<details class="mr-library-extra"><summary>${s.e(s.t('collectionChildren'))}</summary>${item.ignoredCounts.map((row) => `<span>${s.count(row.count)} ${s.e(s.type(row.type))}</span>`).join(' · ')}</details>` : ''}</article>`;
+        const countsLabel = (item.types || []).filter((row) => ['Movie', 'Series', 'MusicAlbum', 'Book', 'AudioBook'].includes(row.type)).map((row) => `${s.count(row.count)} ${s.t(({ Movie: 'movies', Series: 'series', MusicAlbum: 'music', Book: 'books', AudioBook: 'books' })[row.type]).toLocaleLowerCase(s.ctx.State.locale)}`).join(', ');
+
+        const preview = (key, title) => `<div class="mr-library-preview">${item[key] ? `<a data-link href="${s.e(s.mediaLink(item[key]))}"><img data-mr-image src="${s.e(s.image(item[key], 'Primary', 120))}" alt="${s.e(item[key].title)}" loading="lazy"><div><h3>${s.e(s.t(title))}</h3><strong>${s.e(item[key].title)}</strong><small>${key === 'topItem' ? `${s.count(item[key].plays)} ${s.e(s.t('recent.viewsCount'))}` : s.e(item[key].dateAdded ? new Date(item[key].dateAdded).toLocaleDateString(s.ctx.State.locale) : '—')}</small></div></a>` : `<h3>${s.e(s.t(title))}</h3><p>${s.e(s.t(key === 'topItem' ? 'media.noPlays' : 'media.noContentAdded'))}</p>`}</div>`;
+        const scopes = (item.scopes || []).map(({ serverId, name: rawName }) => ({ serverId, name: rawName }));
+        const servers = [...new Set(scopes.map((scope) => scope.serverId))].join(',');
+        return `<article class="card mr-library-card mr-library-${icon}"><div class="mr-library-title">${icons[icon]}<div><h3><a data-link href="${s.e(s.link('/media/all', { libraryScopes: JSON.stringify(scopes), servers }))}">${s.e(name)}</a></h3>${name !== item.name ? `<small class="badge">${s.e(item.name)}</small>` : ''}</div><span class="badge">${s.e(librarySize(item.sizeBytes))}</span></div><div class="mr-library-counts"><span>${s.e(countsLabel)}</span><span>${icons.clock}${s.e(libraryDuration(item.durationMs))}</span></div>${item.ignoredCounts?.length ? `<div class="mr-library-child-counts">${['Episode', 'Audio', 'Track'].map((kind) => ({ kind, count: item.ignoredCounts.filter((row) => row.type === kind || kind === 'Book' && row.type === 'AudioBook').reduce((n, row) => n + Number(row.count || 0), 0) })).filter((row) => row.count).map((row) => `<span>${s.count(row.count)} ${s.e(s.type(row.kind))}</span>`).join(' · ')}</div>` : ''}<div class="mr-library-previews">${preview('topItem', 'media.topContent')}${preview('lastAdded', 'media.lastAdded')}</div></article>`;
       }).join('') || s.empty(); wireImages(s, main);
     };
     render(); main.querySelector('#mr-library-search').addEventListener('input', (event) => render(event.target.value.trim())); serverFilter(s, main, version);
   }
 
   function ranking(s, key, rows, person = false, description = '') {
-    return s.section(key, rows.length ? `<ol class="mr-ranking">${rows.map((m, i) => `<li><span class="mr-rank">#${i + 1}</span>${person ? '' : `<img data-mr-image src="${s.e(s.image(m, 'Primary', 100))}" loading="lazy" alt="${s.e(m.title)}">`}<a data-link href="${s.e(person ? s.link('/media/all', { q: m.name }) : s.mediaLink(m))}">${s.e(m.title || m.name)}</a><span><strong>${s.count(m.plays)} ${s.e(s.t('recent.viewsCount'))}</strong><small>${s.e(s.hours(m.watchTimeMs))}</small></span></li>`).join('')}</ol>` : s.empty('media.noPlays'), description).replace('class="card mr-section"', `class="card mr-section mr-ranking-card mr-ranking-${person ? key.replace(/^.*\.top/, '').toLowerCase() : key.includes('Movies') ? 'movies' : key.includes('Series') ? 'series' : 'music'}"`).replace('</h2>', `</h2><span class="mr-ranking-award">${icons.award}</span>`);
+    const headingIcon = person ? key.replace(/^.*\.top/, '').toLowerCase() : key.includes('Movies') ? 'Movie' : key.includes('Series') ? 'Series' : 'music';
+    return s.section(key, rows.length ? `<ol class="mr-ranking">${rows.map((m, i) => `<li><span class="mr-rank">#${i + 1}</span>${person ? '' : `<img data-mr-image src="${s.e(s.image(m, 'Primary', 100))}" loading="lazy" alt="${s.e(m.title)}">`}<a data-link href="${s.e(person ? s.link('/media/all', { q: m.name }) : s.mediaLink(m))}">${s.e(m.title || m.name)}</a><span><strong>${icons.play}${s.count(m.plays)} ${s.e(s.t(m.plays === 1 ? 'playSingular' : 'playsPlural'))}</strong><small>${icons.clock}${s.e(s.hours(m.watchTimeMs))}</small></span></li>`).join('')}</ol>` : s.empty('media.noPlays'), description).replace('class="card mr-section"', `class="card mr-section mr-ranking-card mr-ranking-${person ? key.replace(/^.*\.top/, '').toLowerCase() : key.includes('Movies') ? 'movies' : key.includes('Series') ? 'series' : 'music'}"`).replace('<h2>', `<h2>${icons[headingIcon] || ''}`).replace('</h2>', `</h2><span class="mr-ranking-award">${icons.award}</span>`);
   }
   async function popular(s, main, version) {
-    main.innerHTML = `${nav(s, 'popular')}${header(s, 'popularTitle', null, window.JellyTrackNavigation.icon('trophy'))}<div class="skeleton mr-loading"></div>`;
+    main.innerHTML = `${nav(s, 'popular')}${header(s, 'popularTitle', null, window.JellyTrackNavigation.icon('trophy'))}<p class="mr-popular-subtitle">${s.e(s.t('popularSubtitle'))}</p><div class="skeleton mr-loading"></div>`;
     const result = await s.ctx.API.getJSON(`/api/media/popular?${s.query()}`); if (version !== generation) return;
     main.querySelector('.mr-loading').outerHTML = `<div class="mr-ranking-grid">${[['movies', 'deepInsights.topMovies', 'popularMoviesDesc'], ['series', 'deepInsights.topSeries', 'popularSeriesDesc'], ['music', 'popularMusicTitle', 'popularMusicDesc']].map(([key, title, description]) => ranking(s, title, result[key] || [], false, s.t(description))).join('')}</div><div class="mr-ranking-grid">${['directors', 'actors', 'studios'].map((key) => ranking(s, 'deepInsights.top'+key[0].toUpperCase()+key.slice(1), result[key] || [], true, s.t('popular'+key[0].toUpperCase()+key.slice(1)+'Desc'))).join('')}</div>`;
     wireImages(s, main); serverFilter(s, main, version);

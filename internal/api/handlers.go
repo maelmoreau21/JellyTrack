@@ -46,6 +46,7 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 	// Standard user session protected routes
 	userRoutes := map[string]http.HandlerFunc{
 		"GET /api/navigation":               h.navigation,
+		"GET /api/newsletter":               h.newsletterData,
 		"GET /api/dashboard":                h.dashboard,
 		"GET /api/users/{id}":               h.userDetail,
 		"GET /api/users/{id}/active-stream": h.userActiveStream,
@@ -127,7 +128,6 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"GET /api/backup/auto/download":                  h.backupAutoDownload,
 		"POST /api/backup/auto/restore":                  h.backupAutoRestore,
 		"POST /api/backup/auto/delete":                   h.backupAutoDelete,
-		"GET /api/newsletter":                            h.newsletterData,
 		"GET /api/admin/server-compare":                  h.recoveredServerCompare,
 		"POST /api/admin/consolidate-history":            h.adminConsolidateHistory,
 		"POST /api/admin/integrity-cleanup":              h.adminIntegrityCleanup,
@@ -1087,6 +1087,7 @@ func (h *Handler) streams(w http.ResponseWriter, r *http.Request) {
 				"mediaTitle":      title.String,
 				"mediaSubtitle":   mediaSubtitle,
 				"mediaType":       mType.String,
+				"albumArtist":     nullable(artist),
 				"progressPercent": progressPercent,
 				"isPaused":        pauseState.String == "pause",
 				"pauseStateKnown": pauseState.Valid,
@@ -1102,6 +1103,15 @@ func (h *Handler) streams(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if rows.Err() != nil {
+		jsonError(w, 500, "Impossible de charger les flux en direct.")
+		return
+	}
+	// Parent lookups need the connection released first on SQLite.
+	rows.Close()
+	for _, stream := range streams {
+		stream["mediaSubtitle"] = h.profileMediaSubtitle(r, stream["serverId"].(string), stream["mediaType"].(string), firstStringValue(stream["parentItemId"]), firstStringValue(stream["albumArtist"]))
+	}
 	if streams == nil {
 		streams = []map[string]any{}
 	}
@@ -1145,15 +1155,15 @@ func (h *Handler) streamsTelemetry(w http.ResponseWriter, r *http.Request) {
 			ID              string           `json:"id"`
 			UserID          string           `json:"userId"`
 			EventSource     string           `json:"eventSource"`
-			SourceEventID   sql.NullString   `json:"sourceEventId"`
+			SourceEventID   any              `json:"sourceEventId"`
 			DurationWatched int64            `json:"durationWatched"`
 			StartedAt       string           `json:"startedAt"`
-			EndedAt         sql.NullString   `json:"endedAt"`
+			EndedAt         any              `json:"endedAt"`
 			User            map[string]any   `json:"user"`
 			TelemetryEvents []map[string]any `json:"telemetryEvents"`
 		}
 
-		var sessions []sessionItem
+		sessions := []sessionItem{}
 		var pids []string
 		for sRows.Next() {
 			var id, es, started string
@@ -1165,10 +1175,10 @@ func (h *Handler) streamsTelemetry(w http.ResponseWriter, r *http.Request) {
 					ID:              id,
 					UserID:          uid.String,
 					EventSource:     es,
-					SourceEventID:   seid,
+					SourceEventID:   nullable(seid),
 					DurationWatched: dur,
 					StartedAt:       started,
-					EndedAt:         ended,
+					EndedAt:         nullable(ended),
 					User: map[string]any{
 						"username":       uname.String,
 						"jellyfinUserId": juid.String,

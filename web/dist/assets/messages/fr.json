@@ -393,7 +393,9 @@
     "volumeHistoryDesc": "Évolution des heures de visionnage par bibliothèque.",
     "vsPrevPeriod": "vs {count} période préc.",
     "vsUsersOnPeriod": "vs {count} période préc.",
-    "watched": "visionnées"
+    "watched": "visionnées",
+    "monitorActive": "actif",
+    "monitorError": "en erreur"
   },
   "deepInsights": {
     "deviceEcosystem": "Écosystème Appareils",

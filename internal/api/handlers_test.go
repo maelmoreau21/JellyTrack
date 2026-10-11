@@ -556,6 +556,11 @@ func TestImageProxyFallbackAndAliases(t *testing.T) {
 	if !strings.Contains(w.Body.String(), "<svg") {
 		t.Fatalf("expected svg body, got %s", w.Body.String())
 	}
+	componentFallback := httptest.NewRecorder()
+	h.jellyfinImageProxy(componentFallback, httptest.NewRequest("GET", "/api/jellyfin/image?itemId=missing-id&fallback=none", nil))
+	if componentFallback.Code != http.StatusNotFound {
+		t.Fatalf("component fallback must activate on image failure, got %d", componentFallback.Code)
+	}
 
 	// 2. User image proxy fallback SVG
 	wUser := httptest.NewRecorder()

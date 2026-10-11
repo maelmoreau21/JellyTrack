@@ -350,7 +350,9 @@
     "watched": "已观看",
     "worldMap": "连接地图",
     "worldMapDesc": "播放会话的地理分布。",
-    "title": "控制面板"
+    "title": "控制面板",
+    "monitorActive": "active",
+    "monitorError": "error"
   },
   "deepInsights": {
     "deviceEcosystem": "设备生态",

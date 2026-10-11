@@ -1,0 +1,2 @@
+Synthetic fixture: two disabled localhost servers and one standard session. No real server or database used.
+

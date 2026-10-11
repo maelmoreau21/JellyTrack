@@ -14,6 +14,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/maelmoreau21/jellytrack/internal/auth"
 	"github.com/maelmoreau21/jellytrack/internal/database"
@@ -267,6 +270,22 @@ func (h *Handler) recoveredMediaFilters(r *http.Request) (string, []any) {
 	q := r.URL.Query()
 	clauses := []string{"1=1"}
 	args := []any{}
+	if raw := q.Get("libraryScopes"); raw != "" {
+		var scopes []struct {
+			ServerID string `json:"serverId"`
+			Name     string `json:"name"`
+		}
+		if json.Unmarshal([]byte(raw), &scopes) != nil || len(scopes) == 0 || len(scopes) > 256 {
+			clauses = append(clauses, "1=0")
+		} else {
+			parts := []string{}
+			for _, scope := range scopes {
+				parts = append(parts, `(m."serverId"=? AND m."libraryName"=?)`)
+				args = append(args, scope.ServerID, scope.Name)
+			}
+			clauses = append(clauses, "("+strings.Join(parts, " OR ")+")")
+		}
+	}
 	// Existing Go consumers keep all types; the restored page requests parents.
 	if q.Get("parents") == "true" {
 		clauses = append(clauses, `m."type" IN ('Movie','Series','MusicAlbum') AND m."libraryName" IS NOT NULL AND m."libraryName"<>''`)
@@ -363,9 +382,13 @@ func (h *Handler) recoveredMediaList(w http.ResponseWriter, r *http.Request) {
 	case "watchTime", "time", "watchtime":
 		order = `COALESCE(a."watchTimeMs",0) DESC,m."title" ASC,m."id" ASC`
 	case "quality":
-		order = recoveredQualityRank + ` DESC,m."title" ASC,m."id" ASC`
+		order = `CASE WHEN COALESCE(a."plays",0)>0 THEN 1.0*a."directPlays"/a."plays" ELSE 0 END DESC,m."title" ASC,m."id" ASC`
 	case "duration":
+		order = `COALESCE(a."watchTimeMs",0) DESC,m."title" ASC,m."id" ASC`
+	case "runtime":
 		order = `m."durationMs" DESC,m."title" ASC`
+	case "resolution":
+		order = recoveredQualityRank + ` DESC,m."title" ASC,m."id" ASC`
 	case "recent":
 		order = `a."lastPlayed" DESC,m."title" ASC`
 	case "added", "new", "recentlyAdded":
@@ -691,6 +714,30 @@ func (h *Handler) recoveredMediaBehavior(r *http.Request, base string, args []an
 	return map[string]any{"ranges": list(ranges), "speeds": list(speeds), "switches": list(switches), "languageSegments": list(segments)}, nil
 }
 
+// Match main's mediaPolicy cleanKey and aliases. Display grouping never changes
+// server-aware identity, exclusions or the scope attached to links.
+func historicalLibraryKey(value string) string {
+	value = strings.Map(func(r rune) rune {
+		if (r >= 0x300 && r <= 0x36f) || unicode.IsSpace(r) || r == '_' || r == '-' {
+			return -1
+		}
+		return r
+	}, norm.NFD.String(strings.ToLower(strings.TrimSpace(value))))
+	aliases := map[string]string{
+		"movie": "movies", "movies": "movies", "film": "movies", "films": "movies",
+		"filmsuhd": "filmsuhd", "moviesuhd": "filmsuhd", "film4k": "filmsuhd", "movie4k": "filmsuhd",
+		"tv": "tvshows", "tvshow": "tvshows", "tvshows": "tvshows", "series": "tvshows", "show": "tvshows", "shows": "tvshows", "seriestv": "tvshows",
+		"seriesuhd": "seriesuhd", "tvshowsuhd": "seriesuhd", "series4k": "seriesuhd", "tv4k": "seriesuhd",
+		"music": "music", "musics": "music", "musique": "music", "musiques": "music", "album": "music", "albums": "music",
+		"book": "books", "books": "books", "audiobook": "books", "audiobooks": "books", "comic": "books", "comics": "books", "comicbook": "books", "comicbooks": "books",
+		"photo": "photos", "photos": "photos", "homevideo": "homevideos", "homevideos": "homevideos", "livetv": "livetv",
+	}
+	if alias := aliases[value]; alias != "" {
+		return alias
+	}
+	return value
+}
+
 func (h *Handler) recoveredMediaCollections(w http.ResponseWriter, r *http.Request) {
 	base, args, err := h.recoveredMediaBase(r)
 	if err != nil {
@@ -706,16 +753,47 @@ func (h *Handler) recoveredMediaCollections(w http.ResponseWriter, r *http.Reque
 	result := []map[string]any{}
 	var totalItems, totalBytes, totalMs float64
 	for _, t := range types {
-		key := mediaString(t["serverId"]) + "\x00" + mediaString(t["name"])
+		key := historicalLibraryKey(mediaString(t["name"]))
 		g := groups[key]
 		if g == nil {
-			g = map[string]any{"name": t["name"], "serverId": t["serverId"], "server": t["server"], "collectionType": t["collectionType"], "types": []map[string]any{}, "ignoredCounts": []map[string]any{}, "totalItems": float64(0), "sizeBytes": float64(0), "durationMs": float64(0)}
+			g = map[string]any{"key": key, "name": t["name"], "serverId": t["serverId"], "server": t["server"], "collectionType": t["collectionType"], "scopes": []map[string]any{}, "types": []map[string]any{}, "ignoredCounts": []map[string]any{}, "totalItems": float64(0), "sizeBytes": float64(0), "durationMs": float64(0)}
 			groups[key] = g
 			result = append(result, g)
 		}
+		// Keep all raw names and servers so a merged card remains searchable and
+		// can drill down without including an unrelated server's library.
+		scopes := g["scopes"].([]map[string]any)
+		foundScope := false
+		for _, scope := range scopes {
+			if scope["serverId"] == t["serverId"] && scope["name"] == t["name"] {
+				foundScope = true
+				break
+			}
+		}
+		if !foundScope {
+			g["scopes"] = append(scopes, map[string]any{"serverId": t["serverId"], "server": t["server"], "name": t["name"]})
+		}
+		// Prefer an actual library label over a generic sync fallback.
+		ghost := func(name string) bool {
+			return name == "Movies" || name == "TV Shows" || name == "Music" || name == "Books" || name == "movies" || name == "tvshows" || name == "music" || name == "books" || name == "Collections"
+		}
+		if ghost(mediaString(g["name"])) && !ghost(mediaString(t["name"])) {
+			g["name"] = t["name"]
+		}
 		kind := mediaString(t["type"])
 		isChild := kind == "Episode" || kind == "Season" || kind == "Audio" || kind == "Track"
-		g["types"] = append(g["types"].([]map[string]any), t)
+		groupTypes := g["types"].([]map[string]any)
+		foundType := false
+		for _, row := range groupTypes {
+			if row["type"] == kind {
+				row["count"] = mediaNumber(row["count"]) + mediaNumber(t["count"])
+				foundType = true
+				break
+			}
+		}
+		if !foundType {
+			g["types"] = append(groupTypes, map[string]any{"type": kind, "count": t["count"]})
+		}
 		g["sizeBytes"] = mediaNumber(g["sizeBytes"]) + mediaNumber(t["sizeBytes"])
 		totalBytes += mediaNumber(t["sizeBytes"])
 		if isChild {
@@ -730,15 +808,26 @@ func (h *Handler) recoveredMediaCollections(w http.ResponseWriter, r *http.Reque
 		}
 	}
 	for _, ranking := range []struct{ key, order string }{{"topItem", `COALESCE(a."plays",0) DESC,m."title" ASC`}, {"lastAdded", `m."dateAdded" DESC,m."id" DESC`}} {
-		items, e := h.recoveredRows(r, base+`, ranked AS (`+recoveredItemSelect+`WHERE m."type" IN ('Movie','Series','MusicAlbum','Book','AudioBook')) SELECT * FROM (SELECT ranked.*,ROW_NUMBER() OVER (PARTITION BY "serverId","libraryName" ORDER BY `+strings.ReplaceAll(strings.ReplaceAll(ranking.order, `COALESCE(a."plays",0)`, `"plays"`), `m.`, ``)+`) AS rn FROM ranked) picked WHERE rn=1`, args...)
+		selectItems := recoveredItemSelect
+		whereItems := `WHERE m."type" IN ('Movie','Series','MusicAlbum','Book','AudioBook')`
+		if ranking.key == "topItem" {
+			// Historical leader is a watched item, including episodes and tracks,
+			// rather than a series/album aggregate. Preserve Go permission scope.
+			selectItems = `SELECT m.*,COALESCE(a."plays",0) AS "plays" FROM catalog m LEFT JOIN (SELECT "mediaId",COUNT(*) AS "plays" FROM valid GROUP BY "mediaId") a ON a."mediaId"=m."id" `
+			whereItems = `WHERE COALESCE(a."plays",0)>0`
+		}
+		items, e := h.recoveredRows(r, base+`, ranked AS (`+selectItems+whereItems+`) SELECT * FROM (SELECT ranked.*,ROW_NUMBER() OVER (PARTITION BY "serverId","libraryName" ORDER BY `+strings.ReplaceAll(strings.ReplaceAll(ranking.order, `COALESCE(a."plays",0)`, `"plays"`), `m.`, ``)+`) AS rn FROM ranked) picked WHERE rn=1`, args...)
 		if e != nil {
 			jsonError(w, 500, "Impossible de charger les détails des collections.")
 			return
 		}
 		for _, i := range items {
-			g := groups[mediaString(i["serverId"])+"\x00"+mediaString(i["libraryName"])]
+			g := groups[historicalLibraryKey(mediaString(i["libraryName"]))]
 			if g != nil && (ranking.key != "topItem" || mediaNumber(i["plays"]) > 0) && (ranking.key != "lastAdded" || i["dateAdded"] != nil) {
-				g[ranking.key] = i
+				previous, _ := g[ranking.key].(map[string]any)
+				if previous == nil || (ranking.key == "topItem" && (mediaNumber(i["plays"]) > mediaNumber(previous["plays"]) || (mediaNumber(i["plays"]) == mediaNumber(previous["plays"]) && mediaString(i["title"]) < mediaString(previous["title"])))) || (ranking.key == "lastAdded" && mediaString(i["dateAdded"]) > mediaString(previous["dateAdded"])) {
+					g[ranking.key] = i
+				}
 			}
 		}
 	}
@@ -777,7 +866,18 @@ func (h *Handler) recoveredMediaCollections(w http.ResponseWriter, r *http.Reque
 		}
 		g["totalHours"] = mediaNumber(g["durationMs"]) / 3600000
 	}
-	jsonResponse(w, 200, map[string]any{"collections": result, "totals": map[string]any{"items": totalItems, "sizeBytes": totalBytes, "durationMs": totalMs}})
+	// The historical page suppresses empty normalized fallback libraries;
+	// sizes are still retained in the global inventory totals.
+	visible := result[:0]
+	for _, group := range result {
+		key := mediaString(group["key"])
+		ghost := key == "movies" || key == "tvshows" || key == "music" || key == "books" || key == "collections"
+		if ghost && mediaNumber(group["totalItems"]) == 0 && group["topItem"] == nil {
+			continue
+		}
+		visible = append(visible, group)
+	}
+	jsonResponse(w, 200, map[string]any{"collections": visible, "totals": map[string]any{"items": totalItems, "sizeBytes": totalBytes, "durationMs": totalMs}})
 }
 
 func (h *Handler) recoveredMediaPopular(w http.ResponseWriter, r *http.Request) {

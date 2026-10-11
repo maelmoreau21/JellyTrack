@@ -1,0 +1,32 @@
+[
+  {
+    "heading": "Activité par Jour",
+    "theme": "dark",
+    "file": "main-restored-profile-Activité-par-Jour-desktop-dark.png"
+  },
+  {
+    "heading": "Genres préférés",
+    "theme": "dark",
+    "file": "main-restored-profile-Genres-préférés-desktop-dark.png"
+  },
+  {
+    "heading": "Historique de lecture",
+    "theme": "dark",
+    "file": "main-restored-profile-Historique-de-lecture-desktop-dark.png"
+  },
+  {
+    "heading": "Activité par Jour",
+    "theme": "light",
+    "file": "main-restored-profile-Activité-par-Jour-desktop-light.png"
+  },
+  {
+    "heading": "Genres préférés",
+    "theme": "light",
+    "file": "main-restored-profile-Genres-préférés-desktop-light.png"
+  },
+  {
+    "heading": "Historique de lecture",
+    "theme": "light",
+    "file": "main-restored-profile-Historique-de-lecture-desktop-light.png"
+  }
+]

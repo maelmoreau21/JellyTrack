@@ -1,0 +1,963 @@
+{
+  "date": "2026-10-11T08:38:21.673Z",
+  "scope": "Original main components; synthetic Prisma/API adapter. Captures are direct rendering comparisons; fixture settings/active-stream differences remain.",
+  "pages": [
+    {
+      "route": "/users",
+      "errors": [
+        "Switched to client rendering because the server rendering errored:\n\nwindow is not defined"
+      ],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "reference-current-users-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Utilisateurs",
+                "x": 313,
+                "y": 163,
+                "width": 148.5,
+                "height": 28
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "reference-current-users-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Utilisateurs",
+                "x": 41,
+                "y": 331,
+                "width": 148.5,
+                "height": 28
+              }
+            ]
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "reference-current-users-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Utilisateurs",
+                "x": 313,
+                "y": 163,
+                "width": 148.5,
+                "height": 28
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "reference-current-users-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Utilisateurs",
+                "x": 41,
+                "y": 331,
+                "width": 148.5,
+                "height": 28
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "route": "/users/alice",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "reference-current-users-alice-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Profil : Alice QA",
+                "x": 376,
+                "y": 28,
+                "width": 226.5625,
+                "height": 36
+              },
+              {
+                "text": "Temps de lecture",
+                "x": 313,
+                "y": 145,
+                "width": 122.15625,
+                "height": 20
+              },
+              {
+                "text": "Session(s)",
+                "x": 597,
+                "y": 145,
+                "width": 74.390625,
+                "height": 20
+              },
+              {
+                "text": "Top Genres",
+                "x": 881,
+                "y": 145,
+                "width": 81.078125,
+                "height": 20
+              },
+              {
+                "text": "Taux de complétion",
+                "x": 1165,
+                "y": 145,
+                "width": 140.609375,
+                "height": 20
+              },
+              {
+                "text": "Pic d'Activité",
+                "x": 313,
+                "y": 343,
+                "width": 94.03125,
+                "height": 20
+              },
+              {
+                "text": "Meilleure Série",
+                "x": 597,
+                "y": 343,
+                "width": 106.46875,
+                "height": 20
+              },
+              {
+                "text": "Contenu Unique",
+                "x": 881,
+                "y": 343,
+                "width": 116.921875,
+                "height": 20
+              },
+              {
+                "text": "Format favori",
+                "x": 1165,
+                "y": 343,
+                "width": 94.796875,
+                "height": 20
+              },
+              {
+                "text": "Le Plus Visionné",
+                "x": 313,
+                "y": 509,
+                "width": 114.65625,
+                "height": 20
+              },
+              {
+                "text": "Client favori",
+                "x": 881,
+                "y": 509,
+                "width": 87.4375,
+                "height": 20
+              },
+              {
+                "text": "Appareil favori",
+                "x": 1165,
+                "y": 509,
+                "width": 105.265625,
+                "height": 20
+              },
+              {
+                "text": "Activité sur 30 jours",
+                "x": 313,
+                "y": 679,
+                "width": 1070,
+                "height": 16
+              },
+              {
+                "text": "Activité par Jour",
+                "x": 313,
+                "y": 1079,
+                "width": 312.65625,
+                "height": 16
+              },
+              {
+                "text": "Taux de Complétion",
+                "x": 691.65625,
+                "y": 1079,
+                "width": 312.671875,
+                "height": 16
+              },
+              {
+                "text": "Activité par Heure",
+                "x": 1070.328125,
+                "y": 1079,
+                "width": 312.65625,
+                "height": 16
+              },
+              {
+                "text": "Genres préférés",
+                "x": 313,
+                "y": 1501,
+                "width": 502,
+                "height": 16
+              },
+              {
+                "text": "Fiche Technique",
+                "x": 881,
+                "y": 1501,
+                "width": 502,
+                "height": 16
+              },
+              {
+                "text": "Historique de lecture",
+                "x": 313,
+                "y": 1943,
+                "width": 1070,
+                "height": 16
+              }
+            ]
+          }
+        }
+      ],
+      "failure": "locator.scrollIntoViewIfNeeded: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('Activité par jour de la semaine', { exact: true })\u001b[22m\n\u001b[2m    - waiting for \"http://localhost:3341/users/alice?colsState=date%3A180%2Cmedia%3A480%2Cclient%3A160%2Cresolution%3A80%2CaudioBitrate%3A90%2Cstatus%3A110%2Cduration%3A90\" navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://localhost:3341/users/alice?colsState=date%3A180%2Cmedia%3A480%2Cclient%3A160%2Cresolution%3A80%2CaudioBitrate%3A90%2Cstatus%3A110%2Cduration%3A90\"\u001b[22m\n"
+    },
+    {
+      "route": "/admin/cleanup",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "reference-current-admin-cleanup-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Assistant de Nettoyage",
+                "x": 304,
+                "y": 24,
+                "width": 347.703125,
+                "height": 36
+              },
+              {
+                "text": "Médias Fantômes",
+                "x": 329,
+                "y": 399,
+                "width": 1038,
+                "height": 16
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "reference-current-admin-cleanup-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Assistant de Nettoyage",
+                "x": 16,
+                "y": 72,
+                "width": 278.171875,
+                "height": 32
+              },
+              {
+                "text": "Médias Fantômes",
+                "x": 41,
+                "y": 789,
+                "width": 308,
+                "height": 16
+              }
+            ]
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "reference-current-admin-cleanup-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Assistant de Nettoyage",
+                "x": 304,
+                "y": 24,
+                "width": 347.703125,
+                "height": 36
+              },
+              {
+                "text": "Médias Fantômes",
+                "x": 329,
+                "y": 399,
+                "width": 1038,
+                "height": 16
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "reference-current-admin-cleanup-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Assistant de Nettoyage",
+                "x": 16,
+                "y": 72,
+                "width": 278.171875,
+                "height": 32
+              },
+              {
+                "text": "Médias Fantômes",
+                "x": 41,
+                "y": 789,
+                "width": 308,
+                "height": 16
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/health",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "reference-current-admin-health-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Santé & Hygiène du Serveur",
+                "x": 338,
+                "y": 24,
+                "width": 441.46875,
+                "height": 36
+              },
+              {
+                "text": "Sécurité & Anomalies",
+                "x": 313,
+                "y": 125,
+                "width": 163.421875,
+                "height": 16
+              },
+              {
+                "text": "Espace Récupérable",
+                "x": 597,
+                "y": 125,
+                "width": 151.171875,
+                "height": 16
+              },
+              {
+                "text": "Médias Inachevés",
+                "x": 881,
+                "y": 125,
+                "width": 134.953125,
+                "height": 16
+              },
+              {
+                "text": "Moniteur de Flux",
+                "x": 1165,
+                "y": 125,
+                "width": 130.875,
+                "height": 16
+              },
+              {
+                "text": "Nettoyage Intelligent & Optimisation",
+                "x": 288,
+                "y": 338.5,
+                "width": 670.421875,
+                "height": 28
+              },
+              {
+                "text": "Médias Fantômes",
+                "x": 313,
+                "y": 697.5,
+                "width": 1070,
+                "height": 16
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "reference-current-admin-health-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Santé & Hygiène du Serveur",
+                "x": 55.421875,
+                "y": 72,
+                "width": 318.578125,
+                "height": 64
+              },
+              {
+                "text": "Sécurité & Anomalies",
+                "x": 41,
+                "y": 217,
+                "width": 104.75,
+                "height": 32
+              },
+              {
+                "text": "Espace Récupérable",
+                "x": 226,
+                "y": 217,
+                "width": 104,
+                "height": 32
+              },
+              {
+                "text": "Médias Inachevés",
+                "x": 41,
+                "y": 404,
+                "width": 102.8125,
+                "height": 32
+              },
+              {
+                "text": "Moniteur de Flux",
+                "x": 226,
+                "y": 404,
+                "width": 102.46875,
+                "height": 32
+              },
+              {
+                "text": "Nettoyage Intelligent & Optimisation",
+                "x": 16,
+                "y": 650,
+                "width": 358,
+                "height": 56
+              },
+              {
+                "text": "Médias Fantômes",
+                "x": 41,
+                "y": 1415,
+                "width": 308,
+                "height": 16
+              }
+            ]
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "reference-current-admin-health-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Santé & Hygiène du Serveur",
+                "x": 338,
+                "y": 24,
+                "width": 441.46875,
+                "height": 36
+              },
+              {
+                "text": "Sécurité & Anomalies",
+                "x": 313,
+                "y": 125,
+                "width": 163.421875,
+                "height": 16
+              },
+              {
+                "text": "Espace Récupérable",
+                "x": 597,
+                "y": 125,
+                "width": 151.171875,
+                "height": 16
+              },
+              {
+                "text": "Médias Inachevés",
+                "x": 881,
+                "y": 125,
+                "width": 134.953125,
+                "height": 16
+              },
+              {
+                "text": "Moniteur de Flux",
+                "x": 1165,
+                "y": 125,
+                "width": 130.875,
+                "height": 16
+              },
+              {
+                "text": "Nettoyage Intelligent & Optimisation",
+                "x": 288,
+                "y": 338.5,
+                "width": 670.421875,
+                "height": 28
+              },
+              {
+                "text": "Médias Fantômes",
+                "x": 313,
+                "y": 697.5,
+                "width": 1070,
+                "height": 16
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "reference-current-admin-health-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Santé & Hygiène du Serveur",
+                "x": 55.421875,
+                "y": 72,
+                "width": 318.578125,
+                "height": 64
+              },
+              {
+                "text": "Sécurité & Anomalies",
+                "x": 41,
+                "y": 217,
+                "width": 104.75,
+                "height": 32
+              },
+              {
+                "text": "Espace Récupérable",
+                "x": 226,
+                "y": 217,
+                "width": 104,
+                "height": 32
+              },
+              {
+                "text": "Médias Inachevés",
+                "x": 41,
+                "y": 404,
+                "width": 102.8125,
+                "height": 32
+              },
+              {
+                "text": "Moniteur de Flux",
+                "x": 226,
+                "y": 404,
+                "width": 102.46875,
+                "height": 32
+              },
+              {
+                "text": "Nettoyage Intelligent & Optimisation",
+                "x": 16,
+                "y": 650,
+                "width": 358,
+                "height": 56
+              },
+              {
+                "text": "Médias Fantômes",
+                "x": 41,
+                "y": 1415,
+                "width": 308,
+                "height": 16
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/server-compare",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "reference-current-admin-server-compare-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Comparateur multi‑serveurs",
+                "x": 288,
+                "y": 24,
+                "width": 1120,
+                "height": 36
+              },
+              {
+                "text": "Active streams",
+                "x": 313,
+                "y": 229,
+                "width": 218,
+                "height": 20
+              },
+              {
+                "text": "Plays (24h)",
+                "x": 597,
+                "y": 229,
+                "width": 218,
+                "height": 20
+              },
+              {
+                "text": "Plugin errors (24h)",
+                "x": 881,
+                "y": 229,
+                "width": 218,
+                "height": 20
+              },
+              {
+                "text": "Scope",
+                "x": 1165,
+                "y": 229,
+                "width": 218,
+                "height": 20
+              },
+              {
+                "text": "Server ranking",
+                "x": 313,
+                "y": 431,
+                "width": 1070,
+                "height": 16
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "reference-current-admin-server-compare-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Comparateur multi‑serveurs",
+                "x": 16,
+                "y": 72,
+                "width": 358,
+                "height": 72
+              },
+              {
+                "text": "Active streams",
+                "x": 41,
+                "y": 333,
+                "width": 308,
+                "height": 20
+              },
+              {
+                "text": "Plays (24h)",
+                "x": 41,
+                "y": 511,
+                "width": 308,
+                "height": 20
+              },
+              {
+                "text": "Plugin errors (24h)",
+                "x": 41,
+                "y": 689,
+                "width": 308,
+                "height": 20
+              },
+              {
+                "text": "Scope",
+                "x": 41,
+                "y": 867,
+                "width": 308,
+                "height": 20
+              },
+              {
+                "text": "Server ranking",
+                "x": 41,
+                "y": 1049,
+                "width": 308,
+                "height": 16
+              }
+            ]
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "reference-current-admin-server-compare-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Comparateur multi‑serveurs",
+                "x": 288,
+                "y": 24,
+                "width": 1120,
+                "height": 36
+              },
+              {
+                "text": "Active streams",
+                "x": 313,
+                "y": 229,
+                "width": 218,
+                "height": 20
+              },
+              {
+                "text": "Plays (24h)",
+                "x": 597,
+                "y": 229,
+                "width": 218,
+                "height": 20
+              },
+              {
+                "text": "Plugin errors (24h)",
+                "x": 881,
+                "y": 229,
+                "width": 218,
+                "height": 20
+              },
+              {
+                "text": "Scope",
+                "x": 1165,
+                "y": 229,
+                "width": 218,
+                "height": 20
+              },
+              {
+                "text": "Server ranking",
+                "x": 313,
+                "y": 431,
+                "width": 1070,
+                "height": 16
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "reference-current-admin-server-compare-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Comparateur multi‑serveurs",
+                "x": 16,
+                "y": 72,
+                "width": 358,
+                "height": 72
+              },
+              {
+                "text": "Active streams",
+                "x": 41,
+                "y": 333,
+                "width": 308,
+                "height": 20
+              },
+              {
+                "text": "Plays (24h)",
+                "x": 41,
+                "y": 511,
+                "width": 308,
+                "height": 20
+              },
+              {
+                "text": "Plugin errors (24h)",
+                "x": 41,
+                "y": 689,
+                "width": 308,
+                "height": 20
+              },
+              {
+                "text": "Scope",
+                "x": 41,
+                "y": 867,
+                "width": 308,
+                "height": 20
+              },
+              {
+                "text": "Server ranking",
+                "x": 41,
+                "y": 1049,
+                "width": 308,
+                "height": 16
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/jellyfin",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "reference-current-settings-jellyfin-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Serveurs Jellyfin connectés",
+                "x": 339,
+                "y": 144,
+                "width": 1018,
+                "height": 28
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "reference-current-settings-jellyfin-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Serveurs Jellyfin connectés",
+                "x": 57,
+                "y": 184,
+                "width": 276,
+                "height": 56
+              }
+            ]
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "reference-current-settings-jellyfin-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Serveurs Jellyfin connectés",
+                "x": 339,
+                "y": 144,
+                "width": 1018,
+                "height": 28
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "reference-current-settings-jellyfin-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Serveurs Jellyfin connectés",
+                "x": 57,
+                "y": 184,
+                "width": 276,
+                "height": 56
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/plugin",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "reference-current-settings-plugin-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Serveurs Jellyfin connectés",
+                "x": 339,
+                "y": 144,
+                "width": 1018,
+                "height": 28
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "reference-current-settings-plugin-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Serveurs Jellyfin connectés",
+                "x": 57,
+                "y": 184,
+                "width": 276,
+                "height": 56
+              }
+            ]
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "reference-current-settings-plugin-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              {
+                "text": "Serveurs Jellyfin connectés",
+                "x": 339,
+                "y": 144,
+                "width": 1018,
+                "height": 28
+              }
+            ]
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "reference-current-settings-plugin-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              {
+                "text": "Serveurs Jellyfin connectés",
+                "x": 57,
+                "y": 184,
+                "width": 276,
+                "height": 56
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

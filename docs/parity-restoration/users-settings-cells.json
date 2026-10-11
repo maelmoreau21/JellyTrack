@@ -1,0 +1,642 @@
+{
+  "date": "2026-10-11T08:47:33.725Z",
+  "scope": "Recommandations individuelles conservatrices sur les 26 anciennes cellules utilisateurs/profils/Settings/admin ouvertes. Historique original intact.",
+  "counts": {
+    "corrected": 20,
+    "already_faithful_revalidated": 5,
+    "partially_corrected": 1
+  },
+  "runtime": {
+    "checks": 79,
+    "failed": 0,
+    "allSixAssetsSame": true
+  },
+  "cells": [
+    {
+      "id": "/admin/cleanup#Apparence",
+      "route": "/admin/cleanup",
+      "criterion": "Apparence",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/cleanup#Textes",
+      "route": "/admin/cleanup",
+      "criterion": "Textes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/cleanup#Icônes",
+      "route": "/admin/cleanup",
+      "criterion": "Icônes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/cleanup#Tableaux",
+      "route": "/admin/cleanup",
+      "criterion": "Tableaux",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/health#Apparence",
+      "route": "/admin/health",
+      "criterion": "Apparence",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/health#Textes",
+      "route": "/admin/health",
+      "criterion": "Textes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/health#Icônes",
+      "route": "/admin/health",
+      "criterion": "Icônes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/server-compare#Apparence",
+      "route": "/admin/server-compare",
+      "criterion": "Apparence",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/server-compare#Textes",
+      "route": "/admin/server-compare",
+      "criterion": "Textes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/server-compare#Icônes",
+      "route": "/admin/server-compare",
+      "criterion": "Icônes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/admin/server-compare#Tableaux",
+      "route": "/admin/server-compare",
+      "criterion": "Tableaux",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/admin.js",
+        "web/dist/assets/admin.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/settings/jellyfin#Apparence",
+      "route": "/settings/jellyfin",
+      "criterion": "Apparence",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/settings.js",
+        "web/dist/assets/settings.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Données Settings: 1 serveur main contre 2 Go, services réels non testés."
+    },
+    {
+      "id": "/settings/jellyfin#Textes",
+      "route": "/settings/jellyfin",
+      "criterion": "Textes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/settings.js",
+        "web/dist/assets/settings.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Données Settings: 1 serveur main contre 2 Go, services réels non testés."
+    },
+    {
+      "id": "/settings/jellyfin#Icônes",
+      "route": "/settings/jellyfin",
+      "criterion": "Icônes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/settings.js",
+        "web/dist/assets/settings.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Données Settings: 1 serveur main contre 2 Go, services réels non testés."
+    },
+    {
+      "id": "/settings/plugin#Apparence",
+      "route": "/settings/plugin",
+      "criterion": "Apparence",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/settings.js",
+        "web/dist/assets/settings.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Données Settings: 1 serveur main contre 2 Go, services réels non testés."
+    },
+    {
+      "id": "/settings/plugin#Textes",
+      "route": "/settings/plugin",
+      "criterion": "Textes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/settings.js",
+        "web/dist/assets/settings.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Données Settings: 1 serveur main contre 2 Go, services réels non testés."
+    },
+    {
+      "id": "/settings/plugin#Icônes",
+      "route": "/settings/plugin",
+      "criterion": "Icônes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/settings.js",
+        "web/dist/assets/settings.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Données Settings: 1 serveur main contre 2 Go, services réels non testés."
+    },
+    {
+      "id": "/users/[id]#Apparence",
+      "route": "/users/[id]",
+      "criterion": "Apparence",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Différence à corriger",
+      "resolution": "partially_corrected",
+      "files": [
+        "web/dist/assets/profile.js"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Apparence de tous les graphiques main sous écran non directement comparée; renderer Canvas Go préservé. Flux active fixture main non comparable."
+    },
+    {
+      "id": "/users/[id]#Sections",
+      "route": "/users/[id]",
+      "criterion": "Sections",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "already_faithful_revalidated",
+      "files": [],
+      "correction": "Voir mapping U/P/A/S dans users-settings.md. Révalidation source sans nouveau changement.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Apparence de tous les graphiques main sous écran non directement comparée; renderer Canvas Go préservé. Flux active fixture main non comparable."
+    },
+    {
+      "id": "/users/[id]#Ordre",
+      "route": "/users/[id]",
+      "criterion": "Ordre",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "already_faithful_revalidated",
+      "files": [],
+      "correction": "Voir mapping U/P/A/S dans users-settings.md. Révalidation source sans nouveau changement.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Apparence de tous les graphiques main sous écran non directement comparée; renderer Canvas Go préservé. Flux active fixture main non comparable."
+    },
+    {
+      "id": "/users/[id]#Textes",
+      "route": "/users/[id]",
+      "criterion": "Textes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/profile.js"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Apparence de tous les graphiques main sous écran non directement comparée; renderer Canvas Go préservé. Flux active fixture main non comparable."
+    },
+    {
+      "id": "/users/[id]#Icônes",
+      "route": "/users/[id]",
+      "criterion": "Icônes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "already_faithful_revalidated",
+      "files": [],
+      "correction": "Voir mapping U/P/A/S dans users-settings.md. Révalidation source sans nouveau changement.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Apparence de tous les graphiques main sous écran non directement comparée; renderer Canvas Go préservé. Flux active fixture main non comparable."
+    },
+    {
+      "id": "/users#Apparence",
+      "route": "/users",
+      "criterion": "Apparence",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/users.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/users#Textes",
+      "route": "/users",
+      "criterion": "Textes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "already_faithful_revalidated",
+      "files": [],
+      "correction": "Voir mapping U/P/A/S dans users-settings.md. Révalidation source sans nouveau changement.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/users#Icônes",
+      "route": "/users",
+      "criterion": "Icônes",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "already_faithful_revalidated",
+      "files": [],
+      "correction": "Voir mapping U/P/A/S dans users-settings.md. Révalidation source sans nouveau changement.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    },
+    {
+      "id": "/users#Responsive",
+      "route": "/users",
+      "criterion": "Responsive",
+      "initialStatus": "Différence à corriger",
+      "recommendedStatus": "Identique ou fidèle",
+      "resolution": "corrected",
+      "files": [
+        "web/dist/assets/users.css"
+      ],
+      "correction": "Restauration du rendu historique et interactions décrites dans users-settings.md.",
+      "proofs": [
+        "users-settings.md",
+        "users-settings-runtime.json",
+        "users-settings-reference.json"
+      ],
+      "proofType": [
+        "source",
+        "runtime",
+        "direct_visual"
+      ],
+      "tests": "79/79 contrôles navigateur; six assets natifs comparés aux sources; JS syntax et diff-check PASS.",
+      "limitations": "Fidélité ciblée du rendu et structure; ne certifie pas chaque pixel et état externe."
+    }
+  ]
+}

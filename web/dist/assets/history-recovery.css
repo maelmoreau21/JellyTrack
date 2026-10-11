@@ -85,3 +85,31 @@
 @media(max-width:639px){.history-recovery .history-filter-card{padding:16px}.history-recovery .history-filter-toolbar .form-select{flex:1;min-width:130px;margin-left:0}.history-recovery .history-checkbox{width:100%}.history-recovery .history-advanced-fields,.history-recovery .history-system-stats,.history-recovery .history-event-list{grid-template-columns:1fr}.history-recovery .history-pagination>span:last-child{width:100%;text-align:center;margin:4px 0}.history-recovery .history-mobile-info{display:block;font-size:10px;color:var(--muted-foreground);margin-top:4px}.history-recovery .history-save-form{flex-direction:column}.history-recovery .history-session-dialog{padding:16px}.history-recovery .history-table th,.history-recovery .history-table td{padding:8px}.history-recovery .history-system-stats{gap:12px}.history-recovery .history-column-options{grid-template-columns:1fr}}
 
 .history-recovery>*,.history-recovery #history-playback-panel,.history-recovery #history-system-panel{min-width:0;max-width:100%}
+
+/* main keeps the server group filled and places filter controls on the right. */
+.history-recovery .history-header svg{width:24px;height:24px;color:var(--primary)}
+.history-recovery .history-header .page-title{display:flex;gap:12px;align-items:center}
+.history-recovery .segmented-control button,.history-recovery .history-filter-toolbar button{display:inline-flex;gap:6px;align-items:center}
+.history-recovery button svg{width:16px;height:16px;flex-shrink:0}
+.history-recovery .history-filter-card{gap:12px;margin-bottom:24px}
+.history-recovery .history-filter-toolbar{justify-content:flex-end;padding-top:8px;gap:8px}
+.history-recovery .history-filter-toolbar .form-select{margin-left:0;width:200px}
+.history-recovery .history-checkbox{font-size:14px;font-weight:500}
+.history-recovery #history-server-filter{padding:6px;border:1px solid var(--border);border-radius:12px;background:var(--surface-soft)}
+.history-recovery #history-server-filter button{border:0;border-radius:8px}
+.history-recovery .history-poster{position:relative;display:flex;align-items:center;justify-content:center;width:48px;height:64px;border-radius:6px;background:#27272a;flex-shrink:0;overflow:hidden}
+.history-recovery .history-poster svg{width:24px;height:24px;color:#71717a}
+.history-recovery .history-poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0}
+.history-recovery .history-media{display:flex;align-items:center;gap:12px}
+.history-recovery #history-smart-alerts{position:relative;padding:16px;margin-bottom:16px}
+.history-recovery #history-smart-alerts h3{display:flex;gap:8px;align-items:center;margin:0;font-size:14px}
+.history-recovery #history-smart-alerts h3 svg{width:16px;height:16px}
+.history-recovery #history-smart-alerts p{position:absolute;right:16px;top:16px;font-size:12px;margin:0;max-width:70%;text-align:right}
+.history-recovery #history-smart-alerts .history-chips{margin-top:12px}
+@media(max-width:767px){.history-recovery #history-smart-alerts p{position:static;max-width:none;text-align:left;margin:8px 0}.history-recovery .history-filter-toolbar .form-select{width:auto}}
+.history-recovery .history-date{display:flex;align-items:center;gap:6px}
+.history-recovery .history-date>div{display:flex;flex-direction:column;white-space:nowrap}
+.history-recovery .history-date small{font-size:10px;color:var(--muted-foreground)}
+.history-recovery .history-col-user a{color:var(--primary);font-weight:600}
+.history-recovery .history-table td{padding-top:12px;padding-bottom:12px}
+.history-recovery .history-search-toolbar button{display:inline-flex;align-items:center;gap:6px}

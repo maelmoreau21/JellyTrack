@@ -81,6 +81,22 @@ func TestFrontendAPIAuthenticationAndAdminPermissions(t *testing.T) {
 	if _, err := db.Exec(`UPDATE "AuthSession" SET "role"='user'`); err != nil {
 		t.Fatal(err)
 	}
+	// main allows authenticated users to read Rewind, but posting to Discord
+	// remains an admin mutation. Exercise both through the real middleware.
+	for _, check := range []struct {
+		method, path string
+		status       int
+	}{{"GET", "/api/newsletter", 200}, {"POST", "/api/newsletter/discord-post", 403}} {
+		request := httptest.NewRequest(check.method, "http://localhost"+check.path, strings.NewReader(`{}`))
+		request.AddCookie(cookie)
+		request.Header.Set("Origin", "http://localhost")
+		request.Header.Set("X-CSRF-Token", identity.CSRFToken)
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, request)
+		if rec.Code != check.status {
+			t.Fatalf("ordinary user %s %s: status %d", check.method, check.path, rec.Code)
+		}
+	}
 	for _, path := range []string{"/api/admin/cleanup", "/api/users", "/api/settings", "/api/streams", "/api/hardware", "/api/admin/health", "/api/stats/deep"} {
 		request := httptest.NewRequest("GET", path, nil)
 		request.AddCookie(cookie)

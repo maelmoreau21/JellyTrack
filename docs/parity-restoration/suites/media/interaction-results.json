@@ -1,0 +1,58 @@
+{
+  "checks": [
+    {
+      "name": "Custom range applies real URL bounds",
+      "ok": true
+    },
+    {
+      "name": "Historical volume title",
+      "ok": true
+    },
+    {
+      "name": "Deep audio label drilldown",
+      "ok": true,
+      "details": {
+        "url": "http://localhost:3350/logs?hideZapped=true&audio=FR+%28aac%29&days=all&dateFrom=2026-10-01&dateTo=2026-10-09",
+        "label": "FR (aac)"
+      }
+    },
+    {
+      "name": "Normalized audio drilldown equals plotted count",
+      "ok": true,
+      "details": {
+        "chart": 18,
+        "history": 18,
+        "label": "FR (aac)"
+      }
+    },
+    {
+      "name": "Wrapped advances automatically after 8 seconds",
+      "ok": true,
+      "details": {
+        "first": "1 / 18",
+        "second": "2 / 18"
+      }
+    },
+    {
+      "name": "Wrapped pauses while configuration is open",
+      "ok": true
+    },
+    {
+      "name": "Wrapped configuration Escape",
+      "ok": true
+    },
+    {
+      "name": "Wrapped closes to its own profile",
+      "ok": true
+    },
+    {
+      "name": "Wrapped timer cleaned up on navigation",
+      "ok": true
+    },
+    {
+      "name": "No uncaught JavaScript exceptions",
+      "ok": true
+    }
+  ],
+  "pageErrors": []
+}

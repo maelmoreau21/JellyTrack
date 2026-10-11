@@ -350,7 +350,9 @@
     "watched": "visti",
     "worldMap": "Mappa delle Connessioni",
     "worldMapDesc": "Distribuzione geografica delle sessioni di riproduzione.",
-    "title": "Dashboard"
+    "title": "Dashboard",
+    "monitorActive": "active",
+    "monitorError": "error"
   },
   "deepInsights": {
     "deviceEcosystem": "Ecosistema dispositivi",

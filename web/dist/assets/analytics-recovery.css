@@ -163,3 +163,41 @@
 #dash-system-health-container .stat-num{font-size:30px;color:var(--foreground);text-shadow:none}
 #dash-draggable-container .stat-grid-5>.stat-card-modern{min-height:170px}
 @media(max-width:639px){#dash-system-health-container>.stat-grid,#dash-system-health-container>.stat-grid-4{padding:16px}#dash-draggable-container .stat-grid-5>.stat-card-modern{min-height:144px}}
+
+/* main: Rewind keeps fixed poster/metric sizes on mobile and wraps text. */
+.newsletter-recovery{padding:0 8px 24px}
+.newsletter-recovery .historical-media-tabs{margin-left:-8px;margin-right:-8px}
+.rewind-card{width:100%;margin:16px auto 24px}
+.rewind-hero{height:256px;min-height:0;background:radial-gradient(circle at top,#6366f13d,transparent 70%),#312e8166}
+.rewind-sparkles{margin-bottom:16px}
+.rewind-hero h1{margin:0 0 8px;font-weight:800}
+.rewind-hero p{font-weight:500}
+.rewind-hero time{color:#71717a}
+.rewind-metric{padding:24px}
+.rewind-metrics{gap:24px}
+.rewind-podium-item{gap:24px;padding:16px}
+.rewind-rank{width:32px;font-weight:900}
+.rewind-poster{width:64px;height:96px;border:1px solid var(--border);box-shadow:0 4px 6px #0002;background:var(--surface)}
+.rewind-media-title h3{font-size:18px}
+.rewind-podium-item>strong:last-child{font-size:20px;flex-shrink:0}
+.rewind-viewer-icon{border:1px solid #6366f14d}
+.rewind-viewer-icon svg{width:32px;height:32px}
+.rewind-actions .btn{display:flex;align-items:center;gap:8px}
+.rewind-actions .btn svg{width:16px;height:16px}
+.dashboard-header .header-filter-btn svg,.stat-card-modern .stat-header>svg{width:16px;height:16px;flex-shrink:0}
+#dash-system-health-container .stat-header{flex-direction:row-reverse;justify-content:flex-end;gap:8px}
+#dash-system-health-container .stat-title{font-size:14px}
+#dash-system-health-container .stat-header>svg{width:16px;height:16px;color:#22d3ee}
+#dash-system-health-container .stat-grid>div:nth-child(2) .stat-header>svg{color:#f59e0b}
+.dashboard-header{margin-bottom:0}
+body.navigation-dashboard #app-main{padding:24px 32px;max-width:none}
+#dash-system-health-container>.stat-grid,#dash-system-health-container>.stat-grid-4{margin-bottom:0!important}
+#dash-system-health-container .stat-num{margin-top:8px}
+html.dark #dash-system-health-container .stat-num{color:var(--foreground)!important;text-shadow:none}
+.dashboard-header #dash-time-select{width:180px}
+#dash-draggable-container .stat-grid-5 .stat-num{font-size:24px;line-height:32px}
+#dash-draggable-container .stat-grid-5 .stat-title{font-size:14px}
+#dash-draggable-container .stat-grid-5 .stat-desc{font-size:12px}
+@media(max-width:767px){body.navigation-dashboard #app-main{padding:16px}}
+@media(max-width:767px){.rewind-hero{height:224px;padding:16px}.rewind-content{padding:16px;gap:32px}.rewind-metric{padding:24px}.rewind-metric strong{font-size:30px}.rewind-rank{font-size:30px}.rewind-media-title h3{font-size:18px}}
+@media(min-width:768px) and (max-width:1023px){.rewind-content{padding:32px}}

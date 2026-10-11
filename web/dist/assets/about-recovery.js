@@ -22,7 +22,7 @@
       // Categories match main; names/versions describe the actual implementation.
       // Go/go-oidc versions are dependency versions, Chart is the bundled asset.
       const stack = [
-        ['server', 'Go', '1.26', copy('Serveur HTTP natif et binaire autonome', 'Native HTTP server and standalone binary')],
+        ['server', 'Go', '1.27', copy('Serveur HTTP natif et binaire autonome', 'Native HTTP server and standalone binary')],
         ['palette', 'HTML / JavaScript', '', copy('Interface embarquée, sans framework au runtime', 'Embedded interface without a runtime framework')],
         ['database', 'SQLite / PostgreSQL', '', copy('Stockage persistant et migrations SQL', 'Persistent storage and SQL migrations')],
         ['chart', 'Chart.js', window.Chart?.version || '4.5.1', copy('Bibliothèque de graphiques interactifs', 'Interactive chart library')],

@@ -151,6 +151,7 @@
         genreOptions.scales.y.grid.display = false;
         genreOptions.scales.x.grid = { color: themeColor('--border') };
         genreOptions.scales.x.ticks.precision = 0;
+        genreOptions.datasets = { bar: { barThickness: 20 } };
         genreOptions.onClick = (event, entries) => { if (entries.length) Router.navigate('/media/all?genre=' + encodeURIComponent(genreData[entries[0].index].name)); };
         if (genreData.length) chart('profile-genres-chart', genreData.map(item => item.name), genreData.map(item => item.count), genreData.map((item, index) => colors[index % colors.length]), genreOptions);
         else find('#profile-genres-chart').parentElement.innerHTML = `<div class="profile-empty">${esc(tr('common.noData', 'Aucune donnée'))}</div>`;
@@ -168,7 +169,20 @@
             const total = context.chart.data.datasets[0].data.reduce((sum, value, i) => sum + (context.chart.getDataVisibility(i) ? Number(value) : 0), 0);
             return `${context.label}: ${context.parsed} sessions (${total ? Math.round(context.parsed / total * 100) : 0}%)`;
           } };
-          const instance = new window.Chart(canvas, { type: 'doughnut', data: { labels: completion.map(item => tr('dashboard.' + item.name, item.name)), datasets: [{ data: completion.map(item => item.value), backgroundColor: completion.map(item => completionColors[item.name] || '#71717a'), borderWidth: 0, spacing: completion.length > 1 ? 3 : 0, hoverOffset: 8 }] }, options });
+          const activeLabel = { id: 'profileCompletionLabel', afterDraw(instance) {
+            const active = instance.getActiveElements()[0];
+            if (!active) return;
+            const element = active.element, index = active.index, dataset = instance.data.datasets[0];
+            const total = dataset.data.reduce((sum, value, i) => sum + (instance.getDataVisibility(i) ? Number(value) : 0), 0);
+            const value = Number(dataset.data[index]) || 0, ctx = instance.ctx;
+            ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = themeColor('--foreground') || '#e5eefb'; ctx.font = '600 13px ' + getComputedStyle(canvas).fontFamily;
+            ctx.fillText(instance.data.labels[index], element.x, element.y - 8, 116);
+            ctx.fillStyle = axis; ctx.font = '11px ' + getComputedStyle(canvas).fontFamily;
+            ctx.fillText(`${value} (${total ? Math.round(value / total * 100) : 0}%)`, element.x, element.y + 12, 116);
+            ctx.restore();
+          } };
+          const instance = new window.Chart(canvas, { type: 'doughnut', data: { labels: completion.map(item => tr('dashboard.' + item.name, item.name)), datasets: [{ data: completion.map(item => item.value), backgroundColor: completion.map(item => completionColors[item.name] || '#71717a'), borderWidth: 0, spacing: completion.length > 1 ? 3 : 0, hoverOffset: 8 }] }, options, plugins: [activeLabel] });
           canvas.setAttribute('aria-label', completion.map(item => tr('dashboard.' + item.name, item.name) + ': ' + item.value).join('; '));
           charts.push(instance);
           find('#profile-completion-legend').innerHTML = completion.map((item, index) => `<button type="button" data-legend="${index}" aria-pressed="true"><span style="background:${completionColors[item.name] || '#71717a'}"></span>${esc(tr('dashboard.' + item.name, item.name))}</button>`).join('');

@@ -350,7 +350,9 @@
     "vsUsersOnPeriod": "vs {count} período anterior",
     "watched": "vistos",
     "worldMap": "Mapa de Conexiones",
-    "worldMapDesc": "Distribución geográfica de las sesiones de reproducción."
+    "worldMapDesc": "Distribución geográfica de las sesiones de reproducción.",
+    "monitorActive": "active",
+    "monitorError": "error"
   },
   "deepInsights": {
     "deviceEcosystem": "Ecosistema de dispositivos",

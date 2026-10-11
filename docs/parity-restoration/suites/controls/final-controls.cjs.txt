@@ -1,0 +1,18 @@
+PASS Anonymous callback retains path and query
+PASS Remember control labelled
+PASS Login restores callback
+PASS Remember thirty-day cookie
+PASS Historical setup redirect
+PASS Go setup wizard preserved
+PASS Export uses connected historical API with filters
+PASS Downloaded historical JSON schema
+PASS Historical download filename
+PASS Locale browser/cookie/preference de-DE//
+PASS Locale browser/cookie/preference en-US/fr/
+PASS Locale browser/cookie/preference pt-BR//
+PASS Locale browser/cookie/preference de-DE/fr/en
+PASS External callback rejected
+PASS Unchecked remember respects configured session policy
+PASS Native Wrapped eighteen slides
+PASS No uncaught JavaScript errors
+

@@ -350,7 +350,9 @@
     "vsUsersOnPeriod": "vs {count} prev. period",
     "watched": "watched",
     "worldMap": "Verbindungskarte",
-    "worldMapDesc": "Geografische Verteilung der Wiedergabesitzungen."
+    "worldMapDesc": "Geografische Verteilung der Wiedergabesitzungen.",
+    "monitorActive": "active",
+    "monitorError": "error"
   },
   "deepInsights": {
     "deviceEcosystem": "Device Ecosystem",

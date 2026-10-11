@@ -1,0 +1,236 @@
+{
+  "date": "2026-10-11T08:46:16.440Z",
+  "scope": "Dashboard tabs and mobile menu. Isolated real APIs; no browser responses or persisted configuration replaced.",
+  "checks": [
+    {
+      "mode": "main",
+      "name": "Dashboard overview",
+      "ok": true,
+      "metrics": {
+        "headings": [
+          "Tableau de bord",
+          "Flux Actifs",
+          "Lectures Totales",
+          "Lecture Directe",
+          "Temps Visionnage",
+          "Utilisateurs actifs",
+          "Films",
+          "Séries & Épisodes",
+          "Musique",
+          "Livres & Audiobooks",
+          "Volume Temporel",
+          "Répartition par Catégorie",
+          "Lectures par Bibliothèque",
+          "Activité Annuelle2026",
+          "Plus Grands Fans",
+          "Écosystème Clients",
+          "Lectures en direct",
+          "Activité par Heure",
+          "Activité par Jour",
+          "Temps Mensuel",
+          "Taux de Complétion",
+          "Familles de Clients",
+          "Charge du Serveur (Flux Simultanés)",
+          "Tendances",
+          "Prédiction de Charge"
+        ],
+        "visibleCharts": 29
+      }
+    },
+    {
+      "mode": "main",
+      "name": "Dashboard analytics",
+      "ok": true,
+      "metrics": {
+        "headings": [
+          "Tableau de bord",
+          "Top Films",
+          "Top Séries",
+          "Top Albums",
+          "Top Livres",
+          "Top Genres",
+          "Top Clients",
+          "Méthodes de Flux",
+          "Matrice des Résolutions",
+          "Écosystème Appareils",
+          "Répartition Audio",
+          "Sous-titres",
+          "Lectures par Jour",
+          "Durée par Jour",
+          "Lectures par Bibliothèque",
+          "Durée par Bibliothèque",
+          "Lectures (Moy. Horaire)",
+          "Durée (Moy. Horaire)",
+          "Carte de Fréquentation",
+          "Taux de Complétion Moyen par Biblio",
+          "Segments d'Abandon",
+          "Pires Taux de Complétion",
+          "Répartition Audio",
+          "Sous-titres"
+        ],
+        "visibleCharts": 41
+      }
+    },
+    {
+      "mode": "main",
+      "name": "Dashboard network",
+      "ok": true,
+      "metrics": {
+        "headings": [
+          "Tableau de bord",
+          "Total Sessions",
+          "Taux de Transcodage",
+          "DirectStream",
+          "Durée de Transcodage",
+          "DirectPlay vs Transcode (par Heure)",
+          "Profil Transcode par Client",
+          "Media les plus transcoder — Tableau des Coupables"
+        ],
+        "visibleCharts": 5
+      }
+    },
+    {
+      "mode": "main",
+      "name": "Mobile menu dark",
+      "ok": true,
+      "links": [
+        {
+          "href": "/users/local-admin",
+          "text": "Mon Compte"
+        },
+        {
+          "href": "/",
+          "text": "Tableau de bord"
+        },
+        {
+          "href": "/recent",
+          "text": "Ajoutés récemment"
+        },
+        {
+          "href": "/media",
+          "text": "Bibliothèque"
+        },
+        {
+          "href": "/users",
+          "text": "Utilisateurs"
+        },
+        {
+          "href": "/admin/health",
+          "text": "Santé"
+        },
+        {
+          "href": "/logs",
+          "text": "Journaux"
+        },
+        {
+          "href": "/settings",
+          "text": "Paramètres"
+        },
+        {
+          "href": "/media/all",
+          "text": "Tous les Médias"
+        },
+        {
+          "href": "/media/popular",
+          "text": "Populaires"
+        },
+        {
+          "href": "/media/analysis",
+          "text": "Analyse Profonde"
+        },
+        {
+          "href": "/media/collections",
+          "text": "collections"
+        }
+      ]
+    },
+    {
+      "mode": "main",
+      "name": "Mobile menu light",
+      "ok": true,
+      "links": [
+        {
+          "href": "/users/local-admin",
+          "text": "Mon Compte"
+        },
+        {
+          "href": "/",
+          "text": "Tableau de bord"
+        },
+        {
+          "href": "/recent",
+          "text": "Ajoutés récemment"
+        },
+        {
+          "href": "/media",
+          "text": "Bibliothèque"
+        },
+        {
+          "href": "/users",
+          "text": "Utilisateurs"
+        },
+        {
+          "href": "/admin/health",
+          "text": "Santé"
+        },
+        {
+          "href": "/logs",
+          "text": "Journaux"
+        },
+        {
+          "href": "/settings",
+          "text": "Paramètres"
+        },
+        {
+          "href": "/media/all",
+          "text": "Tous les Médias"
+        },
+        {
+          "href": "/media/popular",
+          "text": "Populaires"
+        },
+        {
+          "href": "/media/analysis",
+          "text": "Analyse Profonde"
+        },
+        {
+          "href": "/media/collections",
+          "text": "collections"
+        }
+      ]
+    },
+    {
+      "mode": "main",
+      "name": "No JavaScript errors",
+      "ok": true,
+      "errors": []
+    }
+  ],
+  "screenshots": [
+    {
+      "mode": "main",
+      "tab": "overview",
+      "file": "main-aligned-retry-dashboard-overview-charts-desktop-dark.png"
+    },
+    {
+      "mode": "main",
+      "tab": "analytics",
+      "file": "main-aligned-retry-dashboard-analytics-charts-desktop-dark.png"
+    },
+    {
+      "mode": "main",
+      "tab": "network",
+      "file": "main-aligned-retry-dashboard-network-charts-desktop-dark.png"
+    },
+    {
+      "mode": "main",
+      "theme": "dark",
+      "file": "main-aligned-retry-navigation-open-mobile-dark.png"
+    },
+    {
+      "mode": "main",
+      "theme": "light",
+      "file": "main-aligned-retry-navigation-open-mobile-light.png"
+    }
+  ]
+}

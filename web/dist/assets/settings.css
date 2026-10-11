@@ -75,3 +75,13 @@ html:not(.dark) .jt-settings .settings-task.sky{--task-color:#0284c7}html:not(.d
 .jt-settings .settings-backups .settings-summary>div:last-child strong{display:flex;align-items:center;gap:8px}
 .jt-settings .settings-backups .settings-summary strong svg{width:16px;height:16px}
 .jt-settings .settings-backups [data-action="backup-now"]{background:#0891b2;border-color:#0891b2;color:#fff;box-shadow:none}
+
+/* Jellyfin server status semantics and historical field layout. */
+.jt-settings .settings-badge.neutral { color:var(--muted-foreground);background:rgb(113 113 122 / .1);border-color:rgb(113 113 122 / .3); }
+.jt-settings .settings-badge.error { color:#f87171;background:rgb(239 68 68 / .1);border-color:rgb(239 68 68 / .3); }
+.jt-settings .settings-server .settings-badge { border-radius:4px;padding:2px 8px;gap:4px; }
+.jt-settings .settings-server .settings-badge:before { width:8px;height:8px; }
+.jt-settings .settings-server-grid .settings-field { gap:0; }
+.jt-settings .settings-plugin .settings-field { gap:0; }
+@media(min-width:1024px) { .jt-settings .settings-server-grid { grid-template-columns:minmax(0,3fr) minmax(0,5fr) minmax(0,4fr); } }
+@media(max-width:639px) { .jt-settings .settings-server-heading { flex-direction:column;gap:8px; }.jt-settings .settings-server-status p { text-align:left;max-width:320px; } }

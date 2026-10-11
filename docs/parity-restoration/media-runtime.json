@@ -1,0 +1,8402 @@
+{
+  "date": "2026-10-11T08:47:38.404Z",
+  "scope": "Isolated real Go server and synthetic QA SQLite; no fixture API substitutions, settings save, media mutation or deletion. Source comparison and Go runtime checks; direct main captures are handled by the visual agent.",
+  "checks": [
+    {
+      "name": "Embedded media-recovery.js matches source",
+      "ok": true
+    },
+    {
+      "name": "Embedded media-recovery.css matches source",
+      "ok": true
+    },
+    {
+      "name": "Collections real API",
+      "ok": true
+    },
+    {
+      "name": "Collection normalized keys unique",
+      "ok": true
+    },
+    {
+      "name": "Collection filmsqa original server/library scopes retained",
+      "ok": true
+    },
+    {
+      "name": "Collection livresqa original server/library scopes retained",
+      "ok": true
+    },
+    {
+      "name": "Collection musiqueqa original server/library scopes retained",
+      "ok": true
+    },
+    {
+      "name": "Collection seriesqa original server/library scopes retained",
+      "ok": true
+    },
+    {
+      "name": "/media/all renders content without error",
+      "ok": true
+    },
+    {
+      "name": "/media/all desktop dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": 6,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 168,
+            "height": 168,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 168,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          }
+        ],
+        "title": "Tous les Médias"
+      }
+    },
+    {
+      "name": "/media/all desktop dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 168,
+          "height": 168,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 168,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/all mobile dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": 2,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 167,
+            "height": 167,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 167,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          }
+        ],
+        "title": "Tous les Médias"
+      }
+    },
+    {
+      "name": "/media/all mobile dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 167,
+          "height": 167,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 167,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/all desktop light no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": 6,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 168,
+            "height": 168,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 168,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          }
+        ],
+        "title": "Tous les Médias"
+      }
+    },
+    {
+      "name": "/media/all desktop light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 168,
+          "height": 168,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 168,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/all mobile light no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": 2,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 167,
+            "height": 167,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 167,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 167,
+            "height": 250.5,
+            "text": ""
+          }
+        ],
+        "title": "Tous les Médias"
+      }
+    },
+    {
+      "name": "/media/all mobile light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 167,
+          "height": 167,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 167,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 167,
+          "height": 250.5,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "Catalogue historical plain heading",
+      "ok": true
+    },
+    {
+      "name": "Catalogue historical absent type badge",
+      "ok": true
+    },
+    {
+      "name": "Catalogue Go extra sort reachable in details",
+      "ok": true
+    },
+    {
+      "name": "Catalogue search navigates and renders",
+      "ok": false
+    },
+    {
+      "name": "/recent renders content without error",
+      "ok": true
+    },
+    {
+      "name": "/recent desktop dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": 6,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          }
+        ],
+        "title": "Ajouts récents"
+      }
+    },
+    {
+      "name": "/recent desktop dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/recent mobile dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": 2,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          }
+        ],
+        "title": "Ajouts récents"
+      }
+    },
+    {
+      "name": "/recent mobile dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/recent desktop light no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": 6,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 168,
+            "height": 252,
+            "text": ""
+          }
+        ],
+        "title": "Ajouts récents"
+      }
+    },
+    {
+      "name": "/recent desktop light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 168,
+          "height": 252,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/recent mobile light no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": 2,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 173,
+            "height": 259.5,
+            "text": ""
+          }
+        ],
+        "title": "Ajouts récents"
+      }
+    },
+    {
+      "name": "/recent mobile light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 173,
+          "height": 259.5,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "Recent dated labels and type icons",
+      "ok": true
+    },
+    {
+      "name": "/media/collections renders content without error",
+      "ok": true
+    },
+    {
+      "name": "/media/collections desktop dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          }
+        ],
+        "title": "Collections"
+      }
+    },
+    {
+      "name": "/media/collections desktop dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/collections mobile dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          }
+        ],
+        "title": "Collections"
+      }
+    },
+    {
+      "name": "/media/collections mobile dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/collections desktop light no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          }
+        ],
+        "title": "Collections"
+      }
+    },
+    {
+      "name": "/media/collections desktop light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/collections mobile light no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          },
+          {
+            "svg": true,
+            "width": 40,
+            "height": 60,
+            "text": ""
+          }
+        ],
+        "title": "Collections"
+      }
+    },
+    {
+      "name": "/media/collections mobile light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        },
+        {
+          "svg": true,
+          "width": 40,
+          "height": 60,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "Collection cards equal normalized API groups",
+      "ok": true
+    },
+    {
+      "name": "Collection search filters by localized label",
+      "ok": true
+    },
+    {
+      "name": "Collection empty search state",
+      "ok": true
+    },
+    {
+      "name": "Collection drilldown preserves exact raw scopes",
+      "ok": true
+    },
+    {
+      "name": "Collection drilldown loads real catalogue",
+      "ok": true
+    },
+    {
+      "name": "/media/popular renders content without error",
+      "ok": true
+    },
+    {
+      "name": "/media/popular desktop dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [],
+        "title": "Top Contenus"
+      }
+    },
+    {
+      "name": "/media/popular desktop dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": []
+    },
+    {
+      "name": "/media/popular mobile dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [],
+        "title": "Top Contenus"
+      }
+    },
+    {
+      "name": "/media/popular mobile dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": []
+    },
+    {
+      "name": "/media/popular desktop light no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [],
+        "title": "Top Contenus"
+      }
+    },
+    {
+      "name": "/media/popular desktop light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": []
+    },
+    {
+      "name": "/media/popular mobile light no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [],
+        "title": "Top Contenus"
+      }
+    },
+    {
+      "name": "/media/popular mobile light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": []
+    },
+    {
+      "name": "/media/analysis renders content without error",
+      "ok": true
+    },
+    {
+      "name": "/media/analysis desktop dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [],
+        "title": "Analyse Profonde"
+      }
+    },
+    {
+      "name": "/media/analysis desktop dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": []
+    },
+    {
+      "name": "/media/analysis mobile dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [],
+        "title": "Analyse Profonde"
+      }
+    },
+    {
+      "name": "/media/analysis mobile dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": []
+    },
+    {
+      "name": "/media/analysis desktop light no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [],
+        "title": "Analyse Profonde"
+      }
+    },
+    {
+      "name": "/media/analysis desktop light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": []
+    },
+    {
+      "name": "/media/analysis mobile light no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [],
+        "title": "Analyse Profonde"
+      }
+    },
+    {
+      "name": "/media/analysis mobile light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": []
+    },
+    {
+      "name": "Analysis canvases backed by Chart instances",
+      "ok": true
+    },
+    {
+      "name": "/media/qa-primary-movie renders content without error",
+      "ok": true
+    },
+    {
+      "name": "/media/qa-primary-movie desktop dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 192,
+            "height": 288,
+            "text": ""
+          }
+        ],
+        "title": "Film principal QA"
+      }
+    },
+    {
+      "name": "/media/qa-primary-movie desktop dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 192,
+          "height": 288,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-movie mobile dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 180,
+            "height": 270,
+            "text": ""
+          }
+        ],
+        "title": "Film principal QA"
+      }
+    },
+    {
+      "name": "/media/qa-primary-movie mobile dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 180,
+          "height": 270,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-movie desktop light no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 192,
+            "height": 288,
+            "text": ""
+          }
+        ],
+        "title": "Film principal QA"
+      }
+    },
+    {
+      "name": "/media/qa-primary-movie desktop light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 192,
+          "height": 288,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-movie mobile light no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 180,
+            "height": 270,
+            "text": ""
+          }
+        ],
+        "title": "Film principal QA"
+      }
+    },
+    {
+      "name": "/media/qa-primary-movie mobile light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 180,
+          "height": 270,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-episode1 renders content without error",
+      "ok": true
+    },
+    {
+      "name": "/media/qa-primary-episode1 desktop dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 320,
+            "height": 180,
+            "text": ""
+          }
+        ],
+        "title": "Épisode 1"
+      }
+    },
+    {
+      "name": "/media/qa-primary-episode1 desktop dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 320,
+          "height": 180,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-episode1 mobile dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 316,
+            "height": 177.75,
+            "text": ""
+          }
+        ],
+        "title": "Épisode 1"
+      }
+    },
+    {
+      "name": "/media/qa-primary-episode1 mobile dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 316,
+          "height": 177.75,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-episode1 desktop light no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 320,
+            "height": 180,
+            "text": ""
+          }
+        ],
+        "title": "Épisode 1"
+      }
+    },
+    {
+      "name": "/media/qa-primary-episode1 desktop light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 320,
+          "height": 180,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-episode1 mobile light no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 316,
+            "height": 177.75,
+            "text": ""
+          }
+        ],
+        "title": "Épisode 1"
+      }
+    },
+    {
+      "name": "/media/qa-primary-episode1 mobile light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 316,
+          "height": 177.75,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-album renders content without error",
+      "ok": true
+    },
+    {
+      "name": "/media/qa-primary-album desktop dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 192,
+            "height": 192,
+            "text": ""
+          }
+        ],
+        "title": "Album principal QA"
+      }
+    },
+    {
+      "name": "/media/qa-primary-album desktop dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 192,
+          "height": 192,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-album mobile dark no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 180,
+            "height": 180,
+            "text": ""
+          }
+        ],
+        "title": "Album principal QA"
+      }
+    },
+    {
+      "name": "/media/qa-primary-album mobile dark fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 180,
+          "height": 180,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-album desktop light no overflow",
+      "ok": true,
+      "details": {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 192,
+            "height": 192,
+            "text": ""
+          }
+        ],
+        "title": "Album principal QA"
+      }
+    },
+    {
+      "name": "/media/qa-primary-album desktop light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 192,
+          "height": 192,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "/media/qa-primary-album mobile light no overflow",
+      "ok": true,
+      "details": {
+        "width": 390,
+        "scrollWidth": 390,
+        "columns": null,
+        "fallbacks": [
+          {
+            "svg": true,
+            "width": 180,
+            "height": 180,
+            "text": ""
+          }
+        ],
+        "title": "Album principal QA"
+      }
+    },
+    {
+      "name": "/media/qa-primary-album mobile light fallback SVG has nonzero dimensions",
+      "ok": true,
+      "details": [
+        {
+          "svg": true,
+          "width": 180,
+          "height": 180,
+          "text": ""
+        }
+      ]
+    },
+    {
+      "name": "No JavaScript runtime exceptions",
+      "ok": true,
+      "details": []
+    }
+  ],
+  "pages": [
+    {
+      "route": "/media/all",
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "media-restored-media-all-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": 6,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 168,
+                "height": 168,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 168,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              }
+            ],
+            "title": "Tous les Médias"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "media-restored-media-all-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": 2,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 167,
+                "height": 167,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 167,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              }
+            ],
+            "title": "Tous les Médias"
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "media-restored-media-all-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": 6,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 168,
+                "height": 168,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 168,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              }
+            ],
+            "title": "Tous les Médias"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "media-restored-media-all-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": 2,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 167,
+                "height": 167,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 167,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 167,
+                "height": 250.5,
+                "text": ""
+              }
+            ],
+            "title": "Tous les Médias"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/recent",
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "media-restored-recent-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": 6,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              }
+            ],
+            "title": "Ajouts récents"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "media-restored-recent-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": 2,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              }
+            ],
+            "title": "Ajouts récents"
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "media-restored-recent-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": 6,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 168,
+                "height": 252,
+                "text": ""
+              }
+            ],
+            "title": "Ajouts récents"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "media-restored-recent-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": 2,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 173,
+                "height": 259.5,
+                "text": ""
+              }
+            ],
+            "title": "Ajouts récents"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/media/collections",
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "media-restored-media-collections-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              }
+            ],
+            "title": "Collections"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "media-restored-media-collections-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              }
+            ],
+            "title": "Collections"
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "media-restored-media-collections-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              }
+            ],
+            "title": "Collections"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "media-restored-media-collections-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              },
+              {
+                "svg": true,
+                "width": 40,
+                "height": 60,
+                "text": ""
+              }
+            ],
+            "title": "Collections"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/media/popular",
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "media-restored-media-popular-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [],
+            "title": "Top Contenus"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "media-restored-media-popular-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [],
+            "title": "Top Contenus"
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "media-restored-media-popular-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [],
+            "title": "Top Contenus"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "media-restored-media-popular-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [],
+            "title": "Top Contenus"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/media/analysis",
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "media-restored-media-analysis-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [],
+            "title": "Analyse Profonde"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "media-restored-media-analysis-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [],
+            "title": "Analyse Profonde"
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "media-restored-media-analysis-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [],
+            "title": "Analyse Profonde"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "media-restored-media-analysis-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [],
+            "title": "Analyse Profonde"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/media/qa-primary-movie",
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "media-restored-media-qa-primary-movie-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 192,
+                "height": 288,
+                "text": ""
+              }
+            ],
+            "title": "Film principal QA"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "media-restored-media-qa-primary-movie-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 180,
+                "height": 270,
+                "text": ""
+              }
+            ],
+            "title": "Film principal QA"
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "media-restored-media-qa-primary-movie-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 192,
+                "height": 288,
+                "text": ""
+              }
+            ],
+            "title": "Film principal QA"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "media-restored-media-qa-primary-movie-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 180,
+                "height": 270,
+                "text": ""
+              }
+            ],
+            "title": "Film principal QA"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/media/qa-primary-episode1",
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "media-restored-media-qa-primary-episode1-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 320,
+                "height": 180,
+                "text": ""
+              }
+            ],
+            "title": "Épisode 1"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "media-restored-media-qa-primary-episode1-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 316,
+                "height": 177.75,
+                "text": ""
+              }
+            ],
+            "title": "Épisode 1"
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "media-restored-media-qa-primary-episode1-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 320,
+                "height": 180,
+                "text": ""
+              }
+            ],
+            "title": "Épisode 1"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "media-restored-media-qa-primary-episode1-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 316,
+                "height": 177.75,
+                "text": ""
+              }
+            ],
+            "title": "Épisode 1"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/media/qa-primary-album",
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "media-restored-media-qa-primary-album-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 192,
+                "height": 192,
+                "text": ""
+              }
+            ],
+            "title": "Album principal QA"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "media-restored-media-qa-primary-album-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 180,
+                "height": 180,
+                "text": ""
+              }
+            ],
+            "title": "Album principal QA"
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "media-restored-media-qa-primary-album-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 192,
+                "height": 192,
+                "text": ""
+              }
+            ],
+            "title": "Album principal QA"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "media-restored-media-qa-primary-album-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "columns": null,
+            "fallbacks": [
+              {
+                "svg": true,
+                "width": 180,
+                "height": 180,
+                "text": ""
+              }
+            ],
+            "title": "Album principal QA"
+          }
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

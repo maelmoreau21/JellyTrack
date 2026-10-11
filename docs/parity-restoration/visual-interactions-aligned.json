@@ -1,0 +1,141 @@
+{
+  "date": "2026-10-11T08:44:59.961Z",
+  "scope": "Dashboard tabs and mobile menu. Isolated real APIs; no browser responses or persisted configuration replaced.",
+  "checks": [
+    {
+      "mode": "main",
+      "name": "Dashboard overview",
+      "ok": true,
+      "metrics": {
+        "headings": [
+          "Tableau de bord",
+          "Flux Actifs",
+          "Lectures Totales",
+          "Lecture Directe",
+          "Temps Visionnage",
+          "Utilisateurs actifs",
+          "Films",
+          "Séries & Épisodes",
+          "Musique",
+          "Livres & Audiobooks",
+          "Volume Temporel",
+          "Répartition par Catégorie",
+          "Lectures par Bibliothèque",
+          "Activité Annuelle2026",
+          "Plus Grands Fans",
+          "Écosystème Clients",
+          "Lectures en direct",
+          "Activité par Heure",
+          "Activité par Jour",
+          "Temps Mensuel",
+          "Taux de Complétion",
+          "Familles de Clients",
+          "Charge du Serveur (Flux Simultanés)"
+        ],
+        "visibleCharts": 12
+      }
+    },
+    {
+      "mode": "main",
+      "name": "Dashboard analytics",
+      "ok": false,
+      "metrics": {
+        "headings": [
+          "Tableau de bord",
+          "Top Films",
+          "Top Séries",
+          "Top Albums",
+          "Top Livres",
+          "Top Genres",
+          "Top Clients",
+          "Méthodes de Flux",
+          "Matrice des Résolutions",
+          "Écosystème Appareils",
+          "Répartition Audio",
+          "Sous-titres",
+          "Lectures par Jour",
+          "Durée par Jour",
+          "Lectures par Bibliothèque",
+          "Durée par Bibliothèque",
+          "Lectures (Moy. Horaire)",
+          "Durée (Moy. Horaire)",
+          "Carte de Fréquentation",
+          "Taux de Complétion Moyen par Biblio",
+          "Segments d'Abandon",
+          "Pires Taux de Complétion",
+          "Répartition Audio",
+          "Sous-titres"
+        ],
+        "visibleCharts": 0
+      }
+    },
+    {
+      "mode": "main",
+      "name": "Dashboard network",
+      "ok": false,
+      "metrics": {
+        "headings": [
+          "Tableau de bord",
+          "Total Sessions",
+          "Taux de Transcodage",
+          "DirectStream",
+          "Durée de Transcodage",
+          "DirectPlay vs Transcode (par Heure)",
+          "Profil Transcode par Client",
+          "Media les plus transcoder — Tableau des Coupables"
+        ],
+        "visibleCharts": 0
+      }
+    },
+    {
+      "mode": "main",
+      "name": "Mobile menu dark",
+      "ok": true,
+      "links": [
+        {
+          "href": "/media",
+          "text": "Bibliothèque"
+        },
+        {
+          "href": "/recent",
+          "text": "Ajoutés récemment"
+        },
+        {
+          "href": "/media/all",
+          "text": "Tous les Médias"
+        },
+        {
+          "href": "/media/popular",
+          "text": "Populaires"
+        },
+        {
+          "href": "/media/collections",
+          "text": "collections"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "mode": "main",
+      "tab": "overview",
+      "file": "main-aligned-dashboard-overview-charts-desktop-dark.png"
+    },
+    {
+      "mode": "main",
+      "tab": "analytics",
+      "file": "main-aligned-dashboard-analytics-charts-desktop-dark.png"
+    },
+    {
+      "mode": "main",
+      "tab": "network",
+      "file": "main-aligned-dashboard-network-charts-desktop-dark.png"
+    },
+    {
+      "mode": "main",
+      "theme": "dark",
+      "file": "main-aligned-navigation-open-mobile-dark.png"
+    }
+  ],
+  "fatal": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Close menu', exact: true })\u001b[22m\n\u001b[2m    - locator resolved to <button aria-label=\"Close menu\" class=\"p-1 text-sidebar-foreground/60 transition-colors hover:text-sidebar-foreground md:hidden\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - element is outside of the viewport\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is visible, enabled and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - element is outside of the viewport\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    57 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is visible, enabled and stable\u001b[22m\n\u001b[2m       - scrolling into view if needed\u001b[22m\n\u001b[2m       - done scrolling\u001b[22m\n\u001b[2m       - element is outside of the viewport\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+}

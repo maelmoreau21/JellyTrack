@@ -42,6 +42,11 @@
         '<path d="m16 3 3 3a8 8 0 0 1 0 12l-3 3M8 3 5 6a8 8 0 0 0 0 12l3 3M12 12v10m-4 0 4-10 4 10"/><circle cx="12" cy="8" r="2"/>',
       shieldCheck:
         '<path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6c3 0 5.5-1.3 8-4 2.5 2.7 5 4 8 4z"/><path d="m9 12 2 2 4-4"/>',
+      server: '<rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><path d="M6 6h.01M6 17h.01"/>',
+      arrowUpRight: '<path d="M7 17 17 7M7 7h10v10"/>',
+      gauge: '<path d="m12 14 4-4M3.34 19a10 10 0 1 1 17.32 0Z"/>',
+      download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+      zap: '<path d="m13 2-10 12h8l-1 8 11-12h-8z"/>',
     };
     return extra[name]
       ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${extra[name]}</svg>`
@@ -49,18 +54,16 @@
   };
   const badge = (value, kind = "") =>
     `<span class="ar-badge ${kind}">${esc(value)}</span>`;
-  const card = (title, value, help, kind = "") =>
-    `<article class="ar-metric ${kind}"><div class="ar-metric-head"><h3>${esc(title)}</h3>${icon(kind === "ar-green" || kind === "ar-red" ? "shield" : kind === "ar-cyan" ? "drive" : kind === "ar-amber" ? "heartCrack" : "radioTower")}</div><div class="ar-metric-body"><strong>${kind === "ar-green" ? icon("shieldCheck") : ""}${esc(value)}</strong><p>${esc(help || "")}</p></div></article>`;
+  const card = (title, value, help, kind = "", glyph = "") =>
+    `<article class="ar-metric ${kind}"><div class="ar-metric-head"><h3>${esc(title)}</h3>${icon(glyph || (kind === "ar-green" || kind === "ar-red" ? "shield" : kind === "ar-cyan" ? "drive" : kind === "ar-amber" ? "heartCrack" : "radioTower"))}</div><div class="ar-metric-body"><strong>${kind === "ar-green" ? icon("shieldCheck") : ""}${esc(value)}</strong><p>${esc(help || "")}</p></div></article>`;
   const cleanupCard = (title, value, name, kind = "") =>
     `<article class="ar-cleanup-metric ${kind}"><span class="ar-cleanup-icon">${icon(name)}</span><div><h3>${esc(title)}</h3><strong>${esc(value)}</strong></div></article>`;
   const table = (headers, rows, empty) =>
-    rows.length
-      ? `<div class="ar-table-scroll"><table class="ar-table"><thead><tr>${headers.map((s) => `<th>${esc(s)}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`
-      : `<div class="ar-empty">${icon("shield")}<p>${esc(empty)}</p></div>`;
+    `<div class="ar-table-scroll"><table class="ar-table"><thead><tr>${headers.map((s) => `<th scope="col">${esc(s)}</th>`).join("")}</tr></thead><tbody>${rows.length ? rows.join("") : `<tr><td class="ar-table-empty" colspan="${headers.length}">${esc(empty)}</td></tr>`}</tbody></table></div>`;
   const button = (action, label, extra = "") =>
-    `<button type="button" class="btn btn-secondary btn-sm" data-ar-action="${action}" ${extra}>${esc(label)}</button>`;
+    `<button type="button" class="btn btn-secondary btn-sm" data-ar-action="${action}" ${extra}>${["export-csv", "export-json"].includes(action) ? icon("download") : action === "previous" ? icon("chevronLeft") : action === "next" ? icon("chevronRight") : ""}${esc(label)}</button>`;
   const tabs = (items, selected, kind) =>
-    `<div class="ar-tabs" role="tablist" aria-label="${kind === "health" ? "Health" : "Cleanup"}">${items.map(([key, label, count]) => `<button role="tab" type="button" id="ar-${kind}-${key}" aria-controls="ar-${kind}-panel" aria-selected="${selected === key}" tabindex="${selected === key ? "0" : "-1"}" data-ar-tab="${kind}:${key}">${icon(key === "cleanup" ? "eraser" : key === "security" ? "shieldAlert" : key === "logs" ? "activity" : key === "ghosts" ? "ghost" : key === "abandoned" ? "heartCrack" : "layers")}${esc(label)}${count > 0 || kind === "cleanup" ? badge(count) : ""}</button>`).join("")}</div>`;
+    `<div class="ar-tabs" role="tablist" aria-label="${kind === "health" ? "Health" : "Cleanup"}">${items.map(([key, label, count]) => `<button role="tab" type="button" id="ar-${kind}-${key}" aria-controls="ar-${kind}-panel" aria-selected="${selected === key}" tabindex="${selected === key ? "0" : "-1"}" data-ar-tab="${kind}:${key}">${icon(key === "cleanup" ? "eraser" : key === "security" ? "shield" : key === "logs" ? "activity" : key === "ghosts" ? "ghost" : key === "abandoned" ? "heartCrack" : "copy")}${esc(label)}${count > 0 || kind === "cleanup" ? badge(count) : ""}</button>`).join("")}</div>`;
   function download(name, content, type) {
     const url = URL.createObjectURL(new Blob([content], { type }));
     const a = document.createElement("a");
@@ -178,7 +181,7 @@
         } else console[error ? "error" : "info"](message);
       };
       const pageHeader = (title, help, name = "health") =>
-        `<header class="ar-header"><span class="ar-header-icon">${icon(name)}</span><div><h1>${esc(title)}</h1>${help ? `<p>${esc(help)}</p>` : ""}</div></header>`;
+        `<header class="ar-header"><span class="ar-header-icon">${name ? icon(name) : ""}</span><div><h1>${esc(title)}</h1>${help ? `<p>${esc(help)}</p>` : ""}</div></header>`;
       const suggestions = () =>
         state.cleanup?.staleMoviesRecommendation?.media || [];
       const base = (kind) =>
@@ -300,7 +303,7 @@
             cells += `<td>${esc(m.resolution || (fr ? "Inconnue" : "Unknown"))}</td><td>${esc(m.libraryName || "—")}</td><td>${esc(bytes(m.size))}</td>`;
           return `<tr>${cells}</tr>`;
         });
-        return `<div class="ar-cleanup-metrics">${cleanupCard(fr ? "Espace récupérable estimé" : "Estimated reclaimable space", bytes(state.cleanup.totalRecoverableSizeBytes), "drive", "ar-cleanup-estimate")}${cleanupCard(c("ghostMedia", ""), filtered("ghosts", false, false).length, "ghost", "ar-red")}${cleanupCard(c("abandonedMedia", ""), filtered("abandoned", false, false).length, "heartCrack", "ar-amber")}${cleanupCard(fr ? "Doublons détectés" : "Duplicates detected", filtered("duplicates", false, false).length, "copy", "ar-cyan")}</div>
+        return `<div class="ar-cleanup-metrics">${cleanupCard(fr ? "Espace récupérable estimé" : "Estimated reclaimable space", bytes(state.cleanup.totalRecoverableSizeBytes), "drive", "ar-cleanup-estimate")}${cleanupCard(c("ghostMedia", ""), filtered("ghosts", false, false).length, "ghost", "ar-red")}${cleanupCard(c("abandonedMedia", ""), filtered("abandoned", false, false).length, "heartCrack", "ar-amber")}${cleanupCard(fr ? "Doublons détectés" : "Duplicates detected", filtered("duplicates", false, false).length, "copy", "ar-blue")}</div>
       ${tabs(
         [
           [
@@ -325,7 +328,7 @@
       <div id="ar-cleanup-panel" role="tabpanel" aria-labelledby="ar-cleanup-${kind}">
       ${rec.length && !state.dismissed ? `<aside class="ar-recommendation"><div>${icon("sparkles")}<h3>${esc(c("staleMoviesRecommendationTitle", "Suggestion automatique"))}</h3><p>${esc(c("staleMoviesRecommendationDesc", "", { count: rec.length, size: bytes(state.cleanup.staleMoviesRecommendation.totalSizeBytes) }))}</p></div><div class="ar-actions">${button("smart-review", c("reviewStaleMoviesAction", "Examiner la sélection"))}${button("smart-delete", c("deleteStaleMoviesAction", "Supprimer maintenant"))}${button("smart-dismiss", c("dismissSuggestionAction", "Ignorer"))}</div></aside>` : ""}
       ${state.smart ? `<div class="ar-smart">${esc(c("staleMoviesFilterActive", "Filtre smart actif : films anciens jamais vus"))}${button("smart-close", common("close", "Fermer"))}</div>` : ""}
-      <div class="ar-toolbar"><label class="ar-search">${icon("search")}<input data-ar-field="query" aria-label="${esc(common("search", "Rechercher"))}" type="search" value="${esc(state.query)}" placeholder="${esc(common("searchPlaceholder", "Rechercher..."))}"></label><label><span>${esc(fr ? "Période" : "Period")}</span><select data-ar-field="period">${[
+      <div class="ar-toolbar ar-cleanup-toolbar"><label class="ar-search">${icon("search")}<input data-ar-field="query" aria-label="${esc(common("search", "Rechercher"))}" type="search" value="${esc(state.query)}" placeholder="${esc(common("searchPlaceholder", "Rechercher..."))}"></label><label><span class="ar-visually-hidden">${esc(fr ? "Période" : "Period")}</span><select data-ar-field="period">${[
         ["all", text("timeRange.allTime", "Tout le temps")],
         ["30d", text("timeRange.last30d", "30 jours")],
         ["90d", fr ? "90 jours" : "90 days"],
@@ -338,10 +341,10 @@
         )
         .join(
           "",
-        )}</select></label><label><span>${esc(fr ? "Par page" : "Per page")}</span><select data-ar-field="size">${[25, 50, 100].map((v) => `<option ${state.size === v ? "selected" : ""}>${v}</option>`).join("")}</select></label>${button("export-csv", "CSV")}${button("export-json", "JSON")}</div>
-      <section class="ar-panel"><header><h2>${esc(titles[kind])}</h2><p>${esc(descriptions[kind])}</p></header><div class="ar-filter-row"><div class="ar-type-filters">${filterOptions.map(([v, key]) => `<button type="button" data-ar-type="${v}" aria-pressed="${state.types[kind] === v}">${esc(c(key, v))} ${badge(v === "all" ? filtered(kind, false, false).length : filtered(kind, false, false).filter((m) => m.type === v).length)}</button>`).join("")}</div>${kind === "abandoned" ? `<label>${esc(c("sortBy", "Trier par"))}<select data-ar-field="sort"><option value="completion" ${state.sort === "completion" ? "selected" : ""}>${esc(c("sortByCompletion", "Complétion"))}</option><option value="last" ${state.sort === "last" ? "selected" : ""}>${esc(c("sortByLastAttempt", "Dernière tentative"))}</option></select></label>` : ""}</div>
+        )}</select></label><label><span class="ar-visually-hidden">${esc(fr ? "Par page" : "Per page")}</span><select data-ar-field="size">${[25, 50, 100].map((v) => `<option ${state.size === v ? "selected" : ""}>${v}</option>`).join("")}</select></label>${button("export-csv", "CSV")}${button("export-json", "JSON")}</div>
+      <section class="ar-panel ar-cleanup-results ar-cleanup-${kind}"><header><h2>${esc(titles[kind])}</h2><p>${esc(descriptions[kind])}</p></header><div class="ar-filter-row"><div class="ar-type-filters">${filterOptions.map(([v, key]) => `<button type="button" data-ar-type="${v}" aria-pressed="${state.types[kind] === v}">${esc(c(key, v))}${v === "all" ? "" : ` (${filtered(kind, false, false).filter((m) => m.type === v).length})`}</button>`).join("")}</div>${kind === "abandoned" ? `<label><span class="ar-visually-hidden">${esc(c("sortBy", "Trier par"))}</span><select data-ar-field="sort"><option value="completion" ${state.sort === "completion" ? "selected" : ""}>${esc(c("sortByCompletion", "Complétion"))}</option><option value="last" ${state.sort === "last" ? "selected" : ""}>${esc(c("sortByLastAttempt", "Dernière tentative"))}</option></select></label>` : ""}</div>
       ${table(headers, content, kind === "ghosts" ? c(state.smart ? "noSuggestedStaleMovies" : "noGhosts", "") : kind === "abandoned" ? c("noAbandoned", "") : fr ? "Aucun doublon détecté. Votre médiathèque est parfaitement organisée !" : "No duplicates detected. Your media library is perfectly organized!")}
-      <footer class="ar-pagination"><span>${rows.length ? (page - 1) * state.size + 1 : 0}–${Math.min(page * state.size, rows.length)} / ${rows.length}</span><div>${button("previous", common("previous", "Précédent"), page === 1 ? "disabled" : "")}<span>${esc(common("page", "Page"))} ${page} / ${totalPages}</span>${button("next", common("next", "Suivant"), page === totalPages ? "disabled" : "")}</div></footer></section></div>`;
+      <footer class="ar-pagination"><span>${rows.length ? (page - 1) * state.size + 1 : 0}–${Math.min(page * state.size, rows.length)} / ${rows.length}</span><div>${button("previous", common("previous", "Précédent"), page === 1 ? "disabled" : "")}<span>${esc(common("page", "Page"))} ${page}/${totalPages}</span>${button("next", common("next", "Suivant"), page === totalPages ? "disabled" : "")}</div></footer></section></div>`;
       }
       function pluginHTML(embedded) {
         const data = state.plugin,
@@ -499,7 +502,7 @@
             ],
             state.tab,
             "health",
-          )}<div id="ar-health-panel" role="tabpanel" aria-labelledby="ar-health-${state.tab}">${state.tab === "cleanup" ? `<section class="ar-section"><h2>${icon("sparkles")}${esc(fr ? "Nettoyage Intelligent & Optimisation" : "Smart Media Cleanup & Hygiene")}</h2><p class="ar-muted">${esc(fr ? "Détectez et supprimez les fichiers jamais visionnés, abandonnés ou en doublon pour libérer de l’espace disque." : "Find and delete unplayed, abandoned, or duplicate media to reclaim disk space.")}</p>${cleanupHTML()}</section>` : state.tab === "security" ? securityHTML() : logsHTML()}</div>`
+          )}<div id="ar-health-panel" role="tabpanel" aria-labelledby="ar-health-${state.tab}">${state.tab === "cleanup" ? `<section class="ar-section"><h2>${icon("eraser")}${esc(fr ? "Nettoyage Intelligent & Optimisation" : "Smart Media Cleanup & Hygiene")}</h2><p class="ar-muted">${esc(fr ? "Détectez et supprimez les fichiers jamais visionnés, abandonnés ou en doublon pour libérer de l’espace disque." : "Find and delete unplayed, abandoned, or duplicate media to reclaim disk space.")}</p>${cleanupHTML()}</section>` : state.tab === "security" ? securityHTML() : logsHTML()}</div>`
         );
       }
       function inventoryHTML() {
@@ -537,15 +540,8 @@
             ...data.servers.map((s) => number(s.activeStreams)),
           );
         return (
-          pageHeader(
-            title,
-            d(
-              "multiServerComparator.desc",
-              "Comparez la charge et la santé de vos serveurs.",
-            ),
-            "compare",
-          ) +
-          `<div class="ar-scope"><span>${esc(d("serverScope", "Scope"))}</span><button data-ar-server="all" aria-pressed="${!selected.length}">${esc(common("all", "Tous"))}</button>${data.selectableServers.map((s) => `<button data-ar-server="${esc(s.id)}" aria-pressed="${selected.includes(s.id)}">${esc(s.name)}</button>`).join("")}</div><div class="ar-metrics">${card("Active streams", totals.activeStreams || 0, "Across " + data.servers.length + " server(s)")}${card("Plays (24h)", totals.plays24h || 0, number(totals.watchHours24h).toFixed(1) + " watch hours")}${card("Plugin errors (24h)", totals.pluginErrors24h || 0, "Security and ingest validation failures")}${card("Scope", selected.join(",") || "all servers", "URL/global selection fingerprint")}</div><section class="ar-panel"><header><h2>Server ranking</h2><p>${esc("Higher score means more steady activity with fewer stale sessions and lower transcode pressure.")}</p></header>${table(
+          `<header class="ar-compare-heading"><h1>${icon("server")}${esc(title)}</h1><p>${esc(d("multiServerComparator.desc", "Comparez la charge et la santé de vos serveurs."))}</p></header>` +
+          `<div class="ar-scope"><span>${esc(d("serverScope", "Scope"))}</span><button data-ar-server="all" aria-pressed="${!selected.length}">${icon("filter")}${esc(common("all", "Tous"))}</button>${data.selectableServers.map((s) => `<button data-ar-server="${esc(s.id)}" aria-pressed="${selected.includes(s.id)}">${icon("server")}${esc(s.name)}</button>`).join("")}</div><div class="ar-metrics">${card("Active streams", totals.activeStreams || 0, "Across " + data.servers.length + " server(s)", "", "activity")}${card("Plays (24h)", totals.plays24h || 0, number(totals.watchHours24h).toFixed(1) + " watch hours", "", "arrowUpRight")}${card("Plugin errors (24h)", totals.pluginErrors24h || 0, "Security and ingest validation failures", "", "zap")}${card("Scope", selected.join(",") || "all servers", "URL/global selection fingerprint", "", "gauge")}</div><section class="ar-panel"><header><h2>Server ranking</h2><p>${esc("Higher score means more steady activity with fewer stale sessions and lower transcode pressure.")}</p></header>${table(
             [
               "Server",
               "Active",
@@ -566,7 +562,7 @@
                         ? Math.floor(gap / 60) + "m"
                         : Math.floor(gap / 3600) + "h",
                 load = Math.round((number(s.activeStreams) / max) * 100);
-              return `<tr><td><strong>${esc(s.name)}</strong><div class="ar-progress"><span style="width:${load}%"></span></div><small>Load index ${load}%</small></td><td>${number(s.activeStreams)}</td><td>${number(s.transcodes)}${s.staleStreams > 0 ? `<small>${s.staleStreams} stale</small>` : ""}</td><td>${esc(bitrate(s.avgBitrateKbps))}</td><td>${number(s.plays24h)}<small>${number(s.watchHours24h).toFixed(1)}h</small></td><td>${badge(gap == null ? "N/A" : gap <= 120 ? "healthy" : gap <= 600 ? "degraded" : "stale", gap == null ? "" : gap <= 120 ? "ar-green" : gap <= 600 ? "ar-amber" : "ar-red")}<small>${esc(age)}</small></td><td><strong>${number(s.healthScore)}</strong></td></tr>`;
+              return `<tr><td><strong>${esc(s.name)}</strong><div class="ar-progress"><span style="width:${load}%"></span></div><small>Load index: ${load}%</small></td><td>${number(s.activeStreams)}</td><td>${number(s.transcodes)}${s.staleStreams > 0 ? `<small>${s.staleStreams} stale</small>` : ""}</td><td>${esc(bitrate(s.avgBitrateKbps))}</td><td>${number(s.plays24h)}<small>${number(s.watchHours24h).toFixed(1)}h</small></td><td>${badge(gap == null ? "N/A" : gap <= 120 ? "healthy" : gap <= 600 ? "degraded" : "stale", gap == null ? "" : gap <= 120 ? "ar-green" : gap <= 600 ? "ar-amber" : "ar-red")}<small>${esc(age)} ago</small></td><td><strong>${number(s.healthScore)}</strong></td></tr>`;
             }),
             common("noData", "Aucune donnée"),
           )}</section>`
@@ -579,7 +575,7 @@
           : null;
         chart?.destroy();
         chart = null;
-        main.innerHTML = `<div class="admin-recovery ${subpage === "server-compare" ? "ar-compare" : ""}">${state.loading ? `<div class="ar-loading" role="status">${esc(common("loading", "Chargement..."))}</div>` : state.error ? `<div class="ar-error" role="alert">${esc(state.error)} ${button("retry", common("refresh", "Actualiser"))}</div>` : subpage === "cleanup" ? pageHeader(c("title", "Assistant de Nettoyage"), "", "eraser") + cleanupHTML() + `<details class="ar-go-extras"><summary>${esc(fr ? "Maintenance supplémentaire Go" : "Additional Go maintenance")}</summary><p><a href="/admin/maintenance" data-link>${esc(fr ? "Nettoyage des utilisateurs et intégrité" : "User cleanup and integrity")}</a></p></details>` : subpage === "plugin-health" ? pageHeader(p("title", "Centre de santé du plugin"), p("description", "")) + pluginHTML(false) : subpage === "server-compare" ? compareHTML() + inventoryHTML() : healthHTML()}</div>`;
+        main.innerHTML = `<div class="admin-recovery ${subpage === "server-compare" ? "ar-compare" : subpage === "cleanup" ? "ar-cleanup-page" : "ar-health-page"}">${state.loading ? `<div class="ar-loading" role="status">${esc(common("loading", "Chargement..."))}</div>` : state.error ? `<div class="ar-error" role="alert">${esc(state.error)} ${button("retry", common("refresh", "Actualiser"))}</div>` : subpage === "cleanup" ? pageHeader(c("title", "Assistant de Nettoyage"), "", "") + cleanupHTML() + `<details class="ar-go-extras"><summary>${esc(fr ? "Maintenance supplémentaire Go" : "Additional Go maintenance")}</summary><p><a href="/admin/maintenance" data-link>${esc(fr ? "Nettoyage des utilisateurs et intégrité" : "User cleanup and integrity")}</a></p></details>` : subpage === "plugin-health" ? pageHeader(p("title", "Centre de santé du plugin"), p("description", "")) + pluginHTML(false) : subpage === "server-compare" ? compareHTML() + inventoryHTML() : healthHTML()}</div>`;
         if (focusedTab)
           main.querySelector(`[data-ar-tab="${focusedTab}"]`)?.focus();
         if (

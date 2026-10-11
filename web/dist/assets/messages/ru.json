@@ -350,7 +350,9 @@
     "watched": "просмотрено",
     "worldMap": "Карта Подключений",
     "worldMapDesc": "Географическое распределение сеансов воспроизведения.",
-    "title": "Панель управления"
+    "title": "Панель управления",
+    "monitorActive": "active",
+    "monitorError": "error"
   },
   "deepInsights": {
     "deviceEcosystem": "Экосистема устройств",

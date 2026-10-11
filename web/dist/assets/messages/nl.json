@@ -350,7 +350,9 @@
     "watched": "bekeken",
     "worldMap": "Verbindingskaart",
     "worldMapDesc": "Geografische verdeling van afspeelsessies.",
-    "title": "Dashboard"
+    "title": "Dashboard",
+    "monitorActive": "active",
+    "monitorError": "error"
   },
   "deepInsights": {
     "deviceEcosystem": "Apparaat-ecosysteem",

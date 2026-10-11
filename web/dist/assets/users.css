@@ -18,9 +18,9 @@
 .users-reference .users-prune:hover { color: #fbbf24; border-color: rgb(245 158 11 / .5); }
 .users-reference .users-filters { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .users-filters::-webkit-scrollbar { display: none; }
-.users-filter-label { display: inline-flex; align-items: center; gap: 4px; margin-right: 4px; color: var(--users-muted-fg); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.users-filter-label { display: inline-flex; align-items: center; gap: 4px; margin-right: 4px; color: var(--users-muted-fg); font-size: 12px; font-weight: 600; }
 .users-reference .users-filter-label svg { width: 14px; height: 14px; }
-.users-reference .users-filter { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; padding: 4px 12px; border: 1px solid var(--border); border-radius: 9999px; background: color-mix(in srgb, var(--muted) 50%, transparent); color: var(--users-muted-fg); font-size: 12px; line-height: 16px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s; }
+.users-reference .users-filter { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid var(--border); border-radius: 9999px; background: color-mix(in srgb, var(--muted) 50%, transparent); color: var(--users-muted-fg); font-size: 12px; line-height: 16px; font-weight: 500; cursor: pointer; transition: background .15s, color .15s; }
 .users-reference .users-filter svg { width: 12px; height: 12px; }
 .users-filter:hover { background: var(--muted); }
 .users-filter[data-filter="all"].is-active { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }

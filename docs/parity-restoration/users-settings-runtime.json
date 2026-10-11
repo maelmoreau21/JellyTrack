@@ -1,0 +1,1207 @@
+{
+  "date": "2026-10-11T08:47:33.725Z",
+  "scope": "Isolated real Go APIs, synthetic media SQLite. Desktop/mobile, dark/light; no settings save or deletion.",
+  "checks": [
+    {
+      "name": "Embedded users.css matches source",
+      "ok": true
+    },
+    {
+      "name": "Embedded profile.js matches source",
+      "ok": true
+    },
+    {
+      "name": "Embedded admin.js matches source",
+      "ok": true
+    },
+    {
+      "name": "Embedded admin.css matches source",
+      "ok": true
+    },
+    {
+      "name": "Embedded settings.js matches source",
+      "ok": true
+    },
+    {
+      "name": "Embedded settings.css matches source",
+      "ok": true
+    },
+    {
+      "name": "/users desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/users mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "Users mobile historical shrinking/filter wrapping dark",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Utilisateurs"
+        ],
+        "filterHeight": 62,
+        "filterWhiteSpace": "normal"
+      }
+    },
+    {
+      "name": "/users desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/users mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "Users mobile historical shrinking/filter wrapping light",
+      "ok": true,
+      "detail": {
+        "width": 390,
+        "scrollWidth": 390,
+        "headings": [
+          "Utilisateurs"
+        ],
+        "filterHeight": 62,
+        "filterWhiteSpace": "normal"
+      }
+    },
+    {
+      "name": "Users quick filter changes pressed state",
+      "ok": true
+    },
+    {
+      "name": "Users name search returns matching real rows",
+      "ok": true
+    },
+    {
+      "name": "/users no JavaScript errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "/users/qa-primary-alice desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/users/qa-primary-alice mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/users/qa-primary-alice desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/users/qa-primary-alice mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "Profile five historical data charts",
+      "ok": true,
+      "detail": [
+        {
+          "id": "profile-activity-chart",
+          "type": "bar",
+          "labels": [
+            "12/9",
+            "13/9",
+            "14/9",
+            "15/9",
+            "16/9",
+            "17/9",
+            "18/9",
+            "19/9",
+            "20/9",
+            "21/9",
+            "22/9",
+            "23/9",
+            "24/9",
+            "25/9",
+            "26/9",
+            "27/9",
+            "28/9",
+            "29/9",
+            "30/9",
+            "1/10",
+            "2/10",
+            "3/10",
+            "4/10",
+            "5/10",
+            "6/10",
+            "7/10",
+            "8/10",
+            "9/10",
+            "10/10",
+            "11/10"
+          ],
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            2.4,
+            2.5,
+            3.8,
+            2.4,
+            2.5,
+            3.8,
+            2.4,
+            2.5,
+            3.8,
+            2.4,
+            2.5,
+            3.8,
+            2.4,
+            2.5,
+            3.8,
+            4.8,
+            5
+          ],
+          "plugins": []
+        },
+        {
+          "id": "profile-day-chart",
+          "type": "bar",
+          "labels": [
+            "Dim",
+            "Lun",
+            "Mar",
+            "Mer",
+            "Jeu",
+            "Ven",
+            "Sam"
+          ],
+          "values": [
+            21,
+            10,
+            11,
+            11,
+            10,
+            16,
+            19
+          ],
+          "plugins": []
+        },
+        {
+          "id": "profile-completion-chart",
+          "type": "doughnut",
+          "labels": [
+            "Terminé",
+            "Partiel"
+          ],
+          "values": [
+            14,
+            1
+          ],
+          "plugins": [
+            "profileCompletionLabel"
+          ]
+        },
+        {
+          "id": "profile-hour-chart",
+          "type": "bar",
+          "labels": [
+            "00:00",
+            "01:00",
+            "02:00",
+            "03:00",
+            "04:00",
+            "05:00",
+            "06:00",
+            "07:00",
+            "08:00",
+            "09:00",
+            "10:00",
+            "11:00",
+            "12:00",
+            "13:00",
+            "14:00",
+            "15:00",
+            "16:00",
+            "17:00",
+            "18:00",
+            "19:00",
+            "20:00",
+            "21:00",
+            "22:00",
+            "23:00"
+          ],
+          "values": [
+            0,
+            12,
+            11,
+            13,
+            12,
+            12,
+            14,
+            12,
+            12,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "plugins": []
+        },
+        {
+          "id": "profile-genres-chart",
+          "type": "bar",
+          "labels": [
+            "Drama",
+            "QA",
+            "Rock"
+          ],
+          "values": [
+            62,
+            62,
+            36
+          ],
+          "plugins": []
+        }
+      ]
+    },
+    {
+      "name": "Profile weekly chart consumes actual counts",
+      "ok": true
+    },
+    {
+      "name": "Profile genre labels consume API metadata",
+      "ok": true
+    },
+    {
+      "name": "Profile completion hover center label restored",
+      "ok": true
+    },
+    {
+      "name": "Profile completion real pointer activates segment",
+      "ok": true
+    },
+    {
+      "name": "Profile completion legend hides segment",
+      "ok": true
+    },
+    {
+      "name": "Profile completion reset restores segments",
+      "ok": true
+    },
+    {
+      "name": "Profile main five lower cards historical order",
+      "ok": true,
+      "detail": [
+        "Activité par Jour",
+        "Taux de Complétion",
+        "Activité par Heure",
+        "Genres préférés",
+        "Fiche Technique"
+      ]
+    },
+    {
+      "name": "/users/qa-primary-alice no JavaScript errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "/admin/cleanup desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup ghosts maintains table header",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup ghosts all chip historical text",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup abandoned maintains table header",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup abandoned all chip historical text",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup duplicates maintains table header",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup duplicates all chip historical text",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup empty table cell preserves colspan/header",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup no JavaScript errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "/admin/health desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/health mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/health desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/health mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/health ghosts maintains table header",
+      "ok": true
+    },
+    {
+      "name": "/admin/health ghosts all chip historical text",
+      "ok": true
+    },
+    {
+      "name": "/admin/health abandoned maintains table header",
+      "ok": true
+    },
+    {
+      "name": "/admin/health abandoned all chip historical text",
+      "ok": true
+    },
+    {
+      "name": "/admin/health duplicates maintains table header",
+      "ok": true
+    },
+    {
+      "name": "/admin/health duplicates all chip historical text",
+      "ok": true
+    },
+    {
+      "name": "/admin/health empty table cell preserves colspan/header",
+      "ok": true
+    },
+    {
+      "name": "Health keyboard navigation security tab",
+      "ok": true
+    },
+    {
+      "name": "/admin/health no JavaScript errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "/admin/server-compare desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/server-compare mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/server-compare desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/server-compare mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "Comparison KPI four distinct historical icons",
+      "ok": true
+    },
+    {
+      "name": "Comparison historical table Load index/heartbeat age labels",
+      "ok": true
+    },
+    {
+      "name": "Comparison selected server query preserved",
+      "ok": true
+    },
+    {
+      "name": "/admin/server-compare no JavaScript errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "/settings/jellyfin desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/jellyfin mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/jellyfin desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/jellyfin mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/jellyfin masked API field text fallback present",
+      "ok": true
+    },
+    {
+      "name": "/settings/jellyfin plugin key reveal placeholder",
+      "ok": true
+    },
+    {
+      "name": "/settings/jellyfin edit form kept",
+      "ok": true
+    },
+    {
+      "name": "/settings/jellyfin edit cancel kept",
+      "ok": true
+    },
+    {
+      "name": "/settings/jellyfin no JavaScript errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "/settings/plugin desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin masked API field text fallback present",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin plugin key reveal placeholder",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin edit form kept",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin edit cancel kept",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin no JavaScript errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "pages": [
+    {
+      "route": "/users",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "restored-users-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Utilisateurs"
+            ],
+            "filterHeight": 30,
+            "filterWhiteSpace": "normal"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "restored-users-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Utilisateurs"
+            ],
+            "filterHeight": 62,
+            "filterWhiteSpace": "normal"
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "restored-users-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Utilisateurs"
+            ],
+            "filterHeight": 30,
+            "filterWhiteSpace": "normal"
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "restored-users-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Utilisateurs"
+            ],
+            "filterHeight": 62,
+            "filterWhiteSpace": "normal"
+          }
+        }
+      ]
+    },
+    {
+      "route": "/users/qa-primary-alice",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "restored-users-qa-primary-alice-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Profil : Alice QA",
+              "Lecture en pause",
+              "Temps de lecture",
+              "Session(s)",
+              "Top Genres",
+              "Taux de complétion",
+              "Pic d'Activité",
+              "Meilleure Série",
+              "Contenu Unique",
+              "Format favori",
+              "Le Plus Visionné",
+              "Client favori",
+              "Appareil favori",
+              "Activité sur 30 jours",
+              "Activité par Jour",
+              "Taux de Complétion",
+              "Activité par Heure",
+              "Genres préférés",
+              "Fiche Technique",
+              "Historique de lecture"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "section": "charts",
+          "file": "restored-profile-charts-desktop-dark.png"
+        },
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "section": "history",
+          "file": "restored-profile-history-desktop-dark.png"
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "restored-users-qa-primary-alice-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Profil : Alice QA",
+              "Lecture en pause",
+              "Temps de lecture",
+              "Session(s)",
+              "Top Genres",
+              "Taux de complétion",
+              "Pic d'Activité",
+              "Meilleure Série",
+              "Contenu Unique",
+              "Format favori",
+              "Le Plus Visionné",
+              "Client favori",
+              "Appareil favori",
+              "Activité sur 30 jours",
+              "Activité par Jour",
+              "Taux de Complétion",
+              "Activité par Heure",
+              "Genres préférés",
+              "Fiche Technique",
+              "Historique de lecture"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "section": "charts",
+          "file": "restored-profile-charts-mobile-dark.png"
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "section": "history",
+          "file": "restored-profile-history-mobile-dark.png"
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "restored-users-qa-primary-alice-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Profil : Alice QA",
+              "Lecture en pause",
+              "Temps de lecture",
+              "Session(s)",
+              "Top Genres",
+              "Taux de complétion",
+              "Pic d'Activité",
+              "Meilleure Série",
+              "Contenu Unique",
+              "Format favori",
+              "Le Plus Visionné",
+              "Client favori",
+              "Appareil favori",
+              "Activité sur 30 jours",
+              "Activité par Jour",
+              "Taux de Complétion",
+              "Activité par Heure",
+              "Genres préférés",
+              "Fiche Technique",
+              "Historique de lecture"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "section": "charts",
+          "file": "restored-profile-charts-desktop-light.png"
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "section": "history",
+          "file": "restored-profile-history-desktop-light.png"
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "restored-users-qa-primary-alice-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Profil : Alice QA",
+              "Lecture en pause",
+              "Temps de lecture",
+              "Session(s)",
+              "Top Genres",
+              "Taux de complétion",
+              "Pic d'Activité",
+              "Meilleure Série",
+              "Contenu Unique",
+              "Format favori",
+              "Le Plus Visionné",
+              "Client favori",
+              "Appareil favori",
+              "Activité sur 30 jours",
+              "Activité par Jour",
+              "Taux de Complétion",
+              "Activité par Heure",
+              "Genres préférés",
+              "Fiche Technique",
+              "Historique de lecture"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "section": "charts",
+          "file": "restored-profile-charts-mobile-light.png"
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "section": "history",
+          "file": "restored-profile-history-mobile-light.png"
+        }
+      ]
+    },
+    {
+      "route": "/admin/cleanup",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "restored-admin-cleanup-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Assistant de Nettoyage",
+              "Espace récupérable estimé",
+              "Médias Fantômes",
+              "Médias Abandonnés",
+              "Doublons détectés",
+              "Médias Fantômes"
+            ],
+            "filterWhiteSpace": null,
+            "emptyHeaders": 3
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "restored-admin-cleanup-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Assistant de Nettoyage",
+              "Espace récupérable estimé",
+              "Médias Fantômes",
+              "Médias Abandonnés",
+              "Doublons détectés",
+              "Médias Fantômes"
+            ],
+            "filterWhiteSpace": null,
+            "emptyHeaders": 3
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "restored-admin-cleanup-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Assistant de Nettoyage",
+              "Espace récupérable estimé",
+              "Médias Fantômes",
+              "Médias Abandonnés",
+              "Doublons détectés",
+              "Médias Fantômes"
+            ],
+            "filterWhiteSpace": null,
+            "emptyHeaders": 3
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "restored-admin-cleanup-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Assistant de Nettoyage",
+              "Espace récupérable estimé",
+              "Médias Fantômes",
+              "Médias Abandonnés",
+              "Doublons détectés",
+              "Médias Fantômes"
+            ],
+            "filterWhiteSpace": null,
+            "emptyHeaders": 3
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/health",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "restored-admin-health-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Santé & Hygiène du Serveur",
+              "Sécurité & Anomalies",
+              "Espace Récupérable",
+              "Médias Inachevés",
+              "Moniteur de Flux",
+              "Nettoyage Intelligent & Optimisation",
+              "Espace récupérable estimé",
+              "Médias Fantômes",
+              "Médias Abandonnés",
+              "Doublons détectés",
+              "Médias Fantômes"
+            ],
+            "filterWhiteSpace": null,
+            "emptyHeaders": 3
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "restored-admin-health-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Santé & Hygiène du Serveur",
+              "Sécurité & Anomalies",
+              "Espace Récupérable",
+              "Médias Inachevés",
+              "Moniteur de Flux",
+              "Nettoyage Intelligent & Optimisation",
+              "Espace récupérable estimé",
+              "Médias Fantômes",
+              "Médias Abandonnés",
+              "Doublons détectés",
+              "Médias Fantômes"
+            ],
+            "filterWhiteSpace": null,
+            "emptyHeaders": 3
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "restored-admin-health-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Santé & Hygiène du Serveur",
+              "Sécurité & Anomalies",
+              "Espace Récupérable",
+              "Médias Inachevés",
+              "Moniteur de Flux",
+              "Nettoyage Intelligent & Optimisation",
+              "Espace récupérable estimé",
+              "Médias Fantômes",
+              "Médias Abandonnés",
+              "Doublons détectés",
+              "Médias Fantômes"
+            ],
+            "filterWhiteSpace": null,
+            "emptyHeaders": 3
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "restored-admin-health-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Santé & Hygiène du Serveur",
+              "Sécurité & Anomalies",
+              "Espace Récupérable",
+              "Médias Inachevés",
+              "Moniteur de Flux",
+              "Nettoyage Intelligent & Optimisation",
+              "Espace récupérable estimé",
+              "Médias Fantômes",
+              "Médias Abandonnés",
+              "Doublons détectés",
+              "Médias Fantômes"
+            ],
+            "filterWhiteSpace": null,
+            "emptyHeaders": 3
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/server-compare",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "restored-admin-server-compare-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Comparateur multi‑serveurs",
+              "Active streams",
+              "Plays (24h)",
+              "Plugin errors (24h)",
+              "Scope",
+              "Server ranking"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "restored-admin-server-compare-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Comparateur multi‑serveurs",
+              "Active streams",
+              "Plays (24h)",
+              "Plugin errors (24h)",
+              "Scope",
+              "Server ranking"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "restored-admin-server-compare-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Comparateur multi‑serveurs",
+              "Active streams",
+              "Plays (24h)",
+              "Plugin errors (24h)",
+              "Scope",
+              "Server ranking"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "restored-admin-server-compare-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Comparateur multi‑serveurs",
+              "Active streams",
+              "Plays (24h)",
+              "Plugin errors (24h)",
+              "Scope",
+              "Server ranking"
+            ],
+            "filterWhiteSpace": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/jellyfin",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "restored-settings-jellyfin-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Serveurs Jellyfin connectés",
+              "QA principal",
+              "QA secondaire"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "restored-settings-jellyfin-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Serveurs Jellyfin connectés",
+              "QA principal",
+              "QA secondaire"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "restored-settings-jellyfin-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Serveurs Jellyfin connectés",
+              "QA principal",
+              "QA secondaire"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "restored-settings-jellyfin-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Serveurs Jellyfin connectés",
+              "QA principal",
+              "QA secondaire"
+            ],
+            "filterWhiteSpace": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/plugin",
+      "errors": [],
+      "variants": [
+        {
+          "variant": "desktop",
+          "theme": "dark",
+          "file": "restored-settings-plugin-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Serveurs Jellyfin connectés",
+              "QA principal",
+              "QA secondaire"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "dark",
+          "file": "restored-settings-plugin-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Serveurs Jellyfin connectés",
+              "QA principal",
+              "QA secondaire"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "desktop",
+          "theme": "light",
+          "file": "restored-settings-plugin-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "headings": [
+              "Serveurs Jellyfin connectés",
+              "QA principal",
+              "QA secondaire"
+            ],
+            "filterWhiteSpace": null
+          }
+        },
+        {
+          "variant": "mobile",
+          "theme": "light",
+          "file": "restored-settings-plugin-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "headings": [
+              "Serveurs Jellyfin connectés",
+              "QA principal",
+              "QA secondaire"
+            ],
+            "filterWhiteSpace": null
+          }
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "file": "users.css",
+      "status": 200,
+      "same": true
+    },
+    {
+      "file": "profile.js",
+      "status": 200,
+      "same": true
+    },
+    {
+      "file": "admin.js",
+      "status": 200,
+      "same": true
+    },
+    {
+      "file": "admin.css",
+      "status": 200,
+      "same": true
+    },
+    {
+      "file": "settings.js",
+      "status": 200,
+      "same": true
+    },
+    {
+      "file": "settings.css",
+      "status": 200,
+      "same": true
+    }
+  ]
+}

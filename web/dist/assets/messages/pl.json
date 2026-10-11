@@ -350,7 +350,9 @@
     "watched": "obejrzano",
     "worldMap": "Mapa Połączeń",
     "worldMapDesc": "Rozkład geograficzny sesji odtwarzania.",
-    "title": "Pulpit"
+    "title": "Pulpit",
+    "monitorActive": "active",
+    "monitorError": "error"
   },
   "deepInsights": {
     "deviceEcosystem": "Ekosystem urządzeń",

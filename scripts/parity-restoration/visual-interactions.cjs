@@ -1,0 +1,22 @@
+// Read-only visual interaction evidence, isolated QA applications only.
+const fs=require('fs'),path=require('path');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Mael/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const root=path.resolve(__dirname,'../..'),out=path.join(root,'docs/parity-restoration/captures'),tag=process.env.VISUAL_TAG||'final';
+const report={date:new Date().toISOString(),scope:'Dashboard tabs and mobile menu. Isolated real APIs; no browser responses or persisted configuration replaced.',checks:[],screenshots:[]};
+const save=()=>fs.writeFileSync(path.join(root,'docs/parity-restoration/visual-interactions-'+tag+'.json'),JSON.stringify(report,null,2));
+(async()=>{const b=await chromium.launch();try{for(const mode of (process.env.VISUAL_MODES||'main,go').split(',')){
+ const base='http://localhost:'+(mode==='main'?'3341':'3350'),c=await b.newContext({baseURL:base,locale:'fr-FR',viewport:{width:1440,height:900},colorScheme:'dark',timezoneId:'UTC'});
+ if(mode==='main'){const {encode}=require(path.join(root,'scratch/navigation-qa/main-reference/node_modules/next-auth/jwt'));await c.addCookies([{name:'locale',value:'fr',url:base},{name:'next-auth.session-token',url:base,value:await encode({secret:'navigation-qa-reference-secret-at-least-32-characters',token:{name:'QA administrateur',sub:'qa-local',isAdmin:true,jellyfinUserId:'local-admin',authServerName:'QA principal',authServerIsPrimary:true,sessionExpiresAt:Math.floor(Date.now()/1000)+86400,sessionExpired:false},maxAge:86400})}]);}
+ else{const r=await c.request.post('/api/auth/login',{headers:{Origin:base},data:{username:'mediaadmin',password:'Media-pages-QA-test-2026!'}});if(!r.ok())throw Error('Login '+r.status());}
+ await c.addInitScript(mode=>{localStorage.setItem(mode==='main'?'theme':'jt_theme','dark');if(mode==='go')localStorage.setItem('jt_locale','fr');},mode);
+ const p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('/',{waitUntil:'domcontentloaded',timeout:75000});await p.waitForTimeout(1800);
+ for(const [tab,label]of [['overview',/Vue d'ensemble/],['analytics',/Analyses détaillées/],['network',/^Réseau$/]]){
+  try{await (mode==='main'?p.getByRole('tab',{name:label}):p.locator('.dash-tab-btn[data-tab="'+tab+'"]')).click();await p.waitForTimeout(2800);const metrics=await p.evaluate(()=>({headings:[...document.querySelectorAll('main h1,main h2,main h3,main [data-slot="card-title"],main .card-title')].filter(e=>e.getClientRects().length).map(e=>e.textContent.trim()),visibleCharts:[...document.querySelectorAll('main canvas,main .recharts-surface')].filter(e=>e.getClientRects().length&&getComputedStyle(e).display!=='none').length}));
+   report.checks.push({mode,name:'Dashboard '+tab,ok:metrics.visibleCharts>0,metrics});
+   const first=p.locator('main canvas:visible,main .recharts-surface:visible').first();if(await first.count())await first.scrollIntoViewIfNeeded();const file=mode+'-'+tag+'-dashboard-'+tab+'-charts-desktop-dark.png';await p.screenshot({path:path.join(out,file)});report.screenshots.push({mode,tab,file});
+  }catch(e){report.checks.push({mode,name:'Dashboard '+tab,ok:false,error:e.message});}save();
+ }
+ await p.setViewportSize({width:390,height:844});await p.goto('/media/all',{waitUntil:'domcontentloaded',timeout:75000});await p.waitForTimeout(3000);
+ for(const theme of ['dark','light']){await p.evaluate(t=>document.documentElement.classList.toggle('dark',t==='dark'),theme);await p.getByRole('button',{name:'Open menu',exact:true}).click();await p.waitForTimeout(600);const close=p.getByRole('button',{name:'Close menu',exact:true});if((await close.boundingBox())?.x<0){await p.waitForTimeout(1800);await p.getByRole('button',{name:'Open menu',exact:true}).click();await p.waitForTimeout(600);}const file=mode+'-'+tag+'-navigation-open-mobile-'+theme+'.png';await p.screenshot({path:path.join(out,file)});report.screenshots.push({mode,theme,file});const links=await p.locator(mode==='main'?'nav a':'#app-sidebar a').evaluateAll(es=>es.filter(e=>e.getClientRects().length).map(e=>({href:e.getAttribute('href'),text:e.textContent.trim()})));report.checks.push({mode,name:'Mobile menu '+theme,ok:links.length>2,links});await p.getByRole('button',{name:'Close menu',exact:true}).click();save();}
+ report.checks.push({mode,name:'No JavaScript errors',ok:!errors.length,errors});await c.close();save();
+}}finally{await b.close();save();}})().catch(e=>{report.fatal=e.message;save();console.error(e);process.exitCode=1;});

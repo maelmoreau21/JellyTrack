@@ -1,0 +1,14 @@
+[
+  {
+    "script": "final-audit/final-controls.cjs",
+    "exitCode": 0,
+    "seconds": 8.39,
+    "recordedAt": "2026-10-11T08:47:33Z"
+  },
+  {
+    "script": "final-audit/accessibility-focused.cjs",
+    "exitCode": 0,
+    "seconds": 36.59,
+    "recordedAt": "2026-10-11T08:48:10Z"
+  }
+]

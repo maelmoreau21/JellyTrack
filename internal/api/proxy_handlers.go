@@ -56,6 +56,15 @@ func serveFallbackAvatar(w http.ResponseWriter) {
 }
 
 func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
+	// Historical components render their own type-specific fallback. Keep the
+	// existing proxy placeholder for callers that do not opt into that behavior.
+	fallback := func() {
+		if r.URL.Query().Get("fallback") == "none" {
+			http.NotFound(w, r)
+			return
+		}
+		serveFallbackPoster(w)
+	}
 	serverID := strings.TrimSpace(r.URL.Query().Get("serverId"))
 	mediaID := strings.TrimSpace(r.URL.Query().Get("mediaId"))
 	if mediaID == "" {
@@ -88,13 +97,13 @@ func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !srvURL.Valid || srvURL.String == "" || mediaID == "" {
-		serveFallbackPoster(w)
+		fallback()
 		return
 	}
 
 	safeURL, err := security.ValidateSafeServerURL(srvURL.String)
 	if err != nil {
-		serveFallbackPoster(w)
+		fallback()
 		return
 	}
 
@@ -111,7 +120,7 @@ func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, targetURL, nil)
 	if err != nil {
-		serveFallbackPoster(w)
+		fallback()
 		return
 	}
 	if apiKey.Valid && apiKey.String != "" {
@@ -120,13 +129,13 @@ func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := proxyHTTPClient.Do(req)
 	if err != nil {
-		serveFallbackPoster(w)
+		fallback()
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		serveFallbackPoster(w)
+		fallback()
 		return
 	}
 

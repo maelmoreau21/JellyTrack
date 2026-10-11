@@ -1,0 +1,32 @@
+[
+  {
+    "script": "settings-admin-qa/browser.cjs",
+    "exitCode": 0,
+    "seconds": 56.04,
+    "recordedAt": "2026-10-11T08:48:10Z"
+  },
+  {
+    "script": "settings-admin-qa/seed.py",
+    "exitCode": 0,
+    "seconds": 0.31,
+    "recordedAt": "2026-10-11T08:48:10Z"
+  },
+  {
+    "script": "settings-admin-qa/forms.cjs",
+    "exitCode": 0,
+    "seconds": 13.07,
+    "recordedAt": "2026-10-11T08:48:23Z"
+  },
+  {
+    "script": "settings-admin-qa/admin.cjs",
+    "exitCode": 0,
+    "seconds": 11.53,
+    "recordedAt": "2026-10-11T08:48:35Z"
+  },
+  {
+    "script": "settings-admin-qa/modes.cjs",
+    "exitCode": 0,
+    "seconds": 3.54,
+    "recordedAt": "2026-10-11T08:48:38Z"
+  }
+]

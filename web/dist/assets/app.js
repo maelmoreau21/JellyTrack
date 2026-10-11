@@ -1199,7 +1199,7 @@
             <div class="header-filter-bar" id="dash-media-filter">
               <button class="header-filter-btn active" data-type="">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                <span>${I18n.t('media.allMedia') || 'Tous'}</span>
+                <span>${I18n.t('common.all') || 'Tous'}</span>
               </button>
               <button class="header-filter-btn" data-type="Movie">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/></svg>
@@ -1411,7 +1411,7 @@
             srvContainer.innerHTML = `
               <button class="header-filter-btn active" data-server-id="">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                <span>${I18n.t('dashboard.allServers') || 'Tous les serveurs'}</span>
+                <span>${I18n.t('common.all') || 'Tout'}</span>
               </button>
               ${servers.map(s => {
                 const sId = s.id || s.jellyfinServerId || '';
@@ -1461,19 +1461,19 @@
             <div class="system-health-bar">
               <div class="app-chip ${isErr ? 'app-chip-error' : 'app-chip-success'}">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                <span>Moniteur : ${isErr ? 'Erreur' : 'Actif'}</span>
+                <span>${I18n.t('dashboard.monitor')} ${isErr ? I18n.t('dashboard.monitorError') : I18n.t('dashboard.monitorActive')}</span>
               </div>
               <div class="app-chip">
                 <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span>Dernier sondage : ${lastPoll}</span>
+                <span>${I18n.t('dashboard.lastPoll')}: ${lastPoll}</span>
               </div>
               <div class="app-chip">
                 <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                <span>Synchro : ${lastSync}</span>
+                <span>${I18n.t('dashboard.lastSync')}: ${lastSync}</span>
               </div>
               <div class="app-chip">
                 <svg class="nav-icon text-emerald" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-                <span>Sauvegarde : ${lastBackup}</span>
+                <span>${I18n.t('dashboard.lastBackup')}: ${lastBackup}</span>
               </div>
               <a href="/admin/health" class="btn btn-secondary btn-sm" style="margin-left:auto; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem;">
                 <svg class="nav-icon text-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
@@ -1485,14 +1485,14 @@
               <div class="stat-card-modern">
                 <div class="stat-header">
                   <span class="stat-title">${I18n.t('dashboard.activeStreams') || 'Flux actifs'}</span>
-                  <span class="pulse-dot"></span>
+                  ${window.JellyTrackNavigation.icon("checkCircle")}
                 </div>
                 <div class="stat-num metric-glow-emerald">${counts.activeStreams}</div>
                 <div class="stat-desc">Sessions suivies</div>
               </div>
               <div class="stat-card-modern">
                 <div class="stat-header">
-                  <span class="stat-title">${I18n.t('dashboard.openPlaybackOrphans') || 'Lectures orphelines'}</span>
+                  <span class="stat-title">${I18n.t('dashboard.openPlaybackOrphans') || 'Lectures orphelines ouvertes'}</span>
                   <svg class="nav-icon text-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 </div>
                 <div class="stat-num metric-glow-amber">${counts.openPlaybackOrphans}</div>
@@ -1745,7 +1745,7 @@
               <div class="stat-card-modern">
                 <div class="stat-header">
                   <span class="stat-title">${I18n.t('dashboard.activeStreams') || 'Flux actifs'}</span>
-                  <span class="pulse-dot"></span>
+                  ${window.JellyTrackNavigation.icon("activity")}
                 </div>
                 <div class="stat-num metric-glow-emerald" id="dash-active-streams">${State.activeStreamsCount || 0}</div>
                 <div class="stat-desc">${I18n.t('dashboard.managedByServer') || 'Géré par le serveur'}</div>
@@ -1754,7 +1754,7 @@
               <div class="stat-card-modern">
                 <div class="stat-header">
                   <span class="stat-title">${I18n.t('dashboard.totalPlays') || 'Lectures totales'}</span>
-                  <svg class="nav-icon text-blue" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  ${window.JellyTrackNavigation.icon("playCircle")}
                 </div>
                 <div style="display:flex; align-items:center; gap:0.5rem;">
                   <div class="stat-num metric-glow-cyan">${Utils.formatNumber(d.totalPlays || d.views || 0)}</div>
@@ -1964,7 +1964,7 @@
                 <div class="card-title-group" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                   <div>
                     <div class="card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                      <span class="pulse-dot"></span>
+                      ${window.JellyTrackNavigation.icon("activity")}
                       ${I18n.t('dashboard.liveStreams') || 'Flux en direct'}
                     </div>
                     <div class="card-subtitle" id="dash-live-header-info">Surveillance active des lectures en cours</div>
@@ -3799,7 +3799,7 @@
               ${localAdminEnabled ? `
                 <div class="auth-toggle-local-wrap">
                   <button type="button" id="btn-toggle-local" class="auth-toggle-local-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3M17.5 5.5l3 3"/></svg>
+                    ${window.JellyTrackNavigation.icon('key')}
                     <span>${I18n.t('login.localLogin') || 'Utilisateur local'}</span>
                   </button>
                 </div>
@@ -3813,7 +3813,7 @@
               <form id="form-login-local" class="auth-form">
                 <div class="auth-local-header">
                   <span class="auth-local-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3M17.5 5.5l3 3"/></svg>
+                    ${window.JellyTrackNavigation.icon('key')}
                     <span>${I18n.t('login.localAdminTitle') || 'Connexion locale (Admin)'}</span>
                   </span>
                   <button type="button" id="btn-back-sso" class="auth-back-sso-btn" ${!oidcEnabled ? 'hidden' : ''}>
@@ -3918,11 +3918,7 @@
 
                 <button type="button" id="login-theme-card" class="auth-theme-card" aria-label="${isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}">
                   <div class="auth-theme-icon-box">
-                    ${isDark ? `
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                    ` : `
-                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                    `}
+                    ${window.JellyTrackNavigation.icon(isDark ? "sun" : "moon")}
                   </div>
                   <div class="auth-theme-text">
                     <div class="auth-theme-label">${I18n.t('common.theme') || 'THÈME'}</div>
@@ -4210,12 +4206,7 @@
       const copy = (fr, en) => State.locale.startsWith('fr') ? fr : en;
       const tr = (key, fallback) => I18n.t(`newsletter.${key}`) || fallback;
       const escape = Utils.escapeHtml;
-      const icon = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${{
-        sparkles: '<path d="m9 3 1.9 5.8L17 11l-6.1 2.2L9 19l-1.9-5.8L1 11l6.1-2.2L9 3Z"/><path d="M20 3v4M18 5h4M20 17v4M18 19h4"/>',
-        clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
-        play: '<circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4V8Z"/>',
-        trophy: '<path d="M8 21h8M12 17v4M7 3h10v6a5 5 0 0 1-10 0V3ZM7 5H4v2a4 4 0 0 0 4 4M17 5h3v2a4 4 0 0 1-4 4"/>',
-      }[name]}</svg>`;
+      const icon = name => window.JellyTrackNavigation.icon(name === 'play' ? 'playCircle' : name);
       main.innerHTML = `<div class="newsletter-recovery">${Pages.mediaNav('')}<div class="newsletter-loading skeleton" style="height:500px"></div></div>`;
       try {
         const data = await API.getJSON('/api/newsletter');
@@ -4225,7 +4216,7 @@
         const date = value => new Date(value).toLocaleDateString(State.locale, { day: '2-digit', month: 'short', year: 'numeric' });
         const dateRange = data.startDate && data.endDate ? `${date(data.startDate)} – ${date(data.endDate)}` : data.dateRange || '';
         const poster = item => {
-          const params = new URLSearchParams({ itemId: item.jellyfinMediaId || item.jellyfinId || '', type: 'Primary', maxWidth: '160' });
+          const params = new URLSearchParams({ itemId: item.jellyfinMediaId || item.jellyfinId || '', type: 'Primary', maxWidth: '160', fallback: 'none' });
           if (item.serverId) params.set('serverId', item.serverId);
           return item.jellyfinMediaId || item.jellyfinId ? `<img src="/api/jellyfin/image?${escape(params.toString())}" alt="${escape(item.title)}" loading="lazy" data-hide-on-error>` : '';
         };
@@ -4242,10 +4233,10 @@
                 <section class="rewind-podium"><h2>${icon("trophy")} ${tr('videoPodium', copy('Le Podium Vidéo', 'The Video Podium'))}</h2>
                   ${media.slice(0, 3).map((item, index) => `<div class="rewind-podium-item"><strong class="rewind-rank">${index + 1}</strong><div class="rewind-poster">${poster(item)}</div><div class="rewind-media-title"><h3>${escape(item.title)}</h3><p>${escape(I18n.t(`common.${item.type}`) || item.type)}</p></div><strong class="metric-glow-emerald">${Number(item.hours || 0).toFixed(1)}h</strong></div>`).join('') || `<p class="text-muted-foreground">${I18n.t('common.noData')}</p>`}
                 </section>
-                ${leader ? `<section class="rewind-viewer"><span class="rewind-viewer-icon" aria-hidden="true">♙</span><div><p>${tr('bestViewer', copy('Meilleur spectateur', 'Best viewer'))}</p><h2>${escape(leader.username)}</h2></div><div class="rewind-viewer-hours"><strong class="metric-glow-violet">${Math.round(leader.hours || 0)}h</strong><p>${tr('hoursWatched', copy('Visionné', 'Watched'))}</p></div></section>` : ''}
+                ${leader ? `<section class="rewind-viewer"><span class="rewind-viewer-icon" aria-hidden="true">${icon("users")}</span><div><p>${tr('bestViewer', copy('Meilleur spectateur', 'Best viewer'))}</p><h2>${escape(leader.username)}</h2></div><div class="rewind-viewer-hours"><strong class="metric-glow-violet">${Math.round(leader.hours || 0)}h</strong><p>${tr('hoursWatched', copy('Visionné', 'Watched'))}</p></div></section>` : ''}
               </div>
             </article>
-            <div class="rewind-actions"><button class="btn btn-primary" id="btn-download-rewind">↓ ${copy("Télécharger l'infographie (PNG)", 'Download infographic (PNG)')}</button><button class="btn btn-secondary" id="btn-post-discord">${copy('Diffuser sur Discord', 'Post to Discord')}</button></div>
+            <div class="rewind-actions"><button class="btn btn-primary" id="btn-download-rewind">${icon("download")} ${copy("Télécharger l'infographie (PNG)", 'Download infographic (PNG)')}</button><button class="btn btn-secondary" id="btn-post-discord">${icon("send")} ${copy('Diffuser sur Discord', 'Post to Discord')}</button></div>
             <p id="rewind-result" role="status" aria-live="polite"></p>
             ${media.length > 3 || users.length > 1 ? `<details class="rewind-complements"><summary>${copy('Classements complémentaires', 'Additional rankings')}</summary><div class="dash-grid-2"><section><h3>${copy('Autres médias du mois', 'More media this month')}</h3>${media.slice(3).map(item => `<div class="newsletter-top-item"><span>${escape(item.title)}</span><span>${Number(item.hours || 0).toFixed(1)}h · ${item.plays || 0} ${I18n.t('dashboard.readings')}</span></div>`).join('') || `<p>${I18n.t('common.noData')}</p>`}</section><section><h3>${copy('Autres spectateurs', 'More viewers')}</h3>${users.slice(1).map(user => `<div class="newsletter-top-item"><span>${escape(user.username)}</span><span>${Number(user.hours || 0).toFixed(1)}h</span></div>`).join('') || `<p>${I18n.t('common.noData')}</p>`}</section></div></details>` : ''}
           </div>`;
@@ -4333,35 +4324,35 @@
         const peakHour = data.totalPlays > 0 ? `${data.peakHour ?? 0}h` : 'N/A';
         const genres = data.topGenres || [], topGenre = genres[0]?.name || t('unknown');
         const duration = value => { const s = Number(value) || 0; return s >= 3600 ? `${Math.floor(s / 3600)}h ${Math.round(s % 3600 / 60)}m` : `${Math.round(s / 60)}m`; };
-        const ranked = items => !items?.length ? noData : `<ol class="wrapped-ranked">${items.slice(0, 5).map((item, index) => `<li><b>${index + 1}</b><span>${escape(item.title)}</span><small>${duration(item.seconds ?? Number(item.hours || 0) * 3600)}</small></li>`).join('')}</ol>`;
+        const ranked = items => !items?.length ? noData : `<ol class="wrapped-ranked">${items.slice(0, 5).map((item, index) => `<li><i class="wrapped-rank-bar" aria-hidden="true" style="width:${Math.round(Number(item.seconds ?? Number(item.hours || 0) * 3600) / Math.max(1, Number(items[0].seconds ?? Number(items[0].hours || 0) * 3600)) * 100)}%"></i><b>${index + 1}</b><span>${escape(item.title)}</span><small>${duration(item.seconds ?? Number(item.hours || 0) * 3600)}</small></li>`).join('')}</ol>`;
         const slides = [];
         const add = (title, subtitle, icon, content, theme) => slides.push({ title, subtitle, icon, content, theme });
-        add(`JellyTrack Wrapped ${data.year || year}`, t('introSubtitle', { username: data.username }), '▷', `<p>${t('introContent')}</p><button class="btn btn-secondary wrapped-customize" data-wrapped-config>${t('customize')}</button>`, 'purple');
-        add(t('totalTimeTitle'), t('totalTimeSubtitle'), '◷', `<strong class="wrapped-number">${Utils.formatNumber(hours)}</strong><p>${t('hours')} ${t('streaming')}</p><p>${t('acrossSessions', { count: data.totalPlays || 0 })}</p>`, 'emerald');
-        if (hours >= 24) add(t('totalTimeDays', { days: Math.floor(hours / 24), hours: hours % 24 }), t('totalTimeDaysDesc'), '▦', `<strong class="wrapped-number">${Math.floor(hours / 24)}</strong><p>${t('days')}</p>`, 'cyan');
+        add(`JellyTrack Wrapped ${data.year || year}`, t('introSubtitle', { username: data.username }), 'play', `<p>${t('introContent')}</p><button class="btn btn-secondary wrapped-customize" data-wrapped-config>${window.JellyTrackNavigation.icon('filter')} ${t('customize')}</button>`, 'purple');
+        add(t('totalTimeTitle'), t('totalTimeSubtitle'), 'clock', `<strong class="wrapped-number">${Utils.formatNumber(hours)}</strong><p>${t('hours')} ${t('streaming')}</p><p>${t('acrossSessions', { count: data.totalPlays || 0 })}</p>`, 'emerald');
+        if (hours >= 24) add(t('totalTimeDays', { days: Math.floor(hours / 24), hours: hours % 24 }), t('totalTimeDaysDesc'), 'date', `<div class="wrapped-days-clock" aria-hidden="true"><i></i><span>${window.JellyTrackNavigation.icon("clock")}</span></div>`, 'cyan');
         const monthly = data.monthlyHours || [];
         const maxMonth = Math.max(0, ...monthly.map(item => Number(item.hours) || 0));
-        add(t('monthlyTitle'), t('monthlySubtitle'), '▥', monthly.length ? `<div class="wrapped-months">${monthly.map(item => `<div><span style="height:${maxMonth > 0 ? Math.max(0, Number(item.hours) / maxMonth * 100) : 0}%"><small>${Number(item.hours || 0).toFixed(1)}h</small></span><b>${t(item.name)}</b></div>`).join('')}</div>${maxMonth > 0 ? `<p>${t('bestMonth', { name: t(monthly.find(item => Number(item.hours) === maxMonth)?.name || 'jan'), hours: maxMonth.toFixed(1) })}</p>` : noData}` : noData, 'fuchsia');
-        add(t('peakTitle'), t('peakSubtitle'), '↗', `<strong class="wrapped-number">${peakHour}</strong><p>${data.totalPlays > 0 ? escape(t('peakContent', { bold: '', hour: peakHour, count: data.peakHourSessions ?? data.hourCounts?.[data.peakHour] ?? 0 })) : t('noData')}</p>`, 'orange');
-        if (data.topDevice && data.topDevice !== 'N/A') add(t('topDevice'), t('topDeviceDesc', { device: data.topDevice }), '◉', `<strong class="wrapped-device">${escape(data.topDevice)}</strong>`, 'amber');
-        add(t('genresTitle'), t('genresSubtitle'), '☆', genres.length ? `<p>${t('genreFirst')}</p><strong class="wrapped-device">${escape(topGenre)}</strong><ol class="wrapped-genres">${genres.map(item => `<li>${escape(item.name)} <small>${item.count || 0}</small></li>`).join('')}</ol>` : noData, 'rose');
-        add(t('dayTitle'), t('daySubtitle'), '▦', data.totalPlays > 0 ? `<strong class="wrapped-device">${dayLabel}</strong><p>${t('dayContent')}</p>` : noData, 'amber');
-        add(t('pantheonTitle'), t('pantheonSubtitle'), '☆', ranked(data.topMedia || data.topMovies), 'indigo');
-        if (data.topSeries?.length) add(t('bingeTitle'), t('bingeSubtitle'), '▣', ranked(data.topSeries), 'blue');
-        if (data.topTracks?.length || data.topMusic?.length) add(t('tracksTitle'), t('tracksSubtitle'), '♫', ranked(data.topTracks || data.topMusic), 'emerald');
-        if (data.topArtists?.length) add(t('artistsTitle'), t('artistsSubtitle'), '♬', ranked(data.topArtists), 'violet');
-        if (data.topAlbums?.length) add(t('albumsTitle'), t('albumsSubtitle'), '◎', ranked(data.topAlbums), 'rose');
-        const categoryConfigs = [ ['movies', 'moviesTitle', 'moviesSubtitle', 'moviesLabel', '▣', 'red'], ['series', 'episodesTitle', 'episodesSubtitle', 'episodesLabel', '▣', 'blue'], ['music', 'musicTitle', 'musicSubtitle', 'musicLabel', '♫', 'green'], ['books', 'booksTitle', 'booksSubtitle', 'booksLabel', '▤', 'yellow'] ];
+        add(t('monthlyTitle'), t('monthlySubtitle'), 'chart', monthly.length ? `<div class="wrapped-months">${monthly.map(item => `<div><span style="height:${maxMonth > 0 ? Math.max(0, Number(item.hours) / maxMonth * 100) : 0}%"><small>${Number(item.hours || 0).toFixed(1)}h</small></span><b>${t(item.name)}</b></div>`).join('')}</div>${maxMonth > 0 ? `<p>${t('bestMonth', { name: t(monthly.find(item => Number(item.hours) === maxMonth)?.name || 'jan'), hours: maxMonth.toFixed(1) })}</p>` : noData}` : noData, 'fuchsia');
+        add(t('peakTitle'), t('peakSubtitle'), 'trending', `<strong class="wrapped-number">${peakHour}</strong><p>${data.totalPlays > 0 ? escape(t('peakContent', { bold: '', hour: peakHour, count: data.peakHourSessions ?? data.hourCounts?.[data.peakHour] ?? 0 })) : t('noData')}</p>`, 'orange');
+        if (data.topDevice && data.topDevice !== 'N/A') add(t('topDevice'), t('topDeviceDesc', { device: data.topDevice }), 'headphones', `<strong class="wrapped-device">${escape(data.topDevice)}</strong>`, 'amber');
+        add(t('genresTitle'), t('genresSubtitle'), 'star', genres.length ? `<p>${t('genreFirst')}</p><strong class="wrapped-device">${escape(topGenre)}</strong><ol class="wrapped-genres">${genres.map(item => `<li><span>${escape(item.name)}</span><div class="wrapped-genre-track"><i style="width:${Math.round(Number(item.count || 0) / Math.max(1, Number(genres[0].count || 0)) * 100)}%"></i></div><small>${item.count || 0}</small></li>`).join('')}</ol>` : noData, 'rose');
+        add(t('dayTitle'), t('daySubtitle'), 'date', data.totalPlays > 0 ? `<strong class="wrapped-device">${dayLabel}</strong><p>${t('dayContent')}</p>` : noData, 'amber');
+        add(t('pantheonTitle'), t('pantheonSubtitle'), 'star', ranked(data.topMedia || data.topMovies), 'indigo');
+        if (data.topSeries?.length) add(t('bingeTitle'), t('bingeSubtitle'), 'tv', ranked(data.topSeries), 'blue');
+        if (data.topTracks?.length || data.topMusic?.length) add(t('tracksTitle'), t('tracksSubtitle'), 'music', ranked(data.topTracks || data.topMusic), 'emerald');
+        if (data.topArtists?.length) add(t('artistsTitle'), t('artistsSubtitle'), 'headphones', ranked(data.topArtists), 'violet');
+        if (data.topAlbums?.length) add(t('albumsTitle'), t('albumsSubtitle'), 'star', ranked(data.topAlbums), 'rose');
+        const categoryConfigs = [ ['movies', 'moviesTitle', 'moviesSubtitle', 'moviesLabel', 'film', 'red'], ['series', 'episodesTitle', 'episodesSubtitle', 'episodesLabel', 'tv', 'blue'], ['music', 'musicTitle', 'musicSubtitle', 'musicLabel', 'music', 'green'], ['books', 'booksTitle', 'booksSubtitle', 'booksLabel', 'book', 'yellow'] ];
         categoryConfigs.forEach(([key, title, subtitle, label, icon, theme]) => { const category = data.categories?.[key]; if (category?.totalSeconds > 0) add(t(title), t(subtitle), icon, `<strong class="wrapped-number">${Math.round(category.totalSeconds / 3600)}</strong><p>${t('hours')} ${t('ofLabel', { label: t(label) })}</p>${ranked(category.topMedia)}`, theme); });
         const shareCategories = [['movies', '🎬'], ['series', '📺'], ['music', '🎵'], ['books', '📚']].map(([key, glyph]) => ({ glyph, hours: Math.round(Number(data.categories?.[key]?.totalSeconds || 0) / 3600) })).filter(category => category.hours > 0);
-        add(t('shareTitle'), t('shareSubtitle'), '↗', `<div class="wrapped-share-card"><p class="wrapped-share-year">${escape(t('introTitle', { year: data.year || year }))}</p><h3>${escape(data.username)}</h3><p class="wrapped-share-hours">${hours}h ${escape(t('streaming'))}</p><p>${escape(t('genreLabel', { genre: topGenre }))}</p><p>${escape(t('peakLabel', { hour: peakHour }))}</p><p>${escape(t('favDayLabel', { day: dayLabel }))}</p>${shareCategories.length ? `<div class="wrapped-share-categories">${shareCategories.map(category => `<span>${category.glyph} ${category.hours}h</span>`).join('')}</div>` : ''}</div><p class="wrapped-capture-hint">${escape(t('captureScreen'))}</p><button class="btn btn-primary" id="btn-share-wrapped">${copy('Copier le résumé', 'Copy summary')}</button>`, 'share');
+        add(t('shareTitle'), t('shareSubtitle'), 'share', `<div class="wrapped-share-card"><p class="wrapped-share-year">${escape(t('introTitle', { year: data.year || year }))}</p><h3>${escape(data.username)}</h3><p class="wrapped-share-hours">${hours}h ${escape(t('streaming'))}</p><p>${escape(t('genreLabel', { genre: topGenre }))}</p><p>${escape(t('peakLabel', { hour: peakHour }))}</p><p>${escape(t('favDayLabel', { day: dayLabel }))}</p>${shareCategories.length ? `<div class="wrapped-share-categories">${shareCategories.map(category => `<span>${category.glyph} ${category.hours}h</span>`).join('')}</div>` : ''}</div><p class="wrapped-capture-hint">${escape(t('captureScreen'))}</p><button class="btn btn-primary" id="btn-share-wrapped">${copy('Copier le résumé', 'Copy summary')}</button>`, 'share');
         const change = direction => { const next = Math.max(0, Math.min(slides.length - 1, currentSlide + direction)); if (next !== currentSlide) { currentSlide = next; render(); } };
         const schedule = () => { clearTimeout(timer); if (!pageSignal.aborted && !configOpen && !document.hidden && currentSlide < slides.length - 1) timer = setTimeout(() => change(1), 8000); };
         const configuration = () => {
           configOpen = true; clearTimeout(timer);
           const overlay = document.createElement('div'); overlay.className = 'wrapped-config'; overlay.setAttribute('role', 'dialog'); overlay.setAttribute('aria-modal', 'true'); overlay.setAttribute('aria-label', t('customize'));
           const years = data.availableYears?.length ? data.availableYears : [data.year || year];
-          overlay.innerHTML = `<button class="btn btn-secondary wrapped-config-close" id="wrapped-config-close" aria-label="${I18n.t('common.close') || copy('Fermer', 'Close')}">✕</button><div><h2>${t('customize')}</h2><label for="wrapped-year">${t('year')}</label><select class="form-input" id="wrapped-year">${years.map(value => `<option value="${value}" ${value === (data.year || year) ? 'selected' : ''}>${value}</option>`).join('')}</select><fieldset><legend>${t('type')}</legend><div class="wrapped-type-buttons">${[['general', 'all'], ['Movies', 'moviesLabel'], ['TV', 'tv'], ['Music', 'musicLabel'], ['Books', 'booksLabel']].map(([value, label]) => `<button class="btn ${filterType === value ? 'btn-primary' : 'btn-secondary'}" data-wrapped-type="${value}" aria-pressed="${filterType === value}">${t(label)}</button>`).join('')}</div></fieldset></div>`;
+          overlay.innerHTML = `<button class="btn btn-secondary wrapped-config-close" id="wrapped-config-close" aria-label="${I18n.t('common.close') || copy('Fermer', 'Close')}">${window.JellyTrackNavigation.icon("close")}</button><div><h2>${t('customize')}</h2><label for="wrapped-year">${t('year')}</label><select class="form-input" id="wrapped-year">${years.map(value => `<option value="${value}" ${value === (data.year || year) ? 'selected' : ''}>${value}</option>`).join('')}</select><fieldset><legend>${t('type')}</legend><div class="wrapped-type-buttons">${[['general', 'all'], ['Movies', 'moviesLabel'], ['Music', 'musicLabel'], ['TV', 'tv'], ['Books', 'booksLabel']].map(([value, label]) => `<button class="btn ${filterType === value ? 'btn-primary' : 'btn-secondary'}" data-wrapped-type="${value}" aria-pressed="${filterType === value}">${t(label)}</button>`).join('')}</div></fieldset></div>`;
           main.querySelector('.wrapped-recovery').appendChild(overlay);
           const close = () => { configOpen = false; overlay.remove(); main.querySelector('[data-wrapped-config]')?.focus(); schedule(); };
           overlay.querySelector('#wrapped-config-close').addEventListener('click', close);
@@ -4379,8 +4370,8 @@
           main.innerHTML = `<section class="wrapped-recovery wrapped-theme-${slide.theme}" aria-label="JellyTrack Wrapped ${data.year || year}">
             <div class="wrapped-progress" aria-label="${currentSlide + 1} / ${slides.length}">${slides.map((_, index) => `<span><i class="${index < currentSlide ? 'complete' : index === currentSlide ? 'playing' : ''}"></i></span>`).join('')}</div>
             <div class="wrapped-touch-zones"><button data-wrap-zone="-1" aria-label="${t('back')}"></button><button data-wrap-zone="1" aria-label="${t('next')}"></button></div>
-            <article class="wrapped-slide" aria-live="polite"><span class="wrapped-icon" aria-hidden="true">${slide.icon}</span><h2>${escape(slide.subtitle)}</h2><h1>${escape(slide.title)}</h1><div class="wrapped-slide-content">${slide.content}</div></article>
-            <nav class="wrapped-controls"><button id="btn-wrap-prev" ${currentSlide === 0 ? 'disabled' : ''}>← ${t('back')}</button><div><span>${data.year || year} • ${escape(filterType === 'general' ? t('all') : filterType)}</span><small>${currentSlide + 1} / ${slides.length}</small><button id="wrapped-config-nav">${t('customize')}</button></div><button id="btn-wrap-next" ${currentSlide === slides.length - 1 ? 'disabled' : ''}>${t('next')} →</button></nav>
+            <article class="wrapped-slide" aria-live="polite"><span class="wrapped-icon" aria-hidden="true">${window.JellyTrackNavigation.icon(slide.icon)}</span><h2>${escape(slide.subtitle)}</h2><h1>${escape(slide.title)}</h1><div class="wrapped-slide-content">${slide.content}</div></article>
+            <nav class="wrapped-controls"><button id="btn-wrap-prev" ${currentSlide === 0 ? 'disabled' : ''}>${window.JellyTrackNavigation.icon("chevronLeft")} ${t('back')}</button><div><span>${data.year || year} • ${escape(filterType === 'general' ? t('all') : filterType)}</span><small>${currentSlide + 1} / ${slides.length}</small><button id="wrapped-config-nav">${t('customize')}</button></div><button id="btn-wrap-next" ${currentSlide === slides.length - 1 ? 'disabled' : ''}>${t('next')} ${window.JellyTrackNavigation.icon("chevronRight")}</button></nav>
           </section>`;
           const close = () => Router.navigate(`/users/${encodeURIComponent(userId)}`);
           document.getElementById('btn-wrap-prev').addEventListener('click', () => change(-1));
@@ -6040,7 +6031,7 @@
         document.body.classList.remove('is-auth-page');
       }
 
-            if (State.user && !State.user.isAdmin && (path === '/' || path === '/users' || path === '/dashboard' || path === '/logs' || path === '/newsletter' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
+            if (State.user && !State.user.isAdmin && (path === '/' || path === '/users' || path === '/dashboard' || path === '/logs' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
         const uid = State.user.jellyfinUserId || State.user.id;
         if (uid) this.navigate('/users/' + encodeURIComponent(uid), true);
         else document.getElementById('app-main').innerHTML = '<div class="empty-state">Accès réservé à l’administration.</div>';

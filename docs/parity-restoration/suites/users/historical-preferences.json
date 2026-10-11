@@ -1,0 +1,75 @@
+{
+  "checks": [
+    {
+      "name": "historical columnorder restored",
+      "ok": true
+    },
+    {
+      "name": "historical columnwidth restored333",
+      "ok": true
+    },
+    {
+      "name": "columns anchored popover",
+      "ok": true
+    },
+    {
+      "name": "columns clamp matches historical viewport",
+      "ok": true
+    },
+    {
+      "name": "columns Escape closes",
+      "ok": true
+    },
+    {
+      "name": "historical savedfilter available",
+      "ok": true
+    },
+    {
+      "name": "historical savedfilter applies34Movies",
+      "ok": true
+    },
+    {
+      "name": "savedfilters anchoredpopover",
+      "ok": true
+    },
+    {
+      "name": "AudioBook filter restored",
+      "ok": true
+    },
+    {
+      "name": "selected filters remaininitiallyclosed",
+      "ok": true
+    },
+    {
+      "name": "column historicalstorage shape",
+      "ok": true
+    },
+    {
+      "name": "runtimeerrors0",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "errors": [],
+  "popoverGeometry": {
+    "anchor": {
+      "top": 434,
+      "bottom": 466,
+      "left": 1171.453125,
+      "right": 1252.578125
+    },
+    "popover": {
+      "top": 8,
+      "bottom": 676.59375,
+      "left": 1072.578125,
+      "right": 1252.578125
+    },
+    "css": {
+      "top": "8px",
+      "left": "1072.58px",
+      "transform": "none",
+      "position": "fixed"
+    },
+    "parentTransform": "none"
+  }
+}

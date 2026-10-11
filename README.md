@@ -1,221 +1,193 @@
 <p align="center">
-  <img src="public/logo.svg" width="128" height="128" alt="JellyTrack Logo">
+  <img src="web/dist/assets/logo.svg" width="108" alt="JellyTrack logo">
 </p>
 
 <h1 align="center">JellyTrack</h1>
 
 <p align="center">
-  <a href="https://github.com/maelmoreau21/JellyTrack/actions/workflows/docker-publish.yml"><img src="https://github.com/maelmoreau21/JellyTrack/actions/workflows/docker-publish.yml/badge.svg" alt="Docker Build"></a>
-  <a href="https://ghcr.io/maelmoreau21/JellyTrack"><img src="https://img.shields.io/badge/GHCR-ghcr.io%2Fmaelmoreau21%2FJellyTrack-blue?logo=github" alt="GHCR Image"></a>
+  <strong>Playback analytics, live monitoring and detailed Jellyfin telemetry — powered by Go.</strong>
 </p>
 
 <p align="center">
-  <strong>High-performance observability and analytics dashboard for Jellyfin: live sessions, unified history, downloads, and fine playback telemetry.</strong>
+  <a href="https://github.com/maelmoreau21/JellyTrack/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/maelmoreau21/JellyTrack/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/maelmoreau21/JellyTrack/actions/workflows/docker-publish.yml"><img alt="Docker" src="https://github.com/maelmoreau21/JellyTrack/actions/workflows/docker-publish.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="https://github.com/maelmoreau21/JellyTrack/tree/codex/frontend-recovery"><img alt="Status: Go migration" src="https://img.shields.io/badge/status-Go%20migration%20in%20progress-amber"></a>
 </p>
 
-## Preview
+> **Development status:** This README documents the Go implementation on [`codex/frontend-recovery`](https://github.com/maelmoreau21/JellyTrack/tree/codex/frontend-recovery), not the older application on `main`. The repository's `VERSION` file currently reads `3.0.0`; that does not by itself establish a published, production-ready v3 release. Historical UI parity and integration testing remain in progress.
 
-### 📊 Main Dashboard
-![JellyTrack Dashboard](public/screenshots/dashboard.png)
+## Screenshots
 
-### 📈 Detailed Analytics
-![JellyTrack Analytics](public/screenshots/analytics.png)
+Screenshots of the **Go interface**, captured during the isolated parity audit using synthetic test data (not a production Jellyfin installation). Click an image to inspect it in full resolution.
 
-### 👥 Users & Activity
-![JellyTrack Users](public/screenshots/users.png)
+### Dashboard
 
-### 📜 Playback History & Telemetry
-![JellyTrack Logs](public/screenshots/logs.png)
+[![JellyTrack dashboard](docs/final-audit/captures/go-final-dashboard-desktop-dark.png)](docs/final-audit/captures/go-final-dashboard-desktop-dark.png)
 
-### ⚙️ Settings
-![JellyTrack Settings](public/screenshots/settings.png)
+### Users & profiles
 
----
+[![Users](docs/final-audit/captures/go-final-users-desktop-dark.png)](docs/final-audit/captures/go-final-users-desktop-dark.png)
 
-> [!CAUTION]
-> JellyTrack requires the companion Jellyfin plugin. Without it, JellyTrack cannot collect playback, download, seek, language, or telemetry events.
->
-> Plugin repository: [Jellyfin.Plugin.JellyTrack](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack)
+### Media catalogue
+
+[![Media catalogue](docs/final-audit/captures/go-final-media-all-desktop-dark.png)](docs/final-audit/captures/go-final-media-all-desktop-dark.png)
+
+### Playback history
+
+[![Playback history](docs/final-audit/captures/go-final-logs-desktop-dark.png)](docs/final-audit/captures/go-final-logs-desktop-dark.png)
+
+### Jellyfin connection settings
+
+[![Jellyfin settings](docs/final-audit/captures/go-final-settings-jellyfin-desktop-dark.png)](docs/final-audit/captures/go-final-settings-jellyfin-desktop-dark.png)
+
+<details>
+<summary>More screenshots (mobile, recent additions and system health)</summary>
+
+**Mobile dashboard**
+
+![Mobile dashboard](docs/final-audit/captures/go-final-dashboard-mobile-dark.png)
+
+**Recently added**
+
+![Recently added](docs/final-audit/captures/go-final-recent-desktop-dark.png)
+
+**System health**
+
+![System health](docs/final-audit/captures/go-final-admin-health-desktop-dark.png)
+
+</details>
+
+## Highlights
+
+- **Live playback:** current Jellyfin sessions and playback details, including direct play and transcoding, with supported administrative actions.
+- **Playback history:** filtering, session details and exports, with consolidation of playback events.
+- **Analytics:** activity over time, popular media, viewing patterns, media categories, client/platform usage and network/transcoding insights.
+- **Media and users:** searchable catalogue, recent additions, media details, user profiles and activity statistics.
+- **Advanced telemetry:** plugin-assisted pause/resume, seeks, client details, language changes and other events where available.
+- **Multiple Jellyfin servers:** configuration and filtering where supported by the current deployment mode.
+- **Authentication:** local administrator access and OpenID Connect (OIDC) integrations such as Authentik.
+- **Administration:** health views, scheduled tasks, data cleanup, backup and configuration interfaces.
+- **Localization:** bundled translations, dark/light themes and mobile-friendly layout.
+
+Some features depend on the installed Jellyfin plugin, the connected Jellyfin version and available event data. Consult [the parity audit](docs/FINAL_PARITY_AUDIT.md) for verification scope and remaining differences.
 
 ## Architecture
 
-JellyTrack is built as a **100% autonomous Go application**:
-- **Single Self-Contained Binary**: All web assets, styles, scripts, graphics, and SQL migrations are embedded directly via Go `embed.FS`.
-- **Zero Runtime Dependencies**: No Node.js runtime, no package managers, and no external tool chains required at runtime.
-- **Dual Database Support**: Native PostgreSQL (`pgx`) and standalone embedded SQLite (`modernc.org/sqlite`) with automatic schema migrations.
-- **Lightweight Go Runtime**: A standalone Go binary serves the bundled frontend. Memory and image size depend on the platform and workload; the recovery audit measured 75.27 MiB working set on Windows with a small synthetic dataset. Linux/Docker measurements remain pending; see [the recovery report](docs/FRONTEND_RECOVERY_REPORT.md).
+JellyTrack serves its web UI from a **Go application**. HTML, CSS, JavaScript, Chart.js and translations are embedded with `embed.FS`. No Node.js, Next.js or React runtime is required to run the Go build.
 
-```text
-JellyTrack/
-├── cmd/
-│   └── jellytrack/            # Production CLI entry point
-├── internal/
-│   ├── api/                   # REST API routes and business handlers
-│   ├── auth/                  # Local auth & OIDC SSO sessions (PKCE)
-│   ├── backup/                # Backup engine (SQL dumps & restoration)
-│   ├── cleanup/               # Data retention & scheduled cleanup
-│   ├── config/                # Environment configuration loader
-│   ├── database/              # Dual database drivers & migration runner
-│   ├── history/               # History aggregation & playback consolidation
-│   ├── jellyfin/              # Jellyfin client & server synchronizer
-│   ├── logging/               # System event logging & exports
-│   ├── media/                 # Media library queries & metadata
-│   ├── models/                # Shared domain types & structs
-│   ├── plugin/                # Plugin webhook ingestion & event processing
-│   ├── requestip/             # Trusted proxy & client IP extraction
-│   ├── scheduler/             # Periodic background task worker
-│   ├── security/              # SSRF protection, URL safety & audit logs
-│   ├── settings/              # Settings & multi-server registry
-│   ├── stats/                 # Aggregated telemetry & dashboard metrics
-│   ├── telemetry/             # Active streams & fine telemetry
-│   └── users/                 # User management & duplicate merging
-├── web/
-│   ├── static.go              # HTTP file server and SPA router (embed.FS)
-│   └── dist/                  # Native HTML5, CSS, and Vanilla JS assets
-├── migrations/                # Embedded SQL migration scripts (PostgreSQL & SQLite)
-├── Dockerfile                 # Multi-stage lightweight Alpine build
-├── docker-compose.yml         # Ready-to-use Compose configuration
-└── main.go                    # Application root entry point
-```
+| Layer | Implementation |
+| --- | --- |
+| API, authentication and background tasks | Go (`internal/`) |
+| Frontend | HTML, CSS and vanilla JavaScript (`web/dist/`) |
+| Graphs | Bundled Chart.js 4.5.1 |
+| Local database | SQLite via `modernc.org/sqlite` (CGO-free) |
+| External database | PostgreSQL via `pgx` |
+| Database changes | SQL migrations in `migrations/sqlite/` and `migrations/postgres/` |
+| Deployment | Go binary or multi-stage Docker image |
 
-## What JellyTrack Tracks
+The database is **selectable**: SQLite needs no separate database server, while PostgreSQL is suitable for external database deployments. These modes require different deployment configuration; the supplied Compose file currently targets PostgreSQL.
 
-- **Live sessions**: user, device, client, direct play / transcode, video codec (including AV1 / FFmpeg 8.1), bitrate, IP and GeoIP.
-- **Multi-version & Cuts support**: identifies and badges specific editions (Extended cuts, Theatrical cuts, Black & White versions) and aggregates storage footprint across all media sources.
-- **Resilient history consolidation**: pauses, buffers, and disconnections are automatically merged into clean sessions instead of fragmented clutter.
-- **Playback history**: completed, partial, and abandoned media using cumulative user + media history.
-- **Downloads**: a downloaded media item is counted as one complete view and full watched duration.
-- **Fine telemetry**: pause/resume, seek ranges, replay ranges, playback speed changes, audio language changes, and subtitle language changes.
-- **Behavior insights**: skipped passages are shown as `from -> to` ranges, and language periods are derived from initial language plus later changes.
-- **Jellyfin 12+ native support**: native Books, AudioBooks & Comics libraries, server version detection, and automatic deleted-user cleanup.
+## Quick start — Docker Compose (PostgreSQL)
 
-## Docker Installation
-
-The canonical deployment method is Docker Compose.
-
-1. Copy the example environment:
+The checked-in [`docker-compose.yml`](docker-compose.yml) currently starts PostgreSQL and requires its credentials. It is **not** a SQLite-only Compose configuration.
 
 ```bash
+git clone https://github.com/maelmoreau21/JellyTrack.git
+cd JellyTrack
+git switch codex/frontend-recovery
 cp .env.example .env
 ```
 
-2. Edit `.env` and configure your credentials and Jellyfin server URL.
+Edit `.env`, replacing all `CHANGE_ME_*` placeholders with real values. At a minimum, review the Jellyfin URL/API key, database password, application secret, webhook secret and plugin key pepper. Set `JELLYTRACK_URL` to the browser-facing URL of the application and change the default URLs for your environment.
 
-3. Start JellyTrack:
-
-```bash
-docker compose up -d
-```
-
-To build and run locally:
+Build **from this branch**, rather than assuming the GHCR `latest` tag is the Go implementation:
 
 ```bash
-docker compose build
-docker compose up -d
+docker compose up -d --build
 ```
 
-JellyTrack runs on `http://localhost:3000` by default.
+Open **http://localhost:3000** (or the port configured with `APP_PORT`). Inspect startup logs if initial setup is not displayed:
 
-## Jellyfin Plugin Configuration
+```bash
+docker compose logs -f JellyTrack
+```
 
-1. In Jellyfin, navigate to **Dashboard > Plugins > Repositories**.
-2. Add this repository URL:
+**Existing installations:** back up application data and PostgreSQL volumes before upgrading. Do not replace the PostgreSQL 17 image with PostgreSQL 18 on an existing data directory without performing a supported major-version upgrade and checking PostgreSQL 18's changed volume/`PGDATA` layout.
+
+## SQLite mode (no PostgreSQL server)
+
+The Go application supports an embedded SQLite database. The existing Compose file still has a required PostgreSQL service, so use a separate SQLite Compose override or launch the locally built image directly. For example, after configuring `.env`:
+
+```bash
+docker build -t jellytrack:local .
+docker volume create jellytrack_data
+docker run -d --name jellytrack \
+  --env-file .env \
+  -e DATABASE_DRIVER=sqlite \
+  -e DATABASE_PATH=/data/jellytrack.db \
+  -p 3000:3000 \
+  -v jellytrack_data:/data \
+  --restart unless-stopped \
+  jellytrack:local
+```
+
+This command is a **single-instance example**, not a migration of an existing PostgreSQL database. Running multiple application replicas against the same SQLite file is not recommended. The image contains the app and web assets; a separate Jellyfin server is still required.
+
+## Connect Jellyfin and its plugin
+
+JellyTrack uses a Jellyfin API key for server integration. Detailed playback/download telemetry is provided by the companion [Jellyfin.Plugin.JellyTrack](https://github.com/maelmoreau21/Jellyfin.Plugin.JellyTrack) where supported.
+
+To add the plugin repository in Jellyfin, use **Dashboard → Plugins → Repositories** and enter:
 
 ```text
 https://raw.githubusercontent.com/maelmoreau21/Jellyfin.Plugin.JellyTrack/main/manifest.json
 ```
 
-3. Install the **JellyTrack** plugin and restart Jellyfin.
-4. In JellyTrack, open **Settings > Jellyfin Connection**, generate a plugin key, then configure the endpoint and key in the Jellyfin plugin settings.
+Install a plugin version compatible with your Jellyfin server, restart Jellyfin, and configure its JellyTrack URL and shared authentication key as instructed in the application. The event ingestion endpoint is `POST /api/plugin/events`; do not expose event credentials in screenshots or logs.
 
-For Jellyfin 12.x / 12.1+, configure `JELLYFIN_API_KEY` in `.env`; JellyTrack uses the native `Authorization: MediaBrowser Token="..."` header.
+## Authentication and configuration
 
-## Plugin Event Contract
+Configuration starts from [`.env.example`](.env.example). Important variables include:
 
-The plugin posts JSON events to:
+| Variable | Purpose |
+| --- | --- |
+| `JELLYTRACK_URL` | Public URL used to access JellyTrack |
+| `JELLYTRACK_SECRET` | Application/session secret — use a long random value |
+| `JELLYFIN_URL`, `JELLYFIN_API_KEY` | Jellyfin server address and API key |
+| `DATABASE_DRIVER` | `sqlite` or `postgres` |
+| `DATABASE_PATH` | SQLite database file path |
+| `DATABASE_URL` | Optional full PostgreSQL connection URL |
+| `POSTGRES_*` | PostgreSQL credentials when using the supplied Compose configuration |
+| `JELLYFIN_WEBHOOK_SECRET`, `PLUGIN_KEY_PEPPER` | Plugin/webhook authentication secrets |
+| `OIDC_ENABLED`, `OIDC_URL`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` | Optional OIDC single sign-on |
+| `OIDC_USER_GROUP`, `OIDC_ADMIN_GROUP` | OIDC group mapping |
+| `JELLYTRACK_LOCAL_ADMIN_USER`, `JELLYTRACK_LOCAL_ADMIN_PASSWORD` | Optional local administrator access |
+| `TZ`, `APP_PORT`, `PORT` | Timezone and port configuration |
 
-```text
-POST /api/plugin/events
-```
+For an OIDC provider, register the callback URL `https://your-jellytrack-domain/api/auth/oidc/callback` and configure the provider's issuer URL, client and groups as appropriate. Use HTTPS for remote access. Never commit `.env`, database files, session cookies or API keys.
 
-The canonical download event format:
+## Develop and test
 
-```json
-{
-  "event": "MediaDownloaded",
-  "eventId": "stable-plugin-event-id",
-  "observedAt": "2026-05-28T18:00:00.000Z",
-  "user": { "id": "jellyfin-user-id", "username": "Mael" },
-  "media": {
-    "id": "jellyfin-item-id",
-    "title": "Movie title",
-    "type": "Movie",
-    "durationMs": 7200000,
-    "libraryName": "Films"
-  }
-}
-```
-
-Accepted download aliases are `ItemDownloaded` and `DownloadCompleted`. JellyTrack stores downloads with `eventSource = "download"`, `playMethod = "Download"`, full `durationWatched`, and a `TelemetryEvent` of type `download`. `sourceEventId` deduplicates plugin retries per server.
-
-## Authentication & SSO
-
-JellyTrack includes hardened **OpenID Connect (OIDC)** Single Sign-On (SSO) with **PKCE (Proof Key for Code Exchange — RFC 7636)** supporting **Authentik**, **Keycloak**, **Authelia**, etc.
-
-### SSO Environment Variables
-
-Configure the following variables in `.env`:
+The branch currently declares **Go 1.27.2** in `go.mod`. Use a compatible stable Go toolchain.
 
 ```bash
-# Enable SSO OIDC
-OIDC_ENABLED=true
-OIDC_URL=https://authentik.example.com/application/o/jellytrack/
-OIDC_CLIENT_ID=jellytrack
-OIDC_CLIENT_SECRET=your_oidc_client_secret
-
-# Group mapping (LDAP/SSO directory)
-OIDC_USER_GROUP=jellyfin-users
-OIDC_ADMIN_GROUP=jellyfin-admins
-
-# Auto-redirect to IdP when visiting login page
-OIDC_AUTO_REDIRECT=true
-
-# Emergency Local Administrator Access (optional)
-JELLYTRACK_LOCAL_ADMIN_USER=admin
-JELLYTRACK_LOCAL_ADMIN_PASSWORD=your_emergency_strong_password
-```
-
-### Identity Provider (IdP) Setup
-
-1. **Redirect URI**: Register `https://<your-jellytrack-domain>/api/auth/oidc/callback` in your IdP client.
-2. **Scopes**: Ensure `openid`, `profile`, `email`, and `groups` are requested.
-3. **PKCE**: JellyTrack automatically enforces SHA-256 PKCE (`code_challenge_method=S256`).
-4. **User Reconciliation**: JellyTrack matches the canonical username (`preferred_username` or `username` claim) to the Jellyfin user.
-
-## Local Development (Go)
-
-Prerequisites: Go 1.26 or later.
-
-```bash
-# Run unit and integration tests
+go mod download
 go test ./...
-
-# Run static analysis
 go vet ./...
-
-# Build binary
-go build -o jellytrack .
-
-# Run application locally (defaults to SQLite if no POSTGRES_PASSWORD set)
-go run .
+go build ./...
 ```
 
-To run against PostgreSQL:
+To run without Docker using a local SQLite database:
 
 ```bash
-DATABASE_DRIVER=postgres DATABASE_URL="postgres://JellyTrack:password@localhost:5432/JellyTrack?sslmode=disable" go run .
+DATABASE_DRIVER=sqlite DATABASE_PATH=./data/jellytrack.db go run .
 ```
+
+The last command uses POSIX shell syntax; on PowerShell, set environment variables using `$env:DATABASE_DRIVER` and `$env:DATABASE_PATH` first.
+
+For frontend implementation notes, see [Frontend Architecture](docs/FRONTEND_ARCHITECTURE.md). For the historical comparison, see [Final Parity Audit](docs/FINAL_PARITY_AUDIT.md). The screenshots in this README come from the Go parity validation set and are not evidence of production integration tests.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
