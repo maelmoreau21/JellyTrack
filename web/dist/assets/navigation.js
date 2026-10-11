@@ -79,7 +79,7 @@
       <div class="sidebar-scroll"><div id="nav-search" class="nav-search"><button id="sidebar-search-trigger" type="button" class="compact-search">${icon('search')}</button><div class="nav-search-panel"><div class="nav-search-field">${icon('search')}<input id="nav-search-input" autocomplete="off" type="search"><button id="nav-search-clear" type="button" aria-label="Clear search" hidden>✕</button></div><div id="nav-search-results" hidden></div></div></div>
       <div id="backup-server-banner" class="backup-server-banner" hidden>${icon('warning')}<div class="backup-server-copy"><strong id="backup-server-title"></strong><p id="backup-server-desc"></p></div></div>
       <nav id="historical-nav" class="sidebar-nav" aria-label="Navigation"></nav>
-      <details id="go-navigation-extras" class="go-navigation-extras" hidden><summary id="go-extras-label"></summary><div id="go-extras-links"></div><div class="go-extras-actions"><button type="button" class="btn btn-secondary btn-sm" id="btn-quick-sync">${icon('compare')}<span data-i18n="common.sync">Sync</span></button><button type="button" class="btn btn-secondary btn-sm" id="topbar-live-streams-pill"><span class="pulse-dot"></span><span id="topbar-live-streams-count">0</span><span data-i18n="dashboard.streams">flux</span></button></div></details></div>
+</div>
       <div class="sidebar-footer"><div class="nav-language"><button id="language-trigger" class="nav-footer-control" type="button" aria-label="Language" aria-haspopup="menu" aria-expanded="false"><span class="control-icon language-icon">${icon('globe')}</span><span class="control-copy"><span class="control-heading">Language</span><span id="language-value"></span></span><span class="language-chevron">${icon('down')}</span></button><div id="language-menu" role="menu" hidden></div></div>
       <button id="btn-theme-toggle" type="button" class="nav-footer-control"><span id="theme-control-icon" class="control-icon theme-control-icon"></span><span class="control-copy"><span id="theme-control-heading" class="control-heading"></span><span id="theme-control-value"></span></span></button>
       <button id="btn-logout" type="button" class="nav-footer-control logout-control"><span class="control-icon">${icon('logout')}</span><span id="logout-label" class="control-copy"></span></button><a href="/about" data-link id="nav-version" class="sidebar-version-link"></a></div>`;
@@ -202,10 +202,10 @@
     render() {
       if (!config) return;
       const user = config.user(), context = config.context(), e = config.escape, t = config.t;
-      const uid = user?.jellyfinUserId && user.jellyfinUserId !== 'local-admin' ? user.jellyfinUserId : '';
-      const home = user?.isAdmin ? '/' : (uid ? `/users/${encodeURIComponent(uid)}` : '/media');
+      const uid = user?.jellyfinUserId && user.jellyfinUserId !== 'local-admin' && !user.jellyfinUserId.startsWith('oidc-') ? user.jellyfinUserId : '';
+      const home = user?.isAdmin ? '/' : (uid ? '/users/me' : '/media');
       document.querySelectorAll('.brand-link,.mobile-brand-link').forEach(el => { el.href = home; });
-      const items = uid ? [['myAccount', `/users/${encodeURIComponent(uid)}`, 'user']] : [];
+      const items = uid ? [['myAccount', '/users/me', 'user']] : [];
       if (user?.isAdmin) {
         items.push(['dashboard','/','dashboard'], ['recentlyAdded','/recent','sparkles'], ['library','/media','film'], ['users','/users','users'], ['logHealth','/admin/health','health'], ['logs','/logs','logs'], ['settings','/settings','settings']);
         if (context.multiServer) items.push(['serverCompare','/admin/server-compare','compare']);
@@ -219,14 +219,9 @@
       document.getElementById('backup-server-title').textContent = t('nav.backupServerActive');
       document.getElementById('backup-server-desc').textContent = t('nav.backupServerDesc',{server:user?.authServerName || ''});
       backup.title = t('nav.backupServerActive')+' — '+t('nav.backupServerDesc',{server:user?.authServerName || ''});
-      const extras = document.getElementById('go-navigation-extras');
-      extras.hidden = !user?.isAdmin;
-      document.getElementById('go-extras-label').textContent = t('nav.goExtras');
-      document.getElementById('go-extras-links').innerHTML = [['/settings/go-overview','nav.goOverview'],['/settings/plugin','nav.goPlugin'],['/settings/go-network','dashboard.networkTab'],['/admin/system-health','nav.goSystemHealth'],['/admin/cleanup','nav.cleanup'],['/admin/log-diagnostics','nav.goLogHealth'],['/admin/plugin-diagnostics','nav.pluginHealth'],['/newsletter','nav.goNewsletter']].map(([href,key]) => `<a data-link href="${href}">${e(t(key))}</a>`).join('');
       document.getElementById('nav-search-input').placeholder = t('search.placeholder');
       document.getElementById('sidebar-search-trigger').title = t('search.placeholder');
       document.getElementById('sidebar-search-trigger').setAttribute('aria-label',t('search.placeholder'));
-      document.getElementById('go-extras-links').insertAdjacentHTML('beforeend', `<a data-link href="/setup/go">${e(config.locale()==='fr'?'Assistant de configuration Go':'Go setup wizard')}</a>`);
       const loc = locales.find(l => l[0] === config.locale()) || locales[0];
       const country = loc[0] === 'en' ? 'gb' : loc[0] === 'pt-BR' ? 'br' : loc[0] === 'zh' ? 'cn' : loc[0];
       document.getElementById('language-value').innerHTML = `<img class="nav-flag" src="/assets/flags/${country}.png" alt=""> ${e(loc[1])}`;

@@ -1,10 +1,10 @@
 /* Real isolated API/session/browser checks. Never posts to an external service. */
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Mael/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
-const root=path.resolve(__dirname,'../..'),base=process.env.PARITY_GO_BASE||'http://localhost:3350',out=path.join(root,'docs/parity-restoration');
+const root=path.resolve(__dirname,'../..'),base=process.env.PARITY_GO_BASE||'http://localhost:3350',out=process.env.CORE_RESULTS_DIR||path.join(root,'docs/parity-restoration');
 const report={date:new Date().toISOString(),scope:'Real isolated Go API, real standard/admin sessions, recorded SQLite fixture. No intercepted responses, no external send, no production data edits.',checks:[],pageErrors:[],assets:[]};
 const check=(name,ok,details)=>{report.checks.push({name,ok:!!ok,...(details===undefined?{}:{details})});console.log((ok?'PASS ':'FAIL ')+name);};
-const save=()=>fs.writeFileSync(path.join(out,'core-runtime.json'),JSON.stringify(report,null,2));
+const save=()=>{fs.mkdirSync(out,{recursive:true});const target=path.join(out,'core-runtime.json'),temporary=target+'.tmp';fs.writeFileSync(temporary,JSON.stringify(report,null,2));fs.renameSync(temporary,target);};
 const group=async(name,fn)=>{try{await fn();}catch(e){check(name,false,e.message);}save();};
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 (async()=>{const browser=await chromium.launch();try{
@@ -21,7 +21,7 @@ const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
   const data=await user.request.get('/api/newsletter');check('Ordinary user newsletter GET 200',data.status()===200);
   const refused=await user.request.post('/api/newsletter/discord-post',{headers:{Origin:base,'X-CSRF-Token':identity.csrfToken},data:{}});check('Ordinary user Discord POST403 with valid CSRF',refused.status()===403);
   check('Anonymous newsletter GET401',(await anon.request.get('/api/newsletter')).status()===401);
-  await a.goto('/newsletter',{waitUntil:'domcontentloaded'});await a.waitForURL(url=>url.pathname==='/login');await a.locator('#login-language-select').waitFor();check('Anonymous newsletter redirects to login',new URL(a.url()).pathname==='/login');
+  await a.goto('/newsletter',{waitUntil:'domcontentloaded'});await a.waitForURL(url=>url.pathname==='/login');await a.locator('.auth-language-picker summary').waitFor();check('Anonymous newsletter redirects to login',new URL(a.url()).pathname==='/login');
   await u.goto('/newsletter',{waitUntil:'domcontentloaded'});await u.locator('#btn-download-rewind').waitFor();check('Ordinary user newsletter remains on requested page',new URL(u.url()).pathname==='/newsletter');
   const downloadPromise=u.waitForEvent('download');await u.locator('#btn-download-rewind').click();const download=await downloadPromise,filename=path.join(root,'scratch/media-pages-qa/core-rewind.png');await download.saveAs(filename);
   const bytes=fs.readFileSync(filename);check('PNG download has valid signature and historical dimensions',bytes.subarray(0,8).toString('hex')==='89504e470d0a1a0a'&&bytes.readUInt32BE(16)===1080&&bytes.readUInt32BE(20)===1350,{filename:download.suggestedFilename(),width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20),bytes:bytes.length});
@@ -29,8 +29,8 @@ const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
  await group('Login language and theme',async()=>{
   await a.goto('/login',{waitUntil:'domcontentloaded'});await a.locator('#login-theme-card svg').waitFor();const initial=await a.locator('#login-theme-card svg').innerHTML();check('Dark login offers Sun icon',await a.locator('#login-theme-card svg circle').count()>0&&await a.locator('#login-theme-card svg path').count()>0);
   await a.locator('#login-theme-card').click();check('Login theme switches to light',!(await a.locator('html').getAttribute('class')||'').includes('dark'));const next=await a.locator('#login-theme-card svg').innerHTML();check('Light login offers distinct Moon icon',next!==initial&&await a.locator('#login-theme-card svg circle').count()===0);
-  await a.locator('#login-language-select').selectOption('en');await a.waitForFunction(()=>document.querySelector('#login-language-select')?.value==='en'&&document.documentElement.lang==='en');check('Login English preference persisted',await a.evaluate(()=>localStorage.getItem('jt_locale'))==='en');
-  await a.reload({waitUntil:'domcontentloaded'});await a.locator('#login-language-select').waitFor();await a.waitForFunction(()=>document.querySelector('#login-language-select')?.value==='en'&&document.documentElement.lang==='en');check('Login language survives reload',await a.locator('#login-language-select').inputValue()==='en');
+  await a.locator('.auth-language-picker summary').click();await a.locator('[data-login-locale=en]').click();await a.waitForFunction(()=>document.querySelector('[data-login-locale=en]')?.getAttribute('aria-current')==='true'&&document.documentElement.lang==='en');check('Login English preference persisted',await a.evaluate(()=>localStorage.getItem('jt_locale'))==='en');
+  await a.reload({waitUntil:'domcontentloaded'});await a.locator('.auth-language-picker summary').waitFor();await a.waitForFunction(()=>document.querySelector('[data-login-locale=en]')?.getAttribute('aria-current')==='true'&&document.documentElement.lang==='en');check('Login language survives reload',await a.locator('[data-login-locale=en]').getAttribute('aria-current')==='true');
  });
  await group('Wrapped historical charts and controls',async()=>{
   const data=await(await admin.request.get('/api/wrapped/qa-primary-alice')).json();await p.goto('/wrapped/qa-primary-alice',{waitUntil:'domcontentloaded'});await p.locator('#btn-wrap-next').waitFor();

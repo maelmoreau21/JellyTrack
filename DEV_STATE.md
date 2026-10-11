@@ -1,5 +1,9 @@
 # JellyTrack — état de reprise, audit de parité du 10 octobre 2026
 
+## Mise à jour du 11 octobre : bugs de fonctionnement
+
+L’utilisateur considère maintenant la fidélité historique suffisante et demande de traiter les bugs de develop. Lot préparé sur `codex/frontend-recovery` depuis develop `0356455`, sans fusion automatique ni déploiement utilisateur. [Registre des 13 corrections, preuves et limites](docs/runtime-regressions/README.md). 84 contrôles navigateur réussis, tests Go/vet/build et syntaxe JS réussis. Restent la mesure de CPU/RAM sur l’instance réelle et l’examen des anciens orphelins ; aucune donnée historique n’a été supprimée pour faire baisser le compteur. Les constats de parité ci-dessous restent historiques.
+
 Branche : `codex/frontend-recovery`. HEAD initial `c4ed7495c3f420713bbaaabcc337dd47602506db`, référence main `a59a28613e63e86106c61827167d355b47147f42`. Modifications locales seulement ; aucun commit/push/merge. La règle `.claude/rules/instructions.md` interdit ces actions sans demande explicite. Aucun déploiement ni donnée production changé.
 
 ## Source de vérité

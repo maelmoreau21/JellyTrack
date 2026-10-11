@@ -273,7 +273,23 @@
         opts.headers['X-CSRF-Token'] = State.user.csrfToken;
       }
 
-      const res = await fetch(url, opts);
+      let res;
+      if (!opts.method || opts.method.toUpperCase() === 'GET') {
+        const sourceSignal = opts.signal;
+        const controller = new AbortController();
+        let timedOut = false;
+        const abort = () => controller.abort(sourceSignal?.reason);
+        if (sourceSignal?.aborted) abort();
+        else sourceSignal?.addEventListener('abort', abort, { once: true });
+        opts.signal = controller.signal;
+        const timer = setTimeout(() => { timedOut = true; controller.abort(); }, 30000);
+        try { res = await fetch(url, opts); }
+        catch (error) {
+          if (timedOut && !sourceSignal?.aborted) throw new Error(State.locale === 'fr' ? 'Le serveur ne répond pas. Réessayez dans quelques instants.' : 'The server did not respond. Please try again shortly.');
+          throw error;
+        }
+        finally { clearTimeout(timer); sourceSignal?.removeEventListener('abort', abort); }
+      } else res = await fetch(url, opts);
       if (res.status === 401 && !url.includes('/api/auth/me') && !url.includes('/api/auth/login')) {
         State.user = null;
         Auth.updateUserUI();
@@ -3895,18 +3911,9 @@
               <!-- Bottom Language Switcher & Theme Card (matching main branch) -->
               <div class="auth-controls-container">
                 <div class="auth-controls-bottom">
-                  <select id="login-language-select" aria-label="Langue">
-                    <option value="fr">Français</option>
-                    <option value="en">English</option>
-                    <option value="de">Deutsch</option>
-                    <option value="es">Español</option>
-                    <option value="it">Italiano</option>
-                    <option value="nl">Nederlands</option>
-                    <option value="pl">Polski</option>
-                    <option value="pt-BR">Português</option>
-                    <option value="ru">Русский</option>
-                    <option value="zh">中文</option>
-                  </select>
+                  <details class="auth-language-picker">
+                    ${(() => { const languages = [['fr','Français'],['en','English'],['de','Deutsch'],['es','Español'],['it','Italiano'],['nl','Nederlands'],['pl','Polski'],['pt-BR','Português'],['ru','Русский'],['zh','中文']]; const selected = languages.find(([code]) => code === State.locale) || languages[0]; const country = code => code === 'en' ? 'gb' : code === 'pt-BR' ? 'br' : code === 'zh' ? 'cn' : code; return `<summary aria-label="Langue"><img class="nav-flag" src="/assets/flags/${country(selected[0])}.png" alt=""><span>${selected[1]}</span>${window.JellyTrackNavigation.icon('down')}</summary><div class="auth-language-options">${languages.map(([code,label]) => `<button type="button" data-login-locale="${code}" aria-current="${code === State.locale}"><img class="nav-flag" src="/assets/flags/${country(code)}.png" alt=""><span>${label}</span></button>`).join('')}</div>`; })()}
+                  </details>
                 </div>
 
                 <button type="button" id="login-theme-card" class="auth-theme-card" aria-label="${isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}">
@@ -3924,14 +3931,15 @@
         `;
 
         // Wire Event Listeners
-        const langSelect = document.getElementById('login-language-select');
-        if (langSelect) {
-          langSelect.value = State.locale;
-          langSelect.addEventListener('change', async (e) => {
-            await I18n.changeLocale(e.target.value);
+        document.querySelectorAll('[data-login-locale]').forEach(button => {
+          button.addEventListener('click', async () => {
+            await I18n.changeLocale(button.dataset.loginLocale);
             render();
           });
-        }
+        });
+        document.querySelector('.auth-language-picker')?.addEventListener('keydown', event => {
+          if (event.key === 'Escape') { event.currentTarget.open = false; event.currentTarget.querySelector('summary').focus(); }
+        });
 
         const themeCard = document.getElementById('login-theme-card');
         if (themeCard) {
@@ -6026,7 +6034,7 @@
 
             if (State.user && !State.user.isAdmin && (path === '/' || path === '/users' || path === '/dashboard' || path === '/logs' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
         const uid = State.user.jellyfinUserId || State.user.id;
-        if (uid) this.navigate('/users/' + encodeURIComponent(uid), true);
+        if (uid) this.navigate('/users/me', true);
         else document.getElementById('app-main').innerHTML = '<div class="empty-state">Accès réservé à l’administration.</div>';
         return;
       }

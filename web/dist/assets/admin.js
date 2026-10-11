@@ -135,6 +135,8 @@
         compare: null,
         error: "",
         loading: true,
+        cleanupLoading: false,
+        cleanupError: "",
         pluginLoading: false,
         pluginError: "",
         pluginAction: "",
@@ -225,6 +227,7 @@
         return rows;
       };
       function cleanupHTML() {
+        if (!state.cleanup) return `<div class="ar-empty" role="${state.cleanupError ? "alert" : "status"}">${esc(state.cleanupError || common("loading", "Chargement..."))}${state.cleanupError ? button("cleanup-retry", common("refresh", "Actualiser")) : ""}</div>`;
         const kind = state.nested,
           rows = filtered(kind),
           totalPages = Math.max(1, Math.ceil(rows.length / state.size));
@@ -486,7 +489,7 @@
               ? "Diagnostics système, détection d’anomalies et optimisation du stockage"
               : "System diagnostics, anomaly detection, and storage optimization",
           ) +
-          `<div class="ar-metrics">${card(fr ? "Sécurité & Anomalies" : "Security", alerts.length ? alerts.length + " " + (fr ? "alerte(s)" : "alerts") : fr ? "Optimal" : "Healthy", alerts.length ? (fr ? "Comportements suspects" : "Suspect activity") : fr ? "Aucun partage suspect" : "No active threats", alerts.length ? "ar-red" : "ar-green")}${card(fr ? "Espace Récupérable" : "Reclaimable Space", bytes(data.totalRecoverableSizeBytes), `${base("ghosts").length} ${fr ? "médias fantômes" : "ghost media"}`, "ar-cyan")}${card(fr ? "Médias Inachevés" : "Abandoned Media", base("abandoned").length, base("duplicates").length ? `${base("duplicates").length} ${fr ? "doublons" : "duplicates"}` : fr ? "Abandonnés < 25%" : "Abandoned < 25%", "ar-amber")}${card(fr ? "Moniteur de Flux" : "Monitor Status", status(monitor.status), `${state.health.counts?.openPlaybackOrphans || 0} ${fr ? "lectures orphelines" : "orphan playbacks"}`)}</div>${tabs(
+          `<div class="ar-metrics">${card(fr ? "Sécurité & Anomalies" : "Security", alerts.length ? alerts.length + " " + (fr ? "alerte(s)" : "alerts") : fr ? "Optimal" : "Healthy", alerts.length ? (fr ? "Comportements suspects" : "Suspect activity") : fr ? "Aucun partage suspect" : "No active threats", alerts.length ? "ar-red" : "ar-green")}${card(fr ? "Espace Récupérable" : "Reclaimable Space", state.cleanup ? bytes(data.totalRecoverableSizeBytes) : "—", state.cleanup ? `${base("ghosts").length} ${fr ? "médias fantômes" : "ghost media"}` : fr ? "Ouvrez Nettoyage & Stockage" : "Open Media Cleanup", "ar-cyan")}${card(fr ? "Médias Inachevés" : "Abandoned Media", state.cleanup ? base("abandoned").length : "—", !state.cleanup ? (fr ? "Analyse à la demande" : "Analyze on demand") : base("duplicates").length ? `${base("duplicates").length} ${fr ? "doublons" : "duplicates"}` : fr ? "Abandonnés < 25%" : "Abandoned < 25%", "ar-amber")}${card(fr ? "Moniteur de Flux" : "Monitor Status", status(monitor.status), `${state.health.counts?.openPlaybackOrphans || 0} ${fr ? "lectures orphelines" : "orphan playbacks"}`)}</div>${tabs(
             [
               [
                 "cleanup",
@@ -680,13 +683,10 @@
           } else if (subpage === "plugin-health")
             state.plugin = await api.getJSON("/api/admin/plugin/health");
           else {
-            const [health, cleanup] = await Promise.all([
-              api.getJSON("/api/admin/health"),
-              api.getJSON("/api/admin/cleanup"),
-            ]);
-            state.health = health;
-            state.cleanup = cleanup;
-            if (state.tab === "security") await loadPlugin(false);
+            state.health = await api.getJSON("/api/admin/health");
+            // Do not block health on cleanup or plugin diagnostics.
+            if (state.tab === "security") loadPlugin();
+            else if (state.tab === "cleanup") loadCleanup();
           }
         } catch (error) {
           if (error.name !== "AbortError") state.error = error.message;
@@ -694,6 +694,14 @@
           state.loading = false;
           draw();
         }
+      }
+      async function loadCleanup() {
+        if (state.cleanupLoading) return;
+        state.cleanupLoading = true;
+        state.cleanupError = "";
+        try { state.cleanup = await api.getJSON("/api/admin/cleanup"); }
+        catch (error) { if (error.name !== "AbortError") state.cleanupError = error.message; }
+        finally { state.cleanupLoading = false; draw(); }
       }
       async function loadPlugin(render = true) {
         state.pluginLoading = true;
@@ -718,6 +726,7 @@
         main.querySelector(`#ar-${kind}-${value}`)?.focus();
         if (kind === "health" && value === "security" && !state.plugin)
           loadPlugin();
+        if (kind === "health" && value === "cleanup" && !state.cleanup) loadCleanup();
       }
       function exportCleanup(format) {
         const rows = filtered(state.nested),
@@ -920,6 +929,7 @@
             return;
           }
           const action = e.target.closest("[data-ar-action]")?.dataset.arAction;
+          if (action === "cleanup-retry") { loadCleanup(); return; }
           if (!action) return;
           if (action === "retry") {
             load();

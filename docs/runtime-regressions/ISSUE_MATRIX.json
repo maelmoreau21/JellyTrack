@@ -1,0 +1,308 @@
+{
+  "date": "2026-10-11",
+  "scope": "Runtime bug fixes, not a new historical parity audit.",
+  "base": "0356455",
+  "branch": "codex/frontend-recovery",
+  "fixedLocally": 13,
+  "followupsRemaining": 2,
+  "browserChecksPassed": 84,
+  "validation": [
+    {
+      "file": "browser-results.json",
+      "passed": 24
+    },
+    {
+      "file": "settings-browser.json",
+      "passed": 10
+    },
+    {
+      "file": "core-runtime.json",
+      "passed": 50
+    }
+  ],
+  "entries": [
+    {
+      "id": "R001",
+      "files": [
+        "navigation.js"
+      ],
+      "correction": "Retrait du bloc Compléments Go et des références DOM dans la navigation ; autres fonctions accessibles par leurs pages existantes",
+      "proofAndTests": "browser-results.json : sidebar sans go-navigation-extras ; suite core sans erreur JS",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "browser-results.json : sidebar sans go-navigation-extras ; suite core sans erreur JS"
+        }
+      ]
+    },
+    {
+      "id": "R002",
+      "files": [
+        "media-recovery.js",
+        "app.css"
+      ],
+      "correction": "Ajoutés récemment : Tout, Films, Séries, Musique, Livres directement sélectionnables, plusieurs catégories possibles ; livres audio et pistes inclus",
+      "proofAndTests": "browser : cinq boutons, musique puis livres, reset Tout, conservation des filtres des autres pages, desktop/mobile clair/sombre",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "browser : cinq boutons, musique puis livres, reset Tout, conservation des filtres des autres pages, desktop/mobile clair/sombre"
+        }
+      ]
+    },
+    {
+      "id": "R003",
+      "files": [
+        "admin.js",
+        "admin_recovery.go"
+      ],
+      "correction": "Santé ne dépend plus du nettoyage ; chargement à la demande, états inconnus explicites, erreur et réessai ; requête SQL de nettoyage calculant les médias lus une seule fois",
+      "proofAndTests": "settings-browser.json : nettoyage volontairement bloqué puis 503 ; TestCataloguePageWithThousandsOfItemsKeepsRealCounts et TestRecoveredCleanupUsesDateAddedAndKeepsServerScope",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "settings-browser.json : nettoyage volontairement bloqué puis 503 ; TestCataloguePageWithThousandsOfItemsKeepsRealCounts et TestRecoveredCleanupUsesDateAddedAndKeepsServerScope"
+        }
+      ]
+    },
+    {
+      "id": "R004",
+      "files": [
+        "events.go",
+        "key_cache.go"
+      ],
+      "correction": "Réduction du coût CPU/mémoire des validations répétées du plugin : cache positif borné à 16 entrées et une minute, empreintes uniquement ; révocation et expiration vérifiées à chaque événement",
+      "proofAndTests": "TestCachedPluginKeyStillChecksRevocationAndPreviousExpiry ; TestWarmPluginKeyAvoidsScryptAllocations : une allocation par vérification chaude ; aucune clé invalide mise en cache",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "TestCachedPluginKeyStillChecksRevocationAndPreviousExpiry ; TestWarmPluginKeyAvoidsScryptAllocations : une allocation par vérification chaude ; aucune clé invalide mise en cache"
+        }
+      ]
+    },
+    {
+      "id": "R005",
+      "files": [
+        "app.css"
+      ],
+      "correction": "Couleurs et typographie des options de listes natives adaptées au thème",
+      "proofAndTests": "browser : couleurs calculées des options ; contrôle visuel Go",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "browser : couleurs calculées des options ; contrôle visuel Go"
+        }
+      ]
+    },
+    {
+      "id": "R006",
+      "files": [
+        "history.js",
+        "app.css"
+      ],
+      "correction": "Journaux : pochettes audio carrées, épisodes horizontaux, images contenues sans recadrage forcé",
+      "proofAndTests": "browser : wrappers audio 48×48 ; images Jellyfin de production non inspectées",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "browser : wrappers audio 48×48 ; images Jellyfin de production non inspectées"
+        }
+      ]
+    },
+    {
+      "id": "R007",
+      "files": [
+        "settings.js"
+      ],
+      "correction": "Configuration Jellyfin accessible lorsque aucun serveur n’existe, y compris en mode single",
+      "proofAndTests": "settings-browser : réponse vide single explicitement interceptée, formulaire affiché ; browser : serveurs enregistrés réellement visibles",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "settings-browser : réponse vide single explicitement interceptée, formulaire affiché ; browser : serveurs enregistrés réellement visibles"
+        }
+      ]
+    },
+    {
+      "id": "R008",
+      "files": [
+        "events.go"
+      ],
+      "correction": "PlaybackProgress actualise aussi pluginLastSeen, au maximum toutes les dix secondes ; une lecture longue ne dépend plus d’un Heartbeat distinct pour l’état en ligne",
+      "proofAndTests": "TestPlaybackProgressKeepsPluginPresenceFresh envoie un véritable événement autorisé puis relit SQLite",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "TestPlaybackProgressKeepsPluginPresenceFresh envoie un véritable événement autorisé puis relit SQLite"
+        }
+      ]
+    },
+    {
+      "id": "R009",
+      "files": [
+        "sync.go"
+      ],
+      "correction": "Synchronisation : mise à jour du serveur configuré lors de résolution de son véritable identifiant Jellyfin, sans tenter une seconde insertion du même Server.id",
+      "proofAndTests": "TestSyncResolvesConfiguredServerWithoutChangingInternalID : deux synchronisations HTTP simulées, identifiant interne et média existant préservés",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "TestSyncResolvesConfiguredServerWithoutChangingInternalID : deux synchronisations HTTP simulées, identifiant interne et média existant préservés"
+        }
+      ]
+    },
+    {
+      "id": "R010",
+      "files": [
+        "events.go"
+      ],
+      "correction": "Reprise récente à position non nulle : même ligne pour serveur/utilisateur/média/client/appareil/IP correspondants ; fenêtre configurée respectée ; changements de média clôturent l’ancienne ligne ; démarrages simultanés sérialisés",
+      "proofAndTests": "session_resume_test.go : reprise et durée conservées, relecture à zéro, clients parallèles, fenêtre désactivée/expirée, changement Start/Progress, 12 démarrages concurrents",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "session_resume_test.go : reprise et durée conservées, relecture à zéro, clients parallèles, fenêtre désactivée/expirée, changement Start/Progress, 12 démarrages concurrents"
+        }
+      ]
+    },
+    {
+      "id": "R011",
+      "files": [
+        "app.js",
+        "app.css"
+      ],
+      "correction": "Connexion : menu de dix langues avec vrais fichiers drapeaux PNG, choix persistant et fermeture Escape",
+      "proofAndTests": "deux suites navigateur + core : drapeaux décodés, changement/rechargement, clavier ; login-mobile.png",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "deux suites navigateur + core : drapeaux décodés, changement/rechargement, clavier ; login-mobile.png"
+        }
+      ]
+    },
+    {
+      "id": "R012",
+      "files": [
+        "handlers.go",
+        "navigation.js",
+        "app.js"
+      ],
+      "correction": "Mon compte résout /users/me avec le serveur de connexion et les variantes UUID ; aucun utilisateur Jellyfin fictif créé pour une connexion locale",
+      "proofAndTests": "account_runtime_test.go : deux serveurs et comptes homonymes, UUID avec/sans tirets, compte local sans lien ; tests existants d’isolation de profil",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "account_runtime_test.go : deux serveurs et comptes homonymes, UUID avec/sans tirets, compte local sans lien ; tests existants d’isolation de profil"
+        }
+      ]
+    },
+    {
+      "id": "R013",
+      "files": [
+        "admin_handlers.go",
+        "admin_recovery.go",
+        "telemetry.go"
+      ],
+      "correction": "Compteur et liste d’orphelins liés au playbackId et au serveur ; flux expirés clôturent seulement leur historique sans autre flux actif, au dernier ping observé et sans changer la durée",
+      "proofAndTests": "orphan_sessions_test.go ; TestExpiredStreamsCloseOnlyTheirUnobservedHistory : flux actif parallèle et anciennes lignes sans flux préservés, formats SQLite/ISO acceptés",
+      "status": "fixed_locally",
+      "history": [
+        {
+          "date": "2026-10-11",
+          "status": "reported"
+        },
+        {
+          "date": "2026-10-11",
+          "status": "fixed_locally",
+          "evidence": "orphan_sessions_test.go ; TestExpiredStreamsCloseOnlyTheirUnobservedHistory : flux actif parallèle et anciennes lignes sans flux préservés, formats SQLite/ISO acceptés"
+        }
+      ]
+    },
+    {
+      "id": "R014",
+      "status": "production_validation_pending",
+      "correction": "Mesurer les chargements et CPU/RAM sur la véritable instance.",
+      "files": [],
+      "proofAndTests": "Aucune mesure de production disponible."
+    },
+    {
+      "id": "R015",
+      "status": "historical_data_review_pending",
+      "correction": "Examiner les anciens orphelins sans effacer ni clôturer massivement des données.",
+      "files": [],
+      "proofAndTests": "Les tests confirment la préservation des anciennes lignes ; leur cause en production reste à examiner."
+    }
+  ]
+}

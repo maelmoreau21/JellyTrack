@@ -1,0 +1,46 @@
+{
+  "scope": "Real isolated server assets/login; intercepted empty config and failed delayed cleanup explicitly test failure handling, not production integrations.",
+  "checks": [
+    {
+      "name": "login ten languages",
+      "ok": true
+    },
+    {
+      "name": "login flags decoded",
+      "ok": true
+    },
+    {
+      "name": "language persists",
+      "ok": true
+    },
+    {
+      "name": "language Escape closes",
+      "ok": true
+    },
+    {
+      "name": "isolated real admin login",
+      "ok": true
+    },
+    {
+      "name": "logs health does not request cleanup",
+      "ok": true
+    },
+    {
+      "name": "health shown while cleanup pending",
+      "ok": true
+    },
+    {
+      "name": "cleanup failure visible with retry",
+      "ok": true
+    },
+    {
+      "name": "single mode empty setup form",
+      "ok": true
+    },
+    {
+      "name": "no JavaScript runtime errors",
+      "ok": true
+    }
+  ],
+  "errors": []
+}

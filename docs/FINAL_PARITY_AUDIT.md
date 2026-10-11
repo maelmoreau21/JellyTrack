@@ -1,5 +1,7 @@
 # JellyTrack — audit final de parité historique
 
+> Suivi du 11 octobre 2026 : l’utilisateur juge la fidélité suffisante et réoriente le travail vers les bugs de fonctionnement de develop. Le [registre de corrections et de validation](runtime-regressions/README.md) conserve séparément ces nouveaux constats. Les statuts et preuves historiques de cet audit ne sont pas remplacés par les nouveaux tests de fonctionnement.
+
 Audit du 10 octobre 2026, `codex/frontend-recovery`, HEAD initial **c4ed7495c3f420713bbaaabcc337dd47602506db**, comparé à `main` **a59a28613e63e86106c61827167d355b47147f42**. Les corrections décrites sont locales, non commitées. [Empreintes des sources auditées](final-audit/SOURCE_SNAPSHOT.json).
 
 Vérification GitHub en fin d’audit : `main` distant correspond exactement à cette référence. `codex/frontend-recovery` distant est `9835d85d6f7afd571a7896ed672e0afa68ddc9b5` ; la branche locale auditée possède trois commits antérieurs supplémentaires (`0c658f0`, `79f69db`, `c4ed749`) et aucun retard. Ces commits préexistaient à cet audit ; aucun push n’a été effectué. [Preuve des références distantes](final-audit/REMOTE_REFS.json).

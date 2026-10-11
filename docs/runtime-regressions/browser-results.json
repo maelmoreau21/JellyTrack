@@ -1,0 +1,179 @@
+{
+  "checks": [
+    {
+      "name": "Real login",
+      "ok": true
+    },
+    {
+      "name": "Recent five direct category buttons",
+      "ok": true
+    },
+    {
+      "name": "Recent no extra dropdown",
+      "ok": true
+    },
+    {
+      "name": "Sidebar extras removed",
+      "ok": true
+    },
+    {
+      "name": "Music group query",
+      "ok": true
+    },
+    {
+      "name": "Music plus Books selectable",
+      "ok": true
+    },
+    {
+      "name": "Tout resets exclusions",
+      "ok": true
+    },
+    {
+      "name": "Recent no overflow dark 1440",
+      "ok": true
+    },
+    {
+      "name": "Recent no overflow dark 390",
+      "ok": true
+    },
+    {
+      "name": "Recent no overflow light 1440",
+      "ok": true
+    },
+    {
+      "name": "Recent no overflow light 390",
+      "ok": true
+    },
+    {
+      "name": "Other catalogue controls preserved",
+      "ok": true
+    },
+    {
+      "name": "Audio square covers",
+      "ok": true,
+      "details": [
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        },
+        {
+          "width": 48,
+          "height": 48
+        }
+      ]
+    },
+    {
+      "name": "Select options theme background",
+      "ok": true,
+      "details": {
+        "bg": "rgb(15, 23, 42)",
+        "color": "rgb(241, 245, 249)"
+      }
+    },
+    {
+      "name": "Security avoids cleanup request",
+      "ok": true
+    },
+    {
+      "name": "Cleanup loads only on its tab",
+      "ok": true
+    },
+    {
+      "name": "Health remains usable during delayed cleanup",
+      "ok": true
+    },
+    {
+      "name": "Jellyfin configured server visible",
+      "ok": true
+    },
+    {
+      "name": "Leaving page cancels its request",
+      "ok": true
+    },
+    {
+      "name": "Stuck read displays retryable timeout",
+      "ok": true
+    },
+    {
+      "name": "Login ten languages",
+      "ok": true
+    },
+    {
+      "name": "Login flags loaded",
+      "ok": true
+    },
+    {
+      "name": "Login language saved",
+      "ok": true
+    },
+    {
+      "name": "No JavaScript runtime error",
+      "ok": true,
+      "details": []
+    }
+  ],
+  "errors": [],
+  "limits": [
+    "Isolated SQLite fixture; no production Jellyfin service or production memory measurement."
+  ]
+}
