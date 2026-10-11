@@ -3768,16 +3768,34 @@
       }
 
       const render = () => {
-        const isSsoView = oidcEnabled && !isLocalLogin;
-        const headerClass = isSsoView ? 'auth-card-header auth-header-sso' : 'auth-card-header';
+        const headerClass = 'auth-card-header';
         const showSubtitle = false;
 
         let contentHtml = '';
 
-        if (isSsoView) {
-          // --- MODE 1: SSO Primary View (matching historical pre-rewrite behavior) ---
+        if (isAutoRedirecting && !error) {
+          // Auto-redirecting to SSO screen
           contentHtml = `
             <div class="auth-sso-container">
+              <div class="auth-sso-auto-box">
+                <div class="auth-sso-auto-icon-wrap">
+                  <div class="auth-sso-ping"></div>
+                  <div class="auth-sso-icon-box">
+                    <svg class="auth-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                  </div>
+                </div>
+                <div>
+                  <div class="auth-sso-auto-title">${I18n.t('login.autoRedirecting') || 'Redirection vers votre fournisseur SSO...'}</div>
+                  <div class="auth-sso-auto-subtitle">${I18n.t('login.autoRedirectHint') || 'Connexion automatique via OpenID Connect...'}</div>
+                </div>
+                <a href="/api/auth/oidc/start" class="auth-sso-manual-link">${I18n.t('login.continueManually') || 'Continuer vers le SSO'}</a>
+              </div>
+            </div>
+          `;
+        } else {
+          // Combined / Unified Login View
+          contentHtml = `
+            <div class="auth-card-body">
               ${error ? `
                 <div class="auth-alert-error">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -3792,86 +3810,51 @@
                 </div>
               ` : ''}
 
-              ${isAutoRedirecting && !error ? `
-                <div class="auth-sso-auto-box">
-                  <div class="auth-sso-auto-icon-wrap">
-                    <div class="auth-sso-ping"></div>
-                    <div class="auth-sso-icon-box">
-                      <svg class="auth-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="auth-sso-auto-title">${I18n.t('login.autoRedirecting') || 'Redirection vers votre fournisseur SSO...'}</div>
-                    <div class="auth-sso-auto-subtitle">${I18n.t('login.autoRedirectHint') || 'Connexion automatique via OpenID Connect...'}</div>
-                  </div>
-                  <a href="/api/auth/oidc/start" class="auth-sso-manual-link">${I18n.t('login.continueManually') || 'Continuer vers le SSO'}</a>
+              ${oidcEnabled ? `
+                <div class="auth-sso-section" style="margin-bottom: 1.25rem;">
+                  <a href="/api/auth/oidc/start" class="auth-sso-primary-btn" id="btn-sso-start">
+                    <span>${I18n.t('login.signInSso') || 'Se connecter avec SSO'}</span>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </a>
                 </div>
-              ` : `
-                <a href="/api/auth/oidc/start" class="auth-sso-primary-btn" id="btn-sso-start">
-                  <span>${I18n.t('login.signIn') || 'Se connecter'}</span>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </a>
-              `}
-
-              ${localAdminEnabled || jellyfinEnabled ? `
-                <div class="auth-toggle-local-wrap">
-                  <button type="button" id="btn-toggle-local" class="auth-toggle-local-btn">
-                    ${window.JellyTrackNavigation.icon('key')}
-                    <span>${jellyfinEnabled ? 'Jellyfin' : (I18n.t('login.localLogin') || 'Utilisateur local')}</span>
-                  </button>
-                </div>
-              ` : ''}
-            </div>
-          `;
-        } else {
-          // --- MODE 2: Emergency Local Admin Mode (matching historical pre-rewrite behavior) ---
-          contentHtml = `
-            <div class="auth-card-body">
-              <form id="form-login-local" class="auth-form">
-                <div class="auth-local-header">
-                  <span class="auth-local-title">
-                    ${window.JellyTrackNavigation.icon('key')}
-                    <span>${jellyfinEnabled ? 'Connexion Jellyfin' : (I18n.t('login.localAdminTitle') || 'Connexion locale (Admin)')}</span>
-                  </span>
-                  <button type="button" id="btn-back-sso" class="auth-back-sso-btn" ${!oidcEnabled ? 'hidden' : ''}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7M5 12h14"/></svg>
-                    <span>${I18n.t('login.backToSso') || 'Retour au SSO'}</span>
-                  </button>
-                </div>
-
-                ${error ? `
-                  <div class="auth-alert-error">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <span>${Utils.escapeHtml(error)}</span>
+                ${jellyfinEnabled || localAdminEnabled ? `
+                  <div class="auth-divider" style="margin-bottom: 1.25rem;">
+                    <div class="auth-divider-line"></div>
+                    <div class="auth-divider-text">${I18n.t('common.or') || 'OU'}</div>
+                    <div class="auth-divider-line"></div>
                   </div>
                 ` : ''}
+              ` : ''}
 
-                <div class="auth-input-group">
-                  <label class="auth-label" for="login-username">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
-                  <div class="auth-input-wrapper">
-                    <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <input type="text" class="auth-input-field" id="login-username" required value="" autocomplete="username" placeholder="Jellyfin">
+              ${jellyfinEnabled || localAdminEnabled ? `
+                <form id="form-login-local" class="auth-form">
+                  <div class="auth-input-group">
+                    <label class="auth-label" for="login-username">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
+                    <div class="auth-input-wrapper">
+                      <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <input type="text" class="auth-input-field" id="login-username" required value="" autocomplete="username" placeholder="${jellyfinEnabled ? 'Jellyfin' : 'Admin'}">
+                    </div>
                   </div>
-                </div>
 
-                <div class="auth-input-group">
-                  <label class="auth-label" for="login-password">${I18n.t('login.password') || 'Mot de passe'}</label>
-                  <div class="auth-input-wrapper">
-                    <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <input type="password" class="auth-input-field" id="login-password" required autofocus placeholder="••••••••">
+                  <div class="auth-input-group">
+                    <label class="auth-label" for="login-password">${I18n.t('login.password') || 'Mot de passe'}</label>
+                    <div class="auth-input-wrapper">
+                      <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      <input type="password" class="auth-input-field" id="login-password" required placeholder="••••••••">
+                    </div>
                   </div>
-                </div>
 
-                <label class="auth-remember" for="login-remember">
-                  <input type="checkbox" id="login-remember">
-                  <span>${I18n.t('login.rememberMe')}<small>${I18n.t('login.rememberMeHint')}</small></span>
-                </label>
+                  <label class="auth-remember" for="login-remember">
+                    <input type="checkbox" id="login-remember">
+                    <span>${I18n.t('login.rememberMe') || 'Se souvenir de moi'}<small>${I18n.t('login.rememberMeHint') || 'Rester connecté 30 jours sur cet appareil.'}</small></span>
+                  </label>
 
-                <button type="submit" id="btn-login-submit" class="auth-submit-btn auth-submit-btn-amber">
-                  <span id="btn-login-text">${I18n.t('login.signIn') || 'Se connecter'}</span>
-                  <svg id="btn-login-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </button>
-              </form>
+                  <button type="submit" id="btn-login-submit" class="auth-submit-btn">
+                    <span id="btn-login-text">${I18n.t('login.signIn') || 'Se connecter'}</span>
+                    <svg id="btn-login-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </button>
+                </form>
+              ` : ''}
             </div>
           `;
         }
@@ -3957,29 +3940,8 @@
           });
         }
 
-        const toggleLocalBtn = document.getElementById('btn-toggle-local');
-        if (toggleLocalBtn) {
-          toggleLocalBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            error = null;
-            isAutoRedirecting = false;
-            isLocalLogin = true;
-            render();
-          });
-        }
-
-        const backSsoBtn = document.getElementById('btn-back-sso');
-        if (backSsoBtn) {
-          backSsoBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            error = null;
-            isLocalLogin = false;
-            render();
-          });
-        }
-
         // Handle Auto-Redirect timer
-        if (isSsoView && isAutoRedirecting && !autoRedirectAttempted) {
+        if (isAutoRedirecting && !autoRedirectAttempted) {
           autoRedirectAttempted = true;
           setTimeout(() => {
             if (isAutoRedirecting) {

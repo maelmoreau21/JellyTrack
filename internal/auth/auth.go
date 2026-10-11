@@ -273,6 +273,7 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 	account, resolvedServerID, policyErr := m.oidcAccount(r.Context(), rawClaims)
 	if policyErr != nil {
 		clearFlow()
+		slog.Warn("OIDC account reconciliation failed", "username", username, "error", policyErr)
 		http.Redirect(w, r, "/login?error=AccessDenied", http.StatusSeeOther)
 		return
 	}
@@ -282,6 +283,7 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 	username, resolvedJfID := account.Name, account.ID
 	if e = m.upsertUser(r.Context(), stableUserID(resolvedServerID, resolvedJfID), resolvedServerID, resolvedJfID, username, time.Now().UTC().Format(time.RFC3339Nano)); e != nil {
 		clearFlow()
+		slog.Error("OIDC user upsert failed", "username", username, "error", e)
 		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}

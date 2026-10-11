@@ -83,26 +83,115 @@ func (m *Manager) oidcAccount(ctx context.Context, claims map[string]any) (jelly
 	serverID, _ := claims["jellyfin_server_id"].(string)
 	userID, _ := claims["jellyfin_user_id"].(string)
 	subject, _ := claims["sub"].(string)
-	if serverID == "" || userID == "" || subject == "" {
-		return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("missing stable identity claims")
+	if subject == "" {
+		return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("missing stable identity claims: sub is required")
 	}
-	var baseURL, apiKey string
-	err := m.db.QueryRowContext(ctx, database.Bind(`SELECT "url",COALESCE("jellyfinApiKey",'') FROM "Server" WHERE "id"=? AND "isActive"=TRUE`, m.driver), serverID).Scan(&baseURL, &apiKey)
+
+	// 1. If explicit serverID and userID claims are provided, verify them directly
+	if serverID != "" && userID != "" {
+		var baseURL, apiKey string
+		err := m.db.QueryRowContext(ctx, database.Bind(`SELECT "url",COALESCE("jellyfinApiKey",'') FROM "Server" WHERE "id"=? AND "isActive"=TRUE`, m.driver), serverID).Scan(&baseURL, &apiKey)
+		if err != nil {
+			return jellyfin.AuthenticatedUser{}, "", err
+		}
+		if strings.EqualFold(strings.TrimRight(baseURL, "/"), strings.TrimRight(os.Getenv("JELLYFIN_URL"), "/")) {
+			apiKey = first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"), apiKey)
+		}
+		client, err := jellyfin.New(baseURL, apiKey)
+		if err != nil {
+			return jellyfin.AuthenticatedUser{}, "", err
+		}
+		ctxTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		user, err := client.AuthenticationUser(ctxTimeout, userID)
+		if err != nil || !sameJellyfinID(user.ID, userID) || user.Name == "" || user.Policy.IsDisabled || (user.Policy.AuthenticationProviderID != jellyfin.LDAPAuthenticationProvider && (ldapSSOOnly() || user.Policy.AuthenticationProviderID != jellyfin.LocalAuthenticationProvider)) {
+			return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("SSO requires verified Jellyfin identity and allowed authentication provider")
+		}
+		return user, serverID, nil
+	}
+
+	// 2. Automatic reconciliation fallback: Find matching Jellyfin user by OIDC username/email/name
+	preferredUsername, _ := claims["preferred_username"].(string)
+	email, _ := claims["email"].(string)
+	name, _ := claims["name"].(string)
+	targetName := first(preferredUsername, email, name, subject)
+	if targetName == "" {
+		return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("missing username in claims")
+	}
+
+	// Query active servers
+	rows, err := m.db.QueryContext(ctx, `SELECT "id", "url", COALESCE("jellyfinApiKey",'') FROM "Server" WHERE "isActive"=TRUE ORDER BY "createdAt" ASC`)
 	if err != nil {
 		return jellyfin.AuthenticatedUser{}, "", err
 	}
-	if strings.EqualFold(strings.TrimRight(baseURL, "/"), strings.TrimRight(os.Getenv("JELLYFIN_URL"), "/")) {
-		apiKey = first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"), apiKey)
+	defer rows.Close()
+
+	type srvInfo struct {
+		id, url, apiKey string
 	}
-	client, err := jellyfin.New(baseURL, apiKey)
-	if err != nil {
-		return jellyfin.AuthenticatedUser{}, "", err
+	var servers []srvInfo
+	for rows.Next() {
+		var s srvInfo
+		if err := rows.Scan(&s.id, &s.url, &s.apiKey); err == nil {
+			servers = append(servers, s)
+		}
 	}
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	user, err := client.AuthenticationUser(ctx, userID)
-	if err != nil || !sameJellyfinID(user.ID, userID) || user.Name == "" || user.Policy.IsDisabled || (user.Policy.AuthenticationProviderID != jellyfin.LDAPAuthenticationProvider && (ldapSSOOnly() || user.Policy.AuthenticationProviderID != jellyfin.LocalAuthenticationProvider)) {
-		return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("SSO requires verified Jellyfin identity and allowed authentication provider")
+	_ = rows.Close()
+
+	// If no servers in database, check environment JELLYFIN_URL
+	if len(servers) == 0 {
+		envURL := strings.TrimRight(strings.TrimSpace(os.Getenv("JELLYFIN_URL")), "/")
+		if envURL != "" {
+			servers = append(servers, srvInfo{
+				id:     first(os.Getenv("JELLYFIN_SERVER_ID"), "master"),
+				url:    envURL,
+				apiKey: first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY")),
+			})
+		}
 	}
-	return user, serverID, nil
+
+	for _, srv := range servers {
+		apiKey := srv.apiKey
+		if strings.EqualFold(strings.TrimRight(srv.url, "/"), strings.TrimRight(os.Getenv("JELLYFIN_URL"), "/")) {
+			apiKey = first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"), apiKey)
+		}
+		client, err := jellyfin.New(srv.url, apiKey)
+		if err != nil {
+			continue
+		}
+		ctxTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
+		users, err := client.AuthenticationUsers(ctxTimeout)
+		cancel()
+		if err != nil {
+			continue
+		}
+		for _, u := range users {
+			if strings.EqualFold(u.Name, targetName) {
+				if u.ID != "" && !u.Policy.IsDisabled {
+					if u.Policy.AuthenticationProviderID != jellyfin.LDAPAuthenticationProvider && (ldapSSOOnly() || u.Policy.AuthenticationProviderID != jellyfin.LocalAuthenticationProvider) {
+						return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("SSO requires verified Jellyfin identity and allowed authentication provider")
+					}
+					return u, srv.id, nil
+				}
+			}
+		}
+	}
+
+	// If LDAP_SSO_ONLY is active, do not allow arbitrary synthetic accounts without matched LDAP identity
+	if ldapSSOOnly() {
+		return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("SSO requires verified Jellyfin LDAP identity")
+	}
+
+	// If not matched to an existing Jellyfin account, allow SSO synthetic account if server exists
+	if len(servers) > 0 {
+		return jellyfin.AuthenticatedUser{
+			ID:   "oidc-" + subject,
+			Name: targetName,
+		}, servers[0].id, nil
+	}
+
+	return jellyfin.AuthenticatedUser{
+		ID:   "oidc-" + subject,
+		Name: targetName,
+	}, "master", nil
 }
