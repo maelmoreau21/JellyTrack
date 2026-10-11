@@ -415,9 +415,8 @@ func TestAdminEndpoints(t *testing.T) {
 	}
 	var ssoRes map[string]any
 	_ = json.Unmarshal(wSSO.Body.Bytes(), &ssoRes)
-	sec, ok := ssoRes["clientSecret"].(string)
-	if !ok || !strings.Contains(sec, "••••••••") {
-		t.Fatalf("clientSecret should be masked, got: %v", ssoRes["clientSecret"])
+	if ssoRes["configurationSource"] != "environment" || ssoRes["hasClientSecret"] != false {
+		t.Fatal("legacy database secret must be ignored")
 	}
 
 	// 4. Consolidate history

@@ -285,8 +285,8 @@ For PowerShell, assign the environment variables with `$env:DATABASE_DRIVER` and
 
 The backend enforces both methods independently of the login buttons:
 
-- Native Jellyfin accounts use their Jellyfin password only.
-- LDAP accounts use OIDC only, even when Jellyfin accepts their LDAP password.
+- `JELLYFIN_AUTH_ENABLED=true` (default) allows classic Jellyfin login alongside SSO. Set it to `false` to disable classic login; emergency local administrator access remains available.
+- `LDAP_SSO_ONLY=true` (default) requires LDAP accounts to use SSO and native Jellyfin accounts to use their password. Set it to `false` to allow both supported providers through either method; verified Jellyfin identity is still mandatory.
 - The configured JellyTrack local administrator retains password recovery access.
 - Unknown providers, disabled accounts, missing metadata, and metadata outages are denied. Disabling OIDC does not enable LDAP passwords. Pre-policy sessions require a fresh login.
 
@@ -294,7 +294,23 @@ Jellyfin must expose `Policy.AuthenticationProviderId` through its administrativ
 
 Configure each server's administrative Jellyfin API key in Settings / Jellyfin or `JELLYFIN_API_KEY` for the primary environment server. Register the server in JellyTrack before using SSO. LDAP users must already exist in Jellyfin.
 
-SSO configuration remains in Settings / SSO and is stored in the database. Defined environment variables override individual saved fields, including explicitly empty values: `OIDC_ENABLED`, `OIDC_ISSUER` (aliases, in order: `OIDC_URL`, `AUTHENTIK_URL`, `JELLYTRACK_AUTHENTIK_URL`), `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_USER_GROUP`, `OIDC_ADMIN_GROUP`, and `OIDC_AUTO_REDIRECT` (alias `OIDC_AUTO_LOGIN`). Remove variables from the process, container configuration, and `.env` / `.env.local` to manage those fields through Settings. Use `OIDC_AUTO_REDIRECT=false` to present both login methods without automatically redirecting.
+SSO configuration is exclusively managed through environment variables. Legacy saved SSO settings are ignored and preserved; the former Settings / SSO page is removed and its write API returns 410. Supported variables: `OIDC_ENABLED`, `OIDC_ISSUER` (aliases, in order: `OIDC_URL`, `AUTHENTIK_URL`, `JELLYTRACK_AUTHENTIK_URL`), `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_USER_GROUP`, `OIDC_ADMIN_GROUP`, and `OIDC_AUTO_REDIRECT` (alias `OIDC_AUTO_LOGIN`). Use `OIDC_AUTO_REDIRECT=false` to present both login methods without automatically redirecting. Restart/recreate the application after changing its environment.
+
+For mixed native Jellyfin / LDAP accounts:
+
+```dotenv
+OIDC_ENABLED=true
+JELLYFIN_AUTH_ENABLED=true
+LDAP_SSO_ONLY=true
+OIDC_AUTO_REDIRECT=false
+OIDC_URL=https://auth.example.com/application/o/jellytrack/
+OIDC_CLIENT_ID=jellytrack
+OIDC_CLIENT_SECRET=REPLACE_WITH_YOUR_SECRET
+OIDC_USER_GROUP=
+OIDC_ADMIN_GROUP=
+```
+
+With both groups empty, the verified Jellyfin `Policy.IsAdministrator` determines the SSO role. When either group is configured, OIDC token groups control access and roles: being a Jellyfin administrator does not bypass that explicit allowlist. Group names must match the groups actually emitted by the identity provider. Classic Jellyfin login uses Jellyfin permissions directly.
 
 Authentik must issue an RS256-signed ID token containing the stable `sub` and two administrator-controlled claims:
 

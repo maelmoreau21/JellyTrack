@@ -262,6 +262,9 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login?error=AccessDenied", http.StatusSeeOther)
 		return
 	}
+	if cfg.adminGroup == "" && cfg.userGroup == "" && account.Policy.IsAdministrator {
+		role = "admin"
+	}
 	username, resolvedJfID := account.Name, account.ID
 	if e = m.upsertUser(r.Context(), stableUserID(resolvedServerID, resolvedJfID), resolvedServerID, resolvedJfID, username, time.Now().UTC().Format(time.RFC3339Nano)); e != nil {
 		clearFlow()
@@ -308,40 +311,6 @@ func (m *Manager) resolveOIDC(ctx context.Context) resolvedOIDCConfig {
 		autoRedirect: m.oidcAutoRedirect,
 	}
 
-	// Settings are resolved field by field. Environment values lock only their
-	// own field, so saving the database configuration takes effect immediately.
-	if m.db != nil {
-		var raw sql.NullString
-		_ = m.db.QueryRowContext(ctx, database.Bind(`SELECT "ssoSettings" FROM "GlobalSettings" WHERE "id"='global'`, m.driver)).Scan(&raw)
-		if raw.Valid && raw.String != "" {
-			var dbMap map[string]any
-			if json.Unmarshal([]byte(raw.String), &dbMap) == nil {
-				if enabled, ok := dbMap["enabled"].(bool); ok && os.Getenv("OIDC_ENABLED") == "" {
-					cfg.enabled = enabled
-				}
-				{
-					if u, ok := dbMap["url"].(string); ok && first(os.Getenv("OIDC_ISSUER"), os.Getenv("OIDC_URL"), os.Getenv("AUTHENTIK_URL"), os.Getenv("JELLYTRACK_AUTHENTIK_URL")) == "" {
-						cfg.issuer = strings.TrimSpace(u)
-					}
-					if cid, ok := dbMap["clientId"].(string); ok && os.Getenv("OIDC_CLIENT_ID") == "" {
-						cfg.clientID = strings.TrimSpace(cid)
-					}
-					if cs, ok := dbMap["clientSecret"].(string); ok && os.Getenv("OIDC_CLIENT_SECRET") == "" {
-						cfg.clientSecret = strings.TrimSpace(cs)
-					}
-					if ug, ok := dbMap["userGroup"].(string); ok && os.Getenv("OIDC_USER_GROUP") == "" {
-						cfg.userGroup = strings.TrimSpace(ug)
-					}
-					if ag, ok := dbMap["adminGroup"].(string); ok && os.Getenv("OIDC_ADMIN_GROUP") == "" {
-						cfg.adminGroup = strings.TrimSpace(ag)
-					}
-					if ar, ok := dbMap["autoRedirect"].(bool); ok && first(os.Getenv("OIDC_AUTO_REDIRECT"), os.Getenv("OIDC_AUTO_LOGIN")) == "" {
-						cfg.autoRedirect = ar
-					}
-				}
-			}
-		}
-	}
 	if value, set := config.EnvironmentOverride("", "OIDC_ENABLED"); set {
 		cfg.enabled = config.EnvironmentBool(value)
 	}
@@ -524,6 +493,7 @@ func (m *Manager) Routes(mux *http.ServeMux) {
 			strings.TrimSpace(os.Getenv("LOCAL_ADMIN_PASSWORD")) != "" ||
 			strings.TrimSpace(os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD")) != ""
 		writeJSON(w, http.StatusOK, map[string]any{
+			"jellyfin":     jellyfinLoginEnabled(),
 			"oidc":         cfg.enabled,
 			"autoRedirect": cfg.autoRedirect,
 			"localAdmin":   hasLocal,
@@ -617,6 +587,9 @@ func (m *Manager) authProviders(w http.ResponseWriter, r *http.Request) {
 			"name": "Credentials",
 			"type": "credentials",
 		},
+	}
+	if !jellyfinLoginEnabled() {
+		delete(providers, "credentials")
 	}
 	if hasLocal {
 		providers["local-credentials"] = map[string]any{
@@ -726,6 +699,11 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 
 	if userOK && len(m.passwordHash) > 0 {
 		writeJSON(w, 401, map[string]string{"error": "Identifiants invalides."})
+		return
+	}
+
+	if !jellyfinLoginEnabled() {
+		writeJSON(w, 403, map[string]string{"error": "La connexion Jellyfin classique est désactivée. Utilisez le SSO."})
 		return
 	}
 

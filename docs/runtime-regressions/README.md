@@ -56,3 +56,7 @@ node scripts/parity-restoration/core.cjs
 ```
 
 Les commandes navigateur supposent le serveur de fixture 3350 lancé par scripts/media-pages-qa/run-isolated.py. Elles n’utilisent aucune instance de production.
+
+## Suivi tableau de bord, albums et performances
+
+Les nouvelles corrections et leurs limites sont détaillées dans [DASHBOARD_ALBUM_PERFORMANCE.md](DASHBOARD_ALBUM_PERFORMANCE.md). Elles sont locales et ne constituent pas une validation de la synchronisation ni du CPU/RAM de production.

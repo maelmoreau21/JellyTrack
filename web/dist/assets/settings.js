@@ -34,18 +34,18 @@
       if (subpage === 'analytics') { navigate('/media/analysis', true); return; }
       if (['overview', 'network'].includes(subpage)) { navigate('/settings/jellyfin', true); return; }
       if (['go-overview', 'go-network'].includes(subpage)) { await ctx.legacy(subpage.slice(3)); return; }
+      if (subpage === 'sso') { navigate('/settings/jellyfin', true); return; }
       if (subpage === 'plugin') subpage = 'jellyfin';
       const esc = value => utils.escapeHtml(String(value ?? ''));
       const t = (key, values = {}) => i18n.t(key, values) || key.split('.').pop();
       const s = (key, values) => t('settings.' + key, values);
-      const ts = key => t('ssoSettings.' + key);
       const sec = key => t('securitySettings.' + key);
       const extra = (key, fr, en) => i18n.t('settings.'+key) || (document.documentElement.lang==='fr'?fr:en);
       main.innerHTML = `<section class="jt-settings settings-route-${subpage.replaceAll('/','-')}">${window.JellyTrackNavigation.settingsTabs('/settings/' + subpage)}<div class="settings-body" aria-busy="true"><div class="settings-loading" role="status">${esc(t('common.loading'))}</div></div></section>`;
       const root = main.firstElementChild;
       const body = root.querySelector('.settings-body');
       const alive = () => main.contains(root) && !signal?.aborted;
-      let model = {}, serversData = {}, sso = {}, overview = {}, smart = {}, backups = [], feedback = null, busy = false, generation = 0;
+      let model = {}, serversData = {}, overview = {}, smart = {}, backups = [], feedback = null, busy = false, generation = 0;
       let editing = null, adding = false, importFile = null;
       const pluginSecrets = new Map();
       const visibility = new Set();
@@ -72,7 +72,7 @@
       const save = label => `<div class="settings-footer"><button type="submit" class="btn btn-primary" ${busy ? 'disabled' : ''}>${esc(busy ? t('common.saving') : label || s('saveSettings'))}</button></div>`;
       const notice = () => feedback ? `<div class="settings-message ${feedback.error ? 'error' : 'success'}" role="${feedback.error ? 'alert' : 'status'}"><span>${esc(feedback.text)}</span>${btn('×', 'dismiss', 'aria-label="' + esc(t('common.close')) + '"')}</div>` : '';
       const card = (title, description, content, extra = '', headerActions = '') => {
-        const icons = new Map([[s('jellyfinServersTitle'),'plug'],[s('mediaSettings'),'film'],[s('dataBackups'),'database'],[ts('title'),'shield'],[ts('ssoConfigFormTitle'),'shield'],[ts('redirectUriTitle'),'copy']]);
+        const icons = new Map([[s('jellyfinServersTitle'),'plug'],[s('mediaSettings'),'film'],[s('dataBackups'),'database']]);
         if(title===s('dataBackups')) {const toolbar=content.match(/^<div class="settings-toolbar">[\s\S]*?<\/div>/);if(toolbar){headerActions=toolbar[0];content=content.slice(toolbar[0].length);}}
         const glyph=icons.get(title);
         return `<article class="settings-card ${extra}"><header class="settings-card-header"><div><h2>${glyph?['plug','film','copy'].includes(glyph)?symbol(glyph):window.JellyTrackNavigation.icon(glyph):''}${esc(title)}</h2>${description ? `<p>${esc(description)}</p>` : ''}</div>${headerActions}</header><div class="settings-card-content">${content}</div></article>`;
@@ -80,9 +80,9 @@
       const section = (title, description, content) => `<section class="settings-section"><h3>${esc(title)}</h3>${description ? `<p class="settings-help">${esc(description)}</p>` : ''}${content}</section>`;
       const input = (name, label, value, options = {}) => {
         const { type = 'text', hint = '', locked = false, disabled = false, min, max, step, placeholder = '', required = false, secret = false, readOnly = false } = options;
-        return `<label class="settings-field"><span>${esc(label)}${locked ? badge(ts('dockerEnvLocked'), 'warning') : ''}</span><div class="settings-input-wrap"><input class="form-input" name="${esc(name)}" value="${esc(value)}" type="${secret && visibility.has(name) ? 'text' : type}" ${locked || disabled ? 'disabled' : ''} ${readOnly ? 'readonly' : ''} ${required ? 'required' : ''} ${min != null ? `min="${min}"` : ''} ${max != null ? `max="${max}"` : ''} ${step != null ? `step="${step}"` : ''} placeholder="${esc(placeholder)}">${secret ? btn(visibility.has(name) ? '◉' : '◎', 'eye', `data-name="${esc(name)}" aria-label="${esc(s('clickToShow'))}" aria-pressed="${visibility.has(name)}"`) : ''}</div>${hint ? `<small class="settings-help">${esc(hint)}</small>` : ''}</label>`;
+        return `<label class="settings-field"><span>${esc(label)}${locked ? badge(t('ssoSettings.dockerEnvLocked'), 'warning') : ''}</span><div class="settings-input-wrap"><input class="form-input" name="${esc(name)}" value="${esc(value)}" type="${secret && visibility.has(name) ? 'text' : type}" ${locked || disabled ? 'disabled' : ''} ${readOnly ? 'readonly' : ''} ${required ? 'required' : ''} ${min != null ? `min="${min}"` : ''} ${max != null ? `max="${max}"` : ''} ${step != null ? `step="${step}"` : ''} placeholder="${esc(placeholder)}">${secret ? btn(visibility.has(name) ? '◉' : '◎', 'eye', `data-name="${esc(name)}" aria-label="${esc(s('clickToShow'))}" aria-pressed="${visibility.has(name)}"`) : ''}</div>${hint ? `<small class="settings-help">${esc(hint)}</small>` : ''}</label>`;
       };
-      const toggle = (name, label, checked, hint = '', locked = false) => `<label class="settings-switch-row"><span><strong>${esc(label)}</strong>${hint ? `<small class="settings-help">${esc(hint)}</small>` : ''}${locked ? badge(ts('dockerEnvLocked'), 'warning') : ''}</span><input class="settings-switch" type="checkbox" role="switch" name="${esc(name)}" ${checked ? 'checked' : ''} ${locked ? 'disabled' : ''}></label>`;
+      const toggle = (name, label, checked, hint = '', locked = false) => `<label class="settings-switch-row"><span><strong>${esc(label)}</strong>${hint ? `<small class="settings-help">${esc(hint)}</small>` : ''}${locked ? badge(t('ssoSettings.dockerEnvLocked'), 'warning') : ''}</span><input class="settings-switch" type="checkbox" role="switch" name="${esc(name)}" ${checked ? 'checked' : ''} ${locked ? 'disabled' : ''}></label>`;
       const select = (name, label, value, entries, hint = '') => `<label class="settings-field"><span>${esc(label)}</span><select class="form-input" name="${name}">${entries.map(([v, text]) => `<option value="${esc(v)}" ${String(v) === String(value) ? 'selected' : ''}>${esc(text)}</option>`).join('')}</select>${hint ? `<small class="settings-help">${esc(hint)}</small>` : ''}</label>`;
       const serverStatus = server => badge(s(['online','connected'].includes(server.connectionState) ? 'jellyfinConnected' : server.hasApiKey === false ? 'missingApiKey' : 'jellyfinOffline'), ['online','connected'].includes(server.connectionState) ? 'success' : server.hasApiKey === false ? 'neutral' : 'error');
       const connectionText = server => ['Jellyfin connecté.','Jellyfin indisponible.','Clé API non configurée.'].includes(server.connectionMessage)||!server.connectionMessage ? s(['online','connected'].includes(server.connectionState)?'jellyfinConnected':server.hasApiKey===false?'missingApiKey':'jellyfinOffline') : server.connectionMessage;
@@ -103,11 +103,10 @@
       };
       async function load() {
         const current = ++generation;
-        const jobs = subpage === 'jellyfin' ? [get('/api/settings/jellyfin-servers'), get('/api/settings')] : subpage === 'sso' ? [get('/api/settings/sso')] : subpage === 'dataBackups' ? [get('/api/backup/auto')] : subpage === 'plugin/security' ? [get('/api/settings'), get('/api/admin/security/overview'), get('/api/admin/security/smart-settings')] : subpage === 'media' ? [get('/api/settings'), get('/api/settings/jellyfin-servers')] : [get('/api/settings')];
+        const jobs = subpage === 'jellyfin' ? [get('/api/settings/jellyfin-servers'), get('/api/settings')] : subpage === 'dataBackups' ? [get('/api/backup/auto')] : subpage === 'plugin/security' ? [get('/api/settings'), get('/api/admin/security/overview'), get('/api/admin/security/smart-settings')] : subpage === 'media' ? [get('/api/settings'), get('/api/settings/jellyfin-servers')] : [get('/api/settings')];
         const data = await Promise.all(jobs);
         if (!alive() || current !== generation) return;
         if (subpage === 'jellyfin') { serversData = data[0]; model = data[1]; }
-        else if (subpage === 'sso') sso = data[0];
         else if (subpage === 'dataBackups') backups = (data[0].backups || []).sort((a, b) => new Date(b.date) - new Date(a.date));
         else { model = data[0]; if (subpage === 'media') serversData = data[1]; if (subpage === 'plugin/security') { overview = data[1]; smart = data[2].thresholds || {}; } }
         model = copy(model);
@@ -137,18 +136,6 @@
         const secondary=servers.filter(server=>!server.isPrimary);
         if(secondary.length)html+=`<details class="settings-extra"><summary>${esc(s('secondaryServerLabel'))}</summary><div class="settings-secondary-management">${secondary.map(server=>`<div><strong>${esc(server.name)}</strong>${btn(t('common.delete'),'delete-server',`data-id="${esc(server.id)}"`,'danger')}</div>`).join('')}</div></details>`;
         return card(s('jellyfinServersTitle'), s('jellyfinServersDesc'), html);
-      }
-      function renderSSO() {
-        const locked = sso.isEnvControlled || {};
-        const anyEnv = Object.values(locked).some(Boolean);
-        const externalSwitch = html => html.replace('name=','form="settings-sso-config" name=');
-        const switches = `<div class="settings-sso-toggles">${externalSwitch(toggle('enabled', ts('enableSsoLabel'), sso.enabled, locked.enabled ? ts('envOverrideNotice') : ts('dbConfigurableNotice'), locked.enabled))}${externalSwitch(toggle('autoRedirect', ts('autoRedirectLabel'), sso.autoRedirect !== false, ts('autoRedirectNotice'), locked.autoRedirect))}</div>`;
-        const policy = document.documentElement.lang === 'fr'
-          ? 'Comptes LDAP : SSO obligatoire. Comptes Jellyfin locaux : mot de passe uniquement. Si le SSO est désactivé, les comptes LDAP restent bloqués. L’accès administrateur local de secours est conservé.'
-          : 'LDAP accounts require SSO. Local Jellyfin accounts require their password. Disabling SSO keeps LDAP accounts blocked. The local administrator recovery access remains available.';
-        const form = `<p class="settings-help">${esc(policy)}</p><form data-form="sso" id="settings-sso-config">${input('url', ts('oidcUrlLabel'), sso.url || '', { type: 'url', hint: ts('oidcUrlHint'), locked: locked.url })}<div class="settings-grid two">${input('clientId', ts('clientIdLabel'), sso.clientId || '', { locked: locked.clientId })}${input('clientSecret', ts('clientSecretLabel'), sso.hasClientSecret ? sso.clientSecretMasked || '••••••••' : '', { type: 'password', secret: true, locked: locked.clientSecret })}</div>${section(ts('groupsTitle'), '', `<div class="settings-grid two">${input('userGroup', ts('userGroupLabel'), sso.userGroup || '', { hint: ts('userGroupHint'), locked: locked.userGroup })}${input('adminGroup', ts('adminGroupLabel'), sso.adminGroup || '', { hint: ts('adminGroupHint'), locked: locked.adminGroup })}</div>`)}<p class="settings-help">${esc(ts('ssoConfigFormDesc'))}</p>${save(ts('saveButton'))}</form>`;
-        const stateBadges = badge(ts(sso.enabled ? 'statusActive' : 'statusInactive'), sso.enabled ? 'success' : '') + (anyEnv ? badge(ts('envPriorityBadge'), 'warning') : '');
-        return card(ts('title'), ts(sso.enabled ? 'descriptionActive' : 'descriptionInactive'), `<div class="settings-summary"><div><small>${esc(ts('authMode'))}</small><strong>${sso.enabled ? 'OpenID Connect (SSO)' : 'Jellyfin Direct'}</strong></div><div><small>${esc(ts('localAdminAccess'))}</small><strong>${esc(ts(sso.localAdminConfigured ? 'configured' : 'disabled'))}${sso.localAdminConfigured ? ` (${esc(sso.localAdminUser || '')})` : ''}</strong></div><div><small>${esc(ts('groupsSupport'))}</small><strong>${esc(ts(sso.userGroup || sso.adminGroup ? 'groupsActive' : 'openAccess'))}</strong></div></div>`, 'settings-sso-state', btn(ts('refresh'), 'refresh')).replace('</h2>', `${stateBadges}</h2>`) + card(ts('redirectUriTitle'), ts('redirectUriDesc'), `<div class="settings-copy-field">${input('callback', ts('redirectUriTitle'), location.origin + (sso.callbackPath || '/api/auth/callback/oidc'), { readOnly: true })}${btn(s('copy'), 'copy-url', `data-value="${esc(location.origin + (sso.callbackPath || '/api/auth/callback/oidc'))}"`)}</div>`, 'settings-sso-callback') + card(ts('ssoConfigFormTitle'), ts('ssoConfigFormDesc'), form, 'settings-sso-config', switches);
       }
       function renderMedia() {
         const resolution = object(model.resolutionThresholds);
@@ -206,7 +193,7 @@
       }
       function render() {
         if (!alive()) return;
-        const page = subpage==='jellyfin'?renderServers():subpage==='sso'?renderSSO():subpage==='media'?renderMedia():subpage==='plugin/security'?renderSecurity():subpage==='notifications'?renderNotifications():subpage.startsWith('scheduler')?renderScheduler():subpage==='dataBackups'?renderBackups():'';
+        const page = subpage==='jellyfin'?renderServers():subpage==='media'?renderMedia():subpage==='plugin/security'?renderSecurity():subpage==='notifications'?renderNotifications():subpage.startsWith('scheduler')?renderScheduler():subpage==='dataBackups'?renderBackups():'';
         body.innerHTML = `<div class="settings-feedback">${notice()}</div>${page}`;
         body.querySelectorAll('.settings-notification-fields[hidden] input,.settings-notification-fields[hidden] select').forEach(el=>el.disabled=true);
         body.querySelectorAll('form[data-form="server"],form[data-form="add-server"]').forEach(validateServerForm);
@@ -251,7 +238,7 @@
           model.pluginTelemetrySettings={precisionProfile:button.dataset.value,...Object.fromEntries(TELEMETRY.map(([key,,,value])=>[key,value])),...Object.fromEntries(TRACKING.map(key=>[key,true]))};
           Object.assign(model.pluginTelemetrySettings,button.dataset.value==='balanced'?{playingIntervalSeconds:15,pausedIntervalSeconds:60,staleSessionTimeoutSeconds:180}:button.dataset.value==='minimal'?{playingIntervalSeconds:30,pausedIntervalSeconds:120,staleSessionTimeoutSeconds:300,retryQueueSize:250,retryFlushBatchSize:25}:{});render();return;
         }
-        if(name==='copy-url') { await action(button,async()=>{await clipboard(button.dataset.value);copied(button,s('urlCopied'),subpage==='sso'?2500:1800);},s('urlCopied'));return; }
+        if(name==='copy-url') { await action(button,async()=>{await clipboard(button.dataset.value);copied(button,s('urlCopied'),1800);},s('urlCopied'));return; }
         if(name==='plugin-copy'||name==='plugin-regenerate'){
           await action(button,async()=>{
             const server=serversData.servers.find(v=>v.id===button.dataset.id);
@@ -305,14 +292,7 @@
             if(!persisted)throw new Error(s('serverUpdateError'));
             verify(persisted,{name:payload.name,url:payload.url});editing=null;adding=false;render();return;
           }
-          if(type==='sso'){
-            const payload={};['enabled','autoRedirect','url','clientId','userGroup','adminGroup'].forEach(key=>{if(!sso.isEnvControlled?.[key])payload[key]=values[key];});
-            payload.tokenAlg=sso.tokenAlg||'RS256';payload.keepExistingSecret=/[•●]/.test(values.clientSecret)||!!sso.isEnvControlled?.clientSecret;
-            if(!payload.keepExistingSecret)payload.clientSecret=values.clientSecret;
-            await write('/api/settings/sso',payload,'PUT');await load();
-            verify(sso,Object.fromEntries(['enabled','autoRedirect','url','clientId','userGroup','adminGroup'].filter(key=>key in payload).map(key=>[key,payload[key]])));
-            if(payload.clientSecret)verify(sso,{hasClientSecret:true});return;
-          }
+
           if(type==='import'){
             if(!importFile||!/\.zip$/i.test(importFile.name))throw new Error(s('invalidBackup'));
             if(importFile.size>100*1024*1024)throw new Error(s('invalidBackup')+' (100 '+t('common.mb')+')');
@@ -337,7 +317,7 @@
           }
           if(type==='wrapped')payload={wrappedVisible:values.wrappedVisible,wrappedPeriodEnabled:values.wrappedPeriodEnabled,...Object.fromEntries(['Start','End'].flatMap(pos=>[['Month',12],['Day',31]].map(([field,max])=>{const key='wrapped'+pos+field;return [key,clamp(values[key],1,max,1)];})))};
           await write('/api/settings',payload);await load();verify(model,payload);
-        },type==='sso'?ts('saveSuccess'):type==='telemetry'?s('telemetrySaved'):type==='smart'?sec('smartThresholdsSaved'):type==='schedules'?s('cronSaved'):type==='import'?s('restoreSuccess'):undefined);
+        },type==='telemetry'?s('telemetrySaved'):type==='smart'?sec('smartThresholdsSaved'):type==='schedules'?s('cronSaved'):type==='import'?s('restoreSuccess'):undefined);
       },listenOptions);
       async function clipboard(text) {
         try { await navigator.clipboard.writeText(text); }

@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-11T18:56:18.415Z",
+  "date": "2026-10-11T21:35:51.890Z",
   "scope": "Real isolated Go API, real standard/admin sessions, recorded SQLite fixture. No intercepted responses, no external send, no production data edits.",
   "checks": [
     {
@@ -100,8 +100,8 @@
         "topDevice": "Android TV",
         "topPhysicalDevice": "TV",
         "clients": {
-          "Android TV": 96490,
-          "Finamp": 95930
+          "Android TV": 87660,
+          "Finamp": 87350
         }
       }
     },
@@ -201,17 +201,7 @@
       "ok": true,
       "details": [
         {
-          "id": "qa-secondary-play1",
-          "bitrate": 12000,
-          "audioBitrateKbps": null
-        },
-        {
           "id": "qa-primary-play1",
-          "bitrate": 12000,
-          "audioBitrateKbps": null
-        },
-        {
-          "id": "qa-secondary-play2",
           "bitrate": 12000,
           "audioBitrateKbps": null
         },
@@ -221,17 +211,7 @@
           "audioBitrateKbps": null
         },
         {
-          "id": "qa-secondary-play7",
-          "bitrate": 12000,
-          "audioBitrateKbps": null
-        },
-        {
           "id": "qa-primary-play7",
-          "bitrate": 12000,
-          "audioBitrateKbps": null
-        },
-        {
-          "id": "qa-secondary-play8",
           "bitrate": 12000,
           "audioBitrateKbps": null
         },
@@ -241,17 +221,7 @@
           "audioBitrateKbps": null
         },
         {
-          "id": "qa-secondary-play10",
-          "bitrate": 12000,
-          "audioBitrateKbps": null
-        },
-        {
           "id": "qa-primary-play10",
-          "bitrate": 12000,
-          "audioBitrateKbps": null
-        },
-        {
-          "id": "qa-secondary-play11",
           "bitrate": 12000,
           "audioBitrateKbps": null
         },
@@ -359,6 +329,36 @@
           "id": "qa-primary-play59",
           "bitrate": 12000,
           "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play64",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play65",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play67",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play71",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play73",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
+        },
+        {
+          "id": "qa-primary-play74",
+          "bitrate": 12000,
+          "audioBitrateKbps": null
         }
       ]
     },
@@ -375,9 +375,9 @@
       "ok": true,
       "details": {
         "date": "11 oct.",
-        "time": "08:38",
-        "dateY": 522.6303100585938,
-        "timeY": 542.1303100585938,
+        "time": "21:33",
+        "dateY": 520.7504272460938,
+        "timeY": 540.2504272460938,
         "direction": "column"
       }
     },
@@ -630,6 +630,19 @@
           "type": "bar",
           "values": [
             0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             12,
             12,
             12,
@@ -638,19 +651,6 @@
             13,
             13,
             13,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
             0,
             0
           ]
@@ -1001,6 +1001,19 @@
       "type": "bar",
       "values": [
         0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
         12,
         12,
         12,
@@ -1009,19 +1022,6 @@
         13,
         13,
         13,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
         0,
         0
       ]

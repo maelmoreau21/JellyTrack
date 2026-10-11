@@ -269,7 +269,7 @@
       document.getElementById('nav-version').textContent=(collapsed?'v':'JellyTrack v')+(config.context().appVersion||'3.0.0');
     },
     settingsTabs(path) {
-      const tabs=[['jellyfin','jellyfinTitle','server'],['sso','ssoTitle','key'],['plugin/security','authSecurity','shield'],['media','mediaSettings','media'],['scheduler','taskScheduler','calendar'],['dataBackups','dataBackups','database'],['notifications','notifications','bell']];
+      const tabs=[['jellyfin','jellyfinTitle','server'],['plugin/security','authSecurity','shield'],['media','mediaSettings','media'],['scheduler','taskScheduler','calendar'],['dataBackups','dataBackups','database'],['notifications','notifications','bell']];
       return '<nav class="historical-settings-tabs" aria-label="'+config.escape(config.t('nav.settings'))+'">'+tabs.map(([route,key,img])=>{
         const href='/settings/'+route;
         const active=route==='jellyfin'?['/settings','/settings/jellyfin','/settings/plugin'].includes(path):path.startsWith(href);

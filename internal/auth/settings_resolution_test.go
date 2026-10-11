@@ -6,35 +6,28 @@ import (
 	"testing"
 )
 
-func TestSSODatabaseSettingsApplyPerFieldAndRespectEnvironmentLocks(t *testing.T) {
+func TestSSOEnvironmentOnlyIgnoresDatabaseSettings(t *testing.T) {
 	for _, key := range []string{"OIDC_ENABLED", "OIDC_ISSUER", "OIDC_URL", "AUTHENTIK_URL", "JELLYTRACK_AUTHENTIK_URL", "OIDC_CLIENT_ID", "OIDC_CLIENT_SECRET", "OIDC_USER_GROUP", "OIDC_ADMIN_GROUP", "OIDC_AUTO_REDIRECT", "OIDC_AUTO_LOGIN"} {
 		t.Setenv(key, "")
 		os.Unsetenv(key)
 	}
 	m, db := testManager(t)
-	if _, err := db.Exec(`INSERT INTO "GlobalSettings"("id","ssoSettings") VALUES('global','{"enabled":true,"url":"https://issuer.example","clientId":"database-client","clientSecret":"database-secret","userGroup":"members","adminGroup":"admins","autoRedirect":true}')`); err != nil {
+	if _, err := db.Exec(`INSERT INTO "GlobalSettings"("id","ssoSettings") VALUES('global','{"enabled":true,"url":"https://issuer.example","clientSecret":"database-secret","userGroup":"members"}')`); err != nil {
 		t.Fatal(err)
 	}
 	cfg := m.resolveOIDC(context.Background())
-	if !cfg.enabled || cfg.clientID != "database-client" || cfg.clientSecret != "database-secret" || !cfg.autoRedirect {
-		t.Fatalf("database settings ignored: enabled=%v client=%s", cfg.enabled, cfg.clientID)
+	if cfg.enabled || cfg.issuer != "" || cfg.clientSecret != "" || cfg.userGroup != "" {
+		t.Fatal("legacy database SSO settings are still active")
 	}
-	if _, err := db.Exec(`UPDATE "GlobalSettings" SET "ssoSettings"='{"enabled":false,"url":"https://issuer.example","clientId":"new-client","autoRedirect":false}'`); err != nil {
-		t.Fatal(err)
-	}
+	t.Setenv("OIDC_ENABLED", "true")
+	t.Setenv("OIDC_URL", "https://env.example")
+	t.Setenv("OIDC_CLIENT_SECRET", "env-secret")
 	cfg = m.resolveOIDC(context.Background())
-	if cfg.enabled || cfg.clientID != "new-client" || cfg.autoRedirect {
-		t.Fatal("SSO saved changes require restart")
+	if !cfg.enabled || cfg.issuer != "https://env.example" || cfg.clientSecret != "env-secret" {
+		t.Fatal("environment configuration ignored")
 	}
-	t.Setenv("OIDC_ENABLED", "false")
-	t.Setenv("OIDC_CLIENT_ID", "locked-client")
-	m = New(db, "sqlite")
-	cfg = m.resolveOIDC(context.Background())
-	if cfg.enabled || cfg.clientID != "locked-client" {
-		t.Fatal("database configuration bypassed env locks")
-	}
-	t.Setenv("OIDC_USER_GROUP", "")
-	if m.resolveOIDC(context.Background()).userGroup != "" {
-		t.Fatal("explicit empty environment value did not override database group")
+	t.Setenv("OIDC_ISSUER", "")
+	if m.resolveOIDC(context.Background()).issuer != "" {
+		t.Fatal("explicit empty issuer lost precedence")
 	}
 }

@@ -19,20 +19,26 @@ func policyUser(provider string, disabled bool) jellyfin.AuthenticatedUser {
 }
 
 func TestPasswordPolicyPreflightAndRecheck(t *testing.T) {
+	t.Setenv("LDAP_SSO_ONLY", "true")
 	for _, tc := range []struct {
 		name, provider, after string
 		disabled, outage      bool
+		unrestricted          bool
 		success               bool
 		calls                 int
 	}{
 		{name: "local", provider: jellyfin.LocalAuthenticationProvider, after: jellyfin.LocalAuthenticationProvider, success: true, calls: 1},
 		{name: "ldap", provider: jellyfin.LDAPAuthenticationProvider},
+		{name: "ldap classic allowed", provider: jellyfin.LDAPAuthenticationProvider, after: jellyfin.LDAPAuthenticationProvider, unrestricted: true, success: true, calls: 1},
 		{name: "missing"}, {name: "unknown", provider: "other"},
 		{name: "disabled", provider: jellyfin.LocalAuthenticationProvider, disabled: true},
 		{name: "outage", outage: true},
 		{name: "provider changed", provider: jellyfin.LocalAuthenticationProvider, after: jellyfin.LDAPAuthenticationProvider, calls: 1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.unrestricted {
+				t.Setenv("LDAP_SSO_ONLY", "false")
+			}
 			calls := 0
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/Users/AuthenticateByName" {
@@ -140,5 +146,28 @@ func TestPrePolicySessionRequiresFreshLogin(t *testing.T) {
 	}
 	if _, ok := m.authenticate(req); ok {
 		t.Fatal("historical session bypassed new login policy")
+	}
+}
+
+func TestDisabledJellyfinLoginCannotContactServer(t *testing.T) {
+	m, _ := testManager(t)
+	t.Setenv("JELLYFIN_AUTH_ENABLED", "false")
+	calls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { calls++; w.WriteHeader(500) }))
+	defer srv.Close()
+	t.Setenv("JELLYFIN_URL", srv.URL)
+	req := httptest.NewRequest("POST", "/api/auth/login", bytes.NewBufferString(`{"username":"alice","password":"password"}`))
+	req.RemoteAddr = "198.51.100.20:1234"
+	w := httptest.NewRecorder()
+	m.login(w, req)
+	if w.Code != 403 || calls != 0 {
+		t.Fatalf("disabled login: status=%d calls=%d", w.Code, calls)
+	}
+	w = httptest.NewRecorder()
+	m.authProviders(w, httptest.NewRequest("GET", "/api/auth/providers", nil))
+	var providers map[string]any
+	json.Unmarshal(w.Body.Bytes(), &providers)
+	if providers["credentials"] != nil {
+		t.Fatal("disabled classic provider advertised")
 	}
 }

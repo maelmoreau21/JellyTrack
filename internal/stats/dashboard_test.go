@@ -167,3 +167,24 @@ func TestGranularAndNetworkAnalysis(t *testing.T) {
 		t.Errorf("expected subtitlesBurnIn reason, got %+v", netw.CoupableTable)
 	}
 }
+
+func TestTodayCountsSQLiteAndISODateFormats(t *testing.T) {
+	db := statsDB(t)
+	for _, q := range []string{
+		`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s','js','S','http://s')`,
+		`INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u','s','ju','U')`,
+		`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type") VALUES('m','s','jm','M','Movie')`,
+		`INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","durationWatched","playMethod","startedAt") VALUES('sqlite','s','u','m',1800,'DirectPlay',datetime('now')),('iso','s','u','m',1800,'DirectPlay',strftime('%Y-%m-%dT%H:%M:%SZ','now')),('yesterday','s','u','m',1800,'DirectPlay',datetime('now','-1 day'))`,
+	} {
+		if _, err := db.Exec(q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	result, err := GetFullDashboard(context.Background(), db, "sqlite", DashboardFilter{TimeRange: "30d"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.TodayPlays != 2 || result.TodayHours != "1.0" || result.TodayActiveUsers != 1 {
+		t.Fatalf("today: %+v", result)
+	}
+}

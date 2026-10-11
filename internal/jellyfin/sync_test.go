@@ -139,3 +139,44 @@ func TestSyncResolvesConfiguredServerWithoutChangingInternalID(t *testing.T) {
 		t.Fatalf("existing data lost: %d %v", count, err)
 	}
 }
+
+func TestSyncSameServerUUIDFormattingPreservesExistingData(t *testing.T) {
+	db := testdb.Open(t, "sqlite")
+	compact := "edd627c376f2402bb03cd2e31e574198"
+	dashed := "edd627c3-76f2-402b-b03c-d2e31e574198"
+	remote := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/System/Info":
+			fmt.Fprintf(w, `{"Id":%q,"ServerName":"Same"}`, compact)
+		case "/Users":
+			fmt.Fprint(w, `[]`)
+		default:
+			fmt.Fprint(w, `{"Items":[],"TotalRecordCount":0}`)
+		}
+	}))
+	defer remote.Close()
+	if _, err := db.Exec(`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s',?,'S',?)`, dashed, remote.URL); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type") VALUES('m','s','jm','M','Movie')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := SyncOne(context.Background(), db, "sqlite", "s", dashed, "S", remote.URL, "key"); err != nil {
+		t.Fatal(err)
+	}
+	var identity string
+	if err := db.QueryRow(`SELECT "jellyfinServerId" FROM "Server" WHERE "id"='s'`).Scan(&identity); err != nil || identity != dashed {
+		t.Fatalf("identity=%s err=%v", identity, err)
+	}
+}
+
+func TestResolutionLabelRecognizes1440pAndCroppedVideo(t *testing.T) {
+	for _, tc := range []struct {
+		width, height int
+		want          any
+	}{{2560, 1440, "1440p"}, {3840, 1600, "4K"}, {1920, 800, "1080p"}, {1280, 536, "720p"}, {0, 0, nil}} {
+		if got := resolutionLabel(tc.width, tc.height); got != tc.want {
+			t.Fatalf("%dx%d: %v, want %v", tc.width, tc.height, got, tc.want)
+		}
+	}
+}

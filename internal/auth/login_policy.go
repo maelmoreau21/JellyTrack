@@ -7,9 +7,24 @@ import (
 	"strings"
 	"time"
 
+	"github.com/maelmoreau21/jellytrack/internal/config"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/jellyfin"
 )
+
+func jellyfinLoginEnabled() bool {
+	value, set := config.EnvironmentOverride("true", "JELLYFIN_AUTH_ENABLED")
+	return !set || config.EnvironmentBool(value)
+}
+
+func ldapSSOOnly() bool {
+	value, set := config.EnvironmentOverride("true", "LDAP_SSO_ONLY")
+	return !set || config.EnvironmentBool(value)
+}
+
+func passwordProviderAllowed(provider string) bool {
+	return provider == jellyfin.LocalAuthenticationProvider || (!ldapSSOOnly() && provider == jellyfin.LDAPAuthenticationProvider)
+}
 
 // A positive password result is insufficient: Jellyfin may delegate to LDAP.
 // Metadata failures are terminal, including on the primary server, so fallback
@@ -37,7 +52,7 @@ func authenticateLocal(ctx context.Context, baseURL, apiKey, username, password 
 	if match == nil {
 		return jellyfin.AuthenticatedUser{}, false, fmt.Errorf("invalid credentials")
 	}
-	if match.ID == "" || match.Policy.IsDisabled || match.Policy.AuthenticationProviderID != jellyfin.LocalAuthenticationProvider {
+	if match.ID == "" || match.Policy.IsDisabled || !passwordProviderAllowed(match.Policy.AuthenticationProviderID) {
 		return jellyfin.AuthenticatedUser{}, true, fmt.Errorf("password login forbidden")
 	}
 	user, err := jellyfin.Authenticate(ctx, baseURL, username, password)
@@ -49,7 +64,7 @@ func authenticateLocal(ctx context.Context, baseURL, apiKey, username, password 
 	}
 	// Re-read with the administrative API key; ordinary login responses can omit policy.
 	current, err := client.AuthenticationUser(ctx, user.ID)
-	if err != nil || current.Name == "" || !sameJellyfinID(current.ID, match.ID) || current.Policy.IsDisabled || current.Policy.AuthenticationProviderID != jellyfin.LocalAuthenticationProvider {
+	if err != nil || current.Name == "" || !sameJellyfinID(current.ID, match.ID) || current.Policy.IsDisabled || !passwordProviderAllowed(current.Policy.AuthenticationProviderID) || current.Policy.AuthenticationProviderID != match.Policy.AuthenticationProviderID {
 		return user, true, fmt.Errorf("unverifiable local identity")
 	}
 	return current, false, nil
@@ -86,8 +101,8 @@ func (m *Manager) oidcAccount(ctx context.Context, claims map[string]any) (jelly
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	user, err := client.AuthenticationUser(ctx, userID)
-	if err != nil || !sameJellyfinID(user.ID, userID) || user.Name == "" || user.Policy.IsDisabled || user.Policy.AuthenticationProviderID != jellyfin.LDAPAuthenticationProvider {
-		return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("SSO requires verified LDAP identity")
+	if err != nil || !sameJellyfinID(user.ID, userID) || user.Name == "" || user.Policy.IsDisabled || (user.Policy.AuthenticationProviderID != jellyfin.LDAPAuthenticationProvider && (ldapSSOOnly() || user.Policy.AuthenticationProviderID != jellyfin.LocalAuthenticationProvider)) {
+		return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("SSO requires verified Jellyfin identity and allowed authentication provider")
 	}
 	return user, serverID, nil
 }

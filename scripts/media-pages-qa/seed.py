@@ -50,7 +50,7 @@ for sid, name, url in [('qa-primary','QA principal','http://127.0.0.1:9'),('qa-s
 db.execute("INSERT OR IGNORE INTO GlobalSettings(id) VALUES('global')")
 db.execute("UPDATE GlobalSettings SET defaultLocale='fr',wrappedVisible=1,wrappedPeriodEnabled=0 WHERE id='global'")
 expiry=iso(now+dt.timedelta(days=1));sid='media-pages-qa-user-session'
-identity=dict(username='Alice QA',role='user',jellyfinUserId='alice',authServerId='qa-primary',identityVersion=1,authServerName='QA principal',authServerIsPrimary=True)
+identity=dict(username='Alice QA',role='user',jellyfinUserId='alice',authServerId='qa-primary',identityVersion=2,authMethod='jellyfin',authServerName='QA principal',authServerIsPrimary=True)
 insert('AuthSession',dict(id=sid,username='Alice QA',role='user',expiresAt=expiry,createdAt=iso(now),identity=json.dumps(identity)))
 enc=lambda value:base64.urlsafe_b64encode(value).decode().rstrip('=')
 payload=sid+'.'+enc(expiry.encode());cookie=payload+'.'+enc(hmac.new(b'Media-pages-QA-only-secret-2026-0123456789abcdef',payload.encode(),hashlib.sha256).digest())

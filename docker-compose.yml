@@ -43,6 +43,8 @@ services:
       PLUGIN_KEY_PEPPER: ${PLUGIN_KEY_PEPPER:?Set PLUGIN_KEY_PEPPER in .env}
 
       # SSO / OIDC (OpenID Connect)
+      JELLYFIN_AUTH_ENABLED: ${JELLYFIN_AUTH_ENABLED:-true}
+      LDAP_SSO_ONLY: ${LDAP_SSO_ONLY:-true}
       OIDC_ENABLED: ${OIDC_ENABLED:-false}
       OIDC_URL: ${OIDC_URL:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}

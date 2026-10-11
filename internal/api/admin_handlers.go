@@ -486,106 +486,18 @@ func (h *Handler) metadataAudit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getSSO(w http.ResponseWriter, r *http.Request) {
-	var raw sql.NullString
-	_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "ssoSettings" FROM "GlobalSettings" WHERE "id"='global'`, h.driver)).Scan(&raw)
-
-	dbCfg := map[string]any{
-		"enabled":      false,
-		"url":          "",
-		"clientId":     "",
-		"clientSecret": "",
-		"userGroup":    "",
-		"adminGroup":   "",
-		"tokenAlg":     "RS256",
-		"autoRedirect": true,
-	}
-	if raw.Valid && raw.String != "" {
-		_ = json.Unmarshal([]byte(raw.String), &dbCfg)
-	}
-
-	envEnabled, hasEnvEnabled := config.EnvironmentOverride("", "OIDC_ENABLED")
-	enabled, _ := dbCfg["enabled"].(bool)
-	if hasEnvEnabled {
-		enabled = config.EnvironmentBool(envEnabled)
-	}
-	read := func(field string, keys ...string) (string, bool) {
-		value, _ := dbCfg[field].(string)
-		return config.EnvironmentOverride(value, keys...)
-	}
-	ssoURL, hasEnvURL := read("url", "OIDC_ISSUER", "OIDC_URL", "AUTHENTIK_URL", "JELLYTRACK_AUTHENTIK_URL")
-	clientID, hasEnvClientID := read("clientId", "OIDC_CLIENT_ID")
-	clientSecret, hasEnvClientSecret := read("clientSecret", "OIDC_CLIENT_SECRET")
-	userGroup, hasEnvUserGroup := read("userGroup", "OIDC_USER_GROUP")
-	adminGroup, hasEnvAdminGroup := read("adminGroup", "OIDC_ADMIN_GROUP")
-	autoRedirect, _ := dbCfg["autoRedirect"].(bool)
-	envAuto, hasEnvAutoRedir := config.EnvironmentOverride("", "OIDC_AUTO_REDIRECT", "OIDC_AUTO_LOGIN")
-	if hasEnvAutoRedir {
-		autoRedirect = config.EnvironmentBool(envAuto)
-	}
-
-	maskedSecret := ""
-	if len(clientSecret) > 6 {
-		maskedSecret = clientSecret[:3] + "••••••••" + clientSecret[len(clientSecret)-3:]
-	} else if len(clientSecret) > 0 {
-		maskedSecret = "••••••••"
-	}
-
-	dbSecret, _ := dbCfg["clientSecret"].(string)
-	dbMaskedSecret := ""
-	if len(dbSecret) > 6 {
-		dbMaskedSecret = dbSecret[:3] + "••••••••" + dbSecret[len(dbSecret)-3:]
-	} else if len(dbSecret) > 0 {
-		dbMaskedSecret = "••••••••"
-	}
-
-	localAdminConfigured := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD"), os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD")) != ""
-	localAdminUser := first(os.Getenv("JELLYTRACK_LOCAL_ADMIN_USER"), os.Getenv("JELLYGATE_LOCAL_ADMIN_USER"), "admin")
-
+	read := func(keys ...string) string { value, _ := config.EnvironmentOverride("", keys...); return value }
+	secret := read("OIDC_CLIENT_SECRET")
+	auto, _ := config.EnvironmentOverride("true", "OIDC_AUTO_REDIRECT", "OIDC_AUTO_LOGIN")
 	jsonResponse(w, 200, map[string]any{
-		"enabled":            enabled,
-		"url":                ssoURL,
-		"clientId":           clientID,
-		"hasClientSecret":    len(clientSecret) > 0,
-		"clientSecret":       maskedSecret,
-		"clientSecretMasked": maskedSecret,
-		"userGroup":          userGroup,
-		"adminGroup":         adminGroup,
-		"tokenAlg":           "RS256",
-		"autoRedirect":       autoRedirect,
-		"origins": map[string]string{
-			"enabled":      ternary(hasEnvEnabled, "env", ternary(raw.Valid, "db", "default")),
-			"url":          ternary(hasEnvURL, "env", ternary(ssoURL != "", "db", "default")),
-			"clientId":     ternary(hasEnvClientID, "env", ternary(clientID != "", "db", "default")),
-			"clientSecret": ternary(hasEnvClientSecret, "env", ternary(clientSecret != "", "db", "default")),
-			"userGroup":    ternary(hasEnvUserGroup, "env", ternary(userGroup != "", "db", "default")),
-			"adminGroup":   ternary(hasEnvAdminGroup, "env", ternary(adminGroup != "", "db", "default")),
-			"tokenAlg":     "default",
-			"autoRedirect": ternary(hasEnvAutoRedir, "env", ternary(raw.Valid, "db", "default")),
-		},
-		"isEnvControlled": map[string]bool{
-			"enabled":      hasEnvEnabled,
-			"url":          hasEnvURL,
-			"clientId":     hasEnvClientID,
-			"clientSecret": hasEnvClientSecret,
-			"userGroup":    hasEnvUserGroup,
-			"adminGroup":   hasEnvAdminGroup,
-			"tokenAlg":     false,
-			"autoRedirect": hasEnvAutoRedir,
-		},
-		"dbConfig": map[string]any{
-			"enabled":            dbCfg["enabled"],
-			"url":                dbCfg["url"],
-			"clientId":           dbCfg["clientId"],
-			"hasClientSecret":    len(dbSecret) > 0,
-			"clientSecretMasked": dbMaskedSecret,
-			"userGroup":          dbCfg["userGroup"],
-			"adminGroup":         dbCfg["adminGroup"],
-			"tokenAlg":           "RS256",
-			"autoRedirect":       dbCfg["autoRedirect"],
-		},
-		"localAdminConfigured": localAdminConfigured,
-		"localAdminUser":       localAdminUser,
-		"callbackPath":         "/api/auth/oidc/callback",
+		"enabled":         config.EnvironmentBool(read("OIDC_ENABLED")),
+		"url":             read("OIDC_ISSUER", "OIDC_URL", "AUTHENTIK_URL", "JELLYTRACK_AUTHENTIK_URL"),
+		"clientId":        first(read("OIDC_CLIENT_ID"), "jellytrack"),
+		"hasClientSecret": secret != "", "clientSecretMasked": ternary(secret != "", "••••••••", ""),
+		"userGroup": read("OIDC_USER_GROUP"), "adminGroup": read("OIDC_ADMIN_GROUP"),
+		"autoRedirect": config.EnvironmentBool(auto), "configurationSource": "environment",
+		"isEnvControlled": map[string]bool{"enabled": true, "url": true, "clientId": true, "clientSecret": true, "userGroup": true, "adminGroup": true, "autoRedirect": true},
+		"callbackPath":    "/api/auth/callback/oidc",
 	})
 }
 
@@ -597,7 +509,7 @@ func ternary(cond bool, a, b string) string {
 }
 
 func (h *Handler) updateSSO(w http.ResponseWriter, r *http.Request) {
-	h.saveRecoveredSSO(w, r)
+	jsonError(w, http.StatusGone, "Le SSO est configuré uniquement par les variables d’environnement.")
 }
 
 func (h *Handler) getSessionPolicy(w http.ResponseWriter, r *http.Request) {

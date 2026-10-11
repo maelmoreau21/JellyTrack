@@ -4602,3 +4602,18 @@ select option, select optgroup {
   .mr-categories.mr-recent-categories button > span { display: inline; }
   .mr-categories.mr-recent-categories .segment-btn { padding: 6px 10px; }
 }
+
+/* Fit all 24 hours in the attendance card, including narrow screens. */
+.attendance-heatmap-container { box-sizing: border-box; min-width: 0; }
+.attendance-table { min-width: 0; border-spacing: 2px; }
+.attendance-table .attendance-row-lbl { width: 45px !important; padding-right: 3px; }
+.attendance-th { font-size: clamp(0.45rem, 0.8vw, 0.68rem); }
+.banner-metric-item .nav-icon { width: 20px; height: 20px; flex-shrink: 0; }
+@media (max-width: 480px) {
+ .attendance-heatmap-container { padding: 0.35rem !important; }
+ .attendance-table { border-spacing: 1px; }
+ .attendance-table .attendance-row-lbl { width: 28px !important; font-size: 0.55rem; }
+ .attendance-cell { height: 18px; }
+}
+
+.attendance-card { grid-column: 1 / -1; min-width: 0; }

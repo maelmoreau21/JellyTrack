@@ -16,12 +16,16 @@ import (
 
 func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 	for _, tc := range []struct {
-		name, provider  string
-		missing, tamper bool
-		success         bool
+		name, provider                                 string
+		missing, tamper                                bool
+		success                                        bool
+		admin, restricted, unrestricted, requiredGroup bool
 	}{
 		{name: "ldap", provider: jellyfin.LDAPAuthenticationProvider, success: true},
 		{name: "local", provider: jellyfin.LocalAuthenticationProvider},
+		{name: "local unrestricted", provider: jellyfin.LocalAuthenticationProvider, unrestricted: true, success: true},
+		{name: "admin without groups", provider: jellyfin.LDAPAuthenticationProvider, admin: true, success: true},
+		{name: "Jellyfin admin cannot bypass explicit group", provider: jellyfin.LDAPAuthenticationProvider, admin: true, requiredGroup: true},
 		{name: "missing stable claim", provider: jellyfin.LDAPAuthenticationProvider, missing: true},
 		{name: "invalid signature", provider: jellyfin.LDAPAuthenticationProvider, tamper: true},
 	} {
@@ -32,7 +36,9 @@ func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 				os.Unsetenv(key)
 			}
 			jf := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				json.NewEncoder(w).Encode(policyUser(tc.provider, false))
+				u := policyUser(tc.provider, false)
+				u.Policy.IsAdministrator = tc.admin
+				json.NewEncoder(w).Encode(u)
 			}))
 			defer jf.Close()
 			if _, err := db.Exec(`INSERT INTO "Server"("id","jellyfinServerId","name","url","jellyfinApiKey") VALUES('s1','jf1','One',?,'key')`, jf.URL); err != nil {
@@ -85,6 +91,13 @@ func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 			t.Setenv("OIDC_ISSUER", issuer)
 			t.Setenv("OIDC_ENABLED", "true")
 			t.Setenv("OIDC_CLIENT_ID", "test-client")
+			t.Setenv("LDAP_SSO_ONLY", "true")
+			if tc.unrestricted {
+				t.Setenv("LDAP_SSO_ONLY", "false")
+			}
+			if tc.requiredGroup {
+				t.Setenv("OIDC_ADMIN_GROUP", "admins")
+			}
 			req := httptest.NewRequest("GET", "http://localhost/api/auth/callback/oidc?state=state&code=code", nil)
 			req.AddCookie(&http.Cookie{Name: oidcFlowCookie, Value: "state.nonce.verifier"})
 			w := httptest.NewRecorder()
@@ -103,6 +116,9 @@ func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 					}
 				}
 				p, ok := m.authenticate(req)
+				if ok && p.IsAdmin() != tc.admin {
+					t.Fatalf("wrong role: %+v", p)
+				}
 				if !ok || p.Username != "alice" || p.AuthServerID != "s1" || p.OIDCSubject != "immutable-subject" || p.OIDCIssuer != issuer {
 					t.Fatalf("identity not persisted: %+v %v", p, ok)
 				}

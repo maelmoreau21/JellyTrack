@@ -98,7 +98,7 @@ func TestSSOSavePreservesSecretAndEnvironmentSources(t *testing.T) {
 	for _, body := range []string{`{"autoRedirect":false}`, `{"clientSecret":"pri••••••••ret","keepExistingSecret":true}`} {
 		w := httptest.NewRecorder()
 		h.updateSSO(w, httptest.NewRequest("PUT", "/api/settings/sso", strings.NewReader(body)))
-		if w.Code != 200 || strings.Contains(w.Body.String(), "private-secret") {
+		if w.Code != 410 || strings.Contains(w.Body.String(), "private-secret") {
 			t.Fatalf("SSO save %d leaked/failed %s", w.Code, w.Body.String())
 		}
 	}
@@ -106,7 +106,7 @@ func TestSSOSavePreservesSecretAndEnvironmentSources(t *testing.T) {
 	db.QueryRow(`SELECT "ssoSettings" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&raw)
 	var config map[string]any
 	json.Unmarshal([]byte(raw), &config)
-	if config["clientSecret"] != "private-secret" || config["clientId"] != "client" || config["autoRedirect"] != false {
+	if config["clientSecret"] != "private-secret" || config["clientId"] != "client" || config["autoRedirect"] != nil {
 		t.Fatalf("SSO was reset: %s", raw)
 	}
 	t.Setenv("OIDC_CLIENT_ID", "env-client")
@@ -114,7 +114,7 @@ func TestSSOSavePreservesSecretAndEnvironmentSources(t *testing.T) {
 	h.getSSO(w, httptest.NewRequest("GET", "/api/settings/sso", nil))
 	var result map[string]any
 	json.Unmarshal(w.Body.Bytes(), &result)
-	if result["clientId"] != "env-client" || result["dbConfig"].(map[string]any)["clientId"] != "client" {
+	if result["clientId"] != "env-client" || result["configurationSource"] != "environment" {
 		t.Fatal("environment precedence was not preserved")
 	}
 }

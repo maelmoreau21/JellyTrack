@@ -3028,6 +3028,7 @@
             const takeCard = id => granContainer.querySelector(`#${id}`)?.closest('.chart-card, .card');
             const originalCards = Array.from(granContainer.querySelectorAll('.chart-card, .card'));
             const attendanceCard = granContainer.querySelector('.attendance-heatmap-container')?.closest('.card');
+            attendanceCard?.classList.add('attendance-card');
             const segmentCard = originalCards.find(card => card.textContent.includes("Segments d'abandon"));
             const abandonedCard = granContainer.querySelector('.ranking-list')?.closest('.card');
             segmentCard.querySelector('div[style*="padding:1.25rem"]').innerHTML = '<div class="chart-wrap" style="height:300px"><canvas id="chart-abandon-segments"></canvas></div>';
@@ -3728,11 +3729,13 @@
       let oidcEnabled = false;
       let oidcAutoRedirect = false;
       let localAdminEnabled = false;
+      let jellyfinEnabled = true;
       try {
         const opts = await API.getJSON('/api/auth/options');
         oidcEnabled = !!opts.oidc;
         oidcAutoRedirect = !!opts.autoRedirect;
         localAdminEnabled = !!opts.localAdmin;
+        jellyfinEnabled = opts.jellyfin !== false;
       } catch (e) {}
 
       // 2. Query Parameters
@@ -3810,11 +3813,11 @@
                 </a>
               `}
 
-              ${localAdminEnabled ? `
+              ${localAdminEnabled || jellyfinEnabled ? `
                 <div class="auth-toggle-local-wrap">
                   <button type="button" id="btn-toggle-local" class="auth-toggle-local-btn">
                     ${window.JellyTrackNavigation.icon('key')}
-                    <span>${I18n.t('login.localLogin') || 'Utilisateur local'}</span>
+                    <span>${jellyfinEnabled ? 'Jellyfin' : (I18n.t('login.localLogin') || 'Utilisateur local')}</span>
                   </button>
                 </div>
               ` : ''}
@@ -3828,7 +3831,7 @@
                 <div class="auth-local-header">
                   <span class="auth-local-title">
                     ${window.JellyTrackNavigation.icon('key')}
-                    <span>${I18n.t('login.localAdminTitle') || 'Connexion locale (Admin)'}</span>
+                    <span>${jellyfinEnabled ? 'Connexion Jellyfin' : (I18n.t('login.localAdminTitle') || 'Connexion locale (Admin)')}</span>
                   </span>
                   <button type="button" id="btn-back-sso" class="auth-back-sso-btn" ${!oidcEnabled ? 'hidden' : ''}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7M5 12h14"/></svg>
@@ -3847,7 +3850,7 @@
                   <label class="auth-label" for="login-username">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
                   <div class="auth-input-wrapper">
                     <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <input type="text" class="auth-input-field" id="login-username" required value="admin" placeholder="admin">
+                    <input type="text" class="auth-input-field" id="login-username" required value="" autocomplete="username" placeholder="Jellyfin">
                   </div>
                 </div>
 
@@ -4412,109 +4415,6 @@
       });
     },
 
-    // 14. Logs
-    async systemLogs() {
-      const main = document.getElementById('app-main');
-      main.innerHTML = `
-        <div class="page-header">
-          <div>
-            <h1 class="page-title">
-              <svg style="width:26px;height:26px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              ${I18n.t('nav.logs') || 'Journaux Système'}
-            </h1>
-            <p class="page-subtitle">Événements internes, erreurs, diagnostics et synchronisations JellyTrack.</p>
-          </div>
-
-          <div class="page-actions">
-            <a href="/api/logs/system/download" class="btn btn-secondary btn-sm" download style="display:flex;align-items:center;gap:0.4rem;">
-              <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Télécharger
-            </a>
-            <a href="/api/logs/export" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:0.4rem;">
-              <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><line x1="18" y1="8" x2="23" y2="8"/></svg>
-              Export CSV
-            </a>
-            ${State.user && State.user.isAdmin ? `
-              <button class="btn btn-danger btn-sm" id="btn-clear-logs" style="display:flex;align-items:center;gap:0.4rem;">
-                <svg style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                Purger
-              </button>
-            ` : ''}
-          </div>
-        </div>
-
-        <div class="card" style="padding: 0; margin-top: 1.25rem;">
-          <div class="table-wrapper" style="border: none;">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th style="width: 100px;">Niveau</th>
-                  <th>Message</th>
-                  <th style="width: 180px;">Horodatage</th>
-                </tr>
-              </thead>
-              <tbody id="logs-table-body">
-                <tr><td colspan="3" class="skeleton" style="height: 80px;"></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-
-      try {
-        const data = await API.getJSON('/api/logs/system');
-        const tbody = document.getElementById('logs-table-body');
-        if (!data.logs || data.logs.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="3">
-                <div class="empty-state">
-                  <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
-                  <span class="empty-state-title">Aucun log enregistré</span>
-                  <span>Les événements système récents apparaîtront ici.</span>
-                </div>
-              </td>
-            </tr>`;
-          return;
-        }
-
-        tbody.innerHTML = data.logs.map((l) => `
-          <tr>
-            <td>
-              <span class="badge ${l.level === 'ERROR' ? 'badge-danger' : l.level === 'WARN' ? 'badge-warning' : 'badge-primary'}">
-                ${Utils.escapeHtml(l.level || 'INFO')}
-              </span>
-            </td>
-            <td style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.82rem; word-break: break-all;">
-              ${Utils.escapeHtml(l.message || l.msg || '')}
-            </td>
-            <td style="white-space: nowrap; font-size: 0.8rem; color: var(--muted-foreground);">
-              ${Utils.formatDateTime(l.time || l.timestamp)}
-            </td>
-          </tr>
-        `).join('');
-
-        document.getElementById('btn-clear-logs')?.addEventListener('click', () => {
-          Modal.showAction({
-            title: 'Vider les journaux',
-            bodyHtml: '<p>Êtes-vous certain de vouloir purger l’historique des journaux système ? Cette action est irréversible.</p>',
-            confirmText: 'Purger les journaux',
-            onConfirm: async () => {
-              try {
-                await API.delete('/api/logs/system');
-                Toast.success('Journaux vidés avec succès.');
-                Router.renderCurrent();
-              } catch (e) {
-                Toast.error(e.message);
-              }
-            },
-          });
-        });
-      } catch (e) {
-        Toast.error(e.message);
-      }
-    },
-
     // 15. Settings Layout & Pages
     async settings(subpage = 'overview') {
       const main = document.getElementById('app-main');
@@ -4986,64 +4886,6 @@
                 Toast.error(e.message);
               }
             });
-          });
-        } catch (e) {
-          Toast.error(e.message);
-        }
-      }
-
-      // Subpage 6: SSO
-      else if (subpage === 'sso') {
-        try {
-          const sso = await API.getJSON('/api/settings/sso');
-          container.innerHTML = `
-            <div class="card" style="max-width: 650px;">
-              <div class="card-header">
-                <div class="card-title">🔐 Fournisseur OpenID Connect (Authentik, Keycloak)</div>
-              </div>
-              <form id="form-sso" style="display: flex; flex-direction: column; gap: 1rem;">
-                <label class="form-switch">
-                  <input type="checkbox" id="sso-enabled" ${sso.enabled ? 'checked' : ''} style="display:none;">
-                  <span class="switch-toggle"></span>
-                  <span class="form-label" style="margin: 0;">Activer la connexion SSO</span>
-                </label>
-
-                <div class="form-group">
-                  <label class="form-label">URL de l’émetteur (Issuer URL)</label>
-                  <input type="url" class="form-input" id="sso-url" value="${Utils.escapeHtml(sso.url || '')}" placeholder="https://auth.example.com/application/o/jellytrack/">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Client ID</label>
-                  <input type="text" class="form-input" id="sso-client-id" value="${Utils.escapeHtml(sso.clientId || '')}">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Client Secret</label>
-                  <input type="password" class="form-input" id="sso-client-secret" placeholder="Laisser vide pour ne pas modifier">
-                </div>
-
-                <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Enregistrer la configuration SSO</button>
-              </form>
-            </div>
-          `;
-
-          document.getElementById('form-sso').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const payload = {
-              enabled: document.getElementById('sso-enabled').checked,
-              url: document.getElementById('sso-url').value.trim(),
-              clientId: document.getElementById('sso-client-id').value.trim(),
-            };
-            const sec = document.getElementById('sso-client-secret').value;
-            if (sec) payload.clientSecret = sec;
-
-            try {
-              await API.request('/api/settings/sso', { method: 'PUT', body: payload });
-              Toast.success('Configuration SSO enregistrée.');
-            } catch (err) {
-              Toast.error(err.message);
-            }
           });
         } catch (e) {
           Toast.error(e.message);
@@ -6070,7 +5912,7 @@
       } else if (path === '/media' || path.startsWith('/media/')) {
         Pages.mediaPage(path);
       } else if (path === '/logs') {
-        window.JellyTrackHistory.mount({ main: document.getElementById('app-main'), api: API, utils: Utils, i18n: I18n, signal: State.pageController.signal, user: State.user, navigation: State.navigation, openSystemLogs: () => Pages.systemLogs() });
+        window.JellyTrackHistory.mount({ main: document.getElementById('app-main'), api: API, utils: Utils, i18n: I18n, signal: State.pageController.signal, user: State.user, navigation: State.navigation });
       } else if (path.startsWith('/settings')) {
         const rest = path.slice('/settings'.length).replace(/^\//, '');
         const sub = rest || 'overview';

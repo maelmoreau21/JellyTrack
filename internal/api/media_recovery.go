@@ -46,8 +46,28 @@ func (h *Handler) recoveredMediaBase(r *http.Request) (string, []any, error) {
 		playback += ` AND p."userId"=? AND p."serverId"=?`
 		args = append(args, uid, sid)
 	}
-	cte := `WITH RECURSIVE catalog AS (SELECT m.*,s."name" AS "server",(SELECT a."title" FROM "Media" a WHERE a."serverId"=m."serverId" AND (a."id"=m."parentId" OR a."jellyfinMediaId"=m."parentId") LIMIT 1) AS "parentTitle" FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE ` + strings.Join(clauses, " AND ") + `), family("root","member") AS (SELECT "id","id" FROM catalog UNION SELECT f."root",c."id" FROM family f JOIN catalog p ON p."id"=f."member" JOIN catalog c ON c."serverId"=p."serverId" AND (c."parentId"=p."id" OR c."parentId"=p."jellyfinMediaId")), valid AS (SELECT p.* FROM "PlaybackHistory" p JOIN catalog m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE ` + playback + `), agg AS (SELECT f."root",COUNT(p."id") AS "plays",COALESCE(SUM(p."durationWatched"),0)*1000 AS "watchTimeMs",MAX(p."startedAt") AS "lastPlayed",SUM(CASE WHEN p."playMethod"='DirectPlay' THEN 1 ELSE 0 END) AS "directPlays" FROM family f LEFT JOIN valid p ON p."mediaId"=f."member" GROUP BY f."root") `
+	cte := `WITH RECURSIVE catalog AS (SELECT m.*,s."name" AS "server",COALESCE((SELECT a."title" FROM "Media" a WHERE a."serverId"=m."serverId" AND a."id"=m."parentId" LIMIT 1),(SELECT a."title" FROM "Media" a WHERE a."serverId"=m."serverId" AND a."jellyfinMediaId"=m."parentId" LIMIT 1)) AS "parentTitle" FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE ` + strings.Join(clauses, " AND ") + `), edges("parent","child") AS (SELECT p."id",c."id" FROM catalog p JOIN catalog c ON c."serverId"=p."serverId" AND c."parentId"=p."id" UNION SELECT p."id",c."id" FROM catalog p JOIN catalog c ON c."serverId"=p."serverId" AND c."parentId"=p."jellyfinMediaId"), family("root","member") AS (SELECT "id","id" FROM catalog UNION SELECT f."root",e."child" FROM family f JOIN edges e ON e."parent"=f."member"), valid AS (SELECT p.* FROM "PlaybackHistory" p JOIN catalog m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE ` + playback + `), agg AS (SELECT f."root",COUNT(p."id") AS "plays",COALESCE(SUM(p."durationWatched"),0)*1000 AS "watchTimeMs",MAX(p."startedAt") AS "lastPlayed",SUM(CASE WHEN p."playMethod"='DirectPlay' THEN 1 ELSE 0 END) AS "directPlays" FROM family f LEFT JOIN valid p ON p."mediaId"=f."member" GROUP BY f."root") `
 	return cte, args, nil
+}
+
+// A detail page needs its connected hierarchy, not all unrelated albums and
+// their histories. Keep the existing permission and library filters in catalog.
+func (h *Handler) recoveredMediaDetailBase(r *http.Request) (string, []any, error) {
+	base, args, err := h.recoveredMediaBase(r)
+	if err != nil {
+		return "", nil, err
+	}
+	prefix := `WITH RECURSIVE links("parent","child") AS (
+ SELECT p."id",c."id" FROM "Media" p JOIN "Media" c ON c."serverId"=p."serverId" AND c."parentId"=p."id"
+ UNION SELECT p."id",c."id" FROM "Media" p JOIN "Media" c ON c."serverId"=p."serverId" AND c."parentId"=p."jellyfinMediaId"
+ ), neighbors("source","target") AS (SELECT "parent","child" FROM links UNION SELECT "child","parent" FROM links), detail_scope("id") AS (
+ SELECT "id" FROM "Media" WHERE "id"=? OR "jellyfinMediaId"=?
+ UNION SELECT n."target" FROM detail_scope d JOIN neighbors n ON n."source"=d."id"
+ ), `
+	base = strings.Replace(base, "WITH RECURSIVE ", prefix, 1)
+	base = strings.Replace(base, `FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE `, `FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE m."id" IN (SELECT "id" FROM detail_scope) AND `, 1)
+	id := r.PathValue("id")
+	return base, append([]any{id, id}, args...), nil
 }
 
 // SQL result maps retain the old contract while adding nullable real metadata.
@@ -413,7 +433,7 @@ func (h *Handler) recoveredMediaList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) recoveredMediaDetail(w http.ResponseWriter, r *http.Request) {
-	base, args, err := h.recoveredMediaBase(r)
+	base, args, err := h.recoveredMediaDetailBase(r)
 	if err != nil {
 		jsonError(w, 403, "Identité utilisateur introuvable.")
 		return

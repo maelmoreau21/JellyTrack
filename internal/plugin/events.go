@@ -1319,9 +1319,9 @@ func (h *Handler) upsertMedia(ctx context.Context, serverID string, p map[string
 	if err := rows.Close(); err != nil {
 		return "", 0, 0, err
 	}
-	args := []any{serverID, key, title, typ, nullableString(collection), nullableString(firstString(p, "libraryName", "LibraryName")), arrayGenres, nullableString(normalizeResolution(firstString(p, "resolution", "Resolution"))), durValue, sizeValue, arrayDirectors, arrayActors, arrayStudios, nullableString(normalizeID(firstString(p, "parentId", "ParentId"))), nullableString(firstString(p, "artist", "Artist", "albumArtist", "AlbumArtist")), nullableTime(eventDate(p))}
+	args := []any{serverID, key, title, typ, nullableString(collection), nullableString(firstString(p, "libraryName", "LibraryName")), arrayGenres, nullableString(mediaResolution(p)), durValue, sizeValue, arrayDirectors, arrayActors, arrayStudios, nullableString(normalizeID(firstString(p, "parentId", "ParentId"))), nullableString(firstString(p, "artist", "Artist", "albumArtist", "AlbumArtist")), nullableTime(eventDate(p))}
 	if len(found) == 0 {
-		err = h.queryRow(ctx, `INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","resolution","durationMs","size","directors","actors","studios","parentId","artist","dateAdded") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("jellyfinMediaId","serverId") DO UPDATE SET "title"=excluded."title","type"=excluded."type","collectionType"=excluded."collectionType","libraryName"=excluded."libraryName","genres"=excluded."genres","resolution"=excluded."resolution","durationMs"=COALESCE(excluded."durationMs","Media"."durationMs"),"size"=COALESCE(excluded."size","Media"."size"),"directors"=excluded."directors","actors"=excluded."actors","studios"=excluded."studios","parentId"=excluded."parentId","artist"=excluded."artist","dateAdded"=COALESCE(excluded."dateAdded","Media"."dateAdded"),"updatedAt"=CURRENT_TIMESTAMP RETURNING "id"`, append([]any{id}, args...)...).Scan(&mediaID)
+		err = h.queryRow(ctx, `INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","resolution","durationMs","size","directors","actors","studios","parentId","artist","dateAdded") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("jellyfinMediaId","serverId") DO UPDATE SET "title"=excluded."title","type"=excluded."type","collectionType"=excluded."collectionType","libraryName"=excluded."libraryName","genres"=excluded."genres","resolution"=COALESCE(excluded."resolution","Media"."resolution"),"durationMs"=COALESCE(excluded."durationMs","Media"."durationMs"),"size"=COALESCE(excluded."size","Media"."size"),"directors"=excluded."directors","actors"=excluded."actors","studios"=excluded."studios","parentId"=excluded."parentId","artist"=excluded."artist","dateAdded"=COALESCE(excluded."dateAdded","Media"."dateAdded"),"updatedAt"=CURRENT_TIMESTAMP RETURNING "id"`, append([]any{id}, args...)...).Scan(&mediaID)
 		return mediaID, duration, size, err
 	}
 	mediaID = found[0].id
@@ -1330,7 +1330,7 @@ func (h *Handler) upsertMedia(ctx context.Context, serverID string, p map[string
 		return "", 0, 0, err
 	}
 	defer tx.Rollback()
-	if _, err = h.execTx(ctx, tx, `UPDATE "Media" SET "jellyfinMediaId"=?,"title"=?,"type"=?,"collectionType"=?,"libraryName"=?,"genres"=?,"resolution"=?,"durationMs"=COALESCE(?,"durationMs"),"size"=COALESCE(?,"size"),"directors"=?,"actors"=?,"studios"=?,"parentId"=?,"artist"=?,"dateAdded"=COALESCE(?,"dateAdded"),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, append(args[1:], mediaID)...); err != nil {
+	if _, err = h.execTx(ctx, tx, `UPDATE "Media" SET "jellyfinMediaId"=?,"title"=?,"type"=?,"collectionType"=?,"libraryName"=?,"genres"=?,"resolution"=COALESCE(?,"resolution"),"durationMs"=COALESCE(?,"durationMs"),"size"=COALESCE(?,"size"),"directors"=?,"actors"=?,"studios"=?,"parentId"=?,"artist"=?,"dateAdded"=COALESCE(?,"dateAdded"),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, append(args[1:], mediaID)...); err != nil {
 		return "", 0, 0, err
 	}
 	for _, original := range found {
@@ -1833,4 +1833,12 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func mediaResolution(p map[string]any) string {
+	value := normalizeResolution(firstString(p, "resolution", "Resolution"))
+	if value == "Unknown" {
+		return ""
+	}
+	return value
 }

@@ -50,3 +50,13 @@ func providerJSON(ids map[string]string) string {
 	raw, _ := json.Marshal(ids)
 	return string(raw)
 }
+
+// UUID formatting does not indicate a different remote server.
+func sameJellyfinServerID(a, b string) bool {
+	if a == b {
+		return true
+	}
+	compactA := strings.ReplaceAll(a, "-", "")
+	compactB := strings.ReplaceAll(b, "-", "")
+	return jellyfinUUID.MatchString(compactA) && jellyfinUUID.MatchString(compactB) && strings.EqualFold(compactA, compactB)
+}

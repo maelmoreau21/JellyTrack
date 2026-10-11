@@ -38,7 +38,7 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 	probeLatency := time.Since(probeStarted).Milliseconds()
 	// Changing an established remote identity would attach old histories to a
 	// different Jellyfin. Provisional configuration can resolve before ingest.
-	if serverID != "" && jellyfinID != "" && info.ID != "" && jellyfinID != info.ID {
+	if serverID != "" && jellyfinID != "" && info.ID != "" && !sameJellyfinServerID(jellyfinID, info.ID) {
 		var children int
 		err := db.QueryRowContext(ctx, database.Bind(`SELECT (SELECT COUNT(*) FROM "User" WHERE "serverId"=?)+(SELECT COUNT(*) FROM "Media" WHERE "serverId"=?)+(SELECT COUNT(*) FROM "PlaybackHistory" WHERE "serverId"=?)`, driver), serverID, serverID, serverID).Scan(&children)
 		if err != nil {
@@ -48,7 +48,7 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 			return SyncResult{}, fmt.Errorf("configured server %s changed its Jellyfin identity; refusing to mix existing data", serverID)
 		}
 	}
-	if info.ID != "" {
+	if info.ID != "" && !sameJellyfinServerID(jellyfinID, info.ID) {
 		jellyfinID = info.ID
 	}
 	if info.ServerName != "" {
@@ -231,6 +231,9 @@ func resolutionLabel(w, h int) any {
 	}
 	if w >= 3800 || h >= 2100 {
 		return "4K"
+	}
+	if w >= 2500 || h >= 1400 {
+		return "1440p"
 	}
 	if w >= 1900 || h >= 1000 {
 		return "1080p"

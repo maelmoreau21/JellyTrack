@@ -457,6 +457,17 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	if err != nil {
 		return FullDashboardResult{}, err
 	}
+	// SQLite imports/defaults may use a space instead of ISO's T separator.
+	if driver == "sqlite" {
+		for i, clause := range todayWhere {
+			if clause == `p."startedAt" >= ?` {
+				todayWhere[i] = `datetime(p."startedAt") >= datetime(?)`
+			}
+			if clause == `p."startedAt" < ?` {
+				todayWhere[i] = `datetime(p."startedAt") < datetime(?)`
+			}
+		}
+	}
 	todayWhere = append(todayWhere, excludedLibClause, history.ZappingClause("p"))
 	var todayPlays, todayDurationSec, todayActiveUsers int64
 	todayQ := database.Bind(fmt.Sprintf(`

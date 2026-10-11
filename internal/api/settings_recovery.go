@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/maelmoreau21/jellytrack/internal/database"
-	"github.com/maelmoreau21/jellytrack/internal/security"
 	"github.com/maelmoreau21/jellytrack/internal/settings"
 )
 
@@ -213,89 +212,4 @@ func validateSchedulerIntervals(v map[string]any) error {
 		}
 	}
 	return nil
-}
-
-func (h *Handler) saveRecoveredSSO(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, 16384)
-	var input map[string]any
-	if json.NewDecoder(r.Body).Decode(&input) != nil || input == nil {
-		jsonError(w, 400, "Payload JSON invalide.")
-		return
-	}
-	tx, err := h.db.BeginTx(r.Context(), nil)
-	if err != nil {
-		jsonError(w, 500, "Impossible d'enregistrer SSO.")
-		return
-	}
-	defer tx.Rollback()
-	if _, err = tx.ExecContext(r.Context(), `INSERT INTO "GlobalSettings"("id") VALUES('global') ON CONFLICT DO NOTHING`); err != nil {
-		jsonError(w, 500, "Impossible d'enregistrer SSO.")
-		return
-	}
-	var raw sql.NullString
-	if err = tx.QueryRowContext(r.Context(), `SELECT "ssoSettings" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&raw); err != nil {
-		jsonError(w, 500, "Impossible de lire SSO.")
-		return
-	}
-	config := map[string]any{"enabled": false, "url": "", "clientId": "", "clientSecret": "", "userGroup": "", "adminGroup": "", "tokenAlg": "RS256", "autoRedirect": true}
-	if raw.Valid && raw.String != "" && json.Unmarshal([]byte(raw.String), &config) != nil {
-		jsonError(w, 500, "Configuration SSO existante invalide.")
-		return
-	}
-	if config == nil {
-		config = map[string]any{"enabled": false, "url": "", "clientId": "", "clientSecret": "", "userGroup": "", "adminGroup": "", "tokenAlg": "RS256", "autoRedirect": true}
-	}
-	keep, _ := input["keepExistingSecret"].(bool)
-	for key, value := range input {
-		switch key {
-		case "keepExistingSecret":
-			if _, ok := value.(bool); !ok {
-				jsonError(w, 400, "keepExistingSecret: booléen requis.")
-				return
-			}
-		case "enabled", "autoRedirect":
-			if _, ok := value.(bool); !ok {
-				jsonError(w, 400, key+": booléen requis.")
-				return
-			}
-			config[key] = value
-		case "url", "clientId", "clientSecret", "userGroup", "adminGroup", "tokenAlg":
-			v, ok := value.(string)
-			if !ok {
-				jsonError(w, 400, key+": texte requis.")
-				return
-			}
-			v = strings.TrimSpace(v)
-			if key == "clientSecret" && (strings.Contains(v, "••••") || (keep && v == "")) {
-				continue
-			}
-			if key == "url" {
-				v = strings.TrimRight(v, "/")
-				if v != "" {
-					if _, err = security.ValidateSafeServerURL(v); err != nil {
-						jsonError(w, 400, "URL SSO invalide.")
-						return
-					}
-				}
-			}
-			if key == "tokenAlg" && v != "RS256" {
-				jsonError(w, 400, "SSO requiert RS256.")
-				return
-			}
-			config[key] = v
-		default:
-			jsonError(w, 400, "Réglage SSO non supporté: "+key)
-			return
-		}
-	}
-	b, _ := json.Marshal(config)
-	if _, err = tx.ExecContext(r.Context(), database.Bind(`UPDATE "GlobalSettings" SET "ssoSettings"=?,"updatedAt"=? WHERE "id"='global'`, h.driver), string(b), time.Now().UTC().Format(time.RFC3339Nano)); err != nil {
-		jsonError(w, 500, "Impossible d'enregistrer SSO.")
-		return
-	}
-	if err = tx.Commit(); err != nil {
-		jsonError(w, 500, "Impossible d'enregistrer SSO.")
-		return
-	}
-	h.getSSO(w, r)
 }

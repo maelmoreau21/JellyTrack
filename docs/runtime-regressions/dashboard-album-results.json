@@ -1,0 +1,152 @@
+{
+  "checks": [
+    {
+      "name": "Fixture login",
+      "ok": true
+    },
+    {
+      "name": "Today plays displays actual nonzero API result",
+      "ok": true,
+      "data": 16
+    },
+    {
+      "name": "Today hours matches API",
+      "ok": true,
+      "data": "8.7"
+    },
+    {
+      "name": "All 24 hours fit dark 1440",
+      "ok": true,
+      "data": {
+        "scroll": 1078,
+        "width": 1078,
+        "columns": 25,
+        "cell": 39.53125
+      }
+    },
+    {
+      "name": "No page overflow dark 1440",
+      "ok": true
+    },
+    {
+      "name": "All 24 hours fit dark 768",
+      "ok": true,
+      "data": {
+        "scroll": 406,
+        "width": 406,
+        "columns": 25,
+        "cell": 11.53125
+      }
+    },
+    {
+      "name": "No page overflow dark 768",
+      "ok": true
+    },
+    {
+      "name": "All 24 hours fit dark 390",
+      "ok": true,
+      "data": {
+        "scroll": 324,
+        "width": 324,
+        "columns": 25,
+        "cell": 10.78125
+      }
+    },
+    {
+      "name": "No page overflow dark 390",
+      "ok": true
+    },
+    {
+      "name": "All 24 hours fit dark 320",
+      "ok": true,
+      "data": {
+        "scroll": 254,
+        "width": 254,
+        "columns": 25,
+        "cell": 7.859375
+      }
+    },
+    {
+      "name": "No page overflow dark 320",
+      "ok": true
+    },
+    {
+      "name": "All 24 hours fit light 1440",
+      "ok": true,
+      "data": {
+        "scroll": 1078,
+        "width": 1078,
+        "columns": 25,
+        "cell": 39.53125
+      }
+    },
+    {
+      "name": "No page overflow light 1440",
+      "ok": true
+    },
+    {
+      "name": "All 24 hours fit light 768",
+      "ok": true,
+      "data": {
+        "scroll": 406,
+        "width": 406,
+        "columns": 25,
+        "cell": 11.53125
+      }
+    },
+    {
+      "name": "No page overflow light 768",
+      "ok": true
+    },
+    {
+      "name": "All 24 hours fit light 390",
+      "ok": true,
+      "data": {
+        "scroll": 324,
+        "width": 324,
+        "columns": 25,
+        "cell": 10.78125
+      }
+    },
+    {
+      "name": "No page overflow light 390",
+      "ok": true
+    },
+    {
+      "name": "All 24 hours fit light 320",
+      "ok": true,
+      "data": {
+        "scroll": 254,
+        "width": 254,
+        "columns": 25,
+        "cell": 7.859375
+      }
+    },
+    {
+      "name": "No page overflow light 320",
+      "ok": true
+    },
+    {
+      "name": "System tab removed",
+      "ok": true
+    },
+    {
+      "name": "Playback logs remain visible",
+      "ok": true
+    },
+    {
+      "name": "Album renders",
+      "ok": true
+    },
+    {
+      "name": "Album has real tracks",
+      "ok": true
+    },
+    {
+      "name": "No JavaScript errors",
+      "ok": true,
+      "data": []
+    }
+  ],
+  "errors": []
+}
