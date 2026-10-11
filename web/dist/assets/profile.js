@@ -58,7 +58,7 @@
           ${metric('playTime', 'Temps de lecture', String(stats.totalHours || 0) + 'h', tp('cumulTotal', 'Cumul total'), '#f97316', 'clock', stats.lastActive ? `<p class="profile-last-active">${esc(tr('users.colLastActive', 'Dernière Act.'))}: ${esc(Utils.formatDateTime(stats.lastActive))}</p>` : '')}
           ${metric('sessions', 'Session(s)', number(stats.sessionsCount), tp('avgPerSession', '~' + (stats.avgSessionMinutes || 0) + ' min / session', { min: stats.avgSessionMinutes || 0 }), '#10b981', 'hash')}
           ${metric('topGenres', 'Top Genres', genres || 'N/A', tp('mainPreferences', 'Préférences principales'), '#ec4899', 'play')}
-          ${metric('completionRate', 'Taux de complétion', number(stats.averageCompletion) + '%', tp('avgCompletion', 'Complétion moyenne'), '#06b6d4', 'percent')}
+          ${metric('completionRate', 'Taux de complétion', number(Math.round(stats.averageCompletion || 0)) + '%', tp('avgCompletion', 'Complétion moyenne'), '#06b6d4', 'percent')}
           ${metric('peakActivity', "Pic d'Activité", stats.peakDay == null ? 'N/A · 0h' : (dayNames[stats.peakDay] || stats.peakDay) + ' · ' + (stats.peakHour || 0) + 'h', tp('mostActiveTime', 'Heure la plus active'), '#eab308', 'zap')}
           ${metric('bestStreak', 'Meilleure Série', number(stats.bestStreak) + ' ' + tp('days', 'jours'), tp('consecutiveDays', "Jours d'activité consécutifs"), '#ef4444', 'calendar')}
           ${metric('uniqueContent', 'Contenu Unique', number((stats.uniqueMovies || 0) + (stats.uniqueEpisodes || 0) + (stats.uniqueAudio || 0)), '🎬 ' + number(stats.uniqueMovies) + ' · 📺 ' + number(stats.uniqueEpisodes) + ' · 🎵 ' + number(stats.uniqueAudio), '#14b8a6', 'layers')}
@@ -74,7 +74,7 @@
           ${card(tr('dashboard.hourlyActivity', 'Activité par heure'), tr('dashboard.hourlyActivityDesc', 'Heures de la journée les plus actives.'), '<div id="profile-hour-selection" hidden></div><div class="profile-chart profile-hour"><canvas id="profile-hour-chart" role="img"></canvas></div>', 'profile-hour-card')}
         </div><div class="profile-secondary-row">
           ${card('Genres préférés', 'Répartition des genres les plus visionnés par cet utilisateur.', '<div class="profile-chart profile-genres"><canvas id="profile-genres-chart" role="img"></canvas></div>')}
-          ${card('Fiche Technique', "Indicateurs de lecture et appareils préférés de l'utilisateur.", `<div class="profile-technical"><div class="profile-technical-box"><p>Appareil ou client le plus utilisé</p><strong class="profile-cyan">${esc(detail.favoriteClient || 'Aucun')}</strong></div><div class="profile-technical-row"><div class="profile-technical-box"><p>Direct Play</p><strong class="profile-violet">${number(detail.directPlayRatio)}%</strong></div><div class="profile-technical-box"><p>Débit moyen</p><strong class="profile-emerald">${detail.averageBitrateKbps ? esc((detail.averageBitrateKbps / 1000).toFixed(1)) + ' Mbps' : '—'}</strong></div></div></div>`)}
+          ${card('Fiche Technique', "Indicateurs de lecture et appareils préférés de l'utilisateur.", `<div class="profile-technical"><div class="profile-technical-box"><p>Appareil ou client le plus utilisé</p><strong class="profile-cyan">${esc(detail.favoriteClient || 'Aucun')}</strong></div><div class="profile-technical-row"><div class="profile-technical-box"><p>Direct Play</p><strong class="profile-violet">${number(Math.round(detail.directPlayRatio || 0))}%</strong></div><div class="profile-technical-box"><p>Débit moyen</p><strong class="profile-emerald">${detail.averageBitrateKbps ? esc((detail.averageBitrateKbps / 1000).toFixed(1)) + ' Mbps' : '—'}</strong></div></div></div>`)}
         </div></section>` : ''}
         ${card(tp('playbackHistory', 'Historique de lecture'), tp('aggregatedDesc', 'Historique complet agrégé des sessions démarrées.') + ' — ' + number(data.history && data.history.total) + ' sessions', '<div id="profile-history"></div>', 'profile-history-card')}`;
       root.removeAttribute('aria-busy');
@@ -215,7 +215,7 @@
         if (!alive()) return;
         const slot = find('#profile-active-stream');
         if (!stream) { slot.innerHTML = ''; return; }
-        const progress = Math.max(0, Math.min(100, Number(stream.progressPercent) || 0));
+        const progress = Math.round(Math.max(0, Math.min(100, Number(stream.progressPercent) || 0)));
         slot.innerHTML = `<div class="profile-live${stream.isPaused ? ' profile-live-paused' : ''}"><div class="profile-live-main"><span class="profile-live-dot"></span><div><h3>${stream.isPaused ? 'Lecture en pause' : 'Lecture en cours'}</h3><strong>${stream.itemId ? `<a href="/media/${encodeURIComponent(stream.itemId)}" data-link>${esc(stream.mediaTitle)}</a>` : esc(stream.mediaTitle)}</strong>${stream.mediaSubtitle ? `<p>${esc(stream.mediaSubtitle)}</p>` : ''}<p>Sur ${esc(stream.clientName || 'Inconnu')} (${esc(stream.deviceName || 'Inconnu')}) • ${esc(stream.playMethod === 'Transcode' ? tr('common.transcode', 'Transcodage') : tr('common.directPlay', 'Direct Play'))}</p></div></div><div class="profile-live-progress"><div><span>${stream.isPaused ? 'En pause' : 'En cours de lecture'}</span><b>${progress}%</b></div><progress value="${progress}" max="100">${progress}%</progress></div></div>`;
       };
       let poll;

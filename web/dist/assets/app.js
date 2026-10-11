@@ -1602,7 +1602,7 @@
             <div style="display:flex; flex-direction:column; gap:0.6rem;">
               ${liveStreamsData.map((s, idx) => {
                 const c = GANTT_COLORS[idx % GANTT_COLORS.length];
-                const pct = Math.min(100, Math.max(0, s.progressPercent || 0));
+                const pct = Math.round(Math.min(100, Math.max(0, s.progressPercent || 0)));
                 return `
                   <div class="live-stream-timeline-row">
                     <div class="gantt-avatar" style="background:${c}22; color:${c};">${(s.user || s.username || '?').charAt(0).toUpperCase()}</div>
@@ -1644,7 +1644,7 @@
                 if (s.serverId) imageParams.set('serverId', s.serverId);
                 if (s.itemId && s.itemId !== posterId) imageParams.set('fallbackId', s.itemId);
                 const posterShape = ['Audio', 'Track', 'MusicAlbum'].includes(s.mediaType) ? 'square' : s.mediaType === 'Episode' ? 'wide' : '';
-                const pct = Math.min(100, Math.max(0, s.progressPercent || 0));
+                const pct = Math.round(Math.min(100, Math.max(0, s.progressPercent || 0)));
                 const audioSub = [
                   s.audioCodec ? `🔊 ${s.audioCodec.toUpperCase()}${s.audioLanguage ? ` (${s.audioLanguage})` : ''}` : '',
                   s.subtitleCodec ? `💬 ${s.subtitleCodec.toUpperCase()}${s.subtitleLanguage ? ` (${s.subtitleLanguage})` : ''}` : '',
