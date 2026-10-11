@@ -1621,13 +1621,13 @@
                 const pct = Math.round(Math.min(100, Math.max(0, s.progressPercent || 0)));
                 return `
                   <div class="live-stream-timeline-row">
-                    <div class="gantt-avatar" style="background:${c}22; color:${c};">${(s.user || s.username || '?').charAt(0).toUpperCase()}</div>
+                    <div class="gantt-avatar" style="background:${c}22; color:${c};">${(s.user || s.username || '?').charAt(0).toUpperCase()}</div>${State.navigation.multiServer ? `<span class="badge badge-info">${Utils.escapeHtml(s.serverName || s.serverId)} · ${Utils.escapeHtml(s.serverStatus || 'unknown')}</span>` : ''}
                     <div style="flex:1; min-width:0;">
                       <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
                         <div style="display:flex; align-items:center; gap:0.5rem; min-width:0;">
                           <span style="font-size:0.82rem; font-weight:700; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${Utils.escapeHtml(s.user || s.username || 'Utilisateur')}</span>
                           ${s.itemId ? `
-                            <a href="/media/${s.itemId}" style="font-size:0.75rem; color:var(--muted-foreground); text-decoration:none; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" class="hover:underline">
+                            <a href="/media/${encodeURIComponent(s.mediaId || s.itemId)}?serverId=${encodeURIComponent(s.serverId || '')}" style="font-size:0.75rem; color:var(--muted-foreground); text-decoration:none; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" class="hover:underline">
                               ${Utils.escapeHtml(s.mediaTitle || 'Média')}
                             </a>
                           ` : `<span style="font-size:0.75rem; color:var(--muted-foreground); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${Utils.escapeHtml(s.mediaTitle || 'Média')}</span>`}
@@ -1668,12 +1668,12 @@
 
                 return `
                   <div class="stream-card">
-                    <a href="/media/${encodeURIComponent(s.itemId || s.mediaId || '')}" data-link class="stream-poster-thumb ${posterShape}">
+                    <a href="/media/${encodeURIComponent(s.mediaId || s.itemId || '')}?serverId=${encodeURIComponent(s.serverId || '')}" data-link class="stream-poster-thumb ${posterShape}">
                       ${posterId ? `<img src="/api/jellyfin/image?${Utils.escapeHtml(imageParams.toString())}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;" data-hide-on-error alt="${Utils.escapeHtml(s.mediaTitle || '')}">` : ''}
                     </a>
                     <div class="stream-info">
                       <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
-                        <a href="/media/${encodeURIComponent(s.itemId || s.mediaId || '')}" data-link class="stream-title">${Utils.escapeHtml(s.mediaTitle || I18n.t('common.unknownMedia'))}</a>
+                        <a href="/media/${encodeURIComponent(s.mediaId || s.itemId || '')}?serverId=${encodeURIComponent(s.serverId || '')}" data-link class="stream-title">${Utils.escapeHtml(s.mediaTitle || I18n.t('common.unknownMedia'))}</a>${State.navigation.multiServer ? `<span class="badge badge-info">${Utils.escapeHtml(s.serverName || s.serverId)} · ${Utils.escapeHtml(s.serverStatus || 'unknown')}</span>` : ''}
                         ${s.versionName ? `<span class="badge badge-info" style="font-size:0.65rem;">${Utils.escapeHtml(s.versionName)}</span>` : ''}
                         ${s.isPaused ? '<span class="badge badge-warning" style="font-size:0.65rem;">⏸ En pause</span>' : ''}
                       </div>
@@ -1746,6 +1746,11 @@
         const container = document.getElementById('dash-draggable-container');
         if (!container || !dashboardData) return;
 
+        let serverComparison=document.getElementById('dash-server-comparison');
+        if (State.navigation.multiServer) {
+          if (!serverComparison) {serverComparison=document.createElement('section');serverComparison.id='dash-server-comparison';serverComparison.className='card';document.getElementById('dash-server-filter-container')?.parentElement.after(serverComparison);}
+          serverComparison.innerHTML=`<h3>Activité par serveur</h3>${(dashboardData.serverActivity || []).map(row => `<p>${Utils.escapeHtml(row.name)} : ${Utils.escapeHtml(row.plays)} lecture(s), ${Utils.escapeHtml(Number(row.hours).toFixed(1))} h</p>`).join('')}`;
+        }
         const d = dashboardData;
         const b = d.breakdown || { movieViews: 0, movieHours: 0, seriesViews: 0, seriesHours: 0, musicViews: 0, musicHours: 0, booksViews: 0, booksHours: 0 };
 
@@ -1944,7 +1949,7 @@
                 </div>
                 <div class="ranking-list" id="dash-top-users-list">
                   ${(d.topUsers || []).length > 0 ? (d.topUsers || []).slice(0, 5).map((u, i) => `
-                    <a href="/users/${u.jellyfinUserId || ''}" class="ranking-item">
+                    <a href="/users/${encodeURIComponent(u.id || u.jellyfinUserId || '')}" class="ranking-item">
                       <span class="ranking-badge">#${i + 1}</span>
                       <div class="ranking-name">
                         <span style="font-weight:700;">${Utils.escapeHtml(u.username)}</span>
@@ -2657,7 +2662,7 @@
                   </div>
                   <div class="ranking-list">
                     ${trending.slice(0, 8).map((item, i) => `
-                      <a href="/media/${item.jellyfinMediaId || ''}" class="ranking-item">
+                      <a href="/media/${encodeURIComponent(item.id || item.mediaId || item.jellyfinMediaId || '')}?serverId=${encodeURIComponent(item.serverId || '')}" class="ranking-item">
                         <span class="ranking-badge">#${i + 1}</span>
                         <div class="ranking-name">
                           <span style="font-weight:700;">${Utils.escapeHtml(item.title)}</span>
@@ -6065,7 +6070,7 @@
       } else if (path === '/media' || path.startsWith('/media/')) {
         Pages.mediaPage(path);
       } else if (path === '/logs') {
-        window.JellyTrackHistory.mount({ main: document.getElementById('app-main'), api: API, utils: Utils, i18n: I18n, signal: State.pageController.signal, user: State.user, openSystemLogs: () => Pages.systemLogs() });
+        window.JellyTrackHistory.mount({ main: document.getElementById('app-main'), api: API, utils: Utils, i18n: I18n, signal: State.pageController.signal, user: State.user, navigation: State.navigation, openSystemLogs: () => Pages.systemLogs() });
       } else if (path.startsWith('/settings')) {
         const rest = path.slice('/settings'.length).replace(/^\//, '');
         const sub = rest || 'overview';

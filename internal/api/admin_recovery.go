@@ -754,7 +754,7 @@ func (h *Handler) recoveredServerCompare(w http.ResponseWriter, r *http.Request)
 		options = append(options, s)
 	}
 	sort.Slice(options, func(i, j int) bool { return strings.ToLower(options[i].Name) < strings.ToLower(options[j].Name) })
-	multi := strings.EqualFold(os.Getenv("JELLYTRACK_MODE"), "multi") && len(options) > 1
+	multi := len(options) > 1
 	requested, present := r.URL.Query()["servers"]
 	rawScope := ""
 	source := "none"

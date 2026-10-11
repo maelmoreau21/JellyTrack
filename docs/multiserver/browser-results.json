@@ -1,0 +1,106 @@
+{
+  "checks": [
+    {
+      "name": "multi real login",
+      "ok": true
+    },
+    {
+      "name": "multi dashboard comparison",
+      "ok": true
+    },
+    {
+      "name": "multi dashboard server filter",
+      "ok": true
+    },
+    {
+      "name": "multi live session server names",
+      "ok": true
+    },
+    {
+      "name": "live links keep server identity",
+      "ok": true
+    },
+    {
+      "name": "server filter updates live sessions",
+      "ok": true
+    },
+    {
+      "name": "multi history server labels",
+      "ok": true
+    },
+    {
+      "name": "multi profile extra visibility",
+      "ok": true
+    },
+    {
+      "name": "multi availability extra visibility",
+      "ok": true
+    },
+    {
+      "name": "media availability provider match",
+      "ok": true
+    },
+    {
+      "name": "multi health extra visibility",
+      "ok": true
+    },
+    {
+      "name": "health latency and connection visible",
+      "ok": true
+    },
+    {
+      "name": "health values are actual table cells",
+      "ok": true
+    },
+    {
+      "name": "multi can add another server",
+      "ok": true
+    },
+    {
+      "name": "multi mobile health fits viewport",
+      "ok": true
+    },
+    {
+      "name": "single real login",
+      "ok": true
+    },
+    {
+      "name": "mono dashboard filter hidden",
+      "ok": true
+    },
+    {
+      "name": "mono comparison absent",
+      "ok": true
+    },
+    {
+      "name": "single history server labels",
+      "ok": true
+    },
+    {
+      "name": "single profile extra visibility",
+      "ok": true
+    },
+    {
+      "name": "single availability extra visibility",
+      "ok": true
+    },
+    {
+      "name": "single health extra visibility",
+      "ok": true
+    },
+    {
+      "name": "single can add another server",
+      "ok": true
+    },
+    {
+      "name": "single mobile health fits viewport",
+      "ok": true
+    },
+    {
+      "name": "no browser runtime errors",
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "scope": "Disposable SQLite browser fixtures with two simulated Jellyfin endpoints; API and ingestion contracts separately tested on SQLite and PostgreSQL."
+}

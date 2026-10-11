@@ -61,6 +61,9 @@ type Principal struct {
 	CSRFToken           string `json:"csrfToken,omitempty"`
 	JellyfinUserID      string `json:"jellyfinUserId,omitempty"`
 	AuthServerID        string `json:"authServerId,omitempty"`
+	AuthMethod          string `json:"authMethod,omitempty"`
+	OIDCIssuer          string `json:"oidcIssuer,omitempty"`
+	OIDCSubject         string `json:"oidcSubject,omitempty"`
 	IdentityVersion     int    `json:"identityVersion,omitempty"`
 	AuthServerName      string `json:"authServerName,omitempty"`
 	AuthServerIsPrimary *bool  `json:"authServerIsPrimary,omitempty"`
@@ -192,7 +195,7 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
 		return
 	}
-	idToken, e := provider.Verifier(&oidc.Config{ClientID: cfg.clientID}).Verify(ctx, raw)
+	idToken, e := provider.Verifier(&oidc.Config{ClientID: cfg.clientID, SupportedSigningAlgs: []string{oidc.RS256}}).Verify(ctx, raw)
 	if e != nil {
 		clearFlow()
 		slog.Error("OIDC id_token verification failed", "error", e)
@@ -253,8 +256,19 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login?error=AccessDeniedGroup", http.StatusSeeOther)
 		return
 	}
-	resolvedJfID, resolvedServerID := m.resolveOIDCAccount(r.Context(), username, subStr)
-	if _, e = m.createSessionIdentity(w, r, Principal{Username: username, Role: role, JellyfinUserID: resolvedJfID, AuthServerID: resolvedServerID}, false); e != nil {
+	account, resolvedServerID, policyErr := m.oidcAccount(r.Context(), rawClaims)
+	if policyErr != nil {
+		clearFlow()
+		http.Redirect(w, r, "/login?error=AccessDenied", http.StatusSeeOther)
+		return
+	}
+	username, resolvedJfID := account.Name, account.ID
+	if e = m.upsertUser(r.Context(), stableUserID(resolvedServerID, resolvedJfID), resolvedServerID, resolvedJfID, username, time.Now().UTC().Format(time.RFC3339Nano)); e != nil {
+		clearFlow()
+		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
+		return
+	}
+	if _, e = m.createSessionIdentity(w, r, Principal{Username: username, Role: role, JellyfinUserID: resolvedJfID, AuthServerID: resolvedServerID, AuthMethod: "oidc", OIDCIssuer: idToken.Issuer, OIDCSubject: idToken.Subject}, false); e != nil {
 		clearFlow()
 		slog.Error("OIDC session identity creation failed", "error", e)
 		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
@@ -328,8 +342,16 @@ func (m *Manager) resolveOIDC(ctx context.Context) resolvedOIDCConfig {
 			}
 		}
 	}
-	if raw := strings.TrimSpace(os.Getenv("OIDC_ENABLED")); raw != "" {
-		cfg.enabled = strings.EqualFold(raw, "true") || raw == "1" || strings.EqualFold(raw, "yes") || strings.EqualFold(raw, "on")
+	if value, set := config.EnvironmentOverride("", "OIDC_ENABLED"); set {
+		cfg.enabled = config.EnvironmentBool(value)
+	}
+	cfg.issuer, _ = config.EnvironmentOverride(cfg.issuer, "OIDC_ISSUER", "OIDC_URL", "AUTHENTIK_URL", "JELLYTRACK_AUTHENTIK_URL")
+	cfg.clientID, _ = config.EnvironmentOverride(cfg.clientID, "OIDC_CLIENT_ID")
+	cfg.clientSecret, _ = config.EnvironmentOverride(cfg.clientSecret, "OIDC_CLIENT_SECRET")
+	cfg.userGroup, _ = config.EnvironmentOverride(cfg.userGroup, "OIDC_USER_GROUP")
+	cfg.adminGroup, _ = config.EnvironmentOverride(cfg.adminGroup, "OIDC_ADMIN_GROUP")
+	if value, set := config.EnvironmentOverride("", "OIDC_AUTO_REDIRECT", "OIDC_AUTO_LOGIN"); set {
+		cfg.autoRedirect = config.EnvironmentBool(value)
 	}
 	return cfg
 }
@@ -416,7 +438,7 @@ func (m *Manager) createSession(w http.ResponseWriter, r *http.Request, username
 }
 
 func (m *Manager) createSessionIdentity(w http.ResponseWriter, r *http.Request, principal Principal, rememberMe ...bool) (string, error) {
-	principal.IdentityVersion = 1
+	principal.IdentityVersion = 2
 	idBytes := make([]byte, 32)
 	if _, err := rand.Read(idBytes); err != nil {
 		return "", err
@@ -675,7 +697,7 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 	userOK := subtle.ConstantTimeCompare([]byte(input.Username), []byte(m.username)) == 1
 	if userOK && len(m.passwordHash) > 0 && bcrypt.CompareHashAndPassword(m.passwordHash, []byte(input.Password)) == nil {
 		isPrimary := true
-		csrf, err := m.createSessionIdentity(w, r, Principal{Username: m.username, Role: "admin", JellyfinUserID: "local-admin", AuthServerName: "Local Admin", AuthServerIsPrimary: &isPrimary}, rememberBool)
+		csrf, err := m.createSessionIdentity(w, r, Principal{Username: m.username, Role: "admin", JellyfinUserID: "local-admin", AuthServerName: "Local Admin", AuthServerIsPrimary: &isPrimary, AuthMethod: "local-admin"}, rememberBool)
 		if err != nil {
 			writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
 			return
@@ -702,10 +724,16 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if userOK && len(m.passwordHash) > 0 {
+		writeJSON(w, 401, map[string]string{"error": "Identifiants invalides."})
+		return
+	}
+
 	type serverCandidate struct {
 		id                string
 		name              string
 		url               string
+		apiKey            string
 		isPrimary         bool
 		allowAuthFallback bool
 	}
@@ -721,19 +749,20 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 		candidates = append(candidates, serverCandidate{
 			name:      primaryName,
 			url:       primaryURL,
+			apiKey:    first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY")),
 			isPrimary: true,
 		})
 		seenURLs[strings.ToLower(primaryURL)] = true
 	}
 
 	if m.db != nil {
-		rows, err := m.db.QueryContext(r.Context(), `SELECT "id", "name", "url", "allowAuthFallback" FROM "Server" WHERE "isActive" = TRUE`)
+		rows, err := m.db.QueryContext(r.Context(), `SELECT "id", "name", "url", COALESCE("jellyfinApiKey",''), "allowAuthFallback" FROM "Server" WHERE "isActive" = TRUE ORDER BY "createdAt","id"`)
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
-				var sID, sName, sURL string
+				var sID, sName, sURL, sKey string
 				var allowFallback bool
-				if err := rows.Scan(&sID, &sName, &sURL, &allowFallback); err == nil {
+				if err := rows.Scan(&sID, &sName, &sURL, &sKey, &allowFallback); err == nil {
 					norm := strings.ToLower(strings.TrimRight(strings.TrimSpace(sURL), "/"))
 					if norm == "" {
 						continue
@@ -744,6 +773,7 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 							id:                sID,
 							name:              sName,
 							url:               strings.TrimRight(strings.TrimSpace(sURL), "/"),
+							apiKey:            sKey,
 							isPrimary:         len(candidates) == 0,
 							allowAuthFallback: allowFallback,
 						})
@@ -751,6 +781,9 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 						for i := range candidates {
 							if strings.EqualFold(strings.TrimRight(strings.TrimSpace(candidates[i].url), "/"), strings.TrimRight(strings.TrimSpace(sURL), "/")) && candidates[i].id == "" {
 								candidates[i].id = sID
+								if candidates[i].apiKey == "" {
+									candidates[i].apiKey = sKey
+								}
 							}
 						}
 					}
@@ -768,8 +801,12 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-		u, err := jellyfin.Authenticate(ctx, c.url, input.Username, input.Password)
+		u, denied, err := authenticateLocal(ctx, c.url, c.apiKey, input.Username, input.Password)
 		cancel()
+		if denied {
+			writeJSON(w, 403, map[string]string{"error": "Connexion par mot de passe refusée. Utilisez le SSO pour les comptes LDAP ; la politique Jellyfin doit être vérifiable."})
+			return
+		}
 		if err == nil {
 			authUser = &u
 			authCandidate = c
@@ -784,8 +821,12 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-			u, err := jellyfin.Authenticate(ctx, c.url, input.Username, input.Password)
+			u, denied, err := authenticateLocal(ctx, c.url, c.apiKey, input.Username, input.Password)
 			cancel()
+			if denied {
+				writeJSON(w, 403, map[string]string{"error": "Connexion par mot de passe refusée."})
+				return
+			}
 			if err == nil {
 				authUser = &u
 				authCandidate = c
@@ -800,7 +841,7 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 			role = "admin"
 		}
 		isPrimary := authCandidate.isPrimary
-		csrf, e := m.createSessionIdentity(w, r, Principal{Username: authUser.Name, Role: role, JellyfinUserID: authUser.ID, AuthServerID: authCandidate.id, AuthServerName: authCandidate.name, AuthServerIsPrimary: &isPrimary}, rememberBool)
+		csrf, e := m.createSessionIdentity(w, r, Principal{Username: authUser.Name, Role: role, JellyfinUserID: authUser.ID, AuthServerID: authCandidate.id, AuthServerName: authCandidate.name, AuthServerIsPrimary: &isPrimary, AuthMethod: "jellyfin"}, rememberBool)
 		if e != nil {
 			writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
 			return
@@ -977,7 +1018,12 @@ func (m *Manager) authenticate(r *http.Request) (Principal, bool) {
 		if json.Unmarshal([]byte(identity.String), &stored) == nil {
 			p.JellyfinUserID, p.AuthServerID, p.AuthServerName, p.AuthServerIsPrimary = stored.JellyfinUserID, stored.AuthServerID, stored.AuthServerName, stored.AuthServerIsPrimary
 			p.IdentityVersion = stored.IdentityVersion
+			p.AuthMethod, p.OIDCIssuer, p.OIDCSubject = stored.AuthMethod, stored.OIDCIssuer, stored.OIDCSubject
 		}
+	}
+	// Pre-policy sessions may have bypassed SSO; require a fresh login.
+	if p.IdentityVersion < 2 {
+		return Principal{}, false
 	}
 	return p, true
 }

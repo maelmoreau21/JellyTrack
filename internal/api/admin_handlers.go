@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/maelmoreau21/jellytrack/internal/config"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/logging"
 	"github.com/maelmoreau21/jellytrack/internal/security"
@@ -86,12 +87,18 @@ func (h *Handler) adminHealth(w http.ResponseWriter, r *http.Request) {
 	var exclLibs sql.NullString
 	_ = h.db.QueryRowContext(r.Context(), `SELECT "excludedLibraries" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&exclLibs)
 
+	connections, err := h.serverConnectionInfo(r)
+	if err != nil {
+		jsonError(w, 500, "Cannot read server health")
+		return
+	}
 	jsonResponse(w, 200, map[string]any{
 		"status": map[string]any{
 			"monitor": monitorState,
 			"sync":    syncState,
 			"backup":  backupState,
 		},
+		"servers":           connections,
 		"database":          dbStatus,
 		"driver":            h.driver,
 		"timestamp":         time.Now().UTC().Format(time.RFC3339),
@@ -222,22 +229,40 @@ func (h *Handler) adminUserMerge(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) adminUserSyncDeleted(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.db.QueryContext(r.Context(), `SELECT "id", "url", "jellyfinApiKey" FROM "Server" WHERE "isActive" = 1`)
+	rows, err := h.db.QueryContext(r.Context(), `SELECT "id", "url", "jellyfinApiKey" FROM "Server" WHERE "isActive" = TRUE`)
 	if err != nil {
 		jsonError(w, 500, "Impossible de lire les serveurs.")
 		return
 	}
-	defer rows.Close()
+	type target struct {
+		id, url string
+		key     sql.NullString
+	}
+	targets := []target{}
+	for rows.Next() {
+		var s target
+		if err = rows.Scan(&s.id, &s.url, &s.key); err != nil {
+			rows.Close()
+			jsonError(w, 500, "Cannot read servers")
+			return
+		}
+		targets = append(targets, s)
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		jsonError(w, 500, "Cannot read servers")
+		return
+	}
 
 	totalPruned := 0
 	var prunedUsernames []string
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	for rows.Next() {
-		var srvID, srvURL string
-		var apiKey sql.NullString
-		if err := rows.Scan(&srvID, &srvURL, &apiKey); err != nil || !apiKey.Valid || apiKey.String == "" {
+	for _, target := range targets {
+		srvID, srvURL, apiKey := target.id, target.url, target.key
+		if !apiKey.Valid || apiKey.String == "" {
 			continue
 		}
 
@@ -264,8 +289,11 @@ func (h *Handler) adminUserSyncDeleted(w http.ResponseWriter, r *http.Request) {
 			ID   string `json:"Id"`
 			Name string `json:"Name"`
 		}
-		_ = json.NewDecoder(resp.Body).Decode(&jUsers)
+		decodeErr := json.NewDecoder(io.LimitReader(resp.Body, 16<<20)).Decode(&jUsers)
 		_ = resp.Body.Close()
+		if decodeErr != nil {
+			continue
+		}
 
 		validIDs := map[string]struct{}{}
 		for _, ju := range jUsers {
@@ -475,53 +503,24 @@ func (h *Handler) getSSO(w http.ResponseWriter, r *http.Request) {
 		_ = json.Unmarshal([]byte(raw.String), &dbCfg)
 	}
 
-	envEnabled := os.Getenv("OIDC_ENABLED")
-	hasEnvEnabled := envEnabled != ""
-	isEnvEnabled := strings.EqualFold(envEnabled, "true") || envEnabled == "1"
-
-	envURL := strings.TrimRight(first(os.Getenv("OIDC_URL"), os.Getenv("OIDC_ISSUER"), os.Getenv("AUTHENTIK_URL")), "/")
-	envClientID := strings.TrimSpace(os.Getenv("OIDC_CLIENT_ID"))
-	envClientSecret := strings.TrimSpace(os.Getenv("OIDC_CLIENT_SECRET"))
-	envUserGroup := strings.TrimSpace(os.Getenv("OIDC_USER_GROUP"))
-	envAdminGroup := strings.TrimSpace(os.Getenv("OIDC_ADMIN_GROUP"))
-
-	envAutoRedirRaw := first(os.Getenv("OIDC_AUTO_REDIRECT"), os.Getenv("OIDC_AUTO_LOGIN"))
-	hasEnvAutoRedir := envAutoRedirRaw != ""
-	envAutoRedir := strings.EqualFold(envAutoRedirRaw, "true") || envAutoRedirRaw == "1" || envAutoRedirRaw == ""
-
+	envEnabled, hasEnvEnabled := config.EnvironmentOverride("", "OIDC_ENABLED")
 	enabled, _ := dbCfg["enabled"].(bool)
 	if hasEnvEnabled {
-		enabled = isEnvEnabled
+		enabled = config.EnvironmentBool(envEnabled)
 	}
-
-	ssoURL, _ := dbCfg["url"].(string)
-	if envURL != "" {
-		ssoURL = envURL
+	read := func(field string, keys ...string) (string, bool) {
+		value, _ := dbCfg[field].(string)
+		return config.EnvironmentOverride(value, keys...)
 	}
-
-	clientID, _ := dbCfg["clientId"].(string)
-	if envClientID != "" {
-		clientID = envClientID
-	}
-
-	clientSecret, _ := dbCfg["clientSecret"].(string)
-	if envClientSecret != "" {
-		clientSecret = envClientSecret
-	}
-
-	userGroup, _ := dbCfg["userGroup"].(string)
-	if envUserGroup != "" {
-		userGroup = envUserGroup
-	}
-
-	adminGroup, _ := dbCfg["adminGroup"].(string)
-	if envAdminGroup != "" {
-		adminGroup = envAdminGroup
-	}
-
+	ssoURL, hasEnvURL := read("url", "OIDC_ISSUER", "OIDC_URL", "AUTHENTIK_URL", "JELLYTRACK_AUTHENTIK_URL")
+	clientID, hasEnvClientID := read("clientId", "OIDC_CLIENT_ID")
+	clientSecret, hasEnvClientSecret := read("clientSecret", "OIDC_CLIENT_SECRET")
+	userGroup, hasEnvUserGroup := read("userGroup", "OIDC_USER_GROUP")
+	adminGroup, hasEnvAdminGroup := read("adminGroup", "OIDC_ADMIN_GROUP")
 	autoRedirect, _ := dbCfg["autoRedirect"].(bool)
+	envAuto, hasEnvAutoRedir := config.EnvironmentOverride("", "OIDC_AUTO_REDIRECT", "OIDC_AUTO_LOGIN")
 	if hasEnvAutoRedir {
-		autoRedirect = envAutoRedir
+		autoRedirect = config.EnvironmentBool(envAuto)
 	}
 
 	maskedSecret := ""
@@ -555,21 +554,21 @@ func (h *Handler) getSSO(w http.ResponseWriter, r *http.Request) {
 		"autoRedirect":       autoRedirect,
 		"origins": map[string]string{
 			"enabled":      ternary(hasEnvEnabled, "env", ternary(raw.Valid, "db", "default")),
-			"url":          ternary(envURL != "", "env", ternary(ssoURL != "", "db", "default")),
-			"clientId":     ternary(envClientID != "", "env", ternary(clientID != "", "db", "default")),
-			"clientSecret": ternary(envClientSecret != "", "env", ternary(clientSecret != "", "db", "default")),
-			"userGroup":    ternary(envUserGroup != "", "env", ternary(userGroup != "", "db", "default")),
-			"adminGroup":   ternary(envAdminGroup != "", "env", ternary(adminGroup != "", "db", "default")),
+			"url":          ternary(hasEnvURL, "env", ternary(ssoURL != "", "db", "default")),
+			"clientId":     ternary(hasEnvClientID, "env", ternary(clientID != "", "db", "default")),
+			"clientSecret": ternary(hasEnvClientSecret, "env", ternary(clientSecret != "", "db", "default")),
+			"userGroup":    ternary(hasEnvUserGroup, "env", ternary(userGroup != "", "db", "default")),
+			"adminGroup":   ternary(hasEnvAdminGroup, "env", ternary(adminGroup != "", "db", "default")),
 			"tokenAlg":     "default",
 			"autoRedirect": ternary(hasEnvAutoRedir, "env", ternary(raw.Valid, "db", "default")),
 		},
 		"isEnvControlled": map[string]bool{
 			"enabled":      hasEnvEnabled,
-			"url":          envURL != "",
-			"clientId":     envClientID != "",
-			"clientSecret": envClientSecret != "",
-			"userGroup":    envUserGroup != "",
-			"adminGroup":   envAdminGroup != "",
+			"url":          hasEnvURL,
+			"clientId":     hasEnvClientID,
+			"clientSecret": hasEnvClientSecret,
+			"userGroup":    hasEnvUserGroup,
+			"adminGroup":   hasEnvAdminGroup,
 			"tokenAlg":     false,
 			"autoRedirect": hasEnvAutoRedir,
 		},

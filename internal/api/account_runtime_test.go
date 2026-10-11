@@ -46,7 +46,7 @@ func TestMyAccountAdminResolvesServerAndUUIDAlias(t *testing.T) {
 		t.Fatalf("unlinked local account fabricates profile: %d", w.Code)
 	}
 	w = call("00112233-4455-6677-8899-aabbccddeeff", principal)
-	if w.Code != 200 {
-		t.Fatalf("explicit UUID lookup: %d %s", w.Code, w.Body)
+	if w.Code != 409 {
+		t.Fatalf("ambiguous UUID lookup: %d %s", w.Code, w.Body)
 	}
 }

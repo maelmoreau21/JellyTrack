@@ -100,13 +100,3 @@ func ResolveAccount(ctx context.Context, db *sql.DB, driver string, principal Pr
 	}
 	return identity, nil
 }
-
-func (m *Manager) resolveOIDCAccount(ctx context.Context, username, subject string) (string, string) {
-	identity, err := ResolveAccount(ctx, m.db, m.driver, Principal{Username: username})
-	if err != nil {
-		// Keep an unlinked session identifiable without creating a phantom user
-		// or silently attaching it to a homonymous account on a later request.
-		return "oidc-" + first(subject, username), ""
-	}
-	return identity.JellyfinUserID, identity.ServerID
-}

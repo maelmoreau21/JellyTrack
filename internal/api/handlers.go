@@ -22,6 +22,7 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/backup"
 	"github.com/maelmoreau21/jellytrack/internal/cleanup"
 	"github.com/maelmoreau21/jellytrack/internal/database"
+	"github.com/maelmoreau21/jellytrack/internal/history"
 	"github.com/maelmoreau21/jellytrack/internal/jellyfin"
 	"github.com/maelmoreau21/jellytrack/internal/security"
 	"github.com/maelmoreau21/jellytrack/internal/settings"
@@ -195,6 +196,17 @@ func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clauses, args, err := stats.PlaybackConditions(filter)
+	if err != nil {
+		jsonError(w, 400, err.Error())
+		return
+	}
+	clauses = append(clauses, history.ZappingClause("p"))
+	res.ServerActivity, err = h.recoveredRows(r, `SELECT p."serverId",s."name",COUNT(*) AS "plays",COALESCE(SUM(p."durationWatched"),0)/3600.0 AS "hours" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" JOIN "Server" s ON s."id"=p."serverId" WHERE `+strings.Join(clauses, " AND ")+` GROUP BY p."serverId",s."name" ORDER BY s."name",p."serverId"`, args...)
+	if err != nil {
+		jsonError(w, 500, "Cannot compare server activity")
+		return
+	}
 	jsonResponse(w, 200, res)
 }
 
@@ -697,8 +709,18 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 	if limit > 200 {
 		limit = 200
 	}
+	where := ""
+	scopeArgs := []any{}
+	if servers := getServerScope(r); len(servers) > 0 {
+		marks := make([]string, len(servers))
+		for i, id := range servers {
+			marks[i] = "?"
+			scopeArgs = append(scopeArgs, id)
+		}
+		where = ` WHERE u."serverId" IN (` + strings.Join(marks, ",") + `)`
+	}
 	var total int64
-	if err := h.db.QueryRowContext(r.Context(), `SELECT COUNT(*) FROM "User"`).Scan(&total); err != nil {
+	if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*) FROM "User" u`+where, h.driver), scopeArgs...).Scan(&total); err != nil {
 		jsonError(w, 500, "Impossible de charger les utilisateurs.")
 		return
 	}
@@ -712,15 +734,15 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 		       (SELECT MAX(CASE WHEN p3."endedAt">p3."startedAt" THEN p3."endedAt" ELSE p3."startedAt" END) FROM "PlaybackHistory" p3 WHERE p3."userId"=u."id") AS "latestHistoryDate"
 		FROM "User" u
 		LEFT JOIN "Server" s ON s."id"=u."serverId"
-		LEFT JOIN "PlaybackHistory" p ON p."userId"=u."id" AND p."durationWatched">=60
+		LEFT JOIN "PlaybackHistory" p ON p."userId"=u."id" AND p."serverId"=u."serverId" AND p."durationWatched">=60`+where+`
 		GROUP BY u."id", u."username", u."jellyfinUserId", u."lastActive", s."name", u."serverId"
 		ORDER BY "totalSeconds" DESC, LOWER(u."username") ASC
 		LIMIT ? OFFSET ?
 	`, h.driver)
 
-	rows, err := h.db.QueryContext(r.Context(), query, limit, offset)
+	rows, err := h.db.QueryContext(r.Context(), query, append(append([]any{}, scopeArgs...), limit, offset)...)
 	if err != nil {
-		basicRows, bErr := h.db.QueryContext(r.Context(), database.Bind(`SELECT u."id",u."username",u."jellyfinUserId",u."lastActive",s."name",u."serverId" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" ORDER BY LOWER(u."username") LIMIT ? OFFSET ?`, h.driver), limit, offset)
+		basicRows, bErr := h.db.QueryContext(r.Context(), database.Bind(`SELECT u."id",u."username",u."jellyfinUserId",u."lastActive",s."name",u."serverId" FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId"`+where+` ORDER BY LOWER(u."username") LIMIT ? OFFSET ?`, h.driver), append(append([]any{}, scopeArgs...), limit, offset)...)
 		if bErr != nil {
 			jsonError(w, 500, "Impossible de charger les utilisateurs.")
 			return
@@ -838,13 +860,14 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 		userQuery += `u."id"=? AND u."serverId"=?`
 		userArgs = []any{id, authorizedServerID}
 	} else {
-		forms := auth.JellyfinIDForms(id)
-		if len(forms) == 2 {
-			userQuery += `u."id"=? OR LOWER(u."jellyfinUserId") IN (?,?) OR LOWER(u."username")=LOWER(?) ORDER BY u."createdAt" ASC,u."id" ASC LIMIT 1`
-			userArgs = []any{id, forms[0], forms[1], id}
-		} else {
-			userQuery += `u."id"=? OR u."jellyfinUserId"=? OR LOWER(u."username")=LOWER(?) ORDER BY u."createdAt" ASC,u."id" ASC LIMIT 1`
+		resolved, resolveErr := h.resolveProfileAccount(r, id)
+		if resolveErr != nil {
+			jsonError(w, 409, "Identifiant ambigu ou introuvable. Sélectionnez un serveur.")
+			return
 		}
+		userQuery += `u."id"=? AND u."serverId"=?`
+		userArgs = []any{resolved.ID, resolved.ServerID}
+
 	}
 	err := h.db.QueryRowContext(r.Context(), database.Bind(userQuery, h.driver), userArgs...).Scan(&dbUID, &username, &jid, &lastActive, &server, &accountServerID)
 	if err != nil {
@@ -888,6 +911,7 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 	profile["server"], profile["lastActive"] = nullable(server), nullable(lastActive)
 	profile["serverId"] = accountServerID
 	profile["recentActivity"] = recent
+	profile["serverActivity"] = []map[string]any{{"serverId": accountServerID, "name": nullable(server), "stats": profile["stats"]}}
 	jsonResponse(w, 200, profile)
 }
 
@@ -927,8 +951,15 @@ func (h *Handler) userActiveStream(w http.ResponseWriter, r *http.Request) {
 	query := selectStream + `(s."userId"=? OR s."userId" IN (SELECT "id" FROM "User" WHERE "jellyfinUserId"=? OR "id"=?)) ORDER BY s."startedAt" DESC LIMIT 1`
 	queryArgs := []any{id, id, id}
 	if ok && principal.IsAdmin() {
-		query = selectStream + `s."userId" IN (SELECT linked."id" FROM "User" linked WHERE LOWER(linked."username")=LOWER((SELECT seed."username" FROM "User" seed WHERE seed."id"=? OR seed."jellyfinUserId"=? OR LOWER(seed."username")=LOWER(?) ORDER BY seed."createdAt" ASC,seed."id" ASC LIMIT 1))) AND s."serverId"=(SELECT account."serverId" FROM "User" account WHERE account."id"=s."userId") ORDER BY s."startedAt" DESC LIMIT 1`
+		account, err := h.resolveProfileAccount(r, id)
+		if err != nil {
+			jsonError(w, 409, "Identifiant ambigu ou introuvable. Sélectionnez un serveur.")
+			return
+		}
+		query = selectStream + `s."userId"=? AND s."serverId"=? ORDER BY s."startedAt" DESC LIMIT 1`
+		queryArgs = []any{account.ID, account.ServerID}
 	}
+
 	if ok && !principal.IsAdmin() {
 		query = selectStream + `s."userId"=? AND s."serverId"=? ORDER BY s."startedAt" DESC LIMIT 1`
 		queryArgs = []any{authorizedAccount.ID, authorizedAccount.ServerID}
@@ -940,7 +971,7 @@ func (h *Handler) userActiveStream(w http.ResponseWriter, r *http.Request) {
 			progress = math.Min(100, math.Max(0, float64(posTicks.Int64)/10000/float64(runtime.Int64)*100))
 		}
 		stream = map[string]any{
-			"sessionId": sid, "playMethod": playMethod, "startedAt": started,
+			"sessionId": sid, "serverId": streamServer.String, "playMethod": playMethod, "startedAt": started,
 			"mediaTitle": title.String, "mediaType": kind.String, "positionTicks": posTicks.Int64,
 			"clientName": client.String, "deviceName": device.String, "itemId": itemID.String,
 			"progressPercent": progress, "isPaused": strings.EqualFold(state.String, "pause"),
@@ -1019,22 +1050,33 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) streams(w http.ResponseWriter, r *http.Request) {
 	selectedServers := getServerScope(r)
 
-	baseQuery := `SELECT s."id",s."serverId",s."sessionId",s."playMethod",s."clientName",s."deviceName",s."ipAddress",s."country",s."city",s."bitrate",s."positionTicks",s."startedAt",u."username",m."title",m."type",m."durationMs",m."jellyfinMediaId",m."parentId",m."artist",s."videoCodec",s."audioCodec",s."audioLanguage",s."subtitleLanguage",s."subtitleCodec",s."transcodeFps",s."playbackRate",s."playbackId",s."userId",m."id",m."resolution",(SELECT e."eventType" FROM "TelemetryEvent" e WHERE e."playbackId"=s."playbackId" AND e."eventType" IN ('pause','resume') ORDER BY e."createdAt" DESC,e."id" DESC LIMIT 1) FROM "ActiveStream" s LEFT JOIN "User" u ON u."id"=s."userId" LEFT JOIN "Media" m ON m."id"=s."mediaId"`
+	baseQuery := `SELECT s."id",s."serverId",s."sessionId",s."playMethod",s."clientName",s."deviceName",s."ipAddress",s."country",s."city",s."bitrate",s."positionTicks",s."startedAt",u."username",m."title",m."type",m."durationMs",m."jellyfinMediaId",m."parentId",m."artist",s."videoCodec",s."audioCodec",s."audioLanguage",s."subtitleLanguage",s."subtitleCodec",s."transcodeFps",s."playbackRate",s."playbackId",s."userId",m."id",m."resolution",(SELECT e."eventType" FROM "TelemetryEvent" e WHERE e."playbackId"=s."playbackId" AND e."serverId"=s."serverId" AND e."eventType" IN ('pause','resume') ORDER BY e."createdAt" DESC,e."id" DESC LIMIT 1) FROM "ActiveStream" s LEFT JOIN "User" u ON u."id"=s."userId" LEFT JOIN "Media" m ON m."id"=s."mediaId"`
 	var rows *sql.Rows
 	var err error
 
+	clauses := []string{}
+	args := []any{}
 	if len(selectedServers) > 0 {
-		placeholders := make([]string, len(selectedServers))
-		args := make([]any, len(selectedServers))
-		for i, s := range selectedServers {
-			placeholders[i] = "?"
-			args[i] = s
+		marks := make([]string, len(selectedServers))
+		for i, id := range selectedServers {
+			marks[i] = "?"
+			args = append(args, id)
 		}
-		q := baseQuery + ` WHERE s."serverId" IN (` + strings.Join(placeholders, ",") + `)`
-		rows, err = h.db.QueryContext(r.Context(), database.Bind(q, h.driver), args...)
-	} else {
-		rows, err = h.db.QueryContext(r.Context(), baseQuery)
+		clauses = append(clauses, `s."serverId" IN (`+strings.Join(marks, ",")+`)`)
 	}
+	if p, ok := auth.PrincipalFromContext(r.Context()); ok && !p.IsAdmin() {
+		identity, resolveErr := auth.ResolveAccount(r.Context(), h.db, h.driver, p)
+		if resolveErr != nil {
+			jsonError(w, 403, "Forbidden")
+			return
+		}
+		clauses = append(clauses, `s."userId"=? AND s."serverId"=?`)
+		args = append(args, identity.ID, identity.ServerID)
+	}
+	if len(clauses) > 0 {
+		baseQuery += ` WHERE ` + strings.Join(clauses, " AND ")
+	}
+	rows, err = h.db.QueryContext(r.Context(), database.Bind(baseQuery, h.driver), args...)
 
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les flux en direct.")
@@ -1119,7 +1161,23 @@ func (h *Handler) streams(w http.ResponseWriter, r *http.Request) {
 	}
 	// Parent lookups need the connection released first on SQLite.
 	rows.Close()
+	names, nameErr := h.serverNames(r)
+	if nameErr != nil {
+		jsonError(w, 500, "Cannot read servers")
+		return
+	}
+	connections, connectionErr := h.serverConnectionInfo(r)
+	if connectionErr != nil {
+		jsonError(w, 500, "Cannot read server health")
+		return
+	}
+	states := map[string]any{}
+	for _, connection := range connections {
+		states[firstStringValue(connection["id"])] = connection["status"]
+	}
 	for _, stream := range streams {
+		stream["serverName"] = names[firstStringValue(stream["serverId"])]
+		stream["serverStatus"] = states[firstStringValue(stream["serverId"])]
 		stream["mediaSubtitle"] = h.profileMediaSubtitle(r, stream["serverId"].(string), stream["mediaType"].(string), firstStringValue(stream["parentItemId"]), firstStringValue(stream["albumArtist"]))
 	}
 	if streams == nil {
@@ -1397,11 +1455,11 @@ func (h *Handler) listServers(w http.ResponseWriter, r *http.Request) {
 	servers := []map[string]any{}
 	for rows.Next() {
 		var id, jid, name, url string
-		var fallback, active int
+		var fallback, active bool
 		if rows.Scan(&id, &jid, &name, &url, &fallback, &active) == nil {
 			servers = append(servers, map[string]any{
 				"id": id, "jellyfinServerId": jid, "name": name, "url": url,
-				"allowAuthFallback": fallback == 1, "isActive": active == 1,
+				"allowAuthFallback": fallback, "isActive": active,
 			})
 		}
 	}
@@ -1456,29 +1514,44 @@ func (h *Handler) saveServer(w http.ResponseWriter, r *http.Request) {
 		name = "Jellyfin"
 	}
 
-	activeInt := 1
+	activeInt := true
 	if input.IsActive != nil && !*input.IsActive {
-		activeInt = 0
+		activeInt = false
 	}
 
-	allowFallbackInt := 1
+	allowFallbackInt := true
 	if input.AllowAuthFallback != nil && !*input.AllowAuthFallback {
-		allowFallbackInt = 0
+		allowFallbackInt = false
 	}
 
 	if input.ID == "" {
 		idBytes := make([]byte, 16)
 		rand.Read(idBytes)
 		input.ID = hex.EncodeToString(idBytes)
-		_, err := h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","allowAuthFallback","isActive") VALUES (?,?,?,?,?,?,?)`, h.driver), input.ID, detectedServerID, name, urlClean, rawApiKey, allowFallbackInt, activeInt)
+		inserted, err := h.db.ExecContext(r.Context(), database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","allowAuthFallback","isActive") VALUES (?,?,?,?,?,?,?) ON CONFLICT("jellyfinServerId") DO NOTHING`, h.driver), input.ID, detectedServerID, name, urlClean, rawApiKey, allowFallbackInt, activeInt)
 		if err != nil {
 			jsonError(w, 500, "Échec de création du serveur.")
+			return
+		}
+		if count, err := inserted.RowsAffected(); err != nil || count == 0 {
+			jsonError(w, 409, "Server already configured")
 			return
 		}
 	} else {
 		if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "jellyfinServerId" FROM "Server" WHERE "id"=?`, h.driver), input.ID).Scan(&detectedServerID); err != nil {
 			jsonError(w, 404, "Serveur introuvable.")
 			return
+		}
+		var oldURL, oldKey string
+		if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "url",COALESCE("jellyfinApiKey",'') FROM "Server" WHERE "id"=?`, h.driver), input.ID).Scan(&oldURL, &oldKey); err != nil {
+			jsonError(w, 500, "Cannot read server")
+			return
+		}
+		if urlClean != strings.TrimRight(oldURL, "/") {
+			if err := verifyConfiguredServer(r, urlClean, first(rawApiKey, oldKey), detectedServerID); err != nil {
+				jsonError(w, 409, "URL belongs to another server or cannot be verified")
+				return
+			}
 		}
 		var savedKey any
 		if strings.TrimSpace(rawApiKey) != "" {
@@ -1499,8 +1572,8 @@ func (h *Handler) saveServer(w http.ResponseWriter, r *http.Request) {
 			"jellyfinServerId":  detectedServerID,
 			"name":              name,
 			"url":               urlClean,
-			"allowAuthFallback": allowFallbackInt == 1,
-			"isActive":          activeInt == 1,
+			"allowAuthFallback": allowFallbackInt,
+			"isActive":          activeInt,
 		},
 	})
 }
@@ -1522,7 +1595,7 @@ func (h *Handler) updateServer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var curName, curURL, curKey string
-	var curFallback, curActive int
+	var curFallback, curActive bool
 	err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "name","url",COALESCE("jellyfinApiKey",''),"allowAuthFallback","isActive" FROM "Server" WHERE "id"=?`, h.driver), input.ID).Scan(&curName, &curURL, &curKey, &curFallback, &curActive)
 	if err != nil {
 		jsonError(w, 404, "Serveur introuvable.")
@@ -1560,21 +1633,32 @@ func (h *Handler) updateServer(w http.ResponseWriter, r *http.Request) {
 	nextFallback := curFallback
 	if input.AllowAuthFallback != nil {
 		if *input.AllowAuthFallback {
-			nextFallback = 1
+			nextFallback = true
 		} else {
-			nextFallback = 0
+			nextFallback = false
 		}
 	}
 
 	nextActive := curActive
 	if input.IsActive != nil {
 		if *input.IsActive {
-			nextActive = 1
+			nextActive = true
 		} else {
-			nextActive = 0
+			nextActive = false
 		}
 	}
 
+	if nextURL != strings.TrimRight(curURL, "/") {
+		var expected string
+		if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "jellyfinServerId" FROM "Server" WHERE "id"=?`, h.driver), input.ID).Scan(&expected); err != nil {
+			jsonError(w, 500, "Cannot read server identity")
+			return
+		}
+		if err := verifyConfiguredServer(r, nextURL, nextKey, expected); err != nil {
+			jsonError(w, 409, "URL belongs to another server or cannot be verified")
+			return
+		}
+	}
 	_, err = h.db.ExecContext(r.Context(), database.Bind(`UPDATE "Server" SET "name"=?, "url"=?, "jellyfinApiKey"=?, "allowAuthFallback"=?, "isActive"=? WHERE "id"=?`, h.driver), nextName, nextURL, nextKey, nextFallback, nextActive, input.ID)
 	if err != nil {
 		jsonError(w, 500, "Impossible de mettre à jour le serveur.")
@@ -1587,8 +1671,8 @@ func (h *Handler) updateServer(w http.ResponseWriter, r *http.Request) {
 			"id":                input.ID,
 			"name":              nextName,
 			"url":               nextURL,
-			"allowAuthFallback": nextFallback == 1,
-			"isActive":          nextActive == 1,
+			"allowAuthFallback": nextFallback,
+			"isActive":          nextActive,
 		},
 	})
 }
@@ -1930,23 +2014,7 @@ func (h *Handler) sync(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) sessions(w http.ResponseWriter, r *http.Request) {
-	base := strings.TrimRight(strings.TrimSpace(os.Getenv("JELLYFIN_URL")), "/")
-	key := first(os.Getenv("JELLYFIN_API_KEY"), os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"))
-	c, err := jellyfin.New(base, key)
-	if err != nil {
-		jsonError(w, 503, "Configurez Jellyfin avant de consulter les sessions.")
-		return
-	}
-	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
-	defer cancel()
-	items, err := c.Sessions(ctx)
-	if err != nil {
-		jsonError(w, 502, "Jellyfin ne répond pas.")
-		return
-	}
-	jsonResponse(w, 200, map[string]any{"items": items})
-}
+func (h *Handler) sessions(w http.ResponseWriter, r *http.Request) { h.remoteSessions(w, r) }
 
 // ---------------------- Utilities ----------------------
 
@@ -2063,35 +2131,10 @@ func (h *Handler) mediaCollections(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) newsletterData(w http.ResponseWriter, r *http.Request) { h.recoveredNewsletter(w, r) }
 
 func (h *Handler) serverCompare(w http.ResponseWriter, r *http.Request) {
-	rows, err := h.db.QueryContext(r.Context(), `SELECT "id", "name", "url", "isActive" FROM "Server" ORDER BY "name" ASC`)
+	servers, err := h.recoveredRows(r, `SELECT s."id",s."name",s."url",s."isActive",(SELECT COUNT(*) FROM "Media" m WHERE m."serverId"=s."id") AS "mediaCount",(SELECT COUNT(*) FROM "User" u WHERE u."serverId"=s."id") AS "userCount",(SELECT COUNT(*) FROM "PlaybackHistory" p WHERE p."serverId"=s."id") AS "playsCount",(SELECT COUNT(*) FROM "ActiveStream" a WHERE a."serverId"=s."id") AS "activeStreams" FROM "Server" s ORDER BY s."name",s."id"`)
 	if err != nil {
-		jsonError(w, 500, "Impossible de charger les serveurs.")
+		jsonError(w, 500, "Cannot read servers")
 		return
-	}
-	defer rows.Close()
-
-	servers := []map[string]any{}
-	for rows.Next() {
-		var id, name, url string
-		var active int
-		if rows.Scan(&id, &name, &url, &active) == nil {
-			var mediaCount, userCount, playsCount, streamCount int64
-			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*) FROM "Media" WHERE "serverId"=?`, h.driver), id).Scan(&mediaCount)
-			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*) FROM "User" WHERE "serverId"=?`, h.driver), id).Scan(&userCount)
-			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*) FROM "PlaybackHistory" WHERE "serverId"=?`, h.driver), id).Scan(&playsCount)
-			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*) FROM "ActiveStream" WHERE "serverId"=?`, h.driver), id).Scan(&streamCount)
-
-			servers = append(servers, map[string]any{
-				"id":            id,
-				"name":          name,
-				"url":           url,
-				"isActive":      active == 1,
-				"mediaCount":    mediaCount,
-				"userCount":     userCount,
-				"playsCount":    playsCount,
-				"activeStreams": streamCount,
-			})
-		}
 	}
 
 	jsonResponse(w, 200, map[string]any{"servers": servers})
@@ -2164,7 +2207,14 @@ func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
 		userQuery += `"id"=?`
 		userArgs = []any{id}
 	} else {
-		userQuery += `"id"=? OR "jellyfinUserId"=? OR "username"=? LIMIT 1`
+		account, resolveErr := h.resolveProfileAccount(r, id)
+		if resolveErr != nil {
+			jsonError(w, 409, "Select a server for this account")
+			return
+		}
+		userQuery += `"id"=? AND "serverId"=?`
+		userArgs = []any{account.ID, account.ServerID}
+
 	}
 	err := h.db.QueryRowContext(r.Context(), database.Bind(userQuery, h.driver), userArgs...).Scan(&uid, &uname, &jid, &accountServerID)
 	if err != nil {

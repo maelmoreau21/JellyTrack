@@ -228,6 +228,14 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	}
 	// Release rows before enrichment: SQLite uses a single connection.
 	rows.Close()
+	names, nameErr := h.serverNames(r)
+	if nameErr != nil {
+		jsonError(w, 500, "Cannot read servers")
+		return
+	}
+	for _, row := range out {
+		row["serverName"] = names[firstStringValue(row["serverId"])]
+	}
 	markProfileReconnections(out)
 	if err := h.enrichHistory(r, out); err != nil {
 		jsonError(w, 500, "Impossible de charger la chronologie.")

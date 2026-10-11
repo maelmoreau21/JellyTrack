@@ -5,12 +5,13 @@
   const DEFAULT = ['date', 'user', 'media', 'client', 'resolution', 'audioBitrate', 'status', 'duration'];
   const WIDTHS = { date:180, startedAt:140, endedAt:140, user:140, media:480, client:160, resolution:80, audioBitrate:90, ip:140, country:120, status:110, codecs:120, duration:90, pauseCount:70, audioChanges:70, subtitleChanges:70 };
   window.JellyTrackHistory = {
-    async mount({ main, api, utils, i18n, signal, user }) {
+    async mount({ main, api, utils, i18n, signal, user, navigation }) {
       const icon = name => window.JellyTrackNavigation.icon(name);
       const esc = value => utils.escapeHtml(value == null ? '' : String(value));
       const t = (key, fallback, args = {}) => { const value = i18n.t(key, args); return value && value !== key ? value : fallback; };
       const tl = (key, fallback) => t('logs.' + key, fallback);
       const admin = Boolean(user && (user.isAdmin || String(user.role).toLowerCase() === 'admin'));
+      const multi = Boolean(navigation?.multiServer);
       const params = new URLSearchParams(location.search);
       if (params.has('q') && !params.has('query')) params.set('query', params.get('q'));
       let offset = Math.max(0, Number(params.get('offset')) || ((Number(params.get('page')) || 1) - 1) * 50);
@@ -63,7 +64,7 @@
           case 'startedAt': return esc(utils.formatDateTime(item.startedAt));
           case 'endedAt': return item.endedAt ? esc(utils.formatDateTime(item.endedAt)) : esc(item.isActuallyActive ? tl('inProgress','En cours') : '—');
           case 'user': return item.userId ? `<a href="/users/${encodeURIComponent(item.userId)}" data-link>${esc(item.username || t('common.deletedUser','Utilisateur supprimé'))}</a>` : esc(t('common.deletedUser','Utilisateur supprimé'));
-          case 'media': return `<div class="history-media"><span class="history-poster ${['Audio','Track','MusicTrack','MusicAlbum'].includes(item.type) ? 'history-poster-square' : item.type === 'Episode' ? 'history-poster-wide' : ''}">${icon(["Audio","Track","MusicTrack","MusicAlbum"].includes(item.type)?"music":"film")}${item.jellyfinMediaId ? `<img loading="lazy" alt="" src="/api/jellyfin/image?itemId=${encodeURIComponent(item.jellyfinMediaId)}&serverId=${encodeURIComponent(item.serverId || '')}&type=Primary&maxWidth=100&fallback=none${item.parentId ? '&fallbackId='+encodeURIComponent(item.parentId) : ''}" class="${['Audio','Track','MusicTrack','MusicAlbum'].includes(item.type) ? 'history-audio-cover' : item.type==='Episode' ? 'history-episode-cover' : ''}">` : ''}</span><div><a href="${mediaLink(item)}" data-link>${esc(item.title)}</a><div class="text-muted-foreground text-xs">${esc(item.mediaSubtitle || item.library || '')}</div>${item.versionName ? badge(item.versionName,'badge-info') : ''}<div class="history-mobile-info">${esc([item.resolution,item.playMethod,utils.formatMs(item.durationMs),item.clientName].filter(Boolean).join(' · '))}</div></div></div>`;
+          case 'media': return `<div class="history-media"><span class="history-poster ${['Audio','Track','MusicTrack','MusicAlbum'].includes(item.type) ? 'history-poster-square' : item.type === 'Episode' ? 'history-poster-wide' : ''}">${icon(["Audio","Track","MusicTrack","MusicAlbum"].includes(item.type)?"music":"film")}${item.jellyfinMediaId ? `<img loading="lazy" alt="" src="/api/jellyfin/image?itemId=${encodeURIComponent(item.jellyfinMediaId)}&serverId=${encodeURIComponent(item.serverId || '')}&type=Primary&maxWidth=100&fallback=none${item.parentId ? '&fallbackId='+encodeURIComponent(item.parentId) : ''}" class="${['Audio','Track','MusicTrack','MusicAlbum'].includes(item.type) ? 'history-audio-cover' : item.type==='Episode' ? 'history-episode-cover' : ''}">` : ''}</span><div><a href="${mediaLink(item)}" data-link>${esc(item.title)}</a>${multi ? badge(item.serverName || item.serverId, 'badge-info') : ''}<div class="text-muted-foreground text-xs">${esc(item.mediaSubtitle || item.library || '')}</div>${item.versionName ? badge(item.versionName,'badge-info') : ''}<div class="history-mobile-info">${esc([item.resolution,item.playMethod,utils.formatMs(item.durationMs),item.clientName].filter(Boolean).join(' · '))}</div></div></div>`;
           case 'client': return esc([item.clientName,item.deviceName].filter(Boolean).join(' · ') || '—');
           case 'ip': return `<span class="history-mono">${esc(item.ipAddress || '—')}</span>${item.anomalyFlags?.includes('ip_burst') ? badge(tl('smartIpBurstTag','Activité IP élevée'),'badge-warning') : ''}`;
           case 'country': return esc([item.city,item.country].filter(value=>value&&value!=='Unknown').join(', ') || '—');

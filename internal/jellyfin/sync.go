@@ -6,9 +6,11 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/maelmoreau21/jellytrack/internal/database"
@@ -25,9 +27,26 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 	if err != nil {
 		return SyncResult{}, err
 	}
+	probeStarted := time.Now()
 	info, err := client.SystemInfo(ctx)
 	if err != nil {
+		if serverID != "" {
+			_ = database.RecordServerConnection(ctx, db, driver, serverID, false, nil)
+		}
 		return SyncResult{}, fmt.Errorf("read Jellyfin system info: %w", err)
+	}
+	probeLatency := time.Since(probeStarted).Milliseconds()
+	// Changing an established remote identity would attach old histories to a
+	// different Jellyfin. Provisional configuration can resolve before ingest.
+	if serverID != "" && jellyfinID != "" && info.ID != "" && jellyfinID != info.ID {
+		var children int
+		err := db.QueryRowContext(ctx, database.Bind(`SELECT (SELECT COUNT(*) FROM "User" WHERE "serverId"=?)+(SELECT COUNT(*) FROM "Media" WHERE "serverId"=?)+(SELECT COUNT(*) FROM "PlaybackHistory" WHERE "serverId"=?)`, driver), serverID, serverID, serverID).Scan(&children)
+		if err != nil {
+			return SyncResult{}, err
+		}
+		if children > 0 {
+			return SyncResult{}, fmt.Errorf("configured server %s changed its Jellyfin identity; refusing to mix existing data", serverID)
+		}
 	}
 	if info.ID != "" {
 		jellyfinID = info.ID
@@ -43,7 +62,7 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 	}
 	// A configured row can initially carry a provisional Jellyfin identifier.
 	// Keep its internal ID (and all child foreign keys) when SystemInfo resolves it.
-	updated, err := db.ExecContext(ctx, database.Bind(`UPDATE "Server" SET "jellyfinServerId"=?,"name"=?,"url"=?,"jellyfinApiKey"=?,"isActive"=1,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, driver), jellyfinID, name, strings.TrimRight(baseURL, "/"), apiKey, serverID)
+	updated, err := db.ExecContext(ctx, database.Bind(`UPDATE "Server" SET "jellyfinServerId"=?,"name"=?,"url"=?,"jellyfinApiKey"=?,"isActive"=TRUE,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, driver), jellyfinID, name, strings.TrimRight(baseURL, "/"), apiKey, serverID)
 	if err != nil {
 		return SyncResult{}, fmt.Errorf("update configured Jellyfin server: %w", err)
 	}
@@ -52,13 +71,16 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 		return SyncResult{}, err
 	}
 	if changed == 0 {
-		_, err = db.ExecContext(ctx, database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","isActive") VALUES (?,?,?,?,?,1) ON CONFLICT("jellyfinServerId") DO UPDATE SET "name"=excluded."name","url"=excluded."url","jellyfinApiKey"=excluded."jellyfinApiKey","isActive"=1,"updatedAt"=CURRENT_TIMESTAMP`, driver), serverID, jellyfinID, name, strings.TrimRight(baseURL, "/"), apiKey)
+		_, err = db.ExecContext(ctx, database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","isActive") VALUES (?,?,?,?,?,TRUE) ON CONFLICT("jellyfinServerId") DO UPDATE SET "name"=excluded."name","url"=excluded."url","jellyfinApiKey"=excluded."jellyfinApiKey","isActive"=TRUE,"updatedAt"=CURRENT_TIMESTAMP`, driver), serverID, jellyfinID, name, strings.TrimRight(baseURL, "/"), apiKey)
 	}
 	if err != nil {
 		return SyncResult{}, fmt.Errorf("save Jellyfin server: %w", err)
 	}
 	if err := db.QueryRowContext(ctx, database.Bind(`SELECT "id" FROM "Server" WHERE "jellyfinServerId"=?`, driver), jellyfinID).Scan(&serverID); err != nil {
 		return SyncResult{}, fmt.Errorf("read Jellyfin server record: %w", err)
+	}
+	if err := database.RecordServerConnection(ctx, db, driver, serverID, true, probeLatency); err != nil {
+		return SyncResult{}, err
 	}
 	var result SyncResult
 	users, err := client.Users(ctx)
@@ -68,6 +90,10 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 	for _, u := range users {
 		if u.ID == "" {
 			continue
+		}
+		u.ID, err = syncIdentity(ctx, db, driver, "User", "jellyfinUserId", serverID, u.ID)
+		if err != nil {
+			return result, err
 		}
 		username := strings.TrimSpace(u.Name)
 		if username == "" {
@@ -82,7 +108,7 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 				}
 			}
 		}
-		_, err = db.ExecContext(ctx, database.Bind(`INSERT INTO "User" ("id","serverId","jellyfinUserId","username","lastActive") VALUES (?,?,?,?,?) ON CONFLICT("jellyfinUserId","serverId") DO UPDATE SET "username"=excluded."username","lastActive"=COALESCE(excluded."lastActive","User"."lastActive"),"isActive"=1,"updatedAt"=CURRENT_TIMESTAMP`, driver), stableID("usr", serverID+":"+u.ID), serverID, u.ID, username, lastActive)
+		_, err = db.ExecContext(ctx, database.Bind(`INSERT INTO "User" ("id","serverId","jellyfinUserId","username","lastActive") VALUES (?,?,?,?,?) ON CONFLICT("jellyfinUserId","serverId") DO UPDATE SET "username"=excluded."username","lastActive"=COALESCE(excluded."lastActive","User"."lastActive"),"isActive"=TRUE,"updatedAt"=CURRENT_TIMESTAMP`, driver), stableID("usr", serverID+":"+u.ID), serverID, u.ID, username, lastActive)
 		if err != nil {
 			return result, fmt.Errorf("save Jellyfin user: %w", err)
 		}
@@ -101,7 +127,17 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 		if item.ID == "" || item.Type == "" {
 			return nil
 		}
+		item.ID, err = syncIdentity(ctx, db, driver, "Media", "jellyfinMediaId", serverID, item.ID)
+		if err != nil {
+			return err
+		}
 		parent := firstNonEmpty(item.AlbumID, item.SeasonID, item.SeriesID, item.ParentID)
+		if parent != "" {
+			parent, err = syncIdentity(ctx, db, driver, "Media", "jellyfinMediaId", serverID, parent)
+			if err != nil {
+				return err
+			}
+		}
 		libraryName, collection := "", ""
 		if lib, ok := byLibrary[item.ParentID]; ok {
 			libraryName, collection = lib.Name, lib.CollectionType
@@ -164,7 +200,7 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 		if item.AlbumArtist != "" {
 			artist = item.AlbumArtist
 		}
-		_, e := db.ExecContext(ctx, database.Bind(`INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","durationMs","size","directors","actors","studios","parentId","artist","dateAdded","resolution") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("jellyfinMediaId","serverId") DO UPDATE SET "title"=excluded."title","type"=excluded."type","collectionType"=COALESCE(excluded."collectionType","Media"."collectionType"),"libraryName"=COALESCE(excluded."libraryName","Media"."libraryName"),"genres"=excluded."genres","durationMs"=COALESCE(excluded."durationMs","Media"."durationMs"),"size"=COALESCE(excluded."size","Media"."size"),"directors"=excluded."directors","actors"=excluded."actors","studios"=excluded."studios","parentId"=COALESCE(excluded."parentId","Media"."parentId"),"artist"=COALESCE(excluded."artist","Media"."artist"),"dateAdded"=COALESCE(excluded."dateAdded","Media"."dateAdded"),"resolution"=COALESCE(excluded."resolution","Media"."resolution"),"updatedAt"=CURRENT_TIMESTAMP`, driver), stableID("med", serverID+":"+item.ID), serverID, item.ID, firstNonEmpty(item.Name, "Unknown"), item.Type, col, lib, string(genres), duration, size, string(directors), string(actors), string(studios), par, artist, dateAdded, res)
+		_, e := db.ExecContext(ctx, database.Bind(`INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","durationMs","size","directors","actors","studios","parentId","artist","dateAdded","resolution","providerIds") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("jellyfinMediaId","serverId") DO UPDATE SET "providerIds"=excluded."providerIds","title"=excluded."title","type"=excluded."type","collectionType"=COALESCE(excluded."collectionType","Media"."collectionType"),"libraryName"=COALESCE(excluded."libraryName","Media"."libraryName"),"genres"=excluded."genres","durationMs"=COALESCE(excluded."durationMs","Media"."durationMs"),"size"=COALESCE(excluded."size","Media"."size"),"directors"=excluded."directors","actors"=excluded."actors","studios"=excluded."studios","parentId"=COALESCE(excluded."parentId","Media"."parentId"),"artist"=COALESCE(excluded."artist","Media"."artist"),"dateAdded"=COALESCE(excluded."dateAdded","Media"."dateAdded"),"resolution"=COALESCE(excluded."resolution","Media"."resolution"),"updatedAt"=CURRENT_TIMESTAMP`, driver), stableID("med", serverID+":"+item.ID), serverID, item.ID, firstNonEmpty(item.Name, "Unknown"), item.Type, col, lib, syncArrayValue(driver, item.Genres, genres), duration, size, syncArrayValue(driver, item.Directors, directors), syncArrayValue(driver, item.Actors, actors), syncArrayValue(driver, item.Studios, studios), par, artist, dateAdded, res, providerJSON(item.ProviderIDs))
 		if e != nil {
 			return fmt.Errorf("save media %q: %w", item.ID, e)
 		}
@@ -218,15 +254,22 @@ func SyncAllServers(ctx context.Context, db *sql.DB, driver string, recentOnly .
 	var targets []targetServer
 
 	if db != nil {
-		rows, err := db.QueryContext(ctx, `SELECT "id", "jellyfinServerId", "name", "url", COALESCE("jellyfinApiKey",'') FROM "Server" WHERE "isActive" = 1`)
+		rows, err := db.QueryContext(ctx, `SELECT "id", "jellyfinServerId", "name", "url", COALESCE("jellyfinApiKey",'') FROM "Server" WHERE "isActive" = TRUE`)
 		if err == nil {
-			defer rows.Close()
+
 			for rows.Next() {
 				var s targetServer
 				if err := rows.Scan(&s.id, &s.jfID, &s.name, &s.url, &s.apiKey); err == nil && s.url != "" && s.apiKey != "" {
 					targets = append(targets, s)
 				}
 			}
+			scanErr := rows.Err()
+			rows.Close()
+			if scanErr != nil {
+				return SyncResult{}, scanErr
+			}
+		} else {
+			return SyncResult{}, err
 		}
 	}
 
@@ -249,29 +292,58 @@ func SyncAllServers(ctx context.Context, db *sql.DB, driver string, recentOnly .
 	}
 
 	var combined SyncResult
-	var lastErr error
+	var failures []error
+	var outcomes []map[string]any
 	started := time.Now().UTC().Format(time.RFC3339Nano)
-
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	limit := make(chan struct{}, 4)
 	for _, t := range targets {
-		res, err := SyncOne(ctx, db, driver, t.id, t.jfID, t.name, t.url, t.apiKey, recentOnly...)
-		if err != nil {
-			lastErr = err
-		} else {
+		wg.Add(1)
+		go func(t targetServer) {
+			defer wg.Done()
+			select {
+			case limit <- struct{}{}:
+				defer func() { <-limit }()
+			case <-ctx.Done():
+				mu.Lock()
+				failures = append(failures, ctx.Err())
+				mu.Unlock()
+				return
+			}
+			begin := time.Now()
+			res, err := SyncOne(ctx, db, driver, t.id, t.jfID, t.name, t.url, t.apiKey, recentOnly...)
+			outcome := map[string]any{"serverId": t.id, "name": t.name, "durationMs": time.Since(begin).Milliseconds(), "users": res.Users, "media": res.Media, "lastFinishedAt": time.Now().UTC().Format(time.RFC3339Nano), "status": "ok"}
+			mu.Lock()
+			defer mu.Unlock()
 			combined.Users += res.Users
 			combined.Media += res.Media
-		}
+			if err != nil {
+				failures = append(failures, fmt.Errorf("server %s: %w", t.id, err))
+				outcome["status"] = "error"
+			} else {
+				outcome["lastSuccessAt"] = outcome["lastFinishedAt"]
+			}
+			outcomes = append(outcomes, outcome)
+		}(t)
 	}
+	wg.Wait()
+	lastErr := errors.Join(failures...)
 
 	if db != nil {
 		finished := time.Now().UTC().Format(time.RFC3339Nano)
 		syncStatus := "ok"
 		errStr := ""
-		if lastErr != nil && combined.Users == 0 && combined.Media == 0 {
-			syncStatus = "error"
+		if lastErr != nil {
+			syncStatus = "partial"
+			if len(failures) == len(targets) {
+				syncStatus = "error"
+			}
 			errStr = lastErr.Error()
 		}
 		syncState := map[string]any{
 			"status":         syncStatus,
+			"servers":        outcomes,
 			"lastStartedAt":  started,
 			"lastFinishedAt": finished,
 			"lastUsers":      combined.Users,
@@ -287,9 +359,8 @@ func SyncAllServers(ctx context.Context, db *sql.DB, driver string, recentOnly .
 		_, _ = db.ExecContext(ctx, database.Bind(`INSERT INTO "SystemHealthState" ("id", "sync", "updatedAt") VALUES ('global', ?, ?) ON CONFLICT("id") DO UPDATE SET "sync"=excluded."sync", "updatedAt"=excluded."updatedAt"`, driver), string(syncBytes), finished)
 	}
 
-	if lastErr != nil && combined.Users == 0 && combined.Media == 0 {
+	if lastErr != nil {
 		return combined, lastErr
 	}
 	return combined, nil
 }
-

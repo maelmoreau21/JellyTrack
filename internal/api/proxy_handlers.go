@@ -82,19 +82,7 @@ func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 		imageType = "Primary"
 	}
 
-	var srvURL, apiKey sql.NullString
-	if serverID != "" {
-		_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "url", "jellyfinApiKey" FROM "Server" WHERE "id" = ?`, h.driver), serverID).Scan(&srvURL, &apiKey)
-	}
-	if !srvURL.Valid || srvURL.String == "" {
-		_ = h.db.QueryRowContext(r.Context(), `SELECT "url", "jellyfinApiKey" FROM "Server" WHERE "isActive" = 1 LIMIT 1`).Scan(&srvURL, &apiKey)
-	}
-	if (!srvURL.Valid || srvURL.String == "") && os.Getenv("JELLYFIN_URL") != "" {
-		srvURL.String = os.Getenv("JELLYFIN_URL")
-		srvURL.Valid = true
-		apiKey.String = os.Getenv("JELLYFIN_API_KEY")
-		apiKey.Valid = true
-	}
+	srvURL, apiKey := h.imageServer(r, serverID)
 
 	if !srvURL.Valid || srvURL.String == "" || mediaID == "" {
 		fallback()
@@ -163,19 +151,7 @@ func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request)
 		userID = strings.TrimSpace(r.URL.Query().Get("id"))
 	}
 
-	var srvURL, apiKey sql.NullString
-	if serverID != "" {
-		_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "url", "jellyfinApiKey" FROM "Server" WHERE "id" = ?`, h.driver), serverID).Scan(&srvURL, &apiKey)
-	}
-	if !srvURL.Valid || srvURL.String == "" {
-		_ = h.db.QueryRowContext(r.Context(), `SELECT "url", "jellyfinApiKey" FROM "Server" WHERE "isActive" = 1 LIMIT 1`).Scan(&srvURL, &apiKey)
-	}
-	if (!srvURL.Valid || srvURL.String == "") && os.Getenv("JELLYFIN_URL") != "" {
-		srvURL.String = os.Getenv("JELLYFIN_URL")
-		srvURL.Valid = true
-		apiKey.String = os.Getenv("JELLYFIN_API_KEY")
-		apiKey.Valid = true
-	}
+	srvURL, apiKey := h.imageServer(r, serverID)
 
 	if !srvURL.Valid || srvURL.String == "" || userID == "" {
 		fallback()
@@ -227,4 +203,26 @@ func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request)
 	}
 	w.WriteHeader(resp.StatusCode)
 	_, _ = io.Copy(w, resp.Body)
+}
+
+// Never fall through from an explicit invalid server to another server.
+func (h *Handler) imageServer(r *http.Request, id string) (sql.NullString, sql.NullString) {
+	var address, key sql.NullString
+	if id != "" {
+		_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "url","jellyfinApiKey" FROM "Server" WHERE "id"=? OR "jellyfinServerId"=?`, h.driver), id, id).Scan(&address, &key)
+		return address, key
+	}
+	var count int
+	if h.db.QueryRowContext(r.Context(), `SELECT COUNT(*) FROM "Server"`).Scan(&count) != nil || count > 1 {
+		return address, key
+	}
+	if count == 1 {
+		_ = h.db.QueryRowContext(r.Context(), `SELECT "url","jellyfinApiKey" FROM "Server" WHERE "isActive"=TRUE`).Scan(&address, &key)
+		return address, key
+	}
+	if raw := os.Getenv("JELLYFIN_URL"); raw != "" {
+		address = sql.NullString{String: raw, Valid: true}
+		key = sql.NullString{String: os.Getenv("JELLYFIN_API_KEY"), Valid: true}
+	}
+	return address, key
 }

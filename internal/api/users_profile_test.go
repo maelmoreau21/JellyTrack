@@ -172,8 +172,8 @@ func TestProfileHistoryFiltersExportAndIdentityScope(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &linked); err != nil {
 		t.Fatal(err)
 	}
-	if w.Code != 200 || linked.Stats["sessionsCount"] != float64(56) || linked.History.Total != 56 {
-		t.Fatalf("admin historical linked aggregation: %d %s", w.Code, w.Body.String())
+	if w.Code != 200 || linked.Stats["sessionsCount"] != float64(55) || linked.History.Total != 55 {
+		t.Fatalf("admin account isolation: %d %s", w.Code, w.Body.String())
 	}
 	foundPrivate := false
 	for _, item := range linked.History.Items {
@@ -184,8 +184,8 @@ func TestProfileHistoryFiltersExportAndIdentityScope(t *testing.T) {
 			}
 		}
 	}
-	if !foundPrivate {
-		t.Fatal("admin linked history omitted second server")
+	if foundPrivate {
+		t.Fatal("admin profile included a different account with the same name")
 	}
 	w = call("jf-empty", "")
 	if w.Code != 200 {

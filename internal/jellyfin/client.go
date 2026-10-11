@@ -86,20 +86,21 @@ type Library struct {
 	CollectionType string `json:"CollectionType"`
 }
 type Item struct {
-	ID           string   `json:"Id"`
-	Name         string   `json:"Name"`
-	Type         string   `json:"Type"`
-	ParentID     string   `json:"ParentId"`
-	SeriesID     string   `json:"SeriesId"`
-	SeasonID     string   `json:"SeasonId"`
-	AlbumID      string   `json:"AlbumId"`
-	Genres       []string `json:"Genres"`
-	Directors    []string `json:"Directors"`
-	Actors       []string `json:"Actors"`
-	Studios      []string `json:"Studios"`
-	RunTimeTicks int64    `json:"RunTimeTicks"`
-	DateCreated  string   `json:"DateCreated"`
-	AlbumArtist  string   `json:"AlbumArtist"`
+	ProviderIDs  map[string]string `json:"ProviderIds"`
+	ID           string            `json:"Id"`
+	Name         string            `json:"Name"`
+	Type         string            `json:"Type"`
+	ParentID     string            `json:"ParentId"`
+	SeriesID     string            `json:"SeriesId"`
+	SeasonID     string            `json:"SeasonId"`
+	AlbumID      string            `json:"AlbumId"`
+	Genres       []string          `json:"Genres"`
+	Directors    []string          `json:"Directors"`
+	Actors       []string          `json:"Actors"`
+	Studios      []string          `json:"Studios"`
+	RunTimeTicks int64             `json:"RunTimeTicks"`
+	DateCreated  string            `json:"DateCreated"`
+	AlbumArtist  string            `json:"AlbumArtist"`
 	MediaSources []struct {
 		Size         int64 `json:"Size"`
 		MediaStreams []struct {
@@ -130,8 +131,25 @@ type AuthenticatedUser struct {
 	ID     string `json:"Id"`
 	Name   string `json:"Name"`
 	Policy struct {
-		IsAdministrator bool `json:"IsAdministrator"`
+		IsAdministrator          bool   `json:"IsAdministrator"`
+		AuthenticationProviderID string `json:"AuthenticationProviderId"`
+		IsDisabled               bool   `json:"IsDisabled"`
 	} `json:"Policy"`
+}
+
+const LocalAuthenticationProvider = "Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider"
+const LDAPAuthenticationProvider = "Jellyfin.Plugin.LDAP_Auth.LdapAuthenticationProviderPlugin"
+
+func (c *Client) AuthenticationUsers(ctx context.Context) ([]AuthenticatedUser, error) {
+	var users []AuthenticatedUser
+	err := c.get(ctx, "/Users", nil, &users)
+	return users, err
+}
+
+func (c *Client) AuthenticationUser(ctx context.Context, id string) (AuthenticatedUser, error) {
+	var user AuthenticatedUser
+	err := c.get(ctx, "/Users/"+url.PathEscape(id), nil, &user)
+	return user, err
 }
 
 func Authenticate(ctx context.Context, baseURL, username, password string) (AuthenticatedUser, error) {
@@ -210,7 +228,7 @@ func (c *Client) Items(ctx context.Context, visit func(Item) error) error {
 
 func (c *Client) ItemsSince(ctx context.Context, since string, visit func(Item) error) error {
 	for start := 0; start < 50000; start += pageSize {
-		q := url.Values{"IncludeItemTypes": {"Movie,Series,Season,Episode,Audio,MusicAlbum,Book,AudioBook,Comic,BoxSet"}, "Recursive": {"true"}, "Fields": {"Genres,People,Studios,MediaSources,ParentId,RunTimeTicks,DateCreated,SeriesId,SeasonId,AlbumId"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
+		q := url.Values{"IncludeItemTypes": {"Movie,Series,Season,Episode,Audio,MusicAlbum,Book,AudioBook,Comic,BoxSet"}, "Recursive": {"true"}, "Fields": {"ProviderIds,Genres,People,Studios,MediaSources,ParentId,RunTimeTicks,DateCreated,SeriesId,SeasonId,AlbumId"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
 		if since != "" {
 			q.Set("MinDateCreated", since)
 			q.Set("SortBy", "DateCreated")

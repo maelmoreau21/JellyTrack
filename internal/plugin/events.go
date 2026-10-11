@@ -170,14 +170,44 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "Unsupported eventSchemaVersion.", "schemaVersion": version, "minSupported": minSchemaVersion, "maxSupported": currentSchemaVersion})
 		return
 	}
+	node := objectValue(payload, "server", "Server")
+	explicitServer := firstString(node, "serverId", "ServerId", "jellyfinServerId", "JellyfinServerId")
+	if explicitServer == "" {
+		explicitServer = firstString(payload, "serverId", "ServerId", "jellyfinServerId", "JellyfinServerId", "serverUniqueId", "ServerUniqueId")
+	}
+	var configuredCount int
+	if err := h.queryRow(r.Context(), `SELECT COUNT(*) FROM "Server"`).Scan(&configuredCount); err != nil {
+		h.fail(w, "read servers", err)
+		return
+	}
+	if configuredCount >= 2 && explicitServer == "" {
+		writeJSON(w, 400, map[string]string{"error": "An explicit serverId is required with multiple servers."})
+		return
+	}
 	server := serverIdentity(payload)
 	if scopedServer != "" && scopedServer != server.id {
 		writeJSON(w, http.StatusForbidden, map[string]any{"error": "Forbidden — scoped plugin key does not match payload server.", "tokenServerId": scopedServer, "payloadServerId": server.id})
 		return
 	}
+	var storedName, storedURL string
+	if err := h.queryRow(r.Context(), `SELECT "name","url" FROM "Server" WHERE "jellyfinServerId"=?`, server.id).Scan(&storedName, &storedURL); err == nil {
+		if firstString(node, "serverUrl", "ServerUrl", "url", "Url") == "" && firstString(payload, "serverUrl", "ServerUrl", "url", "Url") == "" {
+			server.url = storedURL
+		}
+		if firstString(node, "serverName", "ServerName", "name", "Name") == "" && firstString(payload, "serverName", "ServerName", "pluginServerName", "PluginServerName") == "" {
+			server.name = storedName
+		}
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		h.fail(w, "read server", err)
+		return
+	}
 	serverID, err := h.upsertServer(r.Context(), server)
 	if err != nil {
 		h.fail(w, "upsert server", err)
+		return
+	}
+	if err := database.RecordServerConnection(r.Context(), h.db, h.driver, serverID, true, nil); err != nil {
+		h.fail(w, "record server connection", err)
 		return
 	}
 	if event != "Heartbeat" && event != "PlaybackProgress" {
@@ -1181,7 +1211,11 @@ func (h *Handler) upsertUser(ctx context.Context, serverID, key, name string, bu
 		lastActive = time.Now().UTC().Format(time.RFC3339Nano)
 	}
 	ids := jellyfinIDForms(key)
-	rows, err := h.db.QueryContext(ctx, database.Bind(`SELECT "id","jellyfinUserId" FROM "User" WHERE "serverId"=? AND "jellyfinUserId" IN (?,?) ORDER BY CASE WHEN "jellyfinUserId"=? THEN 0 ELSE 1 END,"createdAt"`, h.driver), serverID, ids[0], ids[1], key)
+	uuidKey := ""
+	if dashedJellyfinUUID.MatchString(key) {
+		uuidKey = strings.ReplaceAll(key, "-", "")
+	}
+	rows, err := h.db.QueryContext(ctx, database.Bind(`SELECT "id","jellyfinUserId" FROM "User" WHERE "serverId"=? AND ("jellyfinUserId" IN (?,?) OR (?<>'' AND LOWER(REPLACE("jellyfinUserId",'-',''))=?)) ORDER BY CASE WHEN "jellyfinUserId"=? THEN 0 ELSE 1 END,"createdAt"`, h.driver), serverID, ids[0], ids[1], uuidKey, uuidKey, key)
 	if err != nil {
 		return "", err
 	}
@@ -1260,7 +1294,11 @@ func (h *Handler) upsertMedia(ctx context.Context, serverID string, p map[string
 		sizeValue = size
 	}
 	ids := jellyfinIDForms(key)
-	rows, err := h.db.QueryContext(ctx, database.Bind(`SELECT "id","jellyfinMediaId" FROM "Media" WHERE "serverId"=? AND "jellyfinMediaId" IN (?,?) ORDER BY CASE WHEN "jellyfinMediaId"=? THEN 0 ELSE 1 END,"createdAt"`, h.driver), serverID, ids[0], ids[1], key)
+	uuidKey := ""
+	if dashedJellyfinUUID.MatchString(key) {
+		uuidKey = strings.ReplaceAll(key, "-", "")
+	}
+	rows, err := h.db.QueryContext(ctx, database.Bind(`SELECT "id","jellyfinMediaId" FROM "Media" WHERE "serverId"=? AND ("jellyfinMediaId" IN (?,?) OR (?<>'' AND LOWER(REPLACE("jellyfinMediaId",'-',''))=?)) ORDER BY CASE WHEN "jellyfinMediaId"=? THEN 0 ELSE 1 END,"createdAt"`, h.driver), serverID, ids[0], ids[1], uuidKey, uuidKey, key)
 	if err != nil {
 		return "", 0, 0, err
 	}
@@ -1281,7 +1319,7 @@ func (h *Handler) upsertMedia(ctx context.Context, serverID string, p map[string
 	if err := rows.Close(); err != nil {
 		return "", 0, 0, err
 	}
-	args := []any{serverID, key, title, typ, nullableString(collection), nullableString(firstString(p, "libraryName", "LibraryName")), arrayGenres, nullableString(normalizeResolution(firstString(p, "resolution", "Resolution"))), durValue, sizeValue, arrayDirectors, arrayActors, arrayStudios, nullableString(firstString(p, "parentId", "ParentId")), nullableString(firstString(p, "artist", "Artist", "albumArtist", "AlbumArtist")), nullableTime(eventDate(p))}
+	args := []any{serverID, key, title, typ, nullableString(collection), nullableString(firstString(p, "libraryName", "LibraryName")), arrayGenres, nullableString(normalizeResolution(firstString(p, "resolution", "Resolution"))), durValue, sizeValue, arrayDirectors, arrayActors, arrayStudios, nullableString(normalizeID(firstString(p, "parentId", "ParentId"))), nullableString(firstString(p, "artist", "Artist", "albumArtist", "AlbumArtist")), nullableTime(eventDate(p))}
 	if len(found) == 0 {
 		err = h.queryRow(ctx, `INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","resolution","durationMs","size","directors","actors","studios","parentId","artist","dateAdded") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("jellyfinMediaId","serverId") DO UPDATE SET "title"=excluded."title","type"=excluded."type","collectionType"=excluded."collectionType","libraryName"=excluded."libraryName","genres"=excluded."genres","resolution"=excluded."resolution","durationMs"=COALESCE(excluded."durationMs","Media"."durationMs"),"size"=COALESCE(excluded."size","Media"."size"),"directors"=excluded."directors","actors"=excluded."actors","studios"=excluded."studios","parentId"=excluded."parentId","artist"=excluded."artist","dateAdded"=COALESCE(excluded."dateAdded","Media"."dateAdded"),"updatedAt"=CURRENT_TIMESTAMP RETURNING "id"`, append([]any{id}, args...)...).Scan(&mediaID)
 		return mediaID, duration, size, err
@@ -1294,6 +1332,13 @@ func (h *Handler) upsertMedia(ctx context.Context, serverID string, p map[string
 	defer tx.Rollback()
 	if _, err = h.execTx(ctx, tx, `UPDATE "Media" SET "jellyfinMediaId"=?,"title"=?,"type"=?,"collectionType"=?,"libraryName"=?,"genres"=?,"resolution"=?,"durationMs"=COALESCE(?,"durationMs"),"size"=COALESCE(?,"size"),"directors"=?,"actors"=?,"studios"=?,"parentId"=?,"artist"=?,"dateAdded"=COALESCE(?,"dateAdded"),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, append(args[1:], mediaID)...); err != nil {
 		return "", 0, 0, err
+	}
+	for _, original := range found {
+		if original.jellyfinID != key {
+			if _, err = h.execTx(ctx, tx, `UPDATE "Media" SET "parentId"=? WHERE "serverId"=? AND "parentId"=?`, key, serverID, original.jellyfinID); err != nil {
+				return "", 0, 0, err
+			}
+		}
 	}
 	for _, duplicate := range found[1:] {
 		if _, err = h.execTx(ctx, tx, `UPDATE "PlaybackHistory" SET "mediaId"=? WHERE "mediaId"=?`, mediaID, duplicate.id); err != nil {

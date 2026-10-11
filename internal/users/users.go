@@ -133,22 +133,20 @@ func GetUserDetail(ctx context.Context, db *sql.DB, driver, userID string) (map[
 	return res, nil
 }
 
-// DuplicateGroup represents users that share the same username across servers or same jellyfinUserId.
+// DuplicateGroup represents same-name candidates within one server.
 type DuplicateGroup struct {
 	Username string           `json:"username"`
 	Count    int              `json:"count"`
 	Users    []map[string]any `json:"users"`
 }
 
-// DetectDuplicates finds accounts sharing identical usernames.
+// DetectDuplicates keeps independent accounts from different servers separate.
 func DetectDuplicates(ctx context.Context, db *sql.DB) ([]DuplicateGroup, error) {
 	rows, err := db.QueryContext(ctx, `
 		SELECT u."id", u."serverId", u."jellyfinUserId", u."username", u."isActive", s."name" AS "serverName"
 		FROM "User" u
 		JOIN "Server" s ON s."id" = u."serverId"
-		WHERE u."username" IN (
-			SELECT "username" FROM "User" GROUP BY "username" HAVING COUNT(*) > 1
-		)
+		WHERE EXISTS (SELECT 1 FROM "User" duplicate WHERE duplicate."serverId"=u."serverId" AND duplicate."username"=u."username" AND duplicate."id"<>u."id")
 		ORDER BY u."username" ASC, u."createdAt" ASC
 	`)
 	if err != nil {
@@ -169,14 +167,15 @@ func DetectDuplicates(ctx context.Context, db *sql.DB) ([]DuplicateGroup, error)
 				"username":       uname,
 				"isActive":       isActive,
 			}
-			grouped[uname] = append(grouped[uname], item)
+			groupKey := srvID + "\x00" + uname
+			grouped[groupKey] = append(grouped[groupKey], item)
 		}
 	}
 
 	result := make([]DuplicateGroup, 0, len(grouped))
-	for uname, usersList := range grouped {
+	for _, usersList := range grouped {
 		result = append(result, DuplicateGroup{
-			Username: uname,
+			Username: usersList[0]["username"].(string),
 			Count:    len(usersList),
 			Users:    usersList,
 		})
@@ -211,14 +210,17 @@ func MergeUsers(ctx context.Context, db *sql.DB, driver, sourceUserID, targetUse
 	defer tx.Rollback()
 
 	// Verify both users exist
-	var srcName, tgtName string
-	if err := tx.QueryRowContext(ctx, database.Bind(`SELECT "username" FROM "User" WHERE "id"=?`, driver), sourceUserID).Scan(&srcName); err != nil {
+	var srcName, tgtName, srcServer, tgtServer string
+	if err := tx.QueryRowContext(ctx, database.Bind(`SELECT "username","serverId" FROM "User" WHERE "id"=?`, driver), sourceUserID).Scan(&srcName, &srcServer); err != nil {
 		return MergeResult{}, fmt.Errorf("source user not found: %w", err)
 	}
-	if err := tx.QueryRowContext(ctx, database.Bind(`SELECT "username" FROM "User" WHERE "id"=?`, driver), targetUserID).Scan(&tgtName); err != nil {
+	if err := tx.QueryRowContext(ctx, database.Bind(`SELECT "username","serverId" FROM "User" WHERE "id"=?`, driver), targetUserID).Scan(&tgtName, &tgtServer); err != nil {
 		return MergeResult{}, fmt.Errorf("target user not found: %w", err)
 	}
 
+	if srcServer != tgtServer {
+		return MergeResult{}, errors.New("cannot merge accounts from different servers")
+	}
 	// 1. Reassign PlaybackHistory
 	histRes, err := tx.ExecContext(ctx, database.Bind(`UPDATE "PlaybackHistory" SET "userId"=? WHERE "userId"=?`, driver), targetUserID, sourceUserID)
 	if err != nil {

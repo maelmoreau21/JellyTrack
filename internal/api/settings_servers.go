@@ -116,7 +116,7 @@ func (h *Handler) recoveredServers(w http.ResponseWriter, r *http.Request) {
 	if r.Context().Err() != nil {
 		return
 	}
-	jsonResponse(w, 200, map[string]any{"servers": servers, "isMultiMode": strings.EqualFold(os.Getenv("JELLYTRACK_MODE"), "multi"), "pluginKeyReady": ready, "pluginLastSeen": nullable(lastSeen), "pluginVersion": nullable(version), "pluginEndpointPath": "/api/plugin/events", "pluginConnected": connected})
+	jsonResponse(w, 200, map[string]any{"servers": servers, "isMultiMode": len(configs) >= 2, "pluginKeyReady": ready, "pluginLastSeen": nullable(lastSeen), "pluginVersion": nullable(version), "pluginEndpointPath": "/api/plugin/events", "pluginConnected": connected})
 }
 
 func (h *Handler) recoveredServerPluginKey(w http.ResponseWriter, r *http.Request) {

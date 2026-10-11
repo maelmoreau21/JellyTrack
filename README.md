@@ -281,6 +281,45 @@ For PowerShell, assign the environment variables with `$env:DATABASE_DRIVER` and
 - [UI parity audit and validation limitations](docs/FINAL_PARITY_AUDIT.md)
 - [Plugin repository](https://github.com/maelmoreau21/jellyfin-plugin-JellyTrack)
 
+## Login policy: Jellyfin local accounts and LDAP / Authentik
+
+The backend enforces both methods independently of the login buttons:
+
+- Native Jellyfin accounts use their Jellyfin password only.
+- LDAP accounts use OIDC only, even when Jellyfin accepts their LDAP password.
+- The configured JellyTrack local administrator retains password recovery access.
+- Unknown providers, disabled accounts, missing metadata, and metadata outages are denied. Disabling OIDC does not enable LDAP passwords. Pre-policy sessions require a fresh login.
+
+Jellyfin must expose `Policy.AuthenticationProviderId` through its administrative API. Only the exact native provider `Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider` and LDAP provider `Jellyfin.Plugin.LDAP_Auth.LdapAuthenticationProviderPlugin` are supported. Jellyfin versions/plugins using other provider formats are refused until explicitly supported. Password authentication checks metadata before sending the password and again after authentication. A denial on the primary server cannot fall through to another server.
+
+Configure each server's administrative Jellyfin API key in Settings / Jellyfin or `JELLYFIN_API_KEY` for the primary environment server. Register the server in JellyTrack before using SSO. LDAP users must already exist in Jellyfin.
+
+SSO configuration remains in Settings / SSO and is stored in the database. Defined environment variables override individual saved fields, including explicitly empty values: `OIDC_ENABLED`, `OIDC_ISSUER` (aliases, in order: `OIDC_URL`, `AUTHENTIK_URL`, `JELLYTRACK_AUTHENTIK_URL`), `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_USER_GROUP`, `OIDC_ADMIN_GROUP`, and `OIDC_AUTO_REDIRECT` (alias `OIDC_AUTO_LOGIN`). Remove variables from the process, container configuration, and `.env` / `.env.local` to manage those fields through Settings. Use `OIDC_AUTO_REDIRECT=false` to present both login methods without automatically redirecting.
+
+Authentik must issue an RS256-signed ID token containing the stable `sub` and two administrator-controlled claims:
+
+- `jellyfin_server_id`: JellyTrack's internal server ID (`Server.id`, visible in the administrator server API), **not** Jellyfin's server ID.
+- `jellyfin_user_id`: the actual Jellyfin user UUID for that LDAP account.
+
+No username or email matching is used for SSO linkage. Do not let users set these claims through editable profiles, enrollment inputs, or untrusted upstream attributes. One safe mapping is an administrator-maintained dictionary keyed by the immutable Authentik user primary key, with values verified from Jellyfin:
+
+```python
+# Example: replace every identifier with the real administrator-verified value.
+links = {
+    "42": {
+        "jellyfin_server_id": "REPLACE_WITH_JELLYTRACK_SERVER_ID",
+        "jellyfin_user_id": "REPLACE_WITH_JELLYFIN_LDAP_USER_UUID",
+    },
+}
+return links.get(str(request.user.pk), {})
+```
+
+Add this OAuth2/OIDC scope mapping to the Authentik provider with scope `profile` (already requested by JellyTrack), and include the claims in the ID token. Keep existing profile/group mappings. Unmapped identities are denied. See the official [Authentik property-mapping guide](https://docs.goauthentik.io/add-secure-apps/providers/property-mappings/) and [OIDC provider guide](https://docs.goauthentik.io/add-secure-apps/providers/oauth2/).
+
+The verified issuer, subject, method, server ID and Jellyfin user ID are retained in the session. Existing sessions do not recheck subsequent Jellyfin account/provider changes on every request: revoke all sessions in the security settings when changing account ownership, disabling accounts, or changing IdP mappings.
+
+Local administrator recovery requires a strong `JELLYTRACK_LOCAL_ADMIN_PASSWORD`, `JELLYTRACK_LOCAL_ADMIN_USER`, and a random session secret of at least 32 characters in `JELLYTRACK_SECRET`. Use HTTPS. Failed credentials for the configured recovery account cannot fall through to Jellyfin.
+
 ## License
 
 JellyTrack is licensed under the [MIT License](LICENSE).

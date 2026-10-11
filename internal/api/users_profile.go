@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maelmoreau21/jellytrack/internal/auth"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 )
 
@@ -23,12 +22,8 @@ type profileSession struct {
 	bitrate                                                            sql.NullInt64
 }
 
-// Historically administrator profiles merge accounts sharing the canonical
-// display name. A standard session always keeps its authenticated server pair.
+// A display name is not an identity, even for administrator profiles.
 func profileScope(r *http.Request, userID, serverID string) (string, []any) {
-	if p, ok := auth.PrincipalFromContext(r.Context()); ok && p.IsAdmin() {
-		return `p."userId" IN (SELECT linked."id" FROM "User" linked WHERE LOWER(linked."username")=LOWER((SELECT seed."username" FROM "User" seed WHERE seed."id"=? AND seed."serverId"=?))) AND p."serverId"=(SELECT account."serverId" FROM "User" account WHERE account."id"=p."userId")`, []any{userID, serverID}
-	}
 	return `p."userId"=? AND p."serverId"=?`, []any{userID, serverID}
 }
 

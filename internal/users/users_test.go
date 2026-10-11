@@ -44,10 +44,26 @@ func TestUserDuplicateDetectionAndMerge(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(dups) != 1 || dups[0].Username != "Bob" || dups[0].Count != 2 {
+	if len(dups) != 0 {
 		t.Fatalf("unexpected duplicates: %+v", dups)
 	}
 
+	// Cross-server names are independent accounts; merging is rejected atomically.
+	if _, err := MergeUsers(ctx, db, "sqlite", "u1", "u2", nil, nil); err == nil {
+		t.Fatal("cross-server merge accepted")
+	}
+	var owner string
+	if err := db.QueryRow(`SELECT "userId" FROM "PlaybackHistory" WHERE "id"='p1'`).Scan(&owner); err != nil || owner != "u1" {
+		t.Fatalf("history changed: %s %v", owner, err)
+	}
+	// Retain coverage for a deliberate merge within the same server.
+	if _, err := db.Exec(`UPDATE "User" SET "serverId"='srv1' WHERE "id"='u2'`); err != nil {
+		t.Fatal(err)
+	}
+	dups, err = DetectDuplicates(ctx, db)
+	if err != nil || len(dups) != 1 || dups[0].Count != 2 {
+		t.Fatalf("same-server candidates: %+v %v", dups, err)
+	}
 	// Merge u1 into u2
 	actor := "admin"
 	res, err := MergeUsers(ctx, db, "sqlite", "u1", "u2", &actor, nil)

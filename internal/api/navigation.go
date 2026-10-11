@@ -33,8 +33,13 @@ func (h *Handler) navigation(w http.ResponseWriter, r *http.Request) {
 			version = "3.0.0"
 		}
 	}
+	var servers int
+	if err := h.db.QueryRowContext(r.Context(), `SELECT COUNT(*) FROM "Server"`).Scan(&servers); err != nil {
+		jsonError(w, 500, "Impossible de lire les serveurs.")
+		return
+	}
 	jsonResponse(w, http.StatusOK, map[string]any{
-		"multiServer":    strings.ToLower(os.Getenv("JELLYTRACK_MODE")) == "multi",
+		"multiServer":    servers >= 2,
 		"wrappedVisible": wrapped,
 		"appVersion":     version,
 	})

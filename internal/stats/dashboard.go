@@ -69,6 +69,7 @@ type DashboardServerLoad struct {
 
 // DashboardTopUser represents a high-activity user.
 type DashboardTopUser struct {
+	ID             string  `json:"id"`
 	JellyfinUserID string  `json:"jellyfinUserId"`
 	Username       string  `json:"username"`
 	Hours          float64 `json:"hours"`
@@ -144,6 +145,7 @@ type FullDashboardResult struct {
 	HourlyChartData       []DashboardHourlyPoint  `json:"hourlyChartData"`
 	DayOfWeekChartData    []DashboardDayPoint     `json:"dayOfWeekChartData"`
 	PlatformChartData     []DashboardNamedValue   `json:"platformChartData"`
+	ServerActivity        []map[string]any        `json:"serverActivity"`
 	ServerLoadData        []DashboardServerLoad   `json:"serverLoadData"`
 	TopUsers              []DashboardTopUser      `json:"topUsers"`
 	MonthlyWatchData      []DashboardMonthlyPoint `json:"monthlyWatchData"`
@@ -759,8 +761,9 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 
 	// Top Users
 	var userList []DashboardTopUser
-	for _, u := range userDurationMap {
+	for id, u := range userDurationMap {
 		userList = append(userList, DashboardTopUser{
+			ID:             id,
 			JellyfinUserID: u.jid,
 			Username:       u.uname,
 			Hours:          math.Round((float64(u.sec)/3600.0)*10) / 10,

@@ -1,0 +1,167 @@
+{
+  "branch": "develop",
+  "date": "2026-10-11",
+  "note": "Only files changed for this task; admin_handlers.go, client.go and settings.js also contained preexisting changes. Other preexisting files are excluded.",
+  "files": [
+    {
+      "path": "internal/api/account_runtime_test.go",
+      "sha256": "78c73f4e4c485a7e84042fa2ec6495fdb418f570f6caf5dead800ebdec14ccf1"
+    },
+    {
+      "path": "internal/api/admin_handlers.go",
+      "sha256": "51d18a773d85f932458d1466cac2455b198f6f60ba7be34a2415c0e12b368cdc"
+    },
+    {
+      "path": "internal/api/admin_recovery.go",
+      "sha256": "0a389ae1f60c1761298ddb6d35f7916975d5995592a04a4a3651d79f67865445"
+    },
+    {
+      "path": "internal/api/handlers.go",
+      "sha256": "ee1a1bb96a1de89746aa31cb468225926fbda8bbd31c6b9b059b82030d25f01d"
+    },
+    {
+      "path": "internal/api/history_handlers.go",
+      "sha256": "6b030ebdcfa05e5762c75483f4a1b87cf3334136c89cb8bf53b2aaa3b629cf85"
+    },
+    {
+      "path": "internal/api/media_recovery.go",
+      "sha256": "19ab1b12488b2930fbfccfaef3afc0134ed5ec6cae8d42a611f608a93871fa31"
+    },
+    {
+      "path": "internal/api/multiserver.go",
+      "sha256": "29bee30664dfdbc8b63ee304ac629269e9f8c70f8986c84cc25a8374fa4b0f45"
+    },
+    {
+      "path": "internal/api/multiserver_test.go",
+      "sha256": "11e20c2796081f5e78e9f7c25cdbf5d7e31f1f3dbc2d54b2eb038553650513ab"
+    },
+    {
+      "path": "internal/api/multiserver_configuration_test.go",
+      "sha256": "3b4180fa5004db7c89189ec145c8fdb7be83c5d0dc7a48939671037e82ae9ef8"
+    },
+    {
+      "path": "internal/api/multiserver_sessions.go",
+      "sha256": "148664422cd51cd0092cbd29df9ae7ea445fb8704de0684376a76eeabf3ac5c7"
+    },
+    {
+      "path": "internal/api/multiserver_sessions_test.go",
+      "sha256": "5bcb3d9f894f2c06bc1c8aaba22f8842fcdaa97c88a024fe04353600c23261b5"
+    },
+    {
+      "path": "internal/api/navigation.go",
+      "sha256": "8013a8f8adb0fcc5a70bec1d0e239b25cea3ea5b388868adfa52b592fa34e707"
+    },
+    {
+      "path": "internal/api/navigation_test.go",
+      "sha256": "96c599163a217537ce4b4b11af7c529ee129a3dc04e13800b41ef0e0dfa1af5d"
+    },
+    {
+      "path": "internal/api/proxy_handlers.go",
+      "sha256": "b5fba0573639af1f37cbdc76bb80d6b0571990d03e4edc00ef93808881115880"
+    },
+    {
+      "path": "internal/api/settings_servers.go",
+      "sha256": "b52bf98afcc86a884a0c6bd6deb7f11368ca06edcaf7fd5918afadced2be07df"
+    },
+    {
+      "path": "internal/api/users_profile.go",
+      "sha256": "0cd3ebd59ece4cd35a08c61d0e10745ead142b2bfee28238b4dd1d569d96f8c3"
+    },
+    {
+      "path": "internal/api/users_profile_test.go",
+      "sha256": "8da0a9e4ad095a9778c3388cde0c630bba81fb8b3c516c87f5db4f11784d1792"
+    },
+    {
+      "path": "internal/database/database_test.go",
+      "sha256": "4ba2cb4fd45c91253cdabb4d859541698d67ccf3c4cd02ea5eef40ce1f928f35"
+    },
+    {
+      "path": "internal/database/server_connection.go",
+      "sha256": "5a3f14d42032bf2a63eb0a6a7c810d8d022cac128fa9290144d19c7654d92808"
+    },
+    {
+      "path": "internal/jellyfin/client.go",
+      "sha256": "0f656e6c181355225671398543acd2e6ae2f1053f2d2dd4bc51c4cb192f13911"
+    },
+    {
+      "path": "internal/jellyfin/identity.go",
+      "sha256": "f4b27e7168ef4cf29b6a3a0828d6c625a5c475dd7b3b8d4631ea7598e58eedbe"
+    },
+    {
+      "path": "internal/jellyfin/sync.go",
+      "sha256": "0fb38a5f9f236414e0d8b6d5c806e13c8d7c4617f1e2fb9c9a03990cac0f41f3"
+    },
+    {
+      "path": "internal/jellyfin/sync_test.go",
+      "sha256": "8c87286cb85eee611f9a079ee5f0a992a02b94756569c754cbf7ced2839b8dcc"
+    },
+    {
+      "path": "internal/plugin/events.go",
+      "sha256": "14b1732f2b32208d580a8b369f8322dc752f3a1e10ee56444c3fad4683da9bb2"
+    },
+    {
+      "path": "internal/plugin/multiserver_test.go",
+      "sha256": "844e28c52d89b7412ee8cd5e61f4745ea8c44f11ab0e8c65bb590ce9a5518acc"
+    },
+    {
+      "path": "internal/stats/dashboard.go",
+      "sha256": "e4adc9eb1e2fefd4e3b55ae784f9c0e78c1941c3830756e6dad4add202d78a07"
+    },
+    {
+      "path": "internal/testdb/multiserver.go",
+      "sha256": "bc040fc788575049dbb40f6151e76557986ae0c3e7960dbc3d4188adf349e5c2"
+    },
+    {
+      "path": "internal/users/users.go",
+      "sha256": "7b26bb9662c1c7e6452fe92a8edb542cc255f8c1c1d12af0e3306cf21d32ea26"
+    },
+    {
+      "path": "internal/users/users_test.go",
+      "sha256": "a3ed91b00e60cb58a4e76b85496e7b87bb3ae4421ef7cf2e86dbe5a3bb940eca"
+    },
+    {
+      "path": "migrations/sqlite/004_server_connection.sql",
+      "sha256": "c42392facf9ce5759144728da41f64fa3ceb76ad9ffd2d441f9bb04209bf0d14"
+    },
+    {
+      "path": "migrations/postgres/004_server_connection.sql",
+      "sha256": "c42392facf9ce5759144728da41f64fa3ceb76ad9ffd2d441f9bb04209bf0d14"
+    },
+    {
+      "path": "web/dist/assets/admin.js",
+      "sha256": "db564a43511ab88aa67a4a80583f5bee7b0de549f82c19aa4b2120f9eddcccc3"
+    },
+    {
+      "path": "web/dist/assets/app.js",
+      "sha256": "221f17d11283e3b85a41311bd9e5648c1954241f8458dbce0f5ebbe77c3a65ea"
+    },
+    {
+      "path": "web/dist/assets/history.js",
+      "sha256": "da065defd0a8d07cc6ee816274a6dd2198c47546fa9508d365f59f4aa8a4706f"
+    },
+    {
+      "path": "web/dist/assets/media-recovery.js",
+      "sha256": "127ea56646f69eb50356ce9ffc6ff6f3093ff0115e8300d0e7537d553267280a"
+    },
+    {
+      "path": "web/dist/assets/profile.js",
+      "sha256": "4a14ceec9b2ee16f718d77cb349c8814e021c31a30c73ac3e9b5a7ad056ba506"
+    },
+    {
+      "path": "web/dist/assets/settings.js",
+      "sha256": "a010ea67244dcc139970869cbe84496cc5c4826c1a2012e23338188e8ca6495f"
+    },
+    {
+      "path": "web/dist/assets/users.js",
+      "sha256": "0000af556cb6364ddb619ba7b1a431cf206028d306fb5c8b24e2282767499082"
+    },
+    {
+      "path": "scripts/multiserver-qa/serve.go",
+      "sha256": "91583ff2016300494cbcf1e03bc181a423d9edac66f2e886543d260731339ef8"
+    },
+    {
+      "path": "scripts/multiserver-qa/browser.cjs",
+      "sha256": "9b2e2f219efb85c077d5757f6be8790681f178bb49fd632b180dad8495dc1279"
+    }
+  ]
+}

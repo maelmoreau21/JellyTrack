@@ -555,6 +555,11 @@ func (h *Handler) recoveredMediaDetail(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("metadata") == "true" {
 		h.recoveredLiveMetadata(r, item)
 	}
+	item["availableServers"], err = h.mediaAvailability(r, item)
+	if err != nil {
+		jsonError(w, 500, "Cannot read media availability")
+		return
+	}
 	jsonResponse(w, 200, item)
 }
 

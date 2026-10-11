@@ -113,7 +113,7 @@
         const profileID = u.jellyfinUserId || u.id;
         return `<tr>
           <td class="users-rank">${(page - 1) * pageSize + index + 1}</td>
-          <td><div class="users-identity"><a class="users-profile-link" href="/users/${encodeURIComponent(profileID)}" data-link><span class="users-avatar"><span>${e(initials)}</span><img src="/api/jellyfin/user-image?userId=${encodeURIComponent(profileID)}&fallback=none${u.serverId ? '&serverId=' + encodeURIComponent(u.serverId) : ''}" alt="${e(u.username)}" width="28" height="28" loading="lazy"></span><span>${e(u.username)}</span></a>${u.jellyfinUserId.startsWith('oidc-') ? '<span class="users-orphan">SSO Orphelin</span>' : ''}</div></td>
+          <td><div class="users-identity"><a class="users-profile-link" href="/users/${encodeURIComponent(u.id)}${u.serverId ? '?serverId=' + encodeURIComponent(u.serverId) : ''}" data-link><span class="users-avatar"><span>${e(initials)}</span><img src="/api/jellyfin/user-image?userId=${encodeURIComponent(profileID)}&fallback=none${u.serverId ? '&serverId=' + encodeURIComponent(u.serverId) : ''}" alt="${e(u.username)}" width="28" height="28" loading="lazy"></span><span>${e(u.username)}</span></a>${u.jellyfinUserId.startsWith('oidc-') ? '<span class="users-orphan">SSO Orphelin</span>' : ''}</div></td>
           <td class="users-right users-hours"><strong>${u.totalHours}</strong> h</td>
           <td class="users-right users-muted">${u.sessionsCount}</td>
           <td class="users-center">${u.sessionsCount > 0 ? `<div class="users-stream-mode"><span class="users-direct" title="DirectPlay">${100 - u.transcodeRatio}% DP</span><span class="users-muted">/</span><span class="${u.transcodeRatio >= 50 ? 'users-transcode' : 'users-muted'}" title="Transcode">${u.transcodeRatio}% TC</span></div>` : '<span class="users-muted users-small">-</span>'}</td>
@@ -213,7 +213,7 @@
       const items = [];
       let offset = 0;
       while (true) {
-        const data = await API.getJSON(`/api/users?limit=200&offset=${offset}`);
+        const data = await API.getJSON(`/api/users?${new URLSearchParams(location.search)}&limit=200&offset=${offset}`);
         if (!current()) return;
         const batch = Array.isArray(data.items) ? data.items : Array.isArray(data.users) ? data.users : [];
         items.push(...batch);

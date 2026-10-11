@@ -137,13 +137,22 @@ func TestJellyfinLoginCannotBindUnregisteredServerOrDuplicateUUIDAccount(t *test
 		t.Run(map[bool]string{false: "unregistered environment server", true: "registered compact UUID login"}[registered], func(t *testing.T) {
 			mock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")
-				_, _ = w.Write([]byte(`{"User":{"Id":"0123456789abcdef0123456789abcdef","Name":"Same","Policy":{"IsAdministrator":false}}}`))
+				user := `{"Id":"0123456789abcdef0123456789abcdef","Name":"Same","Policy":{"IsAdministrator":false,"AuthenticationProviderId":"Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider"}}`
+				switch r.URL.Path {
+				case "/Users":
+					_, _ = w.Write([]byte("[" + user + "]"))
+				case "/Users/AuthenticateByName":
+					_, _ = w.Write([]byte(`{"User":` + user + `}`))
+				default:
+					_, _ = w.Write([]byte(user))
+				}
 			}))
 			defer mock.Close()
 			t.Setenv("JELLYTRACK_SECRET", "integration-test-secret-0123456789abcdef")
 			t.Setenv("JELLYTRACK_LOCAL_ADMIN_USER", "admin")
 			t.Setenv("JELLYTRACK_LOCAL_ADMIN_PASSWORD", "Audit-test-password-2026!")
 			t.Setenv("JELLYFIN_URL", mock.URL)
+			t.Setenv("JELLYFIN_API_KEY", "integration-test-key")
 			db, err := database.Open(context.Background(), config.Config{DatabaseDriver: "sqlite", DatabasePath: filepath.Join(t.TempDir(), "login.db")})
 			if err != nil {
 				t.Fatal(err)

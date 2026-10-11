@@ -7,6 +7,34 @@ import (
 	"testing"
 )
 
+func TestSSOExplicitEmptyEnvironmentLocksSavedFields(t *testing.T) {
+	db := apiDB(t)
+	if _, err := db.Exec(`INSERT INTO "GlobalSettings"("id","ssoSettings") VALUES('global','{"enabled":true,"url":"https://issuer.example","userGroup":"members"}')`); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("OIDC_ENABLED", "false")
+	t.Setenv("OIDC_ISSUER", "")
+	t.Setenv("OIDC_USER_GROUP", "")
+	w := httptest.NewRecorder()
+	New(db, "sqlite").getSSO(w, httptest.NewRequest("GET", "/api/settings/sso", nil))
+	var result struct {
+		Enabled   bool            `json:"enabled"`
+		URL       string          `json:"url"`
+		UserGroup string          `json:"userGroup"`
+		Locks     map[string]bool `json:"isEnvControlled"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
+		t.Fatal(err)
+	}
+	if result.Enabled || result.URL != "" || result.UserGroup != "" || !result.Locks["url"] || !result.Locks["userGroup"] {
+		t.Fatalf("settings disagree with environment: %+v", result)
+	}
+	var saved string
+	if err := db.QueryRow(`SELECT "ssoSettings" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&saved); err != nil || !strings.Contains(saved, "members") {
+		t.Fatal("environment override overwrote persisted configuration")
+	}
+}
+
 func TestSettingsPartialUpdatePreservesOtherSectionsAndRejectsInvalidInput(t *testing.T) {
 	db := apiDB(t)
 	if _, err := db.Exec(`INSERT INTO "GlobalSettings"("id","discordWebhookUrl","ssoSettings","resolutionThresholds") VALUES('global','https://discord.com/api/webhooks/1/private','{"clientSecret":"keep"}','{"720p":{"maxW":1408,"maxH":792},"schedulerIntervals":{"backupEveryHours":24}}')`); err != nil {

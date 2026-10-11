@@ -45,33 +45,3 @@ func TestAccountResolutionPinsServerAndNormalizesOnlyUUIDs(t *testing.T) {
 		t.Fatal("server identity not persisted in session")
 	}
 }
-
-func TestOIDCAmbiguityDoesNotCreateUsersAndLegacyPlaceholdersDoNotPreventRelinking(t *testing.T) {
-	m, db := testManager(t)
-	for _, query := range []string{`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s1','jf1','One','http://one'),('s2','jf2','Two','http://two')`, `INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u1','s1','real-one','Same'),('u2','s2','real-two','Same'),('old-oidc','s1','oidc-old','Same')`} {
-		if _, err := db.Exec(query); err != nil {
-			t.Fatal(err)
-		}
-	}
-	jf, server := m.resolveOIDCAccount(context.Background(), "Same", "subject")
-	if jf != "oidc-subject" || server != "" {
-		t.Fatalf("ambiguous OIDC identity %s/%s", jf, server)
-	}
-	var count int
-	if err := db.QueryRow(`SELECT COUNT(*) FROM "User"`).Scan(&count); err != nil {
-		t.Fatal(err)
-	}
-	if count != 3 {
-		t.Fatal("unlinked OIDC created a synthetic User")
-	}
-	if _, err := db.Exec(`DELETE FROM "User" WHERE "id"='u2'`); err != nil {
-		t.Fatal(err)
-	}
-	jf, server = m.resolveOIDCAccount(context.Background(), "Same", "subject")
-	if jf != "real-one" || server != "s1" {
-		t.Fatalf("unique real account did not relink despite legacy placeholder: %s/%s", jf, server)
-	}
-	if _, err := ResolveAccount(context.Background(), db, "sqlite", Principal{Username: "Same", JellyfinUserID: "oidc-subject"}); err == nil {
-		t.Fatal("unlinked session silently attached to a real user")
-	}
-}

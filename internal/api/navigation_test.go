@@ -33,7 +33,10 @@ func TestNavigationContextDoesNotExposeSettingsSecrets(t *testing.T) {
 	if _, err := db.Exec(`INSERT INTO "GlobalSettings"("id","wrappedVisible","wrappedPeriodEnabled","pluginApiKey","discordWebhookUrl") VALUES('global',TRUE,FALSE,'secret-plugin','secret-discord')`); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("JELLYTRACK_MODE", "MULTI")
+	t.Setenv("JELLYTRACK_MODE", "single")
+	if _, err := db.Exec(`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('a','ja','A','http://a'),('b','jb','B','http://b')`); err != nil {
+		t.Fatal(err)
+	}
 	t.Setenv("APP_VERSION", "qa-version")
 	w := httptest.NewRecorder()
 	New(db, "sqlite").navigation(w, httptest.NewRequest("GET", "/api/navigation", nil))
