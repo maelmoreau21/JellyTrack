@@ -25,9 +25,13 @@ func (h *Handler) navigation(w http.ResponseWriter, r *http.Request) {
 			wrapped = historicalWrappedVisible(time.Now().In(loc), int(startMonth.Int64), int(startDay.Int64), int(endMonth.Int64), int(endDay.Int64))
 		}
 	}
-	version := os.Getenv("APP_VERSION")
+	version := strings.TrimSpace(os.Getenv("APP_VERSION"))
 	if version == "" {
-		version = "2.1.1"
+		if content, err := os.ReadFile("VERSION"); err == nil && len(strings.TrimSpace(string(content))) > 0 {
+			version = strings.TrimSpace(string(content))
+		} else {
+			version = "3.0.0"
+		}
 	}
 	jsonResponse(w, http.StatusOK, map[string]any{
 		"multiServer":    strings.ToLower(os.Getenv("JELLYTRACK_MODE")) == "multi",

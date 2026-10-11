@@ -236,7 +236,7 @@
       document.getElementById('logout-label').textContent = t('nav.logout');
       document.getElementById('btn-logout').title = t('nav.logout');
       document.getElementById('btn-logout').setAttribute('aria-label', t('nav.logout'));
-      document.getElementById('nav-version').textContent = `JellyTrack v${context.appVersion || '2.1.1'}`;
+      document.getElementById('nav-version').textContent = `JellyTrack v${context.appVersion || '3.0.0'}`;
       this.updateTheme();
       this.updateRoute();
     },
@@ -271,7 +271,7 @@
       const button=document.getElementById('sidebar-collapse-btn');
       button.title=config.t(collapsed?'nav.expandMenu':'nav.collapseMenu');
       button.setAttribute('aria-label',button.title);
-      document.getElementById('nav-version').textContent=(collapsed?'v':'JellyTrack v')+(config.context().appVersion||'2.1.1');
+      document.getElementById('nav-version').textContent=(collapsed?'v':'JellyTrack v')+(config.context().appVersion||'3.0.0');
     },
     settingsTabs(path) {
       const tabs=[['jellyfin','jellyfinTitle','server'],['sso','ssoTitle','key'],['plugin/security','authSecurity','shield'],['media','mediaSettings','media'],['scheduler','taskScheduler','calendar'],['dataBackups','dataBackups','database'],['notifications','notifications','bell']];
