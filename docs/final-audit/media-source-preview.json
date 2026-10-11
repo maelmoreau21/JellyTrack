@@ -1,0 +1,1367 @@
+{
+  "scope": "Source preview: only media-recovery.js/css substituted; current Go3350 APIs, FR admin, no restart/reseed.",
+  "cases": [
+    {
+      "route": "/media/analysis",
+      "width": 1440,
+      "theme": "dark",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 3,
+      "quality": [
+        "4K UHD",
+        "1440p QHD",
+        "1080p FHD",
+        "720p HD",
+        "Standard / Autre"
+      ],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Sessions sur 30 jours0",
+        "Épisodes par session0",
+        "Record0",
+        "Spectateur leaderAucune lecture"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [
+        {
+          "w": 346.53125,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "Top RéalisateursRéalisateur QA147 vue(s)"
+        },
+        {
+          "w": 346.546875,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "ActeursActrice QA147 vue(s)"
+        },
+        {
+          "w": 346.53125,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "StudiosStudio QA147 vue(s)"
+        }
+      ],
+      "capture": "media-source-preview-media-analysis-1440-dark.png"
+    },
+    {
+      "route": "/media/analysis",
+      "width": 390,
+      "theme": "dark",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 3,
+      "quality": [
+        "4K UHD",
+        "1440p QHD",
+        "1080p FHD",
+        "720p HD",
+        "Standard / Autre"
+      ],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Sessions sur 30 jours0",
+        "Épisodes par session0",
+        "Record0",
+        "Spectateur leaderAucune lecture"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [
+        {
+          "w": 317.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "Top RéalisateursRéalisateur QA147 vue(s)"
+        },
+        {
+          "w": 317.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "ActeursActrice QA147 vue(s)"
+        },
+        {
+          "w": 317.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "StudiosStudio QA147 vue(s)"
+        }
+      ],
+      "capture": "media-source-preview-media-analysis-390-dark.png"
+    },
+    {
+      "route": "/media/analysis",
+      "width": 320,
+      "theme": "dark",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 3,
+      "quality": [
+        "4K UHD",
+        "1440p QHD",
+        "1080p FHD",
+        "720p HD",
+        "Standard / Autre"
+      ],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Sessions sur 30 jours0",
+        "Épisodes par session0",
+        "Record0",
+        "Spectateur leaderAucune lecture"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [
+        {
+          "w": 247.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "Top RéalisateursRéalisateur QA147 vue(s)"
+        },
+        {
+          "w": 247.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "ActeursActrice QA147 vue(s)"
+        },
+        {
+          "w": 247.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "StudiosStudio QA147 vue(s)"
+        }
+      ]
+    },
+    {
+      "route": "/media/analysis",
+      "width": 1440,
+      "theme": "light",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 3,
+      "quality": [
+        "4K UHD",
+        "1440p QHD",
+        "1080p FHD",
+        "720p HD",
+        "Standard / Autre"
+      ],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Sessions sur 30 jours0",
+        "Épisodes par session0",
+        "Record0",
+        "Spectateur leaderAucune lecture"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [
+        {
+          "w": 346.53125,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "Top RéalisateursRéalisateur QA147 vue(s)"
+        },
+        {
+          "w": 346.546875,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "ActeursActrice QA147 vue(s)"
+        },
+        {
+          "w": 346.53125,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "StudiosStudio QA147 vue(s)"
+        }
+      ],
+      "capture": "media-source-preview-media-analysis-1440-light.png"
+    },
+    {
+      "route": "/media/analysis",
+      "width": 390,
+      "theme": "light",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 3,
+      "quality": [
+        "4K UHD",
+        "1440p QHD",
+        "1080p FHD",
+        "720p HD",
+        "Standard / Autre"
+      ],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Sessions sur 30 jours0",
+        "Épisodes par session0",
+        "Record0",
+        "Spectateur leaderAucune lecture"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [
+        {
+          "w": 317.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "Top RéalisateursRéalisateur QA147 vue(s)"
+        },
+        {
+          "w": 317.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "ActeursActrice QA147 vue(s)"
+        },
+        {
+          "w": 317.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "StudiosStudio QA147 vue(s)"
+        }
+      ],
+      "capture": "media-source-preview-media-analysis-390-light.png"
+    },
+    {
+      "route": "/media/analysis",
+      "width": 320,
+      "theme": "light",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 3,
+      "quality": [
+        "4K UHD",
+        "1440p QHD",
+        "1080p FHD",
+        "720p HD",
+        "Standard / Autre"
+      ],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Sessions sur 30 jours0",
+        "Épisodes par session0",
+        "Record0",
+        "Spectateur leaderAucune lecture"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [
+        {
+          "w": 247.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "Top RéalisateursRéalisateur QA147 vue(s)"
+        },
+        {
+          "w": 247.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "ActeursActrice QA147 vue(s)"
+        },
+        {
+          "w": 247.625,
+          "h": 117.34375,
+          "font": "16px",
+          "radius": "12px",
+          "text": "StudiosStudio QA147 vue(s)"
+        }
+      ]
+    },
+    {
+      "route": "/media/qa-primary-movie",
+      "width": 1440,
+      "theme": "dark",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 192,
+        "h": 295,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total22.7hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne80 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-movie-1440-dark.png"
+    },
+    {
+      "route": "/media/qa-primary-movie",
+      "width": 390,
+      "theme": "dark",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 180,
+        "h": 277,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total22.7hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne80 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-movie-390-dark.png"
+    },
+    {
+      "route": "/media/qa-primary-movie",
+      "width": 320,
+      "theme": "dark",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 180,
+        "h": 277,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total22.7hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne80 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": []
+    },
+    {
+      "route": "/media/qa-primary-movie",
+      "width": 1440,
+      "theme": "light",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 192,
+        "h": 295,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total22.7hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne80 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-movie-1440-light.png"
+    },
+    {
+      "route": "/media/qa-primary-movie",
+      "width": 390,
+      "theme": "light",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 180,
+        "h": 277,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total22.7hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne80 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-movie-390-light.png"
+    },
+    {
+      "route": "/media/qa-primary-movie",
+      "width": 320,
+      "theme": "light",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 180,
+        "h": 277,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total22.7hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne80 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": []
+    },
+    {
+      "route": "/media/qa-primary-episode1",
+      "width": 1440,
+      "theme": "dark",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 320,
+        "h": 187,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total8.5hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne30 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-episode1-1440-dark.png"
+    },
+    {
+      "route": "/media/qa-primary-episode1",
+      "width": 390,
+      "theme": "dark",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 316,
+        "h": 177.75,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total8.5hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne30 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-episode1-390-dark.png"
+    },
+    {
+      "route": "/media/qa-primary-episode1",
+      "width": 320,
+      "theme": "dark",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 246,
+        "h": 138.375,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total8.5hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne30 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": []
+    },
+    {
+      "route": "/media/qa-primary-episode1",
+      "width": 1440,
+      "theme": "light",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 320,
+        "h": 187,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total8.5hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne30 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-episode1-1440-light.png"
+    },
+    {
+      "route": "/media/qa-primary-episode1",
+      "width": 390,
+      "theme": "light",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 316,
+        "h": 177.75,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total8.5hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne30 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-episode1-390-light.png"
+    },
+    {
+      "route": "/media/qa-primary-episode1",
+      "width": 320,
+      "theme": "light",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 246,
+        "h": 138.375,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total8.5hCumulé",
+        "Vues17Sessions uniques",
+        "Durée Moyenne30 minPar session"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": []
+    },
+    {
+      "route": "/media/artist/Artiste%20QA",
+      "width": 1440,
+      "theme": "dark",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": {
+        "w": 160,
+        "h": 160,
+        "font": "16px",
+        "radius": "12px",
+        "text": ""
+      },
+      "artistTitle": {
+        "w": 162.640625,
+        "h": 36,
+        "font": "30px",
+        "radius": "0px",
+        "text": "Artiste QA"
+      },
+      "statTexts": [
+        "Albums2",
+        "Pistes6",
+        "Vues54",
+        "Temps écouté2.6h"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-artist-Artiste-20QA-1440-dark.png"
+    },
+    {
+      "route": "/media/artist/Artiste%20QA",
+      "width": 390,
+      "theme": "dark",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": {
+        "w": 160,
+        "h": 160,
+        "font": "16px",
+        "radius": "12px",
+        "text": ""
+      },
+      "artistTitle": {
+        "w": 162.640625,
+        "h": 36,
+        "font": "30px",
+        "radius": "0px",
+        "text": "Artiste QA"
+      },
+      "statTexts": [
+        "Albums2",
+        "Pistes6",
+        "Vues54",
+        "Temps écouté2.6h"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-artist-Artiste-20QA-390-dark.png"
+    },
+    {
+      "route": "/media/artist/Artiste%20QA",
+      "width": 320,
+      "theme": "dark",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": {
+        "w": 160,
+        "h": 160,
+        "font": "16px",
+        "radius": "12px",
+        "text": ""
+      },
+      "artistTitle": {
+        "w": 162.640625,
+        "h": 36,
+        "font": "30px",
+        "radius": "0px",
+        "text": "Artiste QA"
+      },
+      "statTexts": [
+        "Albums2",
+        "Pistes6",
+        "Vues54",
+        "Temps écouté2.6h"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": []
+    },
+    {
+      "route": "/media/artist/Artiste%20QA",
+      "width": 1440,
+      "theme": "light",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": {
+        "w": 160,
+        "h": 160,
+        "font": "16px",
+        "radius": "12px",
+        "text": ""
+      },
+      "artistTitle": {
+        "w": 162.640625,
+        "h": 36,
+        "font": "30px",
+        "radius": "0px",
+        "text": "Artiste QA"
+      },
+      "statTexts": [
+        "Albums2",
+        "Pistes6",
+        "Vues54",
+        "Temps écouté2.6h"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-artist-Artiste-20QA-1440-light.png"
+    },
+    {
+      "route": "/media/artist/Artiste%20QA",
+      "width": 390,
+      "theme": "light",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": {
+        "w": 160,
+        "h": 160,
+        "font": "16px",
+        "radius": "12px",
+        "text": ""
+      },
+      "artistTitle": {
+        "w": 162.640625,
+        "h": 36,
+        "font": "30px",
+        "radius": "0px",
+        "text": "Artiste QA"
+      },
+      "statTexts": [
+        "Albums2",
+        "Pistes6",
+        "Vues54",
+        "Temps écouté2.6h"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-artist-Artiste-20QA-390-light.png"
+    },
+    {
+      "route": "/media/artist/Artiste%20QA",
+      "width": 320,
+      "theme": "light",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": {
+        "w": 160,
+        "h": 160,
+        "font": "16px",
+        "radius": "12px",
+        "text": ""
+      },
+      "artistTitle": {
+        "w": 162.640625,
+        "h": 36,
+        "font": "30px",
+        "radius": "0px",
+        "text": "Artiste QA"
+      },
+      "statTexts": [
+        "Albums2",
+        "Pistes6",
+        "Vues54",
+        "Temps écouté2.6h"
+      ],
+      "statIcons": 0,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": []
+    },
+    {
+      "route": "/media/popular",
+      "width": 1440,
+      "theme": "dark",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [],
+      "statIcons": 0,
+      "awards": 6,
+      "rank": [
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#2"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        }
+      ],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-popular-1440-dark.png"
+    },
+    {
+      "route": "/media/popular",
+      "width": 390,
+      "theme": "dark",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [],
+      "statIcons": 0,
+      "awards": 6,
+      "rank": [
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#2"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        }
+      ],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-popular-390-dark.png"
+    },
+    {
+      "route": "/media/popular",
+      "width": 320,
+      "theme": "dark",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [],
+      "statIcons": 0,
+      "awards": 6,
+      "rank": [
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#2"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        }
+      ],
+      "rankingCards": []
+    },
+    {
+      "route": "/media/popular",
+      "width": 1440,
+      "theme": "light",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [],
+      "statIcons": 0,
+      "awards": 6,
+      "rank": [
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#2"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        }
+      ],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-popular-1440-light.png"
+    },
+    {
+      "route": "/media/popular",
+      "width": 390,
+      "theme": "light",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [],
+      "statIcons": 0,
+      "awards": 6,
+      "rank": [
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#2"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        }
+      ],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-popular-390-light.png"
+    },
+    {
+      "route": "/media/popular",
+      "width": 320,
+      "theme": "light",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": null,
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [],
+      "statIcons": 0,
+      "awards": 6,
+      "rank": [
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#2"
+        },
+        {
+          "w": 32,
+          "h": 32,
+          "font": "14px",
+          "radius": "50%",
+          "text": "#1"
+        }
+      ],
+      "rankingCards": []
+    },
+    {
+      "route": "/media/qa-primary-album",
+      "width": 1440,
+      "theme": "dark",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 192,
+        "h": 199,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total2.5hCumulé",
+        "Vues51Sessions uniques",
+        "Durée Moyenne3 minPar session",
+        "Pauses102"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-album-1440-dark.png"
+    },
+    {
+      "route": "/media/qa-primary-album",
+      "width": 390,
+      "theme": "dark",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 180,
+        "h": 187,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total2.5hCumulé",
+        "Vues51Sessions uniques",
+        "Durée Moyenne3 minPar session",
+        "Pauses102"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-album-390-dark.png"
+    },
+    {
+      "route": "/media/qa-primary-album",
+      "width": 320,
+      "theme": "dark",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 180,
+        "h": 187,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total2.5hCumulé",
+        "Vues51Sessions uniques",
+        "Durée Moyenne3 minPar session",
+        "Pauses102"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": []
+    },
+    {
+      "route": "/media/qa-primary-album",
+      "width": 1440,
+      "theme": "light",
+      "errors": [],
+      "client": 1184,
+      "scroll": 1184,
+      "root": 1440,
+      "viewport": 1440,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 192,
+        "h": 199,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total2.5hCumulé",
+        "Vues51Sessions uniques",
+        "Durée Moyenne3 minPar session",
+        "Pauses102"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-album-1440-light.png"
+    },
+    {
+      "route": "/media/qa-primary-album",
+      "width": 390,
+      "theme": "light",
+      "errors": [],
+      "client": 390,
+      "scroll": 390,
+      "root": 390,
+      "viewport": 390,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 180,
+        "h": 187,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total2.5hCumulé",
+        "Vues51Sessions uniques",
+        "Durée Moyenne3 minPar session",
+        "Pauses102"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": [],
+      "capture": "media-source-preview-media-qa-primary-album-390-light.png"
+    },
+    {
+      "route": "/media/qa-primary-album",
+      "width": 320,
+      "theme": "light",
+      "errors": [],
+      "client": 320,
+      "scroll": 320,
+      "root": 320,
+      "viewport": 320,
+      "subcards": 0,
+      "quality": [],
+      "poster": {
+        "w": 180,
+        "h": 187,
+        "font": "16px",
+        "radius": "0px",
+        "text": ""
+      },
+      "artist": null,
+      "artistTitle": null,
+      "statTexts": [
+        "Temps Total2.5hCumulé",
+        "Vues51Sessions uniques",
+        "Durée Moyenne3 minPar session",
+        "Pauses102"
+      ],
+      "statIcons": 3,
+      "awards": 0,
+      "rank": [],
+      "rankingCards": []
+    }
+  ]
+}

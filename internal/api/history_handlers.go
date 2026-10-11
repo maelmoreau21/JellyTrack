@@ -16,13 +16,14 @@ import (
 func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	limit, offset := page(r)
 	q := r.URL.Query()
+	export := r.URL.Path == "/api/logs/export"
 	days := boundedInt(q.Get("days"), 30, 1, 3650)
 	clauses := []string{excludedLibrariesClause(h.driver, "m")}
 	if q.Get("hideZapped") != "false" {
 		clauses = append(clauses, history.ZappingClause("p"))
 	}
 	args := []any{}
-	if q.Get("days") != "all" {
+	if q.Get("days") != "all" && (!export || q.Has("days")) {
 		clauses = append(clauses, `p."startedAt" >= ?`)
 		args = append(args, time.Now().UTC().AddDate(0, 0, -days).Format(time.RFC3339Nano))
 	}
@@ -52,9 +53,17 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		clauses = append(clauses, `p."userId" = ? AND p."serverId" = ?`)
 		args = append(args, userID, serverID)
 	}
-	if id := q.Get("userId"); id != "" {
-		clauses = append(clauses, `(u."id"=? OR u."jellyfinUserId"=?)`)
-		args = append(args, id, id)
+	if raw := first(q.Get("userId"), q.Get("user")); raw != "" {
+		matches := []string{}
+		for _, id := range strings.Split(raw, ",") {
+			if id = strings.TrimSpace(id); id != "" {
+				matches = append(matches, `(u."id"=? OR u."jellyfinUserId"=?)`)
+				args = append(args, id, id)
+			}
+		}
+		if len(matches) > 0 {
+			clauses = append(clauses, "("+strings.Join(matches, " OR ")+")")
+		}
 	}
 	if text := strings.TrimSpace(first(q.Get("q"), q.Get("query"))); text != "" {
 		clauses = append(clauses, `(LOWER(m."title") LIKE LOWER(?) OR LOWER(u."username") LIKE LOWER(?) OR LOWER(p."ipAddress") LIKE LOWER(?) OR LOWER(p."clientName") LIKE LOWER(?))`)
@@ -170,6 +179,10 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pageArgs := append(append([]any{}, args...), limit, offset)
+	pageClause := ` LIMIT ? OFFSET ?`
+	if export {
+		pageArgs, pageClause = args, ""
+	}
 	order := `p."startedAt" DESC,p."id" DESC`
 	switch q.Get("sort") {
 	case "date_asc":
@@ -179,7 +192,7 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	case "duration_asc":
 		order = `p."durationWatched" ASC,p."id" ASC`
 	}
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."endedAt",p."durationWatched",COALESCE(p."playMethod",''),u."username",m."title",m."type",m."libraryName",m."id",COALESCE(u."id",''),m."jellyfinMediaId",p."serverId",p."clientName",p."deviceName",p."ipAddress",p."country",p."city",p."audioCodec",p."audioLanguage",p."subtitleCodec",p."subtitleLanguage",p."bitrate",p."pauseCount",p."audioChanges",p."subtitleChanges",p."seekCount",p."rewatchCount",p."speedChangeCount",p."eventSource",m."resolution",COALESCE(m."durationMs",0),m."parentId",m."artist",EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."serverId"=p."serverId" AND a."userId"=p."userId" AND a."mediaId"=p."mediaId" AND (a."playbackId"=p."id" OR (a."playbackId" IS NULL AND p."endedAt" IS NULL)))`+base+` ORDER BY `+order+` LIMIT ? OFFSET ?`, h.driver), pageArgs...)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."endedAt",p."durationWatched",COALESCE(p."playMethod",''),u."username",m."title",m."type",m."libraryName",m."id",COALESCE(u."id",''),m."jellyfinMediaId",p."serverId",p."clientName",p."deviceName",p."ipAddress",p."country",p."city",p."audioCodec",p."audioLanguage",p."subtitleCodec",p."subtitleLanguage",p."bitrate",p."pauseCount",p."audioChanges",p."subtitleChanges",p."seekCount",p."rewatchCount",p."speedChangeCount",p."eventSource",m."resolution",COALESCE(m."durationMs",0),m."parentId",m."artist",EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."serverId"=p."serverId" AND a."userId"=p."userId" AND a."mediaId"=p."mediaId" AND (a."playbackId"=p."id" OR (a."playbackId" IS NULL AND p."endedAt" IS NULL)))`+base+` ORDER BY `+order+pageClause, h.driver), pageArgs...)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger l’historique.")
 		return
@@ -215,6 +228,10 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	}
 	// Release rows before enrichment: SQLite uses a single connection.
 	rows.Close()
+	if export {
+		h.writeHistoryExport(w, r, out)
+		return
+	}
 	markProfileReconnections(out)
 	if err := h.enrichHistory(r, out); err != nil {
 		jsonError(w, 500, "Impossible de charger la chronologie.")

@@ -1,0 +1,13 @@
+warning: in the working copy of 'internal/api/admin_handlers.go', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'internal/api/analytics_recovery.go', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'internal/api/analytics_recovery_test.go', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'internal/api/history_handlers.go', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'internal/api/media_recovery.go', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'internal/api/media_recovery_test.go', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'internal/plugin/events.go', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/dist/assets/admin.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/dist/assets/admin.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/dist/assets/app.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/dist/assets/media-recovery.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/dist/assets/profile.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/dist/assets/profile.js', LF will be replaced by CRLF the next time Git touches it

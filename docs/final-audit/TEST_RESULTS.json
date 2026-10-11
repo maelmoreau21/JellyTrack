@@ -1,0 +1,170 @@
+{
+  "date": "2026-10-10T11:59:06.762339+00:00",
+  "go": {
+    "recordedAt": "2026-10-10T11:35:35.7261911Z",
+    "build": 0,
+    "test": 0,
+    "vet": 0
+  },
+  "browser": [
+    {
+      "suite": "media",
+      "report": "suites/media/go-results.json",
+      "checks": 155,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "media",
+      "report": "suites/media/interaction-results.json",
+      "checks": 10,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "settings",
+      "report": "suites/settings/admin-results.json",
+      "checks": 47,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "settings",
+      "report": "suites/settings/forms-results.json",
+      "checks": 67,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "settings",
+      "report": "suites/settings/go-results.json",
+      "checks": 160,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "settings",
+      "report": "suites/settings/modes-multi.json",
+      "checks": 6,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "users",
+      "report": "suites/users/audiobook.json",
+      "checks": 4,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "users",
+      "report": "suites/users/go-browser-results.json",
+      "checks": 23,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "users",
+      "report": "suites/users/historical-preferences.json",
+      "checks": 12,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "users",
+      "report": "suites/users/list-pagination.json",
+      "checks": 11,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "users",
+      "report": "suites/users/profile-controls.json",
+      "checks": 40,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "users",
+      "report": "suites/users/telemetry.json",
+      "checks": 11,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "users",
+      "report": "suites/users/wrapped-theme.json",
+      "checks": 8,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "final-native",
+      "report": "final-controls.json",
+      "checks": 17,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "final-native",
+      "report": "visual-settings-after.json",
+      "checks": 27,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "final-native",
+      "report": "visual-settings-residuals-after.json",
+      "checks": 26,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    },
+    {
+      "suite": "final-native",
+      "report": "go-extras.json",
+      "checks": 62,
+      "failed": [],
+      "fatal": null,
+      "errors": []
+    }
+  ],
+  "totalAssertions": 686,
+  "failedAssertions": 0,
+  "accessibility": {
+    "cases": 126,
+    "variants": 714,
+    "pageErrors": 0,
+    "failures": [],
+    "overflow": 0
+  },
+  "visual": {
+    "mainCases": 40,
+    "goCases": 40,
+    "mainCaptures": 160,
+    "goCaptures": 160,
+    "goFailedRenders": [],
+    "goPageErrors": 0,
+    "assetsMatch": true
+  },
+  "static": {
+    "javascript": 0,
+    "recordedAt": "2026-10-10T11:40:15.4392616Z",
+    "diff": 0
+  }
+}

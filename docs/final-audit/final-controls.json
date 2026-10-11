@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-10T11:38:15.049Z",
+  "checks": [
+    {
+      "name": "Anonymous callback retains path and query",
+      "ok": true
+    },
+    {
+      "name": "Remember control labelled",
+      "ok": true
+    },
+    {
+      "name": "Login restores callback",
+      "ok": true
+    },
+    {
+      "name": "Remember thirty-day cookie",
+      "ok": true
+    },
+    {
+      "name": "Historical setup redirect",
+      "ok": true
+    },
+    {
+      "name": "Go setup wizard preserved",
+      "ok": true
+    },
+    {
+      "name": "Export uses connected historical API with filters",
+      "ok": true
+    },
+    {
+      "name": "Downloaded historical JSON schema",
+      "ok": true
+    },
+    {
+      "name": "Historical download filename",
+      "ok": true
+    },
+    {
+      "name": "Locale browser/cookie/preference de-DE//",
+      "ok": true
+    },
+    {
+      "name": "Locale browser/cookie/preference en-US/fr/",
+      "ok": true
+    },
+    {
+      "name": "Locale browser/cookie/preference pt-BR//",
+      "ok": true
+    },
+    {
+      "name": "Locale browser/cookie/preference de-DE/fr/en",
+      "ok": true
+    },
+    {
+      "name": "External callback rejected",
+      "ok": true
+    },
+    {
+      "name": "Unchecked remember respects configured session policy",
+      "ok": true,
+      "details": {
+        "expectedDays": 30
+      }
+    },
+    {
+      "name": "Native Wrapped eighteen slides",
+      "ok": true
+    },
+    {
+      "name": "No uncaught JavaScript errors",
+      "ok": true,
+      "details": []
+    }
+  ],
+  "errors": [],
+  "wrappedText": "▷\nLE RÉCAP DE ALICE QA\nJellyTrack Wrapped 2026\n\nPrêt à découvrir votre année en médias ?\n\nPersonnaliser\n← Retour\n2026 • Tout\n1 / 18\nPersonnaliser\nSuivant →"
+}

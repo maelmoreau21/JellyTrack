@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"database/sql"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -725,42 +723,11 @@ func (h *Handler) discordPost(w http.ResponseWriter, r *http.Request) {
 	if strings.TrimSpace(body.Content) != "" {
 		payload = map[string]any{"content": body.Content}
 	} else {
-		// Build monthly rewind metrics
-		today := time.Now().UTC()
-		thirtyDaysAgo := today.AddDate(0, 0, -30).Format(time.RFC3339Nano)
-
-		var totalDuration, totalPlays int64
-		_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COALESCE(SUM("durationWatched"),0), COUNT(*) FROM "PlaybackHistory" WHERE "startedAt" >= ?`, h.driver), thirtyDaysAgo).Scan(&totalDuration, &totalPlays)
-
-		totalHours := totalDuration / 3600
-
-		// Top user
-		var topUserName string
-		var topUserDur int64
-		_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT u."username", COALESCE(SUM(p."durationWatched"),0) FROM "PlaybackHistory" p JOIN "User" u ON u."id"=p."userId" WHERE p."startedAt" >= ? GROUP BY u."username" ORDER BY SUM(p."durationWatched") DESC LIMIT 1`, h.driver), thirtyDaysAgo).Scan(&topUserName, &topUserDur)
-		if topUserName == "" {
-			topUserName = "Aucun"
-		}
-
-		payload = map[string]any{
-			"username":   "JellyTrack Rewind",
-			"avatar_url": "https://raw.githubusercontent.com/maelmoreau21/JellyTrack/main/public/icon.svg",
-			"embeds": []map[string]any{
-				{
-					"title":       "✨ JellyTrack Rewind — Bilan du Mois",
-					"description": "Voici le récapitulatif des 30 derniers jours sur votre serveur multimédia !",
-					"color":       11164867,
-					"fields": []map[string]any{
-						{"name": "⏱️ Temps de Visionnage", "value": fmt.Sprintf("**%d heures**", totalHours), "inline": true},
-						{"name": "🎬 Lectures Totales", "value": fmt.Sprintf("**%d sessions**", totalPlays), "inline": true},
-						{"name": "👑 Spectateur du Mois", "value": fmt.Sprintf("**%s** (%dh)", topUserName, topUserDur/3600), "inline": false},
-					},
-					"footer": map[string]string{
-						"text": "JellyTrack • Analyse & Statistiques pour Jellyfin",
-					},
-					"timestamp": today.Format(time.RFC3339),
-				},
-			},
+		var err error
+		payload, err = h.monthlyDiscordPayload(r.Context(), time.Now().UTC())
+		if err != nil {
+			jsonError(w, 500, "Impossible de calculer le bilan mensuel.")
+			return
 		}
 	}
 
@@ -891,61 +858,42 @@ func (h *Handler) downloadSystemLogs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) exportLogsCSV(w http.ResponseWriter, r *http.Request) {
-	days := boundedInt(r.URL.Query().Get("days"), 30, 1, 3650)
-	since := time.Now().UTC().AddDate(0, 0, -days).Format(time.RFC3339Nano)
-
-	query := database.Bind(`
-		SELECT p."startedAt", COALESCE(u."username",'Unknown'), COALESCE(m."title",'Unknown'), COALESCE(m."type",'Unknown'),
-		       COALESCE(p."durationWatched",0), COALESCE(p."playMethod",'DirectPlay'), COALESCE(p."clientName",''),
-		       COALESCE(p."deviceName",''), COALESCE(m."resolution",''), COALESCE(p."ipAddress",'')
-		FROM "PlaybackHistory" p
-		LEFT JOIN "User" u ON u."id" = p."userId"
-		LEFT JOIN "Media" m ON m."id" = p."mediaId"
-		WHERE p."startedAt" >= ?
-		ORDER BY p."startedAt" DESC
-		LIMIT 10000
-	`, h.driver)
-
-	rows, err := h.db.QueryContext(r.Context(), query, since)
-	if err != nil {
-		jsonError(w, 500, "Erreur d'export CSV.")
-		return
-	}
-	defer rows.Close()
-
-	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
-	w.Header().Set("Content-Disposition", `attachment; filename="jellytrack-history.csv"`)
-	w.WriteHeader(http.StatusOK)
-
-	csvWriter := csv.NewWriter(w)
-	_ = csvWriter.Write([]string{"Date", "User", "Media", "Type", "Duration (min)", "Play Method", "Client", "Device", "Resolution", "IP Address"})
-
-	for rows.Next() {
-		var started, user, title, mtype, playMethod, client, device, res, ip string
-		var duration int64
-		if rows.Scan(&started, &user, &title, &mtype, &duration, &playMethod, &client, &device, &res, &ip) == nil {
-			durMin := strconv.FormatInt(duration/60, 10)
-			_ = csvWriter.Write([]string{started, user, title, mtype, durMin, playMethod, client, device, res, ip})
-		}
-	}
-	csvWriter.Flush()
+	h.history(w, r)
 }
 
 func (h *Handler) posterRotatorRotate(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	id := strings.TrimSpace(r.PathValue("id"))
 	if id == "" {
 		jsonError(w, 400, "media id requis.")
 		return
 	}
 
 	var srvURL, apiKey, jmid sql.NullString
-	_ = h.db.QueryRowContext(r.Context(), database.Bind(`
+	var body struct {
+		ServerID string `json:"serverId"`
+	}
+	if r.Body != nil {
+		_ = json.NewDecoder(r.Body).Decode(&body)
+	}
+	serverID := strings.TrimSpace(first(body.ServerID, r.URL.Query().Get("serverId")))
+	compact := strings.ToLower(strings.ReplaceAll(id, "-", ""))
+	query := `
 		SELECT s."url", s."jellyfinApiKey", m."jellyfinMediaId"
 		FROM "Media" m
 		JOIN "Server" s ON s."id" = m."serverId"
-		WHERE m."id" = ? OR m."jellyfinMediaId" = ?
-		LIMIT 1
-	`, h.driver), id, id).Scan(&srvURL, &apiKey, &jmid)
+		WHERE (m."id" = ? OR m."jellyfinMediaId" = ? OR LOWER(REPLACE(m."jellyfinMediaId",'-','')) = ?)`
+	args := []any{id, id, compact}
+	if serverID != "" {
+		query += ` AND m."serverId" = ?`
+		args = append(args, serverID)
+	}
+	query += ` ORDER BY CASE WHEN m."id"=? THEN 0 ELSE 1 END,m."createdAt" ASC,m."id" ASC LIMIT 1`
+	args = append(args, id)
+	err := h.db.QueryRowContext(r.Context(), database.Bind(query, h.driver), args...).Scan(&srvURL, &apiKey, &jmid)
+	if err != nil && err != sql.ErrNoRows {
+		jsonError(w, 500, "Impossible de rechercher le média.")
+		return
+	}
 
 	if !srvURL.Valid || srvURL.String == "" || !jmid.Valid {
 		jsonResponse(w, 404, map[string]any{"success": false, "code": "media_not_found"})
@@ -976,16 +924,24 @@ func (h *Handler) posterRotatorRotate(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
-		jsonResponse(w, 200, map[string]any{"success": true, "code": "poster_rotated", "mediaId": jmid.String})
+	responseBody, _ := io.ReadAll(io.LimitReader(resp.Body, 65536))
+	var responseData struct {
+		Message string `json:"message"`
+		Error   string `json:"error"`
+	}
+	_ = json.Unmarshal(responseBody, &responseData)
+	message := first(responseData.Message, responseData.Error, string(responseBody))
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		jsonResponse(w, 200, map[string]any{"success": true, "code": "poster_rotated", "mediaId": jmid.String, "message": message})
 		return
 	}
-	if resp.StatusCode == http.StatusNotFound {
-		jsonResponse(w, 404, map[string]any{"success": false, "code": "pool_missing"})
+	haystack := strings.ToLower(message)
+	if resp.StatusCode == http.StatusNotFound || strings.Contains(haystack, "pool") || strings.Contains(haystack, "missing") || strings.Contains(haystack, "empty") || strings.Contains(haystack, "not found") {
+		jsonResponse(w, 404, map[string]any{"success": false, "code": "pool_missing", "message": message})
 		return
 	}
 
-	jsonResponse(w, 502, map[string]any{"success": false, "code": "poster_rotator_error", "status": resp.StatusCode})
+	jsonResponse(w, 502, map[string]any{"success": false, "code": "poster_rotator_error", "status": resp.StatusCode, "message": message})
 }
 
 func (h *Handler) adminPluginHealth(w http.ResponseWriter, r *http.Request) {

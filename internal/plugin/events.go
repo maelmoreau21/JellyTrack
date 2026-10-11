@@ -46,15 +46,16 @@ var allowedEvents = map[string]struct{}{
 }
 
 type Handler struct {
-	db               *sql.DB
-	driver           string
-	logger           *slog.Logger
-	rate             *limiter
-	pepper           string
-	peppers          []string
-	maxBytes         int64
-	monitorMu        sync.Mutex
-	lastMonitorWrite time.Time
+	db                 *sql.DB
+	driver             string
+	logger             *slog.Logger
+	rate               *limiter
+	pepper             string
+	peppers            []string
+	maxBytes           int64
+	monitorMu          sync.Mutex
+	lastMonitorWrite   time.Time
+	notificationClient *http.Client
 }
 
 func NewHandler(db *sql.DB, driver string, logger *slog.Logger) *Handler {
@@ -69,6 +70,7 @@ func NewHandler(db *sql.DB, driver string, logger *slog.Logger) *Handler {
 	return &Handler{
 		db: db, driver: driver, logger: logger, rate: newLimiter(), pepper: pepper,
 		peppers: append([]string{pepper}, legacy...), maxBytes: maxBytes,
+		notificationClient: newNotificationClient(),
 	}
 }
 
@@ -636,6 +638,10 @@ func (h *Handler) playbackStart(ctx context.Context, p map[string]any, serverID 
 	if sessionID == "" {
 		return 400, map[string]string{"error": "Missing sessionId."}, nil
 	}
+	var existingStream int
+	if err := h.queryRow(ctx, `SELECT COUNT(*) FROM "ActiveStream" WHERE "serverId"=? AND "sessionId"=?`, serverID, sessionID).Scan(&existingStream); err != nil {
+		return 500, nil, err
+	}
 	if err := h.markMonitorPoll(ctx, 1); err != nil {
 		return 500, nil, err
 	}
@@ -687,9 +693,12 @@ func (h *Handler) playbackStart(ctx context.Context, p map[string]any, serverID 
 		return 500, nil, err
 	}
 	playbackRate := parseRate(session, session, nil)
-	_, err = h.exec(ctx, `INSERT INTO "ActiveStream" ("id","serverId","sessionId","userId","mediaId","playbackId","playMethod","clientName","deviceName","ipAddress","bitrate","positionTicks","videoCodec","audioCodec","audioLanguage","subtitleLanguage","subtitleCodec","playbackRate") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("sessionId","serverId") DO UPDATE SET "userId"=excluded."userId","mediaId"=excluded."mediaId","playbackId"=excluded."playbackId","playMethod"=excluded."playMethod","clientName"=excluded."clientName","deviceName"=excluded."deviceName","ipAddress"=excluded."ipAddress","positionTicks"=excluded."positionTicks","videoCodec"=excluded."videoCodec","audioCodec"=excluded."audioCodec","audioLanguage"=excluded."audioLanguage","subtitleLanguage"=excluded."subtitleLanguage","subtitleCodec"=excluded."subtitleCodec","playbackRate"=COALESCE(excluded."playbackRate","ActiveStream"."playbackRate"),"lastPingAt"=CURRENT_TIMESTAMP`, streamID, serverID, sessionID, userID, mediaID, playbackID, playMethod, nullableString(client), nullableString(device), ip, nullableInt(bitrate), nullableInt(position), nullableString(firstString(session, "videoCodec", "VideoCodec")), nullableString(firstString(session, "audioCodec", "AudioCodec")), nullableString(firstWord(firstString(session, "audioLanguage", "AudioLanguage"))), nullableString(firstWord(firstString(session, "subtitleLanguage", "SubtitleLanguage"))), nullableString(firstString(session, "subtitleCodec", "SubtitleCodec")), playbackRate)
+	_, err = h.exec(ctx, `INSERT INTO "ActiveStream" ("id","serverId","sessionId","userId","mediaId","playbackId","playMethod","clientName","deviceName","ipAddress","bitrate","positionTicks","videoCodec","audioCodec","audioLanguage","subtitleLanguage","subtitleCodec","playbackRate","transcodeFps") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("sessionId","serverId") DO UPDATE SET "userId"=excluded."userId","mediaId"=excluded."mediaId","playbackId"=excluded."playbackId","playMethod"=excluded."playMethod","clientName"=excluded."clientName","deviceName"=excluded."deviceName","ipAddress"=excluded."ipAddress","positionTicks"=excluded."positionTicks","videoCodec"=excluded."videoCodec","audioCodec"=excluded."audioCodec","audioLanguage"=excluded."audioLanguage","subtitleLanguage"=excluded."subtitleLanguage","subtitleCodec"=excluded."subtitleCodec","playbackRate"=COALESCE(excluded."playbackRate","ActiveStream"."playbackRate"),"transcodeFps"=COALESCE(excluded."transcodeFps","ActiveStream"."transcodeFps"),"lastPingAt"=CURRENT_TIMESTAMP`, streamID, serverID, sessionID, userID, mediaID, playbackID, playMethod, nullableString(client), nullableString(device), ip, nullableInt(bitrate), nullableInt(position), nullableString(firstString(session, "videoCodec", "VideoCodec")), nullableString(firstString(session, "audioCodec", "AudioCodec")), nullableString(firstWord(firstString(session, "audioLanguage", "AudioLanguage"))), nullableString(firstWord(firstString(session, "subtitleLanguage", "SubtitleLanguage"))), nullableString(firstString(session, "subtitleCodec", "SubtitleCodec")), playbackRate, transcodeRate(session))
 	if err != nil {
 		return 500, nil, err
+	}
+	if existingStream == 0 {
+		h.notifyPlaybackStart(ctx, serverID, userID, playbackID, mediaKey, title, playMethod, client, device, ip)
 	}
 	return 200, map[string]any{"success": true, "message": "PlaybackStart processed.", "playbackId": playbackID}, nil
 }
@@ -790,7 +799,7 @@ func (h *Handler) playbackProgress(ctx context.Context, p map[string]any, server
 		bitrate = int64(math.Round(float64(size) * 8000 / float64(duration)))
 	}
 	playbackRate := parseRate(p, session, nil)
-	_, err = h.exec(ctx, `INSERT INTO "ActiveStream" ("id","serverId","sessionId","userId","mediaId","playbackId","playMethod","clientName","deviceName","ipAddress","bitrate","positionTicks","videoCodec","audioCodec","audioLanguage","subtitleLanguage","subtitleCodec","playbackRate") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("sessionId","serverId") DO UPDATE SET "userId"=excluded."userId","mediaId"=excluded."mediaId","playbackId"=excluded."playbackId","playMethod"=excluded."playMethod","clientName"=excluded."clientName","deviceName"=excluded."deviceName","ipAddress"=excluded."ipAddress","positionTicks"=excluded."positionTicks","videoCodec"=excluded."videoCodec","audioCodec"=excluded."audioCodec","audioLanguage"=excluded."audioLanguage","subtitleLanguage"=excluded."subtitleLanguage","subtitleCodec"=excluded."subtitleCodec","playbackRate"=COALESCE(excluded."playbackRate","ActiveStream"."playbackRate"),"lastPingAt"=CURRENT_TIMESTAMP`, streamID, serverID, sessionID, userID, mediaID, playbackID, method, nullableString(client), nullableString(device), ip, nullableInt(bitrate), nullableInt(position), nullableString(firstString(session, "videoCodec", "VideoCodec")), nullableString(firstString(session, "audioCodec", "AudioCodec")), nullableString(firstWord(firstString(session, "audioLanguage", "AudioLanguage"))), nullableString(firstWord(firstString(session, "subtitleLanguage", "SubtitleLanguage"))), nullableString(firstString(session, "subtitleCodec", "SubtitleCodec")), playbackRate)
+	_, err = h.exec(ctx, `INSERT INTO "ActiveStream" ("id","serverId","sessionId","userId","mediaId","playbackId","playMethod","clientName","deviceName","ipAddress","bitrate","positionTicks","videoCodec","audioCodec","audioLanguage","subtitleLanguage","subtitleCodec","playbackRate","transcodeFps") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("sessionId","serverId") DO UPDATE SET "userId"=excluded."userId","mediaId"=excluded."mediaId","playbackId"=excluded."playbackId","playMethod"=excluded."playMethod","clientName"=excluded."clientName","deviceName"=excluded."deviceName","ipAddress"=excluded."ipAddress","positionTicks"=excluded."positionTicks","videoCodec"=excluded."videoCodec","audioCodec"=excluded."audioCodec","audioLanguage"=excluded."audioLanguage","subtitleLanguage"=excluded."subtitleLanguage","subtitleCodec"=excluded."subtitleCodec","playbackRate"=COALESCE(excluded."playbackRate","ActiveStream"."playbackRate"),"transcodeFps"=COALESCE(excluded."transcodeFps","ActiveStream"."transcodeFps"),"lastPingAt"=CURRENT_TIMESTAMP`, streamID, serverID, sessionID, userID, mediaID, playbackID, method, nullableString(client), nullableString(device), ip, nullableInt(bitrate), nullableInt(position), nullableString(firstString(session, "videoCodec", "VideoCodec")), nullableString(firstString(session, "audioCodec", "AudioCodec")), nullableString(firstWord(firstString(session, "audioLanguage", "AudioLanguage"))), nullableString(firstWord(firstString(session, "subtitleLanguage", "SubtitleLanguage"))), nullableString(firstString(session, "subtitleCodec", "SubtitleCodec")), playbackRate, transcodeRate(session))
 	if err != nil {
 		return 500, nil, err
 	}

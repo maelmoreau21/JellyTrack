@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-10T07:12:02.197Z",
+  "assets": [
+    {
+      "file": "app.js",
+      "status": 200,
+      "sourceSHA256": "c4ce5a5caeca4a546f5011ce4b931312b0a66a670cd8d7c7455a28da0ad4bb3a",
+      "servedSHA256": "c4ce5a5caeca4a546f5011ce4b931312b0a66a670cd8d7c7455a28da0ad4bb3a",
+      "same": true
+    },
+    {
+      "file": "navigation.js",
+      "status": 200,
+      "sourceSHA256": "7d6ce1b83f6e6951c100aa17760f2038aea2f1553d5ef323c4bb0867dc3bee69",
+      "servedSHA256": "7d6ce1b83f6e6951c100aa17760f2038aea2f1553d5ef323c4bb0867dc3bee69",
+      "same": true
+    },
+    {
+      "file": "history.js",
+      "status": 200,
+      "sourceSHA256": "d6724ce2cec54c9e531c12338a28e8842d769f3d27c758ee80dfa813ff9fefe4",
+      "servedSHA256": "d6724ce2cec54c9e531c12338a28e8842d769f3d27c758ee80dfa813ff9fefe4",
+      "same": true
+    },
+    {
+      "file": "profile.js",
+      "status": 200,
+      "sourceSHA256": "de89d6cfdd3395369fb5d4035ae67060f62bf1c393c41760f3e86e95753ea59d",
+      "servedSHA256": "de89d6cfdd3395369fb5d4035ae67060f62bf1c393c41760f3e86e95753ea59d",
+      "same": true
+    },
+    {
+      "file": "media-recovery.js",
+      "status": 200,
+      "sourceSHA256": "c77ce3e0050a3f4710e97f5f016e1a7fa25d5e120a32862a0abcbc52341d5973",
+      "servedSHA256": "c77ce3e0050a3f4710e97f5f016e1a7fa25d5e120a32862a0abcbc52341d5973",
+      "same": true
+    },
+    {
+      "file": "history-recovery.css",
+      "status": 200,
+      "sourceSHA256": "22596d0059e0819456e4b8686edbaac7b01bdd8fd03000ea70700eafff579860",
+      "servedSHA256": "22596d0059e0819456e4b8686edbaac7b01bdd8fd03000ea70700eafff579860",
+      "same": true
+    },
+    {
+      "file": "navigation.css",
+      "status": 200,
+      "sourceSHA256": "fd753ce222b25268d1553fed826e43531d16304ce70748d09cd94c79e0f9c73c",
+      "servedSHA256": "fd753ce222b25268d1553fed826e43531d16304ce70748d09cd94c79e0f9c73c",
+      "same": true
+    },
+    {
+      "file": "media-recovery.css",
+      "status": 200,
+      "sourceSHA256": "084dab679a6848dbd1251463db72cc41034745acf52dc57317d20356f7bf49e7",
+      "servedSHA256": "084dab679a6848dbd1251463db72cc41034745acf52dc57317d20356f7bf49e7",
+      "same": true
+    }
+  ]
+}

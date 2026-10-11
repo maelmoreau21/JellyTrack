@@ -1,0 +1,3 @@
+Seed synthétique: deux serveurs inactifs, huit médias, six utilisateurs, 144 lectures, 48 événements télémétrie. Aucun serveur réel appelé.
+Isolated fixture: 9 users; 280 sessions; signed standard-role sessions created.
+

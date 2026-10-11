@@ -1,0 +1,341 @@
+{
+  "date": "2026-10-10T11:54:07.563Z",
+  "checks": [
+    {
+      "name": "catalogue accessibility tree",
+      "snapshot": "- main:\n  - navigation \"Bibliothèque\":\n    - link \"Tous les Médias\":\n      - /url: /media/all\n    - link \"Populaires\":\n      - /url: /media/popular\n    - link \"Analyse Profonde\":\n      - /url: /media/analysis\n    - link \"collections\":\n      - /url: /media/collections\n  - heading \"Tous les Médias\" [level=1]\n  - text: 112 médias\n  - group \"Serveurs\":\n    - text: Serveurs\n    - checkbox \"QA principal\" [checked]\n    - text: QA principal\n    - checkbox \"QA secondaire\" [checked]\n    - text: QA secondaire\n  - button \"Tout\" [pressed]\n  - button \"Films\" [pressed]\n  - button \"Séries\" [pressed]\n  - button \"Musique\" [pressed]\n  - searchbox \"Rechercher un média…\"\n  - text: \"Trier par :\"\n  - combobox \"Trier par :\":\n    - option \"Popularité (Vues)\" [selected]\n    - option \"Temps Visionnage\"\n    - option \"Qualité\"\n    - option \"Titre\"\n    - option \"Date d'ajout\"\n    - option \"Dernière lecture\"\n    - option \"Durée du média\"\n  - group: Autres contenus\n  - link \"Album principal QA Album 3495 kbps Album principal QA Artiste QA 51 vue(s) · 2h 30m Rock Album principal QA 51 vue(s) · 2h 30m\":\n    - /url: /media/qa-primary-album?servers=qa-primary\n    - img \"Album principal QA\"\n    - text: Album 3495 kbps\n    - strong: Album principal QA\n    - text: Artiste QA 51 vue(s) · 2h 30m Rock\n    - strong: Album principal QA\n    - text: 51 vue(s) · 2h 30m\n  - link \"Série principale QA Série 1080p Série principale QA 51 vue(s) · 25h 30m Drama · QA Série principale QA 51 vue(s) · 25h 30m\":\n    - /url: /media/qa-primary-series?servers=qa-primary\n    - img \"Série principale QA\"\n    - text: Série 1080p\n    - strong: Série principale QA\n    - text: 51 vue(s) · 25h 30m Drama · QA\n    - strong: Série principale QA\n    - text: 51 vue(s) · 25h 30m\n  - link \"Film principal QA Film 4K Film principal QA 17 vue(s) · 22h 40m Drama · QA Film principal QA 17 vue(s) · 22h 40m\":\n    - /url: /media/qa-primary-movie?servers=qa-primary\n    - img \"Film principal QA\"\n    - text: Film 4K\n    - strong: Film principal QA\n    - text: 17 vue(s) · 22h 40m Drama · QA\n    - strong: Film principal QA\n    - text: 17 vue(s) · 22h 40m\n  - link \"Série principale QA Série 1080p Série principale QA 6 vue(s) · 3h Drama · QA Série principale QA 6 vue(s) · 3h\":\n    - /url: /media/qa-secondary-series?servers=qa-secondary\n    - img \"Série principale QA\"\n    - text: Série 1080p\n    - strong: Série principale QA\n    - text: 6 vue(s) · 3h Drama · QA\n    - strong: Série principale QA\n    - text: 6 vue(s) · 3h\n  - link \"Album principal QA Album 3495 kbps Album principal QA Artiste QA 3 vue(s) · 8 min Rock Album principal QA 3 vue(s) · 8 min\":\n    - /url: /media/qa-secondary-album?servers=qa-secondary\n    - img \"Album principal QA\"\n    - text: Album 3495 kbps\n    - strong: Album principal QA\n    - text: Artiste QA 3 vue(s) · 8 min Rock\n    - strong: Album principal QA\n    - text: 3 vue(s) · 8 min\n  - link \"Film principal QA Film 4K Film principal QA 2 vue(s) · 2h 40m Drama · QA Film principal QA 2 vue(s) · 2h 40m\":\n    - /url: /media/qa-secondary-movie?servers=qa-secondary\n    - img \"Film principal QA\"\n    - text: Film 4K\n    - strong: Film principal QA\n    - text: 2 vue(s) · 2h 40m Drama · QA\n    - strong: Film principal QA\n    - text: 2 vue(s) · 2h 40m\n  - link \"Film QA 00 Film 4K Film QA 00 0 vue(s) · 0 min Drama · QA Film QA 00 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie0?servers=qa-primary\n    - img \"Film QA 00\"\n    - text: Film 4K\n    - strong: Film QA 00\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 00\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 00 Film 4K Film QA 00 0 vue(s) · 0 min Drama · QA Film QA 00 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie0?servers=qa-secondary\n    - img \"Film QA 00\"\n    - text: Film 4K\n    - strong: Film QA 00\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 00\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 01 Film 4K Film QA 01 0 vue(s) · 0 min Drama · QA Film QA 01 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie1?servers=qa-primary\n    - img \"Film QA 01\"\n    - text: Film 4K\n    - strong: Film QA 01\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 01\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 01 Film 4K Film QA 01 0 vue(s) · 0 min Drama · QA Film QA 01 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie1?servers=qa-secondary\n    - img \"Film QA 01\"\n    - text: Film 4K\n    - strong: Film QA 01\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 01\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 02 Film 4K Film QA 02 0 vue(s) · 0 min Drama · QA Film QA 02 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie2?servers=qa-primary\n    - img \"Film QA 02\"\n    - text: Film 4K\n    - strong: Film QA 02\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 02\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 02 Film 4K Film QA 02 0 vue(s) · 0 min Drama · QA Film QA 02 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie2?servers=qa-secondary\n    - img \"Film QA 02\"\n    - text: Film 4K\n    - strong: Film QA 02\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 02\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 03 Film 4K Film QA 03 0 vue(s) · 0 min Drama · QA Film QA 03 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie3?servers=qa-primary\n    - img \"Film QA 03\"\n    - text: Film 4K\n    - strong: Film QA 03\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 03\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 03 Film 4K Film QA 03 0 vue(s) · 0 min Drama · QA Film QA 03 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie3?servers=qa-secondary\n    - img \"Film QA 03\"\n    - text: Film 4K\n    - strong: Film QA 03\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 03\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 04 Film 4K Film QA 04 0 vue(s) · 0 min Drama · QA Film QA 04 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie4?servers=qa-primary\n    - img \"Film QA 04\"\n    - text: Film 4K\n    - strong: Film QA 04\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 04\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 04 Film 4K Film QA 04 0 vue(s) · 0 min Drama · QA Film QA 04 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie4?servers=qa-secondary\n    - img \"Film QA 04\"\n    - text: Film 4K\n    - strong: Film QA 04\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 04\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 05 Film 4K Film QA 05 0 vue(s) · 0 min Drama · QA Film QA 05 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie5?servers=qa-primary\n    - img \"Film QA 05\"\n    - text: Film 4K\n    - strong: Film QA 05\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 05\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 05 Film 4K Film QA 05 0 vue(s) · 0 min Drama · QA Film QA 05 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie5?servers=qa-secondary\n    - img \"Film QA 05\"\n    - text: Film 4K\n    - strong: Film QA 05\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 05\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 06 Film 4K Film QA 06 0 vue(s) · 0 min Drama · QA Film QA 06 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie6?servers=qa-primary\n    - img \"Film QA 06\"\n    - text: Film 4K\n    - strong: Film QA 06\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 06\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 06 Film 4K Film QA 06 0 vue(s) · 0 min Drama · QA Film QA 06 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie6?servers=qa-secondary\n    - img \"Film QA 06\"\n    - text: Film 4K\n    - strong: Film QA 06\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 06\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 07 Film 4K Film QA 07 0 vue(s) · 0 min Drama · QA Film QA 07 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie7?servers=qa-primary\n    - img \"Film QA 07\"\n    - text: Film 4K\n    - strong: Film QA 07\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 07\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 07 Film 4K Film QA 07 0 vue(s) · 0 min Drama · QA Film QA 07 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie7?servers=qa-secondary\n    - img \"Film QA 07\"\n    - text: Film 4K\n    - strong: Film QA 07\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 07\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 08 Film 4K Film QA 08 0 vue(s) · 0 min Drama · QA Film QA 08 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie8?servers=qa-primary\n    - img \"Film QA 08\"\n    - text: Film 4K\n    - strong: Film QA 08\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 08\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 08 Film 4K Film QA 08 0 vue(s) · 0 min Drama · QA Film QA 08 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie8?servers=qa-secondary\n    - img \"Film QA 08\"\n    - text: Film 4K\n    - strong: Film QA 08\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 08\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 09 Film 4K Film QA 09 0 vue(s) · 0 min Drama · QA Film QA 09 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie9?servers=qa-primary\n    - img \"Film QA 09\"\n    - text: Film 4K\n    - strong: Film QA 09\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 09\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 09 Film 4K Film QA 09 0 vue(s) · 0 min Drama · QA Film QA 09 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie9?servers=qa-secondary\n    - img \"Film QA 09\"\n    - text: Film 4K\n    - strong: Film QA 09\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 09\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 10 Film 4K Film QA 10 0 vue(s) · 0 min Drama · QA Film QA 10 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie10?servers=qa-primary\n    - img \"Film QA 10\"\n    - text: Film 4K\n    - strong: Film QA 10\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 10\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 10 Film 4K Film QA 10 0 vue(s) · 0 min Drama · QA Film QA 10 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie10?servers=qa-secondary\n    - img \"Film QA 10\"\n    - text: Film 4K\n    - strong: Film QA 10\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 10\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 11 Film 4K Film QA 11 0 vue(s) · 0 min Drama · QA Film QA 11 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie11?servers=qa-primary\n    - img \"Film QA 11\"\n    - text: Film 4K\n    - strong: Film QA 11\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 11\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 11 Film 4K Film QA 11 0 vue(s) · 0 min Drama · QA Film QA 11 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie11?servers=qa-secondary\n    - img \"Film QA 11\"\n    - text: Film 4K\n    - strong: Film QA 11\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 11\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 12 Film 4K Film QA 12 0 vue(s) · 0 min Drama · QA Film QA 12 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie12?servers=qa-primary\n    - img \"Film QA 12\"\n    - text: Film 4K\n    - strong: Film QA 12\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 12\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 12 Film 4K Film QA 12 0 vue(s) · 0 min Drama · QA Film QA 12 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie12?servers=qa-secondary\n    - img \"Film QA 12\"\n    - text: Film 4K\n    - strong: Film QA 12\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 12\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 13 Film 4K Film QA 13 0 vue(s) · 0 min Drama · QA Film QA 13 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie13?servers=qa-primary\n    - img \"Film QA 13\"\n    - text: Film 4K\n    - strong: Film QA 13\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 13\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 13 Film 4K Film QA 13 0 vue(s) · 0 min Drama · QA Film QA 13 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie13?servers=qa-secondary\n    - img \"Film QA 13\"\n    - text: Film 4K\n    - strong: Film QA 13\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 13\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 14 Film 4K Film QA 14 0 vue(s) · 0 min Drama · QA Film QA 14 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie14?servers=qa-primary\n    - img \"Film QA 14\"\n    - text: Film 4K\n    - strong: Film QA 14\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 14\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 14 Film 4K Film QA 14 0 vue(s) · 0 min Drama · QA Film QA 14 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie14?servers=qa-secondary\n    - img \"Film QA 14\"\n    - text: Film 4K\n    - strong: Film QA 14\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 14\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 15 Film 4K Film QA 15 0 vue(s) · 0 min Drama · QA Film QA 15 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie15?servers=qa-primary\n    - img \"Film QA 15\"\n    - text: Film 4K\n    - strong: Film QA 15\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 15\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 15 Film 4K Film QA 15 0 vue(s) · 0 min Drama · QA Film QA 15 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie15?servers=qa-secondary\n    - img \"Film QA 15\"\n    - text: Film 4K\n    - strong: Film QA 15\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 15\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 16 Film 4K Film QA 16 0 vue(s) · 0 min Drama · QA Film QA 16 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie16?servers=qa-primary\n    - img \"Film QA 16\"\n    - text: Film 4K\n    - strong: Film QA 16\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 16\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 16 Film 4K Film QA 16 0 vue(s) · 0 min Drama · QA Film QA 16 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie16?servers=qa-secondary\n    - img \"Film QA 16\"\n    - text: Film 4K\n    - strong: Film QA 16\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 16\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 17 Film 4K Film QA 17 0 vue(s) · 0 min Drama · QA Film QA 17 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie17?servers=qa-primary\n    - img \"Film QA 17\"\n    - text: Film 4K\n    - strong: Film QA 17\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 17\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 17 Film 4K Film QA 17 0 vue(s) · 0 min Drama · QA Film QA 17 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie17?servers=qa-secondary\n    - img \"Film QA 17\"\n    - text: Film 4K\n    - strong: Film QA 17\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 17\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 18 Film 4K Film QA 18 0 vue(s) · 0 min Drama · QA Film QA 18 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie18?servers=qa-primary\n    - img \"Film QA 18\"\n    - text: Film 4K\n    - strong: Film QA 18\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 18\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 18 Film 4K Film QA 18 0 vue(s) · 0 min Drama · QA Film QA 18 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie18?servers=qa-secondary\n    - img \"Film QA 18\"\n    - text: Film 4K\n    - strong: Film QA 18\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 18\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 19 Film 4K Film QA 19 0 vue(s) · 0 min Drama · QA Film QA 19 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie19?servers=qa-primary\n    - img \"Film QA 19\"\n    - text: Film 4K\n    - strong: Film QA 19\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 19\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 19 Film 4K Film QA 19 0 vue(s) · 0 min Drama · QA Film QA 19 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie19?servers=qa-secondary\n    - img \"Film QA 19\"\n    - text: Film 4K\n    - strong: Film QA 19\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 19\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 20 Film 4K Film QA 20 0 vue(s) · 0 min Drama · QA Film QA 20 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie20?servers=qa-primary\n    - img \"Film QA 20\"\n    - text: Film 4K\n    - strong: Film QA 20\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 20\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 20 Film 4K Film QA 20 0 vue(s) · 0 min Drama · QA Film QA 20 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie20?servers=qa-secondary\n    - img \"Film QA 20\"\n    - text: Film 4K\n    - strong: Film QA 20\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 20\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 21 Film 4K Film QA 21 0 vue(s) · 0 min Drama · QA Film QA 21 0 vue(s) · 0 min\":\n    - /url: /media/qa-primary-movie21?servers=qa-primary\n    - img \"Film QA 21\"\n    - text: Film 4K\n    - strong: Film QA 21\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 21\n    - text: 0 vue(s) · 0 min\n  - link \"Film QA 21 Film 4K Film QA 21 0 vue(s) · 0 min Drama · QA Film QA 21 0 vue(s) · 0 min\":\n    - /url: /media/qa-secondary-movie21?servers=qa-secondary\n    - img \"Film QA 21\"\n    - text: Film 4K\n    - strong: Film QA 21\n    - text: 0 vue(s) · 0 min Drama · QA\n    - strong: Film QA 21\n    - text: 0 vue(s) · 0 min\n  - navigation \"Page 1 sur 3\":\n    - button \"← Précédent\" [disabled]\n    - text: Page 1 sur 3\n    - button \"Suivant →\"",
+      "cards": [
+        {
+          "text": "Album3495 kbpsAlbum principal QAArtiste QA51 vue(s) · 2h 30mRockAlbum principal QA51 vue(s) · 2h 30m",
+          "label": null,
+          "imageAlt": "Album principal QA",
+          "placeholder": false
+        },
+        {
+          "text": "Série1080pSérie principale QA51 vue(s) · 25h 30mDrama · QASérie principale QA51 vue(s) · 25h 30m",
+          "label": null,
+          "imageAlt": "Série principale QA",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm principal QA17 vue(s) · 22h 40mDrama · QAFilm principal QA17 vue(s) · 22h 40m",
+          "label": null,
+          "imageAlt": "Film principal QA",
+          "placeholder": false
+        },
+        {
+          "text": "Série1080pSérie principale QA6 vue(s) · 3h Drama · QASérie principale QA6 vue(s) · 3h",
+          "label": null,
+          "imageAlt": "Série principale QA",
+          "placeholder": false
+        },
+        {
+          "text": "Album3495 kbpsAlbum principal QAArtiste QA3 vue(s) · 8 minRockAlbum principal QA3 vue(s) · 8 min",
+          "label": null,
+          "imageAlt": "Album principal QA",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm principal QA2 vue(s) · 2h 40mDrama · QAFilm principal QA2 vue(s) · 2h 40m",
+          "label": null,
+          "imageAlt": "Film principal QA",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 000 vue(s) · 0 minDrama · QAFilm QA 000 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 00",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 000 vue(s) · 0 minDrama · QAFilm QA 000 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 00",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 010 vue(s) · 0 minDrama · QAFilm QA 010 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 01",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 010 vue(s) · 0 minDrama · QAFilm QA 010 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 01",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 020 vue(s) · 0 minDrama · QAFilm QA 020 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 02",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 020 vue(s) · 0 minDrama · QAFilm QA 020 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 02",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 030 vue(s) · 0 minDrama · QAFilm QA 030 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 03",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 030 vue(s) · 0 minDrama · QAFilm QA 030 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 03",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 040 vue(s) · 0 minDrama · QAFilm QA 040 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 04",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 040 vue(s) · 0 minDrama · QAFilm QA 040 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 04",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 050 vue(s) · 0 minDrama · QAFilm QA 050 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 05",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 050 vue(s) · 0 minDrama · QAFilm QA 050 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 05",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 060 vue(s) · 0 minDrama · QAFilm QA 060 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 06",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 060 vue(s) · 0 minDrama · QAFilm QA 060 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 06",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 070 vue(s) · 0 minDrama · QAFilm QA 070 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 07",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 070 vue(s) · 0 minDrama · QAFilm QA 070 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 07",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 080 vue(s) · 0 minDrama · QAFilm QA 080 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 08",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 080 vue(s) · 0 minDrama · QAFilm QA 080 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 08",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 090 vue(s) · 0 minDrama · QAFilm QA 090 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 09",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 090 vue(s) · 0 minDrama · QAFilm QA 090 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 09",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 100 vue(s) · 0 minDrama · QAFilm QA 100 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 10",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 100 vue(s) · 0 minDrama · QAFilm QA 100 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 10",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 110 vue(s) · 0 minDrama · QAFilm QA 110 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 11",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 110 vue(s) · 0 minDrama · QAFilm QA 110 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 11",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 120 vue(s) · 0 minDrama · QAFilm QA 120 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 12",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 120 vue(s) · 0 minDrama · QAFilm QA 120 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 12",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 130 vue(s) · 0 minDrama · QAFilm QA 130 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 13",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 130 vue(s) · 0 minDrama · QAFilm QA 130 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 13",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 140 vue(s) · 0 minDrama · QAFilm QA 140 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 14",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 140 vue(s) · 0 minDrama · QAFilm QA 140 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 14",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 150 vue(s) · 0 minDrama · QAFilm QA 150 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 15",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 150 vue(s) · 0 minDrama · QAFilm QA 150 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 15",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 160 vue(s) · 0 minDrama · QAFilm QA 160 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 16",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 160 vue(s) · 0 minDrama · QAFilm QA 160 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 16",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 170 vue(s) · 0 minDrama · QAFilm QA 170 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 17",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 170 vue(s) · 0 minDrama · QAFilm QA 170 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 17",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 180 vue(s) · 0 minDrama · QAFilm QA 180 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 18",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 180 vue(s) · 0 minDrama · QAFilm QA 180 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 18",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 190 vue(s) · 0 minDrama · QAFilm QA 190 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 19",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 190 vue(s) · 0 minDrama · QAFilm QA 190 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 19",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 200 vue(s) · 0 minDrama · QAFilm QA 200 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 20",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 200 vue(s) · 0 minDrama · QAFilm QA 200 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 20",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 210 vue(s) · 0 minDrama · QAFilm QA 210 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 21",
+          "placeholder": false
+        },
+        {
+          "text": "Film4KFilm QA 210 vue(s) · 0 minDrama · QAFilm QA 210 vue(s) · 0 min",
+          "label": null,
+          "imageAlt": "Film QA 21",
+          "placeholder": false
+        }
+      ]
+    },
+    {
+      "name": "profile anchored popover #profile-columns",
+      "open": 1,
+      "label": "Colonnes",
+      "labelledby": null,
+      "focusInside": false,
+      "snapshot": "- dialog \"Colonnes\":\n  - checkbox \"Date\" [checked]\n  - text: Date\n  - checkbox \"Début\"\n  - text: Début\n  - checkbox \"Fin\"\n  - text: Fin\n  - checkbox \"Utilisateur\"\n  - text: Utilisateur\n  - checkbox \"Média\" [checked]\n  - text: Média\n  - checkbox \"Application\" [checked]\n  - text: Application\n  - checkbox \"Adresse IP\"\n  - text: Adresse IP\n  - checkbox \"Pays\"\n  - text: Pays\n  - checkbox \"Statut\" [checked]\n  - text: Statut\n  - checkbox \"Résolution\" [checked]\n  - text: Résolution\n  - checkbox \"Bitrate Audio\" [checked]\n  - text: Bitrate Audio\n  - checkbox \"Codecs\"\n  - text: Codecs\n  - checkbox \"Durée\" [checked]\n  - text: Durée\n  - checkbox \"Pauses\"\n  - text: Pauses\n  - checkbox \"Modif. Audio\"\n  - text: Modif. Audio\n  - checkbox \"Modif. Sous-titres\"\n  - text: Modif. Sous-titres\n  - button \"Réinitialiser\""
+    },
+    {
+      "name": "profile Escape #profile-columns",
+      "open": 0,
+      "focus": "profile-columns"
+    },
+    {
+      "name": "profile anchored popover #profile-saved-filters",
+      "open": 1,
+      "label": "Filtres sauvegardés",
+      "labelledby": null,
+      "focusInside": false,
+      "snapshot": "- dialog \"Filtres sauvegardés\":\n  - paragraph: Aucune donnée\n  - button \"Sauvegarder le filtre actuel\""
+    },
+    {
+      "name": "profile Escape #profile-saved-filters",
+      "open": 0,
+      "focus": "profile-saved-filters"
+    },
+    {
+      "name": "history dialog accessible tree",
+      "snapshot": "- dialog \"Colonnes\":\n  - heading \"Colonnes\" [level=2]\n  - button \"Fermer\"\n  - checkbox \"Date\" [checked]\n  - text: Date\n  - checkbox \"Début\"\n  - text: Début\n  - checkbox \"Fin\"\n  - text: Fin\n  - checkbox \"Utilisateur\" [checked]\n  - text: Utilisateur\n  - checkbox \"Média\" [checked]\n  - text: Média\n  - checkbox \"Application\" [checked]\n  - text: Application\n  - checkbox \"Adresse IP\"\n  - text: Adresse IP\n  - checkbox \"Pays\"\n  - text: Pays\n  - checkbox \"Statut\" [checked]\n  - text: Statut\n  - checkbox \"Résolution\" [checked]\n  - text: Résolution\n  - checkbox \"Bitrate Audio\" [checked]\n  - text: Bitrate Audio\n  - checkbox \"Codecs\"\n  - text: Codecs\n  - checkbox \"Durée\" [checked]\n  - text: Durée\n  - checkbox \"Pauses\"\n  - text: Pauses\n  - checkbox \"Modif. Audio\"\n  - text: Modif. Audio\n  - checkbox \"Modif. Sous-titres\"\n  - text: Modif. Sous-titres\n  - button \"Réinitialiser\""
+    }
+  ]
+}

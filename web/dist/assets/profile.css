@@ -190,3 +190,35 @@ html:not(.dark) .jt-profile .profile-card{border-color:rgba(15,23,42,.11);backgr
 @media(max-width:767px){.jt-profile{gap:16px}.jt-profile .profile-header{margin-bottom:8px}}
 @media(max-width:639px){.jt-profile .profile-metric{padding:24px}.jt-profile .profile-session-fields,.jt-profile .profile-event-list{grid-template-columns:1fr}.jt-profile .profile-history-table table{min-width:900px}.jt-profile .profile-save-form{flex-direction:column;align-items:stretch}.jt-profile .profile-filter-controls .form-select{flex:1;min-width:130px}.jt-profile .profile-filter-controls .profile-checkbox{width:100%}}
 @media(prefers-reduced-motion:reduce){.jt-profile .profile-skeleton{animation:none}.jt-profile .profile-wrapped{transition:none}}
+/* main WrappedClient intro: indigo -> purple -> black and the Filter pill.
+   Scoped to the intro so category and share slides keep their own themes. */
+.wrapped-recovery.wrapped-theme-purple:has(.wrapped-customize){background:linear-gradient(to bottom right in oklab,var(--wrapped-historic-from) 0%,var(--wrapped-historic-via) 50%,#000 100%)}
+.wrapped-recovery .wrapped-customize{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:999px;background:#ffffff1a;color:white;border:1px solid #ffffff33;backdrop-filter:blur(12px);font-size:16px;line-height:24px;font-weight:400;box-shadow:none;margin-top:24px}
+.wrapped-recovery .wrapped-customize:hover{background:#ffffff33}
+.wrapped-recovery .wrapped-customize:before{content:"";width:16px;height:16px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M22 3H2l8 9.46V19l4 2v-8.54L22 3Z'/%3E%3C/svg%3E") center/contain no-repeat}
+.wrapped-recovery .wrapped-customize:focus-visible{outline:2px solid white;outline-offset:4px}
+.wrapped-recovery:has(.wrapped-customize) .wrapped-slide-content>p{font-size:20px;line-height:28px;color:#d4d4d8;max-width:384px;margin:0 auto}
+/* Exact Tailwind color stops/interpolation from main WrappedClient's bgColor. */
+.wrapped-recovery{--wrapped-indigo:oklch(35.9% .144 278.697);--wrapped-purple:oklch(38.1% .176 304.987);--wrapped-emerald:oklch(37.8% .077 168.94);--wrapped-teal:oklch(38.6% .063 188.416);--wrapped-cyan:oklch(39.8% .07 227.392);--wrapped-blue:oklch(37.9% .146 265.522);--wrapped-fuchsia:oklch(40.1% .17 325.612);--wrapped-orange:oklch(40.8% .123 38.172);--wrapped-red:oklch(39.6% .141 25.723);--wrapped-amber:oklch(41.4% .112 45.904);--wrapped-pink:oklch(40.8% .153 2.432);--wrapped-rose:oklch(41% .159 10.272);--wrapped-sky:oklch(39.1% .09 240.876);--wrapped-green:oklch(39.3% .095 152.535);--wrapped-yellow:oklch(42.1% .095 57.708)}
+.wrapped-recovery[class*="wrapped-theme-"]{background:linear-gradient(to bottom right in oklab,var(--wrapped-historic-from) 0%,var(--wrapped-historic-via) 50%,#000 100%)}
+.wrapped-recovery.wrapped-theme-purple{--wrapped-historic-from:var(--wrapped-indigo);--wrapped-historic-via:var(--wrapped-purple)}
+.wrapped-recovery.wrapped-theme-emerald{--wrapped-historic-from:var(--wrapped-emerald);--wrapped-historic-via:var(--wrapped-teal)}
+.wrapped-recovery.wrapped-theme-cyan{--wrapped-historic-from:var(--wrapped-cyan);--wrapped-historic-via:var(--wrapped-blue)}
+.wrapped-recovery.wrapped-theme-fuchsia{--wrapped-historic-from:var(--wrapped-fuchsia);--wrapped-historic-via:var(--wrapped-purple)}
+.wrapped-recovery.wrapped-theme-orange{--wrapped-historic-from:var(--wrapped-orange);--wrapped-historic-via:var(--wrapped-red)}
+.wrapped-recovery.wrapped-theme-amber{--wrapped-historic-from:var(--wrapped-amber);--wrapped-historic-via:var(--wrapped-orange)}
+.wrapped-recovery.wrapped-theme-rose{--wrapped-historic-from:var(--wrapped-pink);--wrapped-historic-via:var(--wrapped-rose)}
+.wrapped-recovery.wrapped-theme-indigo{--wrapped-historic-from:var(--wrapped-blue);--wrapped-historic-via:var(--wrapped-indigo)}
+.wrapped-recovery.wrapped-theme-blue{--wrapped-historic-from:var(--wrapped-sky);--wrapped-historic-via:var(--wrapped-blue)}
+.wrapped-recovery.wrapped-theme-violet{--wrapped-historic-from:var(--wrapped-purple);--wrapped-historic-via:var(--wrapped-indigo)}
+.wrapped-recovery.wrapped-theme-red{--wrapped-historic-from:var(--wrapped-red);--wrapped-historic-via:var(--wrapped-rose)}
+.wrapped-recovery.wrapped-theme-green{--wrapped-historic-from:var(--wrapped-green);--wrapped-historic-via:var(--wrapped-emerald)}
+.wrapped-recovery.wrapped-theme-yellow{--wrapped-historic-from:var(--wrapped-amber);--wrapped-historic-via:var(--wrapped-yellow)}
+.wrapped-recovery.wrapped-theme-share{--wrapped-historic-from:var(--wrapped-purple);--wrapped-historic-via:var(--wrapped-fuchsia)}
+.wrapped-recovery .wrapped-share-card{width:min(100%,384px);display:flex;flex-direction:column;align-items:center;padding:24px;border-radius:20px;background:#0006;border:1px solid #ffffff1a;backdrop-filter:blur(24px)}
+.wrapped-recovery .wrapped-share-card>p{font-size:14px;line-height:20px;color:#d4d4d8;margin:0}
+.wrapped-recovery .wrapped-share-card .wrapped-share-year{color:#a1a1aa;margin-bottom:4px}
+.wrapped-recovery .wrapped-share-card>h3{font-size:24px;line-height:32px;font-weight:700;color:white;margin:0 0 16px}
+.wrapped-recovery .wrapped-share-card .wrapped-share-hours{font-size:18px;line-height:28px;font-weight:700;color:#e879f9;margin:0 0 4px}
+.wrapped-recovery .wrapped-share-categories{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:12px;line-height:16px;color:#a1a1aa;margin-top:12px}
+.wrapped-recovery .wrapped-capture-hint{font-size:12px;line-height:16px;color:#71717a;margin:24px 0}

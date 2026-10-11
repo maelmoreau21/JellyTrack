@@ -1,0 +1,3499 @@
+{
+  "schemaVersion": 1,
+  "referenceCommit": "a59a286",
+  "auditedHead": "c4ed7495c3f420713bbaaabcc337dd47602506db",
+  "workingTreeCorrectionsIncluded": true,
+  "generatedOn": "2026-10-10",
+  "scope": "Source inventory, not full functional or visual parity",
+  "counts": {
+    "historicalPageRoutes": 36,
+    "additionalCurrentPagePaths": 9,
+    "historicalApiFiles": 49,
+    "historicalExportedMethods": 67,
+    "literalGoApiRegistrations": 100,
+    "historicalLiteralMethodMatches": 65,
+    "verifiedMissingApiMethods": 0
+  },
+  "historicalPages": [
+    {
+      "route": "/about",
+      "historicalFile": "src/app/about/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/about",
+      "aliasDestination": null,
+      "parent": "Pied de sidebar",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Différence justifiée",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Structure et fonctionnalités historiques restaurées ; six technologies adaptées à Go, extensions conservées. Rendu corrigé non recapturé par cet agent."
+      ]
+    },
+    {
+      "route": "/admin/cleanup",
+      "historicalFile": "src/app/admin/cleanup/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/admin.js",
+        "line": 74,
+        "symbol": "mount(ctx, subpage)"
+      },
+      "goRoutePattern": "/admin/cleanup",
+      "aliasDestination": null,
+      "parent": "Administration",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/admin/health",
+      "historicalFile": "src/app/admin/health/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/admin.js",
+        "line": 74,
+        "symbol": "mount(ctx, subpage)"
+      },
+      "goRoutePattern": "/admin/health",
+      "aliasDestination": null,
+      "parent": "Administration",
+      "sidebarKey": "logHealth",
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/admin/log-health",
+      "historicalFile": "src/app/admin/log-health/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/admin.js",
+        "line": 74,
+        "symbol": "mount(ctx, subpage)"
+      },
+      "goRoutePattern": "/admin/log-health",
+      "aliasDestination": "/admin/health",
+      "parent": "Administration",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Alias vers /admin/health"
+      ]
+    },
+    {
+      "route": "/admin/plugin-health",
+      "historicalFile": "src/app/admin/plugin-health/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/admin.js",
+        "line": 74,
+        "symbol": "mount(ctx, subpage)"
+      },
+      "goRoutePattern": "/admin/plugin-health",
+      "aliasDestination": "/admin/health",
+      "parent": "Administration",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Alias vers /admin/health"
+      ]
+    },
+    {
+      "route": "/admin/server-compare",
+      "historicalFile": "src/app/admin/server-compare/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/admin.js",
+        "line": 74,
+        "symbol": "mount(ctx, subpage)"
+      },
+      "goRoutePattern": "/admin/server-compare",
+      "aliasDestination": null,
+      "parent": "Administration",
+      "sidebarKey": "serverCompare",
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Sidebar uniquement admin en mode multi ; route directe reste présente."
+      ]
+    },
+    {
+      "route": "/login",
+      "historicalFile": "src/app/login/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/login",
+      "aliasDestination": null,
+      "parent": "Route directe",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Correctif courant : callback local validé conservé après authentification par formulaire ; parcours OIDC non revérifié ici."
+      ]
+    },
+    {
+      "route": "/logs",
+      "historicalFile": "src/app/logs/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/logs",
+      "aliasDestination": null,
+      "parent": "Sidebar",
+      "sidebarKey": "logs",
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/media/[id]",
+      "historicalFile": "src/app/media/[id]/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/media-recovery.js",
+        "line": 320,
+        "symbol": "async render(main, path, ctx)"
+      },
+      "goRoutePattern": "/media/{id}",
+      "aliasDestination": null,
+      "parent": "Bibliothèque",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/media/all",
+      "historicalFile": "src/app/media/all/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/media-recovery.js",
+        "line": 320,
+        "symbol": "async render(main, path, ctx)"
+      },
+      "goRoutePattern": "/media/all",
+      "aliasDestination": null,
+      "parent": "Bibliothèque",
+      "sidebarKey": null,
+      "tabPosition": 1,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/media/analysis",
+      "historicalFile": "src/app/media/analysis/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/media-recovery.js",
+        "line": 320,
+        "symbol": "async render(main, path, ctx)"
+      },
+      "goRoutePattern": "/media/analysis",
+      "aliasDestination": null,
+      "parent": "Bibliothèque",
+      "sidebarKey": null,
+      "tabPosition": 3,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/media/artist/[name]",
+      "historicalFile": "src/app/media/artist/[name]/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/media-recovery.js",
+        "line": 320,
+        "symbol": "async render(main, path, ctx)"
+      },
+      "goRoutePattern": "/media/artist/{name}",
+      "aliasDestination": null,
+      "parent": "Bibliothèque",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/media/collections",
+      "historicalFile": "src/app/media/collections/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/media-recovery.js",
+        "line": 320,
+        "symbol": "async render(main, path, ctx)"
+      },
+      "goRoutePattern": "/media/collections",
+      "aliasDestination": null,
+      "parent": "Bibliothèque",
+      "sidebarKey": null,
+      "tabPosition": 4,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/media",
+      "historicalFile": "src/app/media/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/media-recovery.js",
+        "line": 320,
+        "symbol": "async render(main, path, ctx)"
+      },
+      "goRoutePattern": "/media",
+      "aliasDestination": "/media/all",
+      "parent": "Bibliothèque",
+      "sidebarKey": "library",
+      "tabPosition": null,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Alias vers /media/all"
+      ]
+    },
+    {
+      "route": "/media/popular",
+      "historicalFile": "src/app/media/popular/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/media-recovery.js",
+        "line": 320,
+        "symbol": "async render(main, path, ctx)"
+      },
+      "goRoutePattern": "/media/popular",
+      "aliasDestination": null,
+      "parent": "Bibliothèque",
+      "sidebarKey": null,
+      "tabPosition": 2,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/newsletter",
+      "historicalFile": "src/app/newsletter/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/newsletter",
+      "aliasDestination": null,
+      "parent": "Médias / route directe",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Différence à corriger",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Lecture authentifiée standard historique permise, interdite par garde frontend et GET API Go admin. Publication Discord reste admin."
+      ]
+    },
+    {
+      "route": "/",
+      "historicalFile": "src/app/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/",
+      "aliasDestination": null,
+      "parent": "Sidebar",
+      "sidebarKey": "dashboard",
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/recent",
+      "historicalFile": "src/app/recent/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/recent",
+      "aliasDestination": null,
+      "parent": "Sidebar",
+      "sidebarKey": "recentlyAdded",
+      "tabPosition": null,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/settings/analytics",
+      "historicalFile": "src/app/settings/analytics/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/analytics",
+      "aliasDestination": "/media/analysis",
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Alias vers /media/analysis"
+      ]
+    },
+    {
+      "route": "/settings/dataBackups",
+      "historicalFile": "src/app/settings/dataBackups/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/dataBackups",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": 6,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/settings/jellyfin",
+      "historicalFile": "src/app/settings/jellyfin/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/jellyfin",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": 1,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/settings/media",
+      "historicalFile": "src/app/settings/media/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/media",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": 4,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/settings/network",
+      "historicalFile": "src/app/settings/network/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/network",
+      "aliasDestination": "/settings/jellyfin",
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Alias vers /settings/jellyfin"
+      ]
+    },
+    {
+      "route": "/settings/notifications",
+      "historicalFile": "src/app/settings/notifications/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/notifications",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": 7,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/settings/overview",
+      "historicalFile": "src/app/settings/overview/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/overview",
+      "aliasDestination": "/settings/jellyfin",
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Alias vers /settings/jellyfin"
+      ]
+    },
+    {
+      "route": "/settings",
+      "historicalFile": "src/app/settings/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings",
+      "aliasDestination": "/settings/jellyfin",
+      "parent": "Paramètres",
+      "sidebarKey": "settings",
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Alias vers /settings/jellyfin"
+      ]
+    },
+    {
+      "route": "/settings/plugin",
+      "historicalFile": "src/app/settings/plugin/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/plugin",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Même écran serveurs que Jellyfin, onglet Jellyfin actif."
+      ]
+    },
+    {
+      "route": "/settings/plugin/security",
+      "historicalFile": "src/app/settings/plugin/security/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/plugin/security",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": 3,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/settings/scheduler",
+      "historicalFile": "src/app/settings/scheduler/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/scheduler",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": 5,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/settings/scheduler/schedules",
+      "historicalFile": "src/app/settings/scheduler/schedules/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/scheduler/schedules",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/settings/scheduler/tasks",
+      "historicalFile": "src/app/settings/scheduler/tasks/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/scheduler/tasks",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/settings/sso",
+      "historicalFile": "src/app/settings/sso/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "goRoutePattern": "/settings/sso",
+      "aliasDestination": null,
+      "parent": "Paramètres",
+      "sidebarKey": null,
+      "tabPosition": 2,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": []
+    },
+    {
+      "route": "/setup",
+      "historicalFile": "src/app/setup/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/setup",
+      "aliasDestination": "/",
+      "parent": "Route directe",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Redirection historique restaurée. Assistant Go conservé sous /setup/go."
+      ]
+    },
+    {
+      "route": "/users/[id]",
+      "historicalFile": "src/app/users/[id]/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/users/{id}",
+      "aliasDestination": null,
+      "parent": "Compte / Utilisateurs",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Garde profil frontend et ResolveAccount/backend self scope présents ; aliases me/@me Go."
+      ]
+    },
+    {
+      "route": "/users",
+      "historicalFile": "src/app/users/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/users",
+      "aliasDestination": null,
+      "parent": "Sidebar",
+      "sidebarKey": "users",
+      "tabPosition": null,
+      "standardUserPage": false,
+      "adminOnly": true,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Correctif courant : standard redirigé vers son profil et non login."
+      ]
+    },
+    {
+      "route": "/wrapped/[userId]",
+      "historicalFile": "src/app/wrapped/[userId]/page.tsx",
+      "goDispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "goRoutePattern": "/wrapped/{userId}",
+      "aliasDestination": null,
+      "parent": "Mon Wrapped",
+      "sidebarKey": null,
+      "tabPosition": null,
+      "standardUserPage": true,
+      "adminOnly": false,
+      "status": "Identique ou fidèle",
+      "scope": "Presence/navigation source only; appearance, data, API behavior and responsive not tested by this inventory",
+      "notes": [
+        "Masquage sidebar et calendrier historiques ; gradient/pill intro corrigés."
+      ]
+    }
+  ],
+  "currentAdditionalPages": [
+    {
+      "route": "/settings/go-overview",
+      "parent": "Compléments Go",
+      "dispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "kind": "explicit",
+      "destination": "legacy Pages.settings(overview)"
+    },
+    {
+      "route": "/settings/go-network",
+      "parent": "Compléments Go",
+      "dispatcher": {
+        "file": "web/dist/assets/settings.js",
+        "line": 31,
+        "symbol": "async mount(ctx, subpage = 'jellyfin')"
+      },
+      "kind": "explicit",
+      "destination": "legacy Pages.settings(network)"
+    },
+    {
+      "route": "/admin/system-health",
+      "parent": "Compléments Go",
+      "dispatcher": {
+        "file": "web/dist/assets/admin.js",
+        "line": 74,
+        "symbol": "mount(ctx, subpage)"
+      },
+      "kind": "explicit",
+      "destination": "legacy Pages.health(system)"
+    },
+    {
+      "route": "/admin/log-diagnostics",
+      "parent": "Compléments Go",
+      "dispatcher": {
+        "file": "web/dist/assets/admin.js",
+        "line": 74,
+        "symbol": "mount(ctx, subpage)"
+      },
+      "kind": "explicit",
+      "destination": "legacy Pages.health(logs)"
+    },
+    {
+      "route": "/admin/plugin-diagnostics",
+      "parent": "Compléments Go",
+      "dispatcher": {
+        "file": "web/dist/assets/admin.js",
+        "line": 74,
+        "symbol": "mount(ctx, subpage)"
+      },
+      "kind": "explicit",
+      "destination": "plugin-health renderer"
+    },
+    {
+      "route": "/admin/maintenance",
+      "parent": "Compléments Go du nettoyage",
+      "dispatcher": {
+        "file": "web/dist/assets/admin.js",
+        "line": 74,
+        "symbol": "mount(ctx, subpage)"
+      },
+      "kind": "explicit",
+      "destination": "legacy Pages.cleanup()"
+    },
+    {
+      "route": "/wrapped",
+      "parent": "Raccourci direct",
+      "dispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "kind": "explicit_alias",
+      "destination": "/wrapped/{current user id}"
+    },
+    {
+      "route": "/dashboard",
+      "parent": "Aucun lien/menu explicite",
+      "dispatcher": {
+        "file": "web/dist/assets/app.js",
+        "line": 6029,
+        "symbol": "// Route Dispatcher"
+      },
+      "kind": "implicit_fallback",
+      "destination": "Admin: Pages.dashboard() via fallback; standard: profil",
+      "notes": "Mention dans garde RBAC seulement ; aucune branche spécifique /dashboard."
+    },
+    {
+      "route": "/setup/go",
+      "parent": "Compléments Go",
+      "kind": "explicit",
+      "destination": "Pages.setup()",
+      "notes": "Assistant Go préservé, API et permissions inchangées."
+    }
+  ],
+  "currentCandidatePaths": [
+    {
+      "route": "/charts",
+      "declared": false,
+      "historical": false,
+      "observation": "Aucune déclaration dispatcher ni lien trouvé. SPA fallback générique peut afficher dashboard ; ne pas compter comme route dédiée."
+    }
+  ],
+  "historicalApiRoutes": [
+    {
+      "route": "/api/admin/auth/session-policy",
+      "historicalFile": "src/app/api/admin/auth/session-policy/route.ts",
+      "normalizedGoRoute": "/api/admin/auth/session-policy",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 19,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/admin/auth/session-policy",
+              "file": "internal/api/handlers.go",
+              "line": 90,
+              "handler": "h.getSessionPolicy"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "PATCH",
+          "line": 30,
+          "goEquivalents": [
+            {
+              "method": "PATCH",
+              "route": "/api/admin/auth/session-policy",
+              "file": "internal/api/handlers.go",
+              "line": 91,
+              "handler": "h.updateSessionPolicy"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "POST",
+          "line": 71,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/admin/auth/session-policy",
+              "file": "internal/api/handlers.go",
+              "line": 92,
+              "handler": "h.updateSessionPolicy"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/cleanup/delete-stale-movies",
+      "historicalFile": "src/app/api/admin/cleanup/delete-stale-movies/route.ts",
+      "normalizedGoRoute": "/api/admin/cleanup/delete-stale-movies",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 51,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/admin/cleanup/delete-stale-movies",
+              "file": "internal/api/handlers.go",
+              "line": 85,
+              "handler": "h.recoveredDeleteStaleMovies"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/consolidate-history",
+      "historicalFile": "src/app/api/admin/consolidate-history/route.ts",
+      "normalizedGoRoute": "/api/admin/consolidate-history",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 9,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/admin/consolidate-history",
+              "file": "internal/api/handlers.go",
+              "line": 132,
+              "handler": "h.adminConsolidateHistory"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/health",
+      "historicalFile": "src/app/api/admin/health/route.ts",
+      "normalizedGoRoute": "/api/admin/health",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 7,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/admin/health",
+              "file": "internal/api/handlers.go",
+              "line": 75,
+              "handler": "h.recoveredAdminHealth"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/integrity-cleanup",
+      "historicalFile": "src/app/api/admin/integrity-cleanup/route.ts",
+      "normalizedGoRoute": "/api/admin/integrity-cleanup",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 6,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/admin/integrity-cleanup",
+              "file": "internal/api/handlers.go",
+              "line": 133,
+              "handler": "h.adminIntegrityCleanup"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/plugin/health",
+      "historicalFile": "src/app/api/admin/plugin/health/route.ts",
+      "normalizedGoRoute": "/api/admin/plugin/health",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 289,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/admin/plugin/health",
+              "file": "internal/api/handlers.go",
+              "line": 102,
+              "handler": "h.recoveredPluginHealth"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "POST",
+          "line": 312,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/admin/plugin/health",
+              "file": "internal/api/handlers.go",
+              "line": 103,
+              "handler": "h.recoveredPluginHealth"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/security/audit",
+      "historicalFile": "src/app/api/admin/security/audit/route.ts",
+      "normalizedGoRoute": "/api/admin/security/audit",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 18,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/admin/security/audit",
+              "file": "internal/api/handlers.go",
+              "line": 77,
+              "handler": "h.securityAudit"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/security/overview",
+      "historicalFile": "src/app/api/admin/security/overview/route.ts",
+      "normalizedGoRoute": "/api/admin/security/overview",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 12,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/admin/security/overview",
+              "file": "internal/api/handlers.go",
+              "line": 76,
+              "handler": "h.securityOverview"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/security/smart-settings",
+      "historicalFile": "src/app/api/admin/security/smart-settings/route.ts",
+      "normalizedGoRoute": "/api/admin/security/smart-settings",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 20,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/admin/security/smart-settings",
+              "file": "internal/api/handlers.go",
+              "line": 78,
+              "handler": "h.getSmartSettings"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "PATCH",
+          "line": 34,
+          "goEquivalents": [
+            {
+              "method": "PATCH",
+              "route": "/api/admin/security/smart-settings",
+              "file": "internal/api/handlers.go",
+              "line": 79,
+              "handler": "h.updateSmartSettings"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/users/[id]",
+      "historicalFile": "src/app/api/admin/users/[id]/route.ts",
+      "normalizedGoRoute": "/api/admin/users/{id}",
+      "methods": [
+        {
+          "method": "DELETE",
+          "line": 8,
+          "goEquivalents": [
+            {
+              "method": "DELETE",
+              "route": "/api/admin/users/{id}",
+              "file": "internal/api/handlers.go",
+              "line": 84,
+              "handler": "h.adminDeleteUser"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/users/duplicates",
+      "historicalFile": "src/app/api/admin/users/duplicates/route.ts",
+      "normalizedGoRoute": "/api/admin/users/duplicates",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 8,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/admin/users/duplicates",
+              "file": "internal/api/handlers.go",
+              "line": 80,
+              "handler": "h.adminUserDuplicates"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "POST",
+          "line": 24,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/admin/users/duplicates",
+              "file": "internal/api/handlers.go",
+              "line": 81,
+              "handler": "h.adminUserDuplicates"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/users/merge",
+      "historicalFile": "src/app/api/admin/users/merge/route.ts",
+      "normalizedGoRoute": "/api/admin/users/merge",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 8,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/admin/users/merge",
+              "file": "internal/api/handlers.go",
+              "line": 82,
+              "handler": "h.adminUserMerge"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/admin/users/sync-deleted",
+      "historicalFile": "src/app/api/admin/users/sync-deleted/route.ts",
+      "normalizedGoRoute": "/api/admin/users/sync-deleted",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 8,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/admin/users/sync-deleted",
+              "file": "internal/api/handlers.go",
+              "line": 83,
+              "handler": "h.adminUserSyncDeleted"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/auth/[...nextauth]",
+      "historicalFile": "src/app/api/auth/[...nextauth]/route.ts",
+      "normalizedGoRoute": null,
+      "methods": [
+        {
+          "method": "GET",
+          "line": 215,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/auth/options",
+              "file": "internal/auth/auth.go",
+              "line": 388,
+              "handler": "inline"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/sso/config",
+              "file": "internal/auth/auth.go",
+              "line": 400,
+              "handler": "inline"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/status",
+              "file": "internal/auth/auth.go",
+              "line": 409,
+              "handler": "inline"
+            },
+            {
+              "method": "POST",
+              "route": "/api/auth/login",
+              "file": "internal/auth/auth.go",
+              "line": 422,
+              "handler": "m.login"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/me",
+              "file": "internal/auth/auth.go",
+              "line": 423,
+              "handler": "m.me"
+            },
+            {
+              "method": "POST",
+              "route": "/api/auth/logout",
+              "file": "internal/auth/auth.go",
+              "line": 424,
+              "handler": "m.logout"
+            },
+            {
+              "method": "POST",
+              "route": "/api/auth/signout",
+              "file": "internal/auth/auth.go",
+              "line": 425,
+              "handler": "m.logout"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/oidc/start",
+              "file": "internal/auth/auth.go",
+              "line": 426,
+              "handler": "m.oidcStart"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/oidc/callback",
+              "file": "internal/auth/auth.go",
+              "line": 427,
+              "handler": "m.oidcCallback"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/callback/oidc",
+              "file": "internal/auth/auth.go",
+              "line": 428,
+              "handler": "m.oidcCallback"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/callback/sso",
+              "file": "internal/auth/auth.go",
+              "line": 429,
+              "handler": "m.oidcCallback"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/session",
+              "file": "internal/auth/auth.go",
+              "line": 432,
+              "handler": "m.authSession"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/csrf",
+              "file": "internal/auth/auth.go",
+              "line": 433,
+              "handler": "m.authCSRF"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/providers",
+              "file": "internal/auth/auth.go",
+              "line": 434,
+              "handler": "m.authProviders"
+            }
+          ],
+          "status": "Différence justifiée"
+        },
+        {
+          "method": "POST",
+          "line": 215,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/auth/options",
+              "file": "internal/auth/auth.go",
+              "line": 388,
+              "handler": "inline"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/sso/config",
+              "file": "internal/auth/auth.go",
+              "line": 400,
+              "handler": "inline"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/status",
+              "file": "internal/auth/auth.go",
+              "line": 409,
+              "handler": "inline"
+            },
+            {
+              "method": "POST",
+              "route": "/api/auth/login",
+              "file": "internal/auth/auth.go",
+              "line": 422,
+              "handler": "m.login"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/me",
+              "file": "internal/auth/auth.go",
+              "line": 423,
+              "handler": "m.me"
+            },
+            {
+              "method": "POST",
+              "route": "/api/auth/logout",
+              "file": "internal/auth/auth.go",
+              "line": 424,
+              "handler": "m.logout"
+            },
+            {
+              "method": "POST",
+              "route": "/api/auth/signout",
+              "file": "internal/auth/auth.go",
+              "line": 425,
+              "handler": "m.logout"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/oidc/start",
+              "file": "internal/auth/auth.go",
+              "line": 426,
+              "handler": "m.oidcStart"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/oidc/callback",
+              "file": "internal/auth/auth.go",
+              "line": 427,
+              "handler": "m.oidcCallback"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/callback/oidc",
+              "file": "internal/auth/auth.go",
+              "line": 428,
+              "handler": "m.oidcCallback"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/callback/sso",
+              "file": "internal/auth/auth.go",
+              "line": 429,
+              "handler": "m.oidcCallback"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/session",
+              "file": "internal/auth/auth.go",
+              "line": 432,
+              "handler": "m.authSession"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/csrf",
+              "file": "internal/auth/auth.go",
+              "line": 433,
+              "handler": "m.authCSRF"
+            },
+            {
+              "method": "GET",
+              "route": "/api/auth/providers",
+              "file": "internal/auth/auth.go",
+              "line": 434,
+              "handler": "m.authProviders"
+            }
+          ],
+          "status": "Différence justifiée"
+        }
+      ],
+      "status": "Différence justifiée",
+      "notes": [
+        "NextAuth catchall remplacé par endpoints sessions/CSRF/providers/login/signout et OIDC explicites. Pas de compatibilité promise pour toutes les URL internes NextAuth."
+      ],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/backup/auto/delete",
+      "historicalFile": "src/app/api/backup/auto/delete/route.ts",
+      "normalizedGoRoute": "/api/backup/auto/delete",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 13,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/backup/auto/delete",
+              "file": "internal/api/handlers.go",
+              "line": 129,
+              "handler": "h.backupAutoDelete"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/backup/auto/download",
+      "historicalFile": "src/app/api/backup/auto/download/route.ts",
+      "normalizedGoRoute": "/api/backup/auto/download",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 9,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/backup/auto/download",
+              "file": "internal/api/handlers.go",
+              "line": 127,
+              "handler": "h.backupAutoDownload"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/backup/auto/restore",
+      "historicalFile": "src/app/api/backup/auto/restore/route.ts",
+      "normalizedGoRoute": "/api/backup/auto/restore",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 15,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/backup/auto/restore",
+              "file": "internal/api/handlers.go",
+              "line": 128,
+              "handler": "h.backupAutoRestore"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/backup/auto",
+      "historicalFile": "src/app/api/backup/auto/route.ts",
+      "normalizedGoRoute": "/api/backup/auto",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 7,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/backup/auto",
+              "file": "internal/api/handlers.go",
+              "line": 125,
+              "handler": "h.backupAutoList"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/backup/auto/trigger",
+      "historicalFile": "src/app/api/backup/auto/trigger/route.ts",
+      "normalizedGoRoute": "/api/backup/auto/trigger",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 9,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/backup/auto/trigger",
+              "file": "internal/api/handlers.go",
+              "line": 126,
+              "handler": "h.backupAutoTrigger"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/backup/export",
+      "historicalFile": "src/app/api/backup/export/route.ts",
+      "normalizedGoRoute": "/api/backup/export",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 10,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/backup/export",
+              "file": "internal/api/handlers.go",
+              "line": 123,
+              "handler": "h.backupExport"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/backup/import",
+      "historicalFile": "src/app/api/backup/import/route.ts",
+      "normalizedGoRoute": "/api/backup/import",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 88,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/backup/import",
+              "file": "internal/api/handlers.go",
+              "line": 124,
+              "handler": "h.backupImport"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/geo-stats",
+      "historicalFile": "src/app/api/geo-stats/route.ts",
+      "normalizedGoRoute": "/api/geo-stats",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 5,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/geo-stats",
+              "file": "internal/api/handlers.go",
+              "line": 109,
+              "handler": "h.geoStats"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/hardware",
+      "historicalFile": "src/app/api/hardware/route.ts",
+      "normalizedGoRoute": "/api/hardware",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 7,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/hardware",
+              "file": "internal/api/handlers.go",
+              "line": 74,
+              "handler": "h.hardware"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/health",
+      "historicalFile": "src/app/api/health/route.ts",
+      "normalizedGoRoute": "/api/health",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 27,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/health",
+              "file": "web/static.go",
+              "line": 53,
+              "handler": "inline"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/heatmap-detail",
+      "historicalFile": "src/app/api/heatmap-detail/route.ts",
+      "normalizedGoRoute": "/api/heatmap-detail",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 5,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/heatmap-detail",
+              "file": "internal/api/handlers.go",
+              "line": 110,
+              "handler": "h.heatmapDetail"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/jellyfin/image",
+      "historicalFile": "src/app/api/jellyfin/image/route.ts",
+      "normalizedGoRoute": "/api/jellyfin/image",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 131,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/jellyfin/image",
+              "file": "internal/api/handlers.go",
+              "line": 62,
+              "handler": "h.jellyfinImageProxy"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/jellyfin/kill-stream",
+      "historicalFile": "src/app/api/jellyfin/kill-stream/route.ts",
+      "normalizedGoRoute": "/api/jellyfin/kill-stream",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 11,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/jellyfin/kill-stream",
+              "file": "internal/api/handlers.go",
+              "line": 113,
+              "handler": "h.killStream"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/jellyfin/send-message",
+      "historicalFile": "src/app/api/jellyfin/send-message/route.ts",
+      "normalizedGoRoute": "/api/jellyfin/send-message",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 14,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/jellyfin/send-message",
+              "file": "internal/api/handlers.go",
+              "line": 114,
+              "handler": "h.sendMessage"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/jellyfin/user-image",
+      "historicalFile": "src/app/api/jellyfin/user-image/route.ts",
+      "normalizedGoRoute": "/api/jellyfin/user-image",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 9,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/jellyfin/user-image",
+              "file": "internal/api/handlers.go",
+              "line": 63,
+              "handler": "h.jellyfinUserImageProxy"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/logs/export",
+      "historicalFile": "src/app/api/logs/export/route.ts",
+      "normalizedGoRoute": "/api/logs/export",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 11,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/logs/export",
+              "file": "internal/api/handlers.go",
+              "line": 100,
+              "handler": "h.exportLogsCSV"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/logs/system/download",
+      "historicalFile": "src/app/api/logs/system/download/route.ts",
+      "normalizedGoRoute": "/api/logs/system/download",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 7,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/logs/system/download",
+              "file": "internal/api/handlers.go",
+              "line": 99,
+              "handler": "h.downloadSystemLogs"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/logs/system",
+      "historicalFile": "src/app/api/logs/system/route.ts",
+      "normalizedGoRoute": "/api/logs/system",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 10,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/logs/system",
+              "file": "internal/api/handlers.go",
+              "line": 97,
+              "handler": "h.getSystemLogs"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "DELETE",
+          "line": 40,
+          "goEquivalents": [
+            {
+              "method": "DELETE",
+              "route": "/api/logs/system",
+              "file": "internal/api/handlers.go",
+              "line": 98,
+              "handler": "h.clearSystemLogs"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/media/[id]/poster-rotator/rotate",
+      "historicalFile": "src/app/api/media/[id]/poster-rotator/rotate/route.ts",
+      "normalizedGoRoute": "/api/media/{id}/poster-rotator/rotate",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 30,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/media/{id}/poster-rotator/rotate",
+              "file": "internal/api/handlers.go",
+              "line": 101,
+              "handler": "h.posterRotatorRotate"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/metadata-audit",
+      "historicalFile": "src/app/api/metadata-audit/route.ts",
+      "normalizedGoRoute": "/api/metadata-audit",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 5,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/metadata-audit",
+              "file": "internal/api/handlers.go",
+              "line": 87,
+              "handler": "h.metadataAudit"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/newsletter/discord-post",
+      "historicalFile": "src/app/api/newsletter/discord-post/route.ts",
+      "normalizedGoRoute": "/api/newsletter/discord-post",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 10,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/newsletter/discord-post",
+              "file": "internal/api/handlers.go",
+              "line": 96,
+              "handler": "h.discordPost"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/plugin/api-key",
+      "historicalFile": "src/app/api/plugin/api-key/route.ts",
+      "normalizedGoRoute": "/api/plugin/api-key",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 25,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/plugin/api-key",
+              "file": "internal/api/handlers.go",
+              "line": 93,
+              "handler": "h.getPluginApiKey"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "POST",
+          "line": 59,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/plugin/api-key",
+              "file": "internal/api/handlers.go",
+              "line": 94,
+              "handler": "h.rotatePluginApiKey"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "DELETE",
+          "line": 80,
+          "goEquivalents": [
+            {
+              "method": "DELETE",
+              "route": "/api/plugin/api-key",
+              "file": "internal/api/handlers.go",
+              "line": 95,
+              "handler": "h.revokePluginApiKey"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/plugin/events",
+      "historicalFile": "src/app/api/plugin/events/route.ts",
+      "normalizedGoRoute": "/api/plugin/events",
+      "methods": [
+        {
+          "method": "OPTIONS",
+          "line": 61,
+          "goEquivalents": [
+            {
+              "method": "OPTIONS",
+              "route": "/api/plugin/events",
+              "file": "internal/plugin/events.go",
+              "line": 77,
+              "handler": "plugin.Handler.ServeHTTP",
+              "mount": {
+                "file": "web/static.go",
+                "line": 59,
+                "symbol": "mux.Handle(\"/api/plugin/events\""
+              }
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "GET",
+          "line": 66,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/plugin/events",
+              "file": "internal/plugin/events.go",
+              "line": 77,
+              "handler": "plugin.Handler.ServeHTTP",
+              "mount": {
+                "file": "web/static.go",
+                "line": 59,
+                "symbol": "mux.Handle(\"/api/plugin/events\""
+              }
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "POST",
+          "line": 80,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/plugin/events",
+              "file": "internal/plugin/events.go",
+              "line": 77,
+              "handler": "plugin.Handler.ServeHTTP",
+              "mount": {
+                "file": "web/static.go",
+                "line": 59,
+                "symbol": "mux.Handle(\"/api/plugin/events\""
+              }
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/predictions",
+      "historicalFile": "src/app/api/predictions/route.ts",
+      "normalizedGoRoute": "/api/predictions",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 9,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/predictions",
+              "file": "internal/api/handlers.go",
+              "line": 86,
+              "handler": "h.predictions"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/search",
+      "historicalFile": "src/app/api/search/route.ts",
+      "normalizedGoRoute": "/api/search",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 8,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/search",
+              "file": "internal/api/handlers.go",
+              "line": 60,
+              "handler": "h.search"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/settings/jellyfin-servers/plugin-key",
+      "historicalFile": "src/app/api/settings/jellyfin-servers/plugin-key/route.ts",
+      "normalizedGoRoute": "/api/settings/jellyfin-servers/plugin-key",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 23,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/settings/jellyfin-servers/plugin-key",
+              "file": "internal/api/handlers.go",
+              "line": 122,
+              "handler": "h.recoveredServerPluginKey"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/settings/jellyfin-servers",
+      "historicalFile": "src/app/api/settings/jellyfin-servers/route.ts",
+      "normalizedGoRoute": "/api/settings/jellyfin-servers",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 121,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/settings/jellyfin-servers",
+              "file": "internal/api/handlers.go",
+              "line": 117,
+              "handler": "h.recoveredServers"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "POST",
+          "line": 191,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/settings/jellyfin-servers",
+              "file": "internal/api/handlers.go",
+              "line": 118,
+              "handler": "h.saveServer"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "PATCH",
+          "line": 264,
+          "goEquivalents": [
+            {
+              "method": "PATCH",
+              "route": "/api/settings/jellyfin-servers",
+              "file": "internal/api/handlers.go",
+              "line": 119,
+              "handler": "h.updateServer"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "DELETE",
+          "line": 371,
+          "goEquivalents": [
+            {
+              "method": "DELETE",
+              "route": "/api/settings/jellyfin-servers",
+              "file": "internal/api/handlers.go",
+              "line": 120,
+              "handler": "h.deleteServer"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/settings",
+      "historicalFile": "src/app/api/settings/route.ts",
+      "normalizedGoRoute": "/api/settings",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 79,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/settings",
+              "file": "internal/api/handlers.go",
+              "line": 115,
+              "handler": "h.getSettings"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "POST",
+          "line": 143,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/settings",
+              "file": "internal/api/handlers.go",
+              "line": 116,
+              "handler": "h.updateSettings"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/settings/sso",
+      "historicalFile": "src/app/api/settings/sso/route.ts",
+      "normalizedGoRoute": "/api/settings/sso",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 20,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/settings/sso",
+              "file": "internal/api/handlers.go",
+              "line": 88,
+              "handler": "h.getSSO"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "PUT",
+          "line": 60,
+          "goEquivalents": [
+            {
+              "method": "PUT",
+              "route": "/api/settings/sso",
+              "file": "internal/api/handlers.go",
+              "line": 89,
+              "handler": "h.updateSSO"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/stats/deep",
+      "historicalFile": "src/app/api/stats/deep/route.ts",
+      "normalizedGoRoute": "/api/stats/deep",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 8,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/stats/deep",
+              "file": "internal/api/handlers.go",
+              "line": 105,
+              "handler": "h.deepStats"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/streams",
+      "historicalFile": "src/app/api/streams/route.ts",
+      "normalizedGoRoute": "/api/streams",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 9,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/streams",
+              "file": "internal/api/handlers.go",
+              "line": 111,
+              "handler": "h.streams"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/streams/telemetry",
+      "historicalFile": "src/app/api/streams/telemetry/route.ts",
+      "normalizedGoRoute": "/api/streams/telemetry",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 12,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/streams/telemetry",
+              "file": "internal/api/handlers.go",
+              "line": 112,
+              "handler": "h.streamsTelemetry"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/sync",
+      "historicalFile": "src/app/api/sync/route.ts",
+      "normalizedGoRoute": "/api/sync",
+      "methods": [
+        {
+          "method": "POST",
+          "line": 7,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/sync",
+              "file": "internal/api/handlers.go",
+              "line": 104,
+              "handler": "h.sync"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/users/[id]/active-stream",
+      "historicalFile": "src/app/api/users/[id]/active-stream/route.ts",
+      "normalizedGoRoute": "/api/users/{id}/active-stream",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 16,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/users/{id}/active-stream",
+              "file": "internal/api/handlers.go",
+              "line": 51,
+              "handler": "h.userActiveStream"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    },
+    {
+      "route": "/api/webhook/jellyfin",
+      "historicalFile": "src/app/api/webhook/jellyfin/route.ts",
+      "normalizedGoRoute": "/api/webhook/jellyfin",
+      "methods": [
+        {
+          "method": "GET",
+          "line": 86,
+          "goEquivalents": [
+            {
+              "method": "GET",
+              "route": "/api/webhook/jellyfin",
+              "file": "internal/api/handlers.go",
+              "line": 141,
+              "handler": "inline"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "OPTIONS",
+          "line": 87,
+          "goEquivalents": [
+            {
+              "method": "OPTIONS",
+              "route": "/api/webhook/jellyfin",
+              "file": "internal/api/handlers.go",
+              "line": 149,
+              "handler": "inline"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        },
+        {
+          "method": "POST",
+          "line": 89,
+          "goEquivalents": [
+            {
+              "method": "POST",
+              "route": "/api/webhook/jellyfin",
+              "file": "internal/api/handlers.go",
+              "line": 140,
+              "handler": "h.jellyfinWebhook"
+            }
+          ],
+          "status": "Identique ou fidèle"
+        }
+      ],
+      "status": "Identique ou fidèle",
+      "notes": [],
+      "scope": "Registration and exported method presence only; request/response contract and permissions not fully tested"
+    }
+  ],
+  "currentApiRegistrations": [
+    {
+      "method": "GET",
+      "route": "/api/navigation",
+      "file": "internal/api/handlers.go",
+      "line": 48,
+      "handler": "h.navigation"
+    },
+    {
+      "method": "GET",
+      "route": "/api/dashboard",
+      "file": "internal/api/handlers.go",
+      "line": 49,
+      "handler": "h.dashboard"
+    },
+    {
+      "method": "GET",
+      "route": "/api/users/{id}",
+      "file": "internal/api/handlers.go",
+      "line": 50,
+      "handler": "h.userDetail"
+    },
+    {
+      "method": "GET",
+      "route": "/api/users/{id}/active-stream",
+      "file": "internal/api/handlers.go",
+      "line": 51,
+      "handler": "h.userActiveStream"
+    },
+    {
+      "method": "GET",
+      "route": "/api/wrapped/{id}",
+      "file": "internal/api/handlers.go",
+      "line": 52,
+      "handler": "h.userWrapped"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media",
+      "file": "internal/api/handlers.go",
+      "line": 53,
+      "handler": "h.mediaList"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/popular",
+      "file": "internal/api/handlers.go",
+      "line": 54,
+      "handler": "h.recoveredMediaPopular"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/server-options",
+      "file": "internal/api/handlers.go",
+      "line": 55,
+      "handler": "h.recoveredMediaServerOptions"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/artist/{name}",
+      "file": "internal/api/handlers.go",
+      "line": 56,
+      "handler": "h.recoveredMediaArtist"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/collections",
+      "file": "internal/api/handlers.go",
+      "line": 57,
+      "handler": "h.mediaCollections"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/{id}",
+      "file": "internal/api/handlers.go",
+      "line": 58,
+      "handler": "h.mediaDetail"
+    },
+    {
+      "method": "GET",
+      "route": "/api/history",
+      "file": "internal/api/handlers.go",
+      "line": 59,
+      "handler": "h.history"
+    },
+    {
+      "method": "GET",
+      "route": "/api/search",
+      "file": "internal/api/handlers.go",
+      "line": 60,
+      "handler": "h.search"
+    },
+    {
+      "method": "GET",
+      "route": "/api/jellyfin/sessions",
+      "file": "internal/api/handlers.go",
+      "line": 61,
+      "handler": "h.sessions"
+    },
+    {
+      "method": "GET",
+      "route": "/api/jellyfin/image",
+      "file": "internal/api/handlers.go",
+      "line": 62,
+      "handler": "h.jellyfinImageProxy"
+    },
+    {
+      "method": "GET",
+      "route": "/api/jellyfin/user-image",
+      "file": "internal/api/handlers.go",
+      "line": 63,
+      "handler": "h.jellyfinUserImageProxy"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/analysis",
+      "file": "internal/api/handlers.go",
+      "line": 71,
+      "handler": "h.recoveredMediaAnalysis"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/cleanup",
+      "file": "internal/api/handlers.go",
+      "line": 72,
+      "handler": "h.recoveredCleanup"
+    },
+    {
+      "method": "GET",
+      "route": "/api/users",
+      "file": "internal/api/handlers.go",
+      "line": 73,
+      "handler": "h.users"
+    },
+    {
+      "method": "GET",
+      "route": "/api/hardware",
+      "file": "internal/api/handlers.go",
+      "line": 74,
+      "handler": "h.hardware"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/health",
+      "file": "internal/api/handlers.go",
+      "line": 75,
+      "handler": "h.recoveredAdminHealth"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/security/overview",
+      "file": "internal/api/handlers.go",
+      "line": 76,
+      "handler": "h.securityOverview"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/security/audit",
+      "file": "internal/api/handlers.go",
+      "line": 77,
+      "handler": "h.securityAudit"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/security/smart-settings",
+      "file": "internal/api/handlers.go",
+      "line": 78,
+      "handler": "h.getSmartSettings"
+    },
+    {
+      "method": "PATCH",
+      "route": "/api/admin/security/smart-settings",
+      "file": "internal/api/handlers.go",
+      "line": 79,
+      "handler": "h.updateSmartSettings"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/users/duplicates",
+      "file": "internal/api/handlers.go",
+      "line": 80,
+      "handler": "h.adminUserDuplicates"
+    },
+    {
+      "method": "POST",
+      "route": "/api/admin/users/duplicates",
+      "file": "internal/api/handlers.go",
+      "line": 81,
+      "handler": "h.adminUserDuplicates"
+    },
+    {
+      "method": "POST",
+      "route": "/api/admin/users/merge",
+      "file": "internal/api/handlers.go",
+      "line": 82,
+      "handler": "h.adminUserMerge"
+    },
+    {
+      "method": "POST",
+      "route": "/api/admin/users/sync-deleted",
+      "file": "internal/api/handlers.go",
+      "line": 83,
+      "handler": "h.adminUserSyncDeleted"
+    },
+    {
+      "method": "DELETE",
+      "route": "/api/admin/users/{id}",
+      "file": "internal/api/handlers.go",
+      "line": 84,
+      "handler": "h.adminDeleteUser"
+    },
+    {
+      "method": "POST",
+      "route": "/api/admin/cleanup/delete-stale-movies",
+      "file": "internal/api/handlers.go",
+      "line": 85,
+      "handler": "h.recoveredDeleteStaleMovies"
+    },
+    {
+      "method": "GET",
+      "route": "/api/predictions",
+      "file": "internal/api/handlers.go",
+      "line": 86,
+      "handler": "h.predictions"
+    },
+    {
+      "method": "GET",
+      "route": "/api/metadata-audit",
+      "file": "internal/api/handlers.go",
+      "line": 87,
+      "handler": "h.metadataAudit"
+    },
+    {
+      "method": "GET",
+      "route": "/api/settings/sso",
+      "file": "internal/api/handlers.go",
+      "line": 88,
+      "handler": "h.getSSO"
+    },
+    {
+      "method": "PUT",
+      "route": "/api/settings/sso",
+      "file": "internal/api/handlers.go",
+      "line": 89,
+      "handler": "h.updateSSO"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/auth/session-policy",
+      "file": "internal/api/handlers.go",
+      "line": 90,
+      "handler": "h.getSessionPolicy"
+    },
+    {
+      "method": "PATCH",
+      "route": "/api/admin/auth/session-policy",
+      "file": "internal/api/handlers.go",
+      "line": 91,
+      "handler": "h.updateSessionPolicy"
+    },
+    {
+      "method": "POST",
+      "route": "/api/admin/auth/session-policy",
+      "file": "internal/api/handlers.go",
+      "line": 92,
+      "handler": "h.updateSessionPolicy"
+    },
+    {
+      "method": "GET",
+      "route": "/api/plugin/api-key",
+      "file": "internal/api/handlers.go",
+      "line": 93,
+      "handler": "h.getPluginApiKey"
+    },
+    {
+      "method": "POST",
+      "route": "/api/plugin/api-key",
+      "file": "internal/api/handlers.go",
+      "line": 94,
+      "handler": "h.rotatePluginApiKey"
+    },
+    {
+      "method": "DELETE",
+      "route": "/api/plugin/api-key",
+      "file": "internal/api/handlers.go",
+      "line": 95,
+      "handler": "h.revokePluginApiKey"
+    },
+    {
+      "method": "POST",
+      "route": "/api/newsletter/discord-post",
+      "file": "internal/api/handlers.go",
+      "line": 96,
+      "handler": "h.discordPost"
+    },
+    {
+      "method": "GET",
+      "route": "/api/logs/system",
+      "file": "internal/api/handlers.go",
+      "line": 97,
+      "handler": "h.getSystemLogs"
+    },
+    {
+      "method": "DELETE",
+      "route": "/api/logs/system",
+      "file": "internal/api/handlers.go",
+      "line": 98,
+      "handler": "h.clearSystemLogs"
+    },
+    {
+      "method": "GET",
+      "route": "/api/logs/system/download",
+      "file": "internal/api/handlers.go",
+      "line": 99,
+      "handler": "h.downloadSystemLogs"
+    },
+    {
+      "method": "GET",
+      "route": "/api/logs/export",
+      "file": "internal/api/handlers.go",
+      "line": 100,
+      "handler": "h.exportLogsCSV"
+    },
+    {
+      "method": "POST",
+      "route": "/api/media/{id}/poster-rotator/rotate",
+      "file": "internal/api/handlers.go",
+      "line": 101,
+      "handler": "h.posterRotatorRotate"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/plugin/health",
+      "file": "internal/api/handlers.go",
+      "line": 102,
+      "handler": "h.recoveredPluginHealth"
+    },
+    {
+      "method": "POST",
+      "route": "/api/admin/plugin/health",
+      "file": "internal/api/handlers.go",
+      "line": 103,
+      "handler": "h.recoveredPluginHealth"
+    },
+    {
+      "method": "POST",
+      "route": "/api/sync",
+      "file": "internal/api/handlers.go",
+      "line": 104,
+      "handler": "h.sync"
+    },
+    {
+      "method": "GET",
+      "route": "/api/stats/deep",
+      "file": "internal/api/handlers.go",
+      "line": 105,
+      "handler": "h.deepStats"
+    },
+    {
+      "method": "GET",
+      "route": "/api/stats/granular",
+      "file": "internal/api/handlers.go",
+      "line": 106,
+      "handler": "h.granularStats"
+    },
+    {
+      "method": "GET",
+      "route": "/api/stats/analysis",
+      "file": "internal/api/handlers.go",
+      "line": 107,
+      "handler": "h.analysisStats"
+    },
+    {
+      "method": "GET",
+      "route": "/api/stats/network",
+      "file": "internal/api/handlers.go",
+      "line": 108,
+      "handler": "h.networkStats"
+    },
+    {
+      "method": "GET",
+      "route": "/api/geo-stats",
+      "file": "internal/api/handlers.go",
+      "line": 109,
+      "handler": "h.geoStats"
+    },
+    {
+      "method": "GET",
+      "route": "/api/heatmap-detail",
+      "file": "internal/api/handlers.go",
+      "line": 110,
+      "handler": "h.heatmapDetail"
+    },
+    {
+      "method": "GET",
+      "route": "/api/streams",
+      "file": "internal/api/handlers.go",
+      "line": 111,
+      "handler": "h.streams"
+    },
+    {
+      "method": "GET",
+      "route": "/api/streams/telemetry",
+      "file": "internal/api/handlers.go",
+      "line": 112,
+      "handler": "h.streamsTelemetry"
+    },
+    {
+      "method": "POST",
+      "route": "/api/jellyfin/kill-stream",
+      "file": "internal/api/handlers.go",
+      "line": 113,
+      "handler": "h.killStream"
+    },
+    {
+      "method": "POST",
+      "route": "/api/jellyfin/send-message",
+      "file": "internal/api/handlers.go",
+      "line": 114,
+      "handler": "h.sendMessage"
+    },
+    {
+      "method": "GET",
+      "route": "/api/settings",
+      "file": "internal/api/handlers.go",
+      "line": 115,
+      "handler": "h.getSettings"
+    },
+    {
+      "method": "POST",
+      "route": "/api/settings",
+      "file": "internal/api/handlers.go",
+      "line": 116,
+      "handler": "h.updateSettings"
+    },
+    {
+      "method": "GET",
+      "route": "/api/settings/jellyfin-servers",
+      "file": "internal/api/handlers.go",
+      "line": 117,
+      "handler": "h.recoveredServers"
+    },
+    {
+      "method": "POST",
+      "route": "/api/settings/jellyfin-servers",
+      "file": "internal/api/handlers.go",
+      "line": 118,
+      "handler": "h.saveServer"
+    },
+    {
+      "method": "PATCH",
+      "route": "/api/settings/jellyfin-servers",
+      "file": "internal/api/handlers.go",
+      "line": 119,
+      "handler": "h.updateServer"
+    },
+    {
+      "method": "DELETE",
+      "route": "/api/settings/jellyfin-servers",
+      "file": "internal/api/handlers.go",
+      "line": 120,
+      "handler": "h.deleteServer"
+    },
+    {
+      "method": "DELETE",
+      "route": "/api/settings/jellyfin-servers/{id}",
+      "file": "internal/api/handlers.go",
+      "line": 121,
+      "handler": "h.deleteServer"
+    },
+    {
+      "method": "POST",
+      "route": "/api/settings/jellyfin-servers/plugin-key",
+      "file": "internal/api/handlers.go",
+      "line": 122,
+      "handler": "h.recoveredServerPluginKey"
+    },
+    {
+      "method": "GET",
+      "route": "/api/backup/export",
+      "file": "internal/api/handlers.go",
+      "line": 123,
+      "handler": "h.backupExport"
+    },
+    {
+      "method": "POST",
+      "route": "/api/backup/import",
+      "file": "internal/api/handlers.go",
+      "line": 124,
+      "handler": "h.backupImport"
+    },
+    {
+      "method": "GET",
+      "route": "/api/backup/auto",
+      "file": "internal/api/handlers.go",
+      "line": 125,
+      "handler": "h.backupAutoList"
+    },
+    {
+      "method": "POST",
+      "route": "/api/backup/auto/trigger",
+      "file": "internal/api/handlers.go",
+      "line": 126,
+      "handler": "h.backupAutoTrigger"
+    },
+    {
+      "method": "GET",
+      "route": "/api/backup/auto/download",
+      "file": "internal/api/handlers.go",
+      "line": 127,
+      "handler": "h.backupAutoDownload"
+    },
+    {
+      "method": "POST",
+      "route": "/api/backup/auto/restore",
+      "file": "internal/api/handlers.go",
+      "line": 128,
+      "handler": "h.backupAutoRestore"
+    },
+    {
+      "method": "POST",
+      "route": "/api/backup/auto/delete",
+      "file": "internal/api/handlers.go",
+      "line": 129,
+      "handler": "h.backupAutoDelete"
+    },
+    {
+      "method": "GET",
+      "route": "/api/newsletter",
+      "file": "internal/api/handlers.go",
+      "line": 130,
+      "handler": "h.newsletterData"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/server-compare",
+      "file": "internal/api/handlers.go",
+      "line": 131,
+      "handler": "h.recoveredServerCompare"
+    },
+    {
+      "method": "POST",
+      "route": "/api/admin/consolidate-history",
+      "file": "internal/api/handlers.go",
+      "line": 132,
+      "handler": "h.adminConsolidateHistory"
+    },
+    {
+      "method": "POST",
+      "route": "/api/admin/integrity-cleanup",
+      "file": "internal/api/handlers.go",
+      "line": 133,
+      "handler": "h.adminIntegrityCleanup"
+    },
+    {
+      "method": "POST",
+      "route": "/api/webhook/jellyfin",
+      "file": "internal/api/handlers.go",
+      "line": 140,
+      "handler": "h.jellyfinWebhook"
+    },
+    {
+      "method": "GET",
+      "route": "/api/webhook/jellyfin",
+      "file": "internal/api/handlers.go",
+      "line": 141,
+      "handler": "inline"
+    },
+    {
+      "method": "OPTIONS",
+      "route": "/api/webhook/jellyfin",
+      "file": "internal/api/handlers.go",
+      "line": 149,
+      "handler": "inline"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/options",
+      "file": "internal/auth/auth.go",
+      "line": 388,
+      "handler": "inline"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/sso/config",
+      "file": "internal/auth/auth.go",
+      "line": 400,
+      "handler": "inline"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/status",
+      "file": "internal/auth/auth.go",
+      "line": 409,
+      "handler": "inline"
+    },
+    {
+      "method": "POST",
+      "route": "/api/auth/login",
+      "file": "internal/auth/auth.go",
+      "line": 422,
+      "handler": "m.login"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/me",
+      "file": "internal/auth/auth.go",
+      "line": 423,
+      "handler": "m.me"
+    },
+    {
+      "method": "POST",
+      "route": "/api/auth/logout",
+      "file": "internal/auth/auth.go",
+      "line": 424,
+      "handler": "m.logout"
+    },
+    {
+      "method": "POST",
+      "route": "/api/auth/signout",
+      "file": "internal/auth/auth.go",
+      "line": 425,
+      "handler": "m.logout"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/oidc/start",
+      "file": "internal/auth/auth.go",
+      "line": 426,
+      "handler": "m.oidcStart"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/oidc/callback",
+      "file": "internal/auth/auth.go",
+      "line": 427,
+      "handler": "m.oidcCallback"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/callback/oidc",
+      "file": "internal/auth/auth.go",
+      "line": 428,
+      "handler": "m.oidcCallback"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/callback/sso",
+      "file": "internal/auth/auth.go",
+      "line": 429,
+      "handler": "m.oidcCallback"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/session",
+      "file": "internal/auth/auth.go",
+      "line": 432,
+      "handler": "m.authSession"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/csrf",
+      "file": "internal/auth/auth.go",
+      "line": 433,
+      "handler": "m.authCSRF"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/providers",
+      "file": "internal/auth/auth.go",
+      "line": 434,
+      "handler": "m.authProviders"
+    },
+    {
+      "method": "GET",
+      "route": "/api/health",
+      "file": "web/static.go",
+      "line": 53,
+      "handler": "inline"
+    },
+    {
+      "method": "GET",
+      "route": "/api/plugin/events",
+      "file": "internal/plugin/events.go",
+      "line": 77,
+      "handler": "plugin.Handler.ServeHTTP",
+      "mount": {
+        "file": "web/static.go",
+        "line": 59,
+        "symbol": "mux.Handle(\"/api/plugin/events\""
+      }
+    },
+    {
+      "method": "POST",
+      "route": "/api/plugin/events",
+      "file": "internal/plugin/events.go",
+      "line": 77,
+      "handler": "plugin.Handler.ServeHTTP",
+      "mount": {
+        "file": "web/static.go",
+        "line": 59,
+        "symbol": "mux.Handle(\"/api/plugin/events\""
+      }
+    },
+    {
+      "method": "OPTIONS",
+      "route": "/api/plugin/events",
+      "file": "internal/plugin/events.go",
+      "line": 77,
+      "handler": "plugin.Handler.ServeHTTP",
+      "mount": {
+        "file": "web/static.go",
+        "line": 59,
+        "symbol": "mux.Handle(\"/api/plugin/events\""
+      }
+    }
+  ],
+  "currentAdditionalApiRegistrations": [
+    {
+      "method": "GET",
+      "route": "/api/navigation",
+      "file": "internal/api/handlers.go",
+      "line": 48,
+      "handler": "h.navigation"
+    },
+    {
+      "method": "GET",
+      "route": "/api/dashboard",
+      "file": "internal/api/handlers.go",
+      "line": 49,
+      "handler": "h.dashboard"
+    },
+    {
+      "method": "GET",
+      "route": "/api/users/{id}",
+      "file": "internal/api/handlers.go",
+      "line": 50,
+      "handler": "h.userDetail"
+    },
+    {
+      "method": "GET",
+      "route": "/api/wrapped/{id}",
+      "file": "internal/api/handlers.go",
+      "line": 52,
+      "handler": "h.userWrapped"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media",
+      "file": "internal/api/handlers.go",
+      "line": 53,
+      "handler": "h.mediaList"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/popular",
+      "file": "internal/api/handlers.go",
+      "line": 54,
+      "handler": "h.recoveredMediaPopular"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/server-options",
+      "file": "internal/api/handlers.go",
+      "line": 55,
+      "handler": "h.recoveredMediaServerOptions"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/artist/{name}",
+      "file": "internal/api/handlers.go",
+      "line": 56,
+      "handler": "h.recoveredMediaArtist"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/collections",
+      "file": "internal/api/handlers.go",
+      "line": 57,
+      "handler": "h.mediaCollections"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/{id}",
+      "file": "internal/api/handlers.go",
+      "line": 58,
+      "handler": "h.mediaDetail"
+    },
+    {
+      "method": "GET",
+      "route": "/api/history",
+      "file": "internal/api/handlers.go",
+      "line": 59,
+      "handler": "h.history"
+    },
+    {
+      "method": "GET",
+      "route": "/api/jellyfin/sessions",
+      "file": "internal/api/handlers.go",
+      "line": 61,
+      "handler": "h.sessions"
+    },
+    {
+      "method": "GET",
+      "route": "/api/media/analysis",
+      "file": "internal/api/handlers.go",
+      "line": 71,
+      "handler": "h.recoveredMediaAnalysis"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/cleanup",
+      "file": "internal/api/handlers.go",
+      "line": 72,
+      "handler": "h.recoveredCleanup"
+    },
+    {
+      "method": "GET",
+      "route": "/api/users",
+      "file": "internal/api/handlers.go",
+      "line": 73,
+      "handler": "h.users"
+    },
+    {
+      "method": "GET",
+      "route": "/api/stats/granular",
+      "file": "internal/api/handlers.go",
+      "line": 106,
+      "handler": "h.granularStats"
+    },
+    {
+      "method": "GET",
+      "route": "/api/stats/analysis",
+      "file": "internal/api/handlers.go",
+      "line": 107,
+      "handler": "h.analysisStats"
+    },
+    {
+      "method": "GET",
+      "route": "/api/stats/network",
+      "file": "internal/api/handlers.go",
+      "line": 108,
+      "handler": "h.networkStats"
+    },
+    {
+      "method": "DELETE",
+      "route": "/api/settings/jellyfin-servers/{id}",
+      "file": "internal/api/handlers.go",
+      "line": 121,
+      "handler": "h.deleteServer"
+    },
+    {
+      "method": "GET",
+      "route": "/api/newsletter",
+      "file": "internal/api/handlers.go",
+      "line": 130,
+      "handler": "h.newsletterData"
+    },
+    {
+      "method": "GET",
+      "route": "/api/admin/server-compare",
+      "file": "internal/api/handlers.go",
+      "line": 131,
+      "handler": "h.recoveredServerCompare"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/options",
+      "file": "internal/auth/auth.go",
+      "line": 388,
+      "handler": "inline"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/sso/config",
+      "file": "internal/auth/auth.go",
+      "line": 400,
+      "handler": "inline"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/status",
+      "file": "internal/auth/auth.go",
+      "line": 409,
+      "handler": "inline"
+    },
+    {
+      "method": "POST",
+      "route": "/api/auth/login",
+      "file": "internal/auth/auth.go",
+      "line": 422,
+      "handler": "m.login"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/me",
+      "file": "internal/auth/auth.go",
+      "line": 423,
+      "handler": "m.me"
+    },
+    {
+      "method": "POST",
+      "route": "/api/auth/logout",
+      "file": "internal/auth/auth.go",
+      "line": 424,
+      "handler": "m.logout"
+    },
+    {
+      "method": "POST",
+      "route": "/api/auth/signout",
+      "file": "internal/auth/auth.go",
+      "line": 425,
+      "handler": "m.logout"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/oidc/start",
+      "file": "internal/auth/auth.go",
+      "line": 426,
+      "handler": "m.oidcStart"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/oidc/callback",
+      "file": "internal/auth/auth.go",
+      "line": 427,
+      "handler": "m.oidcCallback"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/callback/oidc",
+      "file": "internal/auth/auth.go",
+      "line": 428,
+      "handler": "m.oidcCallback"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/callback/sso",
+      "file": "internal/auth/auth.go",
+      "line": 429,
+      "handler": "m.oidcCallback"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/session",
+      "file": "internal/auth/auth.go",
+      "line": 432,
+      "handler": "m.authSession"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/csrf",
+      "file": "internal/auth/auth.go",
+      "line": 433,
+      "handler": "m.authCSRF"
+    },
+    {
+      "method": "GET",
+      "route": "/api/auth/providers",
+      "file": "internal/auth/auth.go",
+      "line": 434,
+      "handler": "m.authProviders"
+    }
+  ],
+  "currentSourceChecks": [
+    {
+      "check": "Standard /users -> own profile",
+      "status": "corrected in source",
+      "evidence": {
+        "file": "web/dist/assets/app.js",
+        "line": 6022,
+        "symbol": "path === '/' || path === '/users' || path === '/dashboard'"
+      }
+    },
+    {
+      "check": "Unauthenticated route/query preserved via callbackUrl",
+      "status": "corrected in source",
+      "evidence": {
+        "file": "web/dist/assets/app.js",
+        "line": 6014,
+        "symbol": "'/login?callbackUrl=' + encodeURIComponent(path + window.location.search)"
+      }
+    },
+    {
+      "check": "Form login destination constrained to local path",
+      "status": "corrected in source",
+      "evidence": {
+        "file": "web/dist/assets/app.js",
+        "line": 3996,
+        "symbol": "const target = callback && callback.startsWith('/')"
+      }
+    },
+    {
+      "check": "Settings tab radius 12px",
+      "status": "corrected in source",
+      "evidence": {
+        "file": "web/dist/assets/navigation.css",
+        "line": 112,
+        "symbol": "body.navigation-settings .historical-settings-tabs a { border-radius:12px; }"
+      }
+    },
+    {
+      "check": "Standard profile frontend self guard",
+      "status": "present in current source",
+      "evidence": {
+        "file": "web/dist/assets/profile.js",
+        "line": 24,
+        "symbol": "!['me', '@me', State.user.jellyfinUserId].includes(userId)"
+      }
+    },
+    {
+      "check": "Standard profile backend ResolveAccount/self server scope",
+      "status": "present in current source",
+      "evidence": {
+        "file": "internal/api/handlers.go",
+        "line": 821,
+        "symbol": "identity, err := auth.ResolveAccount"
+      }
+    },
+    {
+      "check": "Newsletter standard lecture historical parity",
+      "status": "unresolved",
+      "evidence": {
+        "file": "web/dist/assets/app.js",
+        "line": 6022,
+        "symbol": "path === '/newsletter' || path.startsWith('/admin/')"
+      }
+    }
+  ]
+}

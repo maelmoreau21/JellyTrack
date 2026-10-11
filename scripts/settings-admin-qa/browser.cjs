@@ -67,7 +67,7 @@ function write(){fs.writeFileSync(path.join(output,'go-results.json'),JSON.strin
     await page.evaluate(url=>window.JellyTrackNavigation ? document.querySelector('#app-main').insertAdjacentHTML('beforeend', '<a data-link id="qa-alias" href="'+url+'">QA</a>'):null,alias);
     await page.locator('#qa-alias').click();await page.waitForTimeout(500);
     assert('Historical redirect '+alias,new URL(page.url()).pathname===target);
-    await page.goBack({waitUntil:'networkidle'});assert('Alias replaces history '+alias,new URL(page.url()).pathname==='/media');
+    await page.goBack({waitUntil:'networkidle'});assert('Alias replaces history '+alias,new URL(page.url()).pathname==='/media/all');
    }
   });
   await test('FR EN navigation translations',async()=>{

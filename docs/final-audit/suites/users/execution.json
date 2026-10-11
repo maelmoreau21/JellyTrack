@@ -1,0 +1,50 @@
+[
+  {
+    "script": "users-qa/seed-users.py",
+    "exitCode": 0,
+    "seconds": 0.54,
+    "recordedAt": "2026-10-10T11:35:06Z"
+  },
+  {
+    "script": "users-qa/browser-users.cjs",
+    "exitCode": 0,
+    "seconds": 32.07,
+    "recordedAt": "2026-10-10T11:35:38Z"
+  },
+  {
+    "script": "users-qa/profile-controls.cjs",
+    "exitCode": 0,
+    "seconds": 16.81,
+    "recordedAt": "2026-10-10T11:35:55Z"
+  },
+  {
+    "script": "users-qa/list-pagination.cjs",
+    "exitCode": 0,
+    "seconds": 5.5,
+    "recordedAt": "2026-10-10T11:36:00Z"
+  },
+  {
+    "script": "users-qa/historical-preferences.cjs",
+    "exitCode": 0,
+    "seconds": 3.46,
+    "recordedAt": "2026-10-10T11:36:04Z"
+  },
+  {
+    "script": "users-qa/audiobook.cjs",
+    "exitCode": 0,
+    "seconds": 3.5,
+    "recordedAt": "2026-10-10T11:36:07Z"
+  },
+  {
+    "script": "users-qa/telemetry.cjs",
+    "exitCode": 0,
+    "seconds": 3.93,
+    "recordedAt": "2026-10-10T11:36:11Z"
+  },
+  {
+    "script": "users-qa/wrapped-theme.cjs",
+    "exitCode": 0,
+    "seconds": 6.54,
+    "recordedAt": "2026-10-10T11:36:18Z"
+  }
+]

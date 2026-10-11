@@ -1,0 +1,24 @@
+ok  	github.com/maelmoreau21/jellytrack	3.852s
+ok  	github.com/maelmoreau21/jellytrack/cmd/jellytrack	6.008s
+ok  	github.com/maelmoreau21/jellytrack/internal/api	4.793s
+ok  	github.com/maelmoreau21/jellytrack/internal/auth	3.757s
+ok  	github.com/maelmoreau21/jellytrack/internal/backup	2.114s
+ok  	github.com/maelmoreau21/jellytrack/internal/cleanup	1.930s
+ok  	github.com/maelmoreau21/jellytrack/internal/config	0.651s
+ok  	github.com/maelmoreau21/jellytrack/internal/database	1.842s
+ok  	github.com/maelmoreau21/jellytrack/internal/history	3.336s
+ok  	github.com/maelmoreau21/jellytrack/internal/jellyfin	3.327s
+ok  	github.com/maelmoreau21/jellytrack/internal/logging	4.740s
+ok  	github.com/maelmoreau21/jellytrack/internal/media	4.556s
+?   	github.com/maelmoreau21/jellytrack/internal/models	[no test files]
+ok  	github.com/maelmoreau21/jellytrack/internal/plugin	12.851s
+ok  	github.com/maelmoreau21/jellytrack/internal/requestip	0.741s
+ok  	github.com/maelmoreau21/jellytrack/internal/scheduler	3.695s
+ok  	github.com/maelmoreau21/jellytrack/internal/security	3.132s
+ok  	github.com/maelmoreau21/jellytrack/internal/settings	3.125s
+ok  	github.com/maelmoreau21/jellytrack/internal/stats	3.492s
+ok  	github.com/maelmoreau21/jellytrack/internal/telemetry	3.108s
+ok  	github.com/maelmoreau21/jellytrack/internal/users	2.562s
+?   	github.com/maelmoreau21/jellytrack/migrations	[no test files]
+?   	github.com/maelmoreau21/jellytrack/scratch/navigation-qa/main-reference/node_modules/flatted/golang/pkg/flatted	[no test files]
+ok  	github.com/maelmoreau21/jellytrack/web	3.607s

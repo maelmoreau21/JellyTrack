@@ -1,0 +1,2739 @@
+{
+  "date": "2026-10-10",
+  "scope": "Real Go APIs and administrator login against isolated synthetic SQLite. No fixture responses substituted. Forced delays/errors only for recovery checks.",
+  "checks": [
+    {
+      "name": "Real administrator login",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset app.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset app.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset navigation.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset navigation.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset history.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset history-recovery.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset media-recovery.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset media-recovery.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset analytics-recovery.css",
+      "ok": true
+    },
+    {
+      "name": "Rendered /",
+      "ok": true
+    },
+    {
+      "name": "API route success /",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Chart initialized / chart-composed-trend",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized / chart-category-pie",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized / chart-library-plays",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized / chart-platform-dist",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized / chart-activity-by-hour",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized / chart-day-of-week",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized / chart-monthly-watch",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized / chart-completion-ratio",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized / chart-client-category",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized / chart-server-load",
+      "ok": true
+    },
+    {
+      "name": "Responsive viewport /",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /",
+      "ok": true
+    },
+    {
+      "name": "Rendered /recent",
+      "ok": true
+    },
+    {
+      "name": "API route success /recent",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Responsive viewport /recent",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /recent",
+      "ok": true
+    },
+    {
+      "name": "Rendered /media/all",
+      "ok": true
+    },
+    {
+      "name": "API route success /media/all",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Responsive viewport /media/all",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /media/all",
+      "ok": true
+    },
+    {
+      "name": "Rendered /media/popular",
+      "ok": true
+    },
+    {
+      "name": "API route success /media/popular",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Responsive viewport /media/popular",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /media/popular",
+      "ok": true
+    },
+    {
+      "name": "Rendered /media/collections",
+      "ok": true
+    },
+    {
+      "name": "API route success /media/collections",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Responsive viewport /media/collections",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /media/collections",
+      "ok": true
+    },
+    {
+      "name": "Rendered /media/analysis",
+      "ok": true
+    },
+    {
+      "name": "API route success /media/analysis",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Chart initialized /media/analysis mr-catalogue-genres",
+      "ok": true
+    },
+    {
+      "name": "Responsive viewport /media/analysis",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /media/analysis",
+      "ok": true
+    },
+    {
+      "name": "Rendered /media/qa-primary-movie",
+      "ok": true
+    },
+    {
+      "name": "API route success /media/qa-primary-movie",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Chart initialized /media/qa-primary-movie mr-completion",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized /media/qa-primary-movie mr-counters",
+      "ok": true
+    },
+    {
+      "name": "Responsive viewport /media/qa-primary-movie",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /media/qa-primary-movie",
+      "ok": true
+    },
+    {
+      "name": "Rendered /media/qa-primary-series",
+      "ok": true
+    },
+    {
+      "name": "API route success /media/qa-primary-series",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Chart initialized /media/qa-primary-series mr-counters",
+      "ok": true
+    },
+    {
+      "name": "Responsive viewport /media/qa-primary-series",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /media/qa-primary-series",
+      "ok": true
+    },
+    {
+      "name": "Rendered /media/qa-primary-episode1",
+      "ok": true
+    },
+    {
+      "name": "API route success /media/qa-primary-episode1",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Chart initialized /media/qa-primary-episode1 mr-completion",
+      "ok": true
+    },
+    {
+      "name": "Chart initialized /media/qa-primary-episode1 mr-counters",
+      "ok": true
+    },
+    {
+      "name": "Responsive viewport /media/qa-primary-episode1",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /media/qa-primary-episode1",
+      "ok": true
+    },
+    {
+      "name": "Rendered /media/artist/Artiste%20QA",
+      "ok": true
+    },
+    {
+      "name": "API route success /media/artist/Artiste%20QA",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Responsive viewport /media/artist/Artiste%20QA",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /media/artist/Artiste%20QA",
+      "ok": true
+    },
+    {
+      "name": "Rendered /logs",
+      "ok": true
+    },
+    {
+      "name": "API route success /logs",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Responsive viewport /logs",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /logs",
+      "ok": true
+    },
+    {
+      "name": "Rendered /newsletter",
+      "ok": true
+    },
+    {
+      "name": "API route success /newsletter",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Responsive viewport /newsletter",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Light theme /newsletter",
+      "ok": true
+    },
+    {
+      "name": "Rendered /wrapped/qa-primary-alice",
+      "ok": true
+    },
+    {
+      "name": "API route success /wrapped/qa-primary-alice",
+      "ok": true,
+      "details": "[]"
+    },
+    {
+      "name": "Responsive viewport /wrapped/qa-primary-alice",
+      "ok": true,
+      "details": {
+        "scroll": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "Historical selector updates URL and request",
+      "ok": true
+    },
+    {
+      "name": "Custom date modal",
+      "ok": true
+    },
+    {
+      "name": "Cancel keeps selected period",
+      "ok": true
+    },
+    {
+      "name": "Tab analytics has rendered content",
+      "ok": true
+    },
+    {
+      "name": "Tab analytics real chart data",
+      "ok": true
+    },
+    {
+      "name": "Responsive tab analytics",
+      "ok": true
+    },
+    {
+      "name": "Tab network has rendered content",
+      "ok": true
+    },
+    {
+      "name": "Tab network real chart data",
+      "ok": true
+    },
+    {
+      "name": "Responsive tab network",
+      "ok": true
+    },
+    {
+      "name": "Analytics chart navigates history",
+      "ok": true,
+      "details": "http://localhost:3350/logs?dateFrom=2026-10-03&dateTo=2026-10-03&hideZapped=false&days=all"
+    },
+    {
+      "name": "Live message modal",
+      "ok": true
+    },
+    {
+      "name": "Message timeout selection",
+      "ok": true
+    },
+    {
+      "name": "Message Escape closes",
+      "ok": true
+    },
+    {
+      "name": "Stop confirmation modal",
+      "ok": true
+    },
+    {
+      "name": "Cancelled stop makes no command",
+      "ok": true
+    },
+    {
+      "name": "API succeeds /api/media?parents=true&limit=1",
+      "ok": true
+    },
+    {
+      "name": "API succeeds /api/media?parents=true&servers=qa-primary&limit=1",
+      "ok": true
+    },
+    {
+      "name": "All and primary parent counts",
+      "ok": true,
+      "details": {
+        "all": 112,
+        "primary": 56
+      }
+    },
+    {
+      "name": "API succeeds /api/media?parents=true&q=Actrice%20QA&servers=qa-primary&limit=200",
+      "ok": true
+    },
+    {
+      "name": "API succeeds /api/media?parents=true&q=Studio%20QA&servers=qa-primary&limit=200",
+      "ok": true
+    },
+    {
+      "name": "Actor and studio search real metadata",
+      "ok": true
+    },
+    {
+      "name": "API succeeds /api/media?parents=true&excludeTypes=Movie,Series&servers=qa-primary",
+      "ok": true
+    },
+    {
+      "name": "Historic multi-category exclusion",
+      "ok": true
+    },
+    {
+      "name": "API succeeds /api/media/qa-primary-episode1",
+      "ok": true
+    },
+    {
+      "name": "Episode recorded hierarchy",
+      "ok": true
+    },
+    {
+      "name": "API succeeds /api/media/qa-primary-movie",
+      "ok": true
+    },
+    {
+      "name": "Film genuine playback aggregates",
+      "ok": true,
+      "details": {
+        "plays": 17,
+        "durationMs": 81600000
+      }
+    },
+    {
+      "name": "API succeeds /api/history?days=all&query=Film%20principal&servers=qa-primary",
+      "ok": true
+    },
+    {
+      "name": "History title and server filter",
+      "ok": true
+    },
+    {
+      "name": "Search stored URL",
+      "ok": true
+    },
+    {
+      "name": "Search actual results",
+      "ok": true
+    },
+    {
+      "name": "Real empty search",
+      "ok": true
+    },
+    {
+      "name": "Catalogue second page",
+      "ok": true
+    },
+    {
+      "name": "Catalogue page2 nonempty",
+      "ok": true
+    },
+    {
+      "name": "Recent page2 nonempty",
+      "ok": true
+    },
+    {
+      "name": "Catalogue historical redirect retains filters",
+      "ok": true
+    },
+    {
+      "name": "Library search filters cards",
+      "ok": true
+    },
+    {
+      "name": "Analysis person controls",
+      "ok": true
+    },
+    {
+      "name": "People modal fetched real search",
+      "ok": true
+    },
+    {
+      "name": "People Escape closes",
+      "ok": true
+    },
+    {
+      "name": "Recorded telemetry events",
+      "ok": true
+    },
+    {
+      "name": "Telemetry event modal visible",
+      "ok": true
+    },
+    {
+      "name": "Timeline user URL retained",
+      "ok": true
+    },
+    {
+      "name": "50 rows per historical page",
+      "ok": true
+    },
+    {
+      "name": "Advanced filters expansion",
+      "ok": true
+    },
+    {
+      "name": "Preset actual results",
+      "ok": true
+    },
+    {
+      "name": "Columns chooser opened",
+      "ok": true
+    },
+    {
+      "name": "Session modal visible",
+      "ok": true
+    },
+    {
+      "name": "Session Escape closes",
+      "ok": true
+    },
+    {
+      "name": "System file inventory",
+      "ok": true
+    },
+    {
+      "name": "System log downloads actual file",
+      "ok": true
+    },
+    {
+      "name": "Newsletter downloadable PNG",
+      "ok": true
+    },
+    {
+      "name": "Wrapped next",
+      "ok": true
+    },
+    {
+      "name": "Wrapped keyboard",
+      "ok": true
+    },
+    {
+      "name": "Wrapped configuration modal",
+      "ok": true
+    },
+    {
+      "name": "Wrapped configuration Escape",
+      "ok": true
+    },
+    {
+      "name": "Wrapped close returns profile",
+      "ok": true
+    },
+    {
+      "name": "Loading state visible",
+      "ok": true
+    },
+    {
+      "name": "Explicit error state",
+      "ok": true
+    },
+    {
+      "name": "Retry loads real data",
+      "ok": true
+    },
+    {
+      "name": "No untranslated keys EN /media/all",
+      "ok": true
+    },
+    {
+      "name": "No untranslated keys EN /media/analysis",
+      "ok": true
+    },
+    {
+      "name": "No untranslated keys EN /logs",
+      "ok": true
+    },
+    {
+      "name": "No untranslated keys EN /newsletter",
+      "ok": true
+    },
+    {
+      "name": "No untranslated keys EN /wrapped/qa-primary-alice",
+      "ok": true
+    },
+    {
+      "name": "Seven historical settings tabs retained",
+      "ok": true
+    },
+    {
+      "name": "Historical admin health heading",
+      "ok": true
+    },
+    {
+      "name": "Genuine standard identity",
+      "ok": true
+    },
+    {
+      "name": "Standard reads /api/media?parents=true",
+      "ok": true
+    },
+    {
+      "name": "Standard reads /api/media/qa-primary-movie",
+      "ok": true
+    },
+    {
+      "name": "Standard reads /api/history?days=all",
+      "ok": true
+    },
+    {
+      "name": "Standard reads /api/wrapped/qa-primary-alice",
+      "ok": true
+    },
+    {
+      "name": "Standard administrator restriction /api/logs/system",
+      "ok": true
+    },
+    {
+      "name": "Standard administrator restriction /api/settings",
+      "ok": true
+    },
+    {
+      "name": "Standard administrator restriction /api/media/analysis",
+      "ok": true
+    },
+    {
+      "name": "History scoped to Alice primary",
+      "ok": true
+    },
+    {
+      "name": "Standard media analysis tab hidden",
+      "ok": true
+    },
+    {
+      "name": "No uncaught JavaScript exceptions",
+      "ok": true,
+      "details": "[]"
+    }
+  ],
+  "pages": [
+    {
+      "route": "/",
+      "actual": "/",
+      "headings": [
+        "Tableau de bord"
+      ],
+      "errors": [],
+      "charts": [
+        {
+          "id": "chart-composed-trend",
+          "rendered": true,
+          "labels": 8,
+          "type": "line"
+        },
+        {
+          "id": "chart-category-pie",
+          "rendered": true,
+          "labels": 4,
+          "type": "doughnut"
+        },
+        {
+          "id": "chart-library-plays",
+          "rendered": true,
+          "labels": 8,
+          "type": "line"
+        },
+        {
+          "id": "chart-platform-dist",
+          "rendered": true,
+          "labels": 3,
+          "type": "doughnut"
+        },
+        {
+          "id": "chart-activity-by-hour",
+          "rendered": true,
+          "labels": 24,
+          "type": "bar"
+        },
+        {
+          "id": "chart-day-of-week",
+          "rendered": true,
+          "labels": 7,
+          "type": "bar"
+        },
+        {
+          "id": "chart-monthly-watch",
+          "rendered": true,
+          "labels": 12,
+          "type": "bar"
+        },
+        {
+          "id": "chart-completion-ratio",
+          "rendered": true,
+          "labels": 2,
+          "type": "doughnut"
+        },
+        {
+          "id": "chart-client-category",
+          "rendered": true,
+          "labels": 3,
+          "type": "bar"
+        },
+        {
+          "id": "chart-server-load",
+          "rendered": true,
+          "labels": 8,
+          "type": "line"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Tous les Médias"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Films"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Séries"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Musique"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Livres"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Tous les serveurs"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "QA principal"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "QA secondaire"
+        },
+        {
+          "tag": "SELECT",
+          "id": "dash-time-select",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "24h"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "7j"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "30j"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "90j"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "1 an"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Tout"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Personnalisé"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-refresh-dashboard",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Vue d'ensemble"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Analyses détaillées"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Réseau"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-toggle-draggable-edit",
+          "name": "",
+          "text": "Modifier l'ordre"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-heatmap-prev-year",
+          "name": "",
+          "text": "◀"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-heatmap-next-year",
+          "name": "",
+          "text": "▶"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Tout"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Audio"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Book"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Movie"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Series"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-toggle-live-view",
+          "name": "",
+          "text": "🗂️ Vue Cartes"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "💬 Message"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Arrêter"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "💬 Message"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Arrêter"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-monthly-prev-year",
+          "name": "",
+          "text": "◀"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-monthly-next-year",
+          "name": "",
+          "text": "▶"
+        }
+      ],
+      "body": "Tableau de bord\nTous les Médias\nFilms\nSéries\nMusique\nLivres\nTous les serveurs\nQA principal\nQA secondaire\nDernières 24h\n7 derniers jours\n30 derniers jours\nTout temps\nPersonnalisé\n90j\n1 an\nMoniteur : Actif\nDernier sondage : Jamais\nSynchro : Jamais\nSauvegarde : Jamais\nSanté\nFlux Actifs\n2\nLectures orphelines ouvertes\n0\nBibliothèques exclues\n0\nAujourd'hui\n14\nlectures\n6.0h\nvisionnées\n4\nutilisateur(s) actif(s)\nVue d'ensemble\nAnalyses détaillées\nRéseau\nModifier l'ordre\nFlux Actifs\n2\nActuellement géré par le serveur\nLectures Totales\n75\n+31.6%\nvs 57 période préc.\nLecture Directe\n33%DP\nLecture sans transcodage (Période)\nTemps Visionnage\n40,8h\n+27.5%\nvs 32h période préc.\nUtilisateurs actifs\n4\n+100.0%\nvs 2 période préc.\nFilms\n10 vues\n13.3h visionnés\nSéries & Épisodes\n30 lectures\n15h marathonnés\nMusique\n27 titres\n1.3h écoutés\nLivres & Audiobooks\n8 ouvertures\n11.1h passés\nVolume Temporel\nÉvolution des heures de visionnage par bibliothèque.\nRépartition par Catégorie\nPart du volume total de lecture (Heures).\nLectures par Bibliothèque\nNombre de lectures quotidiennes par type. Cliquez pour isoler.\nActivité Annuelle\n147 sessions enregistrées en 2026\n◀\n2026\n▶\nTout\nAudio\nBook\nMovie\nSeries\n\t\tJan\tFév\tMar\tAvr\tMai\tJuin\tJuil\tAoû\tSep\tOct\tNov\tDéc\nL\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nM\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nM\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nJ\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nV\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nS\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\nD\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\n\t\nMoins\nPlus\nPlus Grands Fans\nUtilisateurs les plus actifs.\n#1\nAlice QA\n22.4h\n#2\nBob QA\n11.2h\n#3\nAlice QA\n4.8h\n#4\nBob QA\n2.4h\nÉcosystème Clients\nDistribution des plateformes de lecture (Top 8).\nFlux en direct\n2 Flux Actifs (24 Mbps)\n🗂️ Vue Cartes\nFilm principal QA\n⏸ En pause\n👤 Alice QA\n📱 QA browser\nDirectPlay\n🔊 AAC (fre)\n💬 Message\nArrêter\nFilm principal QA\n⏸ En pause\n👤 Alice QA\n📱 QA browser\nDirectPlay\n🔊 AAC (fre)\n💬 Message\nArrêter\nActivité par Heure\nHeure de début des sessions sur la période.\nActivité par Jour\nNombre de sessions par jour de la semaine.\nTemps Mensuel\nHeures de visionnage par mois (12 derniers mois).\n◀\n2026\n▶\nTaux de Complétion\nRatio sessions terminées vs abandonnées vs partielles.\nFamilles de Clients\nTV, Web, Mobile, Desktop — catégorisation automatique.\nCharge du Serveur (Flux Simultanés)\nÉvolution temporelle du nombre de flux actifs simultanés enregistrés.\nTendances émergentes\nContenus en hausse cette semaine vs la semaine précédente.\n#1\nLivre principal QA\n7 lectures cette semaine\nNouveau\n#2\nÉpisode 1\n7 lectures cette semaine\nNouveau\n#3\nÉpisode 2\n7 lectures cette semaine\nNouveau\n#4\nÉpisode 3\n7 lectures cette semaine\nNouveau\n#5\nFilm principal QA\n7 lectures cette semaine\nNouveau\n#6\nPiste 1\n7 lectures cette semaine\nNouveau\n#7\nPiste 2\n7 lectures cette semaine\nNouveau\n#8\nPiste 3\n7 lectures cette semaine\nNouveau\nPrévisions des pics d'affluence\nPics de sessions prévus basés sur les 4 dernières semaines.\nVen\n06h\n~1 flux\n65%\nSam\n05h\n~1 flux\n65%\nVen\n05h\n~1 flux\n65%\nSam\n03h\n~1 flux\n65%\nSam\n00h\n~1 flux\n65%\nSam\n01h\n~1 flux\n65%\nVen\n04h\n~1 flux\n65%\nVen\n03h\n~1 flux\n65%\nSam\n02h\n~1 flux\n65%\nSam\n06h\n~1 flux\n65%\n\nBasé sur l'historique des 4 dernières semaines\n\nRessources du processus"
+    },
+    {
+      "route": "/recent",
+      "actual": "/recent",
+      "headings": [
+        "Ajouts récents"
+      ],
+      "errors": [],
+      "charts": [],
+      "controls": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "SELECT",
+          "id": "mr-extra-types",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "← Précédent"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Suivant →"
+        }
+      ],
+      "body": "Ajouts récents\n112 médias\nServeurs\nQA principal\nQA secondaire\nAutres contenus\nNOUVEAU\nFilm\n4K\nFilm QA 49\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 49\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 37\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 37\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 25\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 25\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 13\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 13\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 01\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 01\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm principal QA\n2 vue(s) · 2h 40m\naujourd’hui\nDrama · QA\nFilm principal QA\naujourd’hui · 2 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 49\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 49\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 37\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 37\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 25\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 25\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 13\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 13\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 01\n0 vue(s) · 0 min\naujourd’hui\nDrama · QA\nFilm QA 01\naujourd’hui · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm principal QA\n17 vue(s) · 22h 40m\naujourd’hui\nDrama · QA\nFilm principal QA\naujourd’hui · 17 vue(s)\nNOUVEAU\nSérie\n1080p\nSérie principale QA\n6 vue(s) · 3h\nhier\nDrama · QA\nSérie principale QA\nhier · 6 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 50\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 50\nhier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 38\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 38\nhier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 26\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 26\nhier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 02\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 02\nhier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 14\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 14\nhier · 0 vue(s)\nNOUVEAU\nSérie\n1080p\nSérie principale QA\n51 vue(s) · 25h 30m\nhier\nDrama · QA\nSérie principale QA\nhier · 51 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 50\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 50\nhier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 38\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 38\nhier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 26\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 26\nhier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 02\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 02\nhier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 14\n0 vue(s) · 0 min\nhier\nDrama · QA\nFilm QA 14\nhier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 51\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 51\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 39\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 39\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 03\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 03\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 27\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 27\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 15\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 15\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 51\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 51\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 39\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 39\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 03\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 03\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 27\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 27\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 15\n0 vue(s) · 0 min\navant-hier\nDrama · QA\nFilm QA 15\navant-hier · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 52\n0 vue(s) · 0 min\nil y a 3 jours\nDrama · QA\nFilm QA 52\nil y a 3 jours · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 40\n0 vue(s) · 0 min\nil y a 3 jours\nDrama · QA\nFilm QA 40\nil y a 3 jours · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 04\n0 vue(s) · 0 min\nil y a 3 jours\nDrama · QA\nFilm QA 04\nil y a 3 jours · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 28\n0 vue(s) · 0 min\nil y a 3 jours\nDrama · QA\nFilm QA 28\nil y a 3 jours · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 16\n0 vue(s) · 0 min\nil y a 3 jours\nDrama · QA\nFilm QA 16\nil y a 3 jours · 0 vue(s)\nNOUVEAU\nFilm\n4K\nFilm QA 52\n0 vue(s) · 0 min\nil y a 3 jours\nDrama · QA\nFilm QA 52\nil y a 3 jours · 0 vue(s)\n← Précédent\nPage 1 sur 3\nSuivant →"
+    },
+    {
+      "route": "/media/all",
+      "actual": "/media/all",
+      "headings": [
+        "Tous les Médias"
+      ],
+      "errors": [],
+      "charts": [],
+      "controls": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Tout"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Films"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Séries"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Musique"
+        },
+        {
+          "tag": "INPUT",
+          "id": "mr-search",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "mr-search-clear",
+          "name": "",
+          "text": "✕"
+        },
+        {
+          "tag": "SELECT",
+          "id": "mr-sort",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "SELECT",
+          "id": "mr-extra-types",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "← Précédent"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Suivant →"
+        }
+      ],
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTous les Médias\n112 médias\nServeurs\nQA principal\nQA secondaire\nTout\nFilms\nSéries\nMusique\nTrier par :\nPopularité (Vues)\nTemps Visionnage\nQualité\nTitre\nDate d'ajout\nDernière lecture\nDurée du média\nAutres contenus\nAlbum\n3495 kbps\nAlbum principal QA\nArtiste QA\n51 vue(s) · 2h 30m\nRock\nAlbum principal QA\n51 vue(s) · 2h 30m\nSérie\n1080p\nSérie principale QA\n51 vue(s) · 25h 30m\nDrama · QA\nSérie principale QA\n51 vue(s) · 25h 30m\nFilm\n4K\nFilm principal QA\n17 vue(s) · 22h 40m\nDrama · QA\nFilm principal QA\n17 vue(s) · 22h 40m\nSérie\n1080p\nSérie principale QA\n6 vue(s) · 3h\nDrama · QA\nSérie principale QA\n6 vue(s) · 3h\nAlbum\n3495 kbps\nAlbum principal QA\nArtiste QA\n3 vue(s) · 8 min\nRock\nAlbum principal QA\n3 vue(s) · 8 min\nFilm\n4K\nFilm principal QA\n2 vue(s) · 2h 40m\nDrama · QA\nFilm principal QA\n2 vue(s) · 2h 40m\nFilm\n4K\nFilm QA 00\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 00\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 00\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 00\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 01\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 01\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 01\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 01\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 02\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 02\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 02\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 02\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 03\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 03\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 03\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 03\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 04\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 04\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 04\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 04\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 05\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 05\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 05\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 05\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 06\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 06\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 06\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 06\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 07\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 07\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 07\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 07\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 08\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 08\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 08\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 08\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 09\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 09\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 09\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 09\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 10\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 10\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 10\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 10\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 11\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 11\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 11\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 11\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 12\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 12\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 12\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 12\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 13\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 13\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 13\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 13\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 14\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 14\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 14\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 14\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 15\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 15\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 15\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 15\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 16\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 16\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 16\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 16\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 17\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 17\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 17\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 17\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 18\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 18\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 18\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 18\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 19\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 19\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 19\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 19\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 20\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 20\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 20\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 20\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 21\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 21\n0 vue(s) · 0 min\nFilm\n4K\nFilm QA 21\n0 vue(s) · 0 min\nDrama · QA\nFilm QA 21\n0 vue(s) · 0 min\n← Précédent\nPage 1 sur 3\nSuivant →"
+    },
+    {
+      "route": "/media/popular",
+      "actual": "/media/popular",
+      "headings": [
+        "Top Contenus",
+        "Top Films",
+        "Top Séries",
+        "Top Titres Musicaux",
+        "Top Réalisateurs",
+        "Top Acteurs",
+        "Top Studios"
+      ],
+      "errors": [],
+      "charts": [],
+      "controls": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        }
+      ],
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTop Contenus\nServeurs\nQA principal\nQA secondaire\nTop Films\n\nLes films les plus visionnés.\n\n#1\nFilm principal QA\n17 vue(s)\n22.7h\n#2\nFilm principal QA\n2 vue(s)\n2.7h\nTop Séries\n\nLes séries les plus suivies.\n\n#1\nSérie principale QA\n51 vue(s)\n25.5h\n#2\nSérie principale QA\n6 vue(s)\n3h\nTop Titres Musicaux\n\nLes musiques les plus écoutées.\n\n#1\nPiste 1\n17 vue(s)\n1.1h\n#2\nPiste 2\n17 vue(s)\n0.8h\n#3\nPiste 3\n17 vue(s)\n0.6h\n#4\nPiste 1\n1 vue(s)\n0.1h\n#5\nPiste 2\n1 vue(s)\n0.1h\nTop Réalisateurs\n\nLes réalisateurs les plus visionnés.\n\n#1\nRéalisateur QA\n76 vue(s)\n53.8h\nTop Acteurs\n\nLes acteurs les plus visionnés.\n\n#1\nActrice QA\n76 vue(s)\n53.8h\nTop Studios\n\nLes studios les plus populaires.\n\n#1\nStudio QA\n76 vue(s)\n53.8h"
+    },
+    {
+      "route": "/media/collections",
+      "actual": "/media/collections",
+      "headings": [
+        "Collections",
+        "Détails par Collection 8",
+        "Films",
+        "Leader",
+        "Nouveauté",
+        "Films",
+        "Leader",
+        "Nouveauté",
+        "Livres",
+        "Leader",
+        "Nouveauté",
+        "Livres",
+        "Leader",
+        "Nouveauté",
+        "Musique",
+        "Leader",
+        "Nouveauté",
+        "Musique",
+        "Leader",
+        "Nouveauté",
+        "Séries",
+        "Leader",
+        "Nouveauté",
+        "Séries",
+        "Leader",
+        "Nouveauté"
+      ],
+      "errors": [],
+      "charts": [],
+      "controls": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "mr-library-search",
+          "name": "",
+          "text": ""
+        }
+      ],
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nCollections\nServeurs\nQA principal\nQA secondaire\nVolume du Disque\n11,9 GiB\nEspace total utilisé\nContenu Total\n118\nInventaire des bibliothèques\nTemps Total\n169h 24m\nDurée cumulée des médias\nDétails par Collection 8\nFilms\nFilms QA\nQA principal\n5,3 GiB\n54 Film\n81h\nLeader\nFilm principal QA\n17 vue(s)\nNouveauté\nFilm QA 49\naujourd’hui\nFilms\nFilms QA\nQA secondaire\n5,3 GiB\n54 Film\n81h\nLeader\nFilm principal QA\n2 vue(s)\nNouveauté\nFilm QA 49\naujourd’hui\nLivres\nLivres QA\nQA principal\n100 MiB\n1 Book\n2h\nLeader\nLivre principal QA\n16 vue(s)\nNouveauté\nLivre principal QA\nil y a 10 jours\nLivres\nLivres QA\nQA secondaire\n100 MiB\n1 Book\n2h\nLeader\nLivre principal QA\n1 vue(s)\nNouveauté\nLivre principal QA\nil y a 10 jours\nMusique\nMusique QA\nQA principal\n300 MiB\n3 Album\n12 min\nLeader\nAlbum principal QA\n51 vue(s)\nNouveauté\nAlbum principal QA\nil y a 6 jours\nÉpisodes et pistes\nMusique\nMusique QA\nQA secondaire\n300 MiB\n3 Album\n12 min\nLeader\nAlbum principal QA\n3 vue(s)\nNouveauté\nAlbum principal QA\nil y a 6 jours\nÉpisodes et pistes\nSéries\nSéries QA\nQA principal\n300 MiB\n1 Série\n1h 30m\nLeader\nSérie principale QA\n51 vue(s)\nNouveauté\nSérie principale QA\nhier\nÉpisodes et pistes\nSéries\nSéries QA\nQA secondaire\n300 MiB\n1 Série\n1h 30m\nLeader\nSérie principale QA\n6 vue(s)\nNouveauté\nSérie principale QA\nhier\nÉpisodes et pistes"
+    },
+    {
+      "route": "/media/analysis",
+      "actual": "/media/analysis",
+      "headings": [
+        "Analyse Profonde",
+        "Contenu Total",
+        "Qualité Vidéo Globale",
+        "Collections",
+        "Diversité de la Bibliothèque (Top Genres)",
+        "Binge-watching",
+        "Suggestions d'acquisition",
+        "Enrichir la collection Drama",
+        "Films & Séries QA",
+        "Compléter la filmographie / discographie de Artiste QA",
+        "Tendances sur 30 jours",
+        "Aperçu des statistiques approfondies",
+        "Top Réalisateurs",
+        "Acteurs",
+        "Studios"
+      ],
+      "errors": [],
+      "charts": [
+        {
+          "id": "mr-catalogue-genres",
+          "rendered": true,
+          "labels": 3,
+          "type": "bar"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Réalisateur QA147 vue(s)"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Actrice QA147 vue(s)"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Studio QA147 vue(s)"
+        }
+      ],
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nAnalyse Profonde\nServeurs\nQA principal\nQA secondaire\nContenu Total\n\nInventaire des bibliothèques\n\nMédias Totaux\n112\nNombre d'éléments multimédia indexés.\nGenres uniques\n3\nDurée moyenne\n1h 30m\nDurée moyenne des médias.\nQualité Vidéo Globale\n\nRépartition par résolution certifiée.\n\n4K UHD\n108\n1440p QHD\n0\n1080p FHD\n2\n720p HD\n0\nStandard / Autre\n0\nCollections\nFilms QA\n108\nMusique QA\n2\nSéries QA\n2\nDiversité de la Bibliothèque (Top Genres)\n\nRépartition des médias par genre (catégories principales).\n\nBinge-watching\n\nAu moins 3 épisodes de la même série, séparés de 45 minutes maximum.\n\nSessions sur 30 jours\n0\nÉpisodes par session\n0\nRecord\n0\nSpectateur leader\nAucune lecture\nAucune lecture\nSuggestions d'acquisition\nTrès Forte Demande · 99% · Score indicatif\nEnrichir la collection Drama\n\nReprésente 97% du temps total de visionnage (77.4h). Vos spectateurs en redemandent !\n\nTendance Forte · 85% · Score indicatif\nFilms & Séries QA\n\nDeuxième genre le plus plébiscité avec 77.4h visionnées sur les 30 derniers jours.\n\nFavori Utilisateurs · 92% · Score indicatif\nCompléter la filmographie / discographie de Artiste QA\n\nCumule 2.7h d'écoute/visionnage sur 54 lectures.\n\nTendances sur 30 jours\nDrama\n77h 26m · 97%\nQA\n77h 26m · 97%\nRock\n2h 39m · 3%\nAperçu des statistiques approfondies\n\nAnalyses avancées de votre collection multimédia.\n\nTop Réalisateurs\nRéalisateur QA\n147 vue(s)\nActeurs\nActrice QA\n147 vue(s)\nStudios\nStudio QA\n147 vue(s)"
+    },
+    {
+      "route": "/media/qa-primary-movie",
+      "actual": "/media/qa-primary-movie",
+      "headings": [
+        "Film principal QA",
+        "Résumé Télémétrie",
+        "Analyse des passages",
+        "Passages sautés / revus",
+        "Vitesses de lecture",
+        "Changements audio / sous-titres",
+        "Périodes de langue",
+        "Spectateurs (2)",
+        "Langues Audio",
+        "Sous-titres",
+        "Distribution de la Complétion",
+        "Chronologie Profonde",
+        "Télémétrie par Session",
+        "Historique Détaillé"
+      ],
+      "errors": [],
+      "charts": [
+        {
+          "id": "mr-completion",
+          "rendered": true,
+          "labels": 10,
+          "type": "bar"
+        },
+        {
+          "id": "mr-counters",
+          "rendered": true,
+          "labels": 17,
+          "type": "line"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "mr-rotate",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Réalisateur QA"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Actrice QA"
+        },
+        {
+          "tag": "SELECT",
+          "id": "mr-timeline-user",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "SELECT",
+          "id": "mr-timeline-session",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Bob QAqa-primary-p"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "3"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "10 oct. 2026, 08:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "9 oct. 2026, 08:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "8 oct. 2026, 08:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "7 oct. 2026, 08:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "6 oct. 2026, 08:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "5 oct. 2026, 08:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "4 oct. 2026, 08:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "3 oct. 2026, 08:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "2 oct. 2026, 08:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "1 oct. 2026, 08:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "30 sept. 2026, 08:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "29 sept. 2026, 08:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "28 sept. 2026, 08:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "27 sept. 2026, 08:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "26 sept. 2026, 08:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "25 sept. 2026, 08:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "24 sept. 2026, 08:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "← Précédent"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Suivant →"
+        }
+      ],
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nFilms QA\n›\nFilm principal QA\nFilm principal QA\nFilm\n4K\nDRAMA\nQA\n\nQA principal · 1h 30m · 100 MiB\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nTemps Total\n22.7h\nCumulé\nVues\n17\nSessions uniques\nDurée Moyenne\n80 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n34\nSauts\n17\nRetours\n0\nChangements de vitesse\n17\nModif. Audio\n17\nModif. Sous-titres\n17\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 1 sessions\n1\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 1 sessions\n1\nPériodes de langue\neng (aac) · 0–4800 s · 16 sessions\n16\neng (aac) · 0–120 s · 1 sessions\n1\nfre · 120–4800 s · 1 sessions\n1\nSpectateurs (2)\nAlice QA\n11 Sessions · 14h 40m\nBob QA\n6 Sessions · 8h\nLangues Audio\neng (aac)\n17\nSous-titres\nAucun\n17\nDistribution de la Complétion\n\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\n\nChronologie Profonde\nUtilisateur\nTous les Utilisateurs\nAlice QA\nBob QA\nSession\nToutes les sessions\nBob QA · qa-primary-p\nAlice QA · 9 oct. 2026, 08:49\nAlice QA · 8 oct. 2026, 08:51\nBob QA · 7 oct. 2026, 08:48\nAlice QA · 6 oct. 2026, 08:50\nAlice QA · 5 oct. 2026, 08:52\nBob QA · 4 oct. 2026, 08:49\nAlice QA · 3 oct. 2026, 08:51\nAlice QA · 2 oct. 2026, 08:48\nBob QA · 1 oct. 2026, 08:50\nAlice QA · 30 sept. 2026, 08:52\nAlice QA · 29 sept. 2026, 08:49\nBob QA · 28 sept. 2026, 08:51\nAlice QA · 27 sept. 2026, 08:48\nAlice QA · 26 sept. 2026, 08:50\nBob QA · 25 sept. 2026, 08:52\nAlice QA · 24 sept. 2026, 08:49\nBob QA\nqa-primary-p\n3\n0\n45 min\n1h 30m\nTélémétrie par Session\n\nPauses, changements d'audio et de sous-titres au fil du temps.\n\nHistorique Détaillé\nUTILISATEUR\tDATE\tMÉTHODE\tAUDIO\tSOUS-TITRES\tPAUSES\tSAUTS\tRETOURS\tVITESSE MAX\tDURÉE\nBob QA\t10 oct. 2026, 08:52\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t9 oct. 2026, 08:49\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t8 oct. 2026, 08:51\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t7 oct. 2026, 08:48\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t6 oct. 2026, 08:50\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t5 oct. 2026, 08:52\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t4 oct. 2026, 08:49\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t3 oct. 2026, 08:51\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t2 oct. 2026, 08:48\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t1 oct. 2026, 08:50\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t30 sept. 2026, 08:52\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t29 sept. 2026, 08:49\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t28 sept. 2026, 08:51\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t27 sept. 2026, 08:48\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t26 sept. 2026, 08:50\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nBob QA\t25 sept. 2026, 08:52\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\nAlice QA\t24 sept. 2026, 08:49\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t1h 20m\n← Précédent\nPage 1 sur 1\nSuivant →"
+    },
+    {
+      "route": "/media/qa-primary-series",
+      "actual": "/media/qa-primary-series",
+      "headings": [
+        "Série principale QA",
+        "Saisons (1)",
+        "Résumé Télémétrie",
+        "Analyse des passages",
+        "Passages sautés / revus",
+        "Vitesses de lecture",
+        "Changements audio / sous-titres",
+        "Périodes de langue",
+        "Spectateurs (2)",
+        "Langues Audio",
+        "Sous-titres",
+        "Chronologie Profonde",
+        "Télémétrie par Session",
+        "Historique Détaillé"
+      ],
+      "errors": [],
+      "charts": [
+        {
+          "id": "mr-counters",
+          "rendered": true,
+          "labels": 51,
+          "type": "line"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "mr-rotate",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Réalisateur QA"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Actrice QA"
+        },
+        {
+          "tag": "SELECT",
+          "id": "mr-timeline-user",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "SELECT",
+          "id": "mr-timeline-session",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Bob QAqa-primary-p"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Alice QAqa-primary-p"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Alice QAqa-primary-p"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "10 oct. 2026, 07:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "10 oct. 2026, 06:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "10 oct. 2026, 05:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "9 oct. 2026, 07:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "9 oct. 2026, 06:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "9 oct. 2026, 05:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "8 oct. 2026, 07:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "8 oct. 2026, 06:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "8 oct. 2026, 05:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "7 oct. 2026, 07:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "7 oct. 2026, 06:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "7 oct. 2026, 05:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "6 oct. 2026, 07:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "6 oct. 2026, 06:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "6 oct. 2026, 05:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "5 oct. 2026, 07:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "5 oct. 2026, 06:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "5 oct. 2026, 05:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "4 oct. 2026, 07:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "4 oct. 2026, 06:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "4 oct. 2026, 05:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "3 oct. 2026, 07:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "3 oct. 2026, 06:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "3 oct. 2026, 05:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "2 oct. 2026, 07:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "← Précédent"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Suivant →"
+        }
+      ],
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nSéries QA\n›\nSérie principale QA\nSérie principale QA\nSérie\n1080p\nDRAMA\nQA\n\nQA principal\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nSaisons (1)\n#\tTITRE\tTYPE\tRÉSOLUTION\tSESSIONS\tTEMPS TOTAL\n1\tSaison 1\tSaison\t1080p\t51\t25h 30m\nTemps Total\n25.5h\nCumulé\nVues\n51\nSessions uniques\nDurée Moyenne\n30 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n102\nSauts\n51\nRetours\n0\nChangements de vitesse\n51\nModif. Audio\n51\nModif. Sous-titres\n51\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 3 sessions\n3\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 3 sessions\n3\nPériodes de langue\neng (subrip) · 0–1800 s · 34 sessions\n34\nfre (aac) · 0–1800 s · 32 sessions\n32\neng (aac) · 0–1800 s · 16 sessions\n16\nfre · 120–1800 s · 3 sessions\n3\nfre (aac) · 0–120 s · 2 sessions\n2\neng (aac) · 0–120 s · 1 sessions\n1\nSpectateurs (2)\nAlice QA\n34 Sessions · 17h\nBob QA\n17 Sessions · 8h 30m\nLangues Audio\nfre (aac)\n34\neng (aac)\n17\nSous-titres\neng (subrip)\n34\nAucun\n17\nChronologie Profonde\nUtilisateur\nTous les Utilisateurs\nAlice QA\nBob QA\nSession\nToutes les sessions\nAlice QA · qa-primary-p\nAlice QA · qa-primary-p\nBob QA · qa-primary-p\nBob QA · 9 oct. 2026, 07:48\nAlice QA · 9 oct. 2026, 06:52\nAlice QA · 9 oct. 2026, 05:51\nAlice QA · 8 oct. 2026, 07:50\nBob QA · 8 oct. 2026, 06:49\nAlice QA · 8 oct. 2026, 05:48\nAlice QA · 7 oct. 2026, 07:52\nAlice QA · 7 oct. 2026, 06:51\nBob QA · 7 oct. 2026, 05:50\nBob QA · 6 oct. 2026, 07:49\nAlice QA · 6 oct. 2026, 06:48\nAlice QA · 6 oct. 2026, 05:52\nAlice QA · 5 oct. 2026, 07:51\nBob QA · 5 oct. 2026, 06:50\nAlice QA · 5 oct. 2026, 05:49\nAlice QA · 4 oct. 2026, 07:48\nAlice QA · 4 oct. 2026, 06:52\nBob QA · 4 oct. 2026, 05:51\nBob QA · 3 oct. 2026, 07:50\nAlice QA · 3 oct. 2026, 06:49\nAlice QA · 3 oct. 2026, 05:48\nAlice QA · 2 oct. 2026, 07:52\nBob QA\nqa-primary-p\nAlice QA\nqa-primary-p\nAlice QA\nqa-primary-p\n0\n1 min\n2 min\nTélémétrie par Session\n\nPauses, changements d'audio et de sous-titres au fil du temps.\n\nHistorique Détaillé\nUTILISATEUR\tDATE\tMÉTHODE\tAUDIO\tSOUS-TITRES\tPAUSES\tSAUTS\tRETOURS\tVITESSE MAX\tDURÉE\nAlice QA\t10 oct. 2026, 07:51\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t10 oct. 2026, 06:50\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nBob QA\t10 oct. 2026, 05:49\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t9 oct. 2026, 07:48\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t9 oct. 2026, 06:52\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t9 oct. 2026, 05:51\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t8 oct. 2026, 07:50\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t8 oct. 2026, 06:49\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t8 oct. 2026, 05:48\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t7 oct. 2026, 07:52\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t7 oct. 2026, 06:51\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nBob QA\t7 oct. 2026, 05:50\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t6 oct. 2026, 07:49\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t6 oct. 2026, 06:48\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t6 oct. 2026, 05:52\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t5 oct. 2026, 07:51\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t5 oct. 2026, 06:50\tDirectPlay\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t5 oct. 2026, 05:49\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t4 oct. 2026, 07:48\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t4 oct. 2026, 06:52\tTranscode\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nBob QA\t4 oct. 2026, 05:51\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t3 oct. 2026, 07:50\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t3 oct. 2026, 06:49\tDirectStream\teng (aac)\tAucun\t2\t1\t0\t1.25×\t30 min\nAlice QA\t3 oct. 2026, 05:48\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t2 oct. 2026, 07:52\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\n← Précédent\nPage 1 sur 3\nSuivant →"
+    },
+    {
+      "route": "/media/qa-primary-episode1",
+      "actual": "/media/qa-primary-episode1",
+      "headings": [
+        "Épisode 1",
+        "Résumé Télémétrie",
+        "Analyse des passages",
+        "Passages sautés / revus",
+        "Vitesses de lecture",
+        "Changements audio / sous-titres",
+        "Périodes de langue",
+        "Spectateurs (2)",
+        "Langues Audio",
+        "Sous-titres",
+        "Distribution de la Complétion",
+        "Chronologie Profonde",
+        "Télémétrie par Session",
+        "Historique Détaillé"
+      ],
+      "errors": [],
+      "charts": [
+        {
+          "id": "mr-completion",
+          "rendered": true,
+          "labels": 10,
+          "type": "bar"
+        },
+        {
+          "id": "mr-counters",
+          "rendered": true,
+          "labels": 17,
+          "type": "line"
+        }
+      ],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "mr-rotate",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Réalisateur QA"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Actrice QA"
+        },
+        {
+          "tag": "SELECT",
+          "id": "mr-timeline-user",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "SELECT",
+          "id": "mr-timeline-session",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Alice QAqa-primary-p"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "3"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "10 oct. 2026, 07:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "9 oct. 2026, 07:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "8 oct. 2026, 07:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "7 oct. 2026, 07:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "6 oct. 2026, 07:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "5 oct. 2026, 07:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "4 oct. 2026, 07:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "3 oct. 2026, 07:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "2 oct. 2026, 07:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "1 oct. 2026, 07:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "30 sept. 2026, 07:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "29 sept. 2026, 07:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "28 sept. 2026, 07:50"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "27 sept. 2026, 07:52"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "26 sept. 2026, 07:49"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "25 sept. 2026, 07:51"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "24 sept. 2026, 07:48"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "← Précédent"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Suivant →"
+        }
+      ],
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nSéries QA\n›\nSérie principale QA\n›\nSaison 1\n›\nÉpisode 1\nSérie: Série principale QA\nSaison: Saison 1\nÉpisode 1\nÉpisode\n1080p\n\nSaison 1\n\nDRAMA\nQA\n\nQA principal · 30 min · 100 MiB\n\nRéalisateurs: Réalisateur QA\n\nActeurs: Actrice QA\n\nTemps Total\n8.5h\nCumulé\nVues\n17\nSessions uniques\nDurée Moyenne\n30 min\nPar session\nRésumé Télémétrie\n\nInteractions utilisateurs cumulées sur toutes les sessions.\n\nPauses\n34\nSauts\n17\nRetours\n0\nChangements de vitesse\n17\nModif. Audio\n17\nModif. Sous-titres\n17\nAnalyse des passages\n\nPassages sautés ou revus, vitesse de lecture et changements de langue détectés depuis les événements utiles.\n\nPassages sautés / revus\nPassage sauté · 30 → 90 s · 1 sessions\n1\nVitesses de lecture\nAucun signal détaillé pour l'instant.\nChangements audio / sous-titres\neng → fre · 1 sessions\n1\nPériodes de langue\neng (subrip) · 0–1800 s · 17 sessions\n17\nfre (aac) · 0–1800 s · 16 sessions\n16\nfre (aac) · 0–120 s · 1 sessions\n1\nfre · 120–1800 s · 1 sessions\n1\nSpectateurs (2)\nAlice QA\n11 Sessions · 5h 30m\nBob QA\n6 Sessions · 3h\nLangues Audio\nfre (aac)\n17\nSous-titres\neng (subrip)\n17\nDistribution de la Complétion\n\nOù s'arrêtent les spectateurs ? Chaque barre montre le nombre de sessions stoppées à ce stade.\n\nChronologie Profonde\nUtilisateur\nTous les Utilisateurs\nAlice QA\nBob QA\nSession\nToutes les sessions\nAlice QA · qa-primary-p\nBob QA · 9 oct. 2026, 07:48\nAlice QA · 8 oct. 2026, 07:50\nAlice QA · 7 oct. 2026, 07:52\nBob QA · 6 oct. 2026, 07:49\nAlice QA · 5 oct. 2026, 07:51\nAlice QA · 4 oct. 2026, 07:48\nBob QA · 3 oct. 2026, 07:50\nAlice QA · 2 oct. 2026, 07:52\nAlice QA · 1 oct. 2026, 07:49\nBob QA · 30 sept. 2026, 07:51\nAlice QA · 29 sept. 2026, 07:48\nAlice QA · 28 sept. 2026, 07:50\nBob QA · 27 sept. 2026, 07:52\nAlice QA · 26 sept. 2026, 07:49\nAlice QA · 25 sept. 2026, 07:51\nBob QA · 24 sept. 2026, 07:48\nAlice QA\nqa-primary-p\n3\n0\n15 min\n30 min\nTélémétrie par Session\n\nPauses, changements d'audio et de sous-titres au fil du temps.\n\nHistorique Détaillé\nUTILISATEUR\tDATE\tMÉTHODE\tAUDIO\tSOUS-TITRES\tPAUSES\tSAUTS\tRETOURS\tVITESSE MAX\tDURÉE\nAlice QA\t10 oct. 2026, 07:51\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t9 oct. 2026, 07:48\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t8 oct. 2026, 07:50\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t7 oct. 2026, 07:52\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t6 oct. 2026, 07:49\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t5 oct. 2026, 07:51\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t4 oct. 2026, 07:48\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t3 oct. 2026, 07:50\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t2 oct. 2026, 07:52\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t1 oct. 2026, 07:49\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t30 sept. 2026, 07:51\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t29 sept. 2026, 07:48\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t28 sept. 2026, 07:50\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t27 sept. 2026, 07:52\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t26 sept. 2026, 07:49\tTranscode\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nAlice QA\t25 sept. 2026, 07:51\tDirectStream\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\nBob QA\t24 sept. 2026, 07:48\tDirectPlay\tfre (aac)\teng\t2\t1\t0\t1.25×\t30 min\n← Précédent\nPage 1 sur 1\nSuivant →"
+    },
+    {
+      "route": "/media/artist/Artiste%20QA",
+      "actual": "/media/artist/Artiste%20QA",
+      "headings": [
+        "Artiste QA",
+        "Albums",
+        "Pistes"
+      ],
+      "errors": [],
+      "charts": [],
+      "controls": [
+        {
+          "tag": "SELECT",
+          "id": "mr-tracks-limit",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "← Précédent"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Suivant →"
+        }
+      ],
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nTous les Médias\n›\nArtiste QA\nArtiste\nArtiste QA\n\n2 Albums · 6 Pistes\n\nAlbums\n2\nPistes\n6\nVues\n54\nTemps écouté\n2.6h\nAlbums\nAlbum\n3495 kbps\nAlbum principal QA\nArtiste QA\n51 vue(s) · 2h 30m\nRock\nAlbum principal QA\n51 vue(s) · 2h 30m\nAlbum\n3495 kbps\nAlbum principal QA\nArtiste QA\n3 vue(s) · 8 min\nRock\nAlbum principal QA\n3 vue(s) · 8 min\nPistes\nPistes par page \n25\n50\nTITRE\tALBUM\tDURÉE DU MÉDIA\tSESSIONS\tTEMPS TOTAL\nPiste 1\tAlbum principal QA\t4 min\t17\t1h 5m\nPiste 2\tAlbum principal QA\t4 min\t17\t51 min\nPiste 3\tAlbum principal QA\t4 min\t17\t34 min\nPiste 1\tAlbum principal QA\t4 min\t1\t3 min\nPiste 2\tAlbum principal QA\t4 min\t1\t3 min\nPiste 3\tAlbum principal QA\t4 min\t1\t2 min\n← Précédent\nPage 1 sur 1\nSuivant →"
+    },
+    {
+      "route": "/logs",
+      "actual": "/logs",
+      "headings": [
+        "⌘ Journaux",
+        "⚠ Alertes smart"
+      ],
+      "errors": [],
+      "charts": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "history-tab-playback",
+          "name": "",
+          "text": "▷ Application"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "history-tab-system",
+          "name": "",
+          "text": "⌘ Système"
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "query",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "history-saved",
+          "name": "",
+          "text": "Filtres sauvegardés"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "history-columns",
+          "name": "",
+          "text": "Colonnes"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Tout"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "QA principal"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "QA secondaire"
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "hideZapped",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "history-advanced-toggle",
+          "name": "",
+          "text": "☷ Filtres"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "history-reset",
+          "name": "",
+          "text": "↶ Réinitialiser"
+        },
+        {
+          "tag": "SELECT",
+          "id": "",
+          "name": "sort",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Rechercher"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "↓ CSV"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "↓ JSON"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Tous"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Transcodes"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Direct Play"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "4K UHD"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Zappés < 1 min"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Tout"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Films"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Épisodes"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Musique"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Livres"
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "client",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "audio",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "subtitle",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "dateFrom",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "dateTo",
+          "text": ""
+        },
+        {
+          "tag": "SELECT",
+          "id": "",
+          "name": "playMethod",
+          "text": ""
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "name": "resolution",
+          "text": ""
+        },
+        {
+          "tag": "SELECT",
+          "id": "",
+          "name": "hour",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "›"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "1"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "2"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "3"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Suivant ›"
+        }
+      ],
+      "body": "⌘ Journaux\n\nHistorique complet des lectures et événements de télémétrie. — 147 entrées au total\n\n▷ Application\n⌘ Système\n⚠ Alertes smart\n\nDisparaît automatiquement après 24h sans activité anormale (fenêtre glissante)\n\n2 Connexions depuis un nouveau pays\nFiltres sauvegardés\nColonnes\nTout\nQA principal\nQA secondaire\nMasquer Zappés (< 1m)\n☷ Filtres\n↶ Réinitialiser\nTrier\nDate (Ancien en premier)\nDurée (Long en premier)\nDurée (Court en premier)\nRechercher\n↓ CSV\n↓ JSON\nDATE\n\tUTILISATEUR\n\tMÉDIA\n\tAPPLICATION\n\tRÉSOLUTION\n\tBITRATE AUDIO\n\tSTATUT\n\tDURÉE\n\n›10 oct. 2026, 08:52\tBob QA\t\nFilm principal QA\nFilms QA\n\tJellyfin Web · Browser\t4K\t12000 kbps\tDirectPlayPauses (2)\t1h 20m\n›10 oct. 2026, 08:52\tBob QA\t\nFilm principal QA\nFilms QA\n\tJellyfin Web · Browser\t4K\t12000 kbps\tDirectPlayPauses (2)\t1h 20m\n›10 oct. 2026, 07:51\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n›10 oct. 2026, 07:51\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n›10 oct. 2026, 06:50\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n›10 oct. 2026, 06:50\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n›10 oct. 2026, 05:49\tBob QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n›10 oct. 2026, 05:49\tBob QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n›10 oct. 2026, 04:48\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n›10 oct. 2026, 04:48\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n›10 oct. 2026, 03:52\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n›10 oct. 2026, 03:52\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n›10 oct. 2026, 02:51\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t2 min\n›10 oct. 2026, 02:51\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t2 min\n›10 oct. 2026, 01:50\tAlice QA\t\nLivre principal QA\nLivres QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t1h 23m\n›10 oct. 2026, 01:50\tAlice QA\t\nLivre principal QA\nLivres QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t1h 23m\n›9 oct. 2026, 08:49\tAlice QA\t\nFilm principal QA\nFilms QA\n\tFinamp · Phone\t4K\t12000 kbps\tTranscodePauses (2)\t1h 20m\n›9 oct. 2026, 08:49\tAlice QA\t\nFilm principal QA\nFilms QA\n\tFinamp · Phone\t4K\t12000 kbps\tTranscodePauses (2)\t1h 20m\n›9 oct. 2026, 07:48Nouveau pays\tBob QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n›9 oct. 2026, 07:48\tBob QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n›9 oct. 2026, 06:52\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n›9 oct. 2026, 06:52\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n›9 oct. 2026, 05:51Nouveau pays\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n›9 oct. 2026, 05:51\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n›9 oct. 2026, 04:50\tBob QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t3 min\n›9 oct. 2026, 03:49\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n›9 oct. 2026, 02:48\tAlice QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t2 min\n›9 oct. 2026, 01:52\tBob QA\t\nLivre principal QA\nLivres QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t1h 23m\n›8 oct. 2026, 08:51\tAlice QA\t\nFilm principal QA\nFilms QA\n\tAndroid TV · TV\t4K\t12000 kbps\tDirectStreamPauses (2)\t1h 20m\n›8 oct. 2026, 07:50\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n›8 oct. 2026, 06:49\tBob QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n›8 oct. 2026, 05:48\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n›8 oct. 2026, 04:52\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n›8 oct. 2026, 03:51\tBob QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t3 min\n›8 oct. 2026, 02:50\tAlice QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t2 min\n›8 oct. 2026, 01:49\tAlice QA\t\nLivre principal QA\nLivres QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t1h 23m\n›7 oct. 2026, 08:48\tBob QA\t\nFilm principal QA\nFilms QA\n\tJellyfin Web · Browser\t4K\t12000 kbps\tDirectPlayPauses (2)\t1h 20m\n›7 oct. 2026, 07:52\tAlice QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n›7 oct. 2026, 06:51\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n›7 oct. 2026, 05:50\tBob QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n›7 oct. 2026, 04:49\tAlice QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n›7 oct. 2026, 03:48\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tFinamp · Phone\t—\t12000 kbps\tTranscodePauses (2)\t3 min\n›7 oct. 2026, 02:52\tBob QA\t\nPiste 3\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t2 min\n›7 oct. 2026, 01:51\tAlice QA\t\nLivre principal QA\nLivres QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t1h 23m\n›6 oct. 2026, 08:50\tAlice QA\t\nFilm principal QA\nFilms QA\n\tFinamp · Phone\t4K\t12000 kbps\tTranscodePauses (2)\t1h 20m\n›6 oct. 2026, 07:49\tBob QA\t\nÉpisode 1\nSérie principale QA — Saison 1\n\tJellyfin Web · Browser\t1080p\t12000 kbps\tDirectPlayPauses (2)\t30 min\n›6 oct. 2026, 06:48\tAlice QA\t\nÉpisode 2\nSérie principale QA — Saison 1\n\tAndroid TV · TV\t1080p\t12000 kbps\tDirectStreamPauses (2)\t30 min\n›6 oct. 2026, 05:52\tAlice QA\t\nÉpisode 3\nSérie principale QA — Saison 1\n\tFinamp · Phone\t1080p\t12000 kbps\tTranscodePauses (2)\t30 min\n›6 oct. 2026, 04:51\tBob QA\t\nPiste 1\nArtiste QA — Album principal QA\n\tJellyfin Web · Browser\t—\t12000 kbps\tDirectPlayPauses (2)\t3 min\n›6 oct. 2026, 03:50\tAlice QA\t\nPiste 2\nArtiste QA — Album principal QA\n\tAndroid TV · TV\t—\t12000 kbps\tDirectStreamPauses (2)\t3 min\n1\n2\n3\nSuivant ›\nPage 1 / 3"
+    },
+    {
+      "route": "/newsletter",
+      "actual": "/newsletter",
+      "headings": [
+        "JellyTrack Rewind",
+        " Le Podium Vidéo",
+        "Film principal QA",
+        "Livre principal QA",
+        "Épisode 1",
+        "Alice QA",
+        "Autres médias du mois",
+        "Autres spectateurs"
+      ],
+      "errors": [],
+      "charts": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "btn-download-rewind",
+          "name": "",
+          "text": "↓ Télécharger l'infographie (PNG)"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-post-discord",
+          "name": "",
+          "text": "Diffuser sur Discord"
+        }
+      ],
+      "body": "Tous les Médias\nPopulaires\nAnalyse Profonde\ncollections\nJellyTrack Rewind\n\nVotre récapitulatif des 30 derniers jours\n\n10 sept. 2026 – 10 oct. 2026\n80h\n\nVisionné\n\n147\n\nLectures totales\n\nLe Podium Vidéo\n1\nFilm principal QA\n\nMovie\n\n22.7h\n2\nLivre principal QA\n\nBook\n\n22.2h\n3\nÉpisode 1\n\nEpisode\n\n8.5h\n♙\n\nMeilleur spectateur\n\nAlice QA\n49h\n\nVisionné\n\n↓ Télécharger l'infographie (PNG)\nDiffuser sur Discord\n\nClassements complémentaires"
+    },
+    {
+      "route": "/wrapped/qa-primary-alice",
+      "actual": "/wrapped/qa-primary-alice",
+      "headings": [
+        "Le Récap de Alice QA",
+        "JellyTrack Wrapped 2026"
+      ],
+      "errors": [],
+      "charts": [],
+      "controls": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": ""
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "name": "",
+          "text": "Personnaliser"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-wrap-prev",
+          "name": "",
+          "text": "← Retour"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "wrapped-config-nav",
+          "name": "",
+          "text": "Personnaliser"
+        },
+        {
+          "tag": "BUTTON",
+          "id": "btn-wrap-next",
+          "name": "",
+          "text": "Suivant →"
+        }
+      ],
+      "body": "▷\nLE RÉCAP DE ALICE QA\nJellyTrack Wrapped 2026\n\nPrêt à découvrir votre année en médias ?\n\nPersonnaliser\n← Retour\n2026 • Tout\n1 / 18\nPersonnaliser\nSuivant →"
+    },
+    {
+      "route": "/analytics",
+      "headings": [
+        "Lectures par Jour",
+        "Durée par Jour",
+        "Lectures par Bibliothèque",
+        "Durée par Bibliothèque",
+        "Lectures (Moy. Horaire)",
+        "Durée (Moy. Horaire)",
+        "Carte de Fréquentation",
+        "Taux de Complétion Moyen par Biblio",
+        "Segments d'Abandon",
+        "Pires Taux de Complétion",
+        "Répartition Audio",
+        "Sous-titres"
+      ],
+      "charts": [
+        {
+          "id": "chart-plays-per-day",
+          "rendered": true,
+          "labels": 8
+        },
+        {
+          "id": "chart-duration-per-day",
+          "rendered": true,
+          "labels": 8
+        },
+        {
+          "id": "chart-plays-by-lib",
+          "rendered": true,
+          "labels": 8
+        },
+        {
+          "id": "chart-duration-by-lib",
+          "rendered": true,
+          "labels": 8
+        },
+        {
+          "id": "chart-plays-hourly-avg",
+          "rendered": true,
+          "labels": 24
+        },
+        {
+          "id": "chart-duration-hourly-avg",
+          "rendered": true,
+          "labels": 24
+        },
+        {
+          "id": "chart-avg-completion-lib",
+          "rendered": true,
+          "labels": 4
+        },
+        {
+          "id": "chart-abandon-segments",
+          "rendered": true,
+          "labels": 4
+        },
+        {
+          "id": "chart-audio-breakdown",
+          "rendered": true,
+          "labels": 2
+        },
+        {
+          "id": "chart-subtitles-breakdown",
+          "rendered": true,
+          "labels": 2
+        }
+      ]
+    },
+    {
+      "route": "/network",
+      "headings": [
+        "DirectPlay vs Transcode (par Heure)",
+        "Profil Transcode par Client",
+        "Media les plus transcoder — Tableau des Coupables",
+        "🌍 Origine géographique des connexions"
+      ],
+      "charts": [
+        {
+          "id": "chart-net-transcode-hourly",
+          "rendered": true,
+          "labels": 24
+        },
+        {
+          "id": "chart-net-client-transcode",
+          "rendered": true,
+          "labels": 3
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "embeddedAssets": [
+    {
+      "file": "app.js",
+      "status": 200,
+      "sha256": "26357ae6f2e70065a73dbdca44f27dd5a978b7cddb10bbd8661a4b394b1bb876",
+      "source": "26357ae6f2e70065a73dbdca44f27dd5a978b7cddb10bbd8661a4b394b1bb876"
+    },
+    {
+      "file": "app.css",
+      "status": 200,
+      "sha256": "188ca7ceb64ed047ffe65ce4532030bcd2424c741b8e09b66ddb88c69144ebf5",
+      "source": "188ca7ceb64ed047ffe65ce4532030bcd2424c741b8e09b66ddb88c69144ebf5"
+    },
+    {
+      "file": "navigation.js",
+      "status": 200,
+      "sha256": "f3898b04b2e9004312df744de58702602459e5b6af5b9d529a31cf7bc563c4b8",
+      "source": "f3898b04b2e9004312df744de58702602459e5b6af5b9d529a31cf7bc563c4b8"
+    },
+    {
+      "file": "navigation.css",
+      "status": 200,
+      "sha256": "fd753ce222b25268d1553fed826e43531d16304ce70748d09cd94c79e0f9c73c",
+      "source": "fd753ce222b25268d1553fed826e43531d16304ce70748d09cd94c79e0f9c73c"
+    },
+    {
+      "file": "history.js",
+      "status": 200,
+      "sha256": "d6724ce2cec54c9e531c12338a28e8842d769f3d27c758ee80dfa813ff9fefe4",
+      "source": "d6724ce2cec54c9e531c12338a28e8842d769f3d27c758ee80dfa813ff9fefe4"
+    },
+    {
+      "file": "history-recovery.css",
+      "status": 200,
+      "sha256": "22596d0059e0819456e4b8686edbaac7b01bdd8fd03000ea70700eafff579860",
+      "source": "22596d0059e0819456e4b8686edbaac7b01bdd8fd03000ea70700eafff579860"
+    },
+    {
+      "file": "media-recovery.js",
+      "status": 200,
+      "sha256": "568a1445c08135b7a6c3640e196687a6827c77e554ac7243abeb8102d0d5ef4d",
+      "source": "568a1445c08135b7a6c3640e196687a6827c77e554ac7243abeb8102d0d5ef4d"
+    },
+    {
+      "file": "media-recovery.css",
+      "status": 200,
+      "sha256": "3a50847fabf499bba7fb03729ab54bbf5a36da76fc666825a0cf205e8febe7af",
+      "source": "3a50847fabf499bba7fb03729ab54bbf5a36da76fc666825a0cf205e8febe7af"
+    },
+    {
+      "file": "analytics-recovery.css",
+      "status": 200,
+      "sha256": "34ee762d11fa4a6ebefcb5d29eeb08981492342e65cd1fbc97db8f63caade796",
+      "source": "34ee762d11fa4a6ebefcb5d29eeb08981492342e65cd1fbc97db8f63caade796"
+    }
+  ],
+  "complete": true
+}

@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-10T12:02:17.386363+00:00",
+  "url": "https://github.com/maelmoreau21/JellyTrack",
+  "remoteMain": "a59a28613e63e86106c61827167d355b47147f42",
+  "remoteFrontendRecovery": "9835d85d6f7afd571a7896ed672e0afa68ddc9b5",
+  "auditedLocalHead": "c4ed7495c3f420713bbaaabcc337dd47602506db",
+  "localAhead": 3,
+  "localBehind": 0,
+  "existingLocalCommits": [
+    "0c658f0",
+    "79f69db",
+    "c4ed749"
+  ],
+  "newCommits": 0,
+  "pushed": false
+}

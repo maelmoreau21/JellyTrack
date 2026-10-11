@@ -41,6 +41,10 @@ func TestWrappedRestoresYearsCategoriesParentsAndHours(t *testing.T) {
 		return data
 	}
 	data := call("year=2025")
+	years := data["availableYears"].([]any)
+	if len(years) != time.Now().UTC().Year()-2025+1 || years[0] != float64(time.Now().UTC().Year()) || years[len(years)-1] != float64(2025) {
+		t.Fatalf("historical continuous years lost: %+v", years)
+	}
 	if data["totalSeconds"] != float64(6300) || data["totalPlays"] != float64(3) || data["topDevice"] != "TV" {
 		t.Fatalf("wrapped totals: %+v", data)
 	}

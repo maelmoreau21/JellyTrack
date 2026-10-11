@@ -4550,3 +4550,7 @@ html:not(.dark) .quality-badge-4k {
   .history-session-fields dd { margin-bottom: 0.75rem; }
   .history-filters > .page-actions { grid-column: 1 / -1; }
 }
+/* Historical optional thirty-day session control. */
+.auth-remember { display:flex; align-items:center; gap:0.65rem; font-size:0.875rem; cursor:pointer; }
+.auth-remember input { width:1rem; height:1rem; accent-color:var(--primary); }
+.auth-remember small { display:block; color:var(--muted-foreground); font-size:0.75rem; margin-top:0.2rem; }

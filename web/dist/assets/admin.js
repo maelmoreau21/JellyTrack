@@ -785,6 +785,7 @@
         if (!selected.length) return;
         dialog = document.createElement("dialog");
         dialog.className = "ar-delete-dialog";
+        dialog.setAttribute("aria-label",c("deleteDialogTitle","",{count:selected.length}));
         let busy = false;
         const total = selected.reduce((n, m) => n + number(m.size), 0),
           word = c("deleteConfirmWord", "SUPPRIMER");

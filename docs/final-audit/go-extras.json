@@ -1,0 +1,593 @@
+{
+  "date": "2026-10-10T11:39:17.875Z",
+  "checks": [
+    {
+      "name": "/settings/go-overview renders",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-overview dark 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-overview dark 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-overview light 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-overview light 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-overview no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-network renders",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-network dark 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-network dark 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-network light 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-network light 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/settings/go-network no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/admin/system-health renders",
+      "ok": true
+    },
+    {
+      "name": "/admin/system-health dark 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/system-health dark 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/system-health light 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/system-health light 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/system-health no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/admin/log-diagnostics renders",
+      "ok": true
+    },
+    {
+      "name": "/admin/log-diagnostics dark 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/log-diagnostics dark 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/log-diagnostics light 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/log-diagnostics light 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/log-diagnostics no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/admin/plugin-diagnostics renders",
+      "ok": true
+    },
+    {
+      "name": "/admin/plugin-diagnostics dark 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/plugin-diagnostics dark 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/plugin-diagnostics light 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/plugin-diagnostics light 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/plugin-diagnostics no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/admin/maintenance renders",
+      "ok": true
+    },
+    {
+      "name": "/admin/maintenance dark 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/maintenance dark 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/maintenance light 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/maintenance light 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/admin/maintenance no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/setup/go renders",
+      "ok": true
+    },
+    {
+      "name": "/setup/go dark 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/setup/go dark 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/setup/go light 1440 fits",
+      "ok": true
+    },
+    {
+      "name": "/setup/go light 390 fits",
+      "ok": true
+    },
+    {
+      "name": "/setup/go no JS errors",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset about-recovery.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset about-recovery.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset admin.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset admin.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset analytics-recovery.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset app.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset app.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset chart.min.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset history-recovery.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset history.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset media-recovery.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset media-recovery.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset navigation.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset navigation.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset profile.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset profile.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset settings.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset settings.js",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset users.css",
+      "ok": true
+    },
+    {
+      "name": "Embedded asset users.js",
+      "ok": true
+    }
+  ],
+  "pages": [
+    {
+      "route": "/settings/go-overview",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "theme": "dark",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "dark",
+          "width": 390,
+          "scrollWidth": 390
+        },
+        {
+          "theme": "light",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "light",
+          "width": 390,
+          "scrollWidth": 390
+        }
+      ],
+      "body": "Jellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nParamètres\n\nAdministration, serveurs, médias, sauvegardes et planificateur.\n\n⚙️\nConfiguration Globale JellyTrack\nÉtat général du système et des fonctionnalités activées\nLANGUE PAR DÉFAUT\n🌍\nFR\nInterface utilisateur\nSERVEURS CONNECTÉS\n🖥️\n2\nGérer les instances →\nWRAPPED ACTIVÉ\n🎉\nOui\nRétrospective annuelle\nALERTES DISCORD\n🔔\nInactives\nWebhooks Discord →"
+    },
+    {
+      "route": "/settings/go-network",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "theme": "dark",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "dark",
+          "width": 390,
+          "scrollWidth": 390
+        },
+        {
+          "theme": "light",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "light",
+          "width": 390,
+          "scrollWidth": 390
+        }
+      ],
+      "body": "Jellyfin\nSSO\nSécurité\nParamètres Média\nPlanificateur de Tâches\nSauvegardes de Données\nNotifications\nParamètres\n\nAdministration, serveurs, médias, sauvegardes et planificateur."
+    },
+    {
+      "route": "/admin/system-health",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "theme": "dark",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "dark",
+          "width": 390,
+          "scrollWidth": 390
+        },
+        {
+          "theme": "light",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "light",
+          "width": 390,
+          "scrollWidth": 390
+        }
+      ],
+      "body": "Santé Système\nNettoyage\nSanté\nSanté du plugin\nComparaison de serveurs\nSanté Système\n\nSurveillance de la base de données, des processus, du plugin et des alertes de sécurité.\n\nBASE DE DONNÉES\n🗄️\nOpérationnelle\nMoteur : sqlite\nSESSIONS ORPHELINES\n🧹\n0\nLectures sans fermeture propre\nMÉMOIRE ALLOUÉE\n🧠\n2.0 MB\nCœurs CPU : 8\nGOROUTINES ACTIVES\n⚙️\n54\nProcessus Go léger\n🧹 Maintenance Rapide de la Base\nPurge immédiate des sessions en suspens sans événement d’arrêt\n\nSi des coupures réseau empêchent la réception des événements \"playback stopped\", vous pouvez purger les sessions orphelines pour recalculer les statistiques proprement.\n\nClôturer les sessions orphelines maintenant"
+    },
+    {
+      "route": "/admin/log-diagnostics",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "theme": "dark",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "dark",
+          "width": 390,
+          "scrollWidth": 390
+        },
+        {
+          "theme": "light",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "light",
+          "width": 390,
+          "scrollWidth": 390
+        }
+      ],
+      "body": "Santé Système\nNettoyage\nSanté\nSanté du plugin\nComparaison de serveurs\nSanté Système\n\nSurveillance de la base de données, des processus, du plugin et des alertes de sécurité.\n\nErreurs Système\n⚠️\n0\nSur les derniers logs\nAvertissements\n⚡\n0\nAvertissements de synchronisation\nAnomalies de Sécurité\n🛡️\n0\nAucun comportement suspect\nDerniers Événements d'Erreur & Alertes\nConsulter tous les logs →\nNIVEAU\tMESSAGE\tHORODATAGE\n\nAucune erreur récente enregistrée. Système sain."
+    },
+    {
+      "route": "/admin/plugin-diagnostics",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "theme": "dark",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "dark",
+          "width": 390,
+          "scrollWidth": 390
+        },
+        {
+          "theme": "light",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "light",
+          "width": 390,
+          "scrollWidth": 390
+        }
+      ],
+      "body": "Centre de santé du plugin\n\nDiagnostic centralisé de la stabilité des heartbeats, de la fiabilité d'ingestion et de la santé des flux.\n\nRafraîchir\nTester la connexion\nForcer un heartbeat\nExporter le JSON de diagnostic\nConnexion\nStatut\nhors ligne\nDernière activité\nJamais\nServeur\n—\nJellyfin\n—\nPlugin\n— Mise à jour requise\nSchema\n—\nJitter heartbeat\nIntervalle P50\nN/A\nIntervalle P95\nN/A\nJitter P95\nN/A N/A\nÉcart actuel\nN/A N/A\nFiabilité d'ingestion\nTaux de succès (24h)\nN/A\nÉchecs (24h)\n0\nNon autorisé\n0\nLimite de débit\n0\nSanté des flux en direct\nFlux actifs\n0\nTranscodages\n0\nFlux inactifs\n2\nDébit moyen\n—\nIntervalles heartbeat (24h)\n\nEvolution de l'intervalle heartbeat et du jitter sur les 24 dernieres heures.\n\nPas assez d'echantillons heartbeat pour tracer le graphe.\nÉchantillons\nSeuils d'alerte\n\nCes seuils sont enregistrés localement dans ce navigateur.\n\nGap warning (secondes)\nGap critical (secondes)\nJitter warning (secondes)\nJitter critical (secondes)\nReinitialiser les valeurs par defaut\nDerniers échecs d'ingestion\n\nAucun échec récent détecté.\n\nMétriques remontées par le plugin\n\nMétriques attendues via la télémétrie de file du plugin.\n\nProgressions fusionnées\nN/A\nDernier code HTTP\nN/A\nProfondeur de file\nN/A\nTentatives\nN/A\nProfil\nvery_precise\nLecture / pause\n5.0 s / 30.0 s\n\nLa version actuelle du payload plugin n'inclut pas les diagnostics de file/retry/code HTTP."
+    },
+    {
+      "route": "/admin/maintenance",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "theme": "dark",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "dark",
+          "width": 390,
+          "scrollWidth": 390
+        },
+        {
+          "theme": "light",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "light",
+          "width": 390,
+          "scrollWidth": 390
+        }
+      ],
+      "body": "Santé Système\nNettoyage\nSanté\nSanté du plugin\nComparaison de serveurs\nNettoyage\n\nMaintenez une base de données saine, compacte et exempte d'enregistrements obsolètes.\n\n🗑️\nSupprimer les films orphelins & obsolètes\nPurge des métadonnées de fichiers supprimés du disque\n\nSupprime les entrées de films qui ne figurent plus sur vos serveurs Jellyfin après des suppressions de fichiers.\n\nSupprimer les films obsolètes\n👥 Synchroniser les utilisateurs supprimés\n\nDésactive les utilisateurs qui ont été supprimés sur vos instances Jellyfin.\n\nSynchroniser les suppressions\n👥 Détection & Fusion des Utilisateurs en Double\n\nRecherche les utilisateurs ayant des pseudonymes identiques sur différents serveurs Jellyfin.\n\nRechercher les doublons\n⏱️ Consolidation de l’Historique\n\nFusionne les sessions de visionnage découpées en plusieurs fragments consécutifs pour le même titre.\n\nConsolider l'historique (30 min)"
+    },
+    {
+      "route": "/setup/go",
+      "errors": [],
+      "httpErrors": [],
+      "variants": [
+        {
+          "theme": "dark",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "dark",
+          "width": 390,
+          "scrollWidth": 390
+        },
+        {
+          "theme": "light",
+          "width": 1440,
+          "scrollWidth": 1440
+        },
+        {
+          "theme": "light",
+          "width": 390,
+          "scrollWidth": 390
+        }
+      ],
+      "body": "🔌\nConfiguration Initiale\n\nConnectez votre serveur Jellyfin pour démarrer.\n\nNom du serveur\nURL Jellyfin\nURL complète avec le port (ex: 8096)\nClé API Jellyfin\nGénération : Tableau de bord Jellyfin → Avancé → Clés API\nEnregistrer et Synchroniser"
+    }
+  ],
+  "assets": [
+    {
+      "file": "about-recovery.css",
+      "status": 200,
+      "source": "d4e2f2e4b214f405baf5b9a46d77c322be012023dbb851ae77a23a750819115b",
+      "served": "d4e2f2e4b214f405baf5b9a46d77c322be012023dbb851ae77a23a750819115b",
+      "same": true
+    },
+    {
+      "file": "about-recovery.js",
+      "status": 200,
+      "source": "941548e5fd2d40ae8322ab0b28ef94ad3a89e51204834474a2e940fce49162ed",
+      "served": "941548e5fd2d40ae8322ab0b28ef94ad3a89e51204834474a2e940fce49162ed",
+      "same": true
+    },
+    {
+      "file": "admin.css",
+      "status": 200,
+      "source": "e5528e5d5373b7e67a08938d7aa55137e880690cb1a77cd664d62089d28bf8db",
+      "served": "e5528e5d5373b7e67a08938d7aa55137e880690cb1a77cd664d62089d28bf8db",
+      "same": true
+    },
+    {
+      "file": "admin.js",
+      "status": 200,
+      "source": "4bb7984033ddfce6f831c064ae02a1471438ae85c478d524dcbeaaf5f224d780",
+      "served": "4bb7984033ddfce6f831c064ae02a1471438ae85c478d524dcbeaaf5f224d780",
+      "same": true
+    },
+    {
+      "file": "analytics-recovery.css",
+      "status": 200,
+      "source": "34ee762d11fa4a6ebefcb5d29eeb08981492342e65cd1fbc97db8f63caade796",
+      "served": "34ee762d11fa4a6ebefcb5d29eeb08981492342e65cd1fbc97db8f63caade796",
+      "same": true
+    },
+    {
+      "file": "app.css",
+      "status": 200,
+      "source": "188ca7ceb64ed047ffe65ce4532030bcd2424c741b8e09b66ddb88c69144ebf5",
+      "served": "188ca7ceb64ed047ffe65ce4532030bcd2424c741b8e09b66ddb88c69144ebf5",
+      "same": true
+    },
+    {
+      "file": "app.js",
+      "status": 200,
+      "source": "26357ae6f2e70065a73dbdca44f27dd5a978b7cddb10bbd8661a4b394b1bb876",
+      "served": "26357ae6f2e70065a73dbdca44f27dd5a978b7cddb10bbd8661a4b394b1bb876",
+      "same": true
+    },
+    {
+      "file": "chart.min.js",
+      "status": 200,
+      "source": "48444a82d4edcb5bec0f1965faacdde18d9c17db3063d042abada2f705c9f54a",
+      "served": "48444a82d4edcb5bec0f1965faacdde18d9c17db3063d042abada2f705c9f54a",
+      "same": true
+    },
+    {
+      "file": "history-recovery.css",
+      "status": 200,
+      "source": "22596d0059e0819456e4b8686edbaac7b01bdd8fd03000ea70700eafff579860",
+      "served": "22596d0059e0819456e4b8686edbaac7b01bdd8fd03000ea70700eafff579860",
+      "same": true
+    },
+    {
+      "file": "history.js",
+      "status": 200,
+      "source": "d6724ce2cec54c9e531c12338a28e8842d769f3d27c758ee80dfa813ff9fefe4",
+      "served": "d6724ce2cec54c9e531c12338a28e8842d769f3d27c758ee80dfa813ff9fefe4",
+      "same": true
+    },
+    {
+      "file": "media-recovery.css",
+      "status": 200,
+      "source": "3a50847fabf499bba7fb03729ab54bbf5a36da76fc666825a0cf205e8febe7af",
+      "served": "3a50847fabf499bba7fb03729ab54bbf5a36da76fc666825a0cf205e8febe7af",
+      "same": true
+    },
+    {
+      "file": "media-recovery.js",
+      "status": 200,
+      "source": "568a1445c08135b7a6c3640e196687a6827c77e554ac7243abeb8102d0d5ef4d",
+      "served": "568a1445c08135b7a6c3640e196687a6827c77e554ac7243abeb8102d0d5ef4d",
+      "same": true
+    },
+    {
+      "file": "navigation.css",
+      "status": 200,
+      "source": "fd753ce222b25268d1553fed826e43531d16304ce70748d09cd94c79e0f9c73c",
+      "served": "fd753ce222b25268d1553fed826e43531d16304ce70748d09cd94c79e0f9c73c",
+      "same": true
+    },
+    {
+      "file": "navigation.js",
+      "status": 200,
+      "source": "f3898b04b2e9004312df744de58702602459e5b6af5b9d529a31cf7bc563c4b8",
+      "served": "f3898b04b2e9004312df744de58702602459e5b6af5b9d529a31cf7bc563c4b8",
+      "same": true
+    },
+    {
+      "file": "profile.css",
+      "status": 200,
+      "source": "a3ca2b98d41e420fc676780f34d6d4d5b7abefaf45c1332c268f9ea41e2ce632",
+      "served": "a3ca2b98d41e420fc676780f34d6d4d5b7abefaf45c1332c268f9ea41e2ce632",
+      "same": true
+    },
+    {
+      "file": "profile.js",
+      "status": 200,
+      "source": "de89d6cfdd3395369fb5d4035ae67060f62bf1c393c41760f3e86e95753ea59d",
+      "served": "de89d6cfdd3395369fb5d4035ae67060f62bf1c393c41760f3e86e95753ea59d",
+      "same": true
+    },
+    {
+      "file": "settings.css",
+      "status": 200,
+      "source": "4d9005156c6cf90f974ec2fc58948e9ac060a4066543e31bedee0c7af7edc83c",
+      "served": "4d9005156c6cf90f974ec2fc58948e9ac060a4066543e31bedee0c7af7edc83c",
+      "same": true
+    },
+    {
+      "file": "settings.js",
+      "status": 200,
+      "source": "5f00e4e931b6ff8331286153e1ee7f86248aedb0ba9ad3f26a48c41360feda06",
+      "served": "5f00e4e931b6ff8331286153e1ee7f86248aedb0ba9ad3f26a48c41360feda06",
+      "same": true
+    },
+    {
+      "file": "users.css",
+      "status": 200,
+      "source": "1785d13ccb931318f8e0fd866e0f57ff0da53b86e00604afd2fe687b295d3d4a",
+      "served": "1785d13ccb931318f8e0fd866e0f57ff0da53b86e00604afd2fe687b295d3d4a",
+      "same": true
+    },
+    {
+      "file": "users.js",
+      "status": 200,
+      "source": "8ad5b77b88e464fcf14bac90e86ff586b748deb433bd594dcde1913e3eb0bceb",
+      "served": "8ad5b77b88e464fcf14bac90e86ff586b748deb433bd594dcde1913e3eb0bceb",
+      "same": true
+    }
+  ]
+}

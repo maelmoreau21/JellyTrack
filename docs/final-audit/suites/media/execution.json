@@ -1,0 +1,14 @@
+[
+  {
+    "script": "media-pages-qa/browser.cjs",
+    "exitCode": 0,
+    "seconds": 81.2,
+    "recordedAt": "2026-10-10T11:39:45Z"
+  },
+  {
+    "script": "media-pages-qa/interactions.cjs",
+    "exitCode": 0,
+    "seconds": 22.51,
+    "recordedAt": "2026-10-10T11:40:08Z"
+  }
+]

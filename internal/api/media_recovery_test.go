@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/maelmoreau21/jellytrack/internal/auth"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +11,70 @@ import (
 	"testing"
 	"time"
 )
+
+func TestHistoricalPopularTracksSeriesPeopleAndCollectionCounts(t *testing.T) {
+	db := apiDB(t)
+	for _, query := range []string{
+		`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('a','ja','A','http://a'),('b','jb','B','http://b')`,
+		`INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u','a','ju','User')`,
+		`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName","parentId","actors","directors","studios","collectionType","size") VALUES('series','a','js','Series','Series','TV',NULL,'["Series Actor"]','["Series Director"]','["Series Studio"]',NULL,0),('season','a','jseason','Season','Season','TV','js','[]','[]','[]',NULL,0),('episode','a','je','Episode','Episode','TV','jseason','[]','[]','[]',NULL,100),('album','a','jalbum','Album','MusicAlbum','Music',NULL,'[]','[]','[]',NULL,0),('cross-server','b','js','Other Series','Series','TV',NULL,'["Other Actor"]','[]','[]',NULL,0),('null-library','a','jn','Unassigned','Movie',NULL,NULL,'[]','[]','[]',NULL,1000),('empty-library','a','jem','Empty library','Movie','',NULL,'[]','[]','[]',NULL,1000),('boxset','a','jb','Boxset','BoxSet','Collections',NULL,'[]','[]','[]','boxsets',1000)`,
+		`INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched") VALUES('episode-play','a','u','episode','DirectPlay',300)`,
+	} {
+		if _, err := db.Exec(query); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i := 1; i <= 6; i++ {
+		id := fmt.Sprintf("track%d", i)
+		if _, err := db.Exec(`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName","parentId","size","durationMs") VALUES(?,'a',?,?,'Audio','Music','jalbum',10,120000)`, id, "j"+id, id); err != nil {
+			t.Fatal(err)
+		}
+		for play := 0; play < 7-i; play++ {
+			if _, err := db.Exec(`INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched") VALUES(?,'a','u',?,'DirectPlay',120)`, fmt.Sprintf("%s-p%d", id, play), id); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	h := New(db, "sqlite")
+	request := func(path string, handler http.HandlerFunc) map[string]any {
+		t.Helper()
+		w := httptest.NewRecorder()
+		handler(w, httptest.NewRequest("GET", path, nil))
+		if w.Code != 200 {
+			t.Fatalf("%s: %d %s", path, w.Code, w.Body.String())
+		}
+		var result map[string]any
+		if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
+			t.Fatal(err)
+		}
+		return result
+	}
+	popular := request("/api/media/popular?servers=a", h.recoveredMediaPopular)
+	tracks := popular["music"].([]any)
+	if len(tracks) != 5 || tracks[0].(map[string]any)["id"] != "track1" || tracks[0].(map[string]any)["plays"] != float64(6) {
+		t.Fatalf("historical top-five tracks lost: %+v", popular)
+	}
+	if len(popular["musicAlbums"].([]any)) != 1 {
+		t.Fatalf("Go album ranking lost: %+v", popular)
+	}
+	for _, key := range []string{"actors", "directors", "studios"} {
+		people := popular[key].([]any)
+		if len(people) != 1 || people[0].(map[string]any)["plays"] != float64(1) || !strings.HasPrefix(people[0].(map[string]any)["name"].(string), "Series ") {
+			t.Fatalf("Series metadata missing or cross-server leakage: %s %+v", key, people)
+		}
+	}
+	collections := request("/api/media/collections?servers=a", h.recoveredMediaCollections)
+	groups := collections["collections"].([]any)
+	if len(groups) != 2 || collections["totals"].(map[string]any)["items"] != float64(7) || collections["totals"].(map[string]any)["sizeBytes"] != float64(160) {
+		t.Fatalf("ghost libraries or incorrect music count: %+v", collections)
+	}
+	for _, item := range groups {
+		group := item.(map[string]any)
+		if group["name"] == "Music" && (group["totalItems"] != float64(6) || group["albumCount"] != float64(1) || group["trackCount"] != float64(6) || len(group["ignoredCounts"].([]any)) != 1) {
+			t.Fatalf("historical music count or Go child breakdown lost: %+v", group)
+		}
+	}
+}
 
 func TestMediaRecoveryFamiliesScopesFiltersAndPagination(t *testing.T) {
 	db := apiDB(t)
@@ -117,6 +182,36 @@ func TestMediaRecoveryBingeRequiresActualRunsAndNoFakeSuggestions(t *testing.T) 
 	emptyBinge, emptyTaste := recoveredMediaInsights(nil)
 	if emptyBinge["totalBingeSessionsMonth"] != 0 || len(emptyTaste["acquisitionSuggestions"].([]map[string]any)) != 0 {
 		t.Fatal("empty inputs fabricate suggestions")
+	}
+}
+
+func TestAcquisitionSuggestionsPreserveHistoricalHeuristicsAndMeasuredDemand(t *testing.T) {
+	genre := map[string]any{"kind": "genre", "name": "Drama", "hours": 2.0, "percentage": 20.0, "plays": 4.0}
+	dominant := recoveredAcquisitionSuggestion(genre, 0, 10)
+	if dominant["scorePercent"] != float64(70) || dominant["category"] != "Genre Dominant" || dominant["title"] != "Enrichir la collection Drama" || dominant["scoreKind"] != "historical_heuristic" || genre["scorePercent"] != nil {
+		t.Fatalf("dominant score fields or immutable demand lost: %+v %+v", dominant, genre)
+	}
+	trend := recoveredAcquisitionSuggestion(genre, 1, 10)
+	if trend["scorePercent"] != float64(50) || trend["badge"] != "Tendance Forte" {
+		t.Fatalf("trend score: %+v", trend)
+	}
+	genre["hours"] = 10.0
+	if recoveredAcquisitionSuggestion(genre, 0, 10)["scorePercent"] != float64(99) || recoveredAcquisitionSuggestion(genre, 1, 10)["scorePercent"] != float64(85) {
+		t.Fatal("historical score maximums lost")
+	}
+	artist := recoveredAcquisitionSuggestion(map[string]any{"kind": "artist", "name": "Artist", "hours": 1.2, "plays": 3.0}, 0, 10)
+	if artist["scorePercent"] != 92 || artist["badge"] != "Favori Utilisateurs" {
+		t.Fatalf("artist heuristic lost: %+v", artist)
+	}
+	_, taste := recoveredMediaInsights([]map[string]any{{"durationWatched": int64(3600), "type": "Movie", "genres": []string{"Drama"}, "artist": "Artist"}})
+	suggestions := taste["acquisitionSuggestions"].([]map[string]any)
+	demand := taste["demandSuggestions"].([]map[string]any)
+	if len(suggestions) != 2 || len(demand) != 2 || suggestions[0]["scoreKind"] != "historical_heuristic" || demand[0]["scorePercent"] != nil || demand[0]["hours"] != float64(1) {
+		t.Fatalf("Go measured demand lost: %+v", taste)
+	}
+	_, empty := recoveredMediaInsights(nil)
+	if len(empty["acquisitionSuggestions"].([]map[string]any)) != 0 || len(empty["demandSuggestions"].([]map[string]any)) != 0 {
+		t.Fatal("empty state fabricates recommendations")
 	}
 }
 

@@ -1,0 +1,95 @@
+{
+  "scope": "Static isolated preview of current renderer share content + source CSS; not deployed app screenshot",
+  "slides": [
+    {
+      "title": "JellyTrack Wrapped 2026",
+      "theme": "purple"
+    },
+    {
+      "title": "Maître du Temps",
+      "theme": "emerald"
+    },
+    {
+      "title": "2 jours et 1 heures",
+      "theme": "cyan"
+    },
+    {
+      "title": "Vitesse de Croisière",
+      "theme": "fuchsia"
+    },
+    {
+      "title": "Heure de Pointe",
+      "theme": "orange"
+    },
+    {
+      "title": "Votre appareil favori",
+      "theme": "amber"
+    },
+    {
+      "title": "Explorateur de Genres",
+      "theme": "rose"
+    },
+    {
+      "title": "Le Grand Jour",
+      "theme": "amber"
+    },
+    {
+      "title": "Le Panthéon",
+      "theme": "indigo"
+    },
+    {
+      "title": "Binge-Watcher",
+      "theme": "blue"
+    },
+    {
+      "title": "Votre univers sonore",
+      "theme": "emerald"
+    },
+    {
+      "title": "Top Artistes",
+      "theme": "violet"
+    },
+    {
+      "title": "Top Albums",
+      "theme": "rose"
+    },
+    {
+      "title": "Cinéphile",
+      "theme": "red"
+    },
+    {
+      "title": "Accro aux Séries",
+      "theme": "blue"
+    },
+    {
+      "title": "Audiophile",
+      "theme": "green"
+    },
+    {
+      "title": "Rat de Bibliothèque",
+      "theme": "yellow"
+    },
+    {
+      "title": "Partagez votre récap",
+      "theme": "share"
+    }
+  ],
+  "checks": [
+    {
+      "viewport": "desktop",
+      "width": 1440,
+      "documentWidth": 1440,
+      "cardWidth": 384,
+      "categories": "🎬 15h📺 17h🎵 2h📚 15h",
+      "gradient": "linear-gradient(to right bottom, oklch(0.381 0.176 304.987) 0%, oklch(0.401 0.17 325.612) 50%, rgb(0, 0, 0) 100%)"
+    },
+    {
+      "viewport": "mobile",
+      "width": 390,
+      "documentWidth": 390,
+      "cardWidth": 358,
+      "categories": "🎬 15h📺 17h🎵 2h📚 15h",
+      "gradient": "linear-gradient(to right bottom, oklch(0.381 0.176 304.987) 0%, oklch(0.401 0.17 325.612) 50%, rgb(0, 0, 0) 100%)"
+    }
+  ]
+}

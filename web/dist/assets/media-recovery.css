@@ -26,3 +26,63 @@
 .mr-header{display:flex;justify-content:space-between;align-items:center;gap:1rem}.mr-header-count{flex-shrink:0;background:var(--surface-nested,var(--card));border:1px solid var(--border);color:var(--foreground);padding:.55rem .85rem}.mr-poster-image>.mr-new{background:rgb(6 182 212/.9);border-color:rgb(34 211 238/.8);color:#ecfeff}.mr-secondary-controls{margin-bottom:1rem}
 
 .mr-dropoff-chart{height:350px}.mr-completion-markers{display:flex;flex-wrap:wrap;gap:.5rem;font-size:.75rem;color:var(--muted-foreground);padding:.7rem 0}.mr-completion-markers span{border:1px solid var(--border);padding:.35rem .5rem;border-radius:6px}
+
+/* Historical collections use two columns, with watch time on the next row. */
+.mr-collections-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+@media(max-width:639px){.mr-collections-stats{grid-template-columns:1fr}}
+
+/* Source parity: analysis summary cards, profile artwork and named statistics. */
+.mr-analysis-overview{gap:24px;align-items:stretch}
+.mr-analysis-overview>.mr-section{padding:24px}
+.mr-analysis-subcards{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+.mr-analysis-subcard{padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-soft,var(--card));display:flex;flex-direction:column;gap:4px}
+.mr-analysis-subcard>span{font-size:14px;color:var(--muted-foreground)}
+.mr-analysis-subcard>strong{font-size:24px;line-height:32px;color:#06b6d4}
+.mr-analysis-subcard:nth-child(2)>strong{color:#a78bfa}
+.mr-analysis-subcard:nth-child(3)>strong{color:#10b981}
+.mr-analysis-subcard>small{font-size:12px;color:var(--muted-foreground)}
+.mr-quality-list{display:flex;flex-direction:column;gap:16px;margin-top:24px}
+.mr-quality-list>a{padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-soft,var(--card))}
+.mr-quality-list strong{font-size:20px}
+.mr-quality-list .mr-quality-4K{color:#f59e0b}
+.mr-quality-list .mr-quality-1440p{color:#38bdf8}
+.mr-quality-list .mr-quality-1080p{color:#60a5fa}
+.mr-quality-list .mr-quality-720p{color:#34d399}
+.mr-quality-list .mr-quality-SD{color:var(--muted-foreground)}
+.mr-detail-layout .mr-episode-hero .mr-hero-poster{flex-basis:320px;width:320px;aspect-ratio:16/9}
+.mr-detail-layout .mr-episode-hero .mr-hero-poster>img{aspect-ratio:16/9}
+.mr-detail-layout .mr-hero-poster>img{display:block}
+.mr-detail-layout .mr-episode-hero .mr-hero-poster>.mr-image-unavailable{position:relative;aspect-ratio:16/9}
+.mr-stat>span{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mr-stat-icon{display:block;width:16px;height:16px;flex-shrink:0;font-style:normal}
+.mr-stat-icon svg{width:100%;height:100%}
+.mr-stats>.mr-stat:nth-child(1) .mr-stat-icon{color:#f97316}
+.mr-stats>.mr-stat:nth-child(2) .mr-stat-icon{color:#3b82f6}
+.mr-stats>.mr-stat:nth-child(3) .mr-stat-icon{color:#10b981}
+.mr-artist-image{width:160px;height:160px;border-radius:12px}
+.mr-artist-hero{padding:24px;gap:24px}
+.mr-artist-hero h1{font-size:30px;line-height:36px;margin-top:4px}
+.mr-artist-summary{font-size:14px;color:var(--muted-foreground);margin-top:8px}
+
+/* Historical rankings use colored numbered circles and equal-height grid cards. */
+.mr-ranking-grid{gap:24px;align-items:stretch}
+.mr-ranking-card{padding:24px;--mr-ranking-color:#3b82f6}
+.mr-ranking-series{--mr-ranking-color:#10b981}
+.mr-ranking-music{--mr-ranking-color:#f59e0b}
+.mr-ranking-directors{--mr-ranking-color:#6366f1}
+.mr-ranking-actors{--mr-ranking-color:#a855f7}
+.mr-ranking-studios{--mr-ranking-color:#ec4899}
+.mr-ranking-card .mr-section-heading{position:relative;min-height:92px;padding-right:28px}
+.mr-ranking-card .mr-section-heading h2{font-size:16px;margin-bottom:8px}
+.mr-ranking-card .mr-section-heading p{font-size:12px;margin:0}
+.mr-ranking-award{position:absolute;right:0;top:8px;width:20px;height:20px;color:#eab308}
+.mr-ranking-award svg{width:100%;height:100%}
+.mr-ranking-card .mr-ranking{display:flex;flex-direction:column;gap:16px}
+.mr-ranking-card .mr-ranking li{position:relative;display:grid;grid-template-columns:32px minmax(0,1fr);gap:4px 12px;padding:8px;min-height:56px;border:1px solid var(--border);border-radius:8px;background:var(--surface-soft,var(--card))}
+.mr-ranking-card .mr-ranking img{display:none}
+.mr-ranking-card .mr-rank{grid-row:1/3;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-size:14px;color:var(--mr-ranking-color);background:color-mix(in srgb,var(--mr-ranking-color) 10%,transparent)}
+.mr-ranking-card .mr-ranking a{font-size:14px;font-weight:600}
+.mr-ranking-card .mr-ranking li>span:last-child{grid-column:2;text-align:left;display:flex;gap:8px;align-items:center;color:var(--muted-foreground);font-size:12px}
+.mr-ranking-card .mr-ranking li>span:last-child strong{font-weight:400}
+.mr-ranking-card .mr-ranking li>span:last-child small{margin:0;font-size:12px}
+@media(max-width:767px){.mr-detail-layout .mr-episode-hero .mr-hero-poster{width:100%;flex-basis:auto}.mr-artist-image{width:160px;height:160px}.mr-artist-hero h1{font-size:30px}.mr-analysis-overview>.mr-section,.mr-ranking-card{padding:20px}}

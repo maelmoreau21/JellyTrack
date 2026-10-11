@@ -11,10 +11,25 @@
   // State & Utilities
   // =========================================================================
 
+  function initialLocale() {
+    const supported = ['fr', 'en', 'de', 'es', 'it', 'nl', 'pl', 'pt-BR', 'ru', 'zh'];
+    const stored = localStorage.getItem('jt_locale');
+    if (supported.includes(stored)) return stored;
+    let cookie = '';
+    try { cookie = decodeURIComponent(document.cookie.split('; ').find(part => part.startsWith('locale='))?.slice(7) || ''); } catch (_) {}
+    if (supported.includes(cookie)) return cookie;
+    for (const language of navigator.languages || [navigator.language]) {
+      const tag = String(language || '').toLowerCase();
+      const matched = supported.find(code => code.toLowerCase() === tag) || supported.find(code => code.toLowerCase().split('-')[0] === tag.split('-')[0]);
+      if (matched) return matched;
+    }
+    return 'en';
+  }
+
   const State = {
     navigation: { multiServer: false, wrappedVisible: false },
     user: null, // { username, role, isAdmin, csrfToken }
-    locale: localStorage.getItem('jt_locale') || 'fr',
+    locale: initialLocale(),
     translations: {},
     fallbackTranslations: {},
     activeStreamsCount: 0,
@@ -3815,7 +3830,7 @@
                 ` : ''}
 
                 <div class="auth-input-group">
-                  <label class="auth-label">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
+                  <label class="auth-label" for="login-username">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
                   <div class="auth-input-wrapper">
                     <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     <input type="text" class="auth-input-field" id="login-username" required value="admin" placeholder="admin">
@@ -3823,12 +3838,17 @@
                 </div>
 
                 <div class="auth-input-group">
-                  <label class="auth-label">${I18n.t('login.password') || 'Mot de passe'}</label>
+                  <label class="auth-label" for="login-password">${I18n.t('login.password') || 'Mot de passe'}</label>
                   <div class="auth-input-wrapper">
                     <svg class="auth-input-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     <input type="password" class="auth-input-field" id="login-password" required autofocus placeholder="••••••••">
                   </div>
                 </div>
+
+                <label class="auth-remember" for="login-remember">
+                  <input type="checkbox" id="login-remember">
+                  <span>${I18n.t('login.rememberMe')}<small>${I18n.t('login.rememberMeHint')}</small></span>
+                </label>
 
                 <button type="submit" id="btn-login-submit" class="auth-submit-btn auth-submit-btn-amber">
                   <span id="btn-login-text">${I18n.t('login.signIn') || 'Se connecter'}</span>
@@ -3992,7 +4012,9 @@
               await Auth.login(u, p, rem);
               Toast.success(I18n.t('login.loginSuccess') || 'Connecté avec succès !');
               document.body.classList.remove('is-auth-page');
-              Router.navigate('/', true, true);
+              const callback = new URLSearchParams(location.search).get('callbackUrl');
+              const target = callback && callback.startsWith('/') && !callback.startsWith('//') && !callback.includes('\\') && !/^\/login(?:[?#]|$)/.test(callback) ? callback : '/';
+              Router.navigate(target, true, true);
             } catch (err) {
               error = err.message || (I18n.t('login.invalidCredentials') || 'Identifiants incorrects.');
               render();
@@ -4085,97 +4107,10 @@
 
     // 4. About Page
     async about() {
-      const main = document.getElementById('app-main');
-      main.innerHTML = `
-        <div class="about-wrapper">
-          <div class="about-hero">
-            <div class="about-logo-box">
-              <img src="/assets/logo.svg" alt="JellyTrack" style="width: 44px; height: 44px;">
-            </div>
-            <span class="about-version-pill">v3.0.0 • Go Native Engine</span>
-            <h1 class="about-hero-title">JellyTrack</h1>
-            <p class="about-hero-desc">
-              ${I18n.t('about.description') || 'Tableau de bord d’analyse, de statistiques et de surveillance en temps réel pour serveurs Jellyfin. Propulsé par un binaire Go autonome ultra-rapide sans dépendance Node.js.'}
-            </p>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg style="width:20px;height:20px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                Fonctionnalités Clés
-              </div>
-            </div>
-            <ul class="feature-list">
-              <li class="feature-item"><div class="feature-dot"></div><span><b>Architecture Go 100% autonome</b> : zéro Node.js, zéro React, zéro npm au runtime.</span></li>
-              <li class="feature-item"><div class="feature-dot"></div><span><b>Graphiques haute performance</b> : suivi de lecture en direct, analyse par format et client.</span></li>
-              <li class="feature-item"><div class="feature-dot"></div><span><b>Carte thermique annuelle</b> : style GitHub interactive avec zoom par session.</span></li>
-              <li class="feature-item"><div class="feature-dot"></div><span><b>Catalogue multimédia enrichi</b> : films, séries, musique et livres avec métadonnées.</span></li>
-              <li class="feature-item"><div class="feature-dot"></div><span><b>JellyTrack Wrapped</b> : rétrospective annuelle interactive style Spotify avec partage.</span></li>
-              <li class="feature-item"><div class="feature-dot"></div><span><b>Sécurité d’entreprise</b> : sessions chiffrées, CSRF/SSRF guard, OpenID Connect / SSO.</span></li>
-              <li class="feature-item"><div class="feature-dot"></div><span><b>Internationalisation</b> : 11 langues traduites (FR, EN, DE, ES, IT, NL, PL, PT, RU, ZH).</span></li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg style="width:20px;height:20px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                Stack Technique
-              </div>
-            </div>
-            <div class="tech-grid">
-              <div class="tech-item">
-                <span class="tech-icon">🐹</span>
-                <div>
-                  <div class="tech-name">Go 1.23+</div>
-                  <div class="tech-desc">Backend ultra-rapide & serveur HTTP natif</div>
-                </div>
-              </div>
-              <div class="tech-item">
-                <span class="tech-icon">🗄️</span>
-                <div>
-                  <div class="tech-name">SQLite / PostgreSQL</div>
-                  <div class="tech-desc">Stockage persistant & migrations automatiques</div>
-                </div>
-              </div>
-              <div class="tech-item">
-                <span class="tech-icon">📊</span>
-                <div>
-                  <div class="tech-name">Chart.js</div>
-                  <div class="tech-desc">Visualisations fluides et interactives</div>
-                </div>
-              </div>
-              <div class="tech-item">
-                <span class="tech-icon">🔑</span>
-                <div>
-                  <div class="tech-name">OIDC & SSO</div>
-                  <div class="tech-desc">Authentification unique unifiée</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div class="card-title">
-                <svg style="width:20px;height:20px;color:var(--primary);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                Liens & Communauté
-              </div>
-            </div>
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-              <a href="https://github.com/maelmoreau21/JellyTrack" target="_blank" rel="noopener" class="btn btn-secondary" style="display:flex;align-items:center;gap:0.5rem;">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-                GitHub Repository
-              </a>
-              <a href="https://jellyfin.org" target="_blank" rel="noopener" class="btn btn-secondary" style="display:flex;align-items:center;gap:0.5rem;">
-                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-                Projet Jellyfin
-              </a>
-            </div>
-          </div>
-        </div>
-      `;
+      window.JellyTrackAbout.render(document.getElementById('app-main'), {
+        i18n: I18n, escape: Utils.escapeHtml, locale: State.locale,
+        version: State.navigation.appVersion,
+      });
     },
 
     // 5. Recent Playback History
@@ -4406,19 +4341,20 @@
         if (hours >= 24) add(t('totalTimeDays', { days: Math.floor(hours / 24), hours: hours % 24 }), t('totalTimeDaysDesc'), '▦', `<strong class="wrapped-number">${Math.floor(hours / 24)}</strong><p>${t('days')}</p>`, 'cyan');
         const monthly = data.monthlyHours || [];
         const maxMonth = Math.max(0, ...monthly.map(item => Number(item.hours) || 0));
-        add(t('monthlyTitle'), t('monthlySubtitle'), '▥', monthly.length ? `<div class="wrapped-months">${monthly.map(item => `<div><span style="height:${maxMonth > 0 ? Math.max(0, Number(item.hours) / maxMonth * 100) : 0}%"><small>${Number(item.hours || 0).toFixed(1)}h</small></span><b>${t(item.name)}</b></div>`).join('')}</div>${maxMonth > 0 ? `<p>${t('bestMonth', { name: t(monthly.find(item => Number(item.hours) === maxMonth)?.name || 'jan'), hours: maxMonth.toFixed(1) })}</p>` : noData}` : noData, 'pink');
+        add(t('monthlyTitle'), t('monthlySubtitle'), '▥', monthly.length ? `<div class="wrapped-months">${monthly.map(item => `<div><span style="height:${maxMonth > 0 ? Math.max(0, Number(item.hours) / maxMonth * 100) : 0}%"><small>${Number(item.hours || 0).toFixed(1)}h</small></span><b>${t(item.name)}</b></div>`).join('')}</div>${maxMonth > 0 ? `<p>${t('bestMonth', { name: t(monthly.find(item => Number(item.hours) === maxMonth)?.name || 'jan'), hours: maxMonth.toFixed(1) })}</p>` : noData}` : noData, 'fuchsia');
         add(t('peakTitle'), t('peakSubtitle'), '↗', `<strong class="wrapped-number">${peakHour}</strong><p>${data.totalPlays > 0 ? escape(t('peakContent', { bold: '', hour: peakHour, count: data.peakHourSessions ?? data.hourCounts?.[data.peakHour] ?? 0 })) : t('noData')}</p>`, 'orange');
         if (data.topDevice && data.topDevice !== 'N/A') add(t('topDevice'), t('topDeviceDesc', { device: data.topDevice }), '◉', `<strong class="wrapped-device">${escape(data.topDevice)}</strong>`, 'amber');
-        add(t('genresTitle'), t('genresSubtitle'), '☆', genres.length ? `<p>${t('genreFirst')}</p><strong class="wrapped-device">${escape(topGenre)}</strong><ol class="wrapped-genres">${genres.map(item => `<li>${escape(item.name)} <small>${item.count || 0}</small></li>`).join('')}</ol>` : noData, 'pink');
+        add(t('genresTitle'), t('genresSubtitle'), '☆', genres.length ? `<p>${t('genreFirst')}</p><strong class="wrapped-device">${escape(topGenre)}</strong><ol class="wrapped-genres">${genres.map(item => `<li>${escape(item.name)} <small>${item.count || 0}</small></li>`).join('')}</ol>` : noData, 'rose');
         add(t('dayTitle'), t('daySubtitle'), '▦', data.totalPlays > 0 ? `<strong class="wrapped-device">${dayLabel}</strong><p>${t('dayContent')}</p>` : noData, 'amber');
-        add(t('pantheonTitle'), t('pantheonSubtitle'), '☆', ranked(data.topMedia || data.topMovies), 'amber');
+        add(t('pantheonTitle'), t('pantheonSubtitle'), '☆', ranked(data.topMedia || data.topMovies), 'indigo');
         if (data.topSeries?.length) add(t('bingeTitle'), t('bingeSubtitle'), '▣', ranked(data.topSeries), 'blue');
         if (data.topTracks?.length || data.topMusic?.length) add(t('tracksTitle'), t('tracksSubtitle'), '♫', ranked(data.topTracks || data.topMusic), 'emerald');
-        if (data.topArtists?.length) add(t('artistsTitle'), t('artistsSubtitle'), '♬', ranked(data.topArtists), 'purple');
-        if (data.topAlbums?.length) add(t('albumsTitle'), t('albumsSubtitle'), '◎', ranked(data.topAlbums), 'pink');
-        const categoryConfigs = [ ['movies', 'moviesTitle', 'moviesSubtitle', 'moviesLabel', '▣', 'red'], ['series', 'episodesTitle', 'episodesSubtitle', 'episodesLabel', '▣', 'blue'], ['music', 'musicTitle', 'musicSubtitle', 'musicLabel', '♫', 'emerald'], ['books', 'booksTitle', 'booksSubtitle', 'booksLabel', '▤', 'amber'] ];
+        if (data.topArtists?.length) add(t('artistsTitle'), t('artistsSubtitle'), '♬', ranked(data.topArtists), 'violet');
+        if (data.topAlbums?.length) add(t('albumsTitle'), t('albumsSubtitle'), '◎', ranked(data.topAlbums), 'rose');
+        const categoryConfigs = [ ['movies', 'moviesTitle', 'moviesSubtitle', 'moviesLabel', '▣', 'red'], ['series', 'episodesTitle', 'episodesSubtitle', 'episodesLabel', '▣', 'blue'], ['music', 'musicTitle', 'musicSubtitle', 'musicLabel', '♫', 'green'], ['books', 'booksTitle', 'booksSubtitle', 'booksLabel', '▤', 'yellow'] ];
         categoryConfigs.forEach(([key, title, subtitle, label, icon, theme]) => { const category = data.categories?.[key]; if (category?.totalSeconds > 0) add(t(title), t(subtitle), icon, `<strong class="wrapped-number">${Math.round(category.totalSeconds / 3600)}</strong><p>${t('hours')} ${t('ofLabel', { label: t(label) })}</p>${ranked(category.topMedia)}`, theme); });
-        add(t('shareTitle'), t('shareSubtitle'), '↗', `<div class="wrapped-share-card"><p>${t('shareCardYear', { year: data.year || year })}</p><h2>${escape(data.username)}</h2><strong>${hours} ${t('hours')}</strong><p>${t('acrossSessions', { count: data.totalPlays || 0 })}</p>${data.totalPlays > 0 ? `<p>${escape(t('genreLabel', { genre: topGenre }))}</p><p>${t('favDayLabel', { day: dayLabel })}</p>` : ''}<p>${t('captureScreen')}</p><button class="btn btn-primary" id="btn-share-wrapped">${copy('Copier le résumé', 'Copy summary')}</button></div>`, 'purple');
+        const shareCategories = [['movies', '🎬'], ['series', '📺'], ['music', '🎵'], ['books', '📚']].map(([key, glyph]) => ({ glyph, hours: Math.round(Number(data.categories?.[key]?.totalSeconds || 0) / 3600) })).filter(category => category.hours > 0);
+        add(t('shareTitle'), t('shareSubtitle'), '↗', `<div class="wrapped-share-card"><p class="wrapped-share-year">${escape(t('introTitle', { year: data.year || year }))}</p><h3>${escape(data.username)}</h3><p class="wrapped-share-hours">${hours}h ${escape(t('streaming'))}</p><p>${escape(t('genreLabel', { genre: topGenre }))}</p><p>${escape(t('peakLabel', { hour: peakHour }))}</p><p>${escape(t('favDayLabel', { day: dayLabel }))}</p>${shareCategories.length ? `<div class="wrapped-share-categories">${shareCategories.map(category => `<span>${category.glyph} ${category.hours}h</span>`).join('')}</div>` : ''}</div><p class="wrapped-capture-hint">${escape(t('captureScreen'))}</p><button class="btn btn-primary" id="btn-share-wrapped">${copy('Copier le résumé', 'Copy summary')}</button>`, 'share');
         const change = direction => { const next = Math.max(0, Math.min(slides.length - 1, currentSlide + direction)); if (next !== currentSlide) { currentSlide = next; render(); } };
         const schedule = () => { clearTimeout(timer); if (!pageSignal.aborted && !configOpen && !document.hidden && currentSlide < slides.length - 1) timer = setTimeout(() => change(1), 8000); };
         const configuration = () => {
@@ -6095,8 +6031,8 @@
       if (routeChanged) document.querySelector('.main-wrapper').scrollTo(0, 0);
 
       // Auth protection guard
-      if (!State.user && path !== '/login' && path !== '/setup') {
-        this.navigate('/login', true);
+      if (!State.user && path !== '/login' && path !== '/setup/go') {
+        this.navigate('/login?callbackUrl=' + encodeURIComponent(path + window.location.search), true);
         return;
       }
 
@@ -6104,11 +6040,7 @@
         document.body.classList.remove('is-auth-page');
       }
 
-      if (State.user && !State.user.isAdmin && path === '/users') {
-        this.navigate('/login', true);
-        return;
-      }
-      if (State.user && !State.user.isAdmin && (path === '/' || path === '/dashboard' || path === '/logs' || path === '/newsletter' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
+            if (State.user && !State.user.isAdmin && (path === '/' || path === '/users' || path === '/dashboard' || path === '/logs' || path === '/newsletter' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
         const uid = State.user.jellyfinUserId || State.user.id;
         if (uid) this.navigate('/users/' + encodeURIComponent(uid), true);
         else document.getElementById('app-main').innerHTML = '<div class="empty-state">Accès réservé à l’administration.</div>';
@@ -6121,6 +6053,8 @@
       } else if (path === '/login') {
         Pages.login();
       } else if (path === '/setup') {
+        this.navigate('/', true);
+      } else if (path === '/setup/go') {
         Pages.setup();
       } else if (path === '/about') {
         Pages.about();
@@ -6209,12 +6143,8 @@
     const backdrop = document.getElementById('sidebar-backdrop');
     if (mobileBtn && sidebar) {
       mobileBtn.addEventListener('click', () => {
-        const isOpen = sidebar.classList.toggle('mobile-open');
-        mobileBtn.setAttribute('aria-expanded', String(isOpen));
-        if (backdrop) {
-          if (isOpen) backdrop.classList.add('active');
-          else backdrop.classList.remove('active');
-        }
+        if (sidebar.classList.contains('mobile-open')) window.JellyTrackNavigation.closeMobile();
+        else window.JellyTrackNavigation.openMobile();
       });
     }
     if (backdrop && sidebar) {

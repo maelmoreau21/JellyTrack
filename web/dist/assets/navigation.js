@@ -86,7 +86,14 @@
         if (!e.target.closest('.nav-search')) this.closeSearch(false);
       });
       document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { languageMenu.hidden = true; languageButton.setAttribute('aria-expanded','false'); this.closeSearch(false); this.closeMobile(); }
+        if (e.key === 'Escape') { const inLanguage=languageMenu.contains(document.activeElement);languageMenu.hidden = true; languageButton.setAttribute('aria-expanded','false'); if(inLanguage)languageButton.focus();this.closeSearch(false); this.closeMobile(); }
+        if (e.key === 'Tab' && sidebar.classList.contains('mobile-open')) {
+          const controls=Array.from(sidebar.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),summary')).filter(el=>el.getClientRects().length&&!el.closest('[hidden]'));
+          const first=controls[0],last=controls[controls.length-1];
+          if(!sidebar.contains(document.activeElement)){e.preventDefault();(e.shiftKey?last:first)?.focus();}
+          else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
+          else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+        }
         if (e.key === '/' && !e.target.matches('input,textarea,select,[contenteditable]') && config.user()) {
           e.preventDefault(); this.openSearch();
         }
@@ -129,9 +136,17 @@
       this.render();
     },
     closeMobile() {
+      const wasOpen=document.getElementById('app-sidebar').classList.contains('mobile-open');
       document.getElementById('app-sidebar').classList.remove('mobile-open');
       document.getElementById('sidebar-backdrop').classList.remove('active');
       document.getElementById('mobile-menu-btn').setAttribute('aria-expanded','false');
+      if(wasOpen&&document.getElementById('app-sidebar').contains(document.activeElement))document.getElementById('mobile-menu-btn').focus();
+    },
+    openMobile() {
+      document.getElementById('app-sidebar').classList.add('mobile-open');
+      document.getElementById('sidebar-backdrop').classList.add('active');
+      document.getElementById('mobile-menu-btn').setAttribute('aria-expanded','true');
+      document.getElementById('sidebar-close-btn').focus();
     },
     openSearch() {
       const sidebar = document.getElementById('app-sidebar');
@@ -190,6 +205,7 @@
       document.getElementById('nav-search-input').placeholder = t('search.placeholder');
       document.getElementById('sidebar-search-trigger').title = t('search.placeholder');
       document.getElementById('sidebar-search-trigger').setAttribute('aria-label',t('search.placeholder'));
+      document.getElementById('go-extras-links').insertAdjacentHTML('beforeend', `<a data-link href="/setup/go">${e(config.locale()==='fr'?'Assistant de configuration Go':'Go setup wizard')}</a>`);
       const loc = locales.find(l => l[0] === config.locale()) || locales[0];
       const country = loc[0] === 'en' ? 'gb' : loc[0] === 'pt-BR' ? 'br' : loc[0] === 'zh' ? 'cn' : loc[0];
       document.getElementById('language-value').innerHTML = `<img class="nav-flag" src="/assets/flags/${country}.png" alt=""> ${e(loc[1])}`;

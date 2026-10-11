@@ -1,0 +1,605 @@
+{
+  "date": "2026-10-10T11:32:34.218Z",
+  "source": "Source JS/CSS preview, real Go APIs, no settings writes",
+  "checks": [
+    {
+      "name": "/settings/sso desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/sso mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/sso desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/sso mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "SSO status badge in heading",
+      "ok": true
+    },
+    {
+      "name": "SSO refresh at heading right",
+      "ok": true
+    },
+    {
+      "name": "SSO both external switches retain form ownership",
+      "ok": true
+    },
+    {
+      "name": "SSO switches align with configuration heading",
+      "ok": true
+    },
+    {
+      "name": "/settings/sso no JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "/settings/dataBackups desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/dataBackups mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/dataBackups desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/dataBackups mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "Backups purple import action",
+      "ok": true
+    },
+    {
+      "name": "Backups file/action same desktop row",
+      "ok": true
+    },
+    {
+      "name": "Backup history nested background",
+      "ok": true
+    },
+    {
+      "name": "/settings/dataBackups no JS errors",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "/settings/media desktop dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/media mobile dark no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/media desktop light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/media mobile light no document overflow",
+      "ok": true
+    },
+    {
+      "name": "Media scoped server groups retained",
+      "ok": true
+    },
+    {
+      "name": "Media per-server unique library keys",
+      "ok": true
+    },
+    {
+      "name": "Media two server columns desktop",
+      "ok": true
+    },
+    {
+      "name": "Media first scope toggle changes only its own key",
+      "ok": true
+    },
+    {
+      "name": "/settings/media no JS errors",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "pages": [
+    {
+      "route": "/settings/sso",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "theme": "dark",
+          "file": "go-preview-residual-settings-sso-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "statusBadge": {
+              "x": 599.015625,
+              "y": 147,
+              "width": 106.59375,
+              "height": 20
+            },
+            "stateTitle": {
+              "x": 339,
+              "y": 145,
+              "width": 568.0625,
+              "height": 24
+            },
+            "refresh": {
+              "x": 1252,
+              "y": 145,
+              "width": 105,
+              "height": 32
+            },
+            "toggles": {
+              "x": 897,
+              "y": 549.59375,
+              "width": 460,
+              "height": 96.78125
+            },
+            "configTitle": {
+              "x": 339,
+              "y": 549.59375,
+              "width": 542,
+              "height": 21.59375
+            },
+            "externalFormFields": [
+              {
+                "name": "enabled",
+                "form": "settings-sso-config",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "autoRedirect",
+                "form": "settings-sso-config",
+                "checked": true,
+                "disabled": false
+              }
+            ],
+            "importButton": null,
+            "importInput": null,
+            "libraryGroups": 0,
+            "scopeKeys": []
+          }
+        },
+        {
+          "viewport": "mobile",
+          "theme": "dark",
+          "file": "go-preview-residual-settings-sso-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "statusBadge": {
+              "x": 57,
+              "y": 227,
+              "width": 106.59375,
+              "height": 20
+            },
+            "stateTitle": {
+              "x": 57,
+              "y": 193,
+              "width": 276,
+              "height": 54
+            },
+            "refresh": {
+              "x": 57,
+              "y": 332,
+              "width": 105,
+              "height": 32
+            },
+            "toggles": {
+              "x": 57,
+              "y": 1122.96875,
+              "width": 276,
+              "height": 169.171875
+            },
+            "configTitle": {
+              "x": 57,
+              "y": 995.375,
+              "width": 276,
+              "height": 21.59375
+            },
+            "externalFormFields": [
+              {
+                "name": "enabled",
+                "form": "settings-sso-config",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "autoRedirect",
+                "form": "settings-sso-config",
+                "checked": true,
+                "disabled": false
+              }
+            ],
+            "importButton": null,
+            "importInput": null,
+            "libraryGroups": 0,
+            "scopeKeys": []
+          }
+        },
+        {
+          "viewport": "desktop",
+          "theme": "light",
+          "file": "go-preview-residual-settings-sso-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "statusBadge": {
+              "x": 599.015625,
+              "y": 147,
+              "width": 106.59375,
+              "height": 20
+            },
+            "stateTitle": {
+              "x": 339,
+              "y": 145,
+              "width": 568.0625,
+              "height": 24
+            },
+            "refresh": {
+              "x": 1252,
+              "y": 145,
+              "width": 105,
+              "height": 32
+            },
+            "toggles": {
+              "x": 897,
+              "y": 549.59375,
+              "width": 460,
+              "height": 96.78125
+            },
+            "configTitle": {
+              "x": 339,
+              "y": 549.59375,
+              "width": 542,
+              "height": 21.59375
+            },
+            "externalFormFields": [
+              {
+                "name": "enabled",
+                "form": "settings-sso-config",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "autoRedirect",
+                "form": "settings-sso-config",
+                "checked": true,
+                "disabled": false
+              }
+            ],
+            "importButton": null,
+            "importInput": null,
+            "libraryGroups": 0,
+            "scopeKeys": []
+          }
+        },
+        {
+          "viewport": "mobile",
+          "theme": "light",
+          "file": "go-preview-residual-settings-sso-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "statusBadge": {
+              "x": 57,
+              "y": 227,
+              "width": 106.59375,
+              "height": 20
+            },
+            "stateTitle": {
+              "x": 57,
+              "y": 193,
+              "width": 276,
+              "height": 54
+            },
+            "refresh": {
+              "x": 57,
+              "y": 332,
+              "width": 105,
+              "height": 32
+            },
+            "toggles": {
+              "x": 57,
+              "y": 1122.96875,
+              "width": 276,
+              "height": 169.171875
+            },
+            "configTitle": {
+              "x": 57,
+              "y": 995.375,
+              "width": 276,
+              "height": 21.59375
+            },
+            "externalFormFields": [
+              {
+                "name": "enabled",
+                "form": "settings-sso-config",
+                "checked": false,
+                "disabled": false
+              },
+              {
+                "name": "autoRedirect",
+                "form": "settings-sso-config",
+                "checked": true,
+                "disabled": false
+              }
+            ],
+            "importButton": null,
+            "importInput": null,
+            "libraryGroups": 0,
+            "scopeKeys": []
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/dataBackups",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "theme": "dark",
+          "file": "go-preview-residual-settings-dataBackups-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "statusBadge": null,
+            "stateTitle": null,
+            "refresh": null,
+            "toggles": null,
+            "configTitle": null,
+            "externalFormFields": [],
+            "importButtonBackground": "rgb(147, 51, 234)",
+            "importButton": {
+              "x": 1112.46875,
+              "y": 725.484375,
+              "width": 213.53125,
+              "height": 36
+            },
+            "importInput": {
+              "x": 370,
+              "y": 725.484375,
+              "width": 730.46875,
+              "height": 36
+            },
+            "backupHistoryBackground": "rgb(23, 32, 51)",
+            "libraryGroups": 0,
+            "scopeKeys": []
+          }
+        },
+        {
+          "viewport": "mobile",
+          "theme": "dark",
+          "file": "go-preview-residual-settings-dataBackups-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "statusBadge": null,
+            "stateTitle": null,
+            "refresh": null,
+            "toggles": null,
+            "configTitle": null,
+            "externalFormFields": [],
+            "importButtonBackground": "rgb(147, 51, 234)",
+            "importButton": {
+              "x": 82,
+              "y": 1299.15625,
+              "width": 226,
+              "height": 36
+            },
+            "importInput": {
+              "x": 82,
+              "y": 1251.15625,
+              "width": 226,
+              "height": 36
+            },
+            "backupHistoryBackground": "rgb(23, 32, 51)",
+            "libraryGroups": 0,
+            "scopeKeys": []
+          }
+        },
+        {
+          "viewport": "desktop",
+          "theme": "light",
+          "file": "go-preview-residual-settings-dataBackups-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "statusBadge": null,
+            "stateTitle": null,
+            "refresh": null,
+            "toggles": null,
+            "configTitle": null,
+            "externalFormFields": [],
+            "importButtonBackground": "rgb(147, 51, 234)",
+            "importButton": {
+              "x": 1112.46875,
+              "y": 725.484375,
+              "width": 213.53125,
+              "height": 36
+            },
+            "importInput": {
+              "x": 370,
+              "y": 725.484375,
+              "width": 730.46875,
+              "height": 36
+            },
+            "backupHistoryBackground": "rgb(240, 244, 249)",
+            "libraryGroups": 0,
+            "scopeKeys": []
+          }
+        },
+        {
+          "viewport": "mobile",
+          "theme": "light",
+          "file": "go-preview-residual-settings-dataBackups-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "statusBadge": null,
+            "stateTitle": null,
+            "refresh": null,
+            "toggles": null,
+            "configTitle": null,
+            "externalFormFields": [],
+            "importButtonBackground": "rgb(147, 51, 234)",
+            "importButton": {
+              "x": 82,
+              "y": 1299.15625,
+              "width": 226,
+              "height": 36
+            },
+            "importInput": {
+              "x": 82,
+              "y": 1251.15625,
+              "width": 226,
+              "height": 36
+            },
+            "backupHistoryBackground": "rgb(240, 244, 249)",
+            "libraryGroups": 0,
+            "scopeKeys": []
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/media",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "theme": "dark",
+          "file": "go-preview-residual-settings-media-desktop-dark.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "statusBadge": null,
+            "stateTitle": null,
+            "refresh": null,
+            "toggles": null,
+            "configTitle": null,
+            "externalFormFields": [],
+            "importButton": null,
+            "importInput": null,
+            "libraryGroupColumns": "495px 495px",
+            "libraryButtonColumns": "226.5px 226.5px",
+            "libraryGroups": 2,
+            "scopeKeys": [
+              "srvlib|qa-primary|Films%20QA",
+              "srvlib|qa-primary|Livres%20QA",
+              "srvlib|qa-primary|Musique%20QA",
+              "srvlib|qa-primary|S%C3%A9ries%20QA",
+              "srvlib|qa-secondary|Films%20QA",
+              "srvlib|qa-secondary|Livres%20QA",
+              "srvlib|qa-secondary|Musique%20QA",
+              "srvlib|qa-secondary|S%C3%A9ries%20QA"
+            ]
+          }
+        },
+        {
+          "viewport": "mobile",
+          "theme": "dark",
+          "file": "go-preview-residual-settings-media-mobile-dark.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "statusBadge": null,
+            "stateTitle": null,
+            "refresh": null,
+            "toggles": null,
+            "configTitle": null,
+            "externalFormFields": [],
+            "importButton": null,
+            "importInput": null,
+            "libraryGroupColumns": "276px",
+            "libraryButtonColumns": "242px",
+            "libraryGroups": 2,
+            "scopeKeys": [
+              "srvlib|qa-primary|Films%20QA",
+              "srvlib|qa-primary|Livres%20QA",
+              "srvlib|qa-primary|Musique%20QA",
+              "srvlib|qa-primary|S%C3%A9ries%20QA",
+              "srvlib|qa-secondary|Films%20QA",
+              "srvlib|qa-secondary|Livres%20QA",
+              "srvlib|qa-secondary|Musique%20QA",
+              "srvlib|qa-secondary|S%C3%A9ries%20QA"
+            ]
+          }
+        },
+        {
+          "viewport": "desktop",
+          "theme": "light",
+          "file": "go-preview-residual-settings-media-desktop-light.png",
+          "metrics": {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "statusBadge": null,
+            "stateTitle": null,
+            "refresh": null,
+            "toggles": null,
+            "configTitle": null,
+            "externalFormFields": [],
+            "importButton": null,
+            "importInput": null,
+            "libraryGroupColumns": "495px 495px",
+            "libraryButtonColumns": "226.5px 226.5px",
+            "libraryGroups": 2,
+            "scopeKeys": [
+              "srvlib|qa-primary|Films%20QA",
+              "srvlib|qa-primary|Livres%20QA",
+              "srvlib|qa-primary|Musique%20QA",
+              "srvlib|qa-primary|S%C3%A9ries%20QA",
+              "srvlib|qa-secondary|Films%20QA",
+              "srvlib|qa-secondary|Livres%20QA",
+              "srvlib|qa-secondary|Musique%20QA",
+              "srvlib|qa-secondary|S%C3%A9ries%20QA"
+            ]
+          }
+        },
+        {
+          "viewport": "mobile",
+          "theme": "light",
+          "file": "go-preview-residual-settings-media-mobile-light.png",
+          "metrics": {
+            "width": 390,
+            "scrollWidth": 390,
+            "statusBadge": null,
+            "stateTitle": null,
+            "refresh": null,
+            "toggles": null,
+            "configTitle": null,
+            "externalFormFields": [],
+            "importButton": null,
+            "importInput": null,
+            "libraryGroupColumns": "276px",
+            "libraryButtonColumns": "242px",
+            "libraryGroups": 2,
+            "scopeKeys": [
+              "srvlib|qa-primary|Films%20QA",
+              "srvlib|qa-primary|Livres%20QA",
+              "srvlib|qa-primary|Musique%20QA",
+              "srvlib|qa-primary|S%C3%A9ries%20QA",
+              "srvlib|qa-secondary|Films%20QA",
+              "srvlib|qa-secondary|Livres%20QA",
+              "srvlib|qa-secondary|Musique%20QA",
+              "srvlib|qa-secondary|S%C3%A9ries%20QA"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

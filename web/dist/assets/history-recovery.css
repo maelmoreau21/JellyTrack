@@ -1,5 +1,5 @@
 /* Scoped historical logs layout; navigation/settings styles remain independent. */
-#playback-history-page.history-recovery{max-width:1800px;margin:auto;padding:8px 0 24px;display:flex;flex-direction:column;gap:20px}
+#playback-history-page.history-recovery{width:100%;min-width:0;max-width:1800px;margin:auto;padding:8px 0 24px;display:flex;flex-direction:column;gap:20px}
 .history-recovery .history-header{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .history-recovery .history-header .segmented-control{flex-shrink:0;margin:0;align-self:center}
 .history-recovery .history-filter-card{padding:24px;display:flex;flex-direction:column;gap:16px;margin-bottom:24px}
@@ -83,3 +83,5 @@
 .history-recovery .history-audit-extra{margin-top:24px;padding:16px}
 @media(max-width:900px){.history-recovery .history-header{align-items:flex-start;flex-direction:column}.history-recovery .history-header .segmented-control{align-self:flex-start}.history-recovery .history-advanced-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.history-recovery .history-system-actions{flex-direction:column;align-items:stretch}.history-recovery .history-system-actions>input{max-width:none}.history-recovery .history-search-toolbar>input{flex-basis:100%}}
 @media(max-width:639px){.history-recovery .history-filter-card{padding:16px}.history-recovery .history-filter-toolbar .form-select{flex:1;min-width:130px;margin-left:0}.history-recovery .history-checkbox{width:100%}.history-recovery .history-advanced-fields,.history-recovery .history-system-stats,.history-recovery .history-event-list{grid-template-columns:1fr}.history-recovery .history-pagination>span:last-child{width:100%;text-align:center;margin:4px 0}.history-recovery .history-mobile-info{display:block;font-size:10px;color:var(--muted-foreground);margin-top:4px}.history-recovery .history-save-form{flex-direction:column}.history-recovery .history-session-dialog{padding:16px}.history-recovery .history-table th,.history-recovery .history-table td{padding:8px}.history-recovery .history-system-stats{gap:12px}.history-recovery .history-column-options{grid-template-columns:1fr}}
+
+.history-recovery>*,.history-recovery #history-playback-panel,.history-recovery #history-system-panel{min-width:0;max-width:100%}

@@ -218,6 +218,18 @@ func (h *Handler) recoveredWrapped(w http.ResponseWriter, r *http.Request, uid, 
 		jsonError(w, 500, "Années illisibles.")
 		return
 	}
+	// The historical selector offers every year since the first playback,
+	// including years without sessions and the current year.
+	oldestYear := time.Now().UTC().Year()
+	for _, availableYear := range availableYears {
+		if availableYear < oldestYear {
+			oldestYear = availableYear
+		}
+	}
+	availableYears = []int{}
+	for availableYear := time.Now().UTC().Year(); availableYear >= oldestYear; availableYear-- {
+		availableYears = append(availableYears, availableYear)
+	}
 	peak := func(values []int64) int {
 		best := 0
 		for i, v := range values {

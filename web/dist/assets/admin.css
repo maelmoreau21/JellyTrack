@@ -230,7 +230,7 @@
   padding: 4px;
   background: var(--surface-soft);
   border-radius: 10px;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
 }
 .ar-tabs button {
@@ -246,6 +246,8 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  flex: 1;
+  justify-content: center;
 }
 .ar-tabs button svg {
   width: 16px;

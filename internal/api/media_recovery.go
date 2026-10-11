@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"sort"
@@ -141,7 +142,7 @@ func mediaQuality(s string) string {
 }
 
 func (h *Handler) recoveredMediaServerOptions(w http.ResponseWriter, r *http.Request) {
-	options, err := h.recoveredRows(r, `SELECT "id","name","isActive" FROM "Server" WHERE "isActive"=1 ORDER BY "name","id"`)
+	options, err := h.recoveredRows(r, `SELECT "id","name","isActive" FROM "Server" WHERE "isActive"=1 OR NOT EXISTS(SELECT 1 FROM "Server" WHERE "isActive"=1) ORDER BY "name","id"`)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les serveurs.")
 		return
@@ -696,7 +697,7 @@ func (h *Handler) recoveredMediaCollections(w http.ResponseWriter, r *http.Reque
 		jsonError(w, 403, "Identité utilisateur introuvable.")
 		return
 	}
-	types, err := h.recoveredRows(r, base+`SELECT m."serverId",m."server",COALESCE(m."libraryName",'') AS "name",m."collectionType",m."type",COUNT(*) AS "count",COALESCE(SUM(m."durationMs"),0) AS "durationMs",COALESCE(SUM(m."size"),0) AS "sizeBytes" FROM catalog m GROUP BY m."serverId",m."server",m."libraryName",m."collectionType",m."type" ORDER BY m."libraryName",m."serverId",m."type"`, args...)
+	types, err := h.recoveredRows(r, base+`SELECT m."serverId",m."server",m."libraryName" AS "name",m."collectionType",m."type",COUNT(*) AS "count",COALESCE(SUM(m."durationMs"),0) AS "durationMs",COALESCE(SUM(m."size"),0) AS "sizeBytes" FROM catalog m WHERE m."libraryName" IS NOT NULL AND m."libraryName"<>'' AND COALESCE(m."collectionType",'')<>'boxsets' GROUP BY m."serverId",m."server",m."libraryName",m."collectionType",m."type" ORDER BY m."libraryName",m."serverId",m."type"`, args...)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les collections.")
 		return
@@ -742,6 +743,38 @@ func (h *Handler) recoveredMediaCollections(w http.ResponseWriter, r *http.Reque
 		}
 	}
 	for _, g := range result {
+		// Historical Collections counts music tracks when present, falling back
+		// to albums for libraries without tracks. Keep the raw album count and
+		// the Go child breakdown available separately.
+		var tracks, albums float64
+		albumIndex := -1
+		groupTypes := g["types"].([]map[string]any)
+		for i, row := range groupTypes {
+			switch mediaString(row["type"]) {
+			case "Audio", "Track":
+				tracks += mediaNumber(row["count"])
+			case "MusicAlbum":
+				albums += mediaNumber(row["count"])
+				albumIndex = i
+			}
+		}
+		g["albumCount"] = albums
+		g["trackCount"] = tracks
+		if tracks > 0 {
+			g["totalItems"] = mediaNumber(g["totalItems"]) - albums + tracks
+			totalItems += tracks - albums
+			if albumIndex >= 0 {
+				row := make(map[string]any, len(groupTypes[albumIndex]))
+				for key, value := range groupTypes[albumIndex] {
+					row[key] = value
+				}
+				row["count"] = tracks
+				groupTypes[albumIndex] = row
+			} else {
+				groupTypes = append(groupTypes, map[string]any{"type": "MusicAlbum", "count": tracks})
+			}
+			g["types"] = groupTypes
+		}
 		g["totalHours"] = mediaNumber(g["durationMs"]) / 3600000
 	}
 	jsonResponse(w, 200, map[string]any{"collections": result, "totals": map[string]any{"items": totalItems, "sizeBytes": totalBytes, "durationMs": totalMs}})
@@ -754,7 +787,7 @@ func (h *Handler) recoveredMediaPopular(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	result := map[string]any{}
-	for _, category := range []struct{ key, kind string }{{"movies", "Movie"}, {"series", "Series"}, {"music", "MusicAlbum"}} {
+	for _, category := range []struct{ key, kind string }{{"movies", "Movie"}, {"series", "Series"}, {"musicAlbums", "MusicAlbum"}} {
 		items, e := h.recoveredRows(r, base+recoveredItemSelect+`WHERE m."type"=? AND COALESCE(a."plays",0)>0 ORDER BY a."plays" DESC,a."watchTimeMs" DESC,m."title" LIMIT 5`, append(append([]any{}, args...), category.kind)...)
 		if e != nil {
 			jsonError(w, 500, "Impossible de charger les classements.")
@@ -762,7 +795,15 @@ func (h *Handler) recoveredMediaPopular(w http.ResponseWriter, r *http.Request) 
 		}
 		result[category.key] = items
 	}
-	played, err := h.recoveredRows(r, base+`SELECT m."directors",m."actors",m."studios",COUNT(p."id") AS "plays",SUM(p."durationWatched")*1000 AS "watchTimeMs" FROM valid p JOIN catalog m ON m."id"=p."mediaId" GROUP BY m."id",m."directors",m."actors",m."studios"`, args...)
+	tracks, err := h.recoveredRows(r, base+recoveredItemSelect+`WHERE m."type" IN ('Audio','Track') AND COALESCE(a."plays",0)>0 ORDER BY a."plays" DESC,a."watchTimeMs" DESC,m."title" LIMIT 5`, args...)
+	if err != nil {
+		jsonError(w, 500, "Impossible de charger le classement musical.")
+		return
+	}
+	result["music"] = tracks
+	// Episodes carry sparse person metadata. The historical rankings credit
+	// their Series, resolved by the scoped family relation, alongside movies.
+	played, err := h.recoveredRows(r, base+`SELECT source."directors",source."actors",source."studios",COUNT(p."id") AS "plays",SUM(p."durationWatched")*1000 AS "watchTimeMs" FROM valid p JOIN catalog m ON m."id"=p."mediaId" JOIN catalog source ON source."id"=CASE WHEN m."type"='Movie' THEN m."id" ELSE (SELECT series."id" FROM family f JOIN catalog series ON series."id"=f."root" WHERE f."member"=m."id" AND series."type"='Series' LIMIT 1) END WHERE m."type" IN ('Movie','Episode') GROUP BY source."id",source."directors",source."actors",source."studios"`, args...)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les classements.")
 		return
@@ -1026,18 +1067,23 @@ func recoveredMediaInsights(sessions []map[string]any) (map[string]any, map[stri
 	}
 	topGenres := ranked(genreHours)
 	topArtists := ranked(artists)
-	// Historical scorePercent included fixed invented scores. Keep suggestions
-	// tied to measured demand, omit that score rather than fabricate confidence.
+	// Historical editorial scores are heuristics, not probabilities. Preserve
+	// their fields alongside the measured demand added by the Go architecture.
 	suggestions := []map[string]any{}
+	demandSuggestions := []map[string]any{}
 	for i, g := range topGenres {
 		if i >= 2 {
 			break
 		}
-		suggestions = append(suggestions, map[string]any{"kind": "genre", "name": g["name"], "hours": g["hours"], "percentage": g["percentage"], "plays": g["plays"]})
+		demand := map[string]any{"kind": "genre", "name": g["name"], "hours": g["hours"], "percentage": g["percentage"], "plays": g["plays"]}
+		demandSuggestions = append(demandSuggestions, demand)
+		suggestions = append(suggestions, recoveredAcquisitionSuggestion(demand, i, totalSeconds/3600))
 	}
 	if len(topArtists) > 0 {
 		a := topArtists[0]
-		suggestions = append(suggestions, map[string]any{"kind": "artist", "name": a["name"], "hours": a["hours"], "plays": a["plays"]})
+		demand := map[string]any{"kind": "artist", "name": a["name"], "hours": a["hours"], "plays": a["plays"]}
+		demandSuggestions = append(demandSuggestions, demand)
+		suggestions = append(suggestions, recoveredAcquisitionSuggestion(demand, 0, totalSeconds/3600))
 	}
 	if len(topGenres) > 8 {
 		topGenres = topGenres[:8]
@@ -1045,5 +1091,38 @@ func recoveredMediaInsights(sessions []map[string]any) (map[string]any, map[stri
 	if len(topArtists) > 6 {
 		topArtists = topArtists[:6]
 	}
-	return map[string]any{"allBingedSeries": bingeList, "totalBingeSessionsMonth": totalRuns}, map[string]any{"topGenres": topGenres, "topArtists": topArtists, "acquisitionSuggestions": suggestions, "totalAnalyzedHours": totalSeconds / 3600}
+	return map[string]any{"allBingedSeries": bingeList, "totalBingeSessionsMonth": totalRuns}, map[string]any{"topGenres": topGenres, "topArtists": topArtists, "acquisitionSuggestions": suggestions, "demandSuggestions": demandSuggestions, "totalAnalyzedHours": totalSeconds / 3600}
+}
+
+func recoveredAcquisitionSuggestion(demand map[string]any, rank int, totalHours float64) map[string]any {
+	suggestion := map[string]any{"scoreKind": "historical_heuristic"}
+	for key, value := range demand {
+		suggestion[key] = value
+	}
+	name := mediaString(demand["name"])
+	hours := math.Round(mediaNumber(demand["hours"])*10) / 10
+	percentage := float64(0)
+	if totalHours > 0 {
+		percentage = math.Min(100, math.Round(hours/totalHours*100))
+	}
+	if demand["kind"] == "artist" {
+		suggestion["category"] = "Artiste / Réalisateur Vedette"
+		suggestion["title"] = "Compléter la filmographie / discographie de " + name
+		suggestion["reason"] = fmt.Sprintf("Cumule %gh d'écoute/visionnage sur %g lectures.", hours, mediaNumber(demand["plays"]))
+		suggestion["scorePercent"] = 92
+		suggestion["badge"] = "Favori Utilisateurs"
+	} else if rank == 0 {
+		suggestion["category"] = "Genre Dominant"
+		suggestion["title"] = "Enrichir la collection " + name
+		suggestion["reason"] = fmt.Sprintf("Représente %g%% du temps total de visionnage (%gh). Vos spectateurs en redemandent !", percentage, hours)
+		suggestion["scorePercent"] = math.Min(99, math.Max(70, percentage+20))
+		suggestion["badge"] = "Très Forte Demande"
+	} else {
+		suggestion["category"] = "Genre Tendance"
+		suggestion["title"] = "Films & Séries " + name
+		suggestion["reason"] = fmt.Sprintf("Deuxième genre le plus plébiscité avec %gh visionnées sur les 30 derniers jours.", hours)
+		suggestion["scorePercent"] = math.Min(85, math.Max(50, percentage+15))
+		suggestion["badge"] = "Tendance Forte"
+	}
+	return suggestion
 }

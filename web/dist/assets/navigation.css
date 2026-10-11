@@ -109,7 +109,7 @@ html.dark .nav-search-field,html.dark .nav-footer-control { background:linear-gr
 .historical-settings-tabs a.active { background:color-mix(in srgb,var(--primary) 15%,transparent); color:var(--primary); border-color:color-mix(in srgb,var(--primary) 30%,transparent); font-weight:700; }
 .historical-settings-tabs svg { width:16px; height:16px; }
 body.navigation-settings #app-main { padding:24px 32px; max-width:none; gap:0; }
-body.navigation-settings .historical-settings-tabs a { border-radius:8px; }
+body.navigation-settings .historical-settings-tabs a { border-radius:12px; }
 body.navigation-admin #app-main { padding:32px; max-width:none; gap:0; }
 @media(max-width:767px) {
   body.navigation-settings #app-main,body.navigation-admin #app-main { padding:16px; }

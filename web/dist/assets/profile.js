@@ -308,6 +308,7 @@
       const showDialog = (title, content) => {
         const dialog = document.createElement('dialog');
         dialog.className = 'profile-dialog';
+        dialog.setAttribute('aria-label',title);
         dialog.innerHTML = `<header><h2>${esc(title)}</h2><button type="button" class="profile-dialog-close" aria-label="${esc(tr('common.close', 'Fermer'))}">×</button></header><div class="profile-dialog-body">${content}</div>`;
         root.appendChild(dialog);
         listen(dialog.querySelector('.profile-dialog-close'), 'click', () => dialog.close());

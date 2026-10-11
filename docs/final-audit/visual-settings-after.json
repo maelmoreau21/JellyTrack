@@ -1,0 +1,566 @@
+{
+  "date": "2026-10-10T11:35:36.695Z",
+  "source": "Real Go embedded assets after rebuild; no intercept",
+  "pages": [
+    {
+      "route": "/settings/notifications",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "file": "go-after-settings-notifications-desktop-dark.png",
+          "metrics": {
+            "scrollWidth": 1440,
+            "width": 1440,
+            "firstCard": {
+              "x": 314,
+              "y": 120,
+              "width": 1068,
+              "height": 257.78125
+            },
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": null,
+            "container": null,
+            "footer": null,
+            "save": null
+          }
+        },
+        {
+          "viewport": "mobile",
+          "file": "go-after-settings-notifications-mobile-dark.png",
+          "metrics": {
+            "scrollWidth": 390,
+            "width": 390,
+            "firstCard": {
+              "x": 32,
+              "y": 168,
+              "width": 326,
+              "height": 318.375
+            },
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": null,
+            "container": null,
+            "footer": null,
+            "save": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/plugin/security",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "file": "go-after-settings-plugin-security-desktop-dark.png",
+          "metrics": {
+            "scrollWidth": 1440,
+            "width": 1440,
+            "firstCard": {
+              "x": 288,
+              "y": 180.1875,
+              "width": 1120,
+              "height": 237.6875
+            },
+            "heading": {
+              "x": 288,
+              "y": 104,
+              "width": 335.109375,
+              "height": 33.59375
+            },
+            "telemetryColumns": "255.5px 255.5px 255.5px 255.5px",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": null,
+            "container": null,
+            "footer": null,
+            "save": null
+          }
+        },
+        {
+          "viewport": "mobile",
+          "file": "go-after-settings-plugin-security-mobile-dark.png",
+          "metrics": {
+            "scrollWidth": 390,
+            "width": 390,
+            "firstCard": {
+              "x": 32,
+              "y": 306.78125,
+              "width": 326,
+              "height": 237.6875
+            },
+            "heading": {
+              "x": 32,
+              "y": 168,
+              "width": 326,
+              "height": 33.59375
+            },
+            "telemetryColumns": "276px",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": null,
+            "container": null,
+            "footer": null,
+            "save": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/scheduler",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "file": "go-after-settings-scheduler-desktop-dark.png",
+          "metrics": {
+            "scrollWidth": 1440,
+            "width": 1440,
+            "firstCard": {
+              "x": 330,
+              "y": 136,
+              "width": 1036,
+              "height": 706.15625
+            },
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(14, 165, 233)",
+            "taskButtonColor": "rgb(255, 255, 255)",
+            "tabs": null,
+            "container": null,
+            "footer": {
+              "x": 355,
+              "y": 1484.3125,
+              "width": 986,
+              "height": 48
+            },
+            "save": {
+              "x": 355,
+              "y": 1496.3125,
+              "width": 201.125,
+              "height": 36
+            }
+          }
+        },
+        {
+          "viewport": "mobile",
+          "file": "go-after-settings-scheduler-mobile-dark.png",
+          "metrics": {
+            "scrollWidth": 390,
+            "width": 390,
+            "firstCard": {
+              "x": 32,
+              "y": 168,
+              "width": 326,
+              "height": 1115.15625
+            },
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(14, 165, 233)",
+            "taskButtonColor": "rgb(255, 255, 255)",
+            "tabs": null,
+            "container": null,
+            "footer": {
+              "x": 57,
+              "y": 2228.09375,
+              "width": 276,
+              "height": 48
+            },
+            "save": {
+              "x": 57,
+              "y": 2240.09375,
+              "width": 276,
+              "height": 36
+            }
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/scheduler/tasks",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "file": "go-after-settings-scheduler-tasks-desktop-dark.png",
+          "metrics": {
+            "scrollWidth": 1440,
+            "width": 1440,
+            "firstCard": {
+              "x": 304,
+              "y": 120,
+              "width": 1088,
+              "height": 706.15625
+            },
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(14, 165, 233)",
+            "taskButtonColor": "rgb(255, 255, 255)",
+            "tabs": null,
+            "container": null,
+            "footer": null,
+            "save": null
+          }
+        },
+        {
+          "viewport": "mobile",
+          "file": "go-after-settings-scheduler-tasks-mobile-dark.png",
+          "metrics": {
+            "scrollWidth": 390,
+            "width": 390,
+            "firstCard": {
+              "x": 32,
+              "y": 168,
+              "width": 326,
+              "height": 1115.15625
+            },
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(14, 165, 233)",
+            "taskButtonColor": "rgb(255, 255, 255)",
+            "tabs": null,
+            "container": null,
+            "footer": null,
+            "save": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/settings/scheduler/schedules",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "file": "go-after-settings-scheduler-schedules-desktop-dark.png",
+          "metrics": {
+            "scrollWidth": 1440,
+            "width": 1440,
+            "firstCard": {
+              "x": 304,
+              "y": 120,
+              "width": 1088,
+              "height": 691.15625
+            },
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": null,
+            "container": null,
+            "footer": {
+              "x": 329,
+              "y": 738.15625,
+              "width": 1038,
+              "height": 48
+            },
+            "save": {
+              "x": 329,
+              "y": 750.15625,
+              "width": 201.125,
+              "height": 36
+            }
+          }
+        },
+        {
+          "viewport": "mobile",
+          "file": "go-after-settings-scheduler-schedules-mobile-dark.png",
+          "metrics": {
+            "scrollWidth": 390,
+            "width": 390,
+            "firstCard": {
+              "x": 32,
+              "y": 168,
+              "width": 326,
+              "height": 1001.9375
+            },
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": null,
+            "container": null,
+            "footer": {
+              "x": 57,
+              "y": 1096.9375,
+              "width": 276,
+              "height": 48
+            },
+            "save": {
+              "x": 57,
+              "y": 1108.9375,
+              "width": 276,
+              "height": 36
+            }
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/health",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "file": "go-after-admin-health-desktop-dark.png",
+          "metrics": {
+            "scrollWidth": 1440,
+            "width": 1440,
+            "firstCard": null,
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": {
+              "x": 288,
+              "y": 282,
+              "width": 1120,
+              "height": 48
+            },
+            "container": {
+              "x": 288,
+              "y": 32,
+              "width": 1120,
+              "height": 1070.6875
+            },
+            "footer": null,
+            "save": null
+          }
+        },
+        {
+          "viewport": "mobile",
+          "file": "go-after-admin-health-mobile-dark.png",
+          "metrics": {
+            "scrollWidth": 390,
+            "width": 390,
+            "firstCard": null,
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": {
+              "x": 16,
+              "y": 592,
+              "width": 358,
+              "height": 82
+            },
+            "container": {
+              "x": 16,
+              "y": 72,
+              "width": 358,
+              "height": 1865.6875
+            },
+            "footer": null,
+            "save": null
+          }
+        }
+      ]
+    },
+    {
+      "route": "/admin/cleanup",
+      "errors": [],
+      "variants": [
+        {
+          "viewport": "desktop",
+          "file": "go-after-admin-cleanup-desktop-dark.png",
+          "metrics": {
+            "scrollWidth": 1440,
+            "width": 1440,
+            "firstCard": null,
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": {
+              "x": 288,
+              "y": 202,
+              "width": 1120,
+              "height": 48
+            },
+            "container": {
+              "x": 288,
+              "y": 32,
+              "width": 1120,
+              "height": 793.6875
+            },
+            "footer": null,
+            "save": null
+          }
+        },
+        {
+          "viewport": "mobile",
+          "file": "go-after-admin-cleanup-mobile-dark.png",
+          "metrics": {
+            "scrollWidth": 390,
+            "width": 390,
+            "firstCard": null,
+            "heading": null,
+            "telemetryColumns": "none",
+            "taskButtonBackground": "rgb(8, 17, 31)",
+            "taskButtonColor": "rgb(241, 245, 249)",
+            "tabs": {
+              "x": 16,
+              "y": 524,
+              "width": 358,
+              "height": 84
+            },
+            "container": {
+              "x": 16,
+              "y": 72,
+              "width": 358,
+              "height": 1238.6875
+            },
+            "footer": null,
+            "save": null
+          }
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "/settings/notifications desktop no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/notifications mobile no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/notifications no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin/security desktop no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin/security mobile no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/plugin/security no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/settings/scheduler desktop no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/scheduler mobile no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/scheduler no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/settings/scheduler/tasks desktop no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/scheduler/tasks mobile no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/scheduler/tasks no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/settings/scheduler/schedules desktop no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/scheduler/schedules mobile no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/settings/scheduler/schedules no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/admin/health desktop no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/health mobile no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/health no JS errors",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup desktop no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup mobile no document overflow",
+      "ok": true
+    },
+    {
+      "name": "/admin/cleanup no JS errors",
+      "ok": true
+    },
+    {
+      "name": "Notifications no vertical centering",
+      "ok": true,
+      "details": {
+        "x": 314,
+        "y": 120,
+        "width": 1068,
+        "height": 257.78125
+      }
+    },
+    {
+      "name": "Security historical heading position",
+      "ok": true,
+      "details": {
+        "x": 288,
+        "y": 104,
+        "width": 335.109375,
+        "height": 33.59375
+      }
+    },
+    {
+      "name": "Security desktop four telemetry columns",
+      "ok": true
+    },
+    {
+      "name": "Task historical filled sky button",
+      "ok": true,
+      "details": {
+        "scrollWidth": 1440,
+        "width": 1440,
+        "firstCard": {
+          "x": 304,
+          "y": 120,
+          "width": 1088,
+          "height": 706.15625
+        },
+        "heading": null,
+        "telemetryColumns": "none",
+        "taskButtonBackground": "rgb(14, 165, 233)",
+        "taskButtonColor": "rgb(255, 255, 255)",
+        "tabs": null,
+        "container": null,
+        "footer": null,
+        "save": null
+      }
+    },
+    {
+      "name": "Health tabs stretch across content",
+      "ok": true
+    },
+    {
+      "name": "Planning save left aligned",
+      "ok": true
+    }
+  ]
+}

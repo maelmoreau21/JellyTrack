@@ -1,0 +1,14 @@
+PASS historical columnorder restored
+PASS historical columnwidth restored333
+PASS columns anchored popover
+{"anchor":{"top":434,"bottom":466,"left":1171.453125,"right":1252.578125},"popover":{"top":8,"bottom":676.59375,"left":1072.578125,"right":1252.578125},"css":{"top":"8px","left":"1072.58px","transform":"none","position":"fixed"},"parentTransform":"none"}
+PASS columns clamp matches historical viewport
+PASS columns Escape closes
+PASS historical savedfilter available
+PASS historical savedfilter applies34Movies
+PASS savedfilters anchoredpopover
+PASS AudioBook filter restored
+PASS selected filters remaininitiallyclosed
+PASS column historicalstorage shape
+PASS runtimeerrors0
+

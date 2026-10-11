@@ -1,0 +1,25 @@
+PASS go-users-desktop-dark JS
+PASS users count9
+PASS username search
+PASS favorite-client search
+PASS filter inactive30
+PASS filter inactive90
+PASS filter transcoders
+PASS filter never
+PASS filter all
+PASS empty search state
+PASS JSON export9 real users
+PASS profile link navigates
+PASS go-profile-desktop-dark JS
+PASS go-users-mobile-dark JS
+PASS go-profile-mobile-dark JS
+PASS go-users-desktop-light JS
+PASS go-profile-desktop-light JS
+PASS go-profile-empty-dark JS
+PASS go-profile-partial-dark JS
+PASS go-standard-own-profile JS
+PASS standard own API
+PASS standard other profile denied
+PASS standard list denied
+Completed 9 captures; 23 checks.
+

@@ -12,3 +12,66 @@ html.dark .jt-settings .settings-card{background:linear-gradient(180deg,rgba(17,
 @media(min-width:1024px){.jt-settings .settings-server-grid{grid-template-columns:3fr 5fr 4fr}.jt-settings .settings-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.jt-settings .settings-server-title{flex-direction:column;align-items:flex-start;justify-content:flex-start}}
 @media(max-width:639px){.jt-settings .settings-body{gap:16px}.jt-settings .settings-card-header{padding:24px 24px 0}.jt-settings .settings-card-content{padding:24px;gap:24px}.jt-settings .settings-server{padding:16px}.jt-settings .settings-copy-field{align-items:stretch;flex-direction:column}.jt-settings .settings-copy-field>button{align-self:flex-end}.jt-settings .settings-footer{flex-direction:column}.jt-settings .settings-footer>*{width:100%}.jt-settings .settings-task{align-items:flex-start;flex-direction:column}.jt-settings .settings-task>button{align-self:flex-end}.jt-settings .settings-server-status{align-items:center;flex-direction:row}}
 .jt-settings .settings-secondary-management{display:flex;flex-direction:column;gap:12px;margin-top:16px}.jt-settings .settings-secondary-management>div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px}
+/* Final audit: preserve the historical position, task hierarchy and settings structure. */
+.jt-settings{margin:0 auto}
+.jt-settings.settings-route-notifications .settings-footer,.jt-settings.settings-route-scheduler .settings-footer,.jt-settings.settings-route-scheduler-schedules .settings-footer{justify-content:flex-start}
+.jt-settings .settings-tasks{gap:12px}
+.jt-settings .settings-task h3{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500}
+.jt-settings .settings-task h3 svg{width:16px;height:16px;flex-shrink:0;color:var(--task-color)}
+.jt-settings .settings-task h3{line-height:20px}
+.jt-settings .settings-task .settings-help,.jt-settings .settings-task .settings-task-feedback{margin-left:24px}
+.jt-settings .settings-task .settings-help{font-size:12px;line-height:16px;margin:4px 0 0 24px}
+.jt-settings .settings-task .settings-task-feedback:empty{display:none}
+.jt-settings .settings-task small{display:inline-flex;align-items:center;gap:6px;margin:3px 0 0 24px;padding:2px 8px;border-radius:999px;color:var(--task-color);border:1px solid color-mix(in srgb,var(--task-color) 20%,transparent);background:color-mix(in srgb,var(--task-color) 10%,transparent)}
+.jt-settings .settings-task small svg{width:12px;height:12px}
+.jt-settings .settings-task small{font-size:11px;line-height:16px;margin-top:8px}
+.jt-settings .settings-task.sky{--task-color:#0ea5e9}.jt-settings .settings-task.violet{--task-color:#8b5cf6}.jt-settings .settings-task.emerald{--task-color:#10b981}.jt-settings .settings-task.amber{--task-color:#f59e0b}.jt-settings .settings-task.purple{--task-color:#a855f7}
+.jt-settings .settings-task>button{background:var(--task-color);color:#fff;border-color:#ffffff33;font-size:12px;font-weight:700;padding:8px 16px;border-radius:8px;box-shadow:0 0 15px color-mix(in srgb,var(--task-color) 15%,transparent)}
+.jt-settings .settings-task>button:disabled{background:var(--muted);color:var(--muted-foreground);box-shadow:none}
+.jt-settings .settings-task.sky>button,.jt-settings .settings-task.violet>button,.jt-settings .settings-task.emerald>button,.jt-settings .settings-task.amber>button,.jt-settings .settings-task.purple>button{color:#fff;border-color:#ffffff33}
+html:not(.dark) .jt-settings .settings-task.sky{--task-color:#0284c7}html:not(.dark) .jt-settings .settings-task.violet{--task-color:#7c3aed}html:not(.dark) .jt-settings .settings-task.emerald{--task-color:#059669}html:not(.dark) .jt-settings .settings-task.amber{--task-color:#d97706}html:not(.dark) .jt-settings .settings-task.purple{--task-color:#9333ea}
+@media(min-width:768px){.jt-settings.settings-route-plugin-security .settings-body{max-width:none;padding:0}.jt-settings.settings-route-scheduler-tasks .settings-body,.jt-settings.settings-route-scheduler-schedules .settings-body{max-width:none}}
+@media(min-width:1024px){.jt-settings .settings-telemetry form>.settings-grid.two{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Historical SSO header controls, backup nesting and scoped library cards. */
+.jt-settings .settings-sso-state .settings-card-header h2{flex-wrap:wrap;gap:10px}
+.jt-settings .settings-sso-state .settings-card-header h2 .settings-badge{font-size:10px;font-weight:500}
+.jt-settings .settings-sso-state .settings-summary>div{padding:14px;border-radius:12px;gap:4px;background:color-mix(in srgb,var(--background) 60%,transparent)}
+.jt-settings .settings-sso-state .settings-summary strong{font-size:14px}
+.jt-settings .settings-sso-toggles{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.jt-settings .settings-sso-toggles .settings-switch-row{flex:1;min-width:170px;max-width:230px;padding:10px;gap:12px;border-radius:12px;background:color-mix(in srgb,var(--muted) 30%,transparent)}
+.jt-settings .settings-sso-toggles strong{font-size:12px;font-weight:600}
+.jt-settings .settings-sso-toggles small{font-size:11px;line-height:1.4;margin-top:2px}
+.jt-settings .settings-sso-callback .settings-field>span,.jt-settings .settings-import .settings-field>span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.jt-settings .settings-sso-callback input{font-family:monospace;font-size:12px}
+.jt-settings .settings-backups .settings-summary small{text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.jt-settings .settings-backups .settings-summary strong{font-size:30px;line-height:36px}
+.jt-settings .settings-backups .settings-summary>div:last-child strong{font-size:16px;line-height:24px;color:#f59e0b}
+.jt-settings .settings-backups .settings-section{padding:0;border:1px solid var(--border);border-radius:12px;background:var(--surface-soft);gap:0;overflow:hidden}
+.jt-settings .settings-backups .settings-section>h3{padding:16px 20px 0;font-size:18px}
+.jt-settings .settings-backups .settings-section>p{padding:4px 20px 16px;border-bottom:1px solid var(--border)}
+.jt-settings .settings-backups .settings-table tbody td[colspan]{text-align:center;padding-top:40px;padding-bottom:40px}
+.jt-settings .settings-import{padding:24px;gap:16px}
+.jt-settings .settings-import h3{display:flex;align-items:center;gap:8px;font-size:18px}
+.jt-settings .settings-import h3 svg{width:20px;height:20px;color:#c084fc}
+.jt-settings .settings-import form{gap:12px;align-items:stretch}
+.jt-settings .settings-import .settings-field{flex:1;min-width:0}
+.jt-settings .settings-import .settings-footer{padding:0;flex-shrink:0;align-items:center}
+.jt-settings .settings-import-submit{background:#9333ea;color:#fff;border-color:#9333ea;box-shadow:none}
+.jt-settings .settings-import-submit:hover{background:#7e22ce;border-color:#7e22ce}
+.jt-settings .settings-library-groups{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.jt-settings .settings-library-group{padding:16px;border-radius:12px;gap:12px}
+.jt-settings .settings-library-group header{display:flex;flex-direction:column;gap:4px}
+.jt-settings .settings-library-url{font-family:monospace;overflow-wrap:anywhere}
+.jt-settings .settings-library-group .settings-library-buttons{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.jt-settings .settings-library-group .settings-library{flex-direction:row;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;font-size:12px}
+.jt-settings .settings-library-group .settings-library small{font-size:10px;border-radius:999px;padding:1px 6px;color:#059669;background:#10b98115;border:1px solid #10b98133}
+.jt-settings .settings-library-group .settings-library.excluded small{color:var(--destructive);border-color:color-mix(in srgb,var(--destructive) 30%,transparent);background:color-mix(in srgb,var(--destructive) 10%,transparent)}
+@media(min-width:640px){.jt-settings .settings-sso-config .settings-card-header>div:first-child{flex:1;min-width:260px}.jt-settings .settings-sso-toggles{max-width:460px;flex:1}.jt-settings .settings-import form{flex-direction:row;align-items:center}.jt-settings .settings-library-group .settings-library-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1280px){.jt-settings .settings-library-groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.jt-settings .settings-sso-state [data-action="refresh"]{align-self:flex-start;min-height:32px;padding:4px 10px;font-size:12px}
+.jt-settings .settings-backups .settings-summary strong>span{font-size:18px;font-weight:400;color:var(--muted-foreground)}
+.jt-settings .settings-backups .settings-summary>div:last-child strong{display:flex;align-items:center;gap:8px}
+.jt-settings .settings-backups .settings-summary strong svg{width:16px;height:16px}
+.jt-settings .settings-backups [data-action="backup-now"]{background:#0891b2;border-color:#0891b2;color:#fff;box-shadow:none}

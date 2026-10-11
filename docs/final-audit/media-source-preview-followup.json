@@ -1,0 +1,25 @@
+{
+  "scope": "Final source CSS baseline follow-up; actual Go API.",
+  "cases": [
+    {
+      "width": 1440,
+      "errors": [],
+      "scroll": 1184,
+      "client": 1184,
+      "poster": {
+        "width": 320,
+        "height": 180
+      }
+    },
+    {
+      "width": 390,
+      "errors": [],
+      "scroll": 390,
+      "client": 390,
+      "poster": {
+        "width": 316,
+        "height": 177.75
+      }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "checks": [
+    {
+      "name": "list35 users25 page1",
+      "ok": true
+    },
+    {
+      "name": "list page2 remaining10",
+      "ok": true
+    },
+    {
+      "name": "lastpage nextdisabled",
+      "ok": true
+    },
+    {
+      "name": "search resets firstpage",
+      "ok": true
+    },
+    {
+      "name": "previous returns25",
+      "ok": true
+    },
+    {
+      "name": "mobile outerwidth390",
+      "ok": true
+    },
+    {
+      "name": "mobile horizontal tablescroll",
+      "ok": true
+    },
+    {
+      "name": "mobile scroll reachesactions",
+      "ok": true
+    },
+    {
+      "name": "listload8skeletonrows",
+      "ok": true
+    },
+    {
+      "name": "listloadsearchdisabled",
+      "ok": true
+    },
+    {
+      "name": "runtimeerrors0",
+      "ok": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

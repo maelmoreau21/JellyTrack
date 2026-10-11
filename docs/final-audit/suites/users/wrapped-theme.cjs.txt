@@ -1,0 +1,9 @@
+PASS real standard Wrapped navigation true
+PASS real standard Wrapped profile true
+PASS profile theme togglelight
+PASS profile card changes theme
+PASS profile mobilelight document width
+PASS real standard Wrapped navigation false
+PASS real standard Wrapped profile false
+PASS runtimeerrors0
+
