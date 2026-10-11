@@ -27,6 +27,7 @@ import (
 
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/requestip"
+	"github.com/maelmoreau21/jellytrack/internal/settings"
 	"golang.org/x/crypto/scrypt"
 )
 
@@ -54,8 +55,11 @@ type Handler struct {
 	peppers            []string
 	maxBytes           int64
 	monitorMu          sync.Mutex
+	sessionMu          sync.Mutex
 	lastMonitorWrite   time.Time
 	notificationClient *http.Client
+	keyMu              sync.Mutex
+	verifiedKeys       map[[32]byte]verifiedPluginKey
 }
 
 func NewHandler(db *sql.DB, driver string, logger *slog.Logger) *Handler {
@@ -352,7 +356,7 @@ func (h *Handler) verifyKey(token, current, previous string, expiry sql.NullStri
 			}
 			continue
 		}
-		if verifyHash(token, candidate.hash, h.peppers) {
+		if h.verifyRepeatedHash(token, candidate.hash) {
 			if candidate.old && !validExpiry(expiry) {
 				continue
 			}
@@ -625,6 +629,13 @@ func (h *Handler) heartbeat(ctx context.Context, p map[string]any, serverID stri
 }
 
 func (h *Handler) playbackStart(ctx context.Context, p map[string]any, serverID string) (int, any, error) {
+	h.sessionMu.Lock()
+	locked := true
+	defer func() {
+		if locked {
+			h.sessionMu.Unlock()
+		}
+	}()
 	user, media, session := objectValue(p, "user", "User"), objectValue(p, "media", "Media"), objectValue(p, "session", "Session")
 	userKey := firstString(user, "jellyfinUserId", "JellyfinUserId", "id", "Id")
 	mediaKey := firstString(media, "jellyfinMediaId", "JellyfinMediaId", "id", "Id")
@@ -665,7 +676,7 @@ func (h *Handler) playbackStart(ctx context.Context, p map[string]any, serverID 
 	if err != nil {
 		return 500, nil, err
 	}
-	playbackID, err := h.openPlayback(ctx, serverID, userID, mediaID)
+	playbackID, err := h.openSessionPlayback(ctx, serverID, userID, mediaID, sessionID, p, session)
 	if err != nil {
 		return 500, nil, err
 	}
@@ -698,6 +709,8 @@ func (h *Handler) playbackStart(ctx context.Context, p map[string]any, serverID 
 		return 500, nil, err
 	}
 	if existingStream == 0 {
+		h.sessionMu.Unlock()
+		locked = false
 		h.notifyPlaybackStart(ctx, serverID, userID, playbackID, mediaKey, title, playMethod, client, device, ip)
 	}
 	return 200, map[string]any{"success": true, "message": "PlaybackStart processed.", "playbackId": playbackID}, nil
@@ -730,11 +743,16 @@ func (h *Handler) markMonitorPoll(ctx context.Context, sessionCount int) error {
 	if _, err := h.exec(ctx, `UPDATE "SystemHealthState" SET "monitor"=?,"updatedAt"=? WHERE "id"='global'`, jsonText(state), now.Format(time.RFC3339Nano)); err != nil {
 		return err
 	}
+	if _, err := h.exec(ctx, `INSERT INTO "GlobalSettings"("id","pluginLastSeen") VALUES('global',?) ON CONFLICT("id") DO UPDATE SET "pluginLastSeen"=excluded."pluginLastSeen"`, now.Format(time.RFC3339Nano)); err != nil {
+		return err
+	}
 	h.lastMonitorWrite = now
 	return nil
 }
 
 func (h *Handler) playbackProgress(ctx context.Context, p map[string]any, serverID string) (int, any, error) {
+	h.sessionMu.Lock()
+	defer h.sessionMu.Unlock()
 	user, media, session := objectValue(p, "user", "User"), objectValue(p, "media", "Media"), objectValue(p, "session", "Session")
 	userKey := firstString(user, "jellyfinUserId", "JellyfinUserId", "id", "Id")
 	mediaKey := firstString(media, "jellyfinMediaId", "JellyfinMediaId", "id", "Id")
@@ -744,6 +762,9 @@ func (h *Handler) playbackProgress(ctx context.Context, p map[string]any, server
 	}
 	if userKey == "" || mediaKey == "" || sessionID == "" {
 		return 400, map[string]string{"error": "Missing userId, mediaId, or sessionId."}, nil
+	}
+	if err := h.markMonitorPoll(ctx, 1); err != nil {
+		return 500, nil, err
 	}
 	userID, err := h.upsertUser(ctx, serverID, userKey, firstString(user, "username", "Username", "name", "Name"), true)
 	if err != nil {
@@ -765,7 +786,7 @@ func (h *Handler) playbackProgress(ctx context.Context, p map[string]any, server
 	if err != nil {
 		return 500, nil, err
 	}
-	playbackID, err := h.openPlayback(ctx, serverID, userID, mediaID)
+	playbackID, err := h.openSessionPlayback(ctx, serverID, userID, mediaID, sessionID, p, session)
 	if err != nil {
 		return 500, nil, err
 	}
@@ -779,8 +800,9 @@ func (h *Handler) playbackProgress(ctx context.Context, p map[string]any, server
 	if priorErr != nil && !errors.Is(priorErr, sql.ErrNoRows) {
 		return 500, nil, priorErr
 	}
-	if priorPlayback.Valid && priorPlayback.String != "" {
-		playbackID = priorPlayback.String
+	if priorPlayback.Valid && priorPlayback.String != playbackID {
+		priorTicks = sql.NullInt64{}
+		priorPing = sql.NullString{}
 	}
 	paused := boolValue(p, "isPaused", "IsPaused")
 	method := firstString(session, "playMethod", "PlayMethod")
@@ -836,6 +858,8 @@ func (h *Handler) playbackProgress(ctx context.Context, p map[string]any, server
 }
 
 func (h *Handler) playbackEnd(ctx context.Context, p map[string]any, event, serverID string) (int, any, error) {
+	h.sessionMu.Lock()
+	defer h.sessionMu.Unlock()
 	user, session := objectValue(p, "user", "User"), objectValue(p, "session", "Session")
 	sessionID := firstString(p, "sessionId", "SessionId")
 	if sessionID == "" {
@@ -1075,15 +1099,61 @@ func (h *Handler) libraryChanged(ctx context.Context, p map[string]any, serverID
 	return 200, map[string]any{"success": true, "message": fmt.Sprintf("%d items synced.", synced)}, nil
 }
 
-func (h *Handler) openPlayback(ctx context.Context, serverID, userID, mediaID string) (string, error) {
-	var id string
-	err := h.queryRow(ctx, `SELECT "id" FROM "PlaybackHistory" WHERE "serverId"=? AND "userId"=? AND "mediaId"=? AND "endedAt" IS NULL ORDER BY "startedAt" DESC LIMIT 1`, serverID, userID, mediaID).Scan(&id)
-	if err == nil {
-		return id, nil
-	}
-	if !errors.Is(err, sql.ErrNoRows) {
+// A session can change media without emitting a stop first. Close its previous
+// history row before replacing the stream, preserving the measured watch time.
+// Closed rows are resumed only with a non-zero position and matching client
+// identity; simultaneous clients and intentional replays remain separate.
+func (h *Handler) openSessionPlayback(ctx context.Context, serverID, userID, mediaID, sessionID string, payload, session map[string]any) (string, error) {
+	var current, currentUser, currentMedia string
+	err := h.queryRow(ctx, `SELECT COALESCE(a."playbackId",''),a."userId",a."mediaId" FROM "ActiveStream" a WHERE a."serverId"=? AND a."sessionId"=?`, serverID, sessionID).Scan(&current, &currentUser, &currentMedia)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return "", err
 	}
+	if err == nil && current != "" {
+		if currentUser == userID && currentMedia == mediaID {
+			return current, nil
+		}
+		if _, err = h.exec(ctx, `UPDATE "PlaybackHistory" SET "endedAt"=? WHERE "id"=? AND "serverId"=? AND "endedAt" IS NULL AND NOT EXISTS(SELECT 1 FROM "ActiveStream" other WHERE other."playbackId"="PlaybackHistory"."id" AND other."serverId"=? AND other."sessionId"<>?)`, time.Now().UTC().Format(time.RFC3339Nano), current, serverID, serverID, sessionID); err != nil {
+			return "", err
+		}
+	}
+	client, device := firstString(session, "clientName", "ClientName"), firstString(session, "deviceName", "DeviceName")
+	ip := normalizedIP(firstString(session, "ipAddress", "IpAddress"))
+	position := integerValue(payload, "positionTicks", "PositionTicks")
+	if position == 0 {
+		position = integerValue(session, "positionTicks", "PositionTicks")
+	}
+	var raw sql.NullString
+	if err = h.queryRow(ctx, `SELECT "pluginTelemetrySettings" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&raw); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return "", err
+	}
+	telemetry := map[string]any{}
+	_ = json.Unmarshal([]byte(raw.String), &telemetry)
+	window := settings.NormalizeTelemetry(telemetry)["mergeWindowSeconds"].(int)
+	if window > 0 && position > 0 && client != "" && device != "" {
+		var candidate, ended, started string
+		err = h.queryRow(ctx, `SELECT p."id",COALESCE(p."endedAt",''),p."startedAt" FROM "PlaybackHistory" p WHERE p."serverId"=? AND p."userId"=? AND p."mediaId"=? AND COALESCE(p."clientName",'')=? AND COALESCE(p."deviceName",'')=? AND COALESCE(p."ipAddress",'')=COALESCE(?,'') AND NOT EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."playbackId"=p."id") ORDER BY p."startedAt" DESC LIMIT 1`, serverID, userID, mediaID, client, device, ip).Scan(&candidate, &ended, &started)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return "", err
+		}
+		if err == nil {
+			last := ended
+			if last == "" {
+				last = started
+			}
+			if at, parseErr := parseTime(last); parseErr == nil {
+				age := time.Since(at)
+				if age >= 0 && age <= time.Duration(window)*time.Second {
+					_, err = h.exec(ctx, `UPDATE "PlaybackHistory" SET "endedAt"=NULL WHERE "id"=?`, candidate)
+					return candidate, err
+				}
+			}
+		}
+	}
+	return h.createPlayback(ctx, serverID, userID, mediaID)
+}
+
+func (h *Handler) createPlayback(ctx context.Context, serverID, userID, mediaID string) (string, error) {
 	created, err := newID()
 	if err != nil {
 		return "", err

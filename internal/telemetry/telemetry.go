@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/maelmoreau21/jellytrack/internal/database"
@@ -175,10 +176,34 @@ func CleanupOrphanStreams(ctx context.Context, db *sql.DB, driver string, timeou
 	}
 	cutoff := time.Now().UTC().Add(-time.Duration(timeoutSeconds) * time.Second).Format(time.RFC3339Nano)
 
-	query := database.Bind(`DELETE FROM "ActiveStream" WHERE "lastPingAt" < ?`, driver)
-	res, err := db.ExecContext(ctx, query, cutoff)
+	stamp := `"lastPingAt"`
+	if driver == "sqlite" {
+		stamp = `REPLACE("lastPingAt",'T',' ')`
+		cutoff = strings.ReplaceAll(cutoff, "T", " ")
+	}
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, fmt.Errorf("cleanup orphan streams: %w", err)
 	}
-	return res.RowsAffected()
+	defer tx.Rollback()
+	// End only histories whose last linked stream has expired. Retain measured
+	// watch time and use the last observed ping, not an invented stop/duration.
+	observedStamp := strings.ReplaceAll(stamp, `"lastPingAt"`, `a."lastPingAt"`)
+	query := `UPDATE "PlaybackHistory" SET "endedAt"=(SELECT a."lastPingAt" FROM "ActiveStream" a WHERE a."serverId"="PlaybackHistory"."serverId" AND a."playbackId"="PlaybackHistory"."id" ORDER BY ` + observedStamp + ` DESC LIMIT 1) WHERE "endedAt" IS NULL AND EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."serverId"="PlaybackHistory"."serverId" AND a."playbackId"="PlaybackHistory"."id" AND ` + observedStamp + ` < ?) AND NOT EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."serverId"="PlaybackHistory"."serverId" AND a."playbackId"="PlaybackHistory"."id" AND ` + observedStamp + ` >= ?)`
+	if _, err = tx.ExecContext(ctx, database.Bind(query, driver), cutoff, cutoff); err != nil {
+		return 0, fmt.Errorf("close expired stream histories: %w", err)
+	}
+	query = database.Bind(`DELETE FROM "ActiveStream" WHERE `+stamp+` < ?`, driver)
+	res, err := tx.ExecContext(ctx, query, cutoff)
+	if err != nil {
+		return 0, fmt.Errorf("cleanup orphan streams: %w", err)
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	if err = tx.Commit(); err != nil {
+		return 0, err
+	}
+	return count, nil
 }

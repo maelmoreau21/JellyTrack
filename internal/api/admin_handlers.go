@@ -55,7 +55,7 @@ func (h *Handler) adminHealth(w http.ResponseWriter, r *http.Request) {
 	var activeStreams, openPlaybackOrphans int64
 	_ = h.db.QueryRowContext(r.Context(), `SELECT COUNT(*) FROM "ActiveStream"`).Scan(&activeStreams)
 
-	checkOrphansQ := `SELECT COUNT(*) FROM "PlaybackHistory" WHERE "endedAt" IS NULL AND ("userId" || ':' || "mediaId") NOT IN (SELECT ("userId" || ':' || "mediaId") FROM "ActiveStream")`
+	checkOrphansQ := `SELECT COUNT(*) FROM "PlaybackHistory" p WHERE p."endedAt" IS NULL AND NOT EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."serverId"=p."serverId" AND (a."playbackId"=p."id" OR (a."playbackId" IS NULL AND a."userId"=p."userId" AND a."mediaId"=p."mediaId")))`
 	_ = h.db.QueryRowContext(r.Context(), checkOrphansQ).Scan(&openPlaybackOrphans)
 
 	var monRaw, syncRaw, backupRaw sql.NullString

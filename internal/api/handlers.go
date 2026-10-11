@@ -805,25 +805,25 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 400, "Identifiant requis.")
 		return
 	}
-	if id == "me" || id == "@me" {
-		if p, ok := auth.PrincipalFromContext(r.Context()); ok {
-			if p.JellyfinUserID != "" {
-				id = p.JellyfinUserID
-			} else {
-				id = p.Username
-			}
-		}
-	}
 	principal, authenticated := auth.PrincipalFromContext(r.Context())
 	if !authenticated {
 		jsonError(w, 401, "Authentification requise.")
 		return
 	}
-	isSelf := !principal.IsAdmin()
+	requestedID := id
+	isSelf := !principal.IsAdmin() || id == "me" || id == "@me"
 	var authorizedServerID string
 	if isSelf {
 		identity, err := auth.ResolveAccount(r.Context(), h.db, h.driver, principal)
-		if err != nil || !identity.Matches(strings.TrimSpace(r.PathValue("id"))) {
+		if err != nil {
+			if principal.IsAdmin() {
+				jsonError(w, 404, "Aucun compte Jellyfin lié à cette connexion.")
+			} else {
+				jsonError(w, 403, "Accès refusé.")
+			}
+			return
+		}
+		if !identity.Matches(requestedID) {
 			jsonError(w, 403, "Accès refusé.")
 			return
 		}
@@ -838,7 +838,13 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 		userQuery += `u."id"=? AND u."serverId"=?`
 		userArgs = []any{id, authorizedServerID}
 	} else {
-		userQuery += `u."id"=? OR u."jellyfinUserId"=? OR LOWER(u."username")=LOWER(?) ORDER BY u."createdAt" ASC,u."id" ASC LIMIT 1`
+		forms := auth.JellyfinIDForms(id)
+		if len(forms) == 2 {
+			userQuery += `u."id"=? OR LOWER(u."jellyfinUserId") IN (?,?) OR LOWER(u."username")=LOWER(?) ORDER BY u."createdAt" ASC,u."id" ASC LIMIT 1`
+			userArgs = []any{id, forms[0], forms[1], id}
+		} else {
+			userQuery += `u."id"=? OR u."jellyfinUserId"=? OR LOWER(u."username")=LOWER(?) ORDER BY u."createdAt" ASC,u."id" ASC LIMIT 1`
+		}
 	}
 	err := h.db.QueryRowContext(r.Context(), database.Bind(userQuery, h.driver), userArgs...).Scan(&dbUID, &username, &jid, &lastActive, &server, &accountServerID)
 	if err != nil {

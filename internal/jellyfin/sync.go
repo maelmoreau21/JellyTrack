@@ -41,7 +41,20 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 	if serverID == "" {
 		serverID = stableID("srv", jellyfinID)
 	}
-	if _, err = db.ExecContext(ctx, database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","isActive") VALUES (?,?,?,?,?,1) ON CONFLICT("jellyfinServerId") DO UPDATE SET "name"=excluded."name","url"=excluded."url","jellyfinApiKey"=excluded."jellyfinApiKey","isActive"=1,"updatedAt"=CURRENT_TIMESTAMP`, driver), serverID, jellyfinID, name, strings.TrimRight(baseURL, "/"), apiKey); err != nil {
+	// A configured row can initially carry a provisional Jellyfin identifier.
+	// Keep its internal ID (and all child foreign keys) when SystemInfo resolves it.
+	updated, err := db.ExecContext(ctx, database.Bind(`UPDATE "Server" SET "jellyfinServerId"=?,"name"=?,"url"=?,"jellyfinApiKey"=?,"isActive"=1,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, driver), jellyfinID, name, strings.TrimRight(baseURL, "/"), apiKey, serverID)
+	if err != nil {
+		return SyncResult{}, fmt.Errorf("update configured Jellyfin server: %w", err)
+	}
+	changed, err := updated.RowsAffected()
+	if err != nil {
+		return SyncResult{}, err
+	}
+	if changed == 0 {
+		_, err = db.ExecContext(ctx, database.Bind(`INSERT INTO "Server" ("id","jellyfinServerId","name","url","jellyfinApiKey","isActive") VALUES (?,?,?,?,?,1) ON CONFLICT("jellyfinServerId") DO UPDATE SET "name"=excluded."name","url"=excluded."url","jellyfinApiKey"=excluded."jellyfinApiKey","isActive"=1,"updatedAt"=CURRENT_TIMESTAMP`, driver), serverID, jellyfinID, name, strings.TrimRight(baseURL, "/"), apiKey)
+	}
+	if err != nil {
 		return SyncResult{}, fmt.Errorf("save Jellyfin server: %w", err)
 	}
 	if err := db.QueryRowContext(ctx, database.Bind(`SELECT "id" FROM "Server" WHERE "jellyfinServerId"=?`, driver), jellyfinID).Scan(&serverID); err != nil {

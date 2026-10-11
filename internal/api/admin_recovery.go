@@ -85,7 +85,9 @@ func (h *Handler) recoveredCleanup(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 500, "Impossible de lire les médias.")
 		return
 	}
-	eligible, err := h.db.QueryContext(r.Context(), `SELECT m."id" FROM "Media" m WHERE m."type" IN ('Movie','Series','MusicAlbum') AND NOT EXISTS (SELECT 1 FROM "PlaybackHistory" p JOIN "Media" child ON child."id"=p."mediaId" LEFT JOIN "Media" parent ON parent."serverId"=child."serverId" AND parent."jellyfinMediaId"=child."parentId" WHERE child."serverId"=m."serverId" AND (child."id"=m."id" OR child."parentId"=m."jellyfinMediaId" OR parent."parentId"=m."jellyfinMediaId"))`)
+	// Build played roots once instead of scanning the entire history for every
+	// candidate. Both parent ID forms are accepted, within the same server.
+	eligible, err := h.db.QueryContext(r.Context(), `WITH played AS (SELECT DISTINCT m."id",m."serverId",m."parentId" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId"), parents AS (SELECT m."id",m."serverId",m."parentId" FROM played c JOIN "Media" m ON m."serverId"=c."serverId" AND m."jellyfinMediaId"=c."parentId" UNION SELECT m."id",m."serverId",m."parentId" FROM played c JOIN "Media" m ON m."serverId"=c."serverId" AND m."id"=c."parentId"), watched AS (SELECT "id" FROM played UNION SELECT "id" FROM parents UNION SELECT m."id" FROM parents c JOIN "Media" m ON m."serverId"=c."serverId" AND m."jellyfinMediaId"=c."parentId" UNION SELECT m."id" FROM parents c JOIN "Media" m ON m."serverId"=c."serverId" AND m."id"=c."parentId") SELECT m."id" FROM "Media" m WHERE m."type" IN ('Movie','Series','MusicAlbum') AND NOT EXISTS (SELECT 1 FROM watched p WHERE p."id"=m."id")`)
 	if err != nil {
 		jsonError(w, 500, "Impossible de lire les lectures.")
 		return
@@ -260,7 +262,7 @@ func (h *Handler) recoveredAdminHealth(w http.ResponseWriter, r *http.Request) {
 	_ = json.Unmarshal([]byte(raw), &monitor)
 	result["status"].(map[string]any)["monitor"] = monitor
 	orphans := []map[string]any{}
-	rows, err := h.db.QueryContext(r.Context(), `SELECT p."id",p."startedAt",COALESCE(p."durationWatched",0),COALESCE(u."username",'Utilisateur Supprimé'),COALESCE(m."title",'Média inconnu'),COALESCE(m."collectionType",m."type",'?') FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE p."endedAt" IS NULL AND NOT EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."userId"=p."userId" AND a."mediaId"=p."mediaId") ORDER BY p."startedAt" DESC LIMIT 20`)
+	rows, err := h.db.QueryContext(r.Context(), `SELECT p."id",p."startedAt",COALESCE(p."durationWatched",0),COALESCE(u."username",'Utilisateur Supprimé'),COALESCE(m."title",'Média inconnu'),COALESCE(m."collectionType",m."type",'?') FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE p."endedAt" IS NULL AND NOT EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."serverId"=p."serverId" AND (a."playbackId"=p."id" OR (a."playbackId" IS NULL AND a."userId"=p."userId" AND a."mediaId"=p."mediaId"))) ORDER BY p."startedAt" DESC LIMIT 20`)
 	if err != nil {
 		jsonError(w, 500, "Impossible de lire les lectures orphelines.")
 		return
