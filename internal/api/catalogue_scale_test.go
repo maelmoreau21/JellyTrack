@@ -39,7 +39,10 @@ func testCatalogueScale(t *testing.T, hierarchy bool) {
 			}
 		}
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// This is a correctness test over a large fixture, not a latency assertion.
+	// CI runs modernc SQLite under -race, where instrumentation substantially
+	// slows queries. Give each endpoint its own bounded execution budget.
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	r := httptest.NewRequest("GET", "/api/media?parents=true&sortBy=added&limit=40", nil).WithContext(ctx)
 	w := httptest.NewRecorder()
@@ -75,7 +78,9 @@ func testCatalogueScale(t *testing.T, hierarchy bool) {
 		t.Fatal(err)
 	}
 	start = time.Now()
-	New(db, "sqlite").recoveredCleanup(cleanup, httptest.NewRequest("GET", "/api/admin/cleanup", nil).WithContext(ctx))
+	cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cleanupCancel()
+	New(db, "sqlite").recoveredCleanup(cleanup, httptest.NewRequest("GET", "/api/admin/cleanup", nil).WithContext(cleanupCtx))
 	t.Logf("cleanup same catalogue: %s", time.Since(start))
 	if cleanup.Code != 200 {
 		t.Fatalf("cleanup %d: %s", cleanup.Code, cleanup.Body.String())
