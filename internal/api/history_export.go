@@ -41,8 +41,9 @@ func (h *Handler) writeHistoryExport(w http.ResponseWriter, r *http.Request, ite
 	exported := make([]map[string]any, 0, len(items))
 	for _, item := range items {
 		live := active[firstStringValue(item["serverId"])+"\x00"+firstStringValue(item["userId"])+"\x00"+firstStringValue(item["mediaId"])]
-		rate := item["bitrate"] // History already normalizes to kbps.
-		if rate == nil {
+		rate := item["audioBitrateKbps"] // Enrichment already resolves audio in kbps.
+		kind := firstStringValue(item["type"])
+		if rate == nil && (kind == "Audio" || kind == "Track" || kind == "MusicTrack" || kind == "MusicAlbum" || kind == "AudioBook") {
 			if n, ok := live.bitrate.(int64); ok && n > 0 {
 				value := float64(n)
 				if value >= 10000 {

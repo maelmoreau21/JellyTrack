@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"math"
 	"net/http"
 	"net/netip"
 	"sort"
@@ -18,6 +19,20 @@ func (h *Handler) enrichHistory(r *http.Request, items []map[string]any) error {
 	if len(items) == 0 {
 		return nil
 	}
+	// Profile exports are not paginated. Bound parameter lists so exports
+	// above a database bind limit retain all their recorded events.
+	if len(items) > 500 {
+		for start := 0; start < len(items); start += 500 {
+			end := start + 500
+			if end > len(items) {
+				end = len(items)
+			}
+			if err := h.enrichHistory(r, items[start:end]); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	marks := make([]string, len(items))
 	args := make([]any, len(items))
 	byID := map[string]map[string]any{}
@@ -26,6 +41,7 @@ func (h *Handler) enrichHistory(r *http.Request, items []map[string]any) error {
 		args[i] = item["id"]
 		byID[item["id"].(string)] = item
 		item["telemetryEvents"] = []map[string]any{}
+		item["audioBitrateKbps"] = nil
 	}
 	query := `SELECT "playbackId","eventType","positionMs","createdAt","metadata" FROM (SELECT t."playbackId",t."eventType",t."positionMs",t."createdAt",t."metadata",ROW_NUMBER() OVER(PARTITION BY t."playbackId" ORDER BY t."createdAt" DESC,t."id" DESC) AS event_rank FROM "TelemetryEvent" t JOIN "PlaybackHistory" p ON p."id"=t."playbackId" AND p."serverId"=t."serverId" WHERE t."playbackId" IN (` + strings.Join(marks, ",") + `)) ranked WHERE event_rank<=200 ORDER BY "createdAt" DESC`
 	rows, err := h.db.QueryContext(r.Context(), database.Bind(query, h.driver), args...)
@@ -50,6 +66,13 @@ func (h *Handler) enrichHistory(r *http.Request, items []map[string]any) error {
 		}
 		events := item["telemetryEvents"].([]map[string]any)
 		item["telemetryEvents"] = append(events, map[string]any{"eventType": kind, "positionMs": pos, "createdAt": created, "metadata": meta})
+		// Events are newest first. A separately recorded audio bitrate is a
+		// stronger source than the combined stream bitrate stored on history.
+		if metadata, ok := meta.(map[string]any); ok && item["audioBitrateKbps"] == nil {
+			if rate := recordedHistoryAudioBitrate(metadata); rate != nil {
+				item["audioBitrateKbps"] = *rate
+			}
+		}
 		if metadata, ok := meta.(map[string]any); ok && item["versionName"] == nil {
 			for _, key := range []string{"versionName", "edition", "mediaSourceName"} {
 				if name, ok := metadata[key].(string); ok && strings.TrimSpace(name) != "" {
@@ -66,6 +89,46 @@ func (h *Handler) enrichHistory(r *http.Request, items []map[string]any) error {
 	}
 	for _, item := range items {
 		item["mediaSubtitle"] = h.profileMediaSubtitle(r, item["serverId"].(string), item["type"].(string), firstStringValue(item["parentId"]), firstStringValue(item["artist"]))
+		if item["audioBitrateKbps"] == nil {
+			// history/profile handlers already return kbps; normalising again
+			// would turn a 12 Mbps video into a fictitious 12 kbps audio stream.
+			// A low combined video bitrate still does not identify an audio
+			// track. Only audio-only media can safely reuse this fallback.
+			if rate, ok := item["bitrate"].(float64); ok && rate > 0 {
+				kind := firstStringValue(item["type"])
+				if kind == "Audio" || kind == "Track" || kind == "MusicTrack" || kind == "MusicAlbum" || kind == "AudioBook" {
+					item["audioBitrateKbps"] = rate
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// Only explicit audio fields are eligible: an unqualified metadata bitrate
+// could describe a video or the combined stream. Telemetry is already joined
+// to the requested playback and its server before this helper is called.
+func recordedHistoryAudioBitrate(metadata map[string]any) *float64 {
+	positive := func(value any) (float64, bool) {
+		rate, ok := value.(float64)
+		return rate, ok && rate > 0 && !math.IsNaN(rate) && !math.IsInf(rate, 0)
+	}
+	if rate, ok := positive(metadata["audioBitrateKbps"]); ok {
+		return &rate
+	}
+	if rate, ok := positive(metadata["audioBitrate"]); ok {
+		if rate >= 10000 {
+			rate /= 1000
+		}
+		return &rate
+	}
+	if stream, ok := metadata["audioStream"].(map[string]any); ok {
+		for _, key := range []string{"BitRate", "bitRate", "bitrate"} {
+			if rate, ok := positive(stream[key]); ok {
+				rate /= 1000 // Jellyfin MediaStream.BitRate is explicitly bits/s.
+				return &rate
+			}
+		}
 	}
 	return nil
 }

@@ -90,7 +90,7 @@
       const themeColor = name => style.getPropertyValue(name).trim();
       const axis = themeColor('--muted-foreground') || '#94a3b8';
       const colors = document.documentElement.classList.contains('dark') ? ['#22d3ee', '#a78bfa', '#f472b6', '#34d399', '#60a5fa', '#fbbf24', '#fb7185', '#38bdf8'] : ['#0891b2', '#7c3aed', '#db2777', '#059669', '#2563eb', '#d97706', '#e11d48', '#0284c7'];
-      const baseOptions = () => ({ responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: themeColor('--surface-raised') || '#0f172a', titleColor: themeColor('--foreground'), bodyColor: themeColor('--foreground'), borderColor: themeColor('--border'), borderWidth: 1, cornerRadius: 12 } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { color: axis, font: { size: 11 } } }, y: { beginAtZero: true, border: { display: false }, grid: { color: themeColor('--border'), borderDash: [3, 3] }, ticks: { color: axis, precision: 0, font: { size: 10 } } } } });
+      const baseOptions = () => ({ responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: themeColor('--surface-raised') || '#0f172a', titleColor: themeColor('--foreground'), bodyColor: themeColor('--foreground'), borderColor: themeColor('--border'), borderWidth: 1, cornerRadius: 12 } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { color: axis, font: { size: 11 } } }, y: { beginAtZero: true, border: { display: false, dash: [3, 3] }, grid: { color: themeColor('--border') }, ticks: { color: axis, precision: 0, font: { size: 10 } } } } });
       const chart = (id, labels, values, color, options = {}) => {
         const canvas = find('#' + id);
         if (!canvas) return null;
@@ -127,6 +127,8 @@
         hourOptions.scales.y.max = hourStep * 4;
         hourOptions.scales.y.ticks.stepSize = hourStep;
         hourOptions.scales.x.ticks.maxRotation = 0;
+        hourOptions.scales.x.ticks.autoSkip = false;
+        hourOptions.scales.y.border.dash = [3, 7];
         hourOptions.scales.x.ticks.callback = function (value, index) { return index % 4 === 0 || index === hours.length - 1 ? this.getLabelForValue(value) : ''; };
         hourOptions.plugins.tooltip.filter = context => context.datasetIndex === 0;
         hourOptions.onClick = (event, entries) => {
@@ -140,7 +142,7 @@
           panel.innerHTML = `<span>${esc(String(item.hour).padStart(2, '0') + ':00')} · ${number(item.count)} ${esc(tr('charts.sessions', 'sessions'))}</span><span>(${difference > 0 ? '+' : ''}${difference} ${esc(tr('charts.vsAverage', 'vs moyenne'))})</span><a href="/logs?hour=${Number(item.hour)}" data-link>${esc(tr('charts.viewLogs', 'Voir les logs'))} ↗</a><button type="button" aria-label="${esc(tr('common.close', 'Fermer'))}">×</button>`;
           listen(panel.querySelector('button'), 'click', () => { panel.hidden = true; });
         };
-        const hourChart = chart('profile-hour-chart', hours.map(item => String(item.hour).padStart(2, '0') + ':00'), hours.map(item => item.count), hours.map(item => item.count === maxHour && maxHour > 0 ? '#ea580c' : '#06b6d4'), hourOptions);
+        const hourChart = chart('profile-hour-chart', hours.map(item => String(item.hour).padStart(2, '0') + ':00'), hours.map(item => item.count), hours.map(item => item.count === maxHour && maxHour > 0 ? '#f97316' : '#38bdf8'), hourOptions);
         if (hourChart && averageHour > 0) {
           hourChart.data.datasets.push({ type: 'line', label: tr('charts.average', 'Moyenne'), data: hours.map(() => averageHour), borderColor: axis, borderWidth: 1, borderDash: [3, 4], pointRadius: 0, order: -1 });
           hourChart.update();
@@ -150,20 +152,25 @@
         genreOptions.indexAxis = 'y';
         genreOptions.scales.y.grid.display = false;
         genreOptions.scales.x.grid = { color: themeColor('--border') };
+        genreOptions.scales.x.border.dash = [3, 3];
         genreOptions.scales.x.ticks.precision = 0;
+        genreOptions.scales.x.ticks.maxTicksLimit = 5;
+        genreOptions.layout = { padding: { left: 40, right: 30 } };
         genreOptions.datasets = { bar: { barThickness: 20 } };
         genreOptions.onClick = (event, entries) => { if (entries.length) Router.navigate('/media/all?genre=' + encodeURIComponent(genreData[entries[0].index].name)); };
         if (genreData.length) chart('profile-genres-chart', genreData.map(item => item.name), genreData.map(item => item.count), genreData.map((item, index) => colors[index % colors.length]), genreOptions);
         else find('#profile-genres-chart').parentElement.innerHTML = `<div class="profile-empty">${esc(tr('common.noData', 'Aucune donnée'))}</div>`;
-        const completion = (detail.completion || []).filter(item => item.value > 0);
+        // Chart.js draws clockwise; reversing sectors preserves Recharts' 3 o'clock,
+        // counterclockwise arrangement without changing their values or legend labels.
+        const completion = (detail.completion || []).filter(item => item.value > 0).slice().reverse();
         const completionColors = { completed: '#22c55e', partial: '#f59e0b', abandoned: '#ef4444' };
         if (completion.length && window.Chart) {
           const canvas = find('#profile-completion-chart');
           const options = baseOptions();
           delete options.scales;
-          options.cutout = '66%';
+          options.rotation = 90;
           options.radius = 90;
-          options.cutout = 60;
+          options.cutout = '66.6666667%';
           options.layout = { padding: 12 };
           options.plugins.tooltip.callbacks = { label: context => {
             const total = context.chart.data.datasets[0].data.reduce((sum, value, i) => sum + (context.chart.getDataVisibility(i) ? Number(value) : 0), 0);
@@ -185,7 +192,7 @@
           const instance = new window.Chart(canvas, { type: 'doughnut', data: { labels: completion.map(item => tr('dashboard.' + item.name, item.name)), datasets: [{ data: completion.map(item => item.value), backgroundColor: completion.map(item => completionColors[item.name] || '#71717a'), borderWidth: 0, spacing: completion.length > 1 ? 3 : 0, hoverOffset: 8 }] }, options, plugins: [activeLabel] });
           canvas.setAttribute('aria-label', completion.map(item => tr('dashboard.' + item.name, item.name) + ': ' + item.value).join('; '));
           charts.push(instance);
-          find('#profile-completion-legend').innerHTML = completion.map((item, index) => `<button type="button" data-legend="${index}" aria-pressed="true"><span style="background:${completionColors[item.name] || '#71717a'}"></span>${esc(tr('dashboard.' + item.name, item.name))}</button>`).join('');
+          find('#profile-completion-legend').innerHTML = completion.map((item, index) => ({ item, index, label: tr('dashboard.' + item.name, item.name) })).sort((a, b) => a.label.localeCompare(b.label, State.locale)).map(({ item, index, label }) => `<button type="button" data-legend="${index}" aria-pressed="true"><span style="background:${completionColors[item.name] || '#71717a'}"></span>${esc(label)}</button>`).join('');
           listen(find('#profile-completion-legend'), 'click', event => {
             const button = event.target.closest('[data-legend]');
             if (!button) return;
@@ -270,7 +277,7 @@
           case 'client': return `<b>${esc(item.clientName || '—')}</b>`;
           case 'user': return `<a href="/users/${encodeURIComponent(data.jellyfinUserId || userId)}" data-link>${esc(username)}</a>`;
           case 'resolution': return /audio|track/i.test(item.type) ? '—' : badge(resolution(item.resolution));
-          case 'audioBitrate': return item.bitrate > 0 ? number(item.bitrate) + ' kbps' : '—';
+          case 'audioBitrate': return item.audioBitrateKbps > 0 ? number(item.audioBitrateKbps) + ' kbps' : '—';
           case 'status': return status(item);
           case 'duration': return item.isActuallyActive ? '<strong class="profile-warning">● Active</strong>' : esc(Utils.formatMs(item.durationMs));
           case 'country': return esc([item.city, item.country].filter(value => value && value !== 'Unknown').join(', ') || '—');

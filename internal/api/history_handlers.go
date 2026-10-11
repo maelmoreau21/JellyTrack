@@ -228,13 +228,13 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	}
 	// Release rows before enrichment: SQLite uses a single connection.
 	rows.Close()
-	if export {
-		h.writeHistoryExport(w, r, out)
-		return
-	}
 	markProfileReconnections(out)
 	if err := h.enrichHistory(r, out); err != nil {
 		jsonError(w, 500, "Impossible de charger la chronologie.")
+		return
+	}
+	if export {
+		h.writeHistoryExport(w, r, out)
 		return
 	}
 	response := map[string]any{"items": out, "total": total, "limit": limit, "offset": offset, "periodDays": days}

@@ -45,7 +45,7 @@ func TestWrappedRestoresYearsCategoriesParentsAndHours(t *testing.T) {
 	if len(years) != time.Now().UTC().Year()-2025+1 || years[0] != float64(time.Now().UTC().Year()) || years[len(years)-1] != float64(2025) {
 		t.Fatalf("historical continuous years lost: %+v", years)
 	}
-	if data["totalSeconds"] != float64(6300) || data["totalPlays"] != float64(3) || data["topDevice"] != "TV" {
+	if data["totalSeconds"] != float64(6300) || data["totalPlays"] != float64(3) || data["topDevice"] != "Web" || data["topPhysicalDevice"] != "TV" {
 		t.Fatalf("wrapped totals: %+v", data)
 	}
 	series := data["topSeries"].([]any)
@@ -57,8 +57,20 @@ func TestWrappedRestoresYearsCategoriesParentsAndHours(t *testing.T) {
 		t.Fatalf("monthly hours: %v", months)
 	}
 	data = call("year=2025&type=Music")
-	if data["totalPlays"] != float64(1) || len(data["topAlbums"].([]any)) != 1 || len(data["topArtists"].([]any)) != 1 {
+	if data["totalPlays"] != float64(1) || len(data["topAlbums"].([]any)) != 1 || len(data["topArtists"].([]any)) != 1 || data["topDevice"] != "Phone" {
 		t.Fatalf("music type: %+v", data)
+	}
+	// Several short sessions must not beat a longer viewing client. Neither
+	// another account/server nor a different year may influence this choice.
+	if _, err := db.Exec(`INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('foreign','other','foreignjf','Foreign')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched","startedAt","endedAt","clientName","deviceName") VALUES('short1','s','u','ep','DirectPlay',120,'2025-01-05T10:00:00Z','2025-01-05T10:02:00Z','Phone','Phone'),('short2','s','u','ep','DirectPlay',120,'2025-01-06T10:00:00Z','2025-01-06T10:02:00Z','Phone','Phone'),('outsideyear','s','u','ep','DirectPlay',9000,'2024-01-02T10:00:00Z','2024-01-02T12:30:00Z','Outside year','Other'),('foreign','other','foreign','wrong','DirectPlay',9000,'2025-01-02T10:00:00Z','2025-01-02T12:30:00Z','Foreign','Other')`); err != nil {
+		t.Fatal(err)
+	}
+	data = call("year=2025")
+	if data["topDevice"] != "Web" || data["topPhysicalDevice"] != "TV" {
+		t.Fatalf("client ranking by duration/account/year: %+v", data)
 	}
 }
 

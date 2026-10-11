@@ -199,6 +199,10 @@ func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deepStats(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Query().Get("catalogue") == "true" {
+		h.catalogueDeepStats(w, r)
+		return
+	}
 	filter, err := dashboardFilter(r, 30)
 	if err != nil {
 		jsonError(w, 400, err.Error())

@@ -249,15 +249,22 @@ func (h *Handler) recoveredWrapped(w http.ResponseWriter, r *http.Request, uid, 
 		categories[name] = map[string]any{"totalSeconds": categorySeconds[name], "totalHours": float64(categorySeconds[name]) / 3600, "topMedia": rankWrapped(tops[name])}
 	}
 	topDevice := "N/A"
+	clients := rankWrapped(tops["clients"])
+	if len(clients) > 0 {
+		topDevice = clients[0].Title
+	}
+	// Main calls the favourite application/client "topDevice". Keep the
+	// independently recorded physical device available without changing it.
+	topPhysicalDevice := "N/A"
 	devices := rankWrapped(tops["devices"])
 	if len(devices) > 0 {
-		topDevice = devices[0].Title
+		topPhysicalDevice = devices[0].Title
 	}
 	jsonResponse(w, 200, map[string]any{
 		"userId": uid, "username": username, "jellyfinUserId": jid, "serverId": serverID, "year": year, "filterType": filter, "availableYears": availableYears,
 		"totalSeconds": totalSeconds, "totalHours": float64(totalSeconds) / 3600, "totalPlays": totalPlays,
 		"topMedia": rankWrapped(tops["media"]), "topMovies": rankWrapped(tops["movies"]), "topSeries": rankWrapped(tops["series"]), "topMusic": rankWrapped(tops["music"]), "topTracks": rankWrapped(tops["music"]), "topBooks": rankWrapped(tops["books"]),
-		"topArtists": rankWrapped(tops["artists"]), "topAlbums": rankWrapped(tops["albums"]), "topGenres": rankWrapped(tops["genres"]), "topClients": rankWrapped(tops["clients"]), "topDevice": topDevice, "categories": categories,
+		"topArtists": rankWrapped(tops["artists"]), "topAlbums": rankWrapped(tops["albums"]), "topGenres": rankWrapped(tops["genres"]), "topClients": clients, "topDevice": topDevice, "topPhysicalDevice": topPhysicalDevice, "categories": categories,
 		"dayCounts": days, "hourCounts": hours, "monthCounts": months, "monthlyHours": monthlyHours, "peakDay": peak(days), "peakHour": peak(hours), "peakMonth": peak(months), "peakHourSessions": hours[peak(hours)],
 	})
 }

@@ -525,15 +525,8 @@ func (h *Handler) profileHistory(r *http.Request, userID, serverID string) (map[
 		return nil, err
 	}
 	markProfileReconnections(items)
-	for _, item := range items {
-		parent, _ := item["parentId"].(string)
-		artist, _ := item["artist"].(string)
-		item["mediaSubtitle"] = h.profileMediaSubtitle(r, item["serverId"].(string), item["type"].(string), parent, artist)
-		telemetry, err := h.profileTelemetry(r, item["id"].(string), item["userId"].(string), item["serverId"].(string))
-		if err != nil {
-			return nil, err
-		}
-		item["telemetryEvents"] = telemetry
+	if err := h.enrichHistory(r, items); err != nil {
+		return nil, err
 	}
 	// Filters cover this account's entire history, independent of the selected page.
 	filterRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."clientName",p."audioLanguage",p."audioCodec",p."subtitleLanguage",p."subtitleCodec",m."resolution",m."type",p."playMethod" FROM "PlaybackHistory" p LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE `+scope, h.driver), args[:2]...)

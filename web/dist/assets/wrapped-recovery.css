@@ -62,3 +62,4 @@
 @keyframes wrapped-days-ping{75%,100%{transform:scale(2);opacity:0}}
 @media(prefers-reduced-motion:reduce){.wrapped-days-clock>i{animation:none}}
 .auth-toggle-local-btn svg,.auth-local-title svg{width:14px;height:14px}
+.wrapped-device.wrapped-device-card{display:inline-block;padding:32px;border:1px solid #ffffff1a;border-radius:24px;background:#ffffff0d;font-size:36px;font-weight:700;text-transform:uppercase;box-shadow:0 20px 25px -5px #0000001a}
