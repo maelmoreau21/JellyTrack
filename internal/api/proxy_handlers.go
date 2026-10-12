@@ -75,6 +75,23 @@ func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	imageType := strings.TrimSpace(r.URL.Query().Get("imageType"))
+	access, accessArgs := h.libraryAccessClause(r, "m")
+	if access != "1=1" {
+		if serverID == "" && len(accessArgs) > 0 {
+			serverID, _ = accessArgs[0].(string)
+		}
+		query := `SELECT COUNT(*) FROM "Media" m WHERE (m."id"=? OR m."jellyfinMediaId"=?) AND (` + access + `)`
+		args := append([]any{mediaID, mediaID}, accessArgs...)
+		if serverID != "" {
+			query += ` AND m."serverId"=?`
+			args = append(args, serverID)
+		}
+		var count int
+		if err := h.db.QueryRowContext(r.Context(), database.Bind(query, h.driver), args...).Scan(&count); err != nil || count == 0 {
+			http.NotFound(w, r)
+			return
+		}
+	}
 	if imageType == "" {
 		imageType = strings.TrimSpace(r.URL.Query().Get("type"))
 	}

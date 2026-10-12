@@ -147,9 +147,11 @@ type AuthenticatedUser struct {
 	ID     string `json:"Id"`
 	Name   string `json:"Name"`
 	Policy struct {
-		IsAdministrator          bool   `json:"IsAdministrator"`
-		AuthenticationProviderID string `json:"AuthenticationProviderId"`
-		IsDisabled               bool   `json:"IsDisabled"`
+		IsAdministrator          bool     `json:"IsAdministrator"`
+		AuthenticationProviderID string   `json:"AuthenticationProviderId"`
+		IsDisabled               bool     `json:"IsDisabled"`
+		EnableAllFolders         bool     `json:"EnableAllFolders"`
+		EnabledFolders           []string `json:"EnabledFolders"`
 	} `json:"Policy"`
 }
 

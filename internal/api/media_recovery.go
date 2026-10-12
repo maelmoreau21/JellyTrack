@@ -29,6 +29,9 @@ import (
 func (h *Handler) recoveredMediaBase(r *http.Request) (string, []any, error) {
 	clauses := []string{excludedLibrariesClause(h.driver, "m"), `m."isAvailable"=1`}
 	args := []any{}
+	access, accessArgs := h.libraryAccessClause(r, "m")
+	clauses = append(clauses, access)
+	args = append(args, accessArgs...)
 	if ids := getServerScope(r); len(ids) > 0 {
 		marks := []string{}
 		for _, id := range ids {

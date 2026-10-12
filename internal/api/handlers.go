@@ -914,7 +914,9 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 
 	searchPattern := "%" + q + "%"
 	excluded := excludedLibrariesClause(h.driver, "m")
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT m."id",m."jellyfinMediaId",m."title",m."type",m."libraryName",m."parentId",m."artist" FROM "Media" m WHERE m."isAvailable"=1 AND (m."title" LIKE ? OR m."directors" LIKE ? OR m."actors" LIKE ?) AND `+excluded+` ORDER BY m."title" ASC LIMIT 10`, h.driver), searchPattern, searchPattern, searchPattern)
+	access, accessArgs := h.libraryAccessClause(r, "m")
+	searchArgs := append([]any{searchPattern, searchPattern, searchPattern}, accessArgs...)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT m."id",m."jellyfinMediaId",m."title",m."type",m."libraryName",m."parentId",m."artist" FROM "Media" m WHERE m."isAvailable"=1 AND (m."title" LIKE ? OR m."directors" LIKE ? OR m."actors" LIKE ?) AND `+excluded+` AND (`+access+`) ORDER BY m."title" ASC LIMIT 10`, h.driver), searchArgs...)
 	mediaList := []map[string]any{}
 	if err == nil {
 		for rows.Next() {

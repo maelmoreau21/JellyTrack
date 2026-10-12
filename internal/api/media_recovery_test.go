@@ -78,6 +78,10 @@ func TestHistoricalPopularTracksSeriesPeopleAndCollectionCounts(t *testing.T) {
 
 func TestMediaRecoveryFamiliesScopesFiltersAndPagination(t *testing.T) {
 	db := apiDB(t)
+	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"Id":"ju","Policy":{"EnableAllFolders":true}}`)
+	}))
+	defer provider.Close()
 	for _, q := range []string{
 		`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('a','ja','A','http://a'),('b','jb','B','http://b')`,
 		`INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u','a','ju','User'),('other','a','jo','Other'),('ub','b','ju','User B')`,
@@ -88,6 +92,9 @@ func TestMediaRecoveryFamiliesScopesFiltersAndPagination(t *testing.T) {
 		if _, e := db.Exec(q); e != nil {
 			t.Fatal(e)
 		}
+	}
+	if _, err := db.Exec(`UPDATE "Server" SET "url"=?,"jellyfinApiKey"='test-key' WHERE "id"='a'`, provider.URL); err != nil {
+		t.Fatal(err)
 	}
 	h := New(db, "sqlite")
 	request := func(path, id string, fn http.HandlerFunc, user bool) map[string]any {
