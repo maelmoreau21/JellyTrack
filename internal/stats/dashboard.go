@@ -266,7 +266,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		userWhere += ` AND "serverId" IN (` + strings.Join(placeholders, ",") + `)`
 	}
 	_ = db.QueryRowContext(ctx, database.Bind(`SELECT COUNT(*) FROM "User" `+userWhere, driver), userArgs...).Scan(&totalUsers)
-	mediaWhere := []string{media.ExcludedLibrariesClause(driver, "m")}
+	mediaWhere := []string{media.ExcludedLibrariesClause(driver, "m"), `m."isAvailable"=1`}
 	mediaArgs := []any{}
 	extraClauses, extraArgs := filterExclusionConditions(filter)
 	mediaWhere = append(mediaWhere, extraClauses...)

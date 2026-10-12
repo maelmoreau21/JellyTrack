@@ -3728,12 +3728,14 @@
       const main = document.getElementById('app-main');
 
       // 1. Fetch Auth Options
+      let ssoButtonLabel = "";
       let oidcEnabled = false;
       let oidcAutoRedirect = false;
       let localAdminEnabled = false;
       let jellyfinEnabled = true;
       try {
         const opts = await API.getJSON('/api/auth/options');
+        ssoButtonLabel = typeof opts.ssoButtonLabel === "string" ? opts.ssoButtonLabel : "";
         oidcEnabled = !!opts.oidc;
         oidcAutoRedirect = !!opts.autoRedirect;
         localAdminEnabled = !!opts.localAdmin;
@@ -3815,7 +3817,7 @@
               ${oidcEnabled ? `
                 <div class="auth-sso-section" style="margin-bottom: 1.25rem;">
                   <a href="/api/auth/oidc/start" class="auth-sso-primary-btn" id="btn-sso-start">
-                    <span>${I18n.t('login.signInSso') || 'Se connecter avec SSO'}</span>
+                    <span>${Utils.escapeHtml(ssoButtonLabel || I18n.t('login.signInSso') || 'Se connecter avec SSO')}</span>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                   </a>
                 </div>

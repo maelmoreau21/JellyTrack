@@ -290,7 +290,7 @@ func (c *Client) LibraryItemIDs(ctx context.Context, libraryID string, visit fun
 
 func (c *Client) LibraryItems(ctx context.Context, libraryID string, visit func(Item) error) error {
 	for start := 0; start < 1000000; {
-		q := url.Values{"ParentId": {libraryID}, "Recursive": {"true"}, "Fields": {"MediaSources"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
+		q := url.Values{"ParentId": {libraryID}, "Recursive": {"true"}, "Fields": {"MediaSources,ProviderIds"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
 		var page itemPage
 		if err := c.get(ctx, "/Items", q, &page); err != nil {
 			return err

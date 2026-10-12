@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -212,6 +213,7 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 		if e != nil || len(libs) == 0 {
 			return nil, nil, 0, nil, fmt.Errorf("Bibliothèques Jellyfin indisponibles pour le serveur %s ; aucune réparation effectuée", s.id)
 		}
+		var catalog []jellyfin.Item
 		membership := map[string]string{}
 		resolutions := map[string]string{}
 		ambiguous := map[string]bool{}
@@ -220,6 +222,7 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 				return nil, nil, 0, nil, fmt.Errorf("Bibliothèque Jellyfin incomplète pour le serveur %s", s.id)
 			}
 			e = client.LibraryItems(ctx, lib.ID, func(item jellyfin.Item) error {
+				catalog = append(catalog, item)
 				key := repairRemoteID(item.ID)
 				if resolution := jellyfin.ItemResolution(item); resolution != "" {
 					resolutions[key] = resolution
@@ -234,21 +237,32 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 				return nil, nil, 0, nil, fmt.Errorf("Lecture des bibliothèques Jellyfin échouée pour le serveur %s ; aucune réparation effectuée", s.id)
 			}
 		}
-		mediaRows, e := h.db.QueryContext(ctx, `SELECT "id","jellyfinMediaId","libraryName","resolution","title" FROM "Media" WHERE "serverId"=?`, s.id)
+		providerIndex := jellyfin.NewProviderIndex(catalog)
+		mediaRows, e := h.db.QueryContext(ctx, `SELECT "id","jellyfinMediaId","libraryName","resolution","title","type","providerIds" FROM "Media" WHERE "serverId"=?`, s.id)
 		if e != nil {
 			return nil, nil, 0, nil, e
 		}
 		matched := 0
 		for mediaRows.Next() {
 			var c libraryRepairChange
-			var title string
+			var title, kind, rawProviders string
 			c.server = s.id
-			if e = mediaRows.Scan(&c.id, &c.remote, &c.before, &c.beforeResolution, &title); e != nil {
+			if e = mediaRows.Scan(&c.id, &c.remote, &c.before, &c.beforeResolution, &title, &kind, &rawProviders); e != nil {
 				mediaRows.Close()
 				return nil, nil, 0, nil, e
 			}
 			key := repairRemoteID(c.remote)
 			name, ok := membership[key]
+			providerRecovered := false
+			if !ok {
+				var ids map[string]string
+				_ = json.Unmarshal([]byte(rawProviders), &ids)
+				if item, matched := providerIndex.Match(kind, ids); matched && !ambiguous[repairRemoteID(item.ID)] {
+					name = membership[repairRemoteID(item.ID)]
+					ok = name != ""
+					providerRecovered = ok
+				}
+			}
 			if !ok || ambiguous[key] {
 				unresolved++
 				reason := "Identifiant absent du catalogue Jellyfin accessible"
@@ -262,7 +276,7 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 			}
 			matched++
 			c.after = name
-			if stats.NormalizeResolution(c.beforeResolution.String) == "Unknown" {
+			if !providerRecovered && stats.NormalizeResolution(c.beforeResolution.String) == "Unknown" {
 				c.afterResolution = resolutions[key]
 			}
 			if !c.before.Valid || c.before.String != name || c.afterResolution != "" {

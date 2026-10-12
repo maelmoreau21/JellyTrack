@@ -1,0 +1,14 @@
+const fs=require('fs');
+const {chromium}=require('C:/Users/Mael/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+(async()=>{const browser=await chromium.launch();try{
+const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.setContent('<html lang="fr"><body><main></main></body></html>');await page.addScriptTag({path:'web/dist/assets/settings.js'});
+const messages=JSON.parse(fs.readFileSync('web/dist/assets/messages/fr.json','utf8'));
+await page.evaluate(async messages=>{
+ window.JellyTrackNavigation={settingsTabs:()=>'',icon:()=>'<svg></svg>'};window.saved={defaultLocale:'fr',timeFormat:'24h',resolutionThresholds:{schedulerIntervals:{backupEveryHours:48}}};window.calls=[];
+ window.mount=()=>JellyTrackSettings.mount({main:document.querySelector('main'),user:{isAdmin:true},navigate:()=>{},
+ i18n:{locale:'fr',t:key=>key.split('.').reduce((v,k)=>v?.[k],messages)||''},utils:{escapeHtml:v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')},
+ api:{getJSON:async url=>url==='/api/settings'?JSON.parse(JSON.stringify(saved)):{servers:[]},request:async(url,options)=>{calls.push(options.body);const b=options.body;if(b.ssoButtonLabel!==undefined)saved.resolutionThresholds.ssoButtonLabel=b.ssoButtonLabel;saved.defaultLocale=b.defaultLocale;saved.timeFormat=b.timeFormat;return{ok:true,json:async()=>({success:true})}}}},'jellyfin');await mount();
+},messages);
+await page.locator('details.settings-extra summary').click();const input=page.locator('[name="ssoButtonLabel"]');if(await input.getAttribute('maxlength')!=='80')throw Error('maxlength missing');await input.fill('Connexion Authentik');await page.locator('[data-form="locale"] [type="submit"]').click();await page.waitForFunction(()=>saved.resolutionThresholds.ssoButtonLabel==='Connexion Authentik');await page.evaluate(()=>mount());await page.locator('details.settings-extra summary').click();if(await page.locator('[name="ssoButtonLabel"]').inputValue()!=='Connexion Authentik')throw Error('label not restored');
+await page.locator('[name="ssoButtonLabel"]').fill('<img src=x onerror=alert(1)>');await page.locator('[data-form="locale"] [type="submit"]').click();await page.waitForFunction(()=>saved.resolutionThresholds.ssoButtonLabel.startsWith('<img'));await page.evaluate(()=>mount());if(await page.locator('img').count())throw Error('unescaped label');if(errors.length)throw Error(errors.join(';'));if(await page.evaluate(()=>saved.resolutionThresholds.schedulerIntervals.backupEveryHours)!==48)throw Error('settings lost');console.log('PASS: SSO label form, length limit, save/reload, escaped text, preserved settings (mock API).');
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

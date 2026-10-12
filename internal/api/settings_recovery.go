@@ -111,6 +111,14 @@ func (h *Handler) saveRecoveredSettings(w http.ResponseWriter, r *http.Request) 
 			values[key] = object
 		}
 	}
+	if raw, ok := input["ssoButtonLabel"]; ok {
+		var label string
+		if json.Unmarshal(raw, &label) != nil || string(raw) == "null" || len([]rune(strings.TrimSpace(label))) > 80 {
+			jsonError(w, 400, "Libellé SSO invalide (80 caractères maximum).")
+			return
+		}
+		values["ssoButtonLabel"] = strings.TrimSpace(label)
+	}
 	for key := range input {
 		if _, ok := values[key]; !ok {
 			jsonError(w, 400, "Réglage non supporté: "+key)
@@ -143,7 +151,7 @@ func (h *Handler) saveRecoveredSettings(w http.ResponseWriter, r *http.Request) 
 		jsonError(w, 400, "Date Wrapped invalide.")
 		return
 	}
-	if values["resolutionThresholds"] != nil || values["schedulerIntervals"] != nil {
+	if values["resolutionThresholds"] != nil || values["schedulerIntervals"] != nil || values["ssoButtonLabel"] != nil {
 		var raw sql.NullString
 		if err = tx.QueryRowContext(r.Context(), `SELECT "resolutionThresholds" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&raw); err != nil {
 			jsonError(w, 500, "Impossible de lire les réglages.")
@@ -156,6 +164,10 @@ func (h *Handler) saveRecoveredSettings(w http.ResponseWriter, r *http.Request) 
 		}
 		if merged == nil {
 			merged = map[string]any{}
+		}
+		if label, ok := values["ssoButtonLabel"].(string); ok {
+			merged["ssoButtonLabel"] = label
+			delete(values, "ssoButtonLabel")
 		}
 		if object, ok := values["resolutionThresholds"].(map[string]any); ok {
 			for key, value := range object {

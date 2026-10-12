@@ -245,29 +245,59 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 		if item.AlbumArtist != "" {
 			artist = item.AlbumArtist
 		}
-		_, e := db.ExecContext(ctx, database.Bind(`INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","durationMs","size","directors","actors","studios","parentId","artist","dateAdded","resolution","providerIds") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("jellyfinMediaId","serverId") DO UPDATE SET "providerIds"=excluded."providerIds","title"=excluded."title","type"=excluded."type","collectionType"=COALESCE(excluded."collectionType","Media"."collectionType"),"libraryName"=COALESCE(excluded."libraryName","Media"."libraryName"),"genres"=excluded."genres","durationMs"=COALESCE(excluded."durationMs","Media"."durationMs"),"size"=COALESCE(excluded."size","Media"."size"),"directors"=excluded."directors","actors"=excluded."actors","studios"=excluded."studios","parentId"=COALESCE(excluded."parentId","Media"."parentId"),"artist"=COALESCE(excluded."artist","Media"."artist"),"dateAdded"=COALESCE(excluded."dateAdded","Media"."dateAdded"),"resolution"=COALESCE(excluded."resolution","Media"."resolution"),"updatedAt"=CURRENT_TIMESTAMP`, driver), stableID("med", serverID+":"+item.ID), serverID, item.ID, firstNonEmpty(item.Name, "Unknown"), item.Type, col, lib, syncArrayValue(driver, item.Genres, genres), duration, size, syncArrayValue(driver, item.Directors, directors), syncArrayValue(driver, item.Actors, actors), syncArrayValue(driver, item.Studios, studios), par, artist, dateAdded, res, providerJSON(item.ProviderIDs))
+		_, e := db.ExecContext(ctx, database.Bind(`INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","durationMs","size","directors","actors","studios","parentId","artist","dateAdded","resolution","providerIds") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("jellyfinMediaId","serverId") DO UPDATE SET "isAvailable"=1,"providerIds"=CASE WHEN excluded."providerIds"='{}' THEN "Media"."providerIds" ELSE excluded."providerIds" END,"title"=excluded."title","type"=excluded."type","collectionType"=COALESCE(excluded."collectionType","Media"."collectionType"),"libraryName"=COALESCE(excluded."libraryName","Media"."libraryName"),"genres"=excluded."genres","durationMs"=COALESCE(excluded."durationMs","Media"."durationMs"),"size"=COALESCE(excluded."size","Media"."size"),"directors"=excluded."directors","actors"=excluded."actors","studios"=excluded."studios","parentId"=COALESCE(excluded."parentId","Media"."parentId"),"artist"=COALESCE(excluded."artist","Media"."artist"),"dateAdded"=COALESCE(excluded."dateAdded","Media"."dateAdded"),"resolution"=COALESCE(excluded."resolution","Media"."resolution"),"updatedAt"=CURRENT_TIMESTAMP`, driver), stableID("med", serverID+":"+item.ID), serverID, item.ID, firstNonEmpty(item.Name, "Unknown"), item.Type, col, lib, syncArrayValue(driver, item.Genres, genres), duration, size, syncArrayValue(driver, item.Directors, directors), syncArrayValue(driver, item.Actors, actors), syncArrayValue(driver, item.Studios, studios), par, artist, dateAdded, res, providerJSON(item.ProviderIDs))
 		if e != nil {
 			return fmt.Errorf("save media %q: %w", item.ID, e)
 		}
 		result.Media++
 		return nil
 	}
+	type catalogEntry struct {
+		item    Item
+		library *Library
+	}
+	var catalog []catalogEntry
+	collect := func(item Item) error { catalog = append(catalog, catalogEntry{item, currentLibrary}); return nil }
 	if len(libraries) > 0 {
 		for i := range libraries {
 			currentLibrary = &libraries[i]
 			if currentLibrary.ID == "" || strings.TrimSpace(currentLibrary.Name) == "" {
 				return result, fmt.Errorf("Jellyfin returned an incomplete library")
 			}
-			err = client.ItemsSinceInLibrary(ctx, since, currentLibrary.ID, visit)
+			err = client.ItemsSinceInLibrary(ctx, since, currentLibrary.ID, collect)
 			if err != nil {
 				break
 			}
 		}
 	} else {
-		err = client.ItemsSince(ctx, since, visit)
+		err = client.ItemsSince(ctx, since, collect)
 	}
 	if err != nil {
 		return result, fmt.Errorf("fetch Jellyfin media: %w", err)
+	}
+	if since == "" && libraryErr == nil && len(libraries) > 0 {
+		items := make([]Item, 0, len(catalog))
+		for _, entry := range catalog {
+			items = append(items, entry.item)
+		}
+		if err := reconcileReplacementIDs(ctx, db, driver, serverID, items); err != nil {
+			return result, err
+		}
+	}
+	for _, entry := range catalog {
+		currentLibrary = entry.library
+		if err := visit(entry.item); err != nil {
+			return result, err
+		}
+	}
+	if since == "" && libraryErr == nil && len(libraries) > 0 {
+		items := make([]Item, 0, len(catalog))
+		for _, entry := range catalog {
+			items = append(items, entry.item)
+		}
+		if err := reconcilePresence(ctx, db, driver, serverID, items); err != nil {
+			return result, err
+		}
 	}
 	if result.Media > 0 && (libraryErr != nil || len(libraries) == 0) {
 		result.Warnings = append(result.Warnings, "Les bibliothèques Jellyfin ne sont pas accessibles : les médias ont été synchronisés mais leur bibliothèque n'a pas pu être vérifiée.")

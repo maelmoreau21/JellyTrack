@@ -27,7 +27,7 @@ import (
 // The family relation accepts Jellyfin or internal parent IDs, always on the
 // same server. UNION also terminates malformed cyclic hierarchies.
 func (h *Handler) recoveredMediaBase(r *http.Request) (string, []any, error) {
-	clauses := []string{excludedLibrariesClause(h.driver, "m")}
+	clauses := []string{excludedLibrariesClause(h.driver, "m"), `m."isAvailable"=1`}
 	args := []any{}
 	if ids := getServerScope(r); len(ids) > 0 {
 		marks := []string{}
@@ -65,6 +65,7 @@ func (h *Handler) recoveredMediaDetailBase(r *http.Request) (string, []any, erro
  UNION SELECT n."target" FROM detail_scope d JOIN neighbors n ON n."source"=d."id"
  ), `
 	base = strings.Replace(base, "WITH RECURSIVE ", prefix, 1)
+	base = strings.ReplaceAll(base, `m."isAvailable"=1`, `1=1`)
 	base = strings.Replace(base, `FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE `, `FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE m."id" IN (SELECT "id" FROM detail_scope) AND `, 1)
 	id := r.PathValue("id")
 	return base, append([]any{id, id}, args...), nil

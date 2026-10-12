@@ -526,10 +526,11 @@ func (m *Manager) Routes(mux *http.ServeMux) {
 			strings.TrimSpace(os.Getenv("LOCAL_ADMIN_PASSWORD")) != "" ||
 			strings.TrimSpace(os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD")) != ""
 		writeJSON(w, http.StatusOK, map[string]any{
-			"jellyfin":     jellyfinLoginEnabled(),
-			"oidc":         cfg.enabled,
-			"autoRedirect": cfg.autoRedirect,
-			"localAdmin":   hasLocal,
+			"jellyfin":       jellyfinLoginEnabled(),
+			"oidc":           cfg.enabled,
+			"ssoButtonLabel": m.ssoButtonLabel(r.Context()),
+			"autoRedirect":   cfg.autoRedirect,
+			"localAdmin":     hasLocal,
 		})
 	})
 	mux.HandleFunc("GET /api/auth/sso/config", func(w http.ResponseWriter, r *http.Request) {

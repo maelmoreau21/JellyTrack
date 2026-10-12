@@ -95,7 +95,7 @@ func GetDeepStats(ctx context.Context, db *sql.DB) (DeepStatsResult, error) {
 	rows, err := db.QueryContext(ctx, `
 		SELECT "directors", "actors", "studios"
 		FROM "Media"
-		WHERE "type" IN ('Movie', 'Series')
+		WHERE "isAvailable"=1 AND "type" IN ('Movie', 'Series')
 	`)
 	if err != nil {
 		return DeepStatsResult{}, err
@@ -195,7 +195,7 @@ type HeatmapCell struct {
 	Day       int   `json:"day"`       // Alias for frontend compatibility
 	Hour      int   `json:"hour"`      // 0-23
 	Views     int64 `json:"views"`
-	Value     int64 `json:"value"`     // Alias for frontend compatibility
+	Value     int64 `json:"value"` // Alias for frontend compatibility
 	Duration  int64 `json:"duration"`
 }
 
@@ -293,15 +293,15 @@ func GetPredictions(ctx context.Context, db *sql.DB, driver string) (map[string]
 // GetMetadataAudit identifies media items missing posters, resolutions, genres, or duration.
 func GetMetadataAudit(ctx context.Context, db *sql.DB) (map[string]any, error) {
 	var missingRes, missingDur, missingGenres int64
-	_ = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "Media" WHERE "resolution" IS NULL OR "resolution" = ''`).Scan(&missingRes)
-	_ = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "Media" WHERE "durationMs" IS NULL OR "durationMs" <= 0`).Scan(&missingDur)
-	_ = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "Media" WHERE "genres" IS NULL OR "genres" = '[]' OR "genres" = '{}'`).Scan(&missingGenres)
+	_ = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "Media" WHERE "isAvailable"=1 AND LOWER("type") IN ('movie','episode','video','musicvideo','trailer') AND ("resolution" IS NULL OR TRIM("resolution")='' OR LOWER(TRIM("resolution")) IN ('unknown','undefined','n/a'))`).Scan(&missingRes)
+	_ = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "Media" WHERE "isAvailable"=1 AND ("durationMs" IS NULL OR "durationMs" <= 0)`).Scan(&missingDur)
+	_ = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "Media" WHERE "isAvailable"=1 AND ("genres" IS NULL OR "genres" = '[]' OR "genres" = '{}')`).Scan(&missingGenres)
 
 	var totalMedia int64
-	_ = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "Media"`).Scan(&totalMedia)
+	_ = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "Media" WHERE "isAvailable"=1`).Scan(&totalMedia)
 
 	return map[string]any{
-		"totalMedia":         totalMedia,
+		"totalMedia":        totalMedia,
 		"missingResolution": missingRes,
 		"missingDuration":   missingDur,
 		"missingGenres":     missingGenres,
