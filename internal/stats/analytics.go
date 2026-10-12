@@ -755,6 +755,7 @@ type DetailedDeepInsights struct {
 	StreamMethodsChartData []DashboardNamedValue        `json:"streamMethodsChartData"`
 	ResolutionChartData    []DashboardNamedValue        `json:"resolutionChartData"`
 	DeviceChartData        []DashboardNamedValue        `json:"deviceChartData"`
+	ApplicationChartData   []ApplicationPoint           `json:"applicationChartData"`
 	AudioChartData         []DashboardNamedValue        `json:"audioChartData"`
 	SubtitleChartData      []DashboardNamedValue        `json:"subtitleChartData"`
 	TopDirectors           []map[string]any             `json:"topDirectors"`
@@ -822,6 +823,7 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 	methodMap := make(map[string]int64)
 	resMap := make(map[string]int64)
 	deviceMap := make(map[string]int64)
+	applicationMap := map[string]*ApplicationPoint{}
 	audioMap := make(map[string]int64)
 	subMap := make(map[string]int64)
 
@@ -872,6 +874,13 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 			// Clients, methods, resolutions, devices
 			clientMap[client]++
 			deviceMap[device]++
+			point := applicationPoint(client, device)
+			if existing := applicationMap[point.Name]; existing != nil {
+				existing.Value++
+			} else {
+				point.Value = 1
+				applicationMap[point.Name] = &point
+			}
 
 			cleanMethod := "DirectPlay"
 			if strings.Contains(strings.ToLower(method), "transcode") {
@@ -949,6 +958,14 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 		topGenres = topGenres[:10]
 	}
 
+	applications := []ApplicationPoint{}
+	for _, point := range applicationMap {
+		applications = append(applications, *point)
+	}
+	sort.Slice(applications, func(i, j int) bool { return applications[i].Value > applications[j].Value })
+	if len(applications) > 8 {
+		applications = applications[:8]
+	}
 	var topClients []ClientStatItem
 	for cl, cnt := range clientMap {
 		topClients = append(topClients, ClientStatItem{ClientName: cl, Count: cnt})
@@ -1002,6 +1019,7 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 		StreamMethodsChartData: toNamedValue(methodMap, 4),
 		ResolutionChartData:    toNamedValue(resMap, 8),
 		DeviceChartData:        toNamedValue(deviceMap, 8),
+		ApplicationChartData:   applications,
 		AudioChartData:         toNamedValue(audioMap, 8),
 		SubtitleChartData:      toNamedValue(subMap, 8),
 		TopDirectors:           sortLimitStringMap(dirMap, 10),

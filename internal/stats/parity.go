@@ -245,9 +245,9 @@ func invalidTelemetryToken(value string) bool {
 }
 
 func visualTelemetry(kind string) bool {
-	switch strings.ToLower(kind) {
-	case "audio", "track", "musicalbum", "book", "audiobook":
-		return false
+	switch strings.ToLower(strings.TrimSpace(kind)) {
+	case "movie", "episode", "series", "season", "video", "musicvideo", "trailer":
+		return true
 	}
-	return true
+	return false
 }

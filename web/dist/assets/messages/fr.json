@@ -398,8 +398,8 @@
     "monitorError": "en erreur"
   },
   "deepInsights": {
-    "deviceEcosystem": "Écosystème Appareils",
-    "deviceEcosystemDesc": "Top 8 des appareils physiques utilisés pour la lecture.",
+    "deviceEcosystem": "Écosystème des applications",
+    "deviceEcosystemDesc": "Applications de lecture enregistrées. Le navigateur et le système sont affichés lorsqu’ils sont indiqués par le client.",
     "genresDesc": "Genres les plus écoutés/visionnés par nombre de lectures.",
     "noAlbums": "Aucun album écouté.",
     "noBooks": "Aucun livre lu.",

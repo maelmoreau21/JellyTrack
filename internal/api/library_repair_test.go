@@ -60,12 +60,16 @@ func TestManualLibraryRepairUsesJellyfinMembershipAndVerifiedBackup(t *testing.T
 	var result struct {
 		Repaired, Unresolved            int
 		Backup, BackupSHA256, BackupURL string
+		UnresolvedSamples               []struct{ Title, RemoteID, ServerID, Reason string }
 	}
 	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil {
 		t.Fatal(err)
 	}
 	if result.Repaired != 3 || result.Unresolved != 1 || len(result.BackupSHA256) != 64 || !repairBackupName.MatchString(result.Backup) {
 		t.Fatalf("%+v", result)
+	}
+	if len(result.UnresolvedSamples) != 1 || result.UnresolvedSamples[0].RemoteID != "gone" || result.UnresolvedSamples[0].ServerID != "a" || result.UnresolvedSamples[0].Reason == "" {
+		t.Fatalf("unresolved diagnostic missing: %+v", result.UnresolvedSamples)
 	}
 	for id, want := range map[string]string{"m": "Films", "k": "Enfants", "e": "Séries"} {
 		var got string

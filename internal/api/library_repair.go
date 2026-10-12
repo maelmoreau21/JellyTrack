@@ -33,6 +33,12 @@ type libraryRepairChange struct {
 }
 
 type libraryRepairServerChange struct{ id, before, after string }
+type libraryRepairDiagnostic struct {
+	Title    string `json:"title"`
+	RemoteID string `json:"remoteId"`
+	ServerID string `json:"serverId"`
+	Reason   string `json:"reason"`
+}
 
 func provisionalRepairIdentity(id, stored string) bool {
 	stored = strings.TrimSpace(stored)
@@ -100,13 +106,13 @@ func (h *Handler) repairLibraryNames(w http.ResponseWriter, r *http.Request) {
 		fail(409, "Réparation interrompue : "+err.Error())
 		return
 	}
-	changes, identities, unresolved, err := h.planLibraryRepair(ctx)
+	changes, identities, unresolved, diagnostics, err := h.planLibraryRepair(ctx)
 	if err != nil {
 		fail(502, err.Error())
 		return
 	}
 	if len(changes) == 0 && len(identities) == 0 {
-		jsonResponse(w, 200, map[string]any{"success": true, "repaired": 0, "unresolved": unresolved, "message": fmt.Sprintf("Aucun nom à corriger. %d média(s) sans correspondance certaine, conservé(s).", unresolved)})
+		jsonResponse(w, 200, map[string]any{"success": true, "repaired": 0, "unresolved": unresolved, "unresolvedSamples": diagnostics, "message": fmt.Sprintf("Aucun nom à corriger. %d média(s) sans correspondance certaine, conservé(s).", unresolved)})
 		return
 	}
 	directory, err := backup.GetBackupDirectory()
@@ -169,64 +175,65 @@ func (h *Handler) repairLibraryNames(w http.ResponseWriter, r *http.Request) {
 	}
 	slog.Info("library repair completed", "media_repaired", repaired, "resolutions_repaired", resolutionsRepaired, "unresolved_media", unresolved)
 	_ = security.LogAudit(ctx, h.db, h.driver, "library_names.repair", nil, nil, nil, nil, map[string]any{"repaired": repaired, "serverIdentitiesRepaired": len(identities), "unresolved": unresolved, "backup": name})
-	jsonResponse(w, 200, map[string]any{"success": true, "repaired": repaired, "resolutionsRepaired": resolutionsRepaired, "serverIdentitiesRepaired": len(identities), "unresolved": unresolved, "backup": name, "backupSHA256": hex.EncodeToString(hash.Sum(nil)), "backupURL": "/api/admin/library-repair-backup/" + name, "message": fmt.Sprintf("Réparation terminée : %d média(s) remis à jour, %d résolution(s) complétée(s), %d identifiant(s) de serveur importé corrigé(s), %d média(s) sans correspondance certaine conservé(s). Historique conservé. Sauvegarde : %s", repaired, resolutionsRepaired, len(identities), unresolved, name)})
+	jsonResponse(w, 200, map[string]any{"success": true, "repaired": repaired, "resolutionsRepaired": resolutionsRepaired, "serverIdentitiesRepaired": len(identities), "unresolved": unresolved, "unresolvedSamples": diagnostics, "backup": name, "backupSHA256": hex.EncodeToString(hash.Sum(nil)), "backupURL": "/api/admin/library-repair-backup/" + name, "message": fmt.Sprintf("Réparation terminée : %d média(s) remis à jour, %d résolution(s) complétée(s), %d identifiant(s) de serveur importé corrigé(s), %d média(s) sans correspondance certaine conservé(s). Historique conservé. Sauvegarde : %s", repaired, resolutionsRepaired, len(identities), unresolved, name)})
 }
 
-func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange, []libraryRepairServerChange, int, error) {
+func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange, []libraryRepairServerChange, int, []libraryRepairDiagnostic, error) {
 	type server struct{ id, jid, url, key string }
 	rows, err := h.db.QueryContext(ctx, `SELECT "id","jellyfinServerId","url",COALESCE("jellyfinApiKey",'') FROM "Server" WHERE EXISTS(SELECT 1 FROM "Media" WHERE "serverId"="Server"."id")`)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, 0, nil, err
 	}
 	var servers []server
 	for rows.Next() {
 		var s server
 		if err = rows.Scan(&s.id, &s.jid, &s.url, &s.key); err != nil {
 			rows.Close()
-			return nil, nil, 0, err
+			return nil, nil, 0, nil, err
 		}
 		servers = append(servers, s)
 	}
 	err = rows.Err()
 	rows.Close()
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, 0, nil, err
 	}
 	var changes []libraryRepairChange
 	var identities []libraryRepairServerChange
 	unresolved := 0
+	diagnostics := []libraryRepairDiagnostic{}
 	for _, s := range servers {
 		if _, err = security.ValidateSafeServerURL(s.url); err != nil {
-			return nil, nil, 0, fmt.Errorf("URL Jellyfin invalide pour le serveur %s ; aucune réparation effectuée", s.id)
+			return nil, nil, 0, nil, fmt.Errorf("URL Jellyfin invalide pour le serveur %s ; aucune réparation effectuée", s.id)
 		}
 		client, e := jellyfin.New(s.url, s.key)
 		if e != nil {
-			return nil, nil, 0, fmt.Errorf("Configurer la clé API Jellyfin du serveur %s avant la réparation", s.id)
+			return nil, nil, 0, nil, fmt.Errorf("Configurer la clé API Jellyfin du serveur %s avant la réparation", s.id)
 		}
 		info, e := client.SystemInfo(ctx)
 		if e != nil {
-			return nil, nil, 0, fmt.Errorf("Jellyfin inaccessible pour le serveur %s ; aucune réparation effectuée", s.id)
+			return nil, nil, 0, nil, fmt.Errorf("Jellyfin inaccessible pour le serveur %s ; aucune réparation effectuée", s.id)
 		}
 		identityMismatch := repairRemoteID(info.ID) != repairRemoteID(s.jid)
 		provisional := provisionalRepairIdentity(s.id, s.jid)
 		if strings.TrimSpace(info.ID) == "" || (identityMismatch && !provisional) {
 			if strings.TrimSpace(info.ID) == "" {
-				return nil, nil, 0, fmt.Errorf("Jellyfin ne renvoie aucun identifiant pour le serveur %s ; aucune réparation effectuée", s.id)
+				return nil, nil, 0, nil, fmt.Errorf("Jellyfin ne renvoie aucun identifiant pour le serveur %s ; aucune réparation effectuée", s.id)
 			}
 			hint := "Vérifier l'identifiant importé et le serveur configuré."
-			return nil, nil, 0, fmt.Errorf("Identité Jellyfin différente pour le serveur %s : enregistré dans la base = %q ; renvoyé par Jellyfin = %q. %s Aucune réparation effectuée.", s.id, s.jid, info.ID, hint)
+			return nil, nil, 0, nil, fmt.Errorf("Identité Jellyfin différente pour le serveur %s : enregistré dans la base = %q ; renvoyé par Jellyfin = %q. %s Aucune réparation effectuée.", s.id, s.jid, info.ID, hint)
 		}
 		if identityMismatch {
 			others, e := h.db.QueryContext(ctx, `SELECT "jellyfinServerId" FROM "Server" WHERE "id"<>?`, s.id)
 			if e != nil {
-				return nil, nil, 0, e
+				return nil, nil, 0, nil, e
 			}
 			conflict := false
 			for others.Next() {
 				var jid string
 				if e = others.Scan(&jid); e != nil {
 					others.Close()
-					return nil, nil, 0, e
+					return nil, nil, 0, nil, e
 				}
 				if repairRemoteID(jid) == repairRemoteID(info.ID) {
 					conflict = true
@@ -235,22 +242,22 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 			e = others.Err()
 			others.Close()
 			if e != nil {
-				return nil, nil, 0, e
+				return nil, nil, 0, nil, e
 			}
 			if conflict {
-				return nil, nil, 0, fmt.Errorf("Cet identifiant Jellyfin est déjà lié à un autre serveur ; aucune fusion automatique.")
+				return nil, nil, 0, nil, fmt.Errorf("Cet identifiant Jellyfin est déjà lié à un autre serveur ; aucune fusion automatique.")
 			}
 		}
 		libs, e := client.Libraries(ctx)
 		if e != nil || len(libs) == 0 {
-			return nil, nil, 0, fmt.Errorf("Bibliothèques Jellyfin indisponibles pour le serveur %s ; aucune réparation effectuée", s.id)
+			return nil, nil, 0, nil, fmt.Errorf("Bibliothèques Jellyfin indisponibles pour le serveur %s ; aucune réparation effectuée", s.id)
 		}
 		membership := map[string]string{}
 		resolutions := map[string]string{}
 		ambiguous := map[string]bool{}
 		for _, lib := range libs {
 			if lib.ID == "" || strings.TrimSpace(lib.Name) == "" {
-				return nil, nil, 0, fmt.Errorf("Bibliothèque Jellyfin incomplète pour le serveur %s", s.id)
+				return nil, nil, 0, nil, fmt.Errorf("Bibliothèque Jellyfin incomplète pour le serveur %s", s.id)
 			}
 			e = client.LibraryItems(ctx, lib.ID, func(item jellyfin.Item) error {
 				key := repairRemoteID(item.ID)
@@ -264,25 +271,35 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 				return nil
 			})
 			if e != nil {
-				return nil, nil, 0, fmt.Errorf("Lecture des bibliothèques Jellyfin échouée pour le serveur %s ; aucune réparation effectuée", s.id)
+				return nil, nil, 0, nil, fmt.Errorf("Lecture des bibliothèques Jellyfin échouée pour le serveur %s ; aucune réparation effectuée", s.id)
 			}
 		}
-		mediaRows, e := h.db.QueryContext(ctx, `SELECT "id","jellyfinMediaId","libraryName","resolution" FROM "Media" WHERE "serverId"=?`, s.id)
+		mediaRows, e := h.db.QueryContext(ctx, `SELECT "id","jellyfinMediaId","libraryName","resolution","title" FROM "Media" WHERE "serverId"=?`, s.id)
 		if e != nil {
-			return nil, nil, 0, e
+			return nil, nil, 0, nil, e
 		}
 		matched := 0
 		for mediaRows.Next() {
 			var c libraryRepairChange
+			var title string
 			c.server = s.id
-			if e = mediaRows.Scan(&c.id, &c.remote, &c.before, &c.beforeResolution); e != nil {
+			if e = mediaRows.Scan(&c.id, &c.remote, &c.before, &c.beforeResolution, &title); e != nil {
 				mediaRows.Close()
-				return nil, nil, 0, e
+				return nil, nil, 0, nil, e
 			}
 			key := repairRemoteID(c.remote)
 			name, ok := membership[key]
 			if !ok || ambiguous[key] {
 				unresolved++
+				reason := "Identifiant absent du catalogue Jellyfin accessible"
+				if ambiguous[key] {
+					reason = "Présence dans plusieurs bibliothèques de noms différents"
+				} else if strings.HasPrefix(key, "imported-media-") || key == "" {
+					reason = "Identifiant Jellyfin manquant dans l’ancien import"
+				}
+				if len(diagnostics) < 20 {
+					diagnostics = append(diagnostics, libraryRepairDiagnostic{title, c.remote, s.id, reason})
+				}
 				continue
 			}
 			matched++
@@ -297,11 +314,11 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 		e = mediaRows.Err()
 		mediaRows.Close()
 		if e != nil {
-			return nil, nil, 0, e
+			return nil, nil, 0, nil, e
 		}
 		if identityMismatch {
 			if matched == 0 {
-				return nil, nil, 0, fmt.Errorf("Identifiant importé provisoire pour le serveur %s, mais aucun média existant confirmé par Jellyfin ; aucune réparation effectuée", s.id)
+				return nil, nil, 0, nil, fmt.Errorf("Identifiant importé provisoire pour le serveur %s, mais aucun média existant confirmé par Jellyfin ; aucune réparation effectuée", s.id)
 			}
 			// Historical aliases are still used by scoped plugin keys. Recognize
 			// them for this task without rewriting the key's configured scope.
@@ -310,7 +327,7 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 			}
 		}
 	}
-	return changes, identities, unresolved, nil
+	return changes, identities, unresolved, diagnostics, nil
 }
 
 func (h *Handler) applyLibraryRepair(ctx context.Context, changes []libraryRepairChange, identities ...libraryRepairServerChange) (int, error) {

@@ -3397,11 +3397,11 @@
             }
 
             // Device ecosystem chart
-            const devices = deep.deviceChartData || [];
+            const devices = deep.applicationChartData || (deep.topClients || []).map(client => ({ name: client.clientName, value: client.count, client: client.clientName }));
             if (devices.length > 0 && devices.some(d => (d.value || 0) > 0)) {
               const labels = devices.map(d => d.name || '?');
               const values = devices.map(d => Number(d.value || 0));
-              ChartHelper.renderDoughnut('chart-device-ecosystem', labels, values, { isHours: false, onClick: index => Router.navigate(historyURL(`hideZapped=true&device=${encodeURIComponent(devices[index].name)}`)) });
+              ChartHelper.renderDoughnut('chart-device-ecosystem', labels, values, { isHours: false, onClick: index => Router.navigate(historyURL(`hideZapped=true&client=${encodeURIComponent(devices[index].client)}${devices[index].device ? '&device='+encodeURIComponent(devices[index].device) : ''}`)) });
             } else {
               ChartHelper.showEmpty('chart-device-ecosystem', 'Aucun appareil enregistré');
             }
@@ -3562,10 +3562,11 @@
               <div style="padding:1rem;">
                 <div class="ranking-list">
                   ${geo.error ? `<p role="status">${Utils.escapeHtml(geo.error)}</p>` : ''}
+                  ${geo.message ? `<p role="status">${Utils.escapeHtml(geo.message)}</p>` : ''}
                   ${(geo.locations || []).slice(0, 10).map((loc, i) => `
                     <div class="ranking-item">
                       <span class="ranking-badge">🌍</span>
-                      <span class="ranking-name">${Utils.escapeHtml(loc.city || 'Inconnu')}, ${Utils.escapeHtml(loc.country || '')}</span>
+                      <span class="ranking-name">${Utils.escapeHtml(loc.kind === 'local' ? 'Réseau local' : loc.kind === 'missing' ? 'Localisation non renseignée' : [loc.city, loc.country].filter(Boolean).join(', '))}</span>
                       <span class="ranking-value">${loc.sessions || 0} sessions</span>
                     </div>
                   `).join('') || '<div class="text-muted-foreground text-sm">Aucune donnée géographique enregistrée.</div>'}
