@@ -2,6 +2,8 @@
 
 Corrections locales sur develop, sans déploiement ni modification de la base utilisateur.
 
+Suivi du 12 octobre : les alias historiques `srv:` et `master` sont reconnus par la tâche et conservés pour les clés du plugin. Les graphiques utilisent les noms réels, et les ajouts musicaux sont regroupés par album. Voir [le diagnostic et les vérifications](LIBRARY_NAMES_FOLLOWUP.md).
+
 Le graphique d'analyse utilise `Media.libraryName`, puis `collectionType` si le nom manque. Des lignes nommées « Films » et d'autres sans nom peuvent donc produire « Films » et « movies ». Ce symptôme ne prouve pas une corruption SQLite ou un échec de l'import PostgreSQL. Le contenu de la base du serveur reste à examiner.
 
 Les événements plugin sans nom de bibliothèque ne remplacent plus un nom existant par NULL. Les parents connus sont également conservés lorsqu'un événement ne les fournit pas. Les noms réellement fournis restent actualisés. La synchronisation Jellyfin conserve déjà les noms absents. Les bibliothèques distinctes ne sont pas fusionnées automatiquement.

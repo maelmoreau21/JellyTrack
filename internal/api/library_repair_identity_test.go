@@ -13,18 +13,21 @@ import (
 
 func TestLibraryRepairReconcilesOnlyProvisionalImportedIdentities(t *testing.T) {
 	const serverID = "edd627c3-76f2-402b-b03c-d2e31e574198"
-	const observed = "1234567890abcdef1234567890abcdef"
+	const observed = "1866d4f56378459384d54b130423a9e8"
 	for _, test := range []struct {
 		name, stored             string
 		match, conflict, allowed bool
 	}{
 		{"internal-id-fallback", serverID, true, false, true},
+		{"historical-host-alias", "srv:jellyfin_8096", true, false, true},
+		{"historical-host-alias-conflict", "srv:jellyfin_8096", true, true, false},
+		{"historical-master-alias", "master", true, false, true},
 		{"historical-import-placeholder", "imported-server-1", true, false, true},
 		{"missing-id", "", true, false, true},
 		{"real-different-identity", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", true, false, false},
 		{"unverified-placeholder", serverID, false, false, false},
 		{"already-configured-server", serverID, true, true, false},
-		{"same-uuid-formatting", " 12345678-90AB-CDEF-1234-567890ABCDEF ", true, false, true},
+		{"same-uuid-formatting", " 1866D4F5-6378-4593-84D5-4B130423A9E8 ", true, false, true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			db := apiDB(t)
@@ -87,7 +90,11 @@ func TestLibraryRepairReconcilesOnlyProvisionalImportedIdentities(t *testing.T) 
 				if w.Code != 200 || lib != "Films" {
 					t.Fatalf("%d %s %q", w.Code, w.Body.String(), lib)
 				}
-				if test.name != "same-uuid-formatting" && jid != observed {
+				alias := test.name == "historical-host-alias" || test.name == "historical-master-alias"
+				if alias && jid != test.stored {
+					t.Fatalf("plugin scope alias changed: %q", jid)
+				}
+				if !alias && test.name != "same-uuid-formatting" && jid != observed {
 					t.Fatalf("identity not reread: %q", jid)
 				}
 				var result struct{ Backup string }

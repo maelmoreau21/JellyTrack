@@ -293,6 +293,9 @@ func (h *Handler) recoveredMediaFilters(r *http.Request) (string, []any) {
 	if q.Get("groupSeries") == "true" {
 		clauses = append(clauses, `m."type" NOT IN ('Season','Episode')`)
 	}
+	if q.Get("groupAlbums") == "true" {
+		clauses = append(clauses, `m."type" NOT IN ('Audio','Track','MusicTrack')`)
+	}
 	if raw := q.Get("libraryScopes"); raw != "" {
 		var scopes []struct {
 			ServerID string `json:"serverId"`

@@ -175,11 +175,11 @@ func getCumulativeCompletion(ctx context.Context, db *sql.DB, driver string, fil
  FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId"
  WHERE `+strings.Join(clauses, " AND ")+`)
  SELECT scoped."userId",scoped."serverId",m."id",m."jellyfinMediaId",m."title",m."type",
- COALESCE(NULLIF(m."collectionType",''),NULLIF(m."libraryName",''),m."type"),COALESCE(NULLIF(m."collectionType",''),m."type"),m."durationMs",SUM(p."durationWatched")
+ `+media.LibraryNameSQL("m")+`,COALESCE(NULLIF(m."collectionType",''),m."type"),m."durationMs",SUM(p."durationWatched")
  FROM scoped JOIN "PlaybackHistory" p ON COALESCE(p."userId",'')=scoped."userId" AND p."serverId"=scoped."serverId" AND p."mediaId"=scoped."mediaId"
  JOIN "Media" m ON m."id"=scoped."mediaId"
  WHERE m."durationMs">0`+refClause+`
- GROUP BY scoped."userId",scoped."serverId",m."id",m."jellyfinMediaId",m."title",m."type",m."collectionType",m."libraryName",m."durationMs"`, driver)
+ GROUP BY scoped."userId",scoped."serverId",m."id",m."serverId",m."parentId",m."jellyfinMediaId",m."title",m."type",m."collectionType",m."libraryName",m."durationMs"`, driver)
 	var config completionSettings
 	rows, err := db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -193,11 +193,11 @@ func getCumulativeCompletion(ctx context.Context, db *sql.DB, driver string, fil
 		if err := rows.Scan(&entry.UserID, &entry.ServerID, &entry.MediaID, &entry.JellyfinID, &entry.Title, &entry.Type, &entry.Library, &completionKind, &entry.RuntimeMS, &entry.WatchedSeconds); err != nil {
 			return nil, err
 		}
-		entry.Library = libraryKey(entry.Library)
 		entry.Percent = math.Max(0, math.Min(100, float64(entry.WatchedSeconds)*100000/float64(entry.RuntimeMS)))
 		entry.Bucket = completionBucket(entry.Percent, libraryKey(completionKind), config)
-		if configured, ok := config.Libraries[entry.Library]; ok {
-			entry.Bucket = completionBucket(entry.Percent, entry.Library, completionSettings{Libraries: map[string]completionRule{entry.Library: configured}})
+		ruleKey := libraryKey(entry.Library)
+		if configured, ok := config.Libraries[ruleKey]; ok {
+			entry.Bucket = completionBucket(entry.Percent, ruleKey, completionSettings{Libraries: map[string]completionRule{ruleKey: configured}})
 		}
 		result = append(result, entry)
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/auth"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/history"
+	"github.com/maelmoreau21/jellytrack/internal/media"
 	"github.com/maelmoreau21/jellytrack/internal/stats"
 )
 
@@ -112,7 +113,7 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		args = append(args, device)
 	}
 	if library := q.Get("library"); library != "" {
-		clauses = append(clauses, `COALESCE(m."libraryName",m."collectionType",m."type")=?`)
+		clauses = append(clauses, media.LibraryNameSQL("m")+`=?`)
 		args = append(args, library)
 	}
 	if category := q.Get("libraryCategory"); category != "" {

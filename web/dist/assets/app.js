@@ -3078,6 +3078,7 @@
 
             // Palette for multi-series
             const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ec4899', '#6366f1', '#14b8a6', '#f43f5e'];
+            const libraryLabel = name => name === 'Unknown' ? (I18n.t('common.unknown') || 'Inconnu') : name;
 
             // 1. Chart: Plays per day
             const dailyData = gran.dailyData || [];
@@ -3093,7 +3094,7 @@
             if (dailyData.length > 0 && gran.collections && gran.collections.length > 0) {
               const labels = dailyData.map(d => d.time);
               const datasets = gran.collections.map((col, idx) => ({
-                label: col,
+                label: libraryLabel(col),
                 data: dailyData.map(d => Number(d[`${col}_plays`] || 0)),
                 color: palette[idx % palette.length],
               }));
@@ -3115,7 +3116,7 @@
             if (dailyData.length > 0 && gran.collections && gran.collections.length > 0) {
               const labels = dailyData.map(d => d.time);
               const datasets = gran.collections.map((col, idx) => ({
-                label: col,
+                label: libraryLabel(col),
                 data: dailyData.map(d => Number(d[`${col}_duration`] || 0)),
                 color: palette[idx % palette.length],
               }));
@@ -3146,12 +3147,12 @@
             // 7. Chart: Average completion by lib
             const dropOff = gran.dropOffData || [];
             if (dropOff.length > 0) {
-              const labels = dropOff.map(d => d.time || 'Bibliothèque');
+              const labels = dropOff.map(d => libraryLabel(d.time) || 'Bibliothèque');
               const values = dropOff.map(d => Number(d.completion || 0));
               ChartHelper.renderHorizontalBar('chart-avg-completion-lib', labels, values, {
                 backgroundColors: '#8b5cf6',
                 label: I18n.t('granular.completionPct'),
-                onClick: index => Router.navigate(historyURL(`libraryCategory=${encodeURIComponent(dropOff[index].time)}`)),
+                onClick: index => Router.navigate(historyURL(`library=${encodeURIComponent(dropOff[index].time)}`)),
               });
             } else {
               ChartHelper.showEmpty('chart-avg-completion-lib', 'Aucune donnée de complétion');

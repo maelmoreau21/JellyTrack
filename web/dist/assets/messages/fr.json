@@ -440,7 +440,7 @@
     "attendanceHeatmapDesc": "Cartes thermiques montrant les pics d'utilisation jours et heures du serveur.",
     "audioBreakdown": "Répartition Audio",
     "audioBreakdownDesc": "Langues écoutées sur cette période.",
-    "avgCompletionByLib": "Taux de Complétion Moyen par Biblio",
+    "avgCompletionByLib": "Taux de complétion moyen par bibliothèque",
     "avgCompletionByLibDesc": "Pourcentage de visionnage moyen (100% = Terminé).",
     "completionPct": "% Complétion",
     "disabled": "Désactivé",

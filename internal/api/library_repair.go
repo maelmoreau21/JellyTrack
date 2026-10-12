@@ -21,6 +21,7 @@ import (
 
 var repairBackupName = regexp.MustCompile(`^JellyTrack-library-repair-[0-9]{8}T[0-9]{15}Z\.sqlite$`)
 var importedRepairIdentity = regexp.MustCompile(`^imported-server-[1-9][0-9]*$`)
+var legacyHostRepairIdentity = regexp.MustCompile(`^srv:[a-z0-9_.-]+$`)
 
 type libraryRepairChange struct {
 	id, server, remote string
@@ -32,7 +33,7 @@ type libraryRepairServerChange struct{ id, before, after string }
 
 func provisionalRepairIdentity(id, stored string) bool {
 	stored = strings.TrimSpace(stored)
-	return stored == "" || repairRemoteID(stored) == repairRemoteID(id) || importedRepairIdentity.MatchString(stored)
+	return stored == "" || stored == "master" || legacyHostRepairIdentity.MatchString(stored) || repairRemoteID(stored) == repairRemoteID(id) || importedRepairIdentity.MatchString(stored)
 }
 
 // Normalize UUID formatting only, preserving arbitrary case-sensitive remote IDs.
@@ -195,6 +196,31 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 			hint := "Vérifier l'identifiant importé et le serveur configuré."
 			return nil, nil, 0, fmt.Errorf("Identité Jellyfin différente pour le serveur %s : enregistré dans la base = %q ; renvoyé par Jellyfin = %q. %s Aucune réparation effectuée.", s.id, s.jid, info.ID, hint)
 		}
+		if identityMismatch {
+			others, e := h.db.QueryContext(ctx, `SELECT "jellyfinServerId" FROM "Server" WHERE "id"<>?`, s.id)
+			if e != nil {
+				return nil, nil, 0, e
+			}
+			conflict := false
+			for others.Next() {
+				var jid string
+				if e = others.Scan(&jid); e != nil {
+					others.Close()
+					return nil, nil, 0, e
+				}
+				if repairRemoteID(jid) == repairRemoteID(info.ID) {
+					conflict = true
+				}
+			}
+			e = others.Err()
+			others.Close()
+			if e != nil {
+				return nil, nil, 0, e
+			}
+			if conflict {
+				return nil, nil, 0, fmt.Errorf("Cet identifiant Jellyfin est déjà lié à un autre serveur ; aucune fusion automatique.")
+			}
+		}
 		libs, e := client.Libraries(ctx)
 		if e != nil || len(libs) == 0 {
 			return nil, nil, 0, fmt.Errorf("Bibliothèques Jellyfin indisponibles pour le serveur %s ; aucune réparation effectuée", s.id)
@@ -250,7 +276,11 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 			if matched == 0 {
 				return nil, nil, 0, fmt.Errorf("Identifiant importé provisoire pour le serveur %s, mais aucun média existant confirmé par Jellyfin ; aucune réparation effectuée", s.id)
 			}
-			identities = append(identities, libraryRepairServerChange{s.id, s.jid, info.ID})
+			// Historical aliases are still used by scoped plugin keys. Recognize
+			// them for this task without rewriting the key's configured scope.
+			if s.jid != "master" && !legacyHostRepairIdentity.MatchString(s.jid) {
+				identities = append(identities, libraryRepairServerChange{s.id, s.jid, info.ID})
+			}
 		}
 	}
 	return changes, identities, unresolved, nil

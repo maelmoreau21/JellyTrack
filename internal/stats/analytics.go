@@ -115,7 +115,7 @@ func GetGranularAnalysis(ctx context.Context, db *sql.DB, driver string, filter 
 	q := database.Bind(fmt.Sprintf(`
 		SELECT p."startedAt", p."durationWatched", p."mediaId",
 		       COALESCE(p."audioLanguage", ''), COALESCE(p."subtitleLanguage", ''), COALESCE(p."subtitleCodec", ''),
-		       COALESCE(NULLIF(m."libraryName",''), NULLIF(m."collectionType",''), NULLIF(m."type",''), 'Unknown'),
+		       `+media.LibraryNameSQL("m")+`,
 		       COALESCE(m."durationMs", 0), COALESCE(m."title", 'Unknown'),COALESCE(m."type",'Unknown')
 		FROM "PlaybackHistory" p
 		LEFT JOIN "Media" m ON m."id" = p."mediaId"
