@@ -14,6 +14,16 @@ func TestIsCloudMetadataHost(t *testing.T) {
 		"[fd00:ec2::254]",
 		"169.254.1.1",
 		"169.254.254.254",
+		"sub.metadata.google.internal",
+		"metadata.azure.com",
+		"sub.metadata.azure.com",
+		"instance-data",
+		"sub.instance-data",
+		"169.254.169.254.nip.io",
+		"169-254-169-254.sslip.io",
+		"100.100.100.200.nip.io",
+		"100-100-100-200.sslip.io",
+		"::",
 	}
 	for _, h := range metadataHosts {
 		if !IsCloudMetadataHost(h) {

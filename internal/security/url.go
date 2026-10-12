@@ -9,11 +9,14 @@ import (
 )
 
 var cloudMetadataHostnames = map[string]struct{}{
-	"169.254.169.254":           {},
-	"metadata.google.internal":  {},
-	"metadata.internal":         {},
-	"100.100.100.200":           {}, // Alibaba Cloud metadata
-	"fd00:ec2::254":             {}, // AWS IPv6 metadata
+	"169.254.169.254":          {},
+	"metadata.google.internal": {},
+	"metadata.azure.com":       {},
+	"instance-data":            {},
+	"::":                       {},
+	"metadata.internal":        {},
+	"100.100.100.200":          {}, // Alibaba Cloud metadata
+	"fd00:ec2::254":            {}, // AWS IPv6 metadata
 }
 
 var ipv4LinkLocalRegex = regexp.MustCompile(`^169\.254\.\d{1,3}\.\d{1,3}$`)
@@ -28,6 +31,16 @@ func IsCloudMetadataHost(hostname string) bool {
 	}
 	if _, ok := cloudMetadataHostnames[h]; ok {
 		return true
+	}
+	for _, suffix := range []string{".metadata.google.internal", ".metadata.azure.com", ".metadata.internal", ".instance-data"} {
+		if strings.HasSuffix(h, suffix) {
+			return true
+		}
+	}
+	for _, embedded := range []string{"169.254.", "169-254-", "100.100.100.200", "100-100-100-200"} {
+		if strings.Contains(h, embedded) {
+			return true
+		}
 	}
 	if ipv4LinkLocalRegex.MatchString(h) {
 		return true
