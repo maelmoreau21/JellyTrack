@@ -244,6 +244,23 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 
 	groups := extractGroupsFromClaims(rawClaims)
 
+	// If groups were not in ID token, try fetching UserInfo from OIDC provider
+	if len(groups) == 0 {
+		if userInfo, err := provider.UserInfo(ctx, oauth2.StaticTokenSource(token)); err == nil {
+			var userInfoClaims map[string]any
+			if err := userInfo.Claims(&userInfoClaims); err == nil {
+				groups = extractGroupsFromClaims(userInfoClaims)
+				for k, v := range userInfoClaims {
+					if _, exists := rawClaims[k]; !exists {
+						rawClaims[k] = v
+					}
+				}
+			}
+		}
+	}
+
+	slog.Info("OIDC extracted claims", "username", username, "groups", groups, "requiredUserGroup", cfg.userGroup, "requiredAdminGroup", cfg.adminGroup)
+
 	role := ""
 	for _, group := range groups {
 		if cfg.adminGroup != "" && strings.EqualFold(group, cfg.adminGroup) {
