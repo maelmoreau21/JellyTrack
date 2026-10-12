@@ -1151,7 +1151,11 @@
     "wrappedVisibilityDesc": "Afficher ou masquer le Wrapped dans la barre latérale et la navigation.",
     "consolidateHistoryTask": "Consolidation de l'historique",
     "consolidateHistoryTaskDesc": "Détecte et fusionne les micro-coupures et pauses pour assainir l'historique de lecture.",
-    "dailyAtTime": "Tous les jours à {time}"
+    "dailyAtTime": "Tous les jours à {time}",
+    "repairLibraryNamesTask": "Réparer les bibliothèques importées",
+    "repairLibraryNamesTaskDesc": "Tâche temporaire : sauvegarde SQLite puis restauration des noms depuis Jellyfin. Historique conservé. Les médias sans correspondance certaine restent inchangés.",
+    "manualOnly": "Lancement manuel uniquement",
+    "downloadRepairBackup": "Télécharger la sauvegarde avant réparation"
   },
   "ssoSettings": {
     "title": "Authentification SSO",

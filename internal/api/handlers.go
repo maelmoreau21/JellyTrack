@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/maelmoreau21/jellytrack/internal/auth"
@@ -30,9 +31,10 @@ import (
 )
 
 type Handler struct {
-	db            *sql.DB
-	driver        string
-	pluginHandler http.Handler
+	db              *sql.DB
+	driver          string
+	pluginHandler   http.Handler
+	libraryRepairMu sync.Mutex
 }
 
 func New(db *sql.DB, driver string, pluginHandler ...http.Handler) *Handler {
@@ -132,6 +134,8 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"GET /api/admin/server-compare":                  h.recoveredServerCompare,
 		"POST /api/admin/consolidate-history":            h.adminConsolidateHistory,
 		"POST /api/admin/integrity-cleanup":              h.adminIntegrityCleanup,
+		"POST /api/admin/repair-library-names":           h.repairLibraryNames,
+		"GET /api/admin/library-repair-backup/{name}":    h.downloadLibraryRepairBackup,
 	}
 	for path, fn := range adminRoutes {
 		mux.Handle(path, adminProtect(fn))

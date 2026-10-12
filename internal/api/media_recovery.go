@@ -290,6 +290,9 @@ func (h *Handler) recoveredMediaFilters(r *http.Request) (string, []any) {
 	q := r.URL.Query()
 	clauses := []string{"1=1"}
 	args := []any{}
+	if q.Get("groupSeries") == "true" {
+		clauses = append(clauses, `m."type" NOT IN ('Season','Episode')`)
+	}
 	if raw := q.Get("libraryScopes"); raw != "" {
 		var scopes []struct {
 			ServerID string `json:"serverId"`
@@ -414,7 +417,17 @@ func (h *Handler) recoveredMediaList(w http.ResponseWriter, r *http.Request) {
 	case "added", "new", "recentlyAdded":
 		order = `m."dateAdded" DESC,m."createdAt" DESC,m."id" DESC`
 	}
-	items, err := h.recoveredRows(r, base+recoveredItemSelect+`WHERE `+where+` ORDER BY `+order+` LIMIT ? OFFSET ?`, append(args, limit, offset)...)
+	// For date/title ordering, only the displayed families need playback totals.
+	// Statistic and inherited-resolution sorts still require the full catalogue.
+	itemBase, itemArgs := base, append([]any{}, args...)
+	sortBy := first(r.URL.Query().Get("sortBy"), r.URL.Query().Get("sort"))
+	if r.URL.Query().Get("resolution") == "" && (sortBy == "added" || sortBy == "new" || sortBy == "recentlyAdded" || sortBy == "title" || sortBy == "") {
+		itemBase = strings.Replace(base, `GROUP BY f."root")`, `WHERE f."root" IN (SELECT m."id" FROM catalog m WHERE `+where+` ORDER BY `+order+` LIMIT ? OFFSET ?) GROUP BY f."root")`, 1)
+		// Catalogue/identity parameters occur before the new page parameters.
+		baseArgs := args[:len(args)-len(filters)]
+		itemArgs = append(append(append(append([]any{}, baseArgs...), filters...), limit, offset), filters...)
+	}
+	items, err := h.recoveredRows(r, itemBase+recoveredItemSelect+`WHERE `+where+` ORDER BY `+order+` LIMIT ? OFFSET ?`, append(itemArgs, limit, offset)...)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les médias.")
 		return

@@ -185,9 +185,46 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	server := serverIdentity(payload)
-	if scopedServer != "" && scopedServer != server.id {
+	if scopedServer != "" && normalizeID(scopedServer) != normalizeID(server.id) {
 		writeJSON(w, http.StatusForbidden, map[string]any{"error": "Forbidden — scoped plugin key does not match payload server.", "tokenServerId": scopedServer, "payloadServerId": server.id})
 		return
+	}
+	if scopedServer != "" {
+		// The signature covers the original token spelling. Compare UUID identities
+		// canonically, then reuse the configured spelling to preserve foreign keys.
+		server.id = scopedServer
+		if compactJellyfinUUID.MatchString(scopedServer) || dashedJellyfinUUID.MatchString(scopedServer) {
+			rows, err := h.db.QueryContext(r.Context(), `SELECT "jellyfinServerId" FROM "Server"`)
+			if err != nil {
+				h.fail(w, "read server identities", err)
+				return
+			}
+			var matches []string
+			for rows.Next() {
+				var id string
+				if err := rows.Scan(&id); err != nil {
+					rows.Close()
+					h.fail(w, "read server identity", err)
+					return
+				}
+				if normalizeID(id) == normalizeID(scopedServer) {
+					matches = append(matches, id)
+				}
+			}
+			err = rows.Err()
+			rows.Close()
+			if err != nil {
+				h.fail(w, "read server identities", err)
+				return
+			}
+			if len(matches) > 1 {
+				writeJSON(w, http.StatusConflict, map[string]string{"error": "Ambiguous Jellyfin server identity: multiple configured servers have the same UUID."})
+				return
+			}
+			if len(matches) == 1 {
+				server.id = matches[0]
+			}
+		}
 	}
 	var storedName, storedURL string
 	if err := h.queryRow(r.Context(), `SELECT "name","url" FROM "Server" WHERE "jellyfinServerId"=?`, server.id).Scan(&storedName, &storedURL); err == nil {
@@ -1321,7 +1358,7 @@ func (h *Handler) upsertMedia(ctx context.Context, serverID string, p map[string
 	}
 	args := []any{serverID, key, title, typ, nullableString(collection), nullableString(firstString(p, "libraryName", "LibraryName")), arrayGenres, nullableString(mediaResolution(p)), durValue, sizeValue, arrayDirectors, arrayActors, arrayStudios, nullableString(normalizeID(firstString(p, "parentId", "ParentId"))), nullableString(firstString(p, "artist", "Artist", "albumArtist", "AlbumArtist")), nullableTime(eventDate(p))}
 	if len(found) == 0 {
-		err = h.queryRow(ctx, `INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","resolution","durationMs","size","directors","actors","studios","parentId","artist","dateAdded") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("jellyfinMediaId","serverId") DO UPDATE SET "title"=excluded."title","type"=excluded."type","collectionType"=excluded."collectionType","libraryName"=excluded."libraryName","genres"=excluded."genres","resolution"=COALESCE(excluded."resolution","Media"."resolution"),"durationMs"=COALESCE(excluded."durationMs","Media"."durationMs"),"size"=COALESCE(excluded."size","Media"."size"),"directors"=excluded."directors","actors"=excluded."actors","studios"=excluded."studios","parentId"=excluded."parentId","artist"=excluded."artist","dateAdded"=COALESCE(excluded."dateAdded","Media"."dateAdded"),"updatedAt"=CURRENT_TIMESTAMP RETURNING "id"`, append([]any{id}, args...)...).Scan(&mediaID)
+		err = h.queryRow(ctx, `INSERT INTO "Media" ("id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","resolution","durationMs","size","directors","actors","studios","parentId","artist","dateAdded") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT("jellyfinMediaId","serverId") DO UPDATE SET "title"=excluded."title","type"=excluded."type","collectionType"=excluded."collectionType","libraryName"=COALESCE(excluded."libraryName","Media"."libraryName"),"genres"=excluded."genres","resolution"=COALESCE(excluded."resolution","Media"."resolution"),"durationMs"=COALESCE(excluded."durationMs","Media"."durationMs"),"size"=COALESCE(excluded."size","Media"."size"),"directors"=excluded."directors","actors"=excluded."actors","studios"=excluded."studios","parentId"=COALESCE(excluded."parentId","Media"."parentId"),"artist"=excluded."artist","dateAdded"=COALESCE(excluded."dateAdded","Media"."dateAdded"),"updatedAt"=CURRENT_TIMESTAMP RETURNING "id"`, append([]any{id}, args...)...).Scan(&mediaID)
 		return mediaID, duration, size, err
 	}
 	mediaID = found[0].id
@@ -1330,7 +1367,7 @@ func (h *Handler) upsertMedia(ctx context.Context, serverID string, p map[string
 		return "", 0, 0, err
 	}
 	defer tx.Rollback()
-	if _, err = h.execTx(ctx, tx, `UPDATE "Media" SET "jellyfinMediaId"=?,"title"=?,"type"=?,"collectionType"=?,"libraryName"=?,"genres"=?,"resolution"=COALESCE(?,"resolution"),"durationMs"=COALESCE(?,"durationMs"),"size"=COALESCE(?,"size"),"directors"=?,"actors"=?,"studios"=?,"parentId"=?,"artist"=?,"dateAdded"=COALESCE(?,"dateAdded"),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, append(args[1:], mediaID)...); err != nil {
+	if _, err = h.execTx(ctx, tx, `UPDATE "Media" SET "jellyfinMediaId"=?,"title"=?,"type"=?,"collectionType"=?,"libraryName"=COALESCE(?,"libraryName"),"genres"=?,"resolution"=COALESCE(?,"resolution"),"durationMs"=COALESCE(?,"durationMs"),"size"=COALESCE(?,"size"),"directors"=?,"actors"=?,"studios"=?,"parentId"=COALESCE(?,"parentId"),"artist"=?,"dateAdded"=COALESCE(?,"dateAdded"),"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=?`, append(args[1:], mediaID)...); err != nil {
 		return "", 0, 0, err
 	}
 	for _, original := range found {

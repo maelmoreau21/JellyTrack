@@ -225,7 +225,7 @@
     main.querySelector('#mr-sort')?.addEventListener('change', (event) => navigate({ sortBy: event.target.value, sort: '' }));
     main.querySelector('#mr-extra-types')?.addEventListener('change', (event) => navigate({ types: event.target.value === 'all' ? 'all' : '', type: event.target.value === 'all' ? '' : event.target.value, excludeTypes: '' }));
     main.querySelectorAll('[data-remove-filter]').forEach((button) => button.addEventListener('click', () => navigate({ [button.dataset.removeFilter]: '' })));
-    const api = new URLSearchParams(params); api.set('limit', recent ? 40 : 50); api.set('parents', recent || extras ? 'false' : 'true'); api.set('sortBy', recent ? 'added' : params.get('sortBy') || params.get('sort') || 'plays');
+    const api = new URLSearchParams(params); api.set('limit', recent ? 40 : 50); if (recent) api.set('groupSeries', 'true'); api.set('parents', recent || extras ? 'false' : 'true'); api.set('sortBy', recent ? 'added' : params.get('sortBy') || params.get('sort') || 'plays');
     const result = await s.ctx.API.getJSON(`/api/media?${api}`); if (version !== generation) return;
     if (main.querySelector('#mr-total')) main.querySelector('#mr-total').textContent = `${s.count(result.total)} ${s.t('recent.mediaCount')}`;
     main.querySelector('#mr-list').innerHTML = result.items.length ? result.items.map((m) => poster(s, m, recent, result.showLibraryMediaBadges)).join('') : `<div class="mr-grid-empty"><h2>${s.e(s.t('recent.noMedia'))}</h2><p>${s.e(s.t(recent ? 'recent.noMediaDesc' : 'noResults'))}</p></div>`;

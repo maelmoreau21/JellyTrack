@@ -1106,7 +1106,11 @@
     "wrappedVisibilityDesc": "Mostrar u ocultar Wrapped en la barra lateral y navegación.",
     "consolidateHistoryTask": "Consolidación del historial de reproducción",
     "consolidateHistoryTaskDesc": "Detecta y combina sesiones de reproducción fragmentadas por pausas o desconexiones.",
-    "dailyAtTime": "Todos los días a las {time}"
+    "dailyAtTime": "Todos los días a las {time}",
+    "repairLibraryNamesTask": "Repair imported library names",
+    "repairLibraryNamesTaskDesc": "Temporary task: back up SQLite, then restore library names from Jellyfin. Keeps playback history and leaves uncertain media unchanged.",
+    "manualOnly": "Manual launch only",
+    "downloadRepairBackup": "Download the backup before repair"
   },
   "timeRange": {
     "allTime": "Todo el tiempo",

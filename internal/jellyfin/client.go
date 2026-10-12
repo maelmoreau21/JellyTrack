@@ -111,7 +111,8 @@ type Item struct {
 	} `json:"MediaSources"`
 }
 type itemPage struct {
-	Items []Item `json:"Items"`
+	Items            []Item `json:"Items"`
+	TotalRecordCount int    `json:"TotalRecordCount"`
 }
 type Session struct {
 	ID             string `json:"Id"`
@@ -248,4 +249,31 @@ func (c *Client) ItemsSince(ctx context.Context, since string, visit func(Item) 
 		}
 	}
 	return nil
+}
+
+// LibraryItemIDs enumerates authoritative membership, including nested episodes.
+// Refuse truncated catalogues rather than treating a partial response as complete.
+func (c *Client) LibraryItemIDs(ctx context.Context, libraryID string, visit func(string) error) error {
+	for start := 0; start < 1000000; {
+		q := url.Values{"ParentId": {libraryID}, "Recursive": {"true"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
+		var page itemPage
+		if err := c.get(ctx, "/Items", q, &page); err != nil {
+			return err
+		}
+		for _, item := range page.Items {
+			if item.ID != "" {
+				if err := visit(item.ID); err != nil {
+					return err
+				}
+			}
+		}
+		start += len(page.Items)
+		if page.TotalRecordCount > start && len(page.Items) == 0 {
+			return fmt.Errorf("Jellyfin returned an incomplete library page")
+		}
+		if (page.TotalRecordCount > 0 && start >= page.TotalRecordCount) || (page.TotalRecordCount == 0 && len(page.Items) < pageSize) {
+			return nil
+		}
+	}
+	return fmt.Errorf("Jellyfin library exceeds the repair enumeration limit")
 }
