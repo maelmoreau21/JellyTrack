@@ -1127,7 +1127,7 @@
     "consolidateHistoryTaskDesc": "Detects and merges fragmented playback sessions caused by pauses, buffers or disconnects.",
     "dailyAtTime": "Daily at {time}",
     "repairLibraryNamesTask": "Repair imported library names",
-    "repairLibraryNamesTaskDesc": "Temporary task: back up SQLite, then restore library names from Jellyfin. Keeps playback history and leaves uncertain media unchanged.",
+    "repairLibraryNamesTaskDesc": "Temporary task: back up SQLite, then fix provisional imported server IDs and restore library names from Jellyfin. Keeps playback history and leaves uncertain media unchanged.",
     "manualOnly": "Manual launch only",
     "downloadRepairBackup": "Download the backup before repair"
   },

@@ -1108,7 +1108,7 @@
     "consolidateHistoryTaskDesc": "Detecta y combina sesiones de reproducción fragmentadas por pausas o desconexiones.",
     "dailyAtTime": "Todos los días a las {time}",
     "repairLibraryNamesTask": "Repair imported library names",
-    "repairLibraryNamesTaskDesc": "Temporary task: back up SQLite, then restore library names from Jellyfin. Keeps playback history and leaves uncertain media unchanged.",
+    "repairLibraryNamesTaskDesc": "Temporary task: back up SQLite, then fix provisional imported server IDs and restore library names from Jellyfin. Keeps playback history and leaves uncertain media unchanged.",
     "manualOnly": "Manual launch only",
     "downloadRepairBackup": "Download the backup before repair"
   },
