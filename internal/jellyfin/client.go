@@ -114,6 +114,21 @@ type itemPage struct {
 	Items            []Item `json:"Items"`
 	TotalRecordCount int    `json:"TotalRecordCount"`
 }
+
+func ItemResolution(item Item) string {
+	var result string
+	for _, source := range item.MediaSources {
+		for _, stream := range source.MediaStreams {
+			if stream.Type == "Video" {
+				if label, ok := resolutionLabel(stream.Width, stream.Height).(string); ok {
+					result = label
+				}
+			}
+		}
+	}
+	return result
+}
+
 type Session struct {
 	ID             string `json:"Id"`
 	UserID         string `json:"UserId"`
@@ -254,15 +269,24 @@ func (c *Client) ItemsSince(ctx context.Context, since string, visit func(Item) 
 // LibraryItemIDs enumerates authoritative membership, including nested episodes.
 // Refuse truncated catalogues rather than treating a partial response as complete.
 func (c *Client) LibraryItemIDs(ctx context.Context, libraryID string, visit func(string) error) error {
+	return c.LibraryItems(ctx, libraryID, func(item Item) error {
+		if item.ID != "" {
+			return visit(item.ID)
+		}
+		return nil
+	})
+}
+
+func (c *Client) LibraryItems(ctx context.Context, libraryID string, visit func(Item) error) error {
 	for start := 0; start < 1000000; {
-		q := url.Values{"ParentId": {libraryID}, "Recursive": {"true"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
+		q := url.Values{"ParentId": {libraryID}, "Recursive": {"true"}, "Fields": {"MediaSources"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
 		var page itemPage
 		if err := c.get(ctx, "/Items", q, &page); err != nil {
 			return err
 		}
 		for _, item := range page.Items {
 			if item.ID != "" {
-				if err := visit(item.ID); err != nil {
+				if err := visit(item); err != nil {
 					return err
 				}
 			}

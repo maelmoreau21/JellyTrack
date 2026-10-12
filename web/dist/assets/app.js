@@ -3078,7 +3078,7 @@
 
             // Palette for multi-series
             const palette = ['#38bdf8', '#22c55e', '#f59e0b', '#a855f7', '#ec4899', '#6366f1', '#14b8a6', '#f43f5e'];
-            const libraryLabel = name => name === 'Unknown' ? (I18n.t('common.unknown') || 'Inconnu') : name;
+            const libraryLabel = name => name === 'Unknown' ? (I18n.t('granular.unassignedLibrary') || 'Bibliothèque non renseignée') : name;
 
             // 1. Chart: Plays per day
             const dailyData = gran.dailyData || [];
@@ -3389,7 +3389,7 @@
             // Resolution matrix chart
             const resolutions = deep.resolutionChartData || [];
             if (resolutions.length > 0 && resolutions.some(r => (r.value || 0) > 0)) {
-              const labels = resolutions.map(r => r.name || '?');
+              const labels = resolutions.map(r => r.name === 'Unknown' ? (I18n.t('deepInsights.missingResolution') || 'Résolution non renseignée') : r.name || '?');
               const values = resolutions.map(r => Number(r.value || 0));
               ChartHelper.renderDoughnut('chart-resolution-matrix', labels, values, { isHours: false, onClick: index => Router.navigate(historyURL(`hideZapped=true&resolution=${encodeURIComponent(resolutions[index].name)}`)) });
             } else {

@@ -92,7 +92,7 @@
       const write = async (url, payload, method = 'POST') => {
         const response = await api.request(url, { method, body: payload });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok || data.success === false) throw new Error(data.error || data.message || t('common.saveError'));
+        if (!response.ok || data.success === false) throw new Error(data.error || data.message || `${t('common.networkError')} (HTTP ${response.status})`);
         return data;
       };
       const showError = error => { if (alive()) { feedback = { text: error.message || t('common.networkError'), error: true }; updateFeedback(); } };

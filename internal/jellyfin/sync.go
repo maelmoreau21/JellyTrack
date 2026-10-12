@@ -36,9 +36,43 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 		return SyncResult{}, fmt.Errorf("read Jellyfin system info: %w", err)
 	}
 	probeLatency := time.Since(probeStarted).Milliseconds()
+	retainAlias := false
+	if serverID != "" && IsLegacyServerAlias(jellyfinID) && info.ID != "" && !sameJellyfinServerID(jellyfinID, info.ID) {
+		var storedID, storedURL string
+		if err := db.QueryRowContext(ctx, database.Bind(`SELECT "jellyfinServerId","url" FROM "Server" WHERE "id"=?`, driver), serverID).Scan(&storedID, &storedURL); err != nil {
+			return SyncResult{}, err
+		}
+		if storedID != jellyfinID || strings.TrimRight(storedURL, "/") != strings.TrimRight(baseURL, "/") {
+			return SyncResult{}, fmt.Errorf("legacy server alias must be verified at its configured URL")
+		}
+		rows, err := db.QueryContext(ctx, database.Bind(`SELECT "jellyfinServerId" FROM "Server" WHERE "id"<>?`, driver), serverID)
+		if err != nil {
+			return SyncResult{}, err
+		}
+		conflict := false
+		for rows.Next() {
+			var id string
+			if err = rows.Scan(&id); err != nil {
+				rows.Close()
+				return SyncResult{}, err
+			}
+			if sameJellyfinServerID(id, info.ID) {
+				conflict = true
+			}
+		}
+		err = rows.Err()
+		rows.Close()
+		if err != nil {
+			return SyncResult{}, err
+		}
+		if conflict {
+			return SyncResult{}, fmt.Errorf("Jellyfin identity is already configured on another server; refusing to merge legacy alias")
+		}
+		retainAlias = true
+	}
 	// Changing an established remote identity would attach old histories to a
 	// different Jellyfin. Provisional configuration can resolve before ingest.
-	if serverID != "" && jellyfinID != "" && info.ID != "" && !sameJellyfinServerID(jellyfinID, info.ID) {
+	if !retainAlias && serverID != "" && jellyfinID != "" && info.ID != "" && !sameJellyfinServerID(jellyfinID, info.ID) {
 		var children int
 		err := db.QueryRowContext(ctx, database.Bind(`SELECT (SELECT COUNT(*) FROM "User" WHERE "serverId"=?)+(SELECT COUNT(*) FROM "Media" WHERE "serverId"=?)+(SELECT COUNT(*) FROM "PlaybackHistory" WHERE "serverId"=?)`, driver), serverID, serverID, serverID).Scan(&children)
 		if err != nil {
@@ -48,7 +82,7 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 			return SyncResult{}, fmt.Errorf("configured server %s changed its Jellyfin identity (stored=%q, received=%q); refusing to mix existing data", serverID, jellyfinID, info.ID)
 		}
 	}
-	if info.ID != "" && !sameJellyfinServerID(jellyfinID, info.ID) {
+	if !retainAlias && info.ID != "" && !sameJellyfinServerID(jellyfinID, info.ID) {
 		jellyfinID = info.ID
 	}
 	if info.ServerName != "" {

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,23 +18,25 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/backup"
 	"github.com/maelmoreau21/jellytrack/internal/jellyfin"
 	"github.com/maelmoreau21/jellytrack/internal/security"
+	"github.com/maelmoreau21/jellytrack/internal/stats"
 )
 
 var repairBackupName = regexp.MustCompile(`^JellyTrack-library-repair-[0-9]{8}T[0-9]{15}Z\.sqlite$`)
 var importedRepairIdentity = regexp.MustCompile(`^imported-server-[1-9][0-9]*$`)
-var legacyHostRepairIdentity = regexp.MustCompile(`^srv:[a-z0-9_.-]+$`)
 
 type libraryRepairChange struct {
 	id, server, remote string
 	before             sql.NullString
 	after              string
+	beforeResolution   sql.NullString
+	afterResolution    string
 }
 
 type libraryRepairServerChange struct{ id, before, after string }
 
 func provisionalRepairIdentity(id, stored string) bool {
 	stored = strings.TrimSpace(stored)
-	return stored == "" || stored == "master" || legacyHostRepairIdentity.MatchString(stored) || repairRemoteID(stored) == repairRemoteID(id) || importedRepairIdentity.MatchString(stored)
+	return stored == "" || jellyfin.IsLegacyServerAlias(stored) || repairRemoteID(stored) == repairRemoteID(id) || importedRepairIdentity.MatchString(stored)
 }
 
 // Normalize UUID formatting only, preserving arbitrary case-sensitive remote IDs.
@@ -68,28 +71,38 @@ func checkRepairIntegrity(ctx context.Context, db *sql.DB) error {
 }
 
 func (h *Handler) repairLibraryNames(w http.ResponseWriter, r *http.Request) {
+	fail := func(status int, message string) {
+		slog.Warn("library repair failed", "status", status, "error", message)
+		jsonError(w, status, message)
+	}
 	if !sameOrigin(r) {
-		jsonError(w, 403, "Origine refusée.")
+		fail(403, "Origine refusée.")
 		return
 	}
 	if h.driver != "sqlite" {
-		jsonError(w, 400, "Cette réparation temporaire concerne les bases SQLite importées.")
+		fail(400, "Cette réparation temporaire concerne les bases SQLite importées.")
 		return
 	}
 	if !h.libraryRepairMu.TryLock() {
-		jsonError(w, 409, "Une réparation est déjà en cours.")
+		fail(409, "Une réparation est déjà en cours.")
 		return
 	}
 	defer h.libraryRepairMu.Unlock()
+	// The global server deadline is 30s; this manually launched operation is
+	// bounded separately and may need to enumerate large remote libraries.
+	_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(30 * time.Minute))
+	started := time.Now()
+	slog.Info("library repair started")
+	defer func() { slog.Info("library repair request finished", "elapsed", time.Since(started).String()) }()
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Minute)
 	defer cancel()
 	if err := checkRepairIntegrity(ctx, h.db); err != nil {
-		jsonError(w, 409, "Réparation interrompue : "+err.Error())
+		fail(409, "Réparation interrompue : "+err.Error())
 		return
 	}
 	changes, identities, unresolved, err := h.planLibraryRepair(ctx)
 	if err != nil {
-		jsonError(w, 502, err.Error())
+		fail(502, err.Error())
 		return
 	}
 	if len(changes) == 0 && len(identities) == 0 {
@@ -98,7 +111,7 @@ func (h *Handler) repairLibraryNames(w http.ResponseWriter, r *http.Request) {
 	}
 	directory, err := backup.GetBackupDirectory()
 	if err != nil {
-		jsonError(w, 500, "Impossible de créer la sauvegarde ; aucune réparation effectuée.")
+		fail(500, "Impossible de créer la sauvegarde ; aucune réparation effectuée.")
 		return
 	}
 	stamp := time.Now().UTC()
@@ -106,20 +119,20 @@ func (h *Handler) repairLibraryNames(w http.ResponseWriter, r *http.Request) {
 	path := filepath.Join(directory, name)
 	reserved, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err != nil {
-		jsonError(w, 500, "Création de sauvegarde impossible ; aucune réparation effectuée.")
+		fail(500, "Création de sauvegarde impossible ; aucune réparation effectuée.")
 		return
 	}
 	if err = reserved.Close(); err != nil {
-		jsonError(w, 500, "Création de sauvegarde impossible ; aucune réparation effectuée.")
+		fail(500, "Création de sauvegarde impossible ; aucune réparation effectuée.")
 		return
 	}
 	// VACUUM INTO copies the entire SQLite database, including committed WAL data.
 	if _, err = h.db.ExecContext(ctx, `VACUUM INTO ?`, path); err != nil {
-		jsonError(w, 500, "Sauvegarde SQLite impossible ; aucune réparation effectuée.")
+		fail(500, "Sauvegarde SQLite impossible ; aucune réparation effectuée.")
 		return
 	}
 	if err = os.Chmod(path, 0600); err != nil {
-		jsonError(w, 500, "Protection de la sauvegarde impossible ; aucune réparation effectuée.")
+		fail(500, "Protection de la sauvegarde impossible ; aucune réparation effectuée.")
 		return
 	}
 	snapshot, err := sql.Open("sqlite", "file:"+filepath.ToSlash(path)+"?mode=ro")
@@ -128,28 +141,35 @@ func (h *Handler) repairLibraryNames(w http.ResponseWriter, r *http.Request) {
 		snapshot.Close()
 	}
 	if err != nil {
-		jsonError(w, 500, "Vérification de sauvegarde échouée ; aucune réparation effectuée.")
+		fail(500, "Vérification de sauvegarde échouée ; aucune réparation effectuée.")
 		return
 	}
 	file, err := os.Open(path)
 	if err != nil {
-		jsonError(w, 500, "Lecture de sauvegarde impossible ; aucune réparation effectuée.")
+		fail(500, "Lecture de sauvegarde impossible ; aucune réparation effectuée.")
 		return
 	}
 	hash := sha256.New()
 	_, err = io.Copy(hash, file)
 	file.Close()
 	if err != nil {
-		jsonError(w, 500, "Vérification de sauvegarde impossible ; aucune réparation effectuée.")
+		fail(500, "Vérification de sauvegarde impossible ; aucune réparation effectuée.")
 		return
 	}
 	repaired, err := h.applyLibraryRepair(ctx, changes, identities...)
 	if err != nil {
-		jsonError(w, 409, "Réparation annulée ; sauvegarde conservée : "+name+". "+err.Error())
+		fail(409, "Réparation annulée ; sauvegarde conservée : "+name+". "+err.Error())
 		return
 	}
+	resolutionsRepaired := 0
+	for _, change := range changes {
+		if change.afterResolution != "" {
+			resolutionsRepaired++
+		}
+	}
+	slog.Info("library repair completed", "media_repaired", repaired, "resolutions_repaired", resolutionsRepaired, "unresolved_media", unresolved)
 	_ = security.LogAudit(ctx, h.db, h.driver, "library_names.repair", nil, nil, nil, nil, map[string]any{"repaired": repaired, "serverIdentitiesRepaired": len(identities), "unresolved": unresolved, "backup": name})
-	jsonResponse(w, 200, map[string]any{"success": true, "repaired": repaired, "serverIdentitiesRepaired": len(identities), "unresolved": unresolved, "backup": name, "backupSHA256": hex.EncodeToString(hash.Sum(nil)), "backupURL": "/api/admin/library-repair-backup/" + name, "message": fmt.Sprintf("Réparation terminée : %d nom(s) corrigé(s), %d identifiant(s) de serveur importé corrigé(s), %d média(s) sans correspondance certaine conservé(s). Historique conservé. Sauvegarde : %s", repaired, len(identities), unresolved, name)})
+	jsonResponse(w, 200, map[string]any{"success": true, "repaired": repaired, "resolutionsRepaired": resolutionsRepaired, "serverIdentitiesRepaired": len(identities), "unresolved": unresolved, "backup": name, "backupSHA256": hex.EncodeToString(hash.Sum(nil)), "backupURL": "/api/admin/library-repair-backup/" + name, "message": fmt.Sprintf("Réparation terminée : %d média(s) remis à jour, %d résolution(s) complétée(s), %d identifiant(s) de serveur importé corrigé(s), %d média(s) sans correspondance certaine conservé(s). Historique conservé. Sauvegarde : %s", repaired, resolutionsRepaired, len(identities), unresolved, name)})
 }
 
 func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange, []libraryRepairServerChange, int, error) {
@@ -226,13 +246,17 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 			return nil, nil, 0, fmt.Errorf("Bibliothèques Jellyfin indisponibles pour le serveur %s ; aucune réparation effectuée", s.id)
 		}
 		membership := map[string]string{}
+		resolutions := map[string]string{}
 		ambiguous := map[string]bool{}
 		for _, lib := range libs {
 			if lib.ID == "" || strings.TrimSpace(lib.Name) == "" {
 				return nil, nil, 0, fmt.Errorf("Bibliothèque Jellyfin incomplète pour le serveur %s", s.id)
 			}
-			e = client.LibraryItemIDs(ctx, lib.ID, func(id string) error {
-				key := repairRemoteID(id)
+			e = client.LibraryItems(ctx, lib.ID, func(item jellyfin.Item) error {
+				key := repairRemoteID(item.ID)
+				if resolution := jellyfin.ItemResolution(item); resolution != "" {
+					resolutions[key] = resolution
+				}
 				if old, ok := membership[key]; ok && old != lib.Name {
 					ambiguous[key] = true
 				}
@@ -243,7 +267,7 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 				return nil, nil, 0, fmt.Errorf("Lecture des bibliothèques Jellyfin échouée pour le serveur %s ; aucune réparation effectuée", s.id)
 			}
 		}
-		mediaRows, e := h.db.QueryContext(ctx, `SELECT "id","jellyfinMediaId","libraryName" FROM "Media" WHERE "serverId"=?`, s.id)
+		mediaRows, e := h.db.QueryContext(ctx, `SELECT "id","jellyfinMediaId","libraryName","resolution" FROM "Media" WHERE "serverId"=?`, s.id)
 		if e != nil {
 			return nil, nil, 0, e
 		}
@@ -251,7 +275,7 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 		for mediaRows.Next() {
 			var c libraryRepairChange
 			c.server = s.id
-			if e = mediaRows.Scan(&c.id, &c.remote, &c.before); e != nil {
+			if e = mediaRows.Scan(&c.id, &c.remote, &c.before, &c.beforeResolution); e != nil {
 				mediaRows.Close()
 				return nil, nil, 0, e
 			}
@@ -262,8 +286,11 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 				continue
 			}
 			matched++
-			if !c.before.Valid || c.before.String != name {
-				c.after = name
+			c.after = name
+			if stats.NormalizeResolution(c.beforeResolution.String) == "Unknown" {
+				c.afterResolution = resolutions[key]
+			}
+			if !c.before.Valid || c.before.String != name || c.afterResolution != "" {
 				changes = append(changes, c)
 			}
 		}
@@ -278,7 +305,7 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 			}
 			// Historical aliases are still used by scoped plugin keys. Recognize
 			// them for this task without rewriting the key's configured scope.
-			if s.jid != "master" && !legacyHostRepairIdentity.MatchString(s.jid) {
+			if !jellyfin.IsLegacyServerAlias(s.jid) {
 				identities = append(identities, libraryRepairServerChange{s.id, s.jid, info.ID})
 			}
 		}
@@ -341,7 +368,11 @@ func (h *Handler) applyLibraryRepair(ctx context.Context, changes []libraryRepai
 		if c.before.Valid {
 			before = c.before.String
 		}
-		result, e := tx.ExecContext(ctx, `UPDATE "Media" SET "libraryName"=?,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "serverId"=? AND "jellyfinMediaId"=? AND "libraryName" IS ?`, c.after, c.id, c.server, c.remote, before)
+		var beforeResolution any
+		if c.beforeResolution.Valid {
+			beforeResolution = c.beforeResolution.String
+		}
+		result, e := tx.ExecContext(ctx, `UPDATE "Media" SET "libraryName"=?,"resolution"=CASE WHEN ?<>'' THEN ? ELSE "resolution" END,"updatedAt"=CURRENT_TIMESTAMP WHERE "id"=? AND "serverId"=? AND "jellyfinMediaId"=? AND "libraryName" IS ? AND (?='' OR "resolution" IS ?)`, c.after, c.afterResolution, c.afterResolution, c.id, c.server, c.remote, before, c.afterResolution, beforeResolution)
 		if e != nil {
 			return 0, e
 		}
@@ -358,6 +389,14 @@ func (h *Handler) applyLibraryRepair(ctx context.Context, changes []libraryRepai
 		}
 		if actual != c.after {
 			return 0, fmt.Errorf("Vérification de la réparation échouée")
+		}
+		if c.afterResolution != "" {
+			if e = tx.QueryRowContext(ctx, `SELECT "resolution" FROM "Media" WHERE "id"=?`, c.id).Scan(&actual); e != nil {
+				return 0, e
+			}
+			if actual != c.afterResolution {
+				return 0, fmt.Errorf("Vérification de résolution échouée")
+			}
 		}
 	}
 	if err = tx.Commit(); err != nil {

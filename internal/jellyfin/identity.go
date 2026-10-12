@@ -12,6 +12,13 @@ import (
 )
 
 var jellyfinUUID = regexp.MustCompile(`^[a-fA-F0-9]{32}$`)
+var legacyServerHostAlias = regexp.MustCompile(`^srv:[a-z0-9_.-]+$`)
+
+// Older JellyTrack installations used an address-derived alias before the
+// Jellyfin system identifier was available. Plugin keys can retain this scope.
+func IsLegacyServerAlias(value string) bool {
+	return value == "master" || legacyServerHostAlias.MatchString(value)
+}
 
 // syncIdentity preserves existing keys written by either sync or the plugin.
 // Compact and dashed UUIDs describe the same remote object, within one server.

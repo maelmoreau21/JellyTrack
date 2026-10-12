@@ -2002,6 +2002,7 @@ func (h *Handler) sync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(30 * time.Minute))
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Minute)
 	defer cancel()
 	result, err := jellyfin.SyncAllServers(ctx, h.db, h.driver, recentOnly)
