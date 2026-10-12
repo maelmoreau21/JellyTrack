@@ -243,8 +243,15 @@ func (c *Client) Items(ctx context.Context, visit func(Item) error) error {
 }
 
 func (c *Client) ItemsSince(ctx context.Context, since string, visit func(Item) error) error {
-	for start := 0; start < 50000; start += pageSize {
+	return c.ItemsSinceInLibrary(ctx, since, "", visit)
+}
+
+func (c *Client) ItemsSinceInLibrary(ctx context.Context, since, parent string, visit func(Item) error) error {
+	for start := 0; start < 1000000; {
 		q := url.Values{"IncludeItemTypes": {"Movie,Series,Season,Episode,Audio,MusicAlbum,Book,AudioBook,Comic,BoxSet"}, "Recursive": {"true"}, "Fields": {"ProviderIds,Genres,People,Studios,MediaSources,ParentId,RunTimeTicks,DateCreated,SeriesId,SeasonId,AlbumId"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
+		if parent != "" {
+			q.Set("ParentId", parent)
+		}
 		if since != "" {
 			q.Set("MinDateCreated", since)
 			q.Set("SortBy", "DateCreated")
@@ -259,11 +266,15 @@ func (c *Client) ItemsSince(ctx context.Context, since string, visit func(Item) 
 				return err
 			}
 		}
-		if len(page.Items) < pageSize {
+		start += len(page.Items)
+		if page.TotalRecordCount > start && len(page.Items) == 0 {
+			return fmt.Errorf("Jellyfin returned an incomplete media page")
+		}
+		if (page.TotalRecordCount > 0 && start >= page.TotalRecordCount) || (page.TotalRecordCount == 0 && len(page.Items) < pageSize) {
 			return nil
 		}
 	}
-	return nil
+	return fmt.Errorf("Jellyfin catalogue exceeds the synchronization enumeration limit")
 }
 
 // LibraryItemIDs enumerates authoritative membership, including nested episodes.

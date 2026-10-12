@@ -17,8 +17,9 @@ import (
 )
 
 type SyncResult struct {
-	Users int `json:"users"`
-	Media int `json:"media"`
+	Users    int      `json:"users"`
+	Media    int      `json:"media"`
+	Warnings []string `json:"warnings,omitempty"`
 }
 
 // SyncOne synchronizes one configured server incrementally and persists each media row as it arrives.
@@ -148,7 +149,7 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 		}
 		result.Users++
 	}
-	libraries, _ := client.Libraries(ctx) // Jellyfin permissions and versions may make this hint endpoint unavailable.
+	libraries, libraryErr := client.Libraries(ctx)
 	byLibrary := make(map[string]Library, len(libraries))
 	for _, lib := range libraries {
 		byLibrary[lib.ID] = lib
@@ -157,7 +158,9 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 	if len(recentOnly) > 0 && recentOnly[0] {
 		since = time.Now().UTC().AddDate(0, 0, -7).Format(time.RFC3339Nano)
 	}
-	err = client.ItemsSince(ctx, since, func(item Item) error {
+	var currentLibrary *Library
+	seenLibraries := map[string]string{}
+	visit := func(item Item) error {
 		if item.ID == "" || item.Type == "" {
 			return nil
 		}
@@ -173,7 +176,15 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 			}
 		}
 		libraryName, collection := "", ""
-		if lib, ok := byLibrary[item.ParentID]; ok {
+		if currentLibrary != nil {
+			libraryName, collection = currentLibrary.Name, currentLibrary.CollectionType
+			key := item.ID
+			if previous, ok := seenLibraries[key]; ok && previous != libraryName {
+				return fmt.Errorf("media %s belongs to multiple library names; refusing to overwrite its library", key)
+			}
+			seenLibraries[key] = libraryName
+		}
+		if lib, ok := byLibrary[item.ParentID]; ok && currentLibrary == nil {
 			libraryName, collection = lib.Name, lib.CollectionType
 		}
 		if collection == "" {
@@ -240,9 +251,26 @@ func SyncOne(ctx context.Context, db *sql.DB, driver string, serverID, jellyfinI
 		}
 		result.Media++
 		return nil
-	})
+	}
+	if len(libraries) > 0 {
+		for i := range libraries {
+			currentLibrary = &libraries[i]
+			if currentLibrary.ID == "" || strings.TrimSpace(currentLibrary.Name) == "" {
+				return result, fmt.Errorf("Jellyfin returned an incomplete library")
+			}
+			err = client.ItemsSinceInLibrary(ctx, since, currentLibrary.ID, visit)
+			if err != nil {
+				break
+			}
+		}
+	} else {
+		err = client.ItemsSince(ctx, since, visit)
+	}
 	if err != nil {
 		return result, fmt.Errorf("fetch Jellyfin media: %w", err)
+	}
+	if result.Media > 0 && (libraryErr != nil || len(libraries) == 0) {
+		result.Warnings = append(result.Warnings, "Les bibliothèques Jellyfin ne sont pas accessibles : les médias ont été synchronisés mais leur bibliothèque n'a pas pu être vérifiée.")
 	}
 	return result, nil
 }
@@ -355,6 +383,10 @@ func SyncAllServers(ctx context.Context, db *sql.DB, driver string, recentOnly .
 			defer mu.Unlock()
 			combined.Users += res.Users
 			combined.Media += res.Media
+			combined.Warnings = append(combined.Warnings, res.Warnings...)
+			if len(res.Warnings) > 0 {
+				outcome["warnings"] = res.Warnings
+			}
 			if err != nil {
 				failures = append(failures, fmt.Errorf("server %s: %w", t.id, err))
 				outcome["status"] = "error"

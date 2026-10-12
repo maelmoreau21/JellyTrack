@@ -175,7 +175,7 @@ func getCumulativeCompletion(ctx context.Context, db *sql.DB, driver string, fil
  FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId"
  WHERE `+strings.Join(clauses, " AND ")+`)
  SELECT scoped."userId",scoped."serverId",m."id",m."jellyfinMediaId",m."title",m."type",
- `+media.LibraryNameSQL("m")+`,COALESCE(NULLIF(m."collectionType",''),m."type"),m."durationMs",SUM(p."durationWatched")
+ `+media.LibraryNameSQL("m", driver)+`,COALESCE(NULLIF(m."collectionType",''),m."type"),m."durationMs",SUM(p."durationWatched")
  FROM scoped JOIN "PlaybackHistory" p ON COALESCE(p."userId",'')=scoped."userId" AND p."serverId"=scoped."serverId" AND p."mediaId"=scoped."mediaId"
  JOIN "Media" m ON m."id"=scoped."mediaId"
  WHERE m."durationMs">0`+refClause+`

@@ -1157,7 +1157,11 @@
     "repairLibraryNamesTask": "Réparer les bibliothèques importées",
     "repairLibraryNamesTaskDesc": "Tâche temporaire : sauvegarde SQLite puis correction des identifiants provisoires de l’import et des noms de bibliothèques depuis Jellyfin. Historique conservé. Les médias sans correspondance certaine restent inchangés.",
     "manualOnly": "Lancement manuel uniquement",
-    "downloadRepairBackup": "Télécharger la sauvegarde avant réparation"
+    "downloadRepairBackup": "Télécharger la sauvegarde avant réparation",
+    "cleanupUnassignedTask": "Nettoyer les anciens historiques sans bibliothèque",
+    "cleanupUnassignedTaskDesc": "Nettoyage manuel des anciens enregistrements non identifiés. Aperçu des lectures concernées, confirmation et sauvegarde SQLite avant suppression.",
+    "cleanupUnassignedApply": "Supprimer ces enregistrements",
+    "cleanupUnassignedConfirm": "Supprimer {media} médias, {history} lectures et {telemetry} événements associés ? Une sauvegarde sera créée avant suppression."
   },
   "ssoSettings": {
     "title": "Authentification SSO",

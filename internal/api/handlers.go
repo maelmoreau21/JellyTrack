@@ -135,6 +135,7 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"POST /api/admin/consolidate-history":            h.adminConsolidateHistory,
 		"POST /api/admin/integrity-cleanup":              h.adminIntegrityCleanup,
 		"POST /api/admin/repair-library-names":           h.repairLibraryNames,
+		"POST /api/admin/cleanup-unassigned-history":     h.cleanupUnassignedHistory,
 		"GET /api/admin/library-repair-backup/{name}":    h.downloadLibraryRepairBackup,
 	}
 	for path, fn := range adminRoutes {
@@ -1922,11 +1923,12 @@ func (h *Handler) sync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jsonResponse(w, 200, map[string]any{
-		"status":  "success",
-		"success": true,
-		"message": fmt.Sprintf("Synchronisation terminée (%d utilisateurs, %d médias)", result.Users, result.Media),
-		"users":   result.Users,
-		"media":   result.Media,
+		"status":   "success",
+		"success":  true,
+		"message":  syncResultMessage(result),
+		"warnings": result.Warnings,
+		"users":    result.Users,
+		"media":    result.Media,
 	})
 }
 

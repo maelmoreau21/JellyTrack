@@ -113,7 +113,7 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		args = append(args, device)
 	}
 	if library := q.Get("library"); library != "" {
-		clauses = append(clauses, media.LibraryNameSQL("m")+`=?`)
+		clauses = append(clauses, media.LibraryNameSQL("m", h.driver)+`=?`)
 		args = append(args, library)
 	}
 	if category := q.Get("libraryCategory"); category != "" {

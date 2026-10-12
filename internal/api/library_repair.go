@@ -34,10 +34,12 @@ type libraryRepairChange struct {
 
 type libraryRepairServerChange struct{ id, before, after string }
 type libraryRepairDiagnostic struct {
-	Title    string `json:"title"`
-	RemoteID string `json:"remoteId"`
-	ServerID string `json:"serverId"`
-	Reason   string `json:"reason"`
+	Title         string `json:"title"`
+	RemoteID      string `json:"remoteId"`
+	ServerID      string `json:"serverId"`
+	Reason        string `json:"reason"`
+	mediaID       string
+	purgeEligible bool
 }
 
 func provisionalRepairIdentity(id, stored string) bool {
@@ -112,54 +114,12 @@ func (h *Handler) repairLibraryNames(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(changes) == 0 && len(identities) == 0 {
-		jsonResponse(w, 200, map[string]any{"success": true, "repaired": 0, "unresolved": unresolved, "unresolvedSamples": diagnostics, "message": fmt.Sprintf("Aucun nom à corriger. %d média(s) sans correspondance certaine, conservé(s).", unresolved)})
+		jsonResponse(w, 200, map[string]any{"success": true, "repaired": 0, "unresolved": unresolved, "unresolvedSamples": repairDiagnosticSamples(diagnostics), "message": fmt.Sprintf("Aucun nom à corriger. %d média(s) sans correspondance certaine, conservé(s).", unresolved)})
 		return
 	}
-	directory, err := backup.GetBackupDirectory()
+	name, checksum, err := h.createLibraryRepairBackup(ctx)
 	if err != nil {
-		fail(500, "Impossible de créer la sauvegarde ; aucune réparation effectuée.")
-		return
-	}
-	stamp := time.Now().UTC()
-	name := fmt.Sprintf("JellyTrack-library-repair-%s%09dZ.sqlite", stamp.Format("20060102T150405"), stamp.Nanosecond())
-	path := filepath.Join(directory, name)
-	reserved, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
-	if err != nil {
-		fail(500, "Création de sauvegarde impossible ; aucune réparation effectuée.")
-		return
-	}
-	if err = reserved.Close(); err != nil {
-		fail(500, "Création de sauvegarde impossible ; aucune réparation effectuée.")
-		return
-	}
-	// VACUUM INTO copies the entire SQLite database, including committed WAL data.
-	if _, err = h.db.ExecContext(ctx, `VACUUM INTO ?`, path); err != nil {
-		fail(500, "Sauvegarde SQLite impossible ; aucune réparation effectuée.")
-		return
-	}
-	if err = os.Chmod(path, 0600); err != nil {
-		fail(500, "Protection de la sauvegarde impossible ; aucune réparation effectuée.")
-		return
-	}
-	snapshot, err := sql.Open("sqlite", "file:"+filepath.ToSlash(path)+"?mode=ro")
-	if err == nil {
-		err = checkRepairIntegrity(ctx, snapshot)
-		snapshot.Close()
-	}
-	if err != nil {
-		fail(500, "Vérification de sauvegarde échouée ; aucune réparation effectuée.")
-		return
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		fail(500, "Lecture de sauvegarde impossible ; aucune réparation effectuée.")
-		return
-	}
-	hash := sha256.New()
-	_, err = io.Copy(hash, file)
-	file.Close()
-	if err != nil {
-		fail(500, "Vérification de sauvegarde impossible ; aucune réparation effectuée.")
+		fail(500, "Sauvegarde impossible ; aucune réparation effectuée. "+err.Error())
 		return
 	}
 	repaired, err := h.applyLibraryRepair(ctx, changes, identities...)
@@ -175,7 +135,7 @@ func (h *Handler) repairLibraryNames(w http.ResponseWriter, r *http.Request) {
 	}
 	slog.Info("library repair completed", "media_repaired", repaired, "resolutions_repaired", resolutionsRepaired, "unresolved_media", unresolved)
 	_ = security.LogAudit(ctx, h.db, h.driver, "library_names.repair", nil, nil, nil, nil, map[string]any{"repaired": repaired, "serverIdentitiesRepaired": len(identities), "unresolved": unresolved, "backup": name})
-	jsonResponse(w, 200, map[string]any{"success": true, "repaired": repaired, "resolutionsRepaired": resolutionsRepaired, "serverIdentitiesRepaired": len(identities), "unresolved": unresolved, "unresolvedSamples": diagnostics, "backup": name, "backupSHA256": hex.EncodeToString(hash.Sum(nil)), "backupURL": "/api/admin/library-repair-backup/" + name, "message": fmt.Sprintf("Réparation terminée : %d média(s) remis à jour, %d résolution(s) complétée(s), %d identifiant(s) de serveur importé corrigé(s), %d média(s) sans correspondance certaine conservé(s). Historique conservé. Sauvegarde : %s", repaired, resolutionsRepaired, len(identities), unresolved, name)})
+	jsonResponse(w, 200, map[string]any{"success": true, "repaired": repaired, "resolutionsRepaired": resolutionsRepaired, "serverIdentitiesRepaired": len(identities), "unresolved": unresolved, "unresolvedSamples": repairDiagnosticSamples(diagnostics), "backup": name, "backupSHA256": checksum, "backupURL": "/api/admin/library-repair-backup/" + name, "message": fmt.Sprintf("Réparation terminée : %d média(s) remis à jour, %d résolution(s) complétée(s), %d identifiant(s) de serveur importé corrigé(s), %d média(s) sans correspondance certaine conservé(s). Historique conservé. Sauvegarde : %s", repaired, resolutionsRepaired, len(identities), unresolved, name)})
 }
 
 func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange, []libraryRepairServerChange, int, []libraryRepairDiagnostic, error) {
@@ -297,9 +257,7 @@ func (h *Handler) planLibraryRepair(ctx context.Context) ([]libraryRepairChange,
 				} else if strings.HasPrefix(key, "imported-media-") || key == "" {
 					reason = "Identifiant Jellyfin manquant dans l’ancien import"
 				}
-				if len(diagnostics) < 20 {
-					diagnostics = append(diagnostics, libraryRepairDiagnostic{title, c.remote, s.id, reason})
-				}
+				diagnostics = append(diagnostics, libraryRepairDiagnostic{Title: title, RemoteID: c.remote, ServerID: s.id, Reason: reason, mediaID: c.id, purgeEligible: !ambiguous[key]})
 				continue
 			}
 			matched++
@@ -443,4 +401,51 @@ func (h *Handler) downloadLibraryRepairBackup(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "application/octet-stream")
 	http.ServeFile(w, r, path)
+}
+
+func repairDiagnosticSamples(values []libraryRepairDiagnostic) []libraryRepairDiagnostic {
+	if len(values) > 20 {
+		return values[:20]
+	}
+	return values
+}
+func (h *Handler) createLibraryRepairBackup(ctx context.Context) (string, string, error) {
+	directory, err := backup.GetBackupDirectory()
+	if err != nil {
+		return "", "", err
+	}
+	stamp := time.Now().UTC()
+	name := fmt.Sprintf("JellyTrack-library-repair-%s%09dZ.sqlite", stamp.Format("20060102T150405"), stamp.Nanosecond())
+	path := filepath.Join(directory, name)
+	reserved, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	if err != nil {
+		return "", "", err
+	}
+	if err = reserved.Close(); err != nil {
+		return "", "", err
+	}
+	if _, err = h.db.ExecContext(ctx, `VACUUM INTO ?`, path); err != nil {
+		return "", "", err
+	}
+	if err = os.Chmod(path, 0600); err != nil {
+		return "", "", err
+	}
+	snapshot, err := sql.Open("sqlite", "file:"+filepath.ToSlash(path)+"?mode=ro")
+	if err == nil {
+		err = checkRepairIntegrity(ctx, snapshot)
+		snapshot.Close()
+	}
+	if err != nil {
+		return "", "", err
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		return "", "", err
+	}
+	defer file.Close()
+	hash := sha256.New()
+	if _, err = io.Copy(hash, file); err != nil {
+		return "", "", err
+	}
+	return name, hex.EncodeToString(hash.Sum(nil)), nil
 }

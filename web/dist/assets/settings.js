@@ -181,7 +181,8 @@
           ['integrityCheckTask','integrityCheckTaskDesc','/api/admin/integrity-cleanup',{},intervals.integrityCheckEveryHours,'emerald'],
           ['backupTask','backupTaskDesc','/api/backup/auto/trigger',{},intervals.backupEveryHours,'amber'],
           ['consolidateHistoryTask','consolidateHistoryTaskDesc','/api/admin/consolidate-history',{},null,'purple'],
-          ['repairLibraryNamesTask','repairLibraryNamesTaskDesc','/api/admin/repair-library-names',{},0,'emerald']
+          ['repairLibraryNamesTask','repairLibraryNamesTaskDesc','/api/admin/repair-library-names',{},0,'emerald'],
+          ['cleanupUnassignedTask','cleanupUnassignedTaskDesc','/api/admin/cleanup-unassigned-history',{},0,'amber']
         ];
         const taskCard = card(s('taskScheduler'),s('taskSchedulerDesc'),`<div class="settings-tasks">${tasks.map(([title,desc,url,payload,hours,color],index)=>`<div class="settings-task ${color}"><div><h3>${index<2?symbol('refresh'):index===3?symbol('save'):window.JellyTrackNavigation.icon(index===2?'shield':'layers')}${esc(s(title))}</h3><p class="settings-help">${esc(s(desc))}</p><small>${symbol('clock')}${esc(hours===0?s('manualOnly'):hours?s('schedulerEveryHours',{hours}):s('dailyAtTime',{time:'03:45 UTC'}))}</small><div class="settings-task-feedback" data-task-feedback="${index}" role="status"></div></div>${btn(t('common.run'),'run-task',`data-index="${index}" data-url="${url}" data-payload="${esc(JSON.stringify(payload))}"`)}</div>`).join('')}</div>`);
         const schedules = card(s('saveSchedules'),s('schedulerSchedulesDesc')+' '+s('schedulerSchedulesExample'),`<form data-form="schedules"><div class="settings-planning-rows">${PLANNINGS.map(([key,title,hint,min,max,step])=>`<label class="settings-planning-row"><span><strong>${esc(s(title))}</strong><small class="settings-help">${esc(s(hint))}</small></span><span class="settings-planning-value"><input class="form-input" type="number" name="${key}" min="${min}" max="${max}" step="${step}" value="${intervals[key]}" aria-label="${esc(s(title))}"> h</span></label>`).join('')}<div class="settings-nested">${select('logRetentionDays',s('logRetention'),intervals.logRetentionDays,[7,14,30,60,90,180,365,0].map(value=>[value,value?value+' '+t('common.days'):s('retentionUnlimited')]),s('logRetentionHint'))}</div></div>${save(s('saveSchedules'))}</form>`);
@@ -257,12 +258,25 @@
           if(!window.confirm(s(name==='backup-delete'?'confirmDeleteBackup':'confirmRestoreBackup')))return;
           await action(button,async()=>{await write('/api/backup/auto/'+(name==='backup-delete'?'delete':'restore'),{fileName:button.dataset.name});if(name==='backup-delete')await load();else scheduleReload();},s(name==='backup-delete'?'deleted':'restoreSuccess'));return;
         }
+        if(name==='apply-unassigned-cleanup'){
+          const counts=JSON.parse(button.dataset.counts);
+          if(!window.confirm(s('cleanupUnassignedConfirm',counts)))return;
+          const output=button.closest('[data-task-feedback]');button.disabled=true;
+          try{const result=await write('/api/admin/cleanup-unassigned-history',{apply:true,token:button.dataset.token});if(alive())renderTaskResult(output,result);}catch(error){if(alive()){output.textContent=error.message;output.setAttribute('role','alert');}}return;
+        }
         if(name==='run-task'){
           button.disabled=true;const original=button.textContent;button.textContent=t('common.running');
           const output=body.querySelector(`[data-task-feedback="${button.dataset.index}"]`);
-          try{const response=await write(button.dataset.url,JSON.parse(button.dataset.payload));if(alive()){output.textContent=response.message||t('common.success');if(response.backupURL?.startsWith('/api/admin/library-repair-backup/')){const link=document.createElement('a');link.href=response.backupURL;link.className='btn btn-secondary btn-sm';link.textContent=s('downloadRepairBackup');link.setAttribute('download','');output.append(document.createElement('br'),link);}if(response.unresolvedSamples?.length){const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Médias non identifiés : exemples';details.append(summary);const list=document.createElement('ul');for(const item of response.unresolvedSamples){const li=document.createElement('li');li.textContent=`${item.title} — ${item.reason} (${item.remoteId})`;list.append(li);}details.append(list);output.append(details);}}}catch(error){if(alive()){output.textContent=error.message;output.setAttribute('role','alert');}}finally{if(alive()){button.disabled=false;button.textContent=original;}}return;
+          try{const response=await write(button.dataset.url,JSON.parse(button.dataset.payload));if(alive())renderTaskResult(output,response);}catch(error){if(alive()){output.textContent=error.message;output.setAttribute('role','alert');}}finally{if(alive()){button.disabled=false;button.textContent=original;}}return;
         }
       },listenOptions);
+      function renderTaskResult(output,response){
+        output.textContent=response.message||t('common.success');output.setAttribute('role','status');
+        if(response.backupURL?.startsWith('/api/admin/library-repair-backup/')){const link=document.createElement('a');link.href=response.backupURL;link.className='btn btn-secondary btn-sm';link.textContent=s('downloadRepairBackup');link.setAttribute('download','');output.append(document.createElement('br'),link);}
+        const examples=response.preview?.samples||response.unresolvedSamples;
+        if(examples?.length){const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Médias non identifiés : exemples';details.append(summary);const list=document.createElement('ul');for(const item of examples){const li=document.createElement('li');li.textContent=`${item.title} — ${item.reason} (${item.remoteId})`;list.append(li);}details.append(list);output.append(details);}
+        if(response.preview?.media>0){const remove=document.createElement('button');remove.type='button';remove.className='btn btn-secondary btn-sm';remove.textContent=s('cleanupUnassignedApply');remove.dataset.action='apply-unassigned-cleanup';remove.dataset.token=response.preview.token;remove.dataset.counts=JSON.stringify({media:response.preview.media,history:response.preview.history,telemetry:response.preview.telemetry});output.append(document.createElement('br'),remove);}
+      }
       function captureMedia(values) {
         const resolution={...object(model.resolutionThresholds)};
         const rules={...object(resolution.completionRules),libraries:{...object(resolution.completionRules?.libraries)}};
