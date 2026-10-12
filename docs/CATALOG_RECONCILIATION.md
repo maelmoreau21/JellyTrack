@@ -8,8 +8,10 @@ Pour les films et les séries, une correspondance unique par TMDB, IMDb ou TVDB,
 
 La tâche de réparation peut retrouver une bibliothèque historique avec ces identifiants. Si l’ancien import ne contient aucun identifiant fournisseur exploitable, le nom du film ne suffit pas : l’enregistrement reste non identifié. Un numéro présent seulement dans le nom du dossier ne sera pas deviné ; Jellyfin doit fournir ses ProviderIds.
 
-La tâche manuelle de nettoyage présente les médias non identifiés admissibles et les lectures concernées. Il faut utiliser son bouton de suppression pour appliquer le nettoyage. Une sauvegarde SQLite précède la suppression. Une résolution manquante seule ne rend pas un média admissible. Musique, albums et conteneurs de séries ne sont pas comptés comme fichiers vidéo sans résolution dans l’audit des métadonnées.
+La tâche manuelle de nettoyage présente les médias non identifiés admissibles et les lectures concernées. Il faut utiliser son bouton de suppression pour appliquer le nettoyage. Une sauvegarde SQLite précède la suppression. Le nettoyage inclut les anciens fichiers vidéo absents de Jellyfin sans résolution, même si leur bibliothèque est connue. La musique ne devient pas admissible parce qu’elle n’a pas de résolution. Les familles entièrement obsolètes sont supprimées dans le même lancement, des enfants vers les parents ; un parent ayant un enfant conservé reste protégé. Musique, albums et conteneurs de séries ne sont pas comptés comme fichiers vidéo sans résolution dans l’audit des métadonnées.
 
 Le texte du bouton SSO se règle dans **Paramètres → Jellyfin → Général → Texte du bouton de connexion SSO**. Vide, il reprend la traduction standard. Ce réglage de présentation ne modifie pas la configuration OIDC définie par les variables d’environnement.
 
 Validation locale : SQLite et Jellyfin simulé. Le serveur NAS et un fournisseur OIDC réel ne sont pas vérifiés par ces tests.
+
+Les boutons des tâches retrouvent leur texte et leur icône après succès ou erreur. Les requêtes et la lecture de leur réponse sont limitées à 31 minutes, pour laisser le serveur terminer son délai de 30 minutes. Un dépassement affiche une erreur et ne relance pas automatiquement la tâche.

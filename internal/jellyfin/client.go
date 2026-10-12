@@ -248,7 +248,7 @@ func (c *Client) ItemsSince(ctx context.Context, since string, visit func(Item) 
 
 func (c *Client) ItemsSinceInLibrary(ctx context.Context, since, parent string, visit func(Item) error) error {
 	for start := 0; start < 1000000; {
-		q := url.Values{"IncludeItemTypes": {"Movie,Series,Season,Episode,Audio,MusicAlbum,Book,AudioBook,Comic,BoxSet"}, "Recursive": {"true"}, "Fields": {"ProviderIds,Genres,People,Studios,MediaSources,ParentId,RunTimeTicks,DateCreated,SeriesId,SeasonId,AlbumId"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
+		q := url.Values{"IncludeItemTypes": {"Movie,Series,Season,Episode,Video,MusicVideo,Trailer,Audio,MusicAlbum,Book,AudioBook,Comic,BoxSet"}, "Recursive": {"true"}, "Fields": {"ProviderIds,Genres,People,Studios,MediaSources,ParentId,RunTimeTicks,DateCreated,SeriesId,SeasonId,AlbumId"}, "StartIndex": {strconv.Itoa(start)}, "Limit": {strconv.Itoa(pageSize)}}
 		if parent != "" {
 			q.Set("ParentId", parent)
 		}

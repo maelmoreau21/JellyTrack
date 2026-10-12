@@ -30,27 +30,97 @@ type cleanupQueryer interface {
 }
 
 func cleanupEligibleSQL() string {
-	return `SELECT m."id" FROM "Media" m WHERE m."id"=? AND ` + media.LibraryNameSQL("m") + `='Unknown'
+	return `SELECT m."id" FROM "Media" m WHERE m."id"=? AND (` + media.LibraryNameSQL("m") + `='Unknown'
+ OR (LOWER(m."type") IN ('movie','episode','video','musicvideo','trailer') AND LOWER(TRIM(COALESCE(m."resolution",''))) IN ('','unknown','undefined','null','n/a','na','-','?','directplay','transcode','remux')))
  AND NOT EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."mediaId"=m."id")
- AND NOT EXISTS(SELECT 1 FROM "PlaybackHistory" p WHERE p."mediaId"=m."id" AND p."serverId"<>m."serverId")
- AND NOT EXISTS(SELECT 1 FROM "Media" child WHERE child."serverId"=m."serverId" AND ` + media.ParentMatchSQL("m", "child") + `)`
+ AND NOT EXISTS(SELECT 1 FROM "PlaybackHistory" p WHERE p."mediaId"=m."id" AND p."serverId"<>m."serverId")`
+}
+
+// Remove descendants before their parents. Keep parents that still have a
+// retained child, and malformed cycles, rather than breaking their links.
+func cleanupDeletionOrder(ctx context.Context, q cleanupQueryer, ids []string) ([]string, error) {
+	candidates := map[string]bool{}
+	for _, id := range ids {
+		candidates[id] = true
+	}
+	children := map[string][]string{}
+	// Restrict the join to the reviewed candidates; avoid a catalogue-wide
+	// parent lookup for every cleanup, and stay below SQLite parameter limits.
+	for start := 0; start < len(ids); start += 400 {
+		end := start + 400
+		if end > len(ids) {
+			end = len(ids)
+		}
+		args := make([]any, 0, end-start)
+		for _, id := range ids[start:end] {
+			args = append(args, id)
+		}
+		marks := strings.TrimSuffix(strings.Repeat("?,", len(args)), ",")
+		rows, err := q.QueryContext(ctx, `SELECT parent."id",child."id" FROM "Media" parent JOIN "Media" child ON parent."serverId"=child."serverId" AND `+media.ParentMatchSQL("parent", "child")+` WHERE parent."id" IN (`+marks+`)`, args...)
+		if err != nil {
+			return nil, err
+		}
+		for rows.Next() {
+			var parent, child string
+			if err = rows.Scan(&parent, &child); err != nil {
+				rows.Close()
+				return nil, err
+			}
+			if candidates[parent] {
+				children[parent] = append(children[parent], child)
+			}
+		}
+		err = rows.Err()
+		rows.Close()
+		if err != nil {
+			return nil, err
+		}
+	}
+	var order []string
+	removed := map[string]bool{}
+	sorted := append([]string{}, ids...)
+	sort.Strings(sorted)
+	for {
+		progress := false
+		for _, id := range sorted {
+			if removed[id] {
+				continue
+			}
+			ready := true
+			for _, child := range children[id] {
+				if !removed[child] {
+					ready = false
+					break
+				}
+			}
+			if ready {
+				order = append(order, id)
+				removed[id] = true
+				progress = true
+			}
+		}
+		if !progress {
+			break
+		}
+	}
+	return order, nil
 }
 
 func cleanupFingerprint(ctx context.Context, q cleanupQueryer, ids []string) (string, int, int, error) {
 	hash := sha256.New()
 	history, telemetry := 0, 0
 	for _, id := range ids {
-		rows, err := q.QueryContext(ctx, `SELECT "id","serverId","jellyfinMediaId",COALESCE("libraryName",''),COALESCE("parentId",''),"title" FROM "Media" WHERE "id"=?`, id)
+		rows, err := q.QueryContext(ctx, `SELECT "id","serverId","jellyfinMediaId",COALESCE("libraryName",''),COALESCE("parentId",''),"title",COALESCE("resolution",''),"type" FROM "Media" WHERE "id"=?`, id)
 		if err != nil {
 			return "", 0, 0, err
 		}
 		for rows.Next() {
-			var a, b, c, d, e, f string
-			if err = rows.Scan(&a, &b, &c, &d, &e, &f); err != nil {
+			var a, b, c, d, e, f, resolution, kind string
+			if err = rows.Scan(&a, &b, &c, &d, &e, &f, &resolution, &kind); err != nil {
 				rows.Close()
 				return "", 0, 0, err
 			}
-			data, _ := json.Marshal([]string{a, b, c, d, e, f})
+			data, _ := json.Marshal([]string{a, b, c, d, e, f, resolution, kind})
 			hash.Write(data)
 		}
 		err = rows.Err()
@@ -124,11 +194,23 @@ func (h *Handler) planUnassignedCleanup(ctx context.Context) (unassignedCleanupP
 			return plan, err
 		}
 		plan.ids = append(plan.ids, id)
-		if len(plan.Samples) < 20 {
-			plan.Samples = append(plan.Samples, item)
+		plan.Samples = append(plan.Samples, item)
+	}
+	plan.ids, err = cleanupDeletionOrder(ctx, h.db, plan.ids)
+	if err != nil {
+		return plan, err
+	}
+	kept := map[string]bool{}
+	for _, id := range plan.ids {
+		kept[id] = true
+	}
+	samples := plan.Samples[:0]
+	for _, item := range plan.Samples {
+		if kept[item.mediaID] {
+			samples = append(samples, item)
 		}
 	}
-	sort.Strings(plan.ids)
+	plan.Samples = repairDiagnosticSamples(samples)
 	plan.Media = len(plan.ids)
 	plan.Token, plan.History, plan.Telemetry, err = cleanupFingerprint(ctx, h.db, plan.ids)
 	return plan, err
@@ -214,7 +296,14 @@ func (h *Handler) applyUnassignedCleanup(ctx context.Context, plan unassignedCle
 	if token != plan.Token || history != plan.History || telemetry != plan.Telemetry {
 		return unassignedCleanupPlan{}, fmt.Errorf("Les historiques ont changé. Relancer l'aperçu.")
 	}
-	for _, id := range plan.ids {
+	order, err := cleanupDeletionOrder(ctx, tx, plan.ids)
+	if err != nil {
+		return unassignedCleanupPlan{}, err
+	}
+	if len(order) != len(plan.ids) {
+		return unassignedCleanupPlan{}, fmt.Errorf("Les liens des médias ont changé. Relancer l'aperçu.")
+	}
+	for _, id := range order {
 		if _, err = tx.ExecContext(ctx, `DELETE FROM "TelemetryEvent" WHERE "playbackId" IN(SELECT "id" FROM "PlaybackHistory" WHERE "mediaId"=?)`, id); err != nil {
 			return unassignedCleanupPlan{}, err
 		}

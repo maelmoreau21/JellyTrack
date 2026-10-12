@@ -95,6 +95,25 @@
         if (!response.ok || data.success === false) throw new Error(data.error || data.message || `${t('common.networkError')} (HTTP ${response.status})`);
         return data;
       };
+      const taskRequests = new Set();
+      async function taskWrite(url, payload) {
+        if(taskRequests.has(url))throw new Error(extra('taskAlreadyRunning','Cette tâche est déjà en cours.','This task is already running.'));
+        taskRequests.add(url);
+        const controller=new AbortController();let timer;
+        try {
+          return await Promise.race([
+            (async()=>{const response=await api.request(url,{method:'POST',body:payload,signal:controller.signal});const data=await response.json();if(!response.ok||data.success===false)throw new Error(data.error||data.message||`${t('common.networkError')} (HTTP ${response.status})`);return data;})(),
+            new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error(extra('taskTimedOut',"Le délai de réponse est dépassé. Vérifiez les journaux avant de relancer la tâche.",'The response timed out. Check the logs before restarting the task.')));},31*60*1000);})
+          ]);
+        } finally {clearTimeout(timer);taskRequests.delete(url);}
+      }
+      async function runTask(button,output,url,payload) {
+        if(button.disabled)return;
+        const original=button.innerHTML;button.disabled=true;button.textContent=t('common.running');button.setAttribute('aria-busy','true');
+        try {const response=await taskWrite(url,payload);if(alive()&&output.isConnected)renderTaskResult(output,response);}
+        catch(error){if(alive()&&output.isConnected){output.textContent=error.message||t('common.networkError');output.setAttribute('role','alert');}}
+        finally {button.disabled=false;button.innerHTML=original;button.removeAttribute('aria-busy');}
+      }
       const showError = error => { if (alive()) { feedback = { text: error.message || t('common.networkError'), error: true }; updateFeedback(); } };
       const updateFeedback = () => {
         let el = body.querySelector('.settings-feedback');
@@ -261,13 +280,12 @@
         if(name==='apply-unassigned-cleanup'){
           const counts=JSON.parse(button.dataset.counts);
           if(!window.confirm(s('cleanupUnassignedConfirm',counts)))return;
-          const output=button.closest('[data-task-feedback]');button.disabled=true;
-          try{const result=await write('/api/admin/cleanup-unassigned-history',{apply:true,token:button.dataset.token});if(alive())renderTaskResult(output,result);}catch(error){if(alive()){output.textContent=error.message;output.setAttribute('role','alert');}}return;
+          const output=button.closest('[data-task-feedback]');
+          await runTask(button,output,'/api/admin/cleanup-unassigned-history',{apply:true,token:button.dataset.token});return;
         }
         if(name==='run-task'){
-          button.disabled=true;const original=button.textContent;button.textContent=t('common.running');
           const output=body.querySelector(`[data-task-feedback="${button.dataset.index}"]`);
-          try{const response=await write(button.dataset.url,JSON.parse(button.dataset.payload));if(alive())renderTaskResult(output,response);}catch(error){if(alive()){output.textContent=error.message;output.setAttribute('role','alert');}}finally{if(alive()){button.disabled=false;button.textContent=original;}}return;
+          await runTask(button,output,button.dataset.url,JSON.parse(button.dataset.payload));return;
         }
       },listenOptions);
       function renderTaskResult(output,response){
