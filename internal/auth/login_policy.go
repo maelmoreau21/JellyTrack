@@ -117,10 +117,7 @@ func (m *Manager) oidcAccount(ctx context.Context, claims map[string]any) (jelly
 	}
 
 	// 2. Automatic reconciliation fallback: Find matching Jellyfin user by OIDC username/email/name
-	preferredUsername, _ := claims["preferred_username"].(string)
-	email, _ := claims["email"].(string)
-	name, _ := claims["name"].(string)
-	targetName := first(preferredUsername, email, name, subject)
+	targetName := oidcProfileName(claims)
 	if targetName == "" {
 		return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("missing username in claims")
 	}
@@ -193,12 +190,19 @@ func (m *Manager) oidcAccount(ctx context.Context, claims map[string]any) (jelly
 			slog.Warn("OIDC reconciliation fetching users failed", "server", srv.id, "url", srv.url, "error", err)
 			continue
 		}
+		var matched jellyfin.AuthenticatedUser
+		matches := 0
 		for _, u := range users {
-			if strings.EqualFold(u.Name, targetName) {
-				if u.ID != "" && !u.Policy.IsDisabled {
-					return u, srv.id, nil
-				}
+			if strings.EqualFold(strings.TrimSpace(u.Name), targetName) && u.ID != "" && !u.Policy.IsDisabled {
+				matched = u
+				matches++
 			}
+		}
+		if matches > 1 {
+			return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("ambiguous Jellyfin name; explicit Jellyfin identity claims required")
+		}
+		if matches == 1 {
+			return matched, srv.id, nil
 		}
 	}
 
@@ -214,4 +218,15 @@ func (m *Manager) oidcAccount(ctx context.Context, claims map[string]any) (jelly
 		ID:   "oidc-" + subject,
 		Name: targetName,
 	}, "master", nil
+}
+
+// Match the historical main OIDC profile preference. A display name is only
+// a reconciliation candidate; explicit Jellyfin IDs remain authoritative.
+func oidcProfileName(claims map[string]any) string {
+	for _, key := range []string{"name", "preferred_username", "username", "nickname", "email", "sub"} {
+		if value, ok := claims[key].(string); ok && strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
 }

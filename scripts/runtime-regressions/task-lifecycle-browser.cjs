@@ -14,18 +14,18 @@ await page.evaluate(async messages=>{
  return{ok:true,json:async()=>url.includes('cleanup')&&!options.body.apply?{success:true,message:'Aperçu prêt.',preview:{media:1,history:2,telemetry:0,token:'token',samples:[]}}:{success:true,message:'Tâche terminée.'}};
  }}},'scheduler/tasks');
 },messages);
-const button=page.locator('[data-url="/api/admin/repair-library-names"]');const html=await button.innerHTML();
+const button=page.locator('[data-url="/api/admin/integrity-cleanup"]');const html=await button.innerHTML();
 for(const mode of ['slow','error','invalid-json','hung','body-hung']){
  await page.evaluate(mode=>window.mode=mode,mode);await button.click();
  if(['slow','hung','body-hung'].includes(mode)){
   if(!await button.isDisabled())throw Error('Pending task enabled');
   if(mode==='slow')await page.evaluate(()=>release());else await page.evaluate(()=>taskTimeout());
  }
- await page.waitForFunction(()=>!document.querySelector('[data-url="/api/admin/repair-library-names"]').disabled);
+ await page.waitForFunction(()=>!document.querySelector('[data-url="/api/admin/integrity-cleanup"]').disabled);
  if(await button.innerHTML()!==html)throw Error('Task label/icon not restored: '+mode);
  if(await button.getAttribute('aria-busy')!==null)throw Error('Busy state left behind');
  if(['hung','body-hung'].includes(mode)&&!await page.evaluate(()=>lastSignal.aborted))throw Error('Hung request not aborted');
 }
-await page.evaluate(()=>window.mode='success');const cleanup=page.locator('[data-url="/api/admin/cleanup-unassigned-history"]');await cleanup.click();const apply=page.locator('[data-action="apply-unassigned-cleanup"]');await apply.waitFor();await page.evaluate(()=>{window.oldApply=document.querySelector('[data-action="apply-unassigned-cleanup"]');window.mode='cleanup-error';});page.once('dialog',d=>d.accept());await apply.click();await page.locator('[data-task-feedback]').filter({hasText:'Erreur contrôlée.'}).last().waitFor();if(!await page.evaluate(()=>oldApply.disabled===false&&oldApply.getAttribute('aria-busy')===null))throw Error('Cleanup button not released on failure');if(await cleanup.isDisabled())throw Error('Preview cannot be relaunched');
-if(errors.length)throw Error(errors.join(';'));console.log('PASS: pending/success/error/invalid JSON/no response/stalled body, labels/icons restored, cleanup failure recovery (mock API and controlled timeout).');
+if(await page.locator('[data-url="/api/admin/cleanup-unassigned-history"],[data-url="/api/admin/repair-library-names"]').count())throw Error('Removed maintenance task still visible');
+if(errors.length)throw Error(errors.join(';'));console.log('PASS: pending/success/error/invalid JSON/no response/stalled body, labels/icons restored, obsolete maintenance tasks absent (mock API and controlled timeout).');
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

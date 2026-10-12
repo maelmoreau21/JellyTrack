@@ -230,11 +230,7 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
 		return
 	}
-	usernameStr, _ := rawClaims["preferred_username"].(string)
-	emailStr, _ := rawClaims["email"].(string)
-	nameStr, _ := rawClaims["name"].(string)
-	subStr, _ := rawClaims["sub"].(string)
-	username := first(usernameStr, emailStr, nameStr, subStr)
+	username := oidcProfileName(rawClaims)
 	if username == "" {
 		clearFlow()
 		slog.Warn("OIDC missing username claim in token")

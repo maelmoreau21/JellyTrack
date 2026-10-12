@@ -200,8 +200,6 @@
           ['integrityCheckTask','integrityCheckTaskDesc','/api/admin/integrity-cleanup',{},intervals.integrityCheckEveryHours,'emerald'],
           ['backupTask','backupTaskDesc','/api/backup/auto/trigger',{},intervals.backupEveryHours,'amber'],
           ['consolidateHistoryTask','consolidateHistoryTaskDesc','/api/admin/consolidate-history',{},null,'purple'],
-          ['repairLibraryNamesTask','repairLibraryNamesTaskDesc','/api/admin/repair-library-names',{},0,'emerald'],
-          ['cleanupUnassignedTask','cleanupUnassignedTaskDesc','/api/admin/cleanup-unassigned-history',{},0,'amber']
         ];
         const taskCard = card(s('taskScheduler'),s('taskSchedulerDesc'),`<div class="settings-tasks">${tasks.map(([title,desc,url,payload,hours,color],index)=>`<div class="settings-task ${color}"><div><h3>${index<2?symbol('refresh'):index===3?symbol('save'):window.JellyTrackNavigation.icon(index===2?'shield':'layers')}${esc(s(title))}</h3><p class="settings-help">${esc(s(desc))}</p><small>${symbol('clock')}${esc(hours===0?s('manualOnly'):hours?s('schedulerEveryHours',{hours}):s('dailyAtTime',{time:'03:45 UTC'}))}</small><div class="settings-task-feedback" data-task-feedback="${index}" role="status"></div></div>${btn(t('common.run'),'run-task',`data-index="${index}" data-url="${url}" data-payload="${esc(JSON.stringify(payload))}"`)}</div>`).join('')}</div>`);
         const schedules = card(s('saveSchedules'),s('schedulerSchedulesDesc')+' '+s('schedulerSchedulesExample'),`<form data-form="schedules"><div class="settings-planning-rows">${PLANNINGS.map(([key,title,hint,min,max,step])=>`<label class="settings-planning-row"><span><strong>${esc(s(title))}</strong><small class="settings-help">${esc(s(hint))}</small></span><span class="settings-planning-value"><input class="form-input" type="number" name="${key}" min="${min}" max="${max}" step="${step}" value="${intervals[key]}" aria-label="${esc(s(title))}"> h</span></label>`).join('')}</div>${save(s('saveSchedules'))}</form>`);
@@ -277,12 +275,6 @@
           if(!window.confirm(s(name==='backup-delete'?'confirmDeleteBackup':'confirmRestoreBackup')))return;
           await action(button,async()=>{await write('/api/backup/auto/'+(name==='backup-delete'?'delete':'restore'),{fileName:button.dataset.name});if(name==='backup-delete')await load();else scheduleReload();},s(name==='backup-delete'?'deleted':'restoreSuccess'));return;
         }
-        if(name==='apply-unassigned-cleanup'){
-          const counts=JSON.parse(button.dataset.counts);
-          if(!window.confirm(s('cleanupUnassignedConfirm',counts)))return;
-          const output=button.closest('[data-task-feedback]');
-          await runTask(button,output,'/api/admin/cleanup-unassigned-history',{apply:true,token:button.dataset.token});return;
-        }
         if(name==='run-task'){
           const output=body.querySelector(`[data-task-feedback="${button.dataset.index}"]`);
           await runTask(button,output,button.dataset.url,JSON.parse(button.dataset.payload));return;
@@ -293,7 +285,7 @@
         if(response.backupURL?.startsWith('/api/admin/library-repair-backup/')){const link=document.createElement('a');link.href=response.backupURL;link.className='btn btn-secondary btn-sm';link.textContent=s('downloadRepairBackup');link.setAttribute('download','');output.append(document.createElement('br'),link);}
         const examples=response.preview?.samples||response.unresolvedSamples;
         if(examples?.length){const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Médias non identifiés : exemples';details.append(summary);const list=document.createElement('ul');for(const item of examples){const li=document.createElement('li');li.textContent=`${item.title} — ${item.reason} (${item.remoteId})`;list.append(li);}details.append(list);output.append(details);}
-        if(response.preview?.media>0){const remove=document.createElement('button');remove.type='button';remove.className='btn btn-secondary btn-sm';remove.textContent=s('cleanupUnassignedApply');remove.dataset.action='apply-unassigned-cleanup';remove.dataset.token=response.preview.token;remove.dataset.counts=JSON.stringify({media:response.preview.media,history:response.preview.history,telemetry:response.preview.telemetry});output.append(document.createElement('br'),remove);}
+
       }
       function captureMedia(values) {
         const resolution={...object(model.resolutionThresholds)};
