@@ -60,6 +60,8 @@ type Handler struct {
 	notificationClient *http.Client
 	keyMu              sync.Mutex
 	verifiedKeys       map[[32]byte]verifiedPluginKey
+	identityMu         sync.Mutex
+	verifiedIdentities map[legacyIdentityKey]time.Time
 }
 
 func NewHandler(db *sql.DB, driver string, logger *slog.Logger) *Handler {
@@ -186,8 +188,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	server := serverIdentity(payload)
 	if scopedServer != "" && normalizeID(scopedServer) != normalizeID(server.id) {
-		writeJSON(w, http.StatusForbidden, map[string]any{"error": "Forbidden — scoped plugin key does not match payload server.", "tokenServerId": scopedServer, "payloadServerId": server.id})
-		return
+		configured, ok := h.verifiedLegacyServer(r.Context(), scopedServer, server.id)
+		if !ok {
+			writeJSON(w, http.StatusForbidden, map[string]any{"error": "Forbidden — scoped plugin key does not match payload server.", "tokenServerId": scopedServer, "payloadServerId": server.id})
+			return
+		}
+		// Keep the existing row and its histories. Only the configured URL can
+		// establish this alias; a URL supplied by the plugin is never trusted.
+		server = configured
 	}
 	if scopedServer != "" {
 		// The signature covers the original token spelling. Compare UUID identities
