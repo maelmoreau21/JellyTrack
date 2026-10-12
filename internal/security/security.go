@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,6 +43,7 @@ func LogAudit(ctx context.Context, db *sql.DB, driver, action string, actorUserI
 
 // SecurityOverviewResult holds metrics on security events.
 type SecurityOverviewResult struct {
+	Plugin               PluginStatus     `json:"plugin"`
 	TotalAudit24h        int64            `json:"totalAudit24h"`
 	Unauthorized24h      int64            `json:"unauthorized24h"`
 	RateLimited24h       int64            `json:"rateLimited24h"`
@@ -51,6 +54,14 @@ type SecurityOverviewResult struct {
 	RecentSecurityEvents []map[string]any `json:"recentSecurityEvents"`
 }
 
+// PluginStatus exposes received telemetry, never the plugin authentication key.
+type PluginStatus struct {
+	Connected  bool    `json:"connected"`
+	ServerName *string `json:"serverName"`
+	Version    *string `json:"version"`
+	LastSeen   *string `json:"lastSeen"`
+}
+
 // GetSecurityOverview aggregates security activity over 24h and 30d periods.
 func GetSecurityOverview(ctx context.Context, db *sql.DB, driver string) (SecurityOverviewResult, error) {
 	now := time.Now().UTC()
@@ -58,6 +69,26 @@ func GetSecurityOverview(ctx context.Context, db *sql.DB, driver string) (Securi
 	last30d := now.AddDate(0, 0, -30).Format(time.RFC3339Nano)
 
 	var res SecurityOverviewResult
+	var seen, version, name sql.NullString
+	err := db.QueryRowContext(ctx, `SELECT "pluginLastSeen","pluginVersion","pluginServerName" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&seen, &version, &name)
+	if err != nil && err != sql.ErrNoRows {
+		return res, err
+	}
+	optional := func(value sql.NullString) *string {
+		if !value.Valid || strings.TrimSpace(value.String) == "" {
+			return nil
+		}
+		return &value.String
+	}
+	res.Plugin = PluginStatus{ServerName: optional(name), Version: optional(version), LastSeen: optional(seen)}
+	timeout := 600
+	if seconds, err := strconv.Atoi(strings.TrimSpace(os.Getenv("PLUGIN_HEARTBEAT_TIMEOUT_SEC"))); err == nil && seconds > 0 {
+		timeout = seconds
+	}
+	if last, err := time.Parse(time.RFC3339Nano, seen.String); err == nil {
+		gap := now.Sub(last)
+		res.Plugin.Connected = gap >= 0 && gap <= time.Duration(timeout)*time.Second
+	}
 
 	countQuery := func(q string, arg any) int64 {
 		var c int64
