@@ -1158,8 +1158,8 @@
     "repairLibraryNamesTaskDesc": "Temporary task: back up SQLite, then fix provisional imported server IDs and restore library names from Jellyfin. Keeps playback history and leaves uncertain media unchanged.",
     "manualOnly": "Manual launch only",
     "downloadRepairBackup": "Download the backup before repair",
-    "cleanupUnassignedTask": "Clean up incomplete old history",
-    "cleanupUnassignedTaskDesc": "Manually remove old media missing from Jellyfin with no library or, for videos, no resolution. Preview, confirmation and backup before deletion.",
+    "cleanupUnassignedTask": "Delete data without a library or resolution",
+    "cleanupUnassignedTaskDesc": "Delete media without a library and videos without a resolution, including playback history, even when present in Jellyfin. Preview and backup before deletion. Music is excluded from the resolution criterion.",
     "cleanupUnassignedApply": "Delete these records",
     "cleanupUnassignedConfirm": "Delete {media} media, {history} playback records and {telemetry} associated events? A backup will be created first."
   },

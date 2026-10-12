@@ -176,25 +176,32 @@ func cleanupFingerprint(ctx context.Context, q cleanupQueryer, ids []string) (st
 }
 
 func (h *Handler) planUnassignedCleanup(ctx context.Context) (unassignedCleanupPlan, error) {
-	_, _, _, unresolved, err := h.planLibraryRepair(ctx)
-	if err != nil {
-		return unassignedCleanupPlan{}, err
-	}
 	plan := unassignedCleanupPlan{Samples: []libraryRepairDiagnostic{}}
-	for _, item := range unresolved {
-		if !item.purgeEligible {
-			continue
-		}
-		var id string
-		err = h.db.QueryRowContext(ctx, cleanupEligibleSQL(), item.mediaID).Scan(&id)
-		if err == sql.ErrNoRows {
-			continue
-		}
-		if err != nil {
+	// This manual purge is based on the local database. Do not restrict it to
+	// items absent from Jellyfin or require the remote server to be online.
+	eligible := strings.Replace(cleanupEligibleSQL(), `m."id"=?`, `1=1`, 1)
+	rows, err := h.db.QueryContext(ctx, `SELECT m."id",m."serverId",m."jellyfinMediaId",m."title",`+media.LibraryNameSQL("m")+` FROM "Media" m WHERE m."id" IN (`+eligible+`) ORDER BY m."id"`)
+	if err != nil {
+		return plan, err
+	}
+	for rows.Next() {
+		var item libraryRepairDiagnostic
+		var library string
+		if err = rows.Scan(&item.mediaID, &item.ServerID, &item.RemoteID, &item.Title, &library); err != nil {
+			rows.Close()
 			return plan, err
 		}
-		plan.ids = append(plan.ids, id)
+		item.Reason = "Résolution vidéo non renseignée"
+		if library == "Unknown" {
+			item.Reason = "Bibliothèque non renseignée"
+		}
+		plan.ids = append(plan.ids, item.mediaID)
 		plan.Samples = append(plan.Samples, item)
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return plan, err
 	}
 	plan.ids, err = cleanupDeletionOrder(ctx, h.db, plan.ids)
 	if err != nil {

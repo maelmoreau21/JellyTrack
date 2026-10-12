@@ -34,7 +34,7 @@ func TestManualUnassignedCleanupPreviewsBacksUpAndPreservesIdentifiableOrActiveM
 	}
 	for _, query := range []string{
 		`INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u','a','ju','User')`,
-		`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName","parentId","resolution") VALUES('bad','a','gone','Old broken','Movie',NULL,NULL,NULL),('known','a','also-gone','Known history','Movie','Films',NULL,'720p'),('repairable','a','current','Still available','Movie',NULL,NULL,NULL),('active','a','active-old','Active','Movie',NULL,NULL,NULL),('parent','a','jparent','Parent','Series',NULL,NULL,NULL),('child','a','jchild','Child','Episode','Films','jparent','720p')`,
+		`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName","parentId","resolution") VALUES('bad','a','gone','Old broken','Movie',NULL,NULL,NULL),('known','a','also-gone','Known history','Movie','Films',NULL,'720p'),('repairable','a','current','Still available','Movie','Films',NULL,'720p'),('active','a','active-old','Active','Movie',NULL,NULL,NULL),('parent','a','jparent','Parent','Series',NULL,NULL,NULL),('child','a','jchild','Child','Episode','Films','jparent','720p')`,
 		`INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched") VALUES('bad-play','a','u','bad','DirectPlay',120),('good-play','a','u','known','DirectPlay',240)`,
 		`INSERT INTO "TelemetryEvent"("id","serverId","playbackId","eventType","positionMs") VALUES('bad-event','a','bad-play','PlaybackStop',120000),('good-event','a','good-play','PlaybackStop',240000)`,
 		`INSERT INTO "ActiveStream"("id","serverId","sessionId","userId","mediaId","playMethod") VALUES('stream','a','session','u','active','DirectPlay')`,

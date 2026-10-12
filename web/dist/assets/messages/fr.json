@@ -1158,8 +1158,8 @@
     "repairLibraryNamesTaskDesc": "Tâche temporaire : sauvegarde SQLite puis correction des identifiants provisoires de l’import et des noms de bibliothèques depuis Jellyfin. Historique conservé. Les médias sans correspondance certaine restent inchangés.",
     "manualOnly": "Lancement manuel uniquement",
     "downloadRepairBackup": "Télécharger la sauvegarde avant réparation",
-    "cleanupUnassignedTask": "Nettoyer les anciens historiques incomplets",
-    "cleanupUnassignedTaskDesc": "Nettoyage manuel des anciens médias absents de Jellyfin sans bibliothèque ou, pour les vidéos, sans résolution. Aperçu des lectures, confirmation et sauvegarde avant suppression.",
+    "cleanupUnassignedTask": "Supprimer les données sans bibliothèque ou résolution",
+    "cleanupUnassignedTaskDesc": "Supprime les médias sans bibliothèque et les vidéos sans résolution, avec leurs historiques, même s’ils existent dans Jellyfin. Aperçu et sauvegarde avant suppression. La musique est exclue du critère de résolution.",
     "cleanupUnassignedApply": "Supprimer ces enregistrements",
     "cleanupUnassignedConfirm": "Supprimer {media} médias, {history} lectures et {telemetry} événements associés ? Une sauvegarde sera créée avant suppression."
   },

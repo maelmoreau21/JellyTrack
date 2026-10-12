@@ -53,7 +53,7 @@ func TestIncompleteCleanupIncludesMissingVideoResolutionAndWholeBrokenFamilies(t
 	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
 		t.Fatal(err)
 	}
-	if response.Preview.Media != 3 || response.Preview.History != 2 {
+	if response.Preview.Media != 4 || response.Preview.History != 2 {
 		t.Fatal(w.Body.String())
 	}
 	var count int
@@ -66,13 +66,13 @@ func TestIncompleteCleanupIncludesMissingVideoResolutionAndWholeBrokenFamilies(t
 	if w.Code != 200 {
 		t.Fatal(w.Code, w.Body.String())
 	}
-	for _, id := range []string{"no-res", "parent", "child"} {
+	for _, id := range []string{"no-res", "parent", "child", "current"} {
 		db.QueryRow(`SELECT COUNT(*) FROM "Media" WHERE "id"=?`, id).Scan(&count)
 		if count != 0 {
 			t.Fatal("incomplete row retained", id)
 		}
 	}
-	for _, id := range []string{"music", "known", "current"} {
+	for _, id := range []string{"music", "known"} {
 		db.QueryRow(`SELECT COUNT(*) FROM "Media" WHERE "id"=?`, id).Scan(&count)
 		if count != 1 {
 			t.Fatal("valid row deleted", id)
@@ -102,5 +102,19 @@ func TestCleanupRejectsResolutionRecoveredAfterPreview(t *testing.T) {
 	db.Exec(`UPDATE "Media" SET "resolution"='1080p' WHERE "id"='m'`)
 	if _, err = h.applyUnassignedCleanup(context.Background(), plan); err == nil {
 		t.Fatal("repaired record deleted")
+	}
+}
+
+func TestIncompleteCleanupWorksOfflineAndIncludesCurrentMedia(t *testing.T) {
+	db := apiDB(t)
+	if _, err := db.Exec(`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s','js','S','http://127.0.0.1:1')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName","resolution","isAvailable") VALUES('missing-lib','s','lib','Film','Movie',NULL,'1080p',1),('missing-res','s','res','Film','Movie','Films',NULL,1),('audio','s','audio','Music','Audio','Music',NULL,1)`); err != nil {
+		t.Fatal(err)
+	}
+	plan, err := New(db, "sqlite").planUnassignedCleanup(context.Background())
+	if err != nil || plan.Media != 2 {
+		t.Fatal(plan, err)
 	}
 }
