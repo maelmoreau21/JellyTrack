@@ -1082,8 +1082,6 @@
     "telemetryTrackSessionEnded": "Uhod polzovatelya",
     "telemetrySave": "Sohranit telemetriyu",
     "schedulerEveryHours": "Kazhdye {hours} ch",
-    "logRetention": "Срок хранения системных журналов",
-    "logRetentionHint": "Время до автоматической ротации и удаления файлов журналов.",
     "retentionUnlimited": "Хранить бессрочно",
     "jellyfinTitle": "Jellyfin",
     "ssoTitle": "SSO",

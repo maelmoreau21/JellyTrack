@@ -7,6 +7,28 @@ import (
 	"testing"
 )
 
+func TestWatchedEpisodeInheritsSeriesCredits(t *testing.T) {
+	db := apiDB(t)
+	for _, q := range []string{
+		`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s','jf','Server','http://server')`,
+		`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","libraryName","parentId","directors","actors") VALUES('series','s','jf-series','Series','Series','TV',NULL,'["Director"]','["Actor"]'),('season','s','jf-season','Season','Season','TV','jf-series','[]','[]'),('episode','s','jf-episode','Episode','Episode','TV','jf-season','[]','[]')`,
+		`INSERT INTO "PlaybackHistory"("id","serverId","mediaId","playMethod","durationWatched") VALUES('p','s','episode','DirectPlay',600)`,
+	} {
+		if _, err := db.Exec(q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	w := httptest.NewRecorder()
+	New(db, "sqlite").deepStats(w, httptest.NewRequest("GET", "/api/stats/deep?timeRange=all&servers=s", nil))
+	var result struct{ TopDirectors, TopActors []catalogueCreditCount }
+	if err := json.Unmarshal(w.Body.Bytes(), &result); err != nil || w.Code != 200 {
+		t.Fatalf("response: %s %v", w.Body.String(), err)
+	}
+	if len(result.TopDirectors) != 1 || result.TopDirectors[0] != (catalogueCreditCount{Name: "Director", Count: 1}) || len(result.TopActors) != 1 || result.TopActors[0] != (catalogueCreditCount{Name: "Actor", Count: 1}) {
+		t.Fatalf("missing series credits: %+v", result)
+	}
+}
+
 func TestCatalogueDeepStatsCountsTitlesNotPlaybacksAndScopesServers(t *testing.T) {
 	db := apiDB(t)
 	for _, query := range []string{

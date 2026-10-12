@@ -25,6 +25,10 @@
         Router.navigate('/users/' + encodeURIComponent(State.user.jellyfinUserId));
         return;
       }
+      if (['me', '@me'].includes(userId) && State.user?.jellyfinUserId === 'local-admin') {
+        main.innerHTML = `<section class="jt-profile"><header class="profile-header"><div class="profile-identity"><div><h1>${esc(tr('nav.myProfile', 'Mon profil'))}</h1><p>${esc(State.user.username || '')}</p></div></div></header><section class="card" style="padding:1.5rem"><h2>${esc(tp('localAccountTitle', 'Compte administrateur local'))}</h2><p>${esc(tp('localAccountDescription', 'Ce compte sert à administrer JellyTrack. Connecte-toi avec ton compte Jellyfin ou SSO lié à Jellyfin pour retrouver tes statistiques et ton historique personnels.'))}</p></section></section>`;
+        return;
+      }
       const charts = [];
       const params = new URLSearchParams(location.search);
       if (params.get('q') && !params.get('query')) params.set('query', params.get('q'));

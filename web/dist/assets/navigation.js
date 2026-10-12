@@ -205,7 +205,7 @@
       const uid = user?.jellyfinUserId && user.jellyfinUserId !== 'local-admin' && !user.jellyfinUserId.startsWith('oidc-') ? user.jellyfinUserId : '';
       const home = user?.isAdmin ? '/' : (uid ? '/users/me' : '/media');
       document.querySelectorAll('.brand-link,.mobile-brand-link').forEach(el => { el.href = home; });
-      const items = uid ? [['myAccount', '/users/me', 'user']] : [];
+      const items = user ? [['myProfile', '/users/me', 'user']] : [];
       if (user?.isAdmin) {
         items.push(['dashboard','/','dashboard'], ['recentlyAdded','/recent','sparkles'], ['library','/media','film'], ['users','/users','users'], ['logHealth','/admin/health','health'], ['logs','/logs','logs'], ['settings','/settings','settings']);
         if (context.multiServer) items.push(['serverCompare','/admin/server-compare','compare']);

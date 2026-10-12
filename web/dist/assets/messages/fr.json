@@ -927,8 +927,6 @@
     "libraryRulesDesc": "Gérez les seuils d'abandon et de complétion par bibliothèque. Vous pouvez désactiver le suivi de la complétion pour certaines bibliothèques (ex: Musique).",
     "completionRulesDefault": "Règle par défaut (autres bibliothèques)",
     "completionRulesHint": "Ajustez les seuils pour définir quand une lecture est considérée comme passée, abandonnée, partielle ou terminée selon le type de bibliothèque.",
-    "logRetention": "Rétention des journaux système",
-    "logRetentionHint": "Durée de conservation automatique des fichiers de journaux système avant rotation et suppression.",
     "retentionUnlimited": "Conserver indéfiniment",
     "manage": "Gérer",
     "maxConcurrentTranscodesDesc": "0 = désactivé. Alerte si le nombre dépasse ce seuil.",
@@ -1225,6 +1223,8 @@
     "pickDate": "Choisir une date"
   },
   "userProfile": {
+    "localAccountTitle": "Compte administrateur local",
+    "localAccountDescription": "Ce compte sert à administrer JellyTrack. Connecte-toi avec ton compte Jellyfin ou SSO lié à Jellyfin pour retrouver tes statistiques et ton historique personnels.",
     "activity30d": "Activité sur 30 jours",
     "activity30dDesc": "Vue sur le volume quotidien de lecture de cet utilisateur.",
     "aggregatedDesc": "Historique complet agrégé des sessions démarrées.",

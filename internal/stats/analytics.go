@@ -798,7 +798,7 @@ func GetDetailedDeepInsights(ctx context.Context, db *sql.DB, driver string, fil
 		       p."durationWatched",
 		       COALESCE(m."title", 'Unknown'), COALESCE(m."type", 'Unknown'),
 		       COALESCE(m."resolution", 'Unknown'), COALESCE(m."genres", '[]'),
-		       COALESCE(m."directors", '[]'), COALESCE(m."actors", '[]'), COALESCE(m."studios", '[]'),
+		       COALESCE(NULLIF(NULLIF(CAST(m."directors" AS TEXT),'[]'),'{}'),CASE WHEN m."type"='Episode' THEN COALESCE(CASE WHEN parent."type" IN ('Season','Series') THEN NULLIF(NULLIF(CAST(parent."directors" AS TEXT),'[]'),'{}') END,CASE WHEN grandparent."type"='Series' THEN NULLIF(NULLIF(CAST(grandparent."directors" AS TEXT),'[]'),'{}') END) END,'[]'), COALESCE(NULLIF(NULLIF(CAST(m."actors" AS TEXT),'[]'),'{}'),CASE WHEN m."type"='Episode' THEN COALESCE(CASE WHEN parent."type" IN ('Season','Series') THEN NULLIF(NULLIF(CAST(parent."actors" AS TEXT),'[]'),'{}') END,CASE WHEN grandparent."type"='Series' THEN NULLIF(NULLIF(CAST(grandparent."actors" AS TEXT),'[]'),'{}') END) END,'[]'), COALESCE(NULLIF(NULLIF(CAST(m."studios" AS TEXT),'[]'),'{}'),CASE WHEN m."type"='Episode' THEN COALESCE(CASE WHEN parent."type" IN ('Season','Series') THEN NULLIF(NULLIF(CAST(parent."studios" AS TEXT),'[]'),'{}') END,CASE WHEN grandparent."type"='Series' THEN NULLIF(NULLIF(CAST(grandparent."studios" AS TEXT),'[]'),'{}') END) END,'[]'),
  COALESCE(p."audioCodec",''),COALESCE(p."subtitleCodec",''),COALESCE(parent."title",''),COALESCE(parent."type",''),COALESCE(grandparent."title",''),COALESCE(grandparent."type",'')
 		FROM "PlaybackHistory" p
 		LEFT JOIN "Media" m ON m."id" = p."mediaId"

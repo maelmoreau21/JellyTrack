@@ -20,3 +20,17 @@ func TestJellyfinStudiosAcceptObjectsAndLegacyStrings(t *testing.T) {
 		t.Fatal("malformed studio accepted")
 	}
 }
+
+func TestItemDecodesJellyfinCredits(t *testing.T) {
+	var item Item
+	err := json.Unmarshal([]byte(`{"Id":"film","Name":"Film","People":[{"Name":"Director","Type":"Director"},{"Name":"Actor","Type":"Actor"},{"Name":"Actor","Type":"GuestStar"},{"Name":"Writer","Type":"Writer"}],"Studios":[{"Id":"studio","Name":"Studio"}],"MediaSources":[{"Size":42}]}`), &item)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if item.ID != "film" || len(item.Directors) != 1 || item.Directors[0] != "Director" || len(item.Actors) != 1 || item.Actors[0] != "Actor" || len(item.Studios) != 1 || item.Studios[0] != "Studio" || item.MediaSources[0].Size != 42 {
+		t.Fatalf("lost metadata: %+v", item)
+	}
+	if err := json.Unmarshal([]byte(`{"Directors":["Legacy"],"Actors":["Actor"],"Studios":["Studio"]}`), &item); err != nil || item.Directors[0] != "Legacy" || item.Studios[0] != "Studio" {
+		t.Fatalf("legacy metadata: %+v %v", item, err)
+	}
+}

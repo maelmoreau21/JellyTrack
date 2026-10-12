@@ -1082,8 +1082,6 @@
     "telemetryTrackSessionEnded": "用户离开",
     "telemetrySave": "保存遥测",
     "schedulerEveryHours": "每 {hours} 小时",
-    "logRetention": "系统日志保留期",
-    "logRetentionHint": "日志文件和审计记录自动轮换与删除前的保存时间。",
     "retentionUnlimited": "永久保留",
     "jellyfinTitle": "Jellyfin",
     "ssoTitle": "SSO",

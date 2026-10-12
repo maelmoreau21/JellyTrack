@@ -901,8 +901,6 @@
     "libraryRulesDesc": "Manage abandonment and completion thresholds per library. You can disable completion tracking for some libraries (e.g. Music).",
     "completionRulesDefault": "Default rule (other libraries)",
     "completionRulesHint": "Adjust thresholds to define when playback is considered skipped, abandoned, partial, or completed for each library type.",
-    "logRetention": "System Log Retention",
-    "logRetentionHint": "Duration before automated log file and audit history rotation and deletion.",
     "retentionUnlimited": "Keep indefinitely",
     "manage": "Manage",
     "maxConcurrentTranscodesDesc": "0 = disabled. Alert if the number exceeds this threshold.",
@@ -1199,6 +1197,8 @@
     "pickDate": "Pick a date"
   },
   "userProfile": {
+    "localAccountTitle": "Local administrator account",
+    "localAccountDescription": "This account administers JellyTrack. Sign in with your Jellyfin account or SSO linked to Jellyfin to view your personal statistics and history.",
     "activity30d": "Activity over 30 days",
     "activity30dDesc": "View this user's daily playback volume.",
     "aggregatedDesc": "Complete aggregated history of started sessions.",

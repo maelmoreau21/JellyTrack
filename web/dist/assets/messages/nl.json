@@ -1082,8 +1082,6 @@
     "telemetryTrackSessionEnded": "Gebruiker vertrekt",
     "telemetrySave": "Telemetrie opslaan",
     "schedulerEveryHours": "Elke {hours} u",
-    "logRetention": "Bewaartermijn van systeemlogboeken",
-    "logRetentionHint": "Tijdsduur vóór automatische rotatie en verwijdering van logbestanden.",
     "retentionUnlimited": "Onbeperkt bewaren",
     "jellyfinTitle": "Jellyfin",
     "ssoTitle": "SSO",

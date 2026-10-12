@@ -2,42 +2,56 @@ package jellyfin
 
 import (
 	"encoding/json"
-	"fmt"
+	"strings"
 )
 
-// Jellyfin returns Name/Id objects for Studios; older exports used strings.
+// Jellyfin sends credits in People and studios as NameGuidPair objects.
+// Accept the older string lists as well, for imported catalogues.
 func (item *Item) UnmarshalJSON(data []byte) error {
 	type plain Item
-	var wire struct {
+	var decoded plain
+	wire := struct {
 		*plain
-		Studios json.RawMessage `json:"Studios"`
-	}
-	wire.plain = (*plain)(item)
+		Studios []json.RawMessage `json:"Studios"`
+		People  []struct {
+			Name string
+			Type string
+		} `json:"People"`
+	}{plain: &decoded}
 	if err := json.Unmarshal(data, &wire); err != nil {
 		return err
 	}
-	item.Studios = nil
-	if len(wire.Studios) == 0 || string(wire.Studios) == "null" {
-		return nil
+	appendName := func(list []string, name string) []string {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			return list
+		}
+		for _, existing := range list {
+			if existing == name {
+				return list
+			}
+		}
+		return append(list, name)
 	}
-	var entries []json.RawMessage
-	if err := json.Unmarshal(wire.Studios, &entries); err != nil {
-		return err
+	for _, person := range wire.People {
+		switch strings.ToLower(person.Type) {
+		case "director":
+			decoded.Directors = appendName(decoded.Directors, person.Name)
+		case "actor", "gueststar":
+			decoded.Actors = appendName(decoded.Actors, person.Name)
+		}
 	}
-	for _, entry := range entries {
+	for _, raw := range wire.Studios {
 		var name string
-		if err := json.Unmarshal(entry, &name); err != nil {
-			var object struct {
-				Name string `json:"Name"`
+		if err := json.Unmarshal(raw, &name); err != nil {
+			var studio struct{ Name string }
+			if err := json.Unmarshal(raw, &studio); err != nil {
+				return err
 			}
-			if err = json.Unmarshal(entry, &object); err != nil {
-				return fmt.Errorf("invalid Jellyfin studio: %w", err)
-			}
-			name = object.Name
+			name = studio.Name
 		}
-		if name != "" {
-			item.Studios = append(item.Studios, name)
-		}
+		decoded.Studios = appendName(decoded.Studios, name)
 	}
+	*item = Item(decoded)
 	return nil
 }

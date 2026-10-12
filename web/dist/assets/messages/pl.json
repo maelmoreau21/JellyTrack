@@ -1082,8 +1082,6 @@
     "telemetryTrackSessionEnded": "Wyjscie uzytkownika",
     "telemetrySave": "Zapisz telemetrie",
     "schedulerEveryHours": "Co {hours} godz.",
-    "logRetention": "Retencja dzienników systemowych",
-    "logRetentionHint": "Czas przed automatyczną rotacją i usuwaniem plików dziennika.",
     "retentionUnlimited": "Przechowuj bezterminowo",
     "jellyfinTitle": "Jellyfin",
     "ssoTitle": "SSO",
