@@ -1,8 +1,10 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/maelmoreau21/jellytrack/internal/auth"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -67,7 +69,7 @@ func TestMultiServerImagesNeverFallbackToAnotherServer(t *testing.T) {
 		id := id
 		remote := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			hits[id]++
-			w.Header().Set("Content-Type", "image/svg+xml")
+			w.Header().Set("Content-Type", "image/png")
 			fmt.Fprint(w, `<svg xmlns="http://www.w3.org/2000/svg"/>`)
 		}))
 		defer remote.Close()
@@ -85,7 +87,9 @@ func TestMultiServerImagesNeverFallbackToAnotherServer(t *testing.T) {
 			}
 		}
 		w := httptest.NewRecorder()
-		handler(w, httptest.NewRequest("GET", "/image?id=same&userId=same&serverId=b", nil))
+		request := httptest.NewRequest("GET", "/image?id=same&userId=same&serverId=b", nil)
+		request = request.WithContext(context.WithValue(request.Context(), auth.PrincipalContextKey, auth.Principal{Role: "super_admin"}))
+		handler(w, request)
 		if w.Code != 200 {
 			t.Fatalf("scoped image=%d", w.Code)
 		}

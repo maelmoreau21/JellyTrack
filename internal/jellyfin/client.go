@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/maelmoreau21/jellytrack/internal/security"
 	"io"
 	"net/http"
 	"net/url"
@@ -31,7 +32,7 @@ func New(baseURL, apiKey string) (*Client, error) {
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || u.User != nil {
 		return nil, fmt.Errorf("Jellyfin URL must be an absolute HTTP(S) URL without credentials")
 	}
-	return &Client{baseURL: baseURL, apiKey: strings.TrimSpace(apiKey), http: &http.Client{Timeout: 45 * time.Second}}, nil
+	return &Client{baseURL: baseURL, apiKey: strings.TrimSpace(apiKey), http: security.ServerHTTPClient(45 * time.Second)}, nil
 }
 
 func (c *Client) get(ctx context.Context, path string, query url.Values, dst any) error {
@@ -189,7 +190,7 @@ func Authenticate(ctx context.Context, baseURL, username, password string) (Auth
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="3.0.0"`)
-	resp, err := (&http.Client{Timeout: 12 * time.Second}).Do(req)
+	resp, err := security.ServerHTTPClient(12 * time.Second).Do(req)
 	if err != nil {
 		return AuthenticatedUser{}, err
 	}

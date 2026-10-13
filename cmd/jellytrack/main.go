@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/maelmoreau21/jellytrack/internal/backup"
 	"github.com/maelmoreau21/jellytrack/internal/config"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/scheduler"
@@ -19,6 +20,32 @@ import (
 
 func main() {
 	config.LoadDotEnv()
+	if len(os.Args) > 1 && os.Args[1] == "decrypt-backup" {
+		if len(os.Args) != 4 {
+			fmt.Fprintln(os.Stderr, "usage: jellytrack decrypt-backup INPUT OUTPUT (BACKUP_ENCRYPTION_KEY required)")
+			os.Exit(1)
+		}
+		data, err := os.ReadFile(os.Args[2])
+		if err == nil {
+			data, err = backup.DecryptBackupBytes(data)
+		}
+		if err == nil {
+			var file *os.File
+			file, err = os.OpenFile(os.Args[3], os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+			if err == nil {
+				_, err = file.Write(data)
+				closeErr := file.Close()
+				if err == nil {
+					err = closeErr
+				}
+			}
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "decryption failed:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		if err := healthcheck(); err != nil {
 			fmt.Fprintln(os.Stderr, err)

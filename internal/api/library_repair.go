@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -22,7 +21,7 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/stats"
 )
 
-var repairBackupName = regexp.MustCompile(`^JellyTrack-library-repair-[0-9]{8}T[0-9]{15}Z\.sqlite$`)
+var repairBackupName = regexp.MustCompile(`^JellyTrack-library-repair-[0-9]{8}T[0-9]{15}Z\.sqlite\.jtb$`)
 var importedRepairIdentity = regexp.MustCompile(`^imported-server-[1-9][0-9]*$`)
 
 type libraryRepairChange struct {
@@ -424,6 +423,9 @@ func repairDiagnosticSamples(values []libraryRepairDiagnostic) []libraryRepairDi
 	return values
 }
 func (h *Handler) createLibraryRepairBackup(ctx context.Context) (string, string, error) {
+	if err := backup.EncryptionAvailable(); err != nil {
+		return "", "", err
+	}
 	directory, err := backup.GetBackupDirectory()
 	if err != nil {
 		return "", "", err
@@ -431,6 +433,7 @@ func (h *Handler) createLibraryRepairBackup(ctx context.Context) (string, string
 	stamp := time.Now().UTC()
 	name := fmt.Sprintf("JellyTrack-library-repair-%s%09dZ.sqlite", stamp.Format("20060102T150405"), stamp.Nanosecond())
 	path := filepath.Join(directory, name)
+	defer os.Remove(path)
 	reserved, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err != nil {
 		return "", "", err
@@ -452,14 +455,28 @@ func (h *Handler) createLibraryRepairBackup(ctx context.Context) (string, string
 	if err != nil {
 		return "", "", err
 	}
-	file, err := os.Open(path)
+	plain, err := os.ReadFile(path)
 	if err != nil {
 		return "", "", err
 	}
-	defer file.Close()
-	hash := sha256.New()
-	if _, err = io.Copy(hash, file); err != nil {
+	encrypted, err := backup.EncryptBackupBytes(plain)
+	if err != nil {
 		return "", "", err
 	}
-	return name, hex.EncodeToString(hash.Sum(nil)), nil
+	encryptedName := name + ".jtb"
+	final, err := os.OpenFile(filepath.Join(directory, encryptedName), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		return "", "", err
+	}
+	_, err = final.Write(encrypted)
+	closeErr := final.Close()
+	if err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		os.Remove(filepath.Join(directory, encryptedName))
+		return "", "", err
+	}
+	sum := sha256.Sum256(encrypted)
+	return encryptedName, hex.EncodeToString(sum[:]), nil
 }

@@ -46,6 +46,8 @@ services:
 
       # Backup location
       BACKUP_DIR: ${BACKUP_DIR:-/data/backups}
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-}
+      JELLYTRACK_SUPER_ADMIN_IDENTITIES: ${JELLYTRACK_SUPER_ADMIN_IDENTITIES:-[]}
     volumes:
       - JellyTrack_data:/data
       - JellyTrack_backups:/data/backups

@@ -215,7 +215,7 @@ func (h *Handler) recoveredDeleteStaleMovies(w http.ResponseWriter, r *http.Requ
 	_ = security.LogAudit(r.Context(), h.db, h.driver, "cleanup.stale_movies.delete_requested", nil, nil, nil, nil, map[string]any{"mediaIds": body.MediaIDs})
 	deletedIDs, deletedTitles := []string{}, []string{}
 	failed := []map[string]string{}
-	client := &http.Client{Timeout: 20 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	client := security.ServerHTTPClient(20 * time.Second)
 	for _, m := range selection {
 		// Recheck immediately before the destructive remote operation.
 		var plays int

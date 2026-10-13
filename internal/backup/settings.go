@@ -11,8 +11,12 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/database"
 )
 
-func exportGlobalSettings(ctx context.Context, db *sql.DB) (map[string]any, error) {
-	rows, err := db.QueryContext(ctx, `SELECT * FROM "GlobalSettings" WHERE "id"='global'`)
+func exportGlobalSettings(ctx context.Context, db snapshotReader, driver ...string) (map[string]any, error) {
+	query := `SELECT * FROM "GlobalSettings" WHERE "id"='global'`
+	if len(driver) > 0 && driver[0] == "postgres" {
+		query = `SELECT *,to_json("excludedLibraries")::text AS "__excluded_libraries" FROM "GlobalSettings" WHERE "id"='global'`
+	}
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -36,6 +40,9 @@ func exportGlobalSettings(ctx context.Context, db *sql.DB) (map[string]any, erro
 	jsonFields := map[string]bool{"excludedLibraries": true, "resolutionThresholds": true, "ssoSettings": true, "pluginTelemetrySettings": true}
 	boolFields := map[string]bool{"discordAlertsEnabled": true, "wrappedVisible": true, "wrappedPeriodEnabled": true, "pluginAutoRotateEnabled": true, "authRememberThirtyDaysEnabled": true}
 	for i, column := range columns {
+		if column == "__excluded_libraries" {
+			column = "excludedLibraries"
+		}
 		value := values[i]
 		if b, ok := value.([]byte); ok {
 			value = string(b)
@@ -70,6 +77,13 @@ func restoreGlobalSettings(ctx context.Context, tx *sql.Tx, driver string, sourc
 		value, exists := source[column]
 		if !exists {
 			continue
+		}
+		if number, ok := value.(json.Number); ok {
+			parsed, err := number.Int64()
+			if err != nil {
+				return err
+			}
+			value = parsed
 		}
 		if jsonFields[column] && value != nil {
 			if column == "excludedLibraries" && driver == "postgres" {

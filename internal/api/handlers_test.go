@@ -19,6 +19,7 @@ import (
 
 func apiDB(t *testing.T) *sql.DB {
 	t.Helper()
+	t.Setenv("BACKUP_ENCRYPTION_KEY", "KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKio=")
 	db, err := database.Open(context.Background(), config.Config{DatabaseDriver: "sqlite", DatabasePath: filepath.Join(t.TempDir(), "api.db")})
 	if err != nil {
 		t.Fatal(err)
@@ -476,7 +477,7 @@ func TestNewHandlersWrappedCollectionsNewsletterServerCompare(t *testing.T) {
 	// 4. User Wrapped
 	reqWrap := httptest.NewRequest("GET", "/api/wrapped/u1", nil)
 	reqWrap.SetPathValue("id", "u1")
-	reqWrap = reqWrap.WithContext(context.WithValue(reqWrap.Context(), auth.PrincipalContextKey, auth.Principal{Username: "Alice", Role: "user"}))
+	reqWrap = reqWrap.WithContext(context.WithValue(reqWrap.Context(), auth.PrincipalContextKey, auth.Principal{Username: "Alice", Role: "super_admin"}))
 	wWrap := httptest.NewRecorder()
 	h.userWrapped(wWrap, reqWrap)
 	if wWrap.Code != 200 {
@@ -564,6 +565,7 @@ func TestImageProxyFallbackAndAliases(t *testing.T) {
 	// 2. User image proxy fallback SVG
 	wUser := httptest.NewRecorder()
 	reqUser := httptest.NewRequest("GET", "/api/jellyfin/user-image?id=missing-user", nil)
+	reqUser = reqUser.WithContext(context.WithValue(reqUser.Context(), auth.PrincipalContextKey, auth.Principal{Role: "super_admin"}))
 	h.jellyfinUserImageProxy(wUser, reqUser)
 	if wUser.Code != 200 {
 		t.Fatalf("expected 200 for fallback avatar, got %d", wUser.Code)

@@ -19,7 +19,7 @@ func TestMyAccountAdminResolvesServerAndUUIDAlias(t *testing.T) {
 		}
 	}
 	h := New(db, "sqlite")
-	principal := auth.Principal{Username: "Alice", Role: "admin", JellyfinUserID: "00112233445566778899AABBCCDDEEFF", AuthServerID: "s2", IdentityVersion: 1}
+	principal := auth.Principal{Username: "Alice", Role: "super_admin", JellyfinUserID: "00112233445566778899AABBCCDDEEFF", AuthServerID: "s2", IdentityVersion: 1}
 	call := func(id string, p auth.Principal) *httptest.ResponseRecorder {
 		r := httptest.NewRequest("GET", "/api/users/"+id, nil)
 		r.SetPathValue("id", id)

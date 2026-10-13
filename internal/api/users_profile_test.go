@@ -160,7 +160,7 @@ func TestProfileHistoryFiltersExportAndIdentityScope(t *testing.T) {
 		t.Fatalf("invalid date=%d", w.Code)
 	}
 	// Administrators retain access to an account with no history.
-	p.Role = "admin"
+	p.Role = "super_admin"
 	w = call("jf-u1", "?export=true")
 	var linked struct {
 		Stats   map[string]any `json:"stats"`
@@ -241,7 +241,9 @@ func TestUserAvatarOptInMissingResponse(t *testing.T) {
 		status int
 	}{{"", 200}, {"&fallback=none", 404}} {
 		w := httptest.NewRecorder()
-		h.jellyfinUserImageProxy(w, httptest.NewRequest("GET", "/api/jellyfin/user-image?userId=missing"+tc.query, nil))
+		request := httptest.NewRequest("GET", "/api/jellyfin/user-image?userId=missing"+tc.query, nil)
+		request = request.WithContext(context.WithValue(request.Context(), auth.PrincipalContextKey, auth.Principal{Role: "super_admin"}))
+		h.jellyfinUserImageProxy(w, request)
 		if w.Code != tc.status {
 			t.Fatalf("avatar %s=%d", tc.query, w.Code)
 		}

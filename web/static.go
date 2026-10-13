@@ -35,18 +35,20 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string, enablePprof ...b
 	fileServer := http.FileServer(http.FS(staticFiles))
 
 	mux := http.NewServeMux()
-	if len(enablePprof) > 0 && enablePprof[0] {
-		mux.HandleFunc("GET /debug/pprof/", pprof.Index)
-		mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
-		mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
-		mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
-		mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
-		mux.Handle("GET /debug/pprof/goroutine", pprof.Handler("goroutine"))
-		mux.Handle("GET /debug/pprof/heap", pprof.Handler("heap"))
-		mux.Handle("GET /debug/pprof/threadcreate", pprof.Handler("threadcreate"))
-		mux.Handle("GET /debug/pprof/block", pprof.Handler("block"))
-	}
 	authManager := auth.New(db, driver)
+	if len(enablePprof) > 0 && enablePprof[0] {
+		diagnostics := http.NewServeMux()
+		diagnostics.HandleFunc("GET /debug/pprof/", pprof.Index)
+		diagnostics.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
+		diagnostics.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
+		diagnostics.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
+		diagnostics.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
+		diagnostics.Handle("GET /debug/pprof/goroutine", pprof.Handler("goroutine"))
+		diagnostics.Handle("GET /debug/pprof/heap", pprof.Handler("heap"))
+		diagnostics.Handle("GET /debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+		diagnostics.Handle("GET /debug/pprof/block", pprof.Handler("block"))
+		mux.Handle("/debug/pprof/", authManager.AdminMiddleware(diagnostics))
+	}
 	authManager.Routes(mux)
 	pluginH := plugin.NewHandler(db, driver, logger)
 	api.New(db, driver, pluginH).Register(mux, authManager.Middleware, authManager.AdminMiddleware)

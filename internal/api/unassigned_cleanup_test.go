@@ -90,7 +90,7 @@ func TestManualUnassignedCleanupPreviewsBacksUpAndPreservesIdentifiableOrActiveM
 			t.Fatalf("%s count=%d want=%d %v", table, count, want, err)
 		}
 	}
-	snapshot, err := sql.Open("sqlite", filepath.Join(directory, result.Backup))
+	snapshot, err := sql.Open("sqlite", decryptedRepairSnapshotPath(t, filepath.Join(directory, result.Backup)))
 	if err != nil {
 		t.Fatal(err)
 	}

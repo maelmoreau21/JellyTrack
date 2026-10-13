@@ -40,3 +40,14 @@ data/
 cookies*.txt
 *.cookie
 *.cookies
+
+# Generated QA evidence is stored as CI artifacts or in an external audit archive.
+__pycache__/
+*.py[cod]
+/docs/**/*.png
+/docs/**/*.jpg
+/docs/**/*.jpeg
+/docs/**/*.webp
+/docs/**/*.gif
+/docs/**/*.webm
+/docs/**/*.mp4

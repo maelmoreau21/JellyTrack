@@ -196,7 +196,7 @@ func (h *Handler) recoveredLiveMetadata(r *http.Request, item map[string]any) {
 		return
 	}
 	request.Header.Set("X-MediaBrowser-Token", key.String)
-	client := &http.Client{Timeout: 3 * time.Second, CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }}
+	client := security.ServerHTTPClient(3 * time.Second)
 	response, err := client.Do(request)
 	if err != nil {
 		return

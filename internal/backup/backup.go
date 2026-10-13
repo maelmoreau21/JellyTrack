@@ -26,9 +26,10 @@ const (
 	MaxRetainedBackups          = 10
 )
 
-var autoBackupFilePattern = regexp.MustCompile(`^JellyTrack-(auto|manuelle|manual)-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.(zip|json)$`)
+var autoBackupFilePattern = regexp.MustCompile(`^JellyTrack-(auto|manuelle|manual)-\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.(zip|json|jtb)$`)
 
 type ExportData struct {
+	PersonAccounts  []map[string]any `json:"personAccounts"`
 	Servers         []map[string]any `json:"servers"`
 	Users           []map[string]any `json:"users"`
 	Media           []map[string]any `json:"media"`
@@ -50,9 +51,19 @@ type Manifest struct {
 
 // CreateZipBackup dumps all database tables and produces an in-memory ZIP buffer.
 func CreateZipBackup(ctx context.Context, db *sql.DB, driver string) ([]byte, error) {
+	return createZipBackup(ctx, db, driver, false)
+}
+
+func createZipBackup(ctx context.Context, db *sql.DB, driver string, secrets bool) ([]byte, error) {
 	data, err := fetchExportData(ctx, db, driver)
 	if err != nil {
 		return nil, fmt.Errorf("fetch export data: %w", err)
+	}
+	if !secrets {
+		for _, server := range data.Servers {
+			delete(server, "jellyfinApiKey")
+		}
+		redactSettings(data.Settings)
 	}
 
 	manifest := Manifest{
@@ -82,6 +93,8 @@ func CreateZipBackup(ctx context.Context, db *sql.DB, driver string) ([]byte, er
 
 	// 2. database.json
 	dbContent := map[string]any{
+		"snapshotFormat":  1,
+		"personAccounts":  data.PersonAccounts,
 		"servers":         data.Servers,
 		"users":           data.Users,
 		"media":           data.Media,
@@ -106,13 +119,6 @@ func CreateZipBackup(ctx context.Context, db *sql.DB, driver string) ([]byte, er
 		return nil, err
 	}
 
-	// 4. database.sql (summary commentary and SQL)
-	sqlBuf := new(bytes.Buffer)
-	fmt.Fprintf(sqlBuf, "-- JellyTrack Backup SQL Dump v3.0\n-- Exported At: %s\n\n", manifest.ExportDate)
-	if err := addZipFile(zw, "database.sql", sqlBuf.Bytes()); err != nil {
-		return nil, err
-	}
-
 	if err := zw.Close(); err != nil {
 		return nil, err
 	}
@@ -130,98 +136,32 @@ func addZipFile(zw *zip.Writer, name string, content []byte) error {
 }
 
 func fetchExportData(ctx context.Context, db *sql.DB, driver string) (*ExportData, error) {
-	out := &ExportData{
-		Servers:         []map[string]any{},
-		Users:           []map[string]any{},
-		Media:           []map[string]any{},
-		PlaybackHistory: []map[string]any{},
-		TelemetryEvents: []map[string]any{},
-		DailyStats:      []map[string]any{},
-		AdminAuditLogs:  []map[string]any{},
-		Settings:        map[string]any{},
+	isolation := sql.LevelSerializable
+	if driver == "postgres" {
+		isolation = sql.LevelRepeatableRead
 	}
-
-	// Fetch servers
-	sRows, err := db.QueryContext(ctx, `SELECT "id","jellyfinServerId","name","url","allowAuthFallback","isActive","createdAt","updatedAt" FROM "Server"`)
-	if err == nil {
-		for sRows.Next() {
-			var id, jid, name, url, created, updated string
-			var allow, active int
-			if sRows.Scan(&id, &jid, &name, &url, &allow, &active, &created, &updated) == nil {
-				out.Servers = append(out.Servers, map[string]any{"id": id, "jellyfinServerId": jid, "name": name, "url": url, "allowAuthFallback": allow == 1, "isActive": active == 1, "createdAt": created, "updatedAt": updated})
-			}
-		}
-		sRows.Close()
-	}
-
-	// Fetch users
-	uRows, err := db.QueryContext(ctx, `SELECT "id","serverId","jellyfinUserId","username","isActive","lastActive","createdAt","updatedAt" FROM "User"`)
-	if err == nil {
-		for uRows.Next() {
-			var id, sid, jid, uname, created, updated string
-			var active int
-			var lastActive sql.NullString
-			if uRows.Scan(&id, &sid, &jid, &uname, &active, &lastActive, &created, &updated) == nil {
-				out.Users = append(out.Users, map[string]any{"id": id, "serverId": sid, "jellyfinUserId": jid, "username": uname, "isActive": active == 1, "lastActive": lastActive.String, "createdAt": created, "updatedAt": updated})
-			}
-		}
-		uRows.Close()
-	}
-
-	// Fetch media
-	mRows, err := db.QueryContext(ctx, `SELECT "id","serverId","jellyfinMediaId","title","type","collectionType","libraryName","genres","resolution","durationMs","size","directors","actors","studios","parentId","artist","dateAdded","createdAt","updatedAt" FROM "Media"`)
-	if err == nil {
-		for mRows.Next() {
-			var id, sid, jid, title, mType, genres, directors, actors, studios, created, updated string
-			var coll, lib, res, parent, artist, dateAdded sql.NullString
-			var dur, sz sql.NullInt64
-			if mRows.Scan(&id, &sid, &jid, &title, &mType, &coll, &lib, &genres, &res, &dur, &sz, &directors, &actors, &studios, &parent, &artist, &dateAdded, &created, &updated) == nil {
-				out.Media = append(out.Media, map[string]any{
-					"id": id, "serverId": sid, "jellyfinMediaId": jid, "title": title, "type": mType,
-					"collectionType": coll.String, "libraryName": lib.String, "genres": parseJSONList(genres),
-					"resolution": res.String, "durationMs": dur.Int64, "size": sz.Int64,
-					"directors": parseJSONList(directors), "actors": parseJSONList(actors), "studios": parseJSONList(studios),
-					"parentId": parent.String, "artist": artist.String, "dateAdded": dateAdded.String,
-					"createdAt": created, "updatedAt": updated,
-				})
-			}
-		}
-		mRows.Close()
-	}
-
-	// Fetch playback history
-	pRows, err := db.QueryContext(ctx, `SELECT "id","serverId","userId","mediaId","playMethod","eventSource","sourceEventId","clientName","deviceName","ipAddress","country","city","durationWatched","startedAt","endedAt","audioLanguage","audioCodec","subtitleLanguage","subtitleCodec","bitrate","pauseCount","audioChanges","subtitleChanges","seekCount","rewatchCount","speedChangeCount","maxPlaybackRate" FROM "PlaybackHistory"`)
-	if err == nil {
-		for pRows.Next() {
-			var id, sid, mid, playMethod, eventSource, started string
-			var uid, sourceEventId, clientName, deviceName, ip, country, city, ended, audioLang, audioCodec, subLang, subCodec sql.NullString
-			var dur int64
-			var bitrate, pauses, audioChg, subChg, seeks, rewatches, speedChg sql.NullInt64
-			var maxRate sql.NullFloat64
-			if pRows.Scan(&id, &sid, &uid, &mid, &playMethod, &eventSource, &sourceEventId, &clientName, &deviceName, &ip, &country, &city, &dur, &started, &ended, &audioLang, &audioCodec, &subLang, &subCodec, &bitrate, &pauses, &audioChg, &subChg, &seeks, &rewatches, &speedChg, &maxRate) == nil {
-				out.PlaybackHistory = append(out.PlaybackHistory, map[string]any{
-					"id": id, "serverId": sid, "userId": uid.String, "mediaId": mid, "playMethod": playMethod,
-					"eventSource": eventSource, "sourceEventId": sourceEventId.String, "clientName": clientName.String,
-					"deviceName": deviceName.String, "ipAddress": ip.String, "country": country.String, "city": city.String,
-					"durationWatched": dur, "startedAt": started, "endedAt": ended.String,
-					"audioLanguage": audioLang.String, "audioCodec": audioCodec.String,
-					"subtitleLanguage": subLang.String, "subtitleCodec": subCodec.String,
-					"bitrate": bitrate.Int64, "pauseCount": pauses.Int64, "audioChanges": audioChg.Int64,
-					"subtitleChanges": subChg.Int64, "seekCount": seeks.Int64, "rewatchCount": rewatches.Int64,
-					"speedChangeCount": speedChg.Int64, "maxPlaybackRate": maxRate.Float64,
-				})
-			}
-		}
-		pRows.Close()
-	}
-
-	// Export all configuration sections, including secrets needed to recover SSO/plugin.
-	out.Settings, err = exportGlobalSettings(ctx, db)
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: isolation, ReadOnly: true})
 	if err != nil {
-		return out, err
+		return nil, err
 	}
-
-	return out, nil
+	defer tx.Rollback()
+	data := &ExportData{}
+	destinations := []*[]map[string]any{&data.Servers, &data.Users, &data.Media, &data.PlaybackHistory, &data.TelemetryEvents, &data.DailyStats, &data.AdminAuditLogs, &data.PersonAccounts}
+	for i, table := range snapshotTables {
+		rows, err := exportSnapshotRows(ctx, tx, driver, table.table)
+		if err != nil {
+			return nil, fmt.Errorf("export %s: %w", table.table, err)
+		}
+		*destinations[i] = rows
+	}
+	data.Settings, err = exportGlobalSettings(ctx, tx, driver)
+	if err != nil {
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // RestoreBackupBuffer safely restores a ZIP or JSON backup into the database.
@@ -231,6 +171,10 @@ func RestoreBackupBuffer(ctx context.Context, db *sql.DB, driver string, buffer 
 	}
 	if int64(len(buffer)) > maxBytes {
 		return "", errors.New("backup payload too large")
+	}
+	buffer, err := decryptBackup(buffer)
+	if err != nil {
+		return "", err
 	}
 
 	// Attempt ZIP extraction
@@ -283,14 +227,16 @@ func restoreZip(ctx context.Context, db *sql.DB, driver string, zr *zip.Reader, 
 
 	var parsedDB map[string]any
 	if len(dbBytes) > 0 {
-		if err := json.Unmarshal(dbBytes, &parsedDB); err != nil {
+		if err := decodeBackupJSON(dbBytes, &parsedDB); err != nil {
 			return "", fmt.Errorf("invalid database.json in zip: %w", err)
 		}
 	}
 
 	var parsedSet map[string]any
 	if len(setBytes) > 0 {
-		_ = json.Unmarshal(setBytes, &parsedSet)
+		if err := decodeBackupJSON(setBytes, &parsedSet); err != nil {
+			return "", fmt.Errorf("invalid settings.json: %w", err)
+		}
 	}
 
 	if err := applyRestoration(ctx, db, driver, parsedDB, parsedSet); err != nil {
@@ -302,7 +248,7 @@ func restoreZip(ctx context.Context, db *sql.DB, driver string, zr *zip.Reader, 
 
 func restoreJSON(ctx context.Context, db *sql.DB, driver string, buffer []byte) (string, error) {
 	var raw map[string]any
-	if err := json.Unmarshal(buffer, &raw); err != nil {
+	if err := decodeBackupJSON(buffer, &raw); err != nil {
 		return "", errors.New("invalid backup format: must be valid ZIP or JSON")
 	}
 
@@ -318,6 +264,12 @@ func restoreJSON(ctx context.Context, db *sql.DB, driver string, buffer []byte) 
 }
 
 func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map[string]any, setData map[string]any) error {
+	if version, ok := dbData["snapshotFormat"]; ok {
+		if fmt.Sprint(version) != "1" {
+			return errors.New("unsupported snapshot format")
+		}
+		return restoreSnapshot(ctx, db, driver, dbData, setData)
+	}
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -326,6 +278,7 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 
 	// 1. Truncate / Delete in reverse foreign key order
 	tables := []string{
+		"AccountLinkProof", "PersonAccount", "AuthSession",
 		"ActiveStream", "TelemetryEvent", "PlaybackHistory", "DailyStats",
 		"Media", "User", "Server", "AdminAuditLog", "SystemHealthEvent", "SystemHealthState",
 	}
@@ -347,8 +300,8 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 				name := stringVal(m, "name", "Imported Server")
 				url := stringVal(m, "url", "")
 				apiKey := nullStringVal(m, "jellyfinApiKey")
-				allowAuth := boolVal(m, "allowAuthFallback", false)
-				isActive := boolVal(m, "isActive", true)
+				allowAuth := boolVal(m, "allowAuthFallback", false) != 0
+				isActive := boolVal(m, "isActive", true) != 0
 				createdAt := stringVal(m, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))
 				updatedAt := stringVal(m, "updatedAt", createdAt)
 
@@ -372,7 +325,7 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 				}
 				jid := stringVal(m, "jellyfinUserId", id)
 				username := stringVal(m, "username", "User")
-				isActive := boolVal(m, "isActive", true)
+				isActive := boolVal(m, "isActive", true) != 0
 				lastActive := nullStringVal(m, "lastActive")
 				createdAt := stringVal(m, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))
 				updatedAt := stringVal(m, "updatedAt", createdAt)
@@ -547,6 +500,18 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 		}
 	}
 
+	if associations, ok := dbData["personAccounts"].([]any); ok {
+		for _, raw := range associations {
+			a, ok := raw.(map[string]any)
+			if !ok {
+				return fmt.Errorf("invalid account association")
+			}
+			if _, err = tx.ExecContext(ctx, database.Bind(`INSERT INTO "PersonAccount"("accountId","personId","createdAt") VALUES(?,?,?)`, driver), stringVal(a, "accountId", ""), stringVal(a, "personId", ""), stringVal(a, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))); err != nil {
+				return fmt.Errorf("restore account association: %w", err)
+			}
+		}
+	}
+
 	return tx.Commit()
 }
 
@@ -571,6 +536,11 @@ func nullStringVal(m map[string]any, key string) any {
 func intVal(m map[string]any, key string, fallback int64) int64 {
 	if val, ok := m[key]; ok && val != nil {
 		switch v := val.(type) {
+		case json.Number:
+			value, err := v.Int64()
+			if err == nil {
+				return value
+			}
 		case float64:
 			return int64(v)
 		case int64:
@@ -589,6 +559,11 @@ func intVal(m map[string]any, key string, fallback int64) int64 {
 func nullIntVal(m map[string]any, key string) any {
 	if val, ok := m[key]; ok && val != nil {
 		switch v := val.(type) {
+		case json.Number:
+			value, err := v.Int64()
+			if err == nil {
+				return value
+			}
 		case float64:
 			return int64(v)
 		case int64:
@@ -607,6 +582,11 @@ func nullIntVal(m map[string]any, key string) any {
 func nullFloatVal(m map[string]any, key string) any {
 	if val, ok := m[key]; ok && val != nil {
 		switch v := val.(type) {
+		case json.Number:
+			value, err := v.Float64()
+			if err == nil {
+				return value
+			}
 		case float64:
 			return v
 		case int64:
@@ -625,6 +605,11 @@ func nullFloatVal(m map[string]any, key string) any {
 func boolVal(m map[string]any, key string, fallback bool) int {
 	if val, ok := m[key]; ok && val != nil {
 		switch v := val.(type) {
+		case json.Number:
+			if v.String() == "1" {
+				return 1
+			}
+			return 0
 		case bool:
 			if v {
 				return 1
@@ -749,7 +734,13 @@ func TriggerAutoBackup(ctx context.Context, db *sql.DB, driver, backupDir, mode 
 		prefix = "JellyTrack-manuelle-"
 	}
 
-	zipData, err := CreateZipBackup(ctx, db, driver)
+	var zipData []byte
+	var err error
+	if strings.TrimSpace(os.Getenv("BACKUP_ENCRYPTION_KEY")) != "" {
+		zipData, err = CreateEncryptedBackup(ctx, db, driver)
+	} else {
+		zipData, err = CreateZipBackup(ctx, db, driver)
+	}
 	if err != nil {
 		return "", err
 	}
@@ -757,7 +748,11 @@ func TriggerAutoBackup(ctx context.Context, db *sql.DB, driver, backupDir, mode 
 	now := time.Now().UTC()
 	dateStr := now.Format("2006-01-02")
 	timeStr := now.Format("15-04-05")
-	fileName := fmt.Sprintf("%s%s_%s.zip", prefix, dateStr, timeStr)
+	extension := "zip"
+	if bytes.HasPrefix(zipData, encryptedMagic) {
+		extension = "jtb"
+	}
+	fileName := fmt.Sprintf("%s%s_%s.%s", prefix, dateStr, timeStr, extension)
 	filePath := filepath.Join(backupDir, fileName)
 
 	if err := os.WriteFile(filePath, zipData, 0600); err != nil {

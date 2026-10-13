@@ -3,12 +3,14 @@ package api
 import (
 	"database/sql"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/maelmoreau21/jellytrack/internal/auth"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/security"
 )
@@ -22,9 +24,7 @@ var allowedImageTypes = map[string]struct{}{
 	"Art":      {},
 }
 
-var proxyHTTPClient = &http.Client{
-	Timeout: 10 * time.Second,
-}
+var proxyHTTPClient = security.ServerHTTPClient(10 * time.Second)
 
 const fallbackPosterSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450" fill="none">
   <rect width="300" height="450" fill="#181920"/>
@@ -53,6 +53,28 @@ func serveFallbackAvatar(w http.ResponseWriter) {
 	w.Header().Set("Cache-Control", "public, max-age=3600")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(fallbackAvatarSVG))
+}
+
+func writeProxyImage(w http.ResponseWriter, resp *http.Response) bool {
+	contentType, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+	if err != nil {
+		return false
+	}
+	switch contentType {
+	case "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif":
+	default:
+		return false
+	}
+	data, err := io.ReadAll(io.LimitReader(resp.Body, (16<<20)+1))
+	if err != nil || len(data) > 16<<20 {
+		return false
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Cache-Control", "private, no-store")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(data)
+	return true
 }
 
 func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
@@ -144,13 +166,9 @@ func (h *Handler) jellyfinImageProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for k, vv := range resp.Header {
-		for _, v := range vv {
-			w.Header().Add(k, v)
-		}
+	if !writeProxyImage(w, resp) {
+		fallback()
 	}
-	w.WriteHeader(resp.StatusCode)
-	_, _ = io.Copy(w, resp.Body)
 }
 
 func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request) {
@@ -167,6 +185,20 @@ func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request)
 	if userID == "" {
 		userID = strings.TrimSpace(r.URL.Query().Get("id"))
 	}
+	p, ok := auth.PrincipalFromContext(r.Context())
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	if !p.IsAdmin() {
+		identity, err := auth.ResolveAccount(r.Context(), h.db, h.driver, p)
+		if err != nil || (serverID != "" && serverID != identity.ServerID) || !sameLibraryID(userID, identity.JellyfinUserID) {
+			http.NotFound(w, r)
+			return
+		}
+		serverID, userID = identity.ServerID, identity.JellyfinUserID
+	}
+	w.Header().Set("Cache-Control", "private, no-store")
 
 	srvURL, apiKey := h.imageServer(r, serverID)
 
@@ -213,13 +245,9 @@ func (h *Handler) jellyfinUserImageProxy(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	for k, vv := range resp.Header {
-		for _, v := range vv {
-			w.Header().Add(k, v)
-		}
+	if !writeProxyImage(w, resp) {
+		fallback()
 	}
-	w.WriteHeader(resp.StatusCode)
-	_, _ = io.Copy(w, resp.Body)
 }
 
 // Never fall through from an explicit invalid server to another server.

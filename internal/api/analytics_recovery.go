@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/maelmoreau21/jellytrack/internal/auth"
 	"github.com/maelmoreau21/jellytrack/internal/database"
 	"github.com/maelmoreau21/jellytrack/internal/history"
 )
@@ -16,6 +17,7 @@ type wrappedRank struct {
 	Title      string  `json:"title"`
 	Name       string  `json:"name"`
 	JellyfinID string  `json:"jellyfinId,omitempty"`
+	ServerID   string  `json:"serverId,omitempty"`
 	Artist     string  `json:"artist,omitempty"`
 	Seconds    int64   `json:"seconds"`
 	Hours      float64 `json:"hours"`
@@ -77,6 +79,21 @@ func (h *Handler) recoveredNewsletter(w http.ResponseWriter, r *http.Request) {
 // Resolve parent entities within the same server. Album/season IDs can collide
 // across Jellyfin installations; rankings must never join by ID alone.
 func (h *Handler) recoveredWrapped(w http.ResponseWriter, r *http.Request, uid, username, jid, serverID string) {
+	w.Header().Set("Cache-Control", "private, no-store")
+	scope, args := `p."userId"=? AND p."serverId"=?`, []any{uid, serverID}
+	if p, ok := auth.PrincipalFromContext(r.Context()); ok && !p.IsAdmin() {
+		access, accessArgs := h.libraryAccessClauseFresh(r, "m")
+		if access == "1=0" {
+			jsonError(w, 403, "Droits Jellyfin invérifiables ou révoqués.")
+			return
+		}
+		scope += ` AND (` + access + `)`
+		args = append(args, accessArgs...)
+	}
+	h.wrappedAccounts(w, r, uid, username, jid, serverID, scope, args, nil)
+}
+
+func (h *Handler) wrappedAccounts(w http.ResponseWriter, r *http.Request, uid, username, jid, serverID, scope string, scopeArgs []any, accounts any) {
 	year, err := wrappedYear(r)
 	if err != nil {
 		jsonError(w, 400, "Année invalide.")
@@ -87,12 +104,12 @@ func (h *Handler) recoveredWrapped(w http.ResponseWriter, r *http.Request, uid, 
 		jsonError(w, 400, "Catégorie invalide.")
 		return
 	}
-	query := `SELECT p."durationWatched",p."startedAt",p."clientName",p."deviceName",m."id",m."jellyfinMediaId",m."title",m."type",m."genres",m."artist",parent."id",parent."title",parent."type",grand."id",grand."title",grand."type"
- FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId"
+	query := `SELECT p."serverId",p."durationWatched",p."startedAt",p."clientName",p."deviceName",m."id",m."jellyfinMediaId",m."title",m."type",m."genres",m."artist",parent."id",parent."title",parent."type",grand."id",grand."title",grand."type"
+ FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId"
  LEFT JOIN "Media" parent ON parent."id"=COALESCE((SELECT pm."id" FROM "Media" pm WHERE pm."serverId"=m."serverId" AND pm."id"=m."parentId"),(SELECT pm."id" FROM "Media" pm WHERE pm."serverId"=m."serverId" AND pm."jellyfinMediaId"=m."parentId"))
  LEFT JOIN "Media" grand ON grand."id"=COALESCE((SELECT gm."id" FROM "Media" gm WHERE gm."serverId"=parent."serverId" AND gm."id"=parent."parentId"),(SELECT gm."id" FROM "Media" gm WHERE gm."serverId"=parent."serverId" AND gm."jellyfinMediaId"=parent."parentId"))
- WHERE p."userId"=? AND p."serverId"=? AND p."startedAt">=? AND p."startedAt"<? AND ` + history.ZappingClause("p") + ` AND ` + excludedLibrariesClause(h.driver, "m")
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(query, h.driver), uid, serverID, time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339), time.Date(year+1, 1, 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339))
+ WHERE (` + scope + `) AND p."startedAt">=? AND p."startedAt"<? AND ` + history.ZappingClause("p") + ` AND ` + excludedLibrariesClause(h.driver, "m")
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(query, h.driver), append(append([]any{}, scopeArgs...), time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339), time.Date(year+1, 1, 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339))...)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger le Wrapped.")
 		return
@@ -101,13 +118,21 @@ func (h *Handler) recoveredWrapped(w http.ResponseWriter, r *http.Request, uid, 
 	for _, key := range []string{"media", "movies", "series", "music", "books", "artists", "albums", "genres", "clients", "devices"} {
 		tops[key] = map[string]*wrappedRank{}
 	}
+	rowServerID := ""
 	add := func(group, key, title, jellyfinID, artist string, seconds int64) {
+		mediaGroup := group == "media" || group == "movies" || group == "series" || group == "music" || group == "books" || group == "albums" || group == "artists"
+		if mediaGroup && key != "" {
+			key = rowServerID + ":" + key
+		}
 		if key == "" {
 			return
 		}
 		item := tops[group][key]
 		if item == nil {
 			item = &wrappedRank{Title: title, Name: title, JellyfinID: jellyfinID, Artist: artist}
+			if mediaGroup {
+				item.ServerID = rowServerID
+			}
 			tops[group][key] = item
 		}
 		item.Seconds += seconds
@@ -124,7 +149,7 @@ func (h *Handler) recoveredWrapped(w http.ResponseWriter, r *http.Request, uid, 
 		var duration int64
 		var started, id, mediaJID, title, kind string
 		var client, device, genres, artist, parentID, parentTitle, parentKind, grandID, grandTitle, grandKind sql.NullString
-		if err = rows.Scan(&duration, &started, &client, &device, &id, &mediaJID, &title, &kind, &genres, &artist, &parentID, &parentTitle, &parentKind, &grandID, &grandTitle, &grandKind); err != nil {
+		if err = rows.Scan(&rowServerID, &duration, &started, &client, &device, &id, &mediaJID, &title, &kind, &genres, &artist, &parentID, &parentTitle, &parentKind, &grandID, &grandTitle, &grandKind); err != nil {
 			break
 		}
 		category := ""
@@ -196,7 +221,7 @@ func (h *Handler) recoveredWrapped(w http.ResponseWriter, r *http.Request, uid, 
 		return
 	}
 	availableYears := []int{}
-	yearRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT DISTINCT substr(CAST("startedAt" AS TEXT),1,4) FROM "PlaybackHistory" WHERE "userId"=? AND "serverId"=? ORDER BY 1 DESC`, h.driver), uid, serverID)
+	yearRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT DISTINCT substr(CAST(p."startedAt" AS TEXT),1,4) FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE (`+scope+`) ORDER BY 1 DESC`, h.driver), scopeArgs...)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les années.")
 		return
@@ -261,7 +286,7 @@ func (h *Handler) recoveredWrapped(w http.ResponseWriter, r *http.Request, uid, 
 		topPhysicalDevice = devices[0].Title
 	}
 	jsonResponse(w, 200, map[string]any{
-		"userId": uid, "username": username, "jellyfinUserId": jid, "serverId": serverID, "year": year, "filterType": filter, "availableYears": availableYears,
+		"accounts": accounts, "multiServer": accounts != nil, "userId": uid, "username": username, "jellyfinUserId": jid, "serverId": serverID, "year": year, "filterType": filter, "availableYears": availableYears,
 		"totalSeconds": totalSeconds, "totalHours": float64(totalSeconds) / 3600, "totalPlays": totalPlays,
 		"topMedia": rankWrapped(tops["media"]), "topMovies": rankWrapped(tops["movies"]), "topSeries": rankWrapped(tops["series"]), "topMusic": rankWrapped(tops["music"]), "topTracks": rankWrapped(tops["music"]), "topBooks": rankWrapped(tops["books"]),
 		"topArtists": rankWrapped(tops["artists"]), "topAlbums": rankWrapped(tops["albums"]), "topGenres": rankWrapped(tops["genres"]), "topClients": clients, "topDevice": topDevice, "topPhysicalDevice": topPhysicalDevice, "categories": categories,

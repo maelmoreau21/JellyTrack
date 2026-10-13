@@ -158,7 +158,7 @@ func TestEndToEndServerLifecycle(t *testing.T) {
 	var meData map[string]any
 	_ = json.NewDecoder(resp.Body).Decode(&meData)
 	resp.Body.Close()
-	if meData["username"] != "admin" || meData["role"] != "admin" {
+	if meData["username"] != "admin" || meData["role"] != "super_admin" {
 		t.Fatalf("unexpected me payload: %v", meData)
 	}
 

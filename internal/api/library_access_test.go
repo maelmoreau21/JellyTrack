@@ -61,6 +61,7 @@ func TestCatalogueLibraryAccess(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			policy, folders = tc.policy, tc.folders
+			h.clearLibraryAccessCache()
 			base, args, err := h.recoveredMediaBase(request("/api/media?servers=all"))
 			if err != nil {
 				t.Fatal(err)

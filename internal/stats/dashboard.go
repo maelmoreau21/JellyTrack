@@ -255,7 +255,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	}
 	// 1. Total counts of users and media
 	var totalUsers, totalMedia int64
-	userWhere := `WHERE "isActive"=1`
+	userWhere := `WHERE "isActive"=TRUE`
 	var userArgs []any
 	if len(filter.ServerIDs) > 0 {
 		placeholders := make([]string, len(filter.ServerIDs))
@@ -337,175 +337,11 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		       COALESCE(m."durationMs", 0), COALESCE(m."libraryName", ''),
 		       COALESCE(m."collectionType", ''), COALESCE(m."parentId", '')
 		FROM "PlaybackHistory" p
-		LEFT JOIN "Media" m ON m."id" = p."mediaId"
-		LEFT JOIN "User" u ON u."id" = p."userId"
+		LEFT JOIN "Media" m ON m."id" = p."mediaId" AND m."serverId"=p."serverId"
+		LEFT JOIN "User" u ON u."id" = p."userId" AND u."serverId"=p."serverId"
 		WHERE %s
 		ORDER BY p."startedAt" ASC
 	`, strings.Join(whereClauses, " AND "))
-
-	rows, err := db.QueryContext(ctx, database.Bind(historyQuery, driver), args...)
-	if err != nil {
-		return FullDashboardResult{}, err
-	}
-	defer rows.Close()
-
-	var histories []playbackRawItem
-	var totalDurationSec int64
-	var directPlayCount int64
-	activeUserSet := make(map[string]bool)
-
-	for rows.Next() {
-		var item playbackRawItem
-		var startedStr string
-		if err := rows.Scan(
-			&startedStr, &item.durationWatched, &item.playMethod,
-			&item.clientName, &item.userId,
-			&item.username, &item.jellyfinUserId,
-			&item.mediaId, &item.mediaType, &item.mediaTitle,
-			&item.mediaDurationMs, &item.libraryName,
-			&item.collectionType, &item.parentId,
-		); err == nil {
-			t, pErr := time.Parse(time.RFC3339Nano, startedStr)
-			if pErr != nil {
-				t, pErr = time.Parse("2006-01-02 15:04:05", startedStr)
-			}
-			if pErr != nil {
-				t, pErr = time.Parse(time.RFC3339, startedStr)
-			}
-			if pErr == nil {
-				item.startedAt = t.UTC()
-				histories = append(histories, item)
-				totalDurationSec += item.durationWatched
-				if strings.EqualFold(item.playMethod, "DirectPlay") {
-					directPlayCount++
-				}
-				if item.userId != "" {
-					activeUserSet[item.userId] = true
-				}
-			}
-		}
-	}
-
-	totalPlays := int64(len(histories))
-	hoursWatched := math.Round((float64(totalDurationSec)/3600.0)*10) / 10
-	currentActiveUsers := len(activeUserSet)
-	directPlayPercent := 100
-	if totalPlays > 0 {
-		directPlayPercent = int((float64(directPlayCount) / float64(totalPlays)) * 100)
-	}
-
-	// 3. Previous period comparisons for growths
-	var previousPlays, previousDurationSec, previousActiveUsers int64
-	var playsGrowth, hoursGrowth, activeUsersGrowth float64
-	if hasPrev && previousStart != nil && previousEnd != nil {
-		prevWhere := []string{
-			excludedLibClause,
-			history.ZappingClause("p"),
-			`p."startedAt" >= ?`,
-			`p."startedAt" < ?`,
-		}
-		prevArgs := []any{previousStart.Format(time.RFC3339Nano), previousEnd.Format(time.RFC3339Nano)}
-		prevWhere = append(prevWhere, extraClauses...)
-		prevArgs = append(prevArgs, extraArgs...)
-		if filter.MediaType != "" {
-			mType := strings.ToLower(filter.MediaType)
-			if mType == "movie" {
-				prevWhere = append(prevWhere, `m."type" = 'Movie'`)
-			} else if mType == "series" {
-				prevWhere = append(prevWhere, `m."type" IN ('Series', 'Episode', 'Season')`)
-			} else if mType == "audio" || mType == "music" {
-				prevWhere = append(prevWhere, `m."type" IN ('Audio', 'Track', 'MusicAlbum')`)
-			} else if mType == "book" {
-				prevWhere = append(prevWhere, `m."type" IN ('Book', 'AudioBook')`)
-			}
-		}
-		if len(filter.ServerIDs) > 0 {
-			placeholders := make([]string, len(filter.ServerIDs))
-			for i, sid := range filter.ServerIDs {
-				placeholders[i] = "?"
-				prevArgs = append(prevArgs, sid)
-			}
-			prevWhere = append(prevWhere, `p."serverId" IN (`+strings.Join(placeholders, ",")+`)`)
-		}
-
-		prevQ := database.Bind(fmt.Sprintf(`
-			SELECT COUNT(*), COALESCE(SUM(p."durationWatched"), 0), COUNT(DISTINCT p."userId")
-			FROM "PlaybackHistory" p
-			LEFT JOIN "Media" m ON m."id" = p."mediaId"
-			WHERE %s
-		`, strings.Join(prevWhere, " AND ")), driver)
-		_ = db.QueryRowContext(ctx, prevQ, prevArgs...).Scan(&previousPlays, &previousDurationSec, &previousActiveUsers)
-
-		prevHours := math.Round((float64(previousDurationSec)/3600.0)*10) / 10
-		if previousPlays > 0 {
-			playsGrowth = math.Round(((float64(totalPlays)-float64(previousPlays))/float64(previousPlays))*1000) / 10
-		}
-		if prevHours > 0 {
-			hoursGrowth = math.Round(((hoursWatched-prevHours)/prevHours)*1000) / 10
-		}
-		if previousActiveUsers > 0 {
-			activeUsersGrowth = math.Round(((float64(currentActiveUsers)-float64(previousActiveUsers))/float64(previousActiveUsers))*1000) / 10
-		}
-	}
-
-	// 4. Today statistics
-	todayScope := filter
-	todayScope.TimeRange = "custom"
-	todayScope.From = now.UTC().Format("2006-01-02")
-	todayScope.To = todayScope.From
-	todayWhere, todayArgs, _, _, err := analyticsConditions(todayScope, now)
-	if err != nil {
-		return FullDashboardResult{}, err
-	}
-	// SQLite imports/defaults may use a space instead of ISO's T separator.
-	if driver == "sqlite" {
-		for i, clause := range todayWhere {
-			if clause == `p."startedAt" >= ?` {
-				todayWhere[i] = `datetime(p."startedAt") >= datetime(?)`
-			}
-			if clause == `p."startedAt" < ?` {
-				todayWhere[i] = `datetime(p."startedAt") < datetime(?)`
-			}
-		}
-	}
-	todayWhere = append(todayWhere, excludedLibClause, history.ZappingClause("p"))
-	var todayPlays, todayDurationSec, todayActiveUsers int64
-	todayQ := database.Bind(fmt.Sprintf(`
-		SELECT COUNT(*), COALESCE(SUM(p."durationWatched"), 0), COUNT(DISTINCT p."userId")
-		FROM "PlaybackHistory" p
-		LEFT JOIN "Media" m ON m."id" = p."mediaId"
-		WHERE %s
-	`, strings.Join(todayWhere, " AND ")), driver)
-	if err := db.QueryRowContext(ctx, todayQ, todayArgs...).Scan(&todayPlays, &todayDurationSec, &todayActiveUsers); err != nil {
-		return FullDashboardResult{}, err
-	}
-	todayHoursFloat := float64(todayDurationSec) / 3600.0
-	todayHoursStr := fmt.Sprintf("%.1f", todayHoursFloat)
-
-	// 5. Sweep-line for Peak Concurrent Streams & Server Load Timeline
-	type event struct {
-		ts  int64
-		val int
-	}
-	var events []event
-	for _, h := range histories {
-		startUnix := h.startedAt.Unix()
-		endUnix := startUnix + h.durationWatched
-		if endUnix <= startUnix {
-			endUnix = startUnix + 60
-		}
-		events = append(events, event{ts: startUnix, val: 1})
-		events = append(events, event{ts: endUnix, val: -1})
-	}
-	sort.Slice(events, func(i, j int) bool {
-		if events[i].ts == events[j].ts {
-			return events[i].val > events[j].val
-		}
-		return events[i].ts < events[j].ts
-	})
-
-	var peakConcurrentStreams, currentStreams int
-	serverLoadMap := make(map[string]int)
 
 	getBucketKey := func(t time.Time) string {
 		if timeRange == "24h" || timeRange == "1d" {
@@ -515,17 +351,6 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 			return fmt.Sprintf("%02d/%d", t.Month(), t.Year())
 		}
 		return fmt.Sprintf("%02d/%02d", t.Day(), t.Month())
-	}
-
-	for _, evt := range events {
-		currentStreams += evt.val
-		if currentStreams > peakConcurrentStreams {
-			peakConcurrentStreams = currentStreams
-		}
-		k := getBucketKey(time.Unix(evt.ts, 0).UTC())
-		if currentStreams > serverLoadMap[k] {
-			serverLoadMap[k] = currentStreams
-		}
 	}
 
 	// 6. Datasets: TrendData, Breakdown, Hourly, DayOfWeek, Platforms, ClientFamilies, etc.
@@ -570,79 +395,256 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	// Completion counts
 	var completedCount, partialCount, abandonedCount int64
 
-	for _, h := range histories {
-		// Category breakdown
-		mType := strings.ToLower(h.mediaType)
-		hHours := float64(h.durationWatched) / 3600.0
+	type event struct {
+		ts  int64
+		val int
+	}
+	var events []event
+	rows, err := db.QueryContext(ctx, database.Bind(historyQuery, driver), args...)
+	if err != nil {
+		return FullDashboardResult{}, err
+	}
+	defer rows.Close()
 
-		bucketKey := getBucketKey(h.startedAt)
-		tp, exists := trendMap[bucketKey]
-		if !exists {
-			tp = &DashboardTrendPoint{Time: bucketKey}
-			trendMap[bucketKey] = tp
-			trendKeys = append(trendKeys, bucketKey)
-		}
-		tp.TotalViews++
+	var totalPlays int64
+	var totalDurationSec int64
+	var directPlayCount int64
+	activeUserSet := make(map[string]bool)
 
-		if strings.Contains(mType, "movie") {
-			movieViews++
-			movieSec += h.durationWatched
-			tp.MovieVolume = tp.MovieVolume + hHours
-			tp.MoviePlays++
-		} else if strings.Contains(mType, "series") || strings.Contains(mType, "episode") {
-			seriesViews++
-			seriesSec += h.durationWatched
-			tp.SeriesVolume = tp.SeriesVolume + hHours
-			if seriesTracker[bucketKey] == nil {
-				seriesTracker[bucketKey] = map[string]bool{}
+	for rows.Next() {
+		var item playbackRawItem
+		var startedStr string
+		if err := rows.Scan(
+			&startedStr, &item.durationWatched, &item.playMethod,
+			&item.clientName, &item.userId,
+			&item.username, &item.jellyfinUserId,
+			&item.mediaId, &item.mediaType, &item.mediaTitle,
+			&item.mediaDurationMs, &item.libraryName,
+			&item.collectionType, &item.parentId,
+		); err == nil {
+			t, pErr := time.Parse(time.RFC3339Nano, startedStr)
+			if pErr != nil {
+				t, pErr = time.Parse("2006-01-02 15:04:05", startedStr)
 			}
-			seriesKey := h.parentId
-			if seriesKey == "" {
-				seriesKey = "unknown"
+			if pErr != nil {
+				t, pErr = time.Parse(time.RFC3339, startedStr)
 			}
-			if !seriesTracker[bucketKey][seriesKey] {
-				tp.SeriesPlays++
-				seriesTracker[bucketKey][seriesKey] = true
+			if pErr == nil {
+				item.startedAt = t.UTC()
+				totalPlays++
+				h := item
+
+				startUnix := h.startedAt.Unix()
+				endUnix := startUnix + h.durationWatched
+				if endUnix <= startUnix {
+					endUnix = startUnix + 60
+				}
+				events = append(events, event{ts: startUnix, val: 1})
+				events = append(events, event{ts: endUnix, val: -1})
+
+				// Category breakdown
+				mType := strings.ToLower(h.mediaType)
+				hHours := float64(h.durationWatched) / 3600.0
+
+				bucketKey := getBucketKey(h.startedAt)
+				tp, exists := trendMap[bucketKey]
+				if !exists {
+					tp = &DashboardTrendPoint{Time: bucketKey}
+					trendMap[bucketKey] = tp
+					trendKeys = append(trendKeys, bucketKey)
+				}
+				tp.TotalViews++
+
+				if strings.Contains(mType, "movie") {
+					movieViews++
+					movieSec += h.durationWatched
+					tp.MovieVolume = tp.MovieVolume + hHours
+					tp.MoviePlays++
+				} else if strings.Contains(mType, "series") || strings.Contains(mType, "episode") {
+					seriesViews++
+					seriesSec += h.durationWatched
+					tp.SeriesVolume = tp.SeriesVolume + hHours
+					if seriesTracker[bucketKey] == nil {
+						seriesTracker[bucketKey] = map[string]bool{}
+					}
+					seriesKey := h.parentId
+					if seriesKey == "" {
+						seriesKey = "unknown"
+					}
+					if !seriesTracker[bucketKey][seriesKey] {
+						tp.SeriesPlays++
+						seriesTracker[bucketKey][seriesKey] = true
+					}
+				} else if strings.Contains(mType, "audio") || strings.Contains(mType, "track") {
+					musicViews++
+					musicSec += h.durationWatched
+					tp.MusicVolume = tp.MusicVolume + hHours
+					tp.MusicPlays++
+				} else if strings.Contains(mType, "book") {
+					booksViews++
+					booksSec += h.durationWatched
+					tp.BooksVolume = tp.BooksVolume + hHours
+					tp.BooksPlays++
+				}
+
+				// Hourly & Day of Week
+				hr := h.startedAt.Hour()
+				if hr >= 0 && hr < 24 {
+					hourlyMap[hr]++
+				}
+				dow := int(h.startedAt.Weekday())
+				if dow >= 0 && dow < 7 {
+					dayOfWeekMap[dow]++
+				}
+
+				// Platform / Client Ecosystem
+				platformMap[h.clientName]++
+				clientCatMap[CategorizeClient(h.clientName)]++
+
+				// Monthly watch time: "YYYY_M" (0-indexed month)
+				mKey := fmt.Sprintf("%d_%d", h.startedAt.Year(), int(h.startedAt.Month())-1)
+				monthlyWatchMap[mKey] = monthlyWatchMap[mKey] + hHours
+
+				// Top users
+				if h.userId != "" {
+					uEntry := userDurationMap[h.userId]
+					uEntry.uname = h.username
+					uEntry.jid = h.jellyfinUserId
+					uEntry.sec += h.durationWatched
+					userDurationMap[h.userId] = uEntry
+				}
+
+				totalDurationSec += item.durationWatched
+				if strings.EqualFold(item.playMethod, "DirectPlay") {
+					directPlayCount++
+				}
+				if item.userId != "" {
+					activeUserSet[item.userId] = true
+				}
 			}
-		} else if strings.Contains(mType, "audio") || strings.Contains(mType, "track") {
-			musicViews++
-			musicSec += h.durationWatched
-			tp.MusicVolume = tp.MusicVolume + hHours
-			tp.MusicPlays++
-		} else if strings.Contains(mType, "book") {
-			booksViews++
-			booksSec += h.durationWatched
-			tp.BooksVolume = tp.BooksVolume + hHours
-			tp.BooksPlays++
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return FullDashboardResult{}, err
+	}
+	rows.Close()
+	hoursWatched := math.Round((float64(totalDurationSec)/3600.0)*10) / 10
+	currentActiveUsers := len(activeUserSet)
+	directPlayPercent := 100
+	if totalPlays > 0 {
+		directPlayPercent = int((float64(directPlayCount) / float64(totalPlays)) * 100)
+	}
+
+	// 3. Previous period comparisons for growths
+	var previousPlays, previousDurationSec, previousActiveUsers int64
+	var playsGrowth, hoursGrowth, activeUsersGrowth float64
+	if hasPrev && previousStart != nil && previousEnd != nil {
+		prevWhere := []string{
+			excludedLibClause,
+			history.ZappingClause("p"),
+			`p."startedAt" >= ?`,
+			`p."startedAt" < ?`,
+		}
+		prevArgs := []any{previousStart.Format(time.RFC3339Nano), previousEnd.Format(time.RFC3339Nano)}
+		prevWhere = append(prevWhere, extraClauses...)
+		prevArgs = append(prevArgs, extraArgs...)
+		if filter.MediaType != "" {
+			mType := strings.ToLower(filter.MediaType)
+			if mType == "movie" {
+				prevWhere = append(prevWhere, `m."type" = 'Movie'`)
+			} else if mType == "series" {
+				prevWhere = append(prevWhere, `m."type" IN ('Series', 'Episode', 'Season')`)
+			} else if mType == "audio" || mType == "music" {
+				prevWhere = append(prevWhere, `m."type" IN ('Audio', 'Track', 'MusicAlbum')`)
+			} else if mType == "book" {
+				prevWhere = append(prevWhere, `m."type" IN ('Book', 'AudioBook')`)
+			}
+		}
+		if len(filter.ServerIDs) > 0 {
+			placeholders := make([]string, len(filter.ServerIDs))
+			for i, sid := range filter.ServerIDs {
+				placeholders[i] = "?"
+				prevArgs = append(prevArgs, sid)
+			}
+			prevWhere = append(prevWhere, `p."serverId" IN (`+strings.Join(placeholders, ",")+`)`)
 		}
 
-		// Hourly & Day of Week
-		hr := h.startedAt.Hour()
-		if hr >= 0 && hr < 24 {
-			hourlyMap[hr]++
+		prevQ := database.Bind(fmt.Sprintf(`
+			SELECT COUNT(*), COALESCE(SUM(p."durationWatched"), 0), COUNT(DISTINCT p."userId")
+			FROM "PlaybackHistory" p
+			LEFT JOIN "Media" m ON m."id" = p."mediaId" AND m."serverId"=p."serverId"
+			WHERE %s
+		`, strings.Join(prevWhere, " AND ")), driver)
+		_ = db.QueryRowContext(ctx, prevQ, prevArgs...).Scan(&previousPlays, &previousDurationSec, &previousActiveUsers)
+
+		prevHours := math.Round((float64(previousDurationSec)/3600.0)*10) / 10
+		if previousPlays > 0 {
+			playsGrowth = math.Round(((float64(totalPlays)-float64(previousPlays))/float64(previousPlays))*1000) / 10
 		}
-		dow := int(h.startedAt.Weekday())
-		if dow >= 0 && dow < 7 {
-			dayOfWeekMap[dow]++
+		if prevHours > 0 {
+			hoursGrowth = math.Round(((hoursWatched-prevHours)/prevHours)*1000) / 10
 		}
-
-		// Platform / Client Ecosystem
-		platformMap[h.clientName]++
-		clientCatMap[CategorizeClient(h.clientName)]++
-
-		// Monthly watch time: "YYYY_M" (0-indexed month)
-		mKey := fmt.Sprintf("%d_%d", h.startedAt.Year(), int(h.startedAt.Month())-1)
-		monthlyWatchMap[mKey] = monthlyWatchMap[mKey] + hHours
-
-		// Top users
-		if h.userId != "" {
-			uEntry := userDurationMap[h.userId]
-			uEntry.uname = h.username
-			uEntry.jid = h.jellyfinUserId
-			uEntry.sec += h.durationWatched
-			userDurationMap[h.userId] = uEntry
+		if previousActiveUsers > 0 {
+			activeUsersGrowth = math.Round(((float64(currentActiveUsers)-float64(previousActiveUsers))/float64(previousActiveUsers))*1000) / 10
 		}
+	}
 
+	// 4. Today statistics
+	todayScope := filter
+	todayScope.TimeRange = "custom"
+	todayScope.From = now.UTC().Format("2006-01-02")
+	todayScope.To = todayScope.From
+	todayWhere, todayArgs, _, _, err := analyticsConditions(todayScope, now)
+	if err != nil {
+		return FullDashboardResult{}, err
+	}
+	// SQLite imports/defaults may use a space instead of ISO's T separator.
+	if driver == "sqlite" {
+		for i, clause := range todayWhere {
+			if clause == `p."startedAt" >= ?` {
+				todayWhere[i] = `datetime(p."startedAt") >= datetime(?)`
+			}
+			if clause == `p."startedAt" < ?` {
+				todayWhere[i] = `datetime(p."startedAt") < datetime(?)`
+			}
+		}
+	}
+	todayWhere = append(todayWhere, excludedLibClause, history.ZappingClause("p"))
+	var todayPlays, todayDurationSec, todayActiveUsers int64
+	todayQ := database.Bind(fmt.Sprintf(`
+		SELECT COUNT(*), COALESCE(SUM(p."durationWatched"), 0), COUNT(DISTINCT p."userId")
+		FROM "PlaybackHistory" p
+		LEFT JOIN "Media" m ON m."id" = p."mediaId" AND m."serverId"=p."serverId"
+		WHERE %s
+	`, strings.Join(todayWhere, " AND ")), driver)
+	if err := db.QueryRowContext(ctx, todayQ, todayArgs...).Scan(&todayPlays, &todayDurationSec, &todayActiveUsers); err != nil {
+		return FullDashboardResult{}, err
+	}
+	todayHoursFloat := float64(todayDurationSec) / 3600.0
+	todayHoursStr := fmt.Sprintf("%.1f", todayHoursFloat)
+
+	// 5. Sweep-line for Peak Concurrent Streams & Server Load Timeline
+
+	sort.Slice(events, func(i, j int) bool {
+		if events[i].ts == events[j].ts {
+			return events[i].val > events[j].val
+		}
+		return events[i].ts < events[j].ts
+	})
+
+	var peakConcurrentStreams, currentStreams int
+	serverLoadMap := make(map[string]int)
+
+	for _, evt := range events {
+		currentStreams += evt.val
+		if currentStreams > peakConcurrentStreams {
+			peakConcurrentStreams = currentStreams
+		}
+		k := getBucketKey(time.Unix(evt.ts, 0).UTC())
+		if currentStreams > serverLoadMap[k] {
+			serverLoadMap[k] = currentStreams
+		}
 	}
 
 	completions, err := getCumulativeCompletion(ctx, db, driver, filter, true)
@@ -815,7 +817,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		            ELSE COALESCE(m."type", 'Unknown') END AS lib,
 		       COUNT(*)
 		FROM "PlaybackHistory" p
-		LEFT JOIN "Media" m ON m."id" = p."mediaId"
+		LEFT JOIN "Media" m ON m."id" = p."mediaId" AND m."serverId"=p."serverId"
 		WHERE `+strings.Join(heatmapWhere, " AND ")+`
 		GROUP BY dt, lib
 	`, driver), heatmapArgs...)

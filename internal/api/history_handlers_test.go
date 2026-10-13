@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -99,6 +100,15 @@ func TestHomonymousUsersCannotCrossServerIdentityBoundary(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"Id":"shared-jellyfin-id","Policy":{"EnableAllFolders":true}}`))
+	}))
+	defer provider.Close()
+	if _, err := db.Exec(`UPDATE "Server" SET "url"=?,"jellyfinApiKey"='key'`, provider.URL); err != nil {
+		t.Fatal(err)
+	}
+
 	h := New(db, "sqlite")
 	known := auth.Principal{Username: "SameName", Role: "user", JellyfinUserID: "shared-jellyfin-id", AuthServerID: "s1"}
 	for _, tc := range []struct {

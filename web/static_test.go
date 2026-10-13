@@ -87,8 +87,8 @@ func TestPprofEndpoints(t *testing.T) {
 	reqEnabled := httptest.NewRequest(http.MethodGet, "/debug/pprof/", nil)
 	recEnabled := httptest.NewRecorder()
 	enabledHandler.ServeHTTP(recEnabled, reqEnabled)
-	if recEnabled.Code != http.StatusOK || !strings.Contains(recEnabled.Body.String(), "Types of profiles available") {
-		t.Fatalf("expected pprof index when enabled, got %d %q", recEnabled.Code, recEnabled.Body.String())
+	if recEnabled.Code != http.StatusUnauthorized || strings.Contains(recEnabled.Body.String(), "Types of profiles available") {
+		t.Fatalf("expected authentication for pprof when enabled, got %d %q", recEnabled.Code, recEnabled.Body.String())
 	}
 }
 

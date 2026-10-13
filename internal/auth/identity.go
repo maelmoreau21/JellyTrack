@@ -79,7 +79,7 @@ func ResolveAccount(ctx context.Context, db *sql.DB, driver string, principal Pr
 		}
 		where += `)`
 	}
-	rows, err := db.QueryContext(ctx, database.Bind(`SELECT u."id",u."serverId",u."jellyfinUserId",u."username",COALESCE(s."name",'') FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" WHERE `+where+` LIMIT 2`, driver), args...)
+	rows, err := db.QueryContext(ctx, database.Bind(`SELECT u."id",u."serverId",u."jellyfinUserId",u."username",COALESCE(s."name",'') FROM "User" u LEFT JOIN "Server" s ON s."id"=u."serverId" WHERE (`+where+`) AND u."isActive"=TRUE AND s."isActive"=TRUE LIMIT 2`, driver), args...)
 	if err != nil {
 		return AccountIdentity{}, err
 	}

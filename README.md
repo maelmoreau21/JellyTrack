@@ -11,11 +11,13 @@
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <a href="https://go.dev/"><img alt="Go" src="https://img.shields.io/badge/backend-Go-00ADD8?logo=go&logoColor=white"></a>
-  <a href="https://github.com/maelmoreau21/JellyTrack/tree/codex/frontend-recovery"><img alt="Go migration in progress" src="https://img.shields.io/badge/status-Go%20migration%20in%20progress-orange"></a>
+  <a href="https://github.com/maelmoreau21/JellyTrack/tree/develop"><img alt="Go development" src="https://img.shields.io/badge/status-Go%20development-orange"></a>
 </p>
 
 > [!IMPORTANT]
-> **Development branch:** This README describes the Go implementation on [`codex/frontend-recovery`](https://github.com/maelmoreau21/JellyTrack/tree/codex/frontend-recovery). The default `main` branch still contains the earlier application. The `VERSION` file declares `3.0.0`, but this does **not** mean that JellyTrack Go 3.0 has been released or validated for production. Historical UI parity and end-to-end integration testing are still being completed.
+> **Go implementation:** `main` and `develop` contain the Go application. This README describes the checked-out code. The `VERSION` value `3.0.0` does not certify a production release: local fixtures, CI and Docker builds are separate from validation on real Jellyfin/OIDC installations.
+
+Account association, scoped administration, private multi-server Wrapped and encrypted backups are documented in [Multi-server identities and backup recovery](docs/MULTISERVER_IDENTITIES.md). Historical audit images are indexed in [the archive manifest](docs/AUDIT_ASSET_ARCHIVE.json); README illustrations remain in Git.
 
 ## Screenshots
 

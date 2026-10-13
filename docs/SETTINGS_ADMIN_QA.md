@@ -42,15 +42,15 @@ Dans la copie historique FR, `/api/admin/plugin/health` a répondu HTTP 500 pend
 
 Jellyfin, bureau sombre — référence puis Go :
 
-![Jellyfin historique](settings-admin-captures/main-settings-jellyfin-desktop-dark.png)
+![Jellyfin historique](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/settings-admin-captures/main-settings-jellyfin-desktop-dark.png)
 
-![Jellyfin Go](settings-admin-captures/go-settings-jellyfin-desktop-dark.png)
+![Jellyfin Go](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/settings-admin-captures/go-settings-jellyfin-desktop-dark.png)
 
 Santé, mobile sombre — référence puis Go :
 
-![Santé historique mobile](settings-admin-captures/main-admin-health-mobile-dark.png)
+![Santé historique mobile](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/settings-admin-captures/main-admin-health-mobile-dark.png)
 
-![Santé Go mobile](settings-admin-captures/go-admin-health-mobile-dark.png)
+![Santé Go mobile](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/settings-admin-captures/go-admin-health-mobile-dark.png)
 
 Les captures ont été inspectées : hiérarchie, placement des onglets et groupes ont été restaurés ; les jeux de données diffèrent. Quelques espacements, icônes, styles de champs et enveloppes d'onglets mobiles diffèrent encore. L'identité pixel à pixel n'est pas déclarée. Les autres captures FR/EN et clair/sombre sont disponibles dans `settings-admin-captures/`.
 

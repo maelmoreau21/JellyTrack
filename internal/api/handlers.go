@@ -31,10 +31,14 @@ import (
 )
 
 type Handler struct {
-	db              *sql.DB
-	driver          string
-	pluginHandler   http.Handler
-	libraryRepairMu sync.Mutex
+	db               *sql.DB
+	driver           string
+	pluginHandler    http.Handler
+	libraryRepairMu  sync.Mutex
+	libraryCacheMu   sync.Mutex
+	libraryCache     map[string]libraryAccessEntry
+	dashboardCacheMu sync.Mutex
+	dashboardCache   map[string]dashboardCacheEntry
 }
 
 func New(db *sql.DB, driver string, pluginHandler ...http.Handler) *Handler {
@@ -46,11 +50,13 @@ func New(db *sql.DB, driver string, pluginHandler ...http.Handler) *Handler {
 }
 
 func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.Handler) http.Handler) {
+	mux.Handle("GET /api/dashboard/live", adminProtect(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { h.dashboardLive(w, r, adminProtect) })))
 	// Standard user session protected routes
 	userRoutes := map[string]http.HandlerFunc{
+		"GET /api/me/wrapped":               h.personalWrapped,
+		"GET /api/me/server":                h.ownServer,
+		"POST /api/me/server/sync":          h.ownServer,
 		"GET /api/navigation":               h.navigation,
-		"GET /api/newsletter":               h.newsletterData,
-		"GET /api/dashboard":                h.dashboard,
 		"GET /api/users/{id}":               h.userDetail,
 		"GET /api/users/{id}/active-stream": h.userActiveStream,
 		"GET /api/wrapped/{id}":             h.userWrapped,
@@ -72,6 +78,8 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 
 	// Admin protected routes
 	adminRoutes := map[string]http.HandlerFunc{
+		"GET /api/newsletter":                            h.newsletterData,
+		"GET /api/dashboard":                             h.dashboard,
 		"GET /api/media/analysis":                        h.recoveredMediaAnalysis,
 		"GET /api/admin/cleanup":                         h.recoveredCleanup,
 		"GET /api/users":                                 h.users,
@@ -125,6 +133,7 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"DELETE /api/settings/jellyfin-servers/{id}":     h.deleteServer,
 		"POST /api/settings/jellyfin-servers/plugin-key": h.recoveredServerPluginKey,
 		"GET /api/backup/export":                         h.backupExport,
+		"POST /api/backup/export/full":                   h.backupExportFull,
 		"POST /api/backup/import":                        h.backupImport,
 		"GET /api/backup/auto":                           h.backupAutoList,
 		"POST /api/backup/auto/trigger":                  h.backupAutoTrigger,
@@ -194,6 +203,15 @@ func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 400, err.Error())
 		return
 	}
+	cacheKey := ""
+	if p, ok := auth.PrincipalFromContext(r.Context()); ok && p.IsAdmin() {
+		key, _ := json.Marshal(filter)
+		cacheKey = string(key)
+		if data := h.cachedDashboard(cacheKey); data != nil {
+			writeDashboardJSON(w, data)
+			return
+		}
+	}
 
 	res, err := stats.GetFullDashboard(r.Context(), h.db, h.driver, filter)
 	if err != nil {
@@ -210,6 +228,16 @@ func (h *Handler) dashboard(w http.ResponseWriter, r *http.Request) {
 	res.ServerActivity, err = h.recoveredRows(r, `SELECT p."serverId",s."name",COUNT(*) AS "plays",COALESCE(SUM(p."durationWatched"),0)/3600.0 AS "hours" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" JOIN "Server" s ON s."id"=p."serverId" WHERE `+strings.Join(clauses, " AND ")+` GROUP BY p."serverId",s."name" ORDER BY s."name",p."serverId"`, args...)
 	if err != nil {
 		jsonError(w, 500, "Cannot compare server activity")
+		return
+	}
+	if cacheKey != "" {
+		data, err := json.Marshal(res)
+		if err != nil {
+			jsonError(w, 500, "Statistiques illisibles.")
+			return
+		}
+		h.storeDashboard(cacheKey, data)
+		writeDashboardJSON(w, data)
 		return
 	}
 	jsonResponse(w, 200, res)
@@ -1385,6 +1413,7 @@ func (h *Handler) listServers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) saveServer(w http.ResponseWriter, r *http.Request) {
+	defer h.clearLibraryAccessCache()
 	var input struct {
 		ID                string `json:"id"`
 		Name              string `json:"name"`
@@ -1497,6 +1526,7 @@ func (h *Handler) saveServer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updateServer(w http.ResponseWriter, r *http.Request) {
+	defer h.clearLibraryAccessCache()
 	var input struct {
 		ID                string  `json:"id"`
 		Name              *string `json:"name"`
@@ -1596,6 +1626,7 @@ func (h *Handler) updateServer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deleteServer(w http.ResponseWriter, r *http.Request) {
+	defer h.clearLibraryAccessCache()
 	id := strings.TrimSpace(r.PathValue("id"))
 	if id == "" {
 		var body struct {
@@ -1721,6 +1752,7 @@ func resolveWebhookServerURL(p map[string]any) string {
 // ---------------------- Backups & Maintenance ----------------------
 
 func (h *Handler) backupExport(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "private, no-store")
 	zipData, err := backup.CreateZipBackup(r.Context(), h.db, h.driver)
 	if err != nil {
 		jsonError(w, 500, "Échec de génération de la sauvegarde.")
@@ -1734,6 +1766,7 @@ func (h *Handler) backupExport(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) backupImport(w http.ResponseWriter, r *http.Request) {
+	defer h.clearLibraryAccessCache()
 	r.Body = http.MaxBytesReader(w, r.Body, backup.DefaultMaxBackupImportBytes)
 	buf, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -1794,13 +1827,19 @@ func (h *Handler) backupAutoDownload(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 404, "Fichier introuvable.")
 		return
 	}
-	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Cache-Control", "private, no-store")
+	contentType := "application/zip"
+	if strings.HasSuffix(safePath, ".jtb") {
+		contentType = "application/octet-stream"
+	}
+	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, fileName))
 	w.WriteHeader(200)
 	_, _ = w.Write(fileBytes)
 }
 
 func (h *Handler) backupAutoRestore(w http.ResponseWriter, r *http.Request) {
+	defer h.clearLibraryAccessCache()
 	var body struct {
 		FileName string `json:"fileName"`
 	}
@@ -1902,6 +1941,7 @@ func (h *Handler) adminIntegrityCleanup(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) sync(w http.ResponseWriter, r *http.Request) {
+	defer h.clearLibraryAccessCache()
 	var input struct {
 		Mode       string `json:"mode"`
 		RecentOnly bool   `json:"recentOnly"`
@@ -2061,7 +2101,7 @@ func (h *Handler) serverCompare(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
-	requestedYear, yearErr := wrappedYear(r)
+	_, yearErr := wrappedYear(r)
 	if yearErr != nil {
 		jsonError(w, 400, "Année invalide.")
 		return
@@ -2095,28 +2135,11 @@ func (h *Handler) userWrapped(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		id = identity.ID
-		var wrapVis, wrapPer int
-		var wrapSM, wrapSD, wrapEM, wrapED int
-		err = h.db.QueryRowContext(r.Context(), `SELECT "wrappedVisible","wrappedPeriodEnabled","wrappedStartMonth","wrappedStartDay","wrappedEndMonth","wrappedEndDay" FROM "GlobalSettings" WHERE "id"='global'`).Scan(&wrapVis, &wrapPer, &wrapSM, &wrapSD, &wrapEM, &wrapED)
-		if err == nil {
-			if wrapVis == 0 {
-				jsonError(w, 404, "Le Wrapped n'est pas activé.")
-				return
-			}
-			if wrapPer == 1 && requestedYear == time.Now().UTC().Year() {
-				now := time.Now().UTC()
-				start := time.Date(now.Year(), time.Month(wrapSM), wrapSD, 0, 0, 0, 0, time.UTC)
-				endYear := now.Year()
-				if wrapEM < wrapSM {
-					endYear++
-				}
-				end := time.Date(endYear, time.Month(wrapEM), wrapED, 23, 59, 59, 0, time.UTC)
-				if now.Before(start) || now.After(end) {
-					jsonError(w, 404, "Le Wrapped n'est pas disponible actuellement.")
-					return
-				}
-			}
+
+		if !personalWrappedAvailable(h, w, r, principal) {
+			return
 		}
+
 	}
 
 	var uid, uname, jid string

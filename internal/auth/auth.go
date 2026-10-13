@@ -71,7 +71,12 @@ type Principal struct {
 }
 
 func (p Principal) IsAdmin() bool {
-	return strings.EqualFold(p.Role, "admin")
+	return p.Role == "super_admin" || (p.Role == "admin" && p.AuthServerID == "" && p.AuthMethod != "oidc" && p.AuthMethod != "jellyfin")
+}
+
+// A server administrator never inherits global administration from Jellyfin.
+func (p Principal) CanAdminServer(serverID string) bool {
+	return p.IsAdmin() || (p.Role == "server_admin" && p.AuthServerID != "" && p.AuthServerID == serverID)
 }
 
 type loginBucket struct {
@@ -109,6 +114,13 @@ func (m *Manager) oidcStart(w http.ResponseWriter, r *http.Request) {
 	}
 	verifier := oauth2.GenerateVerifier()
 	flow := state + "." + nonce + "." + verifier
+	if server := r.URL.Query().Get("serverId"); server != "" {
+		if !m.selectableServer(r.Context(), server) {
+			writeJSON(w, 403, map[string]string{"error": "Authentification par ce serveur non autorisée."})
+			return
+		}
+		flow += "." + base64.RawURLEncoding.EncodeToString([]byte(server))
+	}
 	http.SetCookie(w, &http.Cookie{Name: oidcFlowCookie, Value: flow, Path: "/api/auth", MaxAge: 600, HttpOnly: true, Secure: m.secure, SameSite: http.SameSiteLaxMode})
 	query := oauth2.SetAuthURLParam("nonce", nonce)
 	http.Redirect(w, r, oauth.AuthCodeURL(state, query, oauth2.S256ChallengeOption(verifier)), http.StatusFound)
@@ -180,7 +192,7 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	parts := strings.Split(cookie.Value, ".")
-	if len(parts) != 3 || !constantStringEqual(parts[0], r.URL.Query().Get("state")) || r.URL.Query().Get("code") == "" {
+	if (len(parts) != 3 && len(parts) != 4) || !constantStringEqual(parts[0], r.URL.Query().Get("state")) || r.URL.Query().Get("code") == "" {
 		clearFlow()
 		slog.Warn("OIDC state mismatch or code missing")
 		http.Redirect(w, r, "/login?error=OAuthCallback", http.StatusSeeOther)
@@ -283,7 +295,17 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login?error=AccessDeniedGroup", http.StatusSeeOther)
 		return
 	}
-	account, resolvedServerID, policyErr := m.oidcAccount(r.Context(), rawClaims)
+	selectedServer := ""
+	if len(parts) == 4 {
+		decoded, err := base64.RawURLEncoding.DecodeString(parts[3])
+		if err != nil || !m.selectableServer(r.Context(), string(decoded)) {
+			clearFlow()
+			http.Redirect(w, r, "/login?error=AccessDenied", http.StatusSeeOther)
+			return
+		}
+		selectedServer = string(decoded)
+	}
+	account, resolvedServerID, policyErr := m.oidcAccount(r.Context(), rawClaims, selectedServer)
 	if policyErr != nil {
 		clearFlow()
 		slog.Warn("OIDC account reconciliation failed", "username", username, "error", policyErr)
@@ -292,6 +314,12 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	if cfg.adminGroup == "" && cfg.userGroup == "" && account.Policy.IsAdministrator {
 		role = "admin"
+	}
+	if role == "admin" {
+		role = "server_admin"
+	}
+	if globalIdentityAllowed(resolvedServerID, account.ID) {
+		role = "super_admin"
 	}
 	username, resolvedJfID := account.Name, account.ID
 	if e = m.upsertUser(r.Context(), stableUserID(resolvedServerID, resolvedJfID), resolvedServerID, resolvedJfID, username, time.Now().UTC().Format(time.RFC3339Nano)); e != nil {
@@ -309,7 +337,7 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 
 	ip := requestip.ClientIP(r.RemoteAddr, map[string]string{"X-Forwarded-For": r.Header.Get("X-Forwarded-For"), "X-Real-IP": r.Header.Get("X-Real-IP")})
 	_ = security.LogAudit(r.Context(), m.db, m.driver, "SSO Login successful", &resolvedJfID, &username, nil, &ip, map[string]any{
-		"isAdmin":  role == "admin",
+		"isAdmin":  role == "super_admin",
 		"groups":   groups,
 		"provider": "oidc",
 	})
@@ -360,14 +388,20 @@ func detectBaseURL(r *http.Request) string {
 		return base
 	}
 	if r != nil {
-		host := strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))
+		host := ""
+		if requestip.TrustedPeer(r.RemoteAddr) {
+			host = strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))
+		}
 		if host == "" {
 			host = r.Host
 		}
 		if idx := strings.Index(host, ","); idx != -1 {
 			host = strings.TrimSpace(host[:idx])
 		}
-		proto := strings.TrimSpace(r.Header.Get("X-Forwarded-Proto"))
+		proto := ""
+		if requestip.TrustedPeer(r.RemoteAddr) {
+			proto = strings.TrimSpace(r.Header.Get("X-Forwarded-Proto"))
+		}
 		if proto == "" {
 			if r.TLS != nil {
 				proto = "https"
@@ -515,6 +549,10 @@ func New(db *sql.DB, driver string) *Manager {
 }
 
 func (m *Manager) Routes(mux *http.ServeMux) {
+	mux.Handle("GET /api/me/accounts", m.Middleware(http.HandlerFunc(m.linkedAccounts)))
+	mux.Handle("POST /api/me/accounts/proof", m.Middleware(http.HandlerFunc(m.accountProof)))
+	mux.Handle("POST /api/me/accounts/link", m.Middleware(http.HandlerFunc(m.linkAccount)))
+	mux.Handle("DELETE /api/me/accounts/{id}", m.Middleware(http.HandlerFunc(m.unlinkAccount)))
 	mux.HandleFunc("GET /api/auth/options", func(w http.ResponseWriter, r *http.Request) {
 		cfg := m.resolveOIDC(r.Context())
 		hasLocal := len(m.passwordHash) > 0 ||
@@ -523,6 +561,7 @@ func (m *Manager) Routes(mux *http.ServeMux) {
 			strings.TrimSpace(os.Getenv("JELLYGATE_LOCAL_ADMIN_PASSWORD")) != ""
 		writeJSON(w, http.StatusOK, map[string]any{
 			"jellyfin":       jellyfinLoginEnabled(),
+			"servers":        m.loginServers(r.Context()),
 			"oidc":           cfg.enabled,
 			"ssoButtonLabel": m.ssoButtonLabel(r.Context()),
 			"autoRedirect":   cfg.autoRedirect,
@@ -585,7 +624,7 @@ func (m *Manager) authSession(w http.ResponseWriter, r *http.Request) {
 			"name":           p.Username,
 			"username":       p.Username,
 			"role":           p.Role,
-			"isAdmin":        p.Role == "admin",
+			"isAdmin":        p.IsAdmin(),
 			"jellyfinUserId": resolvedJfID,
 			"authServerId":   p.AuthServerID,
 		},
@@ -667,12 +706,13 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 	loginMu.Unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, 8192)
 	var input struct {
+		ServerID   string `json:"serverId"`
 		Username   string `json:"username"`
 		Password   string `json:"password"`
 		RememberMe any    `json:"rememberMe"`
 	}
 	dec := json.NewDecoder(r.Body)
-	if err := dec.Decode(&input); err != nil || len(input.Username) > 128 || len(input.Password) > 1024 {
+	if err := dec.Decode(&input); err != nil || len(input.Username) > 128 || len(input.Password) > 1024 || len(input.ServerID) > 128 {
 		writeJSON(w, 400, map[string]string{"error": "Requête invalide."})
 		return
 	}
@@ -700,7 +740,7 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 	userOK := subtle.ConstantTimeCompare([]byte(input.Username), []byte(m.username)) == 1
 	if userOK && len(m.passwordHash) > 0 && bcrypt.CompareHashAndPassword(m.passwordHash, []byte(input.Password)) == nil {
 		isPrimary := true
-		csrf, err := m.createSessionIdentity(w, r, Principal{Username: m.username, Role: "admin", JellyfinUserID: "local-admin", AuthServerName: "Local Admin", AuthServerIsPrimary: &isPrimary, AuthMethod: "local-admin"}, rememberBool)
+		csrf, err := m.createSessionIdentity(w, r, Principal{Username: m.username, Role: "super_admin", JellyfinUserID: "local-admin", AuthServerName: "Local Admin", AuthServerIsPrimary: &isPrimary, AuthMethod: "local-admin"}, rememberBool)
 		if err != nil {
 			writeJSON(w, 500, map[string]string{"error": "Erreur interne."})
 			return
@@ -713,7 +753,7 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 		isPrim := true
 		writeJSON(w, 200, Principal{
 			Username:            m.username,
-			Role:                "admin",
+			Role:                "super_admin",
 			CSRFToken:           csrf,
 			JellyfinUserID:      "local-admin",
 			AuthServerName:      "Local Admin",
@@ -800,6 +840,19 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if input.ServerID != "" {
+		selected := []serverCandidate{}
+		for _, candidate := range candidates {
+			if candidate.id == input.ServerID && (candidate.isPrimary || candidate.allowAuthFallback) {
+				selected = append(selected, candidate)
+			}
+		}
+		if len(selected) != 1 {
+			writeJSON(w, 403, map[string]string{"error": "Authentification par ce serveur non autorisée."})
+			return
+		}
+		candidates = selected
+	}
 	var authUser *jellyfin.AuthenticatedUser
 	var authCandidate *serverCandidate
 
@@ -846,7 +899,10 @@ func (m *Manager) login(w http.ResponseWriter, r *http.Request) {
 	if authUser != nil && authCandidate != nil {
 		role := "user"
 		if authUser.Policy.IsAdministrator {
-			role = "admin"
+			role = "server_admin"
+		}
+		if globalIdentityAllowed(authCandidate.id, authUser.ID) {
+			role = "super_admin"
 		}
 		isPrimary := authCandidate.isPrimary
 		csrf, e := m.createSessionIdentity(w, r, Principal{Username: authUser.Name, Role: role, JellyfinUserID: authUser.ID, AuthServerID: authCandidate.id, AuthServerName: authCandidate.name, AuthServerIsPrimary: &isPrimary, AuthMethod: "jellyfin"}, rememberBool)
@@ -975,7 +1031,7 @@ func (m *Manager) Middleware(next http.Handler) http.Handler {
 func (m *Manager) AdminMiddleware(next http.Handler) http.Handler {
 	return m.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		principal, ok := m.authenticate(r)
-		if !ok || principal.Role != "admin" {
+		if !ok || !principal.IsAdmin() {
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "Droits administrateur requis."})
 			return
 		}
@@ -1032,6 +1088,12 @@ func (m *Manager) authenticate(r *http.Request) (Principal, bool) {
 	// Pre-policy sessions may have bypassed SSO; require a fresh login.
 	if p.IdentityVersion < 2 {
 		return Principal{}, false
+	}
+	if p.Role == "admin" && (p.AuthServerID != "" || p.AuthMethod == "oidc" || p.AuthMethod == "jellyfin") {
+		p.Role = "server_admin"
+	}
+	if p.Role == "super_admin" && p.AuthMethod != "local-admin" && !globalIdentityAllowed(p.AuthServerID, p.JellyfinUserID) {
+		p.Role = "user"
 	}
 	return p, true
 }
@@ -1126,7 +1188,7 @@ func sameOrigin(r *http.Request) bool {
 
 	// Check against X-Forwarded-Host
 	forwardedHost := strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))
-	if forwardedHost != "" {
+	if forwardedHost != "" && requestip.TrustedPeer(r.RemoteAddr) {
 		for _, fh := range strings.Split(forwardedHost, ",") {
 			fh = strings.TrimSpace(fh)
 			if strings.EqualFold(requestOrigin, "http://"+fh) || strings.EqualFold(requestOrigin, "https://"+fh) {

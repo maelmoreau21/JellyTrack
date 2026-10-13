@@ -81,12 +81,11 @@ func TestFrontendAPIAuthenticationAndAdminPermissions(t *testing.T) {
 	if _, err := db.Exec(`UPDATE "AuthSession" SET "role"='user'`); err != nil {
 		t.Fatal(err)
 	}
-	// main allows authenticated users to read Rewind, but posting to Discord
-	// remains an admin mutation. Exercise both through the real middleware.
+	// Global newsletter data and Discord posting require global administration. Exercise both through the real middleware.
 	for _, check := range []struct {
 		method, path string
 		status       int
-	}{{"GET", "/api/newsletter", 200}, {"POST", "/api/newsletter/discord-post", 403}} {
+	}{{"GET", "/api/newsletter", 403}, {"POST", "/api/newsletter/discord-post", 403}} {
 		request := httptest.NewRequest(check.method, "http://localhost"+check.path, strings.NewReader(`{}`))
 		request.AddCookie(cookie)
 		request.Header.Set("Origin", "http://localhost")
@@ -97,7 +96,7 @@ func TestFrontendAPIAuthenticationAndAdminPermissions(t *testing.T) {
 			t.Fatalf("ordinary user %s %s: status %d", check.method, check.path, rec.Code)
 		}
 	}
-	for _, path := range []string{"/api/admin/cleanup", "/api/users", "/api/settings", "/api/streams", "/api/hardware", "/api/admin/health", "/api/stats/deep"} {
+	for _, path := range []string{"/api/dashboard/live", "/api/dashboard?servers=all", "/api/newsletter", "/api/admin/cleanup", "/api/users", "/api/settings", "/api/streams", "/api/hardware", "/api/admin/health", "/api/stats/deep"} {
 		request := httptest.NewRequest("GET", path, nil)
 		request.AddCookie(cookie)
 		rec := httptest.NewRecorder()
@@ -188,6 +187,9 @@ func TestJellyfinLoginCannotBindUnregisteredServerOrDuplicateUUIDAccount(t *test
 				want := 403
 				if registered {
 					want = 200
+					if path == "/api/wrapped/me" {
+						want = 404
+					}
 				}
 				if recorder.Code != want {
 					t.Fatalf("%s status=%d want=%d", path, recorder.Code, want)

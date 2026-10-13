@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -16,6 +18,55 @@ import (
 // account's exact server and remote ID. Unavailable or ambiguous data denies
 // access; request filters and display names never establish identity.
 func (h *Handler) libraryAccessClause(r *http.Request, alias string) (string, []any) {
+	p, ok := auth.PrincipalFromContext(r.Context())
+	if !ok || p.IsAdmin() {
+		return h.libraryAccessClauseFresh(r, alias)
+	}
+	identity, err := auth.ResolveAccount(r.Context(), h.db, h.driver, p)
+	if err != nil {
+		return "1=0", nil
+	}
+	var address, key, updated string
+	err = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "url",COALESCE("jellyfinApiKey",''),CAST("updatedAt" AS TEXT) FROM "Server" WHERE "id"=? AND "isActive"=TRUE`, h.driver), identity.ServerID).Scan(&address, &key, &updated)
+	if err != nil {
+		return "1=0", nil
+	}
+	cacheKey := fmt.Sprintf("%x", sha256.Sum256([]byte(identity.ServerID+"\x00"+identity.JellyfinUserID+"\x00"+address+"\x00"+key+"\x00"+updated+"\x00"+os.Getenv("JELLYFIN_API_KEY")+"\x00"+os.Getenv("JELLYTRACK_JELLYFIN_API_KEY"))))
+	h.libraryCacheMu.Lock()
+	entry, found := h.libraryCache[cacheKey]
+	h.libraryCacheMu.Unlock()
+	if found && time.Now().Before(entry.expires) {
+		return strings.ReplaceAll(entry.clause, "__library_media__", alias), append([]any{}, entry.args...)
+	}
+	clause, args := h.libraryAccessClauseFresh(r, "__library_media__")
+	// Never retain a failed provider response or stale permissions.
+	if clause != "1=0" {
+		h.libraryCacheMu.Lock()
+		if h.libraryCache == nil || len(h.libraryCache) > 512 {
+			h.libraryCache = map[string]libraryAccessEntry{}
+		}
+		h.libraryCache[cacheKey] = libraryAccessEntry{clause: clause, args: append([]any{}, args...), expires: time.Now().Add(10 * time.Second)}
+		h.libraryCacheMu.Unlock()
+	}
+	return strings.ReplaceAll(clause, "__library_media__", alias), args
+}
+
+type libraryAccessEntry struct {
+	clause  string
+	args    []any
+	expires time.Time
+}
+
+func (h *Handler) clearLibraryAccessCache() {
+	h.libraryCacheMu.Lock()
+	h.libraryCache = nil
+	h.libraryCacheMu.Unlock()
+	h.dashboardCacheMu.Lock()
+	h.dashboardCache = nil
+	h.dashboardCacheMu.Unlock()
+}
+
+func (h *Handler) libraryAccessClauseFresh(r *http.Request, alias string) (string, []any) {
 	p, ok := auth.PrincipalFromContext(r.Context())
 	if !ok || p.IsAdmin() {
 		return "1=1", nil

@@ -65,3 +65,24 @@ func enabled(v string) bool {
 	}
 	return false
 }
+
+// TrustedPeer is shared by address, origin and OIDC redirect handling.
+func TrustedPeer(remote string) bool {
+	if !enabled(os.Getenv("TRUST_PROXY_HEADERS")) && !enabled(os.Getenv("TRUST_PROXY")) {
+		return false
+	}
+	host, _, err := net.SplitHostPort(remote)
+	if err != nil {
+		host = remote
+	}
+	ip, err := netip.ParseAddr(strings.Trim(host, "[]"))
+	if err != nil {
+		return false
+	}
+	for _, value := range strings.Split(os.Getenv("TRUSTED_PROXY_CIDRS"), ",") {
+		if prefix, err := netip.ParsePrefix(strings.TrimSpace(value)); err == nil && prefix.Contains(ip.Unmap()) {
+			return true
+		}
+	}
+	return false
+}

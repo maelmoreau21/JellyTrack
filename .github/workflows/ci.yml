@@ -10,6 +10,23 @@ jobs:
   go-test-and-vet:
     name: Go Tests & Vet
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: qa
+          POSTGRES_PASSWORD: qa-local-disposable
+          POSTGRES_DB: jellytrack_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U qa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      JELLYTRACK_TEST_POSTGRES_URL: postgresql://qa:qa-local-disposable@127.0.0.1:5432/jellytrack_qa?sslmode=disable
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -30,6 +47,39 @@ jobs:
         run: |
           go build -v .
           go build -v ./cmd/jellytrack
+
+  browser-security:
+    name: Account association and private Wrapped
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: Build disposable QA server
+        run: |
+          mkdir -p scratch/security-qa
+          go build -o scratch/security-qa/jellytrack ./cmd/jellytrack
+      - name: Install browser QA runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/jellytrack-qa" --no-save playwright@1.62.1
+          "$RUNNER_TEMP/jellytrack-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Exercise two-server browser workflow
+        env:
+          NODE_PATH: ${{ runner.temp }}/jellytrack-qa/node_modules
+          QA_BINARY: ${{ github.workspace }}/scratch/security-qa/jellytrack
+          PYTHON: python3
+        run: node scripts/security-qa/browser.cjs
+      - name: Preserve visual QA outside Git
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: account-security-browser-qa
+          path: |
+            scratch/security-qa/*.png
+            scratch/security-qa/browser-results.json
+          retention-days: 30
 
   docker-build:
     name: Docker Build Verification

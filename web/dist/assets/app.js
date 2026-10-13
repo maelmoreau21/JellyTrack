@@ -256,6 +256,16 @@
   // API Fetch Client
   // =========================================================================
 
+  const assetLoads = new Map();
+  function loadAsset(name) {
+    if (!assetLoads.has(name)) assetLoads.set(name, new Promise((resolve, reject) => {
+      const script = document.createElement('script'); script.src = '/assets/' + name + '.js';
+      script.onload = resolve; script.onerror = () => { assetLoads.delete(name); script.remove(); reject(new Error('Chargement de la page impossible.')); };
+      document.head.append(script);
+    }));
+    return assetLoads.get(name);
+  }
+
   const API = {
     async request(url, options = {}) {
       const opts = { ...options };
@@ -347,7 +357,7 @@
         const res = await fetch('/api/auth/me');
         if (res.ok) {
           State.user = await res.json();
-          State.user.isAdmin = String(State.user.role).toLowerCase() === 'admin';
+          State.user.isAdmin = ['admin', 'super_admin'].includes(String(State.user.role).toLowerCase());
           try {
             const context = await fetch('/api/navigation');
             if (context.ok) State.navigation = await context.json();
@@ -365,18 +375,18 @@
       window.JellyTrackNavigation.render();
     },
 
-    async login(username, password, rememberMe = false) {
+    async login(username, password, rememberMe = false, serverId = '') {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, rememberMe }),
+        body: JSON.stringify({ username, password, rememberMe, serverId }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Identifiants invalides');
       }
       State.user = data;
-      State.user.isAdmin = String(State.user.role).toLowerCase() === 'admin';
+      State.user.isAdmin = ['admin', 'super_admin'].includes(String(State.user.role).toLowerCase());
       await this.checkSession();
       return data;
     },
@@ -1058,7 +1068,7 @@
             container.innerHTML = streams.map((s) => `
               <div class="stream-card">
                 <div class="stream-poster-thumb">
-                  ${s.mediaJellyfinId ? `<img src="/api/jellyfin/image?id=${s.mediaJellyfinId}&type=Primary&maxWidth=140" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">` : ''}
+                  ${s.mediaJellyfinId ? `<img src="/api/jellyfin/image?id=${encodeURIComponent(s.mediaJellyfinId)}&serverId=${encodeURIComponent(s.serverId || '')}&type=Primary&maxWidth=140" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">` : ''}
                 </div>
                 <div class="stream-info">
                   <div class="stream-title">${Utils.escapeHtml(s.mediaTitle || 'Titre inconnu')}</div>
@@ -1068,11 +1078,11 @@
                     <span class="badge ${s.playMethod === 'DirectPlay' ? 'badge-success' : 'badge-warning'}">${Utils.escapeHtml(s.playMethod || 'Stream')}</span>
                   </div>
                   <div class="stream-progress-bar">
-                    <div class="stream-progress-fill" style="width: ${Math.min(100, Math.max(5, s.progressPercent || 25))}%;"></div>
+                    <div class="stream-progress-fill" style="width: ${Math.min(100, Math.max(5, Number(s.progressPercent) || 25))}%;"></div>
                   </div>
                 </div>
                 ${State.user.isAdmin ? `
-                  <button class="btn btn-danger btn-sm btn-kill-stream" data-session-id="${s.sessionId}">
+                  <button class="btn btn-danger btn-sm btn-kill-stream" data-session-id="${Utils.escapeHtml(s.sessionId)}">
                     ${I18n.t('dashboard.killStream') || 'Arrêter'}
                   </button>
                 ` : ''}
@@ -1117,11 +1127,12 @@
 
       // Default state
       const pageSignal = State.pageController.signal;
-      let hwInterval, healthInterval, streamsInterval;
+      let hwInterval, healthInterval, streamsInterval, liveEvents, liveScope;
       State.pageCleanups.push(() => {
         clearInterval(hwInterval);
         clearInterval(healthInterval);
         clearInterval(streamsInterval);
+        liveEvents?.close();
         delete window.openSendMessageModal;
         delete window.confirmKillStream;
         delete window.openAttendanceDrilldown;
@@ -1457,9 +1468,9 @@
       } catch (e) {}
 
       // 2. Load System Health Widgets
-      const loadSystemHealth = async () => {
+      const loadSystemHealth = async (snapshot) => {
         try {
-          const health = await API.getJSON('/api/admin/health');
+          const health = snapshot || await API.getJSON('/api/admin/health');
           if (pageSignal.aborted) return;
           const container = document.getElementById('dash-system-health-container');
           if (!container) return;
@@ -1536,9 +1547,9 @@
       };
 
       // 3. Load Hardware Monitor
-      const loadHardware = async () => {
+      const loadHardware = async (snapshot) => {
         try {
-          const hw = await API.getJSON('/api/hardware');
+          const hw = snapshot || await API.getJSON('/api/hardware');
           if (pageSignal.aborted) return;
           const container = document.getElementById('dash-hardware-container');
           if (!container || !hw || !hw.cpu) return;
@@ -1577,11 +1588,22 @@
         } catch (e) {}
       };
 
+      const startLiveEvents = () => {
+        liveEvents?.close(); liveScope = currentServerId;
+        liveEvents = new EventSource('/api/dashboard/live' + (liveScope ? '?servers=' + encodeURIComponent(liveScope) : ''));
+        liveEvents.addEventListener('dashboard', event => {
+          if (pageSignal.aborted) return;
+          try { const data = JSON.parse(event.data); if (data.streams) refreshLiveStreams(data.streams); if (data.hardware) loadHardware(data.hardware); if (data.health) loadSystemHealth(data.health); } catch (error) { console.error('Invalid dashboard event', error); }
+        });
+        liveEvents.addEventListener('revoked', () => { liveEvents.close(); Auth.checkSession().then(() => Router.renderCurrent()); });
+      };
+
       // 4. Live Streams Poller & Renderer
-      const refreshLiveStreams = async () => {
+      const refreshLiveStreams = async (snapshot) => {
+        if (liveEvents && liveScope !== currentServerId) startLiveEvents();
         if (document.hidden) return;
         try {
-          const res = await API.getJSON(`/api/streams${currentServerId ? `?servers=${encodeURIComponent(currentServerId)}` : ''}`);
+          const res = snapshot || await API.getJSON(`/api/streams${currentServerId ? `?servers=${encodeURIComponent(currentServerId)}` : ''}`);
           if (pageSignal.aborted) return;
           liveStreamsData = res.streams || [];
           liveBandwidth = res.totalBandwidthMbps || 0;
@@ -3716,9 +3738,7 @@
       ]);
 
       if (pageSignal.aborted) return;
-      hwInterval = setInterval(loadHardware, 10000);
-      healthInterval = setInterval(loadSystemHealth, 30000);
-      streamsInterval = setInterval(refreshLiveStreams, 4000);
+      startLiveEvents();
     },
 
     // 2. Login Page
@@ -3732,9 +3752,10 @@
       let oidcEnabled = false;
       let oidcAutoRedirect = false;
       let localAdminEnabled = false;
-      let jellyfinEnabled = true;
+      let jellyfinEnabled = true, loginServers = [], selectedLoginServer = '';
       try {
         const opts = await API.getJSON('/api/auth/options');
+        loginServers = opts.servers || [];
         ssoButtonLabel = typeof opts.ssoButtonLabel === "string" ? opts.ssoButtonLabel : "";
         oidcEnabled = !!opts.oidc;
         oidcAutoRedirect = !!opts.autoRedirect;
@@ -3831,6 +3852,7 @@
               ` : ''}
 
               ${jellyfinEnabled || localAdminEnabled ? `
+                ${loginServers.length > 1 ? `<label class="auth-label" for="login-server">Serveur Jellyfin</label><select id="login-server" class="form-input"><option value="">Automatique</option>${loginServers.map(server => `<option value="${Utils.escapeHtml(server.id)}" ${selectedLoginServer === server.id ? 'selected' : ''}>${Utils.escapeHtml(server.name)}</option>`).join('')}</select>` : ''}
                 <form id="form-login-local" class="auth-form">
                   <div class="auth-input-group">
                     <label class="auth-label" for="login-username">${I18n.t('login.username') || 'Nom d\'utilisateur'}</label>
@@ -3926,6 +3948,7 @@
         `;
 
         // Wire Event Listeners
+        document.getElementById('login-server')?.addEventListener('change', event => { selectedLoginServer = event.target.value; document.querySelectorAll('a[href^="/api/auth/oidc/start"]').forEach(link => { link.href = '/api/auth/oidc/start' + (selectedLoginServer ? '?serverId=' + encodeURIComponent(selectedLoginServer) : ''); }); });
         document.querySelectorAll('[data-login-locale]').forEach(button => {
           button.addEventListener('click', async () => {
             await I18n.changeLocale(button.dataset.loginLocale);
@@ -3949,7 +3972,7 @@
           autoRedirectAttempted = true;
           setTimeout(() => {
             if (isAutoRedirecting) {
-              window.location.href = '/api/auth/oidc/start';
+              window.location.href = '/api/auth/oidc/start' + (selectedLoginServer ? '?serverId=' + encodeURIComponent(selectedLoginServer) : '');
             }
           }, 400);
         }
@@ -3980,7 +4003,7 @@
             const rem = remEl ? remEl.checked : false;
 
             try {
-              await Auth.login(u, p, rem);
+              await Auth.login(u, p, rem, selectedLoginServer);
               Toast.success(I18n.t('login.loginSuccess') || 'Connecté avec succès !');
               document.body.classList.remove('is-auth-page');
               const callback = new URLSearchParams(location.search).get('callbackUrl');
@@ -4199,7 +4222,8 @@
       main.innerHTML = '<div class="skeleton" style="height:400px;max-width:680px;margin:2rem auto"></div>';
       try {
         const params = new URLSearchParams({ year: String(year) }); if (filterType !== 'general') params.set('type', filterType);
-        const data = await API.getJSON(`/api/wrapped/${encodeURIComponent(userId)}?${params}`);
+        const endpoint = userId === 'me' && search.get('combined') === '1' ? '/api/me/wrapped' : `/api/wrapped/${encodeURIComponent(userId)}`;
+        const data = await API.getJSON(`${endpoint}?${params}`);
         if (pageSignal.aborted) return;
         document.body.classList.add('wrapped-active');
         const seconds = Number(data.totalSeconds) || 0, hours = Math.round(seconds / 3600);
@@ -4209,7 +4233,7 @@
         const peakHour = data.totalPlays > 0 ? `${data.peakHour ?? 0}h` : 'N/A';
         const genres = data.topGenres || [], topGenre = genres[0]?.name || t('unknown');
         const duration = value => { const s = Number(value) || 0; return s >= 3600 ? `${Math.floor(s / 3600)}h ${Math.round(s % 3600 / 60)}m` : `${Math.round(s / 60)}m`; };
-        const ranked = items => !items?.length ? noData : `<ol class="wrapped-ranked">${items.slice(0, 5).map((item, index) => `<li><i class="wrapped-rank-bar" aria-hidden="true" style="width:${Math.round(Number(item.seconds ?? Number(item.hours || 0) * 3600) / Math.max(1, Number(items[0].seconds ?? Number(items[0].hours || 0) * 3600)) * 100)}%"></i><b>${index + 1}</b><span>${escape(item.title)}</span><small>${duration(item.seconds ?? Number(item.hours || 0) * 3600)}</small></li>`).join('')}</ol>`;
+        const ranked = items => !items?.length ? noData : `<ol class="wrapped-ranked">${items.slice(0, 5).map((item, index) => `<li><i class="wrapped-rank-bar" aria-hidden="true" style="width:${Math.round(Number(item.seconds ?? Number(item.hours || 0) * 3600) / Math.max(1, Number(items[0].seconds ?? Number(items[0].hours || 0) * 3600)) * 100)}%"></i><b>${index + 1}</b><span>${escape(item.title)}${data.multiServer && item.serverId ? ` — ${escape((data.accounts || []).find(a => a.serverId === item.serverId)?.serverName || item.serverId)}` : ''}</span><small>${duration(item.seconds ?? Number(item.hours || 0) * 3600)}</small></li>`).join('')}</ol>`;
         const slides = [];
         const add = (title, subtitle, icon, content, theme) => slides.push({ title, subtitle, icon, content, theme });
         add(`JellyTrack Wrapped ${data.year || year}`, t('introSubtitle', { username: data.username }), 'play', `<p>${t('introContent')}</p><button class="btn btn-secondary wrapped-customize" data-wrapped-config>${window.JellyTrackNavigation.icon('filter')} ${t('customize')}</button>`, 'purple');
@@ -4983,7 +5007,7 @@
       this.renderCurrent();
     },
 
-    renderCurrent() {
+    async renderCurrent() {
       State.pageController?.abort();
       State.pageCleanups.splice(0).forEach(cleanup => cleanup());
       StreamsPoller.stop();
@@ -5032,15 +5056,28 @@
         document.body.classList.remove('is-auth-page');
       }
 
-            if (State.user && !State.user.isAdmin && (path === '/' || path === '/users' || path === '/dashboard' || path === '/logs' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis')) {
+            if (State.user && !State.user.isAdmin && (path === '/' || path === '/users' || path === '/dashboard' || path === '/logs' || path.startsWith('/admin/') || path.startsWith('/settings') || path === '/media/analysis' || path === '/newsletter')) {
         const uid = State.user.jellyfinUserId || State.user.id;
         if (uid) this.navigate('/users/me', true);
         else document.getElementById('app-main').innerHTML = '<div class="empty-state">Accès réservé à l’administration.</div>';
         return;
       }
 
+      const routeSignal = State.pageController.signal;
+      if (path !== '/login' && path !== '/setup/go') {
+        const module = path === '/accounts' ? 'accounts' : path.startsWith('/users/') ? 'profile' : path === '/users' ? 'users' : path.startsWith('/settings') ? 'settings' : path.startsWith('/admin') ? 'admin' : path.startsWith('/media') || path === '/recent' ? 'media-recovery' : path === '/logs' ? 'history' : path === '/about' ? 'about-recovery' : null;
+        try {
+          const needsCharts = path === '/' || path === '/dashboard' || path.startsWith('/users') || path.startsWith('/admin') || path.startsWith('/media');
+          if (needsCharts) await loadAsset('chart.min');
+          if (module) await loadAsset(module);
+        } catch (error) { if (!routeSignal.aborted) document.getElementById('app-main').textContent = error.message; return; }
+        if (routeSignal.aborted) return;
+      }
+
       // Route Dispatcher
-      if (path === '/') {
+      if (path === '/accounts') {
+        window.AccountsUI.render(document.getElementById('app-main'), { API, State, Utils, Router });
+      } else if (path === '/') {
         Pages.dashboard();
       } else if (path === '/login') {
         Pages.login();

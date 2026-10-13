@@ -97,6 +97,9 @@ func ValidateSafeServerURL(rawURL string) (*url.URL, error) {
 	if host == "" {
 		return nil, errors.New("URL missing hostname")
 	}
+	if parsed.User != nil || parsed.Fragment != "" {
+		return nil, errors.New("URL must not contain credentials or fragments")
+	}
 	if IsCloudMetadataHost(host) {
 		return nil, errors.New("URL cannot target cloud metadata services")
 	}

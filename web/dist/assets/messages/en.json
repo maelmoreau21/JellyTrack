@@ -36,7 +36,8 @@
     "goPlugin": "Plugin configuration",
     "goSystemHealth": "Go system diagnostics",
     "goLogHealth": "Go log diagnostics",
-    "goNewsletter": "Newsletter"
+    "goNewsletter": "Newsletter",
+    "myAccounts": "My accounts"
   },
   "about": {
     "description": "Analytics and monitoring dashboard for your Jellyfin server. Track activity, trends and performance of your media server in real time.",

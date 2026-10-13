@@ -115,7 +115,7 @@ func (h *Handler) streamCommand(w http.ResponseWriter, r *http.Request, stop boo
 	}
 	request.Header.Set("Authorization", fmt.Sprintf(`MediaBrowser Token="%s"`, apiKey.String))
 	request.Header.Set("Content-Type", "application/json")
-	response, err := (&http.Client{Timeout: 5 * time.Second}).Do(request)
+	response, err := (security.ServerHTTPClient(5 * time.Second)).Do(request)
 	if err != nil {
 		jsonError(w, 502, "Jellyfin n'a pas répondu.")
 		return

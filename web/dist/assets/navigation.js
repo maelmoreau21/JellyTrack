@@ -206,12 +206,13 @@
       const home = user?.isAdmin ? '/' : (uid ? '/users/me' : '/media');
       document.querySelectorAll('.brand-link,.mobile-brand-link').forEach(el => { el.href = home; });
       const items = user ? [['myProfile', '/users/me', 'user']] : [];
+      if (user && user.jellyfinUserId && user.jellyfinUserId !== 'local-admin') items.push(['myAccounts','/accounts','users']);
       if (user?.isAdmin) {
         items.push(['dashboard','/','dashboard'], ['recentlyAdded','/recent','sparkles'], ['library','/media','film'], ['users','/users','users'], ['logHealth','/admin/health','health'], ['logs','/logs','logs'], ['settings','/settings','settings']);
         if (context.multiServer) items.push(['serverCompare','/admin/server-compare','compare']);
       } else if (user) {
         items.push(['library','/media','film'],['recentlyAdded','/recent','sparkles']);
-        if (uid && context.wrappedVisible) items.push(['myWrapped',`/wrapped/${encodeURIComponent(uid)}`,'gift']);
+        if (uid && context.wrappedVisible) items.push(['myWrapped','/wrapped/me?combined=1','gift']);
       }
       document.getElementById('historical-nav').innerHTML = items.map(([key,href,img]) => `<a href="${e(href)}" data-link data-nav-route="${e(href)}" title="${e(t('nav.'+key))}" aria-label="${e(t('nav.'+key))}">${icon(img)}<span>${e(t('nav.'+key))}</span></a>`).join('');
       const backup = document.getElementById('backup-server-banner');

@@ -80,10 +80,29 @@ func sameJellyfinID(a, b string) bool {
 
 // Called only with claims from the verified ID token. The IdP administrator
 // must own these claims; user-editable profile fields are not identity proof.
-func (m *Manager) oidcAccount(ctx context.Context, claims map[string]any) (jellyfin.AuthenticatedUser, string, error) {
+func (m *Manager) oidcAccount(ctx context.Context, claims map[string]any, selected ...string) (jellyfin.AuthenticatedUser, string, error) {
 	serverID, _ := claims["jellyfin_server_id"].(string)
 	userID, _ := claims["jellyfin_user_id"].(string)
 	subject, _ := claims["sub"].(string)
+	if len(selected) > 0 && selected[0] != "" && selected[0] != serverID {
+		accounts, _ := claims["jellyfin_accounts"].([]any)
+		count := 0
+		for _, raw := range accounts {
+			account, ok := raw.(map[string]any)
+			if !ok {
+				return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("invalid signed account claim")
+			}
+			sid, _ := account["serverId"].(string)
+			uid, _ := account["userId"].(string)
+			if sid == selected[0] && uid != "" {
+				serverID, userID = sid, uid
+				count++
+			}
+		}
+		if count != 1 {
+			return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("selected account is not uniquely present in signed claims")
+		}
+	}
 	if subject == "" {
 		return jellyfin.AuthenticatedUser{}, "", fmt.Errorf("missing stable identity claims: sub is required")
 	}

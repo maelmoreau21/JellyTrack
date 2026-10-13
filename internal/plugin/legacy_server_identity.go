@@ -67,7 +67,7 @@ func (h *Handler) verifiedLegacyServer(ctx context.Context, scope, remoteID stri
 	req.Header.Set("Accept", "application/json")
 	// No credentials are transmitted. Redirects must not change the configured
 	// source of truth, and TLS verification remains enabled.
-	client := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	client := security.ServerHTTPClient(10 * time.Second)
 	response, err := client.Do(req)
 	if err != nil {
 		return serverInfo{}, false

@@ -123,7 +123,7 @@ func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 					}
 				}
 				p, ok := m.authenticate(req)
-				if ok && p.IsAdmin() != tc.admin {
+				if ok && (p.IsAdmin() || (p.Role == "server_admin") != tc.admin) {
 					t.Fatalf("wrong role: %+v", p)
 				}
 				if !ok || p.Username != "alice" || p.AuthServerID != "s1" || p.OIDCSubject != "immutable-subject" || p.OIDCIssuer != issuer {

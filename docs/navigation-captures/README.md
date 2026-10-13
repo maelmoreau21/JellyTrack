@@ -6,27 +6,27 @@ Le contenu de la page À propos garde la présentation de chaque version. Le bad
 
 | Situation | Historique `main` | Go restauré |
 |---|---|---|
-| Admin desktop ouvert | [Main](main-admin-desktop-open.png) | [Go](go-admin-jellyfin-single-desktop-open.png) |
-| Admin desktop réduit | [Main](main-admin-desktop-collapsed.png) | [Go](go-admin-jellyfin-single-desktop-collapsed.png) |
-| Admin mobile fermé | [Main](main-admin-mobile-closed.png) | [Go](go-admin-jellyfin-single-mobile-closed.png) |
-| Admin mobile ouvert | [Main](main-admin-mobile-open.png) | [Go](go-admin-jellyfin-single-mobile-open.png) |
-| Utilisateur desktop ouvert | [Main](main-user-desktop-open.png) | [Go](go-user-wrapped-desktop-open.png) |
-| Utilisateur desktop réduit | [Main](main-user-desktop-collapsed.png) | [Go](go-user-wrapped-desktop-collapsed.png) |
-| Utilisateur mobile fermé | [Main](main-user-mobile-closed.png) | [Go](go-user-wrapped-mobile-closed.png) |
-| Utilisateur mobile ouvert | [Main](main-user-mobile-open.png) | [Go](go-user-wrapped-mobile-open.png) |
+| Admin desktop ouvert | [Main](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/main-admin-desktop-open.png) | [Go](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-admin-jellyfin-single-desktop-open.png) |
+| Admin desktop réduit | [Main](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/main-admin-desktop-collapsed.png) | [Go](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-admin-jellyfin-single-desktop-collapsed.png) |
+| Admin mobile fermé | [Main](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/main-admin-mobile-closed.png) | [Go](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-admin-jellyfin-single-mobile-closed.png) |
+| Admin mobile ouvert | [Main](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/main-admin-mobile-open.png) | [Go](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-admin-jellyfin-single-mobile-open.png) |
+| Utilisateur desktop ouvert | [Main](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/main-user-desktop-open.png) | [Go](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-user-wrapped-desktop-open.png) |
+| Utilisateur desktop réduit | [Main](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/main-user-desktop-collapsed.png) | [Go](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-user-wrapped-desktop-collapsed.png) |
+| Utilisateur mobile fermé | [Main](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/main-user-mobile-closed.png) | [Go](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-user-wrapped-mobile-closed.png) |
+| Utilisateur mobile ouvert | [Main](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/main-user-mobile-open.png) | [Go](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-user-wrapped-mobile-open.png) |
 
 ## Utilisateur mobile : historique puis Go
 
-![Navigation historique utilisateur mobile](main-user-mobile-open.png)
+![Navigation historique utilisateur mobile](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/main-user-mobile-open.png)
 
-![Navigation Go restaurée utilisateur mobile](go-user-wrapped-mobile-open.png)
+![Navigation Go restaurée utilisateur mobile](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-user-wrapped-mobile-open.png)
 
 ## États complémentaires Go
 
-- [Administrateur multi-serveurs](go-admin-multi-desktop-open.png).
-- [Utilisateur connecté au serveur de secours](go-user-backup-mobile-open.png).
-- [Recherche globale](go-user-wrapped-desktop-search.png).
-- [Santé avec Nettoyage imbriqué](go-admin-health.png).
-- [Planificateur avec sections empilées](go-admin-scheduler.png).
+- [Administrateur multi-serveurs](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-admin-multi-desktop-open.png).
+- [Utilisateur connecté au serveur de secours](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-user-backup-mobile-open.png).
+- [Recherche globale](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-user-wrapped-desktop-search.png).
+- [Santé avec Nettoyage imbriqué](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-admin-health.png).
+- [Planificateur avec sections empilées](https://raw.githubusercontent.com/maelmoreau21/JellyTrack/6f0109c03a86b544dca706dbfcae717168d92e1b/docs/navigation-captures/go-admin-scheduler.png).
 
 Les deux dernières pages n'ont pas de capture historique valide : la comparaison de leurs hiérarchies repose sur leurs sources, comme indiqué dans le rapport.

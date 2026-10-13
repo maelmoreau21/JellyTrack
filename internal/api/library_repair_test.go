@@ -1,9 +1,12 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
+	"github.com/maelmoreau21/jellytrack/internal/backup"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -16,6 +19,7 @@ func TestManualLibraryRepairUsesJellyfinMembershipAndVerifiedBackup(t *testing.T
 	db := apiDB(t)
 	directory := t.TempDir()
 	t.Setenv("BACKUP_DIR", directory)
+	t.Setenv("BACKUP_ENCRYPTION_KEY", base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{42}, 32)))
 	remote := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/System/Info":
@@ -77,7 +81,19 @@ func TestManualLibraryRepairUsesJellyfinMembershipAndVerifiedBackup(t *testing.T
 			t.Fatalf("%s: %q %v", id, got, err)
 		}
 	}
-	snapshot, err := sql.Open("sqlite", filepath.Join(directory, result.Backup))
+	encrypted, err := os.ReadFile(filepath.Join(directory, result.Backup))
+	if err != nil {
+		t.Fatal(err)
+	}
+	plain, err := backup.DecryptBackupBytes(encrypted)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshotPath := filepath.Join(t.TempDir(), "snapshot.sqlite")
+	if err = os.WriteFile(snapshotPath, plain, 0600); err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := sql.Open("sqlite", snapshotPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +110,7 @@ func TestManualLibraryRepairUsesJellyfinMembershipAndVerifiedBackup(t *testing.T
 	download.SetPathValue("name", result.Backup)
 	out := httptest.NewRecorder()
 	h.downloadLibraryRepairBackup(out, download)
-	if out.Code != 200 || !strings.HasPrefix(out.Body.String(), "SQLite format 3") {
+	if out.Code != 200 || !bytes.Equal(out.Body.Bytes(), encrypted) {
 		t.Fatal("backup cannot be downloaded", out.Code)
 	}
 	w = request()
@@ -167,4 +183,21 @@ func TestManualLibraryRepairGuardsAndRemoteFailure(t *testing.T) {
 			t.Fatalf("unprotected %s", path)
 		}
 	}
+}
+
+func decryptedRepairSnapshotPath(t *testing.T, path string) string {
+	t.Helper()
+	encrypted, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plain, err := backup.DecryptBackupBytes(encrypted)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot := filepath.Join(t.TempDir(), "decrypted.sqlite")
+	if err = os.WriteFile(snapshot, plain, 0600); err != nil {
+		t.Fatal(err)
+	}
+	return snapshot
 }

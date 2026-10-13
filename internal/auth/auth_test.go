@@ -253,6 +253,8 @@ func TestRevokedSessionRejected(t *testing.T) {
 }
 
 func TestReverseProxyOrigin(t *testing.T) {
+	t.Setenv("TRUST_PROXY_HEADERS", "true")
+	t.Setenv("TRUSTED_PROXY_CIDRS", "192.0.2.0/24")
 	req := httptest.NewRequest("POST", "/api/test", nil)
 	req.Host = "internal-go:8080"
 	req.Header.Set("X-Forwarded-Host", "jellytrack.mydomain.com")
@@ -282,6 +284,8 @@ func TestExtractGroupsFromClaims(t *testing.T) {
 }
 
 func TestDetectBaseURL(t *testing.T) {
+	t.Setenv("TRUST_PROXY_HEADERS", "true")
+	t.Setenv("TRUSTED_PROXY_CIDRS", "192.0.2.0/24")
 	t.Setenv("JELLYTRACK_URL", "https://custom.jellytrack.io")
 	if u := detectBaseURL(nil); u != "https://custom.jellytrack.io" {
 		t.Fatalf("expected custom URL, got %s", u)

@@ -258,7 +258,7 @@ func (h *Handler) adminUserSyncDeleted(w http.ResponseWriter, r *http.Request) {
 	totalPruned := 0
 	var prunedUsernames []string
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := security.ServerHTTPClient(10 * time.Second)
 
 	for _, target := range targets {
 		srvID, srvURL, apiKey := target.id, target.url, target.key
@@ -643,7 +643,7 @@ func (h *Handler) discordPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonBytes, _ := json.Marshal(payload)
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := security.ServerHTTPClient(10 * time.Second)
 	resp, err := client.Post(webhookURL.String, "application/json", bytes.NewReader(jsonBytes))
 	if err != nil || resp.StatusCode >= 400 {
 		if resp != nil {
@@ -827,7 +827,7 @@ func (h *Handler) posterRotatorRotate(w http.ResponseWriter, r *http.Request) {
 		req.Header.Set("X-Emby-Token", apiKey.String)
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := security.ServerHTTPClient(10 * time.Second)
 	resp, err := client.Do(req)
 	if err != nil {
 		jsonResponse(w, 502, map[string]any{"success": false, "code": "poster_rotator_error", "message": "Jellyfin unreachable"})

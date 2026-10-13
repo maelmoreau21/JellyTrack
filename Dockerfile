@@ -21,6 +21,14 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
     go build -trimpath -ldflags="-s -w -buildid=" -o /out/jellytrack ./cmd/jellytrack
 
 
+# Optional isolated CI/QA target. It shares the builder's downloaded modules,
+# excludes local scratch fixtures through .dockerignore, and never runs in the
+# production runner image.
+FROM builder AS security-tests
+RUN apk add --no-cache gcc musl-dev
+RUN CGO_ENABLED=1 go test -race ./...
+RUN go vet ./...
+
 # ── STAGE 2: Minimal non-root runner image ──
 FROM alpine:3.24 AS runner
 
