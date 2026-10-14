@@ -29,12 +29,15 @@ func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 		{name: "Jellyfin admin cannot bypass explicit group", provider: jellyfin.LDAPAuthenticationProvider, admin: true, requiredGroup: true},
 		{name: "signed scalar admin group", provider: jellyfin.LDAPAuthenticationProvider, admin: true, requiredGroup: true, groupClaim: "admins", success: true},
 		{name: "signed array admin group", provider: jellyfin.LDAPAuthenticationProvider, admin: true, requiredGroup: true, groupClaim: []string{"admins"}, success: true},
+		{name: "signed admin group grants global admin without Jellyfin admin", provider: jellyfin.LDAPAuthenticationProvider, requiredGroup: true, groupClaim: []string{"admins"}, success: true},
+		{name: "forged admin group rejected", provider: jellyfin.LDAPAuthenticationProvider, requiredGroup: true, groupClaim: []string{"admins"}, tamper: true},
 		{name: "signed scalar wrong group", provider: jellyfin.LDAPAuthenticationProvider, admin: true, requiredGroup: true, groupClaim: "users,admins"},
 		{name: "missing stable claim", provider: jellyfin.LDAPAuthenticationProvider, missing: true},
 		{name: "invalid signature", provider: jellyfin.LDAPAuthenticationProvider, tamper: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			m, db := testManager(t)
+			t.Setenv("JELLYTRACK_SUPER_ADMIN_IDENTITIES", "[]")
 			for _, key := range []string{"OIDC_ENABLED", "OIDC_ISSUER", "OIDC_URL", "AUTHENTIK_URL", "JELLYTRACK_AUTHENTIK_URL", "OIDC_CLIENT_ID", "OIDC_CLIENT_SECRET", "OIDC_USER_GROUP", "OIDC_ADMIN_GROUP"} {
 				t.Setenv(key, "")
 				os.Unsetenv(key)
@@ -123,8 +126,22 @@ func TestSignedOIDCCallbackEnforcesProviderAndStableClaims(t *testing.T) {
 					}
 				}
 				p, ok := m.authenticate(req)
-				if ok && (p.IsAdmin() || (p.Role == "server_admin") != tc.admin) {
+				globalAdmin := tc.requiredGroup
+				if ok && (p.IsAdmin() != globalAdmin || (p.Role == "server_admin") != (tc.admin && !globalAdmin)) {
 					t.Fatalf("wrong role: %+v", p)
+				}
+				if globalAdmin {
+					t.Setenv("OIDC_ADMIN_GROUP", "other-admins")
+					revoked, authenticated := m.authenticate(req)
+					if !authenticated || revoked.IsAdmin() {
+						t.Fatalf("changed OIDC group retained global grant: %+v", revoked)
+					}
+					t.Setenv("OIDC_ADMIN_GROUP", "admins")
+					t.Setenv("OIDC_ISSUER", issuer+"/other")
+					revoked, authenticated = m.authenticate(req)
+					if !authenticated || revoked.IsAdmin() {
+						t.Fatalf("changed OIDC issuer retained global grant: %+v", revoked)
+					}
 				}
 				if !ok || p.Username != "alice" || p.AuthServerID != "s1" || p.OIDCSubject != "immutable-subject" || p.OIDCIssuer != issuer {
 					t.Fatalf("identity not persisted: %+v %v", p, ok)

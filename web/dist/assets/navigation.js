@@ -206,7 +206,7 @@
       const home = user?.isAdmin ? '/' : (uid ? '/users/me' : '/media');
       document.querySelectorAll('.brand-link,.mobile-brand-link').forEach(el => { el.href = home; });
       const items = user ? [['myProfile', '/users/me', 'user']] : [];
-      if (user && user.jellyfinUserId && user.jellyfinUserId !== 'local-admin') items.push(['myAccounts','/accounts','users']);
+      if ((context.multiServer || user?.role === 'server_admin') && user && user.jellyfinUserId && user.jellyfinUserId !== 'local-admin') items.push(['myAccounts','/accounts','users']);
       if (user?.isAdmin) {
         items.push(['dashboard','/','dashboard'], ['recentlyAdded','/recent','sparkles'], ['library','/media','film'], ['users','/users','users'], ['logHealth','/admin/health','health'], ['logs','/logs','logs'], ['settings','/settings','settings']);
         if (context.multiServer) items.push(['serverCompare','/admin/server-compare','compare']);

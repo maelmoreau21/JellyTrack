@@ -10,7 +10,7 @@ Une session reste attachée à un seul compte Jellyfin et à son serveur. Une as
 | `server_admin` | Même identité courante ; observation et synchronisation de son propre serveur via `/api/me/server`, avec vérification de la politique Jellyfin actuelle. |
 | `super_admin` | Administration globale, paramètres, sauvegardes, dashboard et newsletter globaux. |
 
-L'administrateur local JellyTrack reçoit `super_admin`. Un administrateur Jellyfin ou un groupe OIDC administrateur reçoit `server_admin`. Pour accorder volontairement l'administration globale à une identité distante, définir une liste contrôlée par l'opérateur :
+L'administrateur local JellyTrack et les membres du groupe `OIDC_ADMIN_GROUP` validé par le fournisseur SSO reçoivent `super_admin`. Un administrateur Jellyfin sans ce groupe reçoit `server_admin`. Le groupe et l'émetteur validés sont conservés dans l'identité de session ; changer leur configuration retire ce droit global. Pour accorder volontairement l'administration globale à une autre identité distante, définir une liste contrôlée par l'opérateur :
 
 ```dotenv
 JELLYTRACK_SUPER_ADMIN_IDENTITIES='[{"serverId":"identifiant-interne-du-serveur","userId":"identifiant-jellyfin-immuable"}]'

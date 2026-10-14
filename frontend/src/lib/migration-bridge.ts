@@ -42,7 +42,7 @@ function widgetRenderer<T>(component: Component<{ context: T }, { update(next: T
 
 export type Translate = (key: string, params?: Record<string, string>) => unknown;
 export interface NavigationContext {
-  user: { isAdmin?: boolean; jellyfinUserId?: string } | null;
+  user: { isAdmin?: boolean; jellyfinUserId?: string; role?: string } | null;
   context: { multiServer?: boolean; wrappedVisible?: boolean };
   t: Translate;
   icon: (name: string) => string;

@@ -64,6 +64,7 @@ type Principal struct {
 	AuthMethod          string `json:"authMethod,omitempty"`
 	OIDCIssuer          string `json:"oidcIssuer,omitempty"`
 	OIDCSubject         string `json:"oidcSubject,omitempty"`
+	OIDCAdminGroup      string `json:"oidcAdminGroup,omitempty"`
 	IdentityVersion     int    `json:"identityVersion,omitempty"`
 	AuthServerName      string `json:"authServerName,omitempty"`
 	AuthServerIsPrimary *bool  `json:"authServerIsPrimary,omitempty"`
@@ -315,7 +316,13 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 	if cfg.adminGroup == "" && cfg.userGroup == "" && account.Policy.IsAdministrator {
 		role = "admin"
 	}
-	if role == "admin" {
+	oidcAdminGroup := ""
+	if role == "admin" && cfg.adminGroup != "" {
+		// This grant comes from a verified provider claim matching the operator's
+		// configured admin group, not from a Jellyfin server administrator flag.
+		role = "super_admin"
+		oidcAdminGroup = cfg.adminGroup
+	} else if role == "admin" {
 		role = "server_admin"
 	}
 	if globalIdentityAllowed(resolvedServerID, account.ID) {
@@ -328,7 +335,7 @@ func (m *Manager) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
 		return
 	}
-	if _, e = m.createSessionIdentity(w, r, Principal{Username: username, Role: role, JellyfinUserID: resolvedJfID, AuthServerID: resolvedServerID, AuthMethod: "oidc", OIDCIssuer: idToken.Issuer, OIDCSubject: idToken.Subject}, false); e != nil {
+	if _, e = m.createSessionIdentity(w, r, Principal{Username: username, Role: role, JellyfinUserID: resolvedJfID, AuthServerID: resolvedServerID, AuthMethod: "oidc", OIDCIssuer: idToken.Issuer, OIDCSubject: idToken.Subject, OIDCAdminGroup: oidcAdminGroup}, false); e != nil {
 		clearFlow()
 		slog.Error("OIDC session identity creation failed", "error", e)
 		http.Redirect(w, r, "/login?error=OAuthSignin", http.StatusSeeOther)
@@ -1083,6 +1090,7 @@ func (m *Manager) authenticate(r *http.Request) (Principal, bool) {
 			p.JellyfinUserID, p.AuthServerID, p.AuthServerName, p.AuthServerIsPrimary = stored.JellyfinUserID, stored.AuthServerID, stored.AuthServerName, stored.AuthServerIsPrimary
 			p.IdentityVersion = stored.IdentityVersion
 			p.AuthMethod, p.OIDCIssuer, p.OIDCSubject = stored.AuthMethod, stored.OIDCIssuer, stored.OIDCSubject
+			p.OIDCAdminGroup = stored.OIDCAdminGroup
 		}
 	}
 	// Pre-policy sessions may have bypassed SSO; require a fresh login.
@@ -1092,7 +1100,7 @@ func (m *Manager) authenticate(r *http.Request) (Principal, bool) {
 	if p.Role == "admin" && (p.AuthServerID != "" || p.AuthMethod == "oidc" || p.AuthMethod == "jellyfin") {
 		p.Role = "server_admin"
 	}
-	if p.Role == "super_admin" && p.AuthMethod != "local-admin" && !globalIdentityAllowed(p.AuthServerID, p.JellyfinUserID) {
+	if p.Role == "super_admin" && p.AuthMethod != "local-admin" && !globalIdentityAllowed(p.AuthServerID, p.JellyfinUserID) && !m.oidcAdminAllowed(r.Context(), p) {
 		p.Role = "user"
 	}
 	return p, true

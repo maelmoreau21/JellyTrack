@@ -4,7 +4,7 @@
   const uid = $derived(user?.jellyfinUserId && user.jellyfinUserId !== 'local-admin' && !user.jellyfinUserId.startsWith('oidc-') ? user.jellyfinUserId : '');
   const items = $derived.by(() => {
     const links: [string, string, string][] = user ? [['myProfile', '/users/me', 'user']] : [];
-    if (user?.jellyfinUserId && user.jellyfinUserId !== 'local-admin') links.push(['myAccounts', '/accounts', 'users']);
+    if ((context.multiServer || user?.role === 'server_admin') && user?.jellyfinUserId && user.jellyfinUserId !== 'local-admin') links.push(['myAccounts', '/accounts', 'users']);
     if (user?.isAdmin) {
       links.push(['dashboard','/','dashboard'], ['recentlyAdded','/recent','sparkles'], ['library','/media','film'], ['users','/users','users'], ['logHealth','/admin/health','health'], ['logs','/logs','logs'], ['settings','/settings','settings']);
       if (context.multiServer) links.push(['serverCompare','/admin/server-compare','compare']);

@@ -4,6 +4,29 @@
     async render(main, { API, State, Utils, Router }) {
       const signal = State.pageController.signal;
       main.replaceChildren();
+      const status = document.createElement('p'); status.setAttribute('role', 'status');
+      const run = async (button, action) => {
+        button.disabled = true; status.textContent = '';
+        try { await action(); } catch (error) { if (!signal.aborted) status.textContent = error.message; }
+        finally { if (!signal.aborted) button.disabled = false; }
+      };
+      const renderServerAdministration = async card => {
+        if (State.user.role !== 'server_admin') return;
+        const server = document.createElement('section'); const heading = document.createElement('h2'); heading.textContent = 'Administration de mon serveur';
+        const details = document.createElement('p'); const sync = document.createElement('button'); sync.className = 'btn btn-secondary'; sync.textContent = 'Synchroniser mon serveur';
+        server.append(heading, details, sync); card.append(server);
+        sync.addEventListener('click', () => run(sync, async () => { await API.postJSON('/api/me/server/sync', {}); status.textContent = 'Synchronisation terminée.'; }));
+        try { const data = await API.getJSON('/api/me/server'); if (!signal.aborted) details.textContent = (data.servers || []).map(s => s.name + ' : ' + s.users + ' utilisateurs, ' + s.media + ' médias, ' + s.plays + ' lectures').join('; '); }
+        catch (error) { if (!signal.aborted) details.textContent = error.message; }
+      };
+      if (!State.navigation?.multiServer) {
+        const card = document.createElement('section'); card.className = 'card';
+        const title = document.createElement('h1'); title.textContent = 'Mes comptes Jellyfin';
+        const help = document.createElement('p'); help.textContent = 'L’association de comptes est disponible uniquement lorsque plusieurs serveurs Jellyfin sont configurés.';
+        card.append(title, help, status); main.append(card);
+        await renderServerAdministration(card);
+        return;
+      }
       const card = document.createElement('section'); card.className = 'card';
       const title = document.createElement('h1'); title.textContent = 'Mes comptes Jellyfin';
       const help = document.createElement('p');
@@ -14,7 +37,6 @@
       for (const text of ['Connectez-vous au second compte dans une fenêtre privée, puis ouvrez Mes comptes et générez un code.', 'Revenez dans cette fenêtre et saisissez ce code. Les deux connexions doivent dater de moins de dix minutes.']) { const step = document.createElement('li'); step.textContent = text; steps.append(step); }
       guide.append(summary, steps);
       const list = document.createElement('div'); list.style.margin = '1rem 0';
-      const status = document.createElement('p'); status.setAttribute('role', 'status');
       const code = document.createElement('output'); code.style.overflowWrap = 'anywhere'; code.style.display = 'block'; code.style.margin = '1rem 0'; code.hidden = true;
       const proof = document.createElement('button'); proof.className = 'btn btn-secondary'; proof.textContent = 'Générer un code pour ce compte';
       const form = document.createElement('form'); form.style.display = 'grid'; form.style.gap = '0.75rem'; form.style.margin = '1rem 0';
@@ -27,11 +49,6 @@
       card.append(title, help, guide, list, proof, code, form, wrapped, status); main.append(card);
       let expiryTimer;
       State.pageCleanups.push(() => clearTimeout(expiryTimer));
-      const run = async (button, action) => {
-        button.disabled = true; status.textContent = '';
-        try { await action(); } catch (error) { if (!signal.aborted) status.textContent = error.message; }
-        finally { if (!signal.aborted) button.disabled = false; }
-      };
       const load = async () => {
         const data = await API.getJSON('/api/me/accounts'); if (signal.aborted) return;
         list.replaceChildren();
@@ -57,14 +74,7 @@
       form.addEventListener('submit', event => { event.preventDefault(); run(submit, async () => {
         await API.postJSON('/api/me/accounts/link', { code: input.value.trim() }); input.value = ''; await load(); status.textContent = 'Compte associé. Aucun droit supplémentaire accordé.';
       }); });
-      if (State.user.role === 'server_admin') {
-        const server = document.createElement('section'); const heading = document.createElement('h2'); heading.textContent = 'Administration de mon serveur';
-        const details = document.createElement('p'); const sync = document.createElement('button'); sync.className = 'btn btn-secondary'; sync.textContent = 'Synchroniser mon serveur';
-        server.append(heading, details, sync); card.append(server);
-        sync.addEventListener('click', () => run(sync, async () => { await API.postJSON('/api/me/server/sync', {}); status.textContent = 'Synchronisation terminée.'; }));
-        try { const data = await API.getJSON('/api/me/server'); if (!signal.aborted) details.textContent = (data.servers || []).map(s => s.name + ' : ' + s.users + ' utilisateurs, ' + s.media + ' médias, ' + s.plays + ' lectures').join('; '); }
-        catch (error) { if (!signal.aborted) details.textContent = error.message; }
-      }
+      await renderServerAdministration(card);
       await run(submit, load);
     }
   };
