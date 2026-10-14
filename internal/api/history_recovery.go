@@ -33,17 +33,19 @@ func (h *Handler) enrichHistory(r *http.Request, items []map[string]any) error {
 		}
 		return nil
 	}
-	marks := make([]string, len(items))
+	queries := make([]string, len(items))
 	args := make([]any, len(items))
 	byID := map[string]map[string]any{}
 	for i, item := range items {
-		marks[i] = "?"
+		// Each indexed seek stops at 200 rows. A window over every matching
+		// event otherwise ranks an entire long session before applying the cap.
+		queries[i] = `SELECT * FROM (SELECT t."playbackId",t."eventType",t."positionMs",t."createdAt",t."metadata" FROM "TelemetryEvent" t JOIN "PlaybackHistory" p ON p."id"=t."playbackId" AND p."serverId"=t."serverId" WHERE t."playbackId"=? ORDER BY t."createdAt" DESC,t."id" DESC LIMIT 200) event_page`
 		args[i] = item["id"]
 		byID[item["id"].(string)] = item
 		item["telemetryEvents"] = []map[string]any{}
 		item["audioBitrateKbps"] = nil
 	}
-	query := `SELECT "playbackId","eventType","positionMs","createdAt","metadata" FROM (SELECT t."playbackId",t."eventType",t."positionMs",t."createdAt",t."metadata",ROW_NUMBER() OVER(PARTITION BY t."playbackId" ORDER BY t."createdAt" DESC,t."id" DESC) AS event_rank FROM "TelemetryEvent" t JOIN "PlaybackHistory" p ON p."id"=t."playbackId" AND p."serverId"=t."serverId" WHERE t."playbackId" IN (` + strings.Join(marks, ",") + `)) ranked WHERE event_rank<=200 ORDER BY "createdAt" DESC`
+	query := strings.Join(queries, ` UNION ALL `) + ` ORDER BY "createdAt" DESC`
 	rows, err := h.db.QueryContext(r.Context(), database.Bind(query, h.driver), args...)
 	if err != nil {
 		return err

@@ -80,7 +80,7 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string, enablePprof ...b
 		fileServer.ServeHTTP(w, r)
 	})
 
-	return securityHeaders(requestLogger(logger, mux))
+	return securityHeaders(requestLogger(logger, compressHistory(mux)))
 }
 
 func requestLogger(logger *slog.Logger, next http.Handler) http.Handler {

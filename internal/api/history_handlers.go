@@ -19,11 +19,15 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	export := r.URL.Path == "/api/logs/export"
 	days := boundedInt(q.Get("days"), 30, 1, 3650)
-	clauses := []string{excludedLibrariesClause(h.driver, "m")}
+	exclusion, args, err := h.historyExcludedLibraries(r)
+	if err != nil {
+		jsonError(w, 500, "Impossible de charger l’historique.")
+		return
+	}
+	clauses := []string{exclusion}
 	if q.Get("hideZapped") != "false" {
 		clauses = append(clauses, history.ZappingClause("p"))
 	}
-	args := []any{}
 	if q.Get("days") != "all" && (!export || q.Has("days")) {
 		clauses = append(clauses, `p."startedAt" >= ?`)
 		args = append(args, time.Now().UTC().AddDate(0, 0, -days).Format(time.RFC3339Nano))
@@ -174,8 +178,12 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		clauses = append(clauses, `p."serverId" IN (`+strings.Join(marks, ",")+`)`)
 	}
 	base := ` FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" JOIN "Media" m ON m."id"=p."mediaId" WHERE ` + strings.Join(clauses, " AND ")
+	countBase := base
+	if first(q.Get("userId"), q.Get("user")) == "" && strings.TrimSpace(first(q.Get("q"), q.Get("query"))) == "" {
+		countBase = ` FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE ` + strings.Join(clauses, " AND ")
+	}
 	var total int64
-	if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*)`+base, h.driver), args...).Scan(&total); err != nil {
+	if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*)`+countBase, h.driver), args...).Scan(&total); err != nil {
 		jsonError(w, 500, "Impossible de charger l’historique.")
 		return
 	}
@@ -192,6 +200,11 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		order = `p."durationWatched" DESC,p."id" DESC`
 	case "duration_asc":
 		order = `p."durationWatched" ASC,p."id" ASC`
+	}
+	if h.driver != "postgres" && (q.Get("sort") == "duration_desc" || q.Get("sort") == "duration_asc") {
+		// An expression index supports duration sorting without tempting SQLite
+		// to union three broad indexes for the unrelated zapping/count filter.
+		order = strings.ReplaceAll(order, `p."durationWatched"`, `(p."durationWatched"+0)`)
 	}
 	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."endedAt",p."durationWatched",COALESCE(p."playMethod",''),u."username",m."title",m."type",m."libraryName",m."id",COALESCE(u."id",''),m."jellyfinMediaId",p."serverId",p."clientName",p."deviceName",p."ipAddress",p."country",p."city",p."audioCodec",p."audioLanguage",p."subtitleCodec",p."subtitleLanguage",p."bitrate",p."pauseCount",p."audioChanges",p."subtitleChanges",p."seekCount",p."rewatchCount",p."speedChangeCount",p."eventSource",m."resolution",COALESCE(m."durationMs",0),m."parentId",m."artist",EXISTS(SELECT 1 FROM "ActiveStream" a WHERE a."serverId"=p."serverId" AND a."userId"=p."userId" AND a."mediaId"=p."mediaId" AND (a."playbackId"=p."id" OR (a."playbackId" IS NULL AND p."endedAt" IS NULL)))`+base+` ORDER BY `+order+pageClause, h.driver), pageArgs...)
 	if err != nil {
@@ -256,6 +269,36 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		response["newCountryAlerts"], response["topHotIps"] = alerts, ips
 	}
 	jsonResponse(w, 200, response)
+}
+
+// Resolve SQLite's JSON array once per request, rather than invoking the
+// correlated json_each virtual table for every historical playback counted.
+func (h *Handler) historyExcludedLibraries(r *http.Request) (string, []any, error) {
+	if h.driver == "postgres" {
+		return excludedLibrariesClause(h.driver, "m"), nil, nil
+	}
+	rows, err := h.db.QueryContext(r.Context(), `SELECT value FROM json_each(COALESCE((SELECT "excludedLibraries" FROM "GlobalSettings" WHERE "id"='global'),'[]')) WHERE value IS NOT NULL`)
+	if err != nil {
+		return "", nil, err
+	}
+	defer rows.Close()
+	args := []any{}
+	marks := []string{}
+	for rows.Next() {
+		var value any
+		if err := rows.Scan(&value); err != nil {
+			return "", nil, err
+		}
+		args = append(args, value)
+		marks = append(marks, "?")
+	}
+	if err := rows.Err(); err != nil {
+		return "", nil, err
+	}
+	if len(args) == 0 {
+		return "1=1", args, nil
+	}
+	return `(m."libraryName" IS NULL OR m."libraryName" NOT IN (` + strings.Join(marks, ",") + `))`, args, nil
 }
 
 func firstStringValue(value any) string { text, _ := value.(string); return text }
