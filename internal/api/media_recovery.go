@@ -482,7 +482,11 @@ func (h *Handler) recoveredMediaMetadata(w http.ResponseWriter, r *http.Request)
 		args = args[:len(args)-2] // Playback identity was checked; this query has no history.
 	}
 	id := r.PathValue("id")
-	items, err := h.recoveredRows(r, base+`SELECT m."id",m."serverId",m."jellyfinMediaId",m."type" FROM catalog m WHERE m."id"=? OR m."jellyfinMediaId"=? ORDER BY CASE WHEN m."id"=? THEN 0 ELSE 1 END LIMIT 2`, append(args, id, id, id)...)
+	selection := `SELECT m."id",m."serverId",m."jellyfinMediaId",m."type"`
+	if r.URL.Query().Get("part") == "header" {
+		selection = `SELECT m.*,m."resolution" AS "displayResolution"`
+	}
+	items, err := h.recoveredRows(r, base+selection+` FROM catalog m WHERE m."id"=? OR m."jellyfinMediaId"=? ORDER BY CASE WHEN m."id"=? THEN 0 ELSE 1 END LIMIT 2`, append(args, id, id, id)...)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger le média.")
 		return
@@ -497,6 +501,10 @@ func (h *Handler) recoveredMediaMetadata(w http.ResponseWriter, r *http.Request)
 	}
 	item := items[0]
 	item["metadataAvailable"] = map[string]bool{"peoplePortraits": false, "peopleRoles": false, "versions": false, "backdrop": false, "logo": false}
+	if r.URL.Query().Get("part") == "header" {
+		jsonResponse(w, 200, item)
+		return
+	}
 	h.recoveredLiveMetadata(r, item)
 	patch := map[string]any{}
 	for _, field := range []string{"id", "metadataAvailable", "metadataSource", "overview", "year", "hasLogo", "hasBackdrop", "episodeCode", "people", "versions", "markers"} {
@@ -565,6 +573,13 @@ func (h *Handler) recoveredMediaDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	for k, v := range summary[0] {
 		item[k] = v
+	}
+	// First paint omits history, distributions and telemetry, preserving the
+	// existing full response for callers that do not request an overview.
+	if r.URL.Query().Get("part") == "overview" {
+		item["metadataAvailable"] = map[string]bool{"peoplePortraits": false, "peopleRoles": false, "versions": false, "backdrop": false, "logo": false}
+		jsonResponse(w, 200, item)
+		return
 	}
 	viewers, err := read(`SELECT u."id" AS "userId",u."username",COUNT(*) AS "plays",SUM(p."durationWatched")*1000 AS "watchTimeMs"`+familyWhere+` GROUP BY u."id",u."username" ORDER BY SUM(p."durationWatched") DESC,u."username"`, id)
 	if err != nil {
@@ -907,26 +922,28 @@ func (h *Handler) recoveredMediaCollections(w http.ResponseWriter, r *http.Reque
 			totalMs += mediaNumber(t["durationMs"])
 		}
 	}
-	for _, ranking := range []struct{ key, order string }{{"topItem", `COALESCE(a."plays",0) DESC,m."title" ASC`}, {"lastAdded", `m."dateAdded" DESC,m."id" DESC`}} {
-		selectItems := recoveredItemSelect
-		whereItems := `WHERE m."type" IN ('Movie','Series','MusicAlbum','Book','AudioBook')`
-		if ranking.key == "topItem" {
-			// Historical leader is a watched item, including episodes and tracks,
-			// rather than a series/album aggregate. Preserve Go permission scope.
-			selectItems = `SELECT m.*,COALESCE(a."plays",0) AS "plays" FROM catalog m LEFT JOIN (SELECT "mediaId",COUNT(*) AS "plays" FROM valid GROUP BY "mediaId") a ON a."mediaId"=m."id" `
-			whereItems = `WHERE COALESCE(a."plays",0)>0`
-		}
-		items, e := h.recoveredRows(r, base+`, ranked AS (`+selectItems+whereItems+`) SELECT * FROM (SELECT ranked.*,ROW_NUMBER() OVER (PARTITION BY "serverId","libraryName" ORDER BY `+strings.ReplaceAll(strings.ReplaceAll(ranking.order, `COALESCE(a."plays",0)`, `"plays"`), `m.`, ``)+`) AS rn FROM ranked) picked WHERE rn=1`, args...)
-		if e != nil {
-			jsonError(w, 500, "Impossible de charger les détails des collections.")
-			return
-		}
-		for _, i := range items {
-			g := groups[historicalLibraryKey(mediaString(i["libraryName"]))]
-			if g != nil && (ranking.key != "topItem" || mediaNumber(i["plays"]) > 0) && (ranking.key != "lastAdded" || i["dateAdded"] != nil) {
-				previous, _ := g[ranking.key].(map[string]any)
-				if previous == nil || (ranking.key == "topItem" && (mediaNumber(i["plays"]) > mediaNumber(previous["plays"]) || (mediaNumber(i["plays"]) == mediaNumber(previous["plays"]) && mediaString(i["title"]) < mediaString(previous["title"])))) || (ranking.key == "lastAdded" && mediaString(i["dateAdded"]) > mediaString(previous["dateAdded"])) {
-					g[ranking.key] = i
+	if r.URL.Query().Get("part") != "overview" {
+		for _, ranking := range []struct{ key, order string }{{"topItem", `COALESCE(a."plays",0) DESC,m."title" ASC`}, {"lastAdded", `m."dateAdded" DESC,m."id" DESC`}} {
+			selectItems := recoveredItemSelect
+			whereItems := `WHERE m."type" IN ('Movie','Series','MusicAlbum','Book','AudioBook')`
+			if ranking.key == "topItem" {
+				// Historical leader is a watched item, including episodes and tracks,
+				// rather than a series/album aggregate. Preserve Go permission scope.
+				selectItems = `SELECT m.*,COALESCE(a."plays",0) AS "plays" FROM catalog m LEFT JOIN (SELECT "mediaId",COUNT(*) AS "plays" FROM valid GROUP BY "mediaId") a ON a."mediaId"=m."id" `
+				whereItems = `WHERE COALESCE(a."plays",0)>0`
+			}
+			items, e := h.recoveredRows(r, base+`, ranked AS (`+selectItems+whereItems+`) SELECT * FROM (SELECT ranked.*,ROW_NUMBER() OVER (PARTITION BY "serverId","libraryName" ORDER BY `+strings.ReplaceAll(strings.ReplaceAll(ranking.order, `COALESCE(a."plays",0)`, `"plays"`), `m.`, ``)+`) AS rn FROM ranked) picked WHERE rn=1`, args...)
+			if e != nil {
+				jsonError(w, 500, "Impossible de charger les détails des collections.")
+				return
+			}
+			for _, i := range items {
+				g := groups[historicalLibraryKey(mediaString(i["libraryName"]))]
+				if g != nil && (ranking.key != "topItem" || mediaNumber(i["plays"]) > 0) && (ranking.key != "lastAdded" || i["dateAdded"] != nil) {
+					previous, _ := g[ranking.key].(map[string]any)
+					if previous == nil || (ranking.key == "topItem" && (mediaNumber(i["plays"]) > mediaNumber(previous["plays"]) || (mediaNumber(i["plays"]) == mediaNumber(previous["plays"]) && mediaString(i["title"]) < mediaString(previous["title"])))) || (ranking.key == "lastAdded" && mediaString(i["dateAdded"]) > mediaString(previous["dateAdded"])) {
+						g[ranking.key] = i
+					}
 				}
 			}
 		}

@@ -4251,7 +4251,7 @@ export function startApplication() {
       if (path !== '/login' && path !== '/setup/go') {
         const module = path === '/accounts' ? 'accounts' : path.startsWith('/users/') ? 'profile' : path === '/users' ? 'users' : path.startsWith('/settings') ? 'settings' : path.startsWith('/admin') ? 'admin' : path.startsWith('/media') || path === '/recent' ? 'media-recovery' : path === '/logs' ? 'history' : path === '/about' ? 'about-recovery' : null;
         try {
-          const needsCharts = path === '/' || path === '/dashboard' || path.startsWith('/users/') || path.startsWith('/admin') || path.startsWith('/media');
+          const needsCharts = path === '/' || path === '/dashboard' || path.startsWith('/users/') || path.startsWith('/admin');
           await Promise.all([
             ...(needsCharts ? [loadAsset('chart.min')] : []),
             ...(module ? [loadAsset(module)] : []),

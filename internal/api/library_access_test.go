@@ -83,6 +83,11 @@ func TestCatalogueLibraryAccess(t *testing.T) {
 		{"/api/media", "", h.mediaList, 200},
 		{"/api/search?q=Secret", "", h.search, 200},
 		{"/api/media/album", "album", h.mediaDetail, 404},
+		{"/api/media/album?part=overview", "album", h.mediaDetail, 404},
+		{"/api/media/film?part=overview", "film", h.mediaDetail, 200},
+		{"/api/media-metadata/album?part=header", "album", h.recoveredMediaMetadata, 404},
+		{"/api/media-metadata/film?part=header", "film", h.recoveredMediaMetadata, 200},
+		{"/api/media/collections?part=overview", "", h.mediaCollections, 200},
 		{"/api/media/track", "track", h.mediaDetail, 404},
 		{"/api/jellyfin/image?serverId=s&mediaId=jf-album", "", h.jellyfinImageProxy, 404},
 	} {

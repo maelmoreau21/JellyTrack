@@ -10,6 +10,14 @@ plus embarqué ni utilisé pour servir l'application.
 
 ## Architecture et portée exacte
 
+Albums/bibliothèques : premier affichage indépendant de Chart.js et des
+réponses lourdes. Bibliothèques sépare l'inventaire de ses aperçus ; les fiches
+médias séparent la fiche locale, les pistes/compteurs, puis l'activité complète.
+Le rendu final est conservé. Erreur tardive avec réessai et réponse obsolète après
+navigation sont couvertes par l'intégration navigateur. Les mesures des fixtures
+3 000 et 100 000 lectures sont dans `docs/frontend-performance/README.md` ; les
+phases finales restent coûteuses sur l'album extrême, sans preuve serveur réel.
+
 Toutes les routes passent par le frontend SvelteKit et ses modules compilés.
 La préparation ne copie plus ni ne réécrit les scripts de web/dist.
 Le document et les assets publics sont possédés par frontend, le démarrage et le

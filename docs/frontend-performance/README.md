@@ -1,5 +1,52 @@
 # Chargement des pages — vérification locale
 
+## Albums et bibliothèques : chargement progressif
+
+Les pages médias ne bloquent plus leur affichage sur le téléchargement de
+Chart.js. Bibliothèques charge d'abord les groupes, volumes et nombres exacts
+(`part=overview`), puis les classements et vignettes. Un album charge d'abord sa
+fiche locale (`/api/media-metadata/:id?part=header`, sans appel Jellyfin distant
+ni historique), ensuite les pistes et compteurs (`part=overview`), enfin
+l'historique paginé, les analyses et graphiques. Le contrat complet sans `part`
+reste identique. Les requêtes conservent les mêmes contrôles de bibliothèques,
+d'identité et de serveur. Une erreur tardive conserve la fiche et propose de
+réessayer ; quitter la page empêche une réponse tardive de remplacer la suivante.
+
+Mesures locales SQLite, un album de dix pistes :
+
+| Réponse | 3 000 lectures / 1 500 événements | 100 000 lectures / 15 000 événements |
+| --- | ---: | ---: |
+| Fiche locale album | 1,3 ms / 604 octets | 1,7 ms / 604 octets |
+| Pistes et compteurs | 28 ms / 7 Ko | 2,1 s / 7 Ko |
+| Réponse complète album | 199 ms / 342 Ko | 12 s / 450 Ko |
+| Bibliothèques, aperçu | 1,5 ms | 1,3 ms |
+| Bibliothèques, réponse complète | 14 ms | 1,2 s |
+
+Le premier affichage n'attend donc plus les réponses lourdes. Ces temps sont
+ceux des handlers sur une base jetable, hors authentification/réseau, sous charge
+CPU variable ; ils ne garantissent pas un temps sur le serveur de l'utilisateur.
+Les phases finales restent plus coûteuses sur l'album extrême. Les expériences
+de changement du plan SQLite n'ont pas montré de gain suffisamment net et n'ont
+pas été retenues : aucune modification d'index ni de filtres pour ce correctif.
+
+Test normal : `go test ./internal/api -run TestProgressivePopularAlbumAndLibraries -count=1 -v`.
+Charge extrême PowerShell :
+
+```powershell
+$env:JELLYTRACK_MEDIA_SCALE_QA='true'
+go test ./internal/api -run TestProgressivePopularAlbumAndLibraries -count=1 -v
+Remove-Item Env:JELLYTRACK_MEDIA_SCALE_QA
+```
+
+`npm run test:integration --prefix frontend` compare la présentation finale aux
+pages historiques et bloque volontairement les réponses secondaires pour vérifier
+la disponibilité du premier affichage, le réessai et l'annulation de navigation.
+Les 34 routes et quatre scénarios progressifs passent. Avec ce serveur Go jetable,
+le navigateur atteint le premier affichage utilisable en 346 ms pour les
+bibliothèques et 499 ms pour l'album (fiche et compteurs disponibles alors que
+la réponse d'activité reste volontairement bloquée). Ce sont des mesures de
+fixture locale, distinctes des temps de handlers du tableau et du serveur réel.
+
 ## Mesures complémentaires du 14 octobre : historique et profils
 
 L'utilisateur situe son volume probable à quelques milliers de lectures. La

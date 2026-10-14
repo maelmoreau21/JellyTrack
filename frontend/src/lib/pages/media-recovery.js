@@ -1,4 +1,5 @@
 /* Historical media pages. Framework-free, using the current Go API and SPA services. */
+import { loadPageModule } from '../runtime/modules';
 (() => {
   'use strict';
   const svg = (paths) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">${paths}</svg>`;
@@ -236,8 +237,10 @@
 
   async function collections(s, main, version) {
     main.innerHTML = `${nav(s, 'collections')}<div class="mr-collections-page">${header(s, 'media.libraryCollections')}<div class="skeleton mr-loading" aria-label="${s.e(s.t('loading'))}"></div></div>`;
-    const result = await s.ctx.API.getJSON(`/api/media/collections?${s.query()}`); if (version !== generation) return;
-    const data = result.collections || []; const totals = result.totals || {};
+    const overviewParams=s.query(); overviewParams.set('part','overview');
+    const result = await s.ctx.API.getJSON(`/api/media/collections?${overviewParams}`); if (version !== generation) return;
+    let data = result.collections || []; const totals = result.totals || {};
+    let previewsPending=true;
     const librarySize = (value) => { const n = Number(value || 0); return n >= 1024 ** 4 ? `${(n / 1024 ** 4).toFixed(2)} To` : `${(n / 1024 ** 3).toFixed(1)} Go`; };
     const libraryDuration = (value) => `${Math.floor(Number(value || 0) / 86400000)}${s.ctx.State.locale === 'en' ? 'd' : 'j'} ${Math.floor(Number(value || 0) % 86400000 / 3600000)}h`;
 
@@ -258,6 +261,7 @@
         const countsLabel = (item.types || []).filter((row) => ['Movie', 'Series', 'MusicAlbum', 'Book', 'AudioBook'].includes(row.type)).map((row) => `${s.count(row.count)} ${s.t(({ Movie: 'movies', Series: 'series', MusicAlbum: 'music', Book: 'books', AudioBook: 'books' })[row.type]).toLocaleLowerCase(s.ctx.State.locale)}`).join(', ');
 
         const preview = (key, title) => {
+          if (previewsPending) return `<div class="mr-library-preview" aria-busy="true"><div class="skeleton" style="width:100%;height:56px" aria-label="${s.e(s.t('loading'))}"></div></div>`;
           const media = item[key], glyph = key === 'topItem' ? icons.trendingUp : icons.recent;
           return `<div class="mr-library-preview ${media ? '' : 'mr-library-preview-empty'}">${media ? `<a data-link href="${s.e(s.mediaLink(media))}"><span class="mr-library-preview-image ${key === 'topItem' && media.type === 'Episode' ? 'mr-preview-wide' : ''}"><img data-mr-image data-mr-fallback="${['Audio','Track','MusicAlbum'].includes(media.type) ? 'music' : 'Movie'}" src="${s.e(s.image(media, 'Primary', 120))}" alt="${s.e(media.title)}" loading="lazy"></span><div><h3>${glyph}${s.e(s.t(title))}</h3><strong>${s.e(media.title)}</strong><small>${key === 'topItem' ? `${s.count(media.plays)} ${s.e(s.t('recent.viewsCount'))}` : `${icons.calendar}${s.e(media.dateAdded ? new Date(media.dateAdded).toLocaleDateString(s.ctx.State.locale) : '—')}`}</small></div></a>` : `<span class="mr-library-preview-image">${glyph}</span><p>${s.e(s.t(key === 'topItem' ? 'media.noPlays' : 'media.noContentAdded'))}</p>`}</div>`;
         };
@@ -267,6 +271,22 @@
       }).join('') || s.empty(); wireImages(s, main);
     };
     render(); main.querySelector('#mr-library-search').addEventListener('input', (event) => render(event.target.value.trim())); serverFilter(s, main, version);
+    const loadPreviews=async()=>{
+      try {
+        const details=await s.ctx.API.getJSON(`/api/media/collections?${s.query()}`);
+        if(version!==generation||s.ctx.State.pageController?.signal.aborted)return;
+        data=details.collections||[];previewsPending=false;
+        render(main.querySelector('#mr-library-search').value.trim());
+      } catch(error) {
+        if(version!==generation||error.name==='AbortError')return;
+        main.querySelectorAll('.mr-library-preview[aria-busy]').forEach(holder=>{
+          holder.removeAttribute('aria-busy');holder.textContent=error.message;
+          const retry=document.createElement('button');retry.type='button';retry.className='btn btn-secondary';retry.textContent=s.t('retry');
+          retry.addEventListener('click',()=>{previewsPending=true;render(main.querySelector('#mr-library-search').value.trim());void loadPreviews();});holder.append(retry);
+        });
+      }
+    };
+    void loadPreviews();
   }
 
   function ranking(s, key, rows, person = false, description = '') {
@@ -317,7 +337,7 @@
     const quality = ['4K', '1440p', '1080p', '720p', 'SD'].map((name) => ({ name, count: (result.quality || []).find((item) => item.name === name)?.count || 0 }));
     const taste = result.taste || {};
     main.querySelector('.mr-loading').outerHTML = `<div class="mr-analysis-overview"><section class="card mr-section mr-analysis-content"><div class="mr-section-heading"><h2>${s.e(s.t('media.statsContent'))}</h2><p>${s.e(s.t('media.statsContentDesc'))}</p></div><div class="mr-analysis-subcards">${[['media.totalMedia', s.count(result.totalMedia), 'media.totalMediaDesc'], ['media.uniqueGenres', s.count(result.uniqueGenres), ''], ['media.avgDuration', s.ms(Math.round(result.averageDurationMs / 60000) * 60000), 'media.avgDurationDesc']].map(([label, value, desc]) => `<div class="mr-analysis-subcard"><span>${s.e(s.t(label))}</span><strong>${s.e(value)}</strong>${desc ? `<small>${s.e(s.t(desc))}</small>` : ''}</div>`).join('')}</div></section>${s.section('media.videoQuality', `<div class="mr-quality-list">${quality.map((row) => `<a data-link href="${s.e(s.link('/media/all', { resolution: row.name }))}"><span class="mr-quality-${row.name}">${s.e(({'4K': s.t('media.4kLabel', {}, '4K UHD'), '1440p': '1440p QHD', '1080p': '1080p FHD', '720p': '720p HD', 'SD': s.t('media.standardOther')})[row.name] || row.name)}</span><strong>${s.count(row.count)}</strong></a>`).join('')}</div>`, s.t('media.videoQualityDesc'))}${s.section('media.libraryCollections', (result.libraries || []).slice(0, 6).map((row) => `<a data-link class="mr-list-row" href="${s.e(s.link('/media/all', { library: row.name }))}"><span>${s.e(row.name)}</span><strong>${s.count(row.count)}</strong></a>`).join('') || s.empty(), s.t('media.statsContentDesc'))}</div>${s.section('media.genreDiversity', '<div class="mr-chart mr-genre-chart"><div class="mr-genre-canvas"><canvas id="mr-catalogue-genres"></canvas></div></div>', s.t('media.genreDiversityDesc'))}${analysisHighlights(s, result.binge, taste)}${s.section('media.deepStatsOverview', `<div id="mr-deep-stats" aria-live="polite">${s.e(s.t('loading'))}</div>`, s.t('media.deepStatsOverviewDesc'))}`;
-    catalogueGenres(s, (result.genres || []).slice(0, 10));
+    void loadPageModule('chart.min').then(()=>{if(version===generation)catalogueGenres(s,(result.genres||[]).slice(0,10));}).catch(error=>{if(version===generation)s.ctx.ChartHelper.showEmpty('mr-catalogue-genres',error.message);});
     serverFilter(s, main, version);
     try {
       const deepParams = s.query(); deepParams.set('catalogue', 'true');
@@ -445,13 +465,52 @@
   async function detail(s, main, id, version) {
     main.innerHTML = `${nav(s, '')}<div class="mr-detail-layout"><div class="skeleton mr-loading"></div></div>`;
     const params = s.query(); params.delete('metadata');
-    const item = await s.ctx.API.getJSON(`/api/media/${encodeURIComponent(id)}?${params}`); if (version !== generation) return;
+    params.set('part','header');
+    const heading=await s.ctx.API.getJSON(`/api/media-metadata/${encodeURIComponent(id)}?${params}`);if(version!==generation)return;
+    renderDetail(s,main,id,version,heading,'header');
+    params.delete('part');
+    const loadActivity=async()=>{
+      const holder=main.querySelector('.mr-deferred');if(holder)holder.innerHTML=`<div class="skeleton mr-loading" aria-label="${s.e(s.t('loading'))}"></div>`;
+      try {
+        const overviewParams=new URLSearchParams(params);overviewParams.set('part','overview');
+        const overview=await s.ctx.API.getJSON(`/api/media/${encodeURIComponent(id)}?${overviewParams}`);if(version!==generation)return;
+        const overviewContainer=main.closest('.main-wrapper'),overviewScrollTop=overviewContainer?.scrollTop;
+        main.innerHTML=`${nav(s,'')}<div class="mr-detail-layout"><div class="skeleton mr-loading"></div></div>`;
+        renderDetail(s,main,id,version,overview,true);
+        if(overviewContainer)overviewContainer.scrollTop=overviewScrollTop;
+        const [item]=await Promise.all([s.ctx.API.getJSON(`/api/media/${encodeURIComponent(id)}?${params}`),loadPageModule('chart.min')]);
+        if(version!==generation||s.ctx.State.pageController?.signal.aborted)return;
+        const container=main.closest('.main-wrapper'),scrollTop=container?.scrollTop;
+        main.innerHTML=`${nav(s,'')}<div class="mr-detail-layout"><div class="skeleton mr-loading"></div></div>`;
+        renderDetail(s,main,id,version,item,false);
+        if(container)container.scrollTop=scrollTop;
+      } catch(error) {
+        if(version!==generation||error.name==='AbortError')return;
+        const holder=main.querySelector('.mr-deferred');if(!holder)return;
+        holder.replaceChildren();holder.setAttribute('role','alert');
+        const message=document.createElement('p');message.textContent=error.message;
+        const retry=document.createElement('button');retry.type='button';retry.className='btn btn-secondary';retry.textContent=s.t('retry');retry.addEventListener('click',()=>{holder.removeAttribute('role');void loadActivity();});holder.append(message,retry);
+      }
+    };
+    void loadActivity();
+  }
+  function renderDetail(s, main, id, version, item, pending) {
+    const params=s.query();params.delete('metadata');params.delete('part');
     const music = ['MusicAlbum', 'Audio', 'Track'].includes(item.type); const hierarchy = item.hierarchy || []; const kids = (item.children || []).slice().sort((a, b) => a.type.localeCompare(b.type) || a.title.localeCompare(b.title, s.ctx.State.locale, { numeric: true })); const events = item.telemetry || [];
     const childrenTitle = item.type === 'Series' ? 'mediaProfile.seasons' : item.type === 'Season' ? 'mediaProfile.episodes' : 'mediaProfile.tracks';
     const distribution = (key) => `<div class="mr-language-list mr-language-${key}">${(item[key] || []).map((row) => `<div class="mr-language-row"><span>${s.e(row.language || s.t(key === 'subtitleDistribution' ? 'mediaProfile.none' : 'unknown'))}${row.codec ? ` (${s.e(row.codec)})` : ''}</span><div><span class="mr-language-track"><i style="width:${Math.min(100, Math.round(Number(row.count || 0) / Math.max(1, Number(item.totalPlays || 0)) * 100))}%"></i></span><strong>${s.count(row.count)}</strong></div></div>`).join('') || s.empty(key === 'subtitleDistribution' ? 'mediaProfile.none' : 'mediaProfile.noDataSmall')}</div>`;
 
     const telemetryFields = [['pauseCount', 'mediaProfile.pausesLabel', 'pause'], ['seekCount', 'mediaProfile.skippedPassages', 'fastForward'], ['rewatchCount', 'mediaProfile.replayedPassages', 'rotateCcw'], ['speedChangeCount', 'mediaProfile.speedChanges', 'gauge'], ...(music ? [] : [['audioChanges', 'mediaProfile.audioChanges', 'headphones'], ['subtitleChanges', 'mediaProfile.subtitleChanges', 'languages']])];
     main.querySelector('.mr-loading').outerHTML = `<nav class="mr-breadcrumb"><a data-link href="${s.e(s.link('/media/collections'))}">${icons.arrowLeft}${s.e(s.t('mediaProfile.library'))}</a>${item.artist ? `${icons.chevron}<a data-link href="${s.e(s.link(`/media/artist/${encodeURIComponent(item.artist)}`, { servers: item.serverId }))}">${s.e(item.artist)}</a>` : ''}${hierarchy.map((parent) => `${icons.chevron}<a data-link href="${s.e(s.mediaLink(parent))}">${s.e(parent.title)}</a>`).join('')}${icons.chevron}<span class="mr-breadcrumb-current">${item.episodeCode ? `<b>${s.e(item.episodeCode)}</b>` : ''}${s.e(item.title)}</span></nav><div class="mr-quick-nav">${item.artist ? `<a data-link class="mr-quick-artist" href="${s.e(s.link(`/media/artist/${encodeURIComponent(item.artist)}`, { servers: item.serverId }))}">${icons.headphones}${s.e(item.artist)}</a>` : ''}${hierarchy.map((parent) => `<a data-link class="mr-quick-${s.e(parent.type)}" href="${s.e(s.mediaLink(parent))}">${parent.type === 'Series' ? icons.Series : parent.type === 'Season' ? icons.MusicAlbum : icons.music}${s.e(parent.type === 'Series' ? s.t('mediaProfile.viewSeries', { name: parent.title }) : parent.type === 'MusicAlbum' ? s.t('mediaProfile.viewAlbum', { name: parent.title }) : parent.title)}</a>`).join('')}</div>${detailPresentation(s, item)}${kids.length ? s.section(childrenTitle, table(s, [['#'], ['mediaProfile.colTitle'], ['mediaProfile.colType'], ...(item.type !== 'MusicAlbum' ? [['mediaProfile.colResolution']] : []), ['mediaProfile.colSessions'], ['mediaProfile.colTotalTime']], kids, (child, index) => `<tr><td>${index + 1}</td><td><a data-link class="mr-child-title" href="${s.e(s.mediaLink(child))}"><span class="mr-child-image"><img data-mr-image data-mr-fallback="${['Audio', 'Track'].includes(child.type) ? 'music' : 'Movie'}" src="${s.e(s.image(child, 'Primary', 64))}" alt="${s.e(child.title)}" loading="lazy"></span><span>${s.e(child.title)}</span></a></td><td><span class="badge">${s.e(child.type)}</span></td>${item.type !== 'MusicAlbum' ? `<td>${['Series', 'Season'].includes(child.type) ? '—' : s.e(child.displayResolution || child.resolution || '—')}</td>` : ''}<td>${s.count(child.plays)}</td><td>${s.e(s.ms(child.watchTimeMs))}</td></tr>`), s.t(item.type === 'Series' ? 'mediaProfile.seasonsDesc' : item.type === 'Season' ? 'mediaProfile.episodesDesc' : 'mediaProfile.tracksDesc')) .replace(/\{count\}/g, String(kids.length)) : ''}<div class="mr-stats ${music ? 'mr-stats-four' : 'mr-stats-three'}">${s.stat('mediaProfile.totalTime', s.hours(item.totalDurationMs), s.t('mediaProfile.cumulated'), 'clock')}${s.stat('mediaProfile.viewsTitle', s.count(item.totalPlays), s.t('mediaProfile.uniqueSessions'), 'eye')}${s.stat('mediaProfile.avgDuration', s.minutes(item.totalPlays ? item.totalDurationMs / item.totalPlays : 0), s.t('mediaProfile.perSession'), 'timer')}${music ? s.stat('mediaProfile.pauses', s.count(item.pauseCount)) : ''}</div>${!music ? s.section('mediaProfile.telemetrySummary', `<div class="mr-telemetry-summary">${telemetryFields.map(([field, title, icon]) => `<div><span>${icons[icon]}${s.e(s.t(title))}</span><strong>${s.count(item[field])}</strong><meter min="0" max="${Math.max(1, ...telemetryFields.map(([name]) => Number(item[name]) || 0))}" value="${Number(item[field]) || 0}"></meter></div>`).join('')}</div>`, s.t('mediaProfile.telemetryDesc')) : ''}${s.section('mediaProfile.behaviorTitle', behaviors(s, events, item.behavior), s.t('mediaProfile.behaviorDesc'))}<div class="mr-viewer-language-grid">${s.section('mediaProfile.viewers', (item.viewers || []).length ? `<div class="mr-viewers">${item.viewers.map((user) => `<a data-link href="${s.e(s.profileLink(user))}"><strong>${s.e(user.username || s.t('unknown'))}</strong><span>${s.count(user.plays)} ${s.e(s.t('bingeSessions'))}<b>${s.e((Number(user.watchTimeMs || 0) / 3600000).toFixed(1))}h</b></span></a>`).join('')}</div>` : s.empty('mediaProfile.noViewers'), s.t('mediaProfile.viewersDesc')).replace(/\{count\}/g, String(item.viewers?.length || 0))}${s.section('mediaProfile.audioLanguages', distribution('audioDistribution'))}${!music ? s.section('mediaProfile.subtitlesTitle', distribution('subtitleDistribution')) : ''}</div>${completionSection(s, item)}${s.section('mediaProfile.timelineTitle', `${historicalTimeline(s, item)}<details class="mr-timeline-explorer"><summary>${s.e(s.t('exploreEvents'))}</summary><div class="mr-timeline-controls"><label>${s.e(s.t('mediaProfile.colUser'))}<select id="mr-timeline-user" class="form-select"><option value="">${s.e(s.t('mediaProfile.allUsers'))}</option>${(item.viewers || []).map((user) => `<option value="${s.e(user.userId)}" ${s.query().get('user') === user.userId ? 'selected' : ''}>${s.e(user.username || s.t('unknown'))}</option>`).join('')}</select></label><label>${s.e(s.t('session'))}<select id="mr-timeline-session" class="form-select"><option value="">${s.e(s.t('allSessions'))}</option>${Array.from(new Map([...(item.history || []), ...events.map((event) => ({ id: event.playbackId, username: event.username }))].map((row) => [row.id, row])).values()).map((session) => `<option value="${s.e(session.id)}" ${s.query().get('session') === session.id ? 'selected' : ''}>${s.e(session.username || s.t('unknown'))} · ${s.e(session.startedAt ? s.date(session.startedAt) : session.id.slice(0, 12))}</option>`).join('')}</select></label></div>${Number(item.telemetryTotal) > events.length ? `<p class="mr-notice">${s.e(s.t('telemetryLimit', { shown: events.length, total: item.telemetryTotal }))}</p>` : ''}${timeline(s, item)}</details>`, s.t('mediaProfile.timelineDesc'))}${(item.counterTimeline || []).length ? s.section('mediaProfile.telemetryTimeline', '<div class="mr-chart"><canvas id="mr-counters"></canvas></div>', s.t(music ? 'mediaProfile.telemetryTimelineMusicDesc' : 'mediaProfile.telemetryTimelineVideoDesc')) : ''}${s.section('mediaProfile.detailedHistory', table(s, [['mediaProfile.colUser'], ['mediaProfile.colDate'], ['mediaProfile.colMethod', 'mr-md'], ['mediaProfile.colAudio'], ...(!music ? [['mediaProfile.colSubtitles', 'mr-lg']] : []), ['mediaProfile.colPauses', 'mr-md'], ['mediaProfile.colJumps', 'mr-lg'], ['mediaProfile.colReplays', 'mr-xl'], ['mediaProfile.colMaxSpeed', 'mr-xl'], ['mediaProfile.colDuration']], item.history || [], (session) => `<tr><td><a data-link href="${s.e(s.profileLink(session))}">${s.e(session.username || s.t('unknown'))}</a></td><td><button type="button" class="mr-person-inline" data-session-detail="${s.e(session.id)}">${s.e(s.date(session.startedAt))}</button></td><td class="mr-md">${s.e(session.playMethod)}</td><td>${s.e(session.audioLanguage || s.t('unknown'))}${session.audioCodec ? ` (${s.e(session.audioCodec)})` : ''}</td>${!music ? `<td class="mr-lg">${s.e(session.subtitleLanguage || s.t('mediaProfile.none'))}</td>` : ''}<td class="mr-md">${s.count(session.pauseCount)}</td><td class="mr-lg">${s.count(session.seekCount)}</td><td class="mr-xl">${s.count(session.rewatchCount)}</td><td class="mr-xl">${session.maxPlaybackRate ? `${s.e(session.maxPlaybackRate)}×` : '—'}</td><td>${s.e(s.ms(session.durationMs))}</td></tr>`)+pager(s, item.historyPage, item.historyPages, 'historyPage'), s.t('mediaProfile.sessionsTotal', { count: item.totalPlays }))}`;
+    if(pending){
+      const stats=main.querySelector('.mr-detail-layout > .mr-stats');
+      while(stats?.nextElementSibling)stats.nextElementSibling.remove();
+      if(pending==='header')stats?.remove();
+      main.querySelector('#mr-rotate')?.setAttribute('disabled','');
+      const holder=document.createElement('div');holder.className='mr-deferred';holder.setAttribute('aria-live','polite');
+      holder.innerHTML=`<div class="skeleton mr-loading" aria-label="${s.e(s.t('loading'))}"></div>`;main.querySelector('.mr-detail-layout').append(holder);
+      wireImages(s,main);return;
+    }
     if (s.ctx.State.navigation.multiServer) {
       const box=document.createElement('section'); box.className='card';
       box.innerHTML=`<h3>Disponible sur</h3>${(item.availableServers || []).map(row => `<a data-link href="/media/${encodeURIComponent(row.mediaId)}?serverId=${encodeURIComponent(row.serverId)}">${s.e(row.name)}</a>`).join(' · ')}`;

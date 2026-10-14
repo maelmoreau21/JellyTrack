@@ -72,7 +72,7 @@ try {
         pending.add(key);
         try {
           if (!cache.has(key)) {
-            assert.equal(name,'reference','compiled client changed API contract: '+key);
+            assert.ok(name==='reference'||(['overview','header'].includes(url.searchParams.get('part'))&&/^\/api\/(media\/|media-metadata\/)/.test(url.pathname)),'compiled client changed API contract: '+key);
             cache.set(key,(async()=>{const response=await backend.get(url.pathname+url.search);return {status:response.status(),body:await response.body(),contentType:response.headers()['content-type']||'application/json'};})());
           }
           await route.fulfill(await cache.get(key));
@@ -143,6 +143,54 @@ try {
     const redesigned = ['/settings/jellyfin','/settings/media','/settings/plugin/security'].includes(uri);
     if (!redesigned) assert.deepEqual(snapshots[1],snapshots[0],uri+' presentation/API parity');
     report.cases.push({route:uri,passed:true,comparison:redesigned?'Intentional native settings redesign; behavior verified by settings-native.mjs':'Historical presentation/API parity'}); console.log('PASS integration '+uri);
+  }
+  // Gate expensive responses instead of relying on timing guesses: both pages
+  // must remain useful while history/rankings are still unavailable.
+  report.progressive=[];
+  for(const mode of ['album','libraries','retry','leave']){
+    const context=await browser.newContext({viewport:{width:1440,height:900}});
+    await context.addInitScript(()=>{localStorage.setItem('jt_locale','fr');localStorage.setItem('jt_theme','dark');});
+    const errors=[];let releaseOverview,releaseFull,fullCalls=0;
+    const overviewGate=new Promise(resolve=>releaseOverview=resolve),fullGate=new Promise(resolve=>releaseFull=resolve);
+    await context.route('**/api/**',async route=>{
+      const url=new URL(route.request().url()),part=url.searchParams.get('part');
+      const gated=mode==='libraries'?url.pathname==='/api/media/collections':url.pathname==='/api/media/qa-primary-album';
+      if(gated){
+        if(part==='overview'&&mode!=='libraries')await overviewGate;
+        if(!part){fullCalls++;await fullGate;if(mode==='retry'&&fullCalls===1)return route.fulfill({status:503,json:{error:'Fixture activity temporarily unavailable'}});}
+      }
+      const response=await backend.get(url.pathname+url.search);
+      await route.fulfill({status:response.status(),body:await response.body(),contentType:response.headers()['content-type']||'application/json'});
+    });
+    const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
+    try{
+      const started=Date.now();
+      await page.goto(base+(mode==='libraries'?'/media/collections':'/media/qa-primary-album?serverId=qa-primary'));
+      const first=mode==='libraries'?'.mr-library-card':'.mr-media-hero';await page.locator(first).first().waitFor();
+      assert.equal(await page.evaluate(()=>typeof window.Chart),'undefined','Chart.js does not block first paint');
+      if(mode==='libraries'){
+        assert.ok(await page.locator('.mr-library-preview[aria-busy=true]').count(),'library cards precede rankings');
+      }else{
+        assert.match(await page.locator('.mr-media-hero').innerText(),/Album principal QA/);
+        assert.equal(await page.locator('.mr-detail-layout > .mr-stats').count(),0,'header precedes expensive counters');
+        releaseOverview();await page.locator('.mr-detail-layout > .mr-stats').waitFor();await page.locator('.mr-deferred').waitFor();
+      }
+      const firstPaintMs=Date.now()-started;
+      if(mode==='leave'){
+        await page.locator('#nav-version').click();await page.locator('.about-historical').waitFor();releaseFull();
+        await page.waitForTimeout(300);assert.equal(await page.locator('.mr-media-hero').count(),0,'late activity must not replace another page');
+      }else{
+        releaseFull();
+        if(mode==='retry'){
+          await page.locator('.mr-deferred[role=alert]').waitFor();assert.ok(await page.locator('.mr-media-hero').isVisible(),'activity failure preserves header');
+          await page.locator('.mr-deferred button').click();
+        }
+        await page.waitForFunction(libraries=>!document.querySelector(libraries?'.mr-library-preview[aria-busy=true]':'.mr-deferred'),mode==='libraries');
+        if(mode!=='libraries')await page.locator('.mr-historical-timeline').waitFor();
+      }
+      assert.deepEqual(errors,[],mode+' progressive JS errors');
+      report.progressive.push({mode,passed:true,firstPaintMs,fullCalls});console.log('PASS progressive '+mode);
+    }finally{releaseOverview();releaseFull();await context.unrouteAll({behavior:'wait'});await context.close();}
   }
 } finally {
   await writeFile(path.join(evidence,'results.json'),JSON.stringify(report,null,2));
