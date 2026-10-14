@@ -13,11 +13,16 @@ function resolve(dictionary: TranslationDictionary, path: string): TranslationVa
 export function createI18n(state: LocaleState, renderNavigation: () => unknown, navigate: (path: string, replace: boolean, force: boolean) => unknown) {
   return {
     async init() {
-      try {
+      const fallback = (async () => { try {
         const response = await fetch('/assets/messages/fr.json');
         if (response.ok) state.fallbackTranslations = await response.json();
-      } catch { /* Keep the available fallback when the asset cannot be fetched. */ }
-      await this.loadLocale(state.locale);
+      } catch { /* Keep the available fallback when the asset cannot be fetched. */ } })();
+      if (state.locale === 'fr') {
+        await fallback;
+        state.translations = state.fallbackTranslations;
+        document.documentElement.lang = 'fr';
+        localStorage.setItem('jt_locale', 'fr');
+      } else await Promise.all([fallback, this.loadLocale(state.locale)]);
       this.applyTranslationsToDOM();
     },
     async loadLocale(locale: string) {

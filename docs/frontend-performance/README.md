@@ -1,0 +1,129 @@
+# Chargement des pages — vérification locale
+
+Le Dockerfile et `web/static.go` livrent toujours `web/dist`, pas `frontend/build`.
+La migration Svelte reste partielle et isolée. Les optimisations ci-dessous
+concernent donc aussi le frontend réellement livré, sans bascule prématurée.
+
+## Frontend
+
+La migration Svelte conservait les chaînes de chargement du client historique.
+Changer de framework ne supprimait donc pas ces attentes réseau.
+
+Corrections appliquées à `web/dist/assets/app.js` et au service i18n Svelte :
+
+- Traductions et vérification de session démarrent ensemble ; le routeur attend
+  toujours la session vérifiée avant d'ouvrir une page protégée.
+- Le français est téléchargé une fois au démarrage, au lieu de deux fois.
+- Les autres langues et le français de secours sont téléchargés en parallèle.
+- Chart.js et le module de page sont téléchargés en parallèle.
+- La liste des utilisateurs ne télécharge plus Chart.js : elle n'a aucun graphique.
+- Le tableau de bord lance ses données sans attendre les options de serveurs.
+  En mono-serveur, cette requête d'options n'est plus effectuée.
+- L'annulation des requêtes de l'ancienne page lors d'une navigation est conservée.
+
+### Mesures reproductibles
+
+Depuis `frontend`, lancer `node scripts/loading-performance.mjs`.
+Le test compare `HEAD:web/dist/assets/app.js` au fichier modifié, dans Chromium,
+avec des API simulées et une latence imposée de 250 ms. Aucun compte réel,
+fournisseur SSO ou base de production n'est utilisé.
+
+Exécution locale du 14 octobre 2026 :
+
+| Scénario | Avant | Après |
+| --- | ---: | ---: |
+| Premier affichage de À propos | 1 549 ms | 973 ms |
+| Navigation vers les utilisateurs | 1 365 ms | 848 ms |
+| Téléchargements du français | 2 | 1 |
+| Téléchargements Chart.js pour les utilisateurs | 1 | 0 |
+
+Le test impose également 750 ms sur les options du tableau de bord multi-serveur.
+La requête de données démarre 4 ms après celle des options, sans attendre sa réponse.
+Le scénario mono-serveur ne demande aucune option. Le scénario de navigation
+rapide annule la requête utilisateurs et vérifie que sa réponse tardive ne peut
+pas remplacer la page À propos.
+
+Les temps absolus sont des observations, pas des seuils CI : la charge CPU locale
+peut les modifier. Une répétition pendant les autres vérifications a donné
+1 527 → 989 ms au démarrage et 873 → 901 ms pour la navigation utilisateurs :
+le gain de cette dernière n'est donc pas constant dans ces observations.
+Les assertions portent sur les requêtes supprimées, les
+opérations concurrentes et l'annulation. Ces mesures ne démontrent pas le temps
+de chargement sur le serveur de l'utilisateur ni la performance de sa base.
+
+Validation complémentaire : syntaxe JavaScript valide, Svelte check sans erreur
+ni avertissement et les 7 contrats runtime API réussis.
+
+## Catalogue et base de données
+
+Pour les tris titre/date sans filtre de résolution, la requête récursive développe
+désormais les familles des éléments de la page demandée plutôt que toutes celles
+du catalogue. Le catalogue autorisé complet reste disponible pour rechercher les
+descendants. Les statistiques globales, filtres et permissions sont conservés.
+
+Fixture SQLite de 3 000 titres et 3 000 lectures, une exécution locale :
+
+| API catalogue | Avant | Après |
+| --- | ---: | ---: |
+| Films | 39 ms | 23 ms |
+| Séries avec saisons et épisodes | 184 ms | 54 ms |
+
+Commande : `go test ./internal/api -run 'TestCataloguePageWithThousandsOfItemsKeepsRealCounts|TestMediaRecoveryFamiliesScopesFiltersAndPagination|TestCatalogueLibraryAccess' -count=1 -v`.
+Les tests vérifient aussi les descendants, la pagination, les filtres et les
+statistiques personnelles d'un utilisateur ordinaire. Le dashboard avec 10 000
+lectures mesure 106 ms sur la fixture ; cela ne mesure pas la base déployée.
+
+## Transfert des fichiers
+
+Les scripts, styles et traductions publics sont comprimés une fois au démarrage.
+La réponse utilise gzip si le navigateur l'accepte et une empreinte ETag pour
+éviter de renvoyer un fichier déjà reçu. Les noms historiques ne sont pas
+empreintés : la revalidation reste obligatoire pour récupérer les mises à jour.
+L'API privée, les flux live et les pages HTML sont exclus de ce cache.
+
+| Fichier | Taille originale | Transfert gzip |
+| --- | ---: | ---: |
+| app.js | 291 080 octets | 62 384 octets |
+| app.css | 107 777 octets | 18 678 octets |
+| chart.min.js | 208 536 octets | 73 135 octets |
+
+Commande : `go test ./web -run TestTextAssetsTransferAndRevalidation -v`.
+Le test vérifie l'identité exacte après décompression, la revalidation 304,
+les variantes avec et sans gzip, HEAD et les requêtes de plages d'octets.
+Le middleware ajoute `duration_ms` aux journaux de requêtes afin de distinguer
+une réponse API lente d'une attente de chargement dans le navigateur.
+
+## Limites
+
+Aucune image n'a été publiée, aucune base réelle n'a été modifiée et aucune mesure
+de production n'a été effectuée. Les chiffres SQLite et Chromium ci-dessus sont
+des mesures de fixtures. Le résultat sur PostgreSQL, le NAS, le réseau et Jellyfin
+réels reste à mesurer après installation du correctif.
+
+## Fiches média : métadonnées progressives
+
+La fiche ne demande plus `metadata=true` dans sa requête de statistiques. Elle
+présente les données locales immédiatement, puis appelle
+`/api/media-metadata/{id}` avec les mêmes filtres de serveur. La réponse autorisée
+enrichit uniquement la présentation : résumé, année, logo, arrière-plan,
+distribution, versions et repères. Les graphiques, statistiques, contrôles de
+chronologie et action du poster conservent leurs éléments et leurs interactions.
+Une erreur du fournisseur conserve la fiche locale ; une navigation annule la
+requête de métadonnées. Les erreurs de la requête initiale restent affichées.
+
+Validation : depuis `frontend`, `node scripts/media-progressive.mjs` compare
+la présentation finale à celle de `HEAD:web/dist/assets/media-recovery.js` avec
+la même fixture enrichie. Le HTML normalisé du héros, distribution, versions et
+repères est identique. Avec les métadonnées retardées de 1 seconde, les
+statistiques apparaissent avant la réponse. Les tests vérifient le maintien des
+éléments statistiques/graphiques et d'une chronologie développée, la rotation du
+poster, la recherche d'une personne après enrichissement, le fournisseur hors
+ligne et l'annulation lors d'une autre navigation. Les 3 scénarios réussissent.
+Ces preuves utilisent des API simulées, sans serveur Jellyfin ni base réelle.
+
+Validation finale du lot : `go test ./...`, `go vet ./...`, `go build ./...`,
+Svelte Check (0 erreur/avertissement), build statique, 7 contrats runtime API,
+8 scénarios dashboard sous CSP stricte et 3 scénarios média progressif réussis.
+Le nouvel endpoint est testé à travers le routeur HTTP pour l'authentification,
+et directement avec un fournisseur simulé pour l'isolation serveur/bibliothèque,
+les champs retournés et l'absence de données privées. Diff-check réussi.

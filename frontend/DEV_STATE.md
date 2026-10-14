@@ -77,3 +77,13 @@ Après stabilisation des animations de capture, les 8 captures du viewport dashb
 Go/Svelte ont zéro pixel différent. Comparateur : `scripts/compare-dashboard-pixels.py`.
 Limites strictes : viewport 900 px, API simulée, graphiques vides, aucune preuve
 visuelle globale ou de production. À propos change le libellé de technologie.
+
+Correctifs de performance du 14 octobre, sur `develop` : voir
+`../docs/frontend-performance/README.md`. Docker livre encore `web/dist` ; la
+migration Svelte n'a pas été intégrée à l'image. Les optimisations sont appliquées
+au frontend livré et reprises par la préparation Svelte : démarrage et chargement
+de modules parallèles, fichiers publics comprimés/revalidés, catalogue paginé
+optimisé et fiches médias affichées avant l'enrichissement Jellyfin. Le service
+i18n TypeScript reçoit la même suppression du téléchargement français dupliqué.
+Trois scénarios média progressif comparent la présentation finale historique et
+vérifient les interactions/annulations. Aucune mesure sur la production.

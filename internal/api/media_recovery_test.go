@@ -133,6 +133,15 @@ func TestMediaRecoveryFamiliesScopesFiltersAndPagination(t *testing.T) {
 	if out["total"] != float64(1) {
 		t.Fatalf("studio search: %+v", out)
 	}
+	out = request("/api/media?parents=true&servers=a&genre=Drama&sortBy=added&limit=1", "", h.recoveredMediaList, true)
+	items = out["items"].([]any)
+	if out["total"] != float64(1) || len(items) != 1 {
+		t.Fatalf("scoped page: %+v", out)
+	}
+	scopedItem := items[0].(map[string]any)
+	if scopedItem["id"] != "series" || scopedItem["plays"] != float64(1) || scopedItem["watchTimeMs"] != float64(600000) || scopedItem["displayResolution"] != "1080p" {
+		t.Fatalf("scoped page lost descendant data or leaked other users: %+v", scopedItem)
+	}
 	detail := request("/api/media/series?servers=a", "series", h.recoveredMediaDetail, true)
 	if detail["totalPlays"] != float64(1) || detail["totalDurationMs"] != float64(600000) || len(detail["viewers"].([]any)) != 1 || len(detail["telemetry"].([]any)) != 1 || detail["pauseCount"] != float64(2) {
 		t.Fatalf("user scope: %+v", detail)

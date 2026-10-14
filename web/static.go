@@ -10,6 +10,7 @@ import (
 	"net/http/pprof"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/maelmoreau21/jellytrack/internal/api"
 	"github.com/maelmoreau21/jellytrack/internal/auth"
@@ -32,7 +33,7 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string, enablePprof ...b
 		}
 		staticFiles = sub
 	}
-	fileServer := http.FileServer(http.FS(staticFiles))
+	fileServer := textAssets(staticFiles, http.FileServer(http.FS(staticFiles)))
 
 	mux := http.NewServeMux()
 	authManager := auth.New(db, driver)
@@ -84,8 +85,9 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string, enablePprof ...b
 
 func requestLogger(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		started := time.Now()
 		next.ServeHTTP(w, r)
-		logger.Info("request", "method", r.Method, "path", r.URL.Path, "remote_addr", r.RemoteAddr)
+		logger.Info("request", "method", r.Method, "path", r.URL.Path, "remote_addr", r.RemoteAddr, "duration_ms", float64(time.Since(started).Microseconds())/1000)
 	})
 }
 

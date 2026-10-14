@@ -156,11 +156,16 @@
 
   const I18n = {
     async init() {
-      try {
+      const fallback = (async () => { try {
         const res = await fetch('/assets/messages/fr.json');
         if (res.ok) State.fallbackTranslations = await res.json();
-      } catch (e) {}
-      await this.loadLocale(State.locale);
+      } catch (e) {} })();
+      if (State.locale === 'fr') {
+        await fallback;
+        State.translations = State.fallbackTranslations;
+        document.documentElement.lang = 'fr';
+        localStorage.setItem('jt_locale', 'fr');
+      } else await Promise.all([fallback, this.loadLocale(State.locale)]);
       this.applyTranslationsToDOM();
     },
 
@@ -1426,46 +1431,51 @@
         });
       };
 
-      // 1. Fetch Servers for ServerFilter
-      try {
-        const srvRes = await API.getJSON('/api/settings/jellyfin-servers').catch(() => null);
-        const servers = (srvRes && srvRes.servers) ? srvRes.servers : [];
-        if (State.navigation.multiServer && servers.length > 1) {
-          const srvContainer = document.getElementById('dash-server-filter-container');
-          if (srvContainer) {
-            srvContainer.style.display = 'inline-flex';
-            srvContainer.innerHTML = `
-              <button class="header-filter-btn active" data-server-id="">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-                <span>${I18n.t('common.all') || 'Tout'}</span>
-              </button>
-              ${servers.map(s => {
-                const sId = s.id || s.jellyfinServerId || '';
-                const sName = s.name || s.url || sId;
-                return `
-                  <button class="header-filter-btn" data-server-id="${sId}">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-                    <span>${Utils.escapeHtml(sName)}</span>
-                  </button>
-                `;
-              }).join('')}
-            `;
-            srvContainer.querySelectorAll('.header-filter-btn').forEach(btn => {
-              btn.addEventListener('click', () => {
-                const id = btn.dataset.serverId;
-                let selected = currentServerId.split(',').filter(Boolean);
-                selected = id ? selected.includes(id) ? selected.filter(value => value !== id) : [...selected, id] : [];
-                currentServerId = selected.join(',');
-                try { if (currentServerId) localStorage.setItem('jellytrack:server-scope', currentServerId); else localStorage.removeItem('jellytrack:server-scope'); } catch (e) {}
-                document.cookie = `jellytrack_server_scope=${encodeURIComponent(currentServerId)}; path=/; max-age=${currentServerId ? 31536000 : 0}; samesite=lax`;
-                updateServerButtons();
-                refreshFilteredDashboard();
-                refreshLiveStreams();
+      // The optional filter must not delay the dashboard data.
+      const loadServerFilter = async () => {
+        if (!State.navigation.multiServer) return;
+        try {
+          const srvRes = await API.getJSON('/api/settings/jellyfin-servers').catch(() => null);
+          if (pageSignal.aborted) return;
+          const servers = (srvRes && srvRes.servers) ? srvRes.servers : [];
+          if (State.navigation.multiServer && servers.length > 1) {
+            const srvContainer = document.getElementById('dash-server-filter-container');
+            if (srvContainer) {
+              srvContainer.style.display = 'inline-flex';
+              srvContainer.innerHTML = `
+                <button class="header-filter-btn active" data-server-id="">
+                  <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span>${I18n.t('common.all') || 'Tout'}</span>
+                </button>
+                ${servers.map(s => {
+                  const sId = s.id || s.jellyfinServerId || '';
+                  const sName = s.name || s.url || sId;
+                  return `
+                    <button class="header-filter-btn" data-server-id="${sId}">
+                      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                      <span>${Utils.escapeHtml(sName)}</span>
+                    </button>
+                  `;
+                }).join('')}
+              `;
+              srvContainer.querySelectorAll('.header-filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                  const id = btn.dataset.serverId;
+                  let selected = currentServerId.split(',').filter(Boolean);
+                  selected = id ? selected.includes(id) ? selected.filter(value => value !== id) : [...selected, id] : [];
+                  currentServerId = selected.join(',');
+                  try { if (currentServerId) localStorage.setItem('jellytrack:server-scope', currentServerId); else localStorage.removeItem('jellytrack:server-scope'); } catch (e) {}
+                  document.cookie = `jellytrack_server_scope=${encodeURIComponent(currentServerId)}; path=/; max-age=${currentServerId ? 31536000 : 0}; samesite=lax`;
+                  updateServerButtons();
+                  refreshFilteredDashboard();
+                  refreshLiveStreams();
+                });
               });
-            });
+              updateServerButtons();
+            }
           }
-        }
-      } catch (e) {}
+        } catch (e) {}
+      };
 
       // 2. Load System Health Widgets
       const loadSystemHealth = async (snapshot) => {
@@ -3731,6 +3741,7 @@
       updateServerButtons();
       // Initial loaders
       await Promise.all([
+        loadServerFilter(),
         loadSystemHealth(),
         loadHardware(),
         refreshLiveStreams(),
@@ -5067,9 +5078,11 @@
       if (path !== '/login' && path !== '/setup/go') {
         const module = path === '/accounts' ? 'accounts' : path.startsWith('/users/') ? 'profile' : path === '/users' ? 'users' : path.startsWith('/settings') ? 'settings' : path.startsWith('/admin') ? 'admin' : path.startsWith('/media') || path === '/recent' ? 'media-recovery' : path === '/logs' ? 'history' : path === '/about' ? 'about-recovery' : null;
         try {
-          const needsCharts = path === '/' || path === '/dashboard' || path.startsWith('/users') || path.startsWith('/admin') || path.startsWith('/media');
-          if (needsCharts) await loadAsset('chart.min');
-          if (module) await loadAsset(module);
+          const needsCharts = path === '/' || path === '/dashboard' || path.startsWith('/users/') || path.startsWith('/admin') || path.startsWith('/media');
+          await Promise.all([
+            ...(needsCharts ? [loadAsset('chart.min')] : []),
+            ...(module ? [loadAsset(module)] : []),
+          ]);
         } catch (error) { if (!routeSignal.aborted) document.getElementById('app-main').textContent = error.message; return; }
         if (routeSignal.aborted) return;
       }
@@ -5133,7 +5146,8 @@
     new MutationObserver(() => window.JellyTrackNavigation.updateTheme()).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
     // 2. Initialize i18n
-    await I18n.init();
+    // Translations and session context are independent network operations.
+    await Promise.all([I18n.init(), Auth.checkSession()]);
 
     // Language dropdown bind
     const langSelect = document.getElementById('select-language');
@@ -5214,10 +5228,7 @@
     // 3. Update historical sidebar controls after loading translations.
     window.JellyTrackNavigation.render();
 
-    // 4. Verify user session
-    await Auth.checkSession();
-
-    // 5. Mount Router
+    // 5. Mount Router after translations and the verified session are ready.
     Router.init();
   });
 })();

@@ -429,10 +429,21 @@ func (h *Handler) recoveredMediaList(w http.ResponseWriter, r *http.Request) {
 	itemBase, itemArgs := base, append([]any{}, args...)
 	sortBy := first(r.URL.Query().Get("sortBy"), r.URL.Query().Get("sort"))
 	if r.URL.Query().Get("resolution") == "" && (sortBy == "added" || sortBy == "new" || sortBy == "recentlyAdded" || sortBy == "title" || sortBy == "") {
-		itemBase = strings.Replace(base, `FROM valid GROUP BY "mediaId"`, `FROM valid WHERE "mediaId" IN (SELECT f."member" FROM family f WHERE f."root" IN (SELECT m."id" FROM catalog m WHERE `+where+` ORDER BY `+order+` LIMIT ? OFFSET ?)) GROUP BY "mediaId"`, 1)
-		// Catalogue/identity parameters occur before the new page parameters.
+		// Expand only the displayed roots, while retaining the complete permitted
+		// catalog for their descendants. Expanding every unrelated family before
+		// pagination makes small pages increasingly expensive on large libraries.
+		itemBase = strings.Replace(base, `SELECT "id","id" FROM catalog UNION`, `SELECT "id","id" FROM catalog WHERE "id" IN (SELECT m."id" FROM catalog m WHERE `+where+` ORDER BY `+order+` LIMIT ? OFFSET ?) UNION`, 1)
+		itemBase = strings.Replace(itemBase, `FROM valid GROUP BY "mediaId"`, `FROM valid WHERE "mediaId" IN (SELECT "member" FROM family) GROUP BY "mediaId"`, 1)
 		baseArgs := args[:len(args)-len(filters)]
-		itemArgs = append(append(append(append([]any{}, baseArgs...), filters...), limit, offset), filters...)
+		catalogArgCount := len(baseArgs)
+		if principal, ok := auth.PrincipalFromContext(r.Context()); ok && !principal.IsAdmin() {
+			catalogArgCount -= 2 // The verified playback user and server follow family.
+		}
+		itemArgs = append([]any{}, baseArgs[:catalogArgCount]...)
+		itemArgs = append(itemArgs, filters...)
+		itemArgs = append(itemArgs, limit, offset)
+		itemArgs = append(itemArgs, baseArgs[catalogArgCount:]...)
+		itemArgs = append(itemArgs, filters...)
 	}
 	items, err := h.recoveredRows(r, itemBase+recoveredItemSelect+`WHERE `+where+` ORDER BY `+order+` LIMIT ? OFFSET ?`, append(itemArgs, limit, offset)...)
 	if err != nil {
@@ -450,6 +461,50 @@ func (h *Handler) recoveredMediaList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	jsonResponse(w, 200, map[string]any{"items": items, "total": total, "limit": limit, "offset": offset, "showLibraryMediaBadges": badges})
+}
+
+// Presentation is independently loadable so a slow provider cannot delay the
+// persisted detail page. Resolve the same authorized catalog before contacting it.
+func (h *Handler) recoveredMediaMetadata(w http.ResponseWriter, r *http.Request) {
+	base, args, err := h.recoveredMediaBase(r)
+	if err != nil {
+		jsonError(w, 403, "Identité utilisateur introuvable.")
+		return
+	}
+	catalog, _, found := strings.Cut(base, `), edges(`)
+	if !found {
+		jsonError(w, 500, "Impossible de charger le média.")
+		return
+	}
+	base = catalog + ") "
+	base = strings.Replace(base, `m."isAvailable"=1`, `1=1`, 1)
+	if principal, ok := auth.PrincipalFromContext(r.Context()); ok && !principal.IsAdmin() {
+		args = args[:len(args)-2] // Playback identity was checked; this query has no history.
+	}
+	id := r.PathValue("id")
+	items, err := h.recoveredRows(r, base+`SELECT m."id",m."serverId",m."jellyfinMediaId",m."type" FROM catalog m WHERE m."id"=? OR m."jellyfinMediaId"=? ORDER BY CASE WHEN m."id"=? THEN 0 ELSE 1 END LIMIT 2`, append(args, id, id, id)...)
+	if err != nil {
+		jsonError(w, 500, "Impossible de charger le média.")
+		return
+	}
+	if len(items) == 0 {
+		jsonError(w, 404, "Média introuvable.")
+		return
+	}
+	if len(items) > 1 && mediaString(items[0]["id"]) != id {
+		jsonError(w, 409, "Plusieurs serveurs contiennent cet identifiant. Sélectionnez un serveur.")
+		return
+	}
+	item := items[0]
+	item["metadataAvailable"] = map[string]bool{"peoplePortraits": false, "peopleRoles": false, "versions": false, "backdrop": false, "logo": false}
+	h.recoveredLiveMetadata(r, item)
+	patch := map[string]any{}
+	for _, field := range []string{"id", "metadataAvailable", "metadataSource", "overview", "year", "hasLogo", "hasBackdrop", "episodeCode", "people", "versions", "markers"} {
+		if value, exists := item[field]; exists {
+			patch[field] = value
+		}
+	}
+	jsonResponse(w, 200, patch)
 }
 
 func (h *Handler) recoveredMediaDetail(w http.ResponseWriter, r *http.Request) {

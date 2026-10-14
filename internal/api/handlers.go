@@ -66,6 +66,7 @@ func (h *Handler) Register(mux *http.ServeMux, protect, adminProtect func(http.H
 		"GET /api/media/artist/{name}":      h.recoveredMediaArtist,
 		"GET /api/media/collections":        h.mediaCollections,
 		"GET /api/media/{id}":               h.mediaDetail,
+		"GET /api/media-metadata/{id}":      h.recoveredMediaMetadata,
 		"GET /api/history":                  h.history,
 		"GET /api/search":                   h.search,
 		"GET /api/jellyfin/sessions":        h.sessions,

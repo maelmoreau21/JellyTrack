@@ -41,6 +41,15 @@ func TestMissingAssetDoesNotReturnApplicationHTML(t *testing.T) {
 	}
 }
 
+func TestMediaMetadataRouteRequiresAuthentication(t *testing.T) {
+	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/media-metadata/example", nil))
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("metadata route returned %d", rec.Code)
+	}
+}
+
 func TestSecurityHeadersArePresent(t *testing.T) {
 	handler := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
 	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
