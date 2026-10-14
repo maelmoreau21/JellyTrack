@@ -17,6 +17,17 @@ Read this document before changing the project.
 - Do not commit, push, create branches, or merge without an explicit user request.
 - `.env.example` contains placeholders only. Never add real secrets.
 
+## Frontend migration in progress
+
+The user authorized a SvelteKit 3 / Svelte 5 / TypeScript migration on
+`codex/frontend-sveltekit`. `frontend/README.md` and `frontend/DEV_STATE.md`
+describe its scope and evidence. Node/npm are build and QA tools for this isolated
+frontend; Go remains the runtime. `web/dist` is still the delivered frontend and
+visual reference. Do not overwrite it or switch Docker delivery before the
+integration phase is validated. Preserve current appearance, API contracts,
+permissions, multi-server identity and data. Use the compatible stable versions
+locked in `frontend/package-lock.json`; do not force incompatible peer versions.
+
 ## Canonical Stack
 
 - Language: Go 1.26+

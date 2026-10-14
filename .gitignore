@@ -43,6 +43,12 @@ cookies*.txt
 
 # Generated QA evidence is stored as CI artifacts or in an external audit archive.
 __pycache__/
+frontend/node_modules/
+frontend/.svelte-kit/
+frontend/build/
+frontend/static/
+frontend/src/app.html
+frontend/src/lib/legacy-shell.html
 *.py[cod]
 /docs/**/*.png
 /docs/**/*.jpg
