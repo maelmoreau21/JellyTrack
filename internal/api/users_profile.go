@@ -27,6 +27,12 @@ func profileScope(r *http.Request, userID, serverID string) (string, []any) {
 	return `p."userId"=? AND p."serverId"=?`, []any{userID, serverID}
 }
 
+func (h *Handler) profileLibraryScope(r *http.Request, userID, serverID string) (string, []any) {
+	scope, args := profileScope(r, userID, serverID)
+	access, accessArgs := h.historyLibraryClause(r)
+	return scope + " AND (" + access + ")", append(args, accessArgs...)
+}
+
 func profileLocation() *time.Location {
 	if loc, err := time.LoadLocation(os.Getenv("TZ")); err == nil {
 		return loc
@@ -37,12 +43,13 @@ func profileLocation() *time.Location {
 // These sections are scoped to the account/server already authorized by userDetail.
 // Keep the all-session chart population distinct from meaningful-session cards.
 func (h *Handler) userProfileData(r *http.Request, userID, serverID string) (map[string]any, error) {
-	scope, args := profileScope(r, userID, serverID)
+	r = h.withHistoryLibraryAccess(r)
+	scope, args := h.profileLibraryScope(r, userID, serverID)
 	order := ""
 	if h.driver != "postgres" {
 		order = ` ORDER BY p.rowid ASC`
 	}
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."mediaId",p."durationWatched",p."startedAt",p."endedAt",p."eventSource",p."playMethod",p."clientName",p."deviceName",p."bitrate",COALESCE(m."jellyfinMediaId",''),COALESCE(m."title",''),COALESCE(m."type",''),COALESCE(m."durationMs",0),m."genres",p."userId",p."serverId" FROM "PlaybackHistory" p LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE `+scope+order, h.driver), args...)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."mediaId",p."durationWatched",p."startedAt",p."endedAt",p."eventSource",p."playMethod",p."clientName",p."deviceName",p."bitrate",COALESCE(m."jellyfinMediaId",''),COALESCE(m."title",''),COALESCE(m."type",''),COALESCE(m."durationMs",0),m."genres",p."userId",p."serverId" FROM "PlaybackHistory" p LEFT JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE `+scope+order, h.driver), args...)
 	if err != nil {
 		return nil, err
 	}
@@ -369,8 +376,10 @@ func aggregateProfileSessions(sessions []profileSession, now time.Time, loc *tim
 }
 
 func (h *Handler) profileHistory(r *http.Request, userID, serverID string) (map[string]any, error) {
+	r = h.withHistoryLibraryAccess(r)
 	q := r.URL.Query()
-	scope, args := profileScope(r, userID, serverID)
+	scope, args := h.profileLibraryScope(r, userID, serverID)
+	scopeArgs := append([]any{}, args...)
 	clauses := []string{scope}
 	if q.Get("hideZapped") != "false" {
 		clauses = append(clauses, `(p."eventSource"='download' OR p."durationWatched">=60 OR p."endedAt" IS NULL)`)
@@ -453,7 +462,7 @@ func (h *Handler) profileHistory(r *http.Request, userID, serverID string) (map[
 			args = append(args, date.UTC().Format(time.RFC3339Nano))
 		}
 	}
-	base := ` FROM "PlaybackHistory" p LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE ` + strings.Join(clauses, " AND ")
+	base := ` FROM "PlaybackHistory" p LEFT JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE ` + strings.Join(clauses, " AND ")
 	var total int
 	if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*)`+base, h.driver), args...).Scan(&total); err != nil {
 		return nil, err
@@ -526,7 +535,7 @@ func (h *Handler) profileHistory(r *http.Request, userID, serverID string) (map[
 	// Filters cover this account's entire history, independent of the selected page.
 	// Only unique filter combinations are consumed below. Avoid transferring
 	// every session to Go when a large account repeats the same client/codecs.
-	filterRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT DISTINCT p."clientName",p."audioLanguage",p."audioCodec",p."subtitleLanguage",p."subtitleCodec",m."resolution",m."type",p."playMethod" FROM "PlaybackHistory" p LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE `+scope, h.driver), args[:2]...)
+	filterRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT DISTINCT p."clientName",p."audioLanguage",p."audioCodec",p."subtitleLanguage",p."subtitleCodec",m."resolution",m."type",p."playMethod" FROM "PlaybackHistory" p LEFT JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE `+scope, h.driver), scopeArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -606,13 +615,16 @@ func markProfileReconnections(items []map[string]any) {
 
 func (h *Handler) profileMediaSubtitle(r *http.Request, serverID, kind, parentID, artist string) string {
 	var parentTitle, parentParent, parentArtist sql.NullString
+	access, accessArgs := h.historyLibraryClause(r)
 	if parentID != "" {
-		_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "title","parentId","artist" FROM "Media" WHERE "serverId"=? AND "jellyfinMediaId"=? LIMIT 1`, h.driver), serverID, parentID).Scan(&parentTitle, &parentParent, &parentArtist)
+		args := append([]any{serverID, parentID}, accessArgs...)
+		_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT m."title",m."parentId",m."artist" FROM "Media" m WHERE m."serverId"=? AND m."jellyfinMediaId"=? AND (`+access+`) LIMIT 1`, h.driver), args...).Scan(&parentTitle, &parentParent, &parentArtist)
 	}
 	if kind == "Episode" {
 		var grandparent sql.NullString
 		if parentParent.Valid {
-			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT "title" FROM "Media" WHERE "serverId"=? AND "jellyfinMediaId"=? LIMIT 1`, h.driver), serverID, parentParent.String).Scan(&grandparent)
+			args := append([]any{serverID, parentParent.String}, accessArgs...)
+			_ = h.db.QueryRowContext(r.Context(), database.Bind(`SELECT m."title" FROM "Media" m WHERE m."serverId"=? AND m."jellyfinMediaId"=? AND (`+access+`) LIMIT 1`, h.driver), args...).Scan(&grandparent)
 		}
 		if grandparent.String != "" && parentTitle.String != "" {
 			return grandparent.String + " — " + parentTitle.String
@@ -639,7 +651,9 @@ func (h *Handler) profileMediaSubtitle(r *http.Request, serverID, kind, parentID
 }
 
 func (h *Handler) profileTelemetry(r *http.Request, playbackID, userID, serverID string) ([]map[string]any, error) {
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT t."eventType",t."positionMs",t."createdAt",t."metadata" FROM "TelemetryEvent" t JOIN "PlaybackHistory" p ON p."id"=t."playbackId" AND p."serverId"=t."serverId" WHERE t."playbackId"=? AND p."userId"=? AND p."serverId"=? ORDER BY t."createdAt" DESC,t."id" DESC LIMIT 200`, h.driver), playbackID, userID, serverID)
+	scope, args := h.profileLibraryScope(r, userID, serverID)
+	args = append([]any{playbackID}, args...)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT t."eventType",t."positionMs",t."createdAt",t."metadata" FROM "TelemetryEvent" t JOIN "PlaybackHistory" p ON p."id"=t."playbackId" AND p."serverId"=t."serverId" JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE t."playbackId"=? AND `+scope+` ORDER BY t."createdAt" DESC,t."id" DESC LIMIT 200`, h.driver), args...)
 	if err != nil {
 		return nil, err
 	}

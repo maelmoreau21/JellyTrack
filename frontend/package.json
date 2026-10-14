@@ -16,6 +16,7 @@
     "test:backups": "node scripts/backups-parity.mjs",
     "test:accounts": "node scripts/accounts-parity.mjs",
     "test:users": "node scripts/users-parity.mjs",
+    "test:settings": "node scripts/settings-native.mjs",
     "test:integration": "node scripts/integration-parity.mjs",
     "build": "node scripts/prepare-assets.mjs && vite build && node scripts/externalize-bootstrap.mjs && node scripts/install-build.mjs",
     "preview": "vite preview --host 127.0.0.1"

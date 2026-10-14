@@ -57,6 +57,29 @@ type libraryAccessEntry struct {
 	expires time.Time
 }
 
+type historyLibraryAccessKey struct{}
+type historyLibraryAccess struct {
+	clause string
+	args   []any
+}
+
+// A request uses one freshly checked policy consistently for its rows, counts,
+// aggregates and exports. Do not reuse the catalogue's cross-request cache.
+func (h *Handler) withHistoryLibraryAccess(r *http.Request) *http.Request {
+	if _, ok := r.Context().Value(historyLibraryAccessKey{}).(historyLibraryAccess); ok {
+		return r
+	}
+	clause, args := h.libraryAccessClauseFresh(r, "m")
+	return r.WithContext(context.WithValue(r.Context(), historyLibraryAccessKey{}, historyLibraryAccess{clause, args}))
+}
+
+func (h *Handler) historyLibraryClause(r *http.Request) (string, []any) {
+	if access, ok := r.Context().Value(historyLibraryAccessKey{}).(historyLibraryAccess); ok {
+		return access.clause, append([]any{}, access.args...)
+	}
+	return h.libraryAccessClauseFresh(r, "m")
+}
+
 func (h *Handler) clearLibraryAccessCache() {
 	h.libraryCacheMu.Lock()
 	h.libraryCache = nil

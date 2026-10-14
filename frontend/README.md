@@ -10,10 +10,12 @@ reste Go, sans serveur Node.
 - `src/document.html` : document de l'application, avec les styles historiques.
 - `static/assets` : CSS, polices, icônes et traductions, sans anciens scripts.
 - `src/lib/components` : structure, navigation, connexion, À propos, widgets du
-  dashboard, comptes, sauvegardes et utilisateurs en composants Svelte.
+  dashboard, comptes, sauvegardes, utilisateurs et paramètres Jellyfin/Médias/
+  Sécurité en composants Svelte. Ces trois pages de paramètres ont une nouvelle
+  présentation responsive ; elles ne suivent plus le rendu impératif historique.
 - `src/lib/runtime/application.js` et `src/lib/pages` : contrôleurs JavaScript
   historiques repris comme modules compilés et chargés par SvelteKit. Ils gardent
-  les graphiques, filtres, télémétrie, profils, médias, Wrapped, paramètres et
+  les graphiques, filtres, télémétrie, profils, médias, Wrapped, autres paramètres et
   administration. Toutes les vues ne sont pas réécrites en templates Svelte.
 - `src/lib/view-renderers.ts` : montage, actualisation et démontage des composants.
 - `src/lib/runtime/modules.ts` : chargement différé des modules de pages.
@@ -56,14 +58,17 @@ npm run test:dashboard --prefix frontend -- --production --widgets
 npm run test:backups --prefix frontend
 npm run test:accounts --prefix frontend
 npm run test:users --prefix frontend
+npm run test:settings --prefix frontend
 python frontend/scripts/compare-dashboard-pixels.py --widgets
 python frontend/scripts/compare-page-pixels.py backups
 python frontend/scripts/compare-page-pixels.py accounts
 python frontend/scripts/compare-page-pixels.py users
 ```
 
-L'intégration complète construit un serveur Go puis compare 34 routes à la
-référence, avec une base SQLite jetable et des réponses API enregistrées :
+L'intégration complète construit un serveur Go puis contrôle 34 routes, avec
+une base SQLite jetable et des réponses API enregistrées. 31 routes conservent
+la comparaison historique ; les trois paramètres redessinés sont contrôlés par
+`test:settings` (12 scénarios mobile/desktop, clair/sombre, écritures et erreurs) :
 
 ```powershell
 go build -o scratch/frontend-integration-qa/jellytrack.exe ./cmd/jellytrack
@@ -72,7 +77,8 @@ npm run test:integration --prefix frontend
 
 Les preuves vont dans `scratch/frontend-sveltekit-*-qa`, ignoré par Git, et dans
 les artefacts CI. Les tests contrôlent les API, textes, liens, graphiques et
-interactions. Les comparaisons strictes des pages converties ont zéro pixel
-modifié dans les scénarios testés. Les captures intégrales conservent quelques
+interactions. Les comparaisons strictes des pages conservées ont zéro pixel
+modifié dans les scénarios testés. Les nouveaux paramètres changent volontairement
+de présentation. Les captures intégrales conservent quelques
 variations de rasterisation/états transitoires ; elles ne certifient pas chaque
 pixel de chaque page, ni une instance réelle Jellyfin/SSO.

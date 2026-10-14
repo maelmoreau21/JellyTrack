@@ -19,6 +19,10 @@
 
 Account association, scoped administration, private multi-server Wrapped and encrypted backups are documented in [Multi-server identities and backup recovery](docs/MULTISERVER_IDENTITIES.md). Historical audit images are indexed in [the archive manifest](docs/AUDIT_ASSET_ARCHIVE.json); README illustrations remain in Git.
 
+For complete automatic backups, configure `BACKUP_ENCRYPTION_KEY` as described
+in that guide: the resulting `.jtb` archives preserve server credentials.
+Standard ZIP backups omit secrets and require reconnecting servers after restore.
+
 ## Screenshots
 
 These are screenshots of the **Go frontend**, taken with synthetic data during UI parity testing. They are not screenshots of a live production Jellyfin deployment. Select an image to see it at full resolution.
@@ -95,7 +99,7 @@ Jellyfin server
    v
 JellyTrack (Go application)
    |-- HTTP API, authentication and background tasks
-   |-- Embedded HTML / CSS / vanilla JavaScript UI
+   |-- Embedded SvelteKit / Svelte / TypeScript UI
    |-- SQLite OR PostgreSQL
    `-- Browser on port 3000 (default)
 ```
@@ -110,7 +114,7 @@ scope and validation commands are documented in [frontend/README.md](frontend/RE
 | Component | Implementation |
 | --- | --- |
 | Backend | Go (`internal/`) |
-| Frontend | HTML, CSS and vanilla JavaScript (`web/dist/`) |
+| Frontend | SvelteKit / Svelte / TypeScript (`frontend/`), compiled into `web/svelte/` |
 | Charts | Bundled Chart.js 4.5.1 |
 | Embedded database | SQLite through `modernc.org/sqlite` (no CGO required) |
 | External database | PostgreSQL through `pgx` |
@@ -132,7 +136,7 @@ JellyTrack supports **SQLite and PostgreSQL in the same application**. You choos
 ### 1. Get the Go development branch
 
 ```bash
-git clone --branch codex/frontend-recovery --single-branch https://github.com/maelmoreau21/JellyTrack.git
+git clone --branch develop --single-branch https://github.com/maelmoreau21/JellyTrack.git
 cd JellyTrack
 cp .env.example .env
 ```

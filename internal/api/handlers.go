@@ -829,8 +829,9 @@ func (h *Handler) userDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Recent activity
-	profileClause, profileArgs := profileScope(r, dbUID, accountServerID)
-	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",m."title",m."type",m."libraryName" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE `+profileClause+` ORDER BY p."startedAt" DESC LIMIT 20`, h.driver), profileArgs...)
+	r = h.withHistoryLibraryAccess(r)
+	profileClause, profileArgs := h.profileLibraryScope(r, dbUID, accountServerID)
+	rows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."id",p."startedAt",p."durationWatched",p."playMethod",m."title",m."type",m."libraryName" FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE `+profileClause+` ORDER BY p."startedAt" DESC LIMIT 20`, h.driver), profileArgs...)
 	recent := []map[string]any{}
 	if err == nil {
 		for rows.Next() {

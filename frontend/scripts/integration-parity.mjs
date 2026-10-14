@@ -140,8 +140,9 @@ try {
       await page.unrouteAll({behavior:'wait'});
       await context.close();
     }
-    assert.deepEqual(snapshots[1],snapshots[0],uri+' presentation/API parity');
-    report.cases.push({route:uri,passed:true}); console.log('PASS integration '+uri);
+    const redesigned = ['/settings/jellyfin','/settings/media','/settings/plugin/security'].includes(uri);
+    if (!redesigned) assert.deepEqual(snapshots[1],snapshots[0],uri+' presentation/API parity');
+    report.cases.push({route:uri,passed:true,comparison:redesigned?'Intentional native settings redesign; behavior verified by settings-native.mjs':'Historical presentation/API parity'}); console.log('PASS integration '+uri);
   }
 } finally {
   await writeFile(path.join(evidence,'results.json'),JSON.stringify(report,null,2));

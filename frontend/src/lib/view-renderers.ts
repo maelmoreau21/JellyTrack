@@ -4,6 +4,7 @@ import type { SidebarConfig, SidebarController } from './sidebar-types';
 import About from './components/About.svelte';
 import Login from './components/Login.svelte';
 import Backups from './components/Backups.svelte';
+import type { SettingsContext } from './settings-types';
 import type { BackupContext } from './backup-types';
 import Accounts from './components/Accounts.svelte';
 import type { AccountContext } from './account-types';
@@ -75,6 +76,7 @@ declare global {
       about: (target: HTMLElement, context: AboutContext) => void;
       login: (target: HTMLElement, context: LoginContext) => void;
       backups: (target: HTMLElement, context: BackupContext) => void;
+      settings: (target: HTMLElement, context: SettingsContext) => Promise<void>;
       accounts: (target: HTMLElement, context: AccountContext) => void;
       users: (target: HTMLElement, context: UsersContext) => void;
       disposePage: () => void;
@@ -146,6 +148,13 @@ export function installViewRenderers() {
       disposePage();
       target.replaceChildren();
       page = flushSync(() => mount(Backups, { target, props: { context } }));
+    },
+    async settings(target, context) {
+      const { default: Settings } = await import('./components/Settings.svelte');
+      if (context.signal?.aborted) return;
+      disposePage();
+      target.replaceChildren();
+      page = flushSync(() => mount(Settings, { target, props: { context } }));
     },
     accounts(target, context) {
       disposePage();

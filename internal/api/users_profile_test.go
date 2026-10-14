@@ -102,6 +102,7 @@ func TestProfileHistoryFiltersExportAndIdentityScope(t *testing.T) {
 	}
 	h := New(db, "sqlite")
 	p := auth.Principal{Username: "Alice", Role: "user", JellyfinUserID: "jf-u1", AuthServerID: "s1", IdentityVersion: 1}
+	allowTestLibraryAccess(t, db, "s1", "jf-u1")
 	call := func(id, query string) *httptest.ResponseRecorder {
 		t.Helper()
 		req := httptest.NewRequest("GET", "/api/users/"+id+query, nil)

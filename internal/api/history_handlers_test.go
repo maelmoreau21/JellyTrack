@@ -24,6 +24,7 @@ func TestHistoryFiltersPaginationAndSelfScope(t *testing.T) {
 		}
 	}
 	h := New(db, "sqlite")
+	allowTestLibraryAccess(t, db, "s1", "jf-alice")
 	for _, tc := range []struct {
 		name, query, role, user string
 		want                    int
@@ -39,7 +40,13 @@ func TestHistoryFiltersPaginationAndSelfScope(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := httptest.NewRequest("GET", "/api/history?"+tc.query, nil)
-			r = r.WithContext(context.WithValue(r.Context(), auth.PrincipalContextKey, auth.Principal{Role: tc.role, Username: tc.user}))
+			principal := auth.Principal{Role: tc.role, Username: tc.user}
+			if tc.role == "user" {
+				principal.AuthServerID = "s1"
+				principal.JellyfinUserID = "jf-alice"
+				principal.IdentityVersion = 1
+			}
+			r = r.WithContext(context.WithValue(r.Context(), auth.PrincipalContextKey, principal))
 			w := httptest.NewRecorder()
 			h.history(w, r)
 			if w.Code != 200 {

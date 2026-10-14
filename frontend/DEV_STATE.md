@@ -20,9 +20,13 @@ est supprimé. Filtres de profils/historique et onglets admin préservent égale
 l'état de navigation SvelteKit ; leurs parcours de filtrage/retour sont testés.
 
 Composants Svelte : structure, sidebar, connexion, À propos, cadre/KPI/santé/
-matériel/flux du dashboard, sauvegardes, comptes et utilisateurs. Les contrôleurs
+matériel/flux du dashboard, sauvegardes, comptes, utilisateurs et paramètres
+Jellyfin/Médias/Sécurité. `Settings.svelte` est chargé à la demande, avec formulaires
+et événements Svelte natifs. Ses trois anciens générateurs HTML sont supprimés.
+Ces trois pages sont volontairement redessinées à la demande de l'utilisateur.
+Les contrôleurs
 JavaScript des graphiques, analyses, profils, historique, médias, Wrapped,
-paramètres et administration restent repris dans src/lib/pages et le module
+autres paramètres et administration restent repris dans src/lib/pages et le module
 application.js. Ce n'est pas une réécriture de chaque template en Svelte natif.
 La conservation de ces contrôleurs préserve les fonctions et données existantes.
 
@@ -39,11 +43,20 @@ et DISTINCT des filtres du profil du lot précédent sont conservées.
 - Sauvegardes : 8 scénarios et captures identiques ; comptes : 16 scénarios et
   captures identiques ; dashboard : 8 scénarios, 36 captures identiques.
 - Navigation sidebar, précédent/suivant, contrats de connexion et API réussis.
-- Intégration : 34 routes desktop comparées à web/dist, mêmes textes, liens,
+- Intégration : 34 routes desktop ; 31 comparées à web/dist, mêmes textes, liens,
   dimensions des canvases et sections, sans erreur JavaScript. Les réponses
   viennent d'un serveur Go/SQLite jetable puis sont rejouées pour la comparaison.
   Date, animation des graphiques, origine affichée et chronologie du compteur
   live sont stabilisées uniquement dans cette fixture.
+- Les trois paramètres redessinés sont capturés séparément sur 390/1440 px,
+  en clair/sombre. `test:settings` vérifie CRUD serveur, clés plugin/CSRF,
+  exclusions par serveur, conservation des seuils non enregistrés, presets,
+  sessions, erreurs et navigation retour. Ce test est aussi ajouté à la CI.
+- Les bibliothèques Jellyfin sont revérifiées une fois par requête personnelle,
+  sans le cache de catalogue de 10 secondes : historique, exports, compteurs,
+  profils, filtres, activité récente et télémétrie. Les titres des parents sont
+  également filtrés. Tests de révocation, refus fournisseur et administrateur
+  sur SQLite et PostgreSQL jetables ; aucune preuve sur le Jellyfin utilisateur.
 - Le test Go vérifie le manifeste, chaque module livré, la CSP du bootstrap,
   la compression, les variantes ETag et les 404 des modules inexistants.
 - Docker : image standard construite avec une variante QA utilisant le cache

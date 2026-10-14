@@ -77,6 +77,69 @@ html:not(.dark) .jt-settings .settings-task.sky{--task-color:#0284c7}html:not(.d
 .jt-settings .settings-backups [data-action="backup-now"]{background:#0891b2;border-color:#0891b2;color:#fff;box-shadow:none}
 
 /* Jellyfin server status semantics and historical field layout. */
+/* Native settings pages: explicit groups, restrained borders, responsive forms. */
+.jt-settings.settings-modern { max-width:1280px; }
+.settings-modern .settings-body { padding:8px 0 24px; gap:20px; }
+.settings-modern .settings-page-heading { align-items:center; margin:4px 0 8px; }
+.settings-modern .settings-page-heading h1 { font-size:28px; letter-spacing:-.6px; }
+.settings-modern .settings-page-heading .settings-help { font-size:14px; max-width:680px; margin-top:8px; }
+.settings-modern .settings-eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:1.4px; color:var(--muted-foreground); margin-bottom:6px; }
+.settings-modern .settings-card { border-color:var(--border); border-radius:16px; box-shadow:none; overflow:hidden; }
+.settings-modern .settings-card-header { padding:22px 24px; align-items:flex-start; border-bottom:1px solid var(--border); background:var(--surface-card); }
+.settings-modern .settings-card-header h2 { font-size:17px; letter-spacing:-.2px; }
+.settings-modern .settings-card-header p { font-size:13px; line-height:1.6; max-width:680px; }
+.settings-modern .settings-card-content { padding:24px; gap:20px; }
+.settings-modern .settings-card-header .settings-badges { margin-top:12px; }
+.settings-modern .settings-summary { gap:12px; }
+.settings-modern .settings-summary>div { background:var(--surface-card); border-color:var(--border); border-radius:12px; padding:18px; }
+.settings-modern .settings-summary strong { font-size:24px; }
+.settings-modern .settings-summary .settings-endpoint { font-size:12px; line-height:1.6; font-family:monospace; }
+.settings-modern .settings-connection-details { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:24px; }
+.settings-modern .settings-connection-details>div { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.settings-modern .settings-connection-details small { font-size:12px; color:var(--muted-foreground); }
+.settings-modern .settings-connection-details a { color:var(--foreground); font-size:14px; overflow-wrap:anywhere; text-decoration:none; }
+.settings-modern .settings-connection-details a:hover { text-decoration:underline; }
+.settings-modern .settings-plugin-panel { border:1px solid var(--border); border-radius:10px; background:var(--surface-soft); }
+.settings-modern .settings-plugin-panel summary { cursor:pointer; padding:16px; font-size:14px; font-weight:600; }
+.settings-modern .settings-plugin-panel summary .settings-help { margin:6px 0 0 18px; font-weight:400; }
+.settings-modern .settings-plugin-content { display:flex; flex-direction:column; gap:16px; padding:0 16px 16px; }
+.settings-modern .settings-plugin-content>button { align-self:flex-start; }
+.settings-modern .settings-field { gap:8px; }
+.settings-modern .form-input { height:42px; border-radius:8px; }
+.settings-modern .settings-copy-field>button,.settings-modern .settings-input-wrap button { height:42px; }
+.settings-modern .settings-eye svg { width:18px; height:18px; }
+.settings-modern .btn { min-height:38px; border-radius:8px; }
+.settings-modern .settings-rule-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.settings-modern .settings-rule { padding:18px; background:var(--surface-card); border-color:var(--border); border-radius:12px; }
+.settings-modern .settings-rule .settings-field>span { font-size:12px; }
+.settings-modern .settings-library-group { background:var(--surface-soft); border-color:var(--border); }
+.settings-modern .settings-library-group h3 { font-size:15px; }
+.settings-modern .settings-library { min-height:46px; }
+.settings-modern .settings-plugin-status { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin:0; }
+.settings-modern .settings-plugin-status dt { color:var(--muted-foreground); font-size:12px; margin-bottom:8px; }
+.settings-modern .settings-plugin-status dd { margin:0; font-size:14px; overflow-wrap:anywhere; }
+.settings-modern .settings-security-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-items:start; }
+.settings-modern .settings-presets { padding:5px; border:1px solid var(--border); border-radius:10px; background:var(--surface-soft); align-self:flex-start; }
+.settings-modern .settings-presets .btn { background:transparent; border-color:transparent; }
+.settings-modern .settings-presets .btn.active { color:var(--primary); background:var(--surface-card); border-color:var(--border); }
+.settings-modern .settings-extra { padding:20px; border-radius:12px; background:var(--surface-card); }
+.settings-modern .settings-extra>.settings-grid { margin-top:20px; }
+.settings-modern .settings-extra>.settings-help { margin-top:12px; }
+.settings-modern .settings-save-bar { position:sticky; bottom:12px; padding:12px 16px; background:var(--surface-card); border:1px solid var(--border); border-radius:12px; box-shadow:var(--card-shadow); z-index:2; }
+@media(max-width:767px) {
+  .jt-settings.settings-modern { padding:12px; }
+  .settings-modern .settings-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .settings-modern .settings-summary>div:last-child { grid-column:1 / -1; }
+  .settings-modern .settings-page-heading h1 { font-size:24px; }
+  .settings-modern .settings-card-header,.settings-modern .settings-card-content { padding:18px; }
+  .settings-modern .settings-card-header { flex-wrap:wrap; }
+  .settings-modern .settings-rule-grid,.settings-modern .settings-security-grid,.settings-modern .settings-connection-details { grid-template-columns:minmax(0,1fr); }
+  .settings-modern .settings-plugin-status { grid-template-columns:minmax(0,1fr); gap:16px; }
+  .settings-modern .settings-copy-field { flex-wrap:wrap; }
+  .settings-modern .settings-copy-field>label { flex-basis:100%; }
+  .settings-modern .settings-presets { width:100%; }
+  .settings-modern .settings-presets .btn { flex:1; }
+}
 .jt-settings .settings-badge.neutral { color:var(--muted-foreground);background:rgb(113 113 122 / .1);border-color:rgb(113 113 122 / .3); }
 .jt-settings .settings-badge.error { color:#f87171;background:rgb(239 68 68 / .1);border-color:rgb(239 68 68 / .3); }
 .jt-settings .settings-server .settings-badge { border-radius:4px;padding:2px 8px;gap:4px; }

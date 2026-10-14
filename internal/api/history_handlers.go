@@ -15,6 +15,7 @@ import (
 )
 
 func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
+	r = h.withHistoryLibraryAccess(r)
 	limit, offset := page(r)
 	q := r.URL.Query()
 	export := r.URL.Path == "/api/logs/export"
@@ -25,6 +26,9 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	clauses := []string{exclusion}
+	access, accessArgs := h.historyLibraryClause(r)
+	clauses = append(clauses, access)
+	args = append(args, accessArgs...)
 	if q.Get("hideZapped") != "false" {
 		clauses = append(clauses, history.ZappingClause("p"))
 	}
@@ -177,10 +181,10 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		}
 		clauses = append(clauses, `p."serverId" IN (`+strings.Join(marks, ",")+`)`)
 	}
-	base := ` FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" JOIN "Media" m ON m."id"=p."mediaId" WHERE ` + strings.Join(clauses, " AND ")
+	base := ` FROM "PlaybackHistory" p LEFT JOIN "User" u ON u."id"=p."userId" JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE ` + strings.Join(clauses, " AND ")
 	countBase := base
 	if first(q.Get("userId"), q.Get("user")) == "" && strings.TrimSpace(first(q.Get("q"), q.Get("query"))) == "" {
-		countBase = ` FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" WHERE ` + strings.Join(clauses, " AND ")
+		countBase = ` FROM "PlaybackHistory" p JOIN "Media" m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE ` + strings.Join(clauses, " AND ")
 	}
 	var total int64
 	if err := h.db.QueryRowContext(r.Context(), database.Bind(`SELECT COUNT(*)`+countBase, h.driver), args...).Scan(&total); err != nil {
