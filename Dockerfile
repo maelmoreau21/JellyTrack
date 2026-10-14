@@ -7,7 +7,15 @@ WORKDIR /src
 
 # Download Go modules
 COPY go.mod go.sum ./
-RUN go mod download
+# Avoid proxy HTTP/2 stream failures; retry transient download errors.
+# Keep this setting scoped to module downloads, not the application runtime.
+RUN attempt=1; \
+    until GODEBUG=http2client=0 go mod download; do \
+        if [ "$attempt" -ge 3 ]; then exit 1; fi; \
+        echo "Module download failed; retrying ($attempt/3)..."; \
+        sleep "$((attempt * 5))"; \
+        attempt="$((attempt + 1))"; \
+    done
 
 # Copy the entire Go source tree (including web/dist and migrations)
 COPY . .
