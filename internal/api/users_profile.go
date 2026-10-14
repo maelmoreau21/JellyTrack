@@ -524,7 +524,9 @@ func (h *Handler) profileHistory(r *http.Request, userID, serverID string) (map[
 		return nil, err
 	}
 	// Filters cover this account's entire history, independent of the selected page.
-	filterRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT p."clientName",p."audioLanguage",p."audioCodec",p."subtitleLanguage",p."subtitleCodec",m."resolution",m."type",p."playMethod" FROM "PlaybackHistory" p LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE `+scope, h.driver), args[:2]...)
+	// Only unique filter combinations are consumed below. Avoid transferring
+	// every session to Go when a large account repeats the same client/codecs.
+	filterRows, err := h.db.QueryContext(r.Context(), database.Bind(`SELECT DISTINCT p."clientName",p."audioLanguage",p."audioCodec",p."subtitleLanguage",p."subtitleCodec",m."resolution",m."type",p."playMethod" FROM "PlaybackHistory" p LEFT JOIN "Media" m ON m."id"=p."mediaId" WHERE `+scope, h.driver), args[:2]...)
 	if err != nil {
 		return nil, err
 	}

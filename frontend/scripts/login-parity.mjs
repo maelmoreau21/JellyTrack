@@ -17,7 +17,20 @@ const server = createServer(async (request, response) => {
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const baseline = `http://127.0.0.1:${server.address().port}`;
-const migrated = process.env.FRONTEND_QA_URL || 'http://127.0.0.1:5173';
+const production = process.argv.includes('--production');
+const built = production ? createServer(async (request, response) => {
+  try {
+    const pathname = new URL(request.url, 'http://localhost').pathname;
+    const file = pathname.startsWith('/assets/') || pathname.startsWith('/_app/') ? pathname.slice(1) : 'index.html';
+    if (file.includes('..')) throw new Error('Invalid path');
+    const type = file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'application/javascript' : file.endsWith('.json') ? 'application/json' : file.endsWith('.svg') ? 'image/svg+xml' : file.endsWith('.html') ? 'text/html' : 'application/octet-stream';
+    const data = await readFile(new URL(file, new URL('../build/', import.meta.url)));
+    response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+    response.writeHead(200, { 'Content-Type': type }); response.end(data);
+  } catch { response.writeHead(404); response.end(); }
+}) : null;
+if (built) await new Promise(resolve => built.listen(0, '127.0.0.1', resolve));
+const migrated = built ? `http://127.0.0.1:${built.address().port}` : process.env.FRONTEND_QA_URL || 'http://127.0.0.1:5173';
 const out = new URL('../../scratch/frontend-sveltekit-login-qa/', import.meta.url);
 await mkdir(out, { recursive: true });
 const report = { limits: 'Mock API only; no real authentication, provider, server or production verification.', cases: [] };
@@ -114,6 +127,7 @@ try {
 } finally {
   await writeFile(new URL(process.argv.includes('--contracts') ? 'results-contracts.json' : 'results.json', out), JSON.stringify(report, null, 2));
   await browser.close(); await new Promise(resolve => server.close(resolve));
+  if (built) await new Promise(resolve => built.close(resolve));
 }
 
 

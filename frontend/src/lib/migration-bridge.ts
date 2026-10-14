@@ -3,6 +3,10 @@ import Sidebar from './components/Sidebar.svelte';
 import type { SidebarConfig, SidebarController } from './sidebar-types';
 import About from './components/About.svelte';
 import Login from './components/Login.svelte';
+import Backups from './components/Backups.svelte';
+import type { BackupContext } from './backup-types';
+import Accounts from './components/Accounts.svelte';
+import type { AccountContext } from './account-types';
 import type { LoginContext } from './login-types';
 import { goto } from '$app/navigation';
 import { createTheme } from './runtime/theme';
@@ -68,6 +72,8 @@ declare global {
       sidebar: (target: HTMLElement, config: SidebarConfig, icon: (name: string) => string, logo: string) => SidebarController;
       about: (target: HTMLElement, context: AboutContext) => void;
       login: (target: HTMLElement, context: LoginContext) => void;
+      backups: (target: HTMLElement, context: BackupContext) => void;
+      accounts: (target: HTMLElement, context: AccountContext) => void;
       disposePage: () => void;
       history: (path: string, replace: boolean) => Promise<void>;
     };
@@ -132,6 +138,16 @@ export function installMigrationBridge() {
     login(target, context) {
       disposePage();
       page = mount(Login, { target, props: { context } });
+    },
+    backups(target, context) {
+      disposePage();
+      target.replaceChildren();
+      page = flushSync(() => mount(Backups, { target, props: { context } }));
+    },
+    accounts(target, context) {
+      disposePage();
+      target.replaceChildren();
+      page = flushSync(() => mount(Accounts, { target, props: { context } }));
     },
     disposePage
   };

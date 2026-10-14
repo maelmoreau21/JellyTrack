@@ -13,6 +13,8 @@
     "test:login": "node scripts/login-parity.mjs",
     "test:runtime": "node scripts/runtime-contracts.mjs",
     "test:dashboard": "node scripts/dashboard-parity.mjs",
+    "test:backups": "node scripts/backups-parity.mjs",
+    "test:accounts": "node scripts/accounts-parity.mjs",
     "build": "node scripts/sync-legacy.mjs && vite build && node scripts/externalize-bootstrap.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },

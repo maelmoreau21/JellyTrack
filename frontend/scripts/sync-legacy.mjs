@@ -115,6 +115,21 @@ migratedApp = migratedApp.replace(login, `    async login() {
 
     // 3. Setup Wizard`);
 await writeFile(appPath, migratedApp);
+const settingsPath = new URL('assets/settings.js', destination);
+await writeFile(new URL('assets/accounts.js', destination), `window.AccountsUI = {
+  render(main, context) { window.JellyTrackMigration.accounts(main, context); }
+};\n`);
+const settings = (await readFile(settingsPath, 'utf8')).replaceAll('\r\n', '\n');
+const settingsMount = "    async mount(ctx, subpage = 'jellyfin') {";
+if (settings.split(settingsMount).length !== 2) throw new Error('Settings mount changed; review migration.');
+await writeFile(settingsPath, settings.replace(settingsMount, settingsMount + `
+      if (subpage === 'dataBackups') {
+        window.JellyTrackMigration.backups(ctx.main, { ...ctx,
+          tabs: window.JellyTrackNavigation.settingsTabs('/settings/dataBackups'),
+          icon: name => window.JellyTrackNavigation.icon(name)
+        });
+        return;
+      }`));
 const navigationPath = new URL('assets/navigation.js', destination);
 const navigation = (await readFile(navigationPath, 'utf8')).replaceAll('\r\n', '\n');
 const sidebar = /    init\(options\) \{[\s\S]*?    settingsTabs\(path\) \{/;

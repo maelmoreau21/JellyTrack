@@ -7,6 +7,47 @@ on:
     branches: [ main, master, develop ]
 
 jobs:
+  sveltekit:
+    name: SvelteKit checks and presentation parity
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm run test:runtime
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser -- --production
+      - run: npm run test:browser -- --production --smoke
+      - run: npm run test:browser -- --production --sidebar
+      - run: npm run test:login -- --production
+      - run: npm run test:login -- --production --contracts
+      - run: npm run test:dashboard -- --production --widgets
+      - run: npm run test:backups
+      - run: npm run test:accounts
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: python3 -m pip install Pillow==12.2.0
+      - run: python3 scripts/compare-dashboard-pixels.py --widgets
+      - run: python3 scripts/compare-page-pixels.py backups
+      - run: python3 scripts/compare-page-pixels.py accounts
+      - name: Preserve frontend evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sveltekit-parity
+          path: scratch/frontend-sveltekit-*
+          retention-days: 30
+
   go-test-and-vet:
     name: Go Tests & Vet
     runs-on: ubuntu-latest
@@ -27,6 +68,7 @@ jobs:
           --health-retries 12
     env:
       JELLYTRACK_TEST_POSTGRES_URL: postgresql://qa:qa-local-disposable@127.0.0.1:5432/jellytrack_qa?sslmode=disable
+      JELLYTRACK_MULTI_TEST_PG_URL: postgresql://qa:qa-local-disposable@127.0.0.1:5432/jellytrack_multi_test?sslmode=disable
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -39,6 +81,9 @@ jobs:
 
       - name: Go Vet
         run: go vet ./...
+
+      - name: Create isolated multi-server test database
+        run: docker exec ${{ job.services.postgres.id }} createdb -U qa jellytrack_multi_test
 
       - name: Run Go tests
         run: go test -v -race ./...

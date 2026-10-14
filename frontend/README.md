@@ -72,7 +72,17 @@ npm run test:login -- --contracts
 npm run test:runtime
 npm run test:dashboard
 npm run test:dashboard -- --production
+npm run test:backups
+npm run test:accounts
+python scripts/compare-page-pixels.py backups
+python scripts/compare-page-pixels.py accounts
 ```
+
+Les pages Sauvegardes et Mes comptes sont désormais des composants Svelte.
+Leurs 24 scénarios comparatifs couvrent les mutations simulées, les erreurs et
+le démontage ; les captures complètes ont zéro pixel différent. Les contrôles
+SvelteKit et ces comparaisons sont ajoutés à `.github/workflows/ci.yml`.
+La migration reste partielle ; `DEV_STATE.md` précise les vues encore historiques.
 
 Le second test sert uniquement le build local sous une CSP stricte. Toutes les
 réponses API sont simulées. Les résultats et captures sont écrits dans

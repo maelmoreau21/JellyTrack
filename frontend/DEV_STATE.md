@@ -87,3 +87,39 @@ optimisé et fiches médias affichées avant l'enrichissement Jellyfin. Le servi
 i18n TypeScript reçoit la même suppression du téléchargement français dupliqué.
 Trois scénarios média progressif comparent la présentation finale historique et
 vérifient les interactions/annulations. Aucune mesure sur la production.
+
+## Nouveau lot — sauvegardes, comptes, CI et historique
+
+Travail local sur `develop`, sans commit/push ni déploiement. `main` local est
+toujours `e80c5e8`; les contrôleurs historiques conservent les ajouts de develop.
+
+- `Backups.svelte` et `Accounts.svelte` remplacent les deux renderers dans la
+  copie préparée pour SvelteKit. Les classes, textes, liens et dispositions sont
+  conservés. Aucun changement de CSS ni du frontend Go livré.
+- 8 scénarios sauvegardes et 16 scénarios comptes passent sur le build statique
+  sous CSP stricte, avec 24 captures ayant zéro pixel différent. Les mutations,
+  erreurs, import binaire, CSRF, filtres de visibilité et démontage sont exercés
+  avec des API simulées. Les permissions réelles restent contrôlées par Go.
+- CI : installation verrouillée, Svelte Check, contrats API, build, présentation
+  sidebar/login/dashboard/comptes/sauvegardes et comparateurs de pixels. Les deux
+  variables PostgreSQL de test sont configurées, avec bases jetables distinctes,
+  afin de ne plus ignorer les contrats multi-serveurs. Pas de run GitHub exécuté.
+- Restauration Go : JSON non reconnu et tables malformées rejetés ; import de
+  paramètres sans effacement ; erreurs de télémétrie/statistiques/audit entraînent
+  un rollback. Tests sur SQLite et PostgreSQL 18 jetable réussis, ainsi que le
+  roundtrip chiffré. Le conteneur de test est supprimé après validation.
+- Historique : mesure avec 3 000 et 100 000 lectures. Une seule requête modifiée,
+  les options de filtres du profil, via `SELECT DISTINCT`; les mêmes ensembles
+  restent disponibles malgré filtrage/pagination, sans données de l'autre serveur.
+  Voir `../docs/frontend-performance/README.md` pour les valeurs et leurs limites.
+- Validation : suite Go complète (avec PostgreSQL), vet/build, Svelte Check sans
+  erreur/avertissement, 7 contrats API, 16 comparaisons navigation/À propos,
+  8 sidebar, navigation précédent/suivant, 20 login et 14 contrats login,
+  8 dashboard avec widgets (36 captures à zéro différence), 24 nouvelles pages.
+
+Reste nécessaire pour terminer la migration : graphiques et analyses du
+dashboard, setup/newsletter/Wrapped, utilisateurs/profils/historique, catalogue
+et fiches médias, autres formulaires paramètres et administration. Le routeur
+historique et `sync-legacy.mjs` restent des dépendances temporaires. Ne pas
+annoncer la migration complète ni basculer Docker tant que ces vues ne sont pas
+converties et leur parité fonctionnelle/visuelle validée.

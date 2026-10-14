@@ -1,5 +1,33 @@
 # Chargement des pages — vérification locale
 
+## Mesures complémentaires du 14 octobre : historique et profils
+
+L'utilisateur situe son volume probable à quelques milliers de lectures. La
+fixture de 3 000 lectures représente donc mieux ce volume ; 100 000 constitue
+un test de charge. Chaque fixture comporte aussi 15 000 événements de télémétrie,
+dont les 200 plus récents par session sont conservés dans les réponses. Ce cas
+est volontairement chargé, sans représenter une mesure de la base déployée.
+
+Commande : `go test ./internal/api -run TestHistoryLargeFixture -count=1 -v`.
+
+| API / sous-ensemble, dernière exécution locale | 3 000 lectures | 100 000 lectures |
+| --- | ---: | ---: |
+| Historique, page de 50 avec télémétrie | 48 ms | 186 ms |
+| Historique, tri durée | 6 ms | 56 ms |
+| Historique, recherche titre | 53 ms | 183 ms |
+| Données de profil et son historique | 109 ms | 640 ms |
+| Historique du profil seul | 105 ms | 154 ms |
+
+Le profil transférant auparavant toutes les combinaisons client/codecs/types pour
+construire des ensembles de filtres, cette requête utilise maintenant `DISTINCT`.
+Sur deux observations comparables avec 100 000 lectures, l'historique du profil
+passe de 613 à 419 ms et le profil complet de 1 482 à 1 163 ms. Les mesures du
+tableau, effectuées ensuite avec moins de concurrence CPU, sont plus basses : ne
+pas en déduire un gain garanti ou attribuer toute variation à la correction.
+Les tests SQLite et PostgreSQL vérifient les options de toute l'identité autorisée,
+même lorsque la page courante est filtrée et limitée, et excluent l'autre serveur.
+Aucun cache ni changement des agrégats/permissions ajouté.
+
 Le Dockerfile et `web/static.go` livrent toujours `web/dist`, pas `frontend/build`.
 La migration Svelte reste partielle et isolée. Les optimisations ci-dessous
 concernent donc aussi le frontend réellement livré, sans bascule prématurée.

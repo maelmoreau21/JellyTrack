@@ -270,6 +270,58 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 		}
 		return restoreSnapshot(ctx, db, driver, dbData, setData)
 	}
+	// A settings-only export must never clear playback data. Reject unrelated
+	// JSON and malformed legacy tables before entering the destructive path.
+	_, hasDatabase := dbData["servers"]
+	if !hasDatabase {
+		settings, ok := setData["settings"].(map[string]any)
+		if !ok || len(settings) == 0 {
+			return errors.New("invalid backup: missing database tables or settings")
+		}
+		for _, key := range []string{"users", "media", "playbackHistory", "telemetryEvents", "dailyStats", "adminAuditLogs", "personAccounts"} {
+			if _, present := dbData[key]; present {
+				return fmt.Errorf("invalid backup: %s without servers", key)
+			}
+		}
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+		if err := restoreGlobalSettings(ctx, tx, driver, settings); err != nil {
+			return err
+		}
+		return tx.Commit()
+	}
+	for _, spec := range []struct {
+		key      string
+		required []string
+	}{
+		{"servers", []string{"id"}}, {"users", []string{"id", "serverId"}},
+		{"media", []string{"id", "serverId"}}, {"playbackHistory", []string{"id", "serverId", "mediaId"}},
+		{"telemetryEvents", []string{"id", "serverId", "playbackId"}}, {"dailyStats", []string{"id", "date"}},
+		{"adminAuditLogs", []string{"id", "action"}}, {"personAccounts", []string{"accountId", "personId"}},
+	} {
+		raw, present := dbData[spec.key]
+		if !present {
+			continue
+		}
+		rows, ok := raw.([]any)
+		if !ok {
+			return fmt.Errorf("invalid backup table %s", spec.key)
+		}
+		for _, rawRow := range rows {
+			row, ok := rawRow.(map[string]any)
+			if !ok {
+				return fmt.Errorf("invalid %s row", spec.key)
+			}
+			for _, key := range spec.required {
+				if stringVal(row, key, "") == "" {
+					return fmt.Errorf("invalid %s row: missing %s", spec.key, key)
+				}
+			}
+		}
+	}
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -434,8 +486,11 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 				meta := nullStringVal(m, "metadata")
 				createdAt := stringVal(m, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))
 
-				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "TelemetryEvent" ("id","serverId","playbackId","eventType","positionMs","metadata","createdAt") VALUES (?,?,?,?,?,?,?)`, driver),
+				_, err = tx.ExecContext(ctx, database.Bind(`INSERT INTO "TelemetryEvent" ("id","serverId","playbackId","eventType","positionMs","metadata","createdAt") VALUES (?,?,?,?,?,?,?)`, driver),
 					id, sid, pid, evType, posMs, meta, createdAt)
+				if err != nil {
+					return fmt.Errorf("insert telemetry %s: %w", id, err)
+				}
 			}
 		}
 	}
@@ -459,8 +514,11 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 				unique := intVal(m, "uniqueMedia", 0)
 				updatedAt := stringVal(m, "updatedAt", time.Now().UTC().Format(time.RFC3339Nano))
 
-				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "DailyStats" ("id","date","userId","libraryName","mediaType","totalPlays","totalDuration","directPlays","transcodes","uniqueMedia","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,?)`, driver),
+				_, err = tx.ExecContext(ctx, database.Bind(`INSERT INTO "DailyStats" ("id","date","userId","libraryName","mediaType","totalPlays","totalDuration","directPlays","transcodes","uniqueMedia","updatedAt") VALUES (?,?,?,?,?,?,?,?,?,?,?)`, driver),
 					id, date, uid, lib, mType, plays, dur, direct, trans, unique, updatedAt)
+				if err != nil {
+					return fmt.Errorf("insert daily stats %s: %w", id, err)
+				}
 			}
 		}
 	}
@@ -481,8 +539,11 @@ func applyRestoration(ctx context.Context, db *sql.DB, driver string, dbData map
 				details := jsonCol(m, "details", "{}")
 				createdAt := stringVal(m, "createdAt", time.Now().UTC().Format(time.RFC3339Nano))
 
-				_, _ = tx.ExecContext(ctx, database.Bind(`INSERT INTO "AdminAuditLog" ("id","action","actorUserId","actorUsername","target","ipAddress","details","createdAt") VALUES (?,?,?,?,?,?,?,?)`, driver),
+				_, err = tx.ExecContext(ctx, database.Bind(`INSERT INTO "AdminAuditLog" ("id","action","actorUserId","actorUsername","target","ipAddress","details","createdAt") VALUES (?,?,?,?,?,?,?,?)`, driver),
 					id, action, actorUID, actorUname, target, ip, details, createdAt)
+				if err != nil {
+					return fmt.Errorf("insert audit log %s: %w", id, err)
+				}
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { readFile, mkdir, writeFile, readdir, unlink } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 
@@ -34,6 +34,7 @@ for (const server of [reference, built].filter(Boolean)) await new Promise(resol
 const base = server => `http://127.0.0.1:${server.address().port}`;
 const out = new URL(widgets ? '../../scratch/frontend-sveltekit-widget-qa/' : '../../scratch/frontend-sveltekit-dashboard-qa/', import.meta.url);
 await mkdir(out, { recursive: true });
+for (const name of await readdir(out)) if (name.endsWith('.png') || name.endsWith('.json')) await unlink(new URL(name, out));
 const report = { mode: production ? 'static build with strict CSP' : 'development', limits: 'API and live event fixtures; no provider or production validation. Charts and analytics retain legacy controllers.', cases: [] };
 const browser = await chromium.launch();
 try {
@@ -156,7 +157,7 @@ try {
         assert.equal(requests.at(-1).to, '2026-02-01');
         for (const tab of ['analytics', 'network', 'overview']) {
           await page.locator(`#dashboard-tablist [data-tab="${tab}"]`).click();
-          assert.equal(await page.locator(`#tab-content-${tab}`).isVisible(), true);
+          await page.locator(`#tab-content-${tab}`).waitFor({ state: 'visible' });
           assert.equal(await page.locator(`#dashboard-tablist [data-tab="${tab}"]`).evaluate(node => node.classList.contains('active')), true);
         }
       }
