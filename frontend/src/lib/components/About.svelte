@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AboutContext } from '../migration-bridge';
+  import type { AboutContext } from '../view-renderers';
   import AboutIcon from './AboutIcon.svelte';
   let { i18n, locale, version }: AboutContext = $props();
   const text = (key: string, params: Record<string, string> = {}) => String(i18n.t('about.' + key, params));
@@ -7,7 +7,7 @@
   const features = $derived(i18n.t('about.featuresList'));
   const stack = $derived([
     ['server', 'Go', '1.27', copy('Serveur HTTP natif et binaire autonome', 'Native HTTP server and standalone binary')],
-    ['palette', 'SvelteKit / Svelte / TypeScript', '', copy('Interface embarquée compilée avec SvelteKit', 'Embedded interface compiled with SvelteKit')],
+    ['palette', 'HTML / JavaScript', '', copy('Interface embarquée, sans framework au runtime', 'Embedded interface without a runtime framework')],
     ['database', 'SQLite / PostgreSQL', '', copy('Stockage persistant et migrations SQL', 'Persistent storage and SQL migrations')],
     ['chart', 'Chart.js', '4.5.1', copy('Bibliothèque de graphiques interactifs', 'Interactive chart library')],
     ['shield', 'Go OIDC / Sessions', '3.21.0', copy('Authentification Jellyfin et OpenID Connect', 'Jellyfin and OpenID Connect authentication')],

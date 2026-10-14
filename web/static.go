@@ -17,17 +17,17 @@ import (
 	"github.com/maelmoreau21/jellytrack/internal/plugin"
 )
 
-//go:embed all:dist
+//go:embed all:svelte
 var frontend embed.FS
 
 func NewHandler(logger *slog.Logger, db *sql.DB, driver string, enablePprof ...bool) http.Handler {
 	var staticFiles fs.FS
-	if fi, err := os.Stat("web/dist"); err == nil && fi.IsDir() {
-		staticFiles = os.DirFS("web/dist")
-	} else if fi, err := os.Stat("dist"); err == nil && fi.IsDir() {
-		staticFiles = os.DirFS("dist")
+	if fi, err := os.Stat("web/svelte"); err == nil && fi.IsDir() {
+		staticFiles = os.DirFS("web/svelte")
+	} else if fi, err := os.Stat("svelte"); err == nil && fi.IsDir() {
+		staticFiles = os.DirFS("svelte")
 	} else {
-		sub, err := fs.Sub(frontend, "dist")
+		sub, err := fs.Sub(frontend, "svelte")
 		if err != nil {
 			panic(err)
 		}
@@ -71,7 +71,7 @@ func NewHandler(logger *slog.Logger, db *sql.DB, driver string, enablePprof ...b
 				fileServer.ServeHTTP(w, r)
 				return
 			}
-			if strings.HasPrefix(path, "assets/") {
+			if strings.HasPrefix(path, "assets/") || strings.HasPrefix(path, "_app/") {
 				http.NotFound(w, r)
 				return
 			}

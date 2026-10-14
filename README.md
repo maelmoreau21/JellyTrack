@@ -102,6 +102,11 @@ JellyTrack (Go application)
 
 JellyTrack embeds its frontend and SQL migrations in the Go application, so **Node.js, Next.js, React and npm are not required at runtime**.
 
+The frontend is built with SvelteKit and embedded from `web/svelte`. Docker builds
+compile it automatically. For a local source build, run `npm ci --prefix frontend`
+and `npm run build --prefix frontend` before `go build ./...`. Frontend sources,
+scope and validation commands are documented in [frontend/README.md](frontend/README.md).
+
 | Component | Implementation |
 | --- | --- |
 | Backend | Go (`internal/`) |

@@ -1,0 +1,17 @@
+export const userIcons: Record<string, string> = {
+    search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 21v-2a4 4 0 0 0-3-3.87M16 3a4 4 0 0 1 0 8"/><circle cx="9" cy="7" r="4"/>',
+    refresh: '<path d="M3 11a9 9 0 0 1 15.3-6.3L21 7M21 3v4h-4M21 13a9 9 0 0 1-15.3 6.3L3 17M7 17H3v4"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+    filter: '<path d="M4 4h16l-6.5 7.5V19l-3-1.5v-6z"/>',
+    moon: '<path d="M20.9 13A9 9 0 0 1 11 3.1a9 9 0 1 0 9.9 9.9Z"/>',
+    userX: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M17 8l5 5M22 8l-5 5"/><circle cx="9" cy="7" r="4"/>',
+    flame: '<path d="M12 3c2 4-1 5-1 8 0 2 2 3 3 1 1-1 1-3 1-3 4 4 5 8 2 11-3 3-8 2-10-1-3-5 1-8 5-16Z"/>',
+    monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    trash: '<path d="M3 6h18M19 6l-1 14H6L5 6M9 6V3h6v3M10 10v6M14 10v6"/>',
+    left: '<path d="m15 18-6-6 6-6"/>',
+    right: '<path d="m9 18 6-6-6-6"/>',
+    check: '<circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/>',
+    close: '<path d="m18 6-12 12M6 6l12 12"/>',
+    loader: '<path d="M12 2a10 10 0 1 1-7.1 2.9"/>',
+  };

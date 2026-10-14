@@ -28,9 +28,10 @@ Les tests SQLite et PostgreSQL vérifient les options de toute l'identité autor
 même lorsque la page courante est filtrée et limitée, et excluent l'autre serveur.
 Aucun cache ni changement des agrégats/permissions ajouté.
 
-Le Dockerfile et `web/static.go` livrent toujours `web/dist`, pas `frontend/build`.
-La migration Svelte reste partielle et isolée. Les optimisations ci-dessous
-concernent donc aussi le frontend réellement livré, sans bascule prématurée.
+Lors des mesures décrites ci-dessous, le frontend livré était encore `web/dist`.
+Depuis l'intégration SvelteKit, `web/static.go` embarque `web/svelte`, produit
+depuis les sources `frontend`. Les optimisations historiques sont reprises dans
+ses contrôleurs compilés. Voir `frontend/DEV_STATE.md` pour la validation actuelle.
 
 ## Frontend
 

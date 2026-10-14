@@ -7,6 +7,8 @@ import Backups from './components/Backups.svelte';
 import type { BackupContext } from './backup-types';
 import Accounts from './components/Accounts.svelte';
 import type { AccountContext } from './account-types';
+import Users from './components/Users.svelte';
+import type { UsersContext } from './users-types';
 import type { LoginContext } from './login-types';
 import { goto } from '$app/navigation';
 import { createTheme } from './runtime/theme';
@@ -59,7 +61,7 @@ export interface AboutContext {
 
 declare global {
   interface Window {
-    JellyTrackMigration: {
+    JellyTrackUI: {
       createTheme: typeof createTheme;
       createI18n: typeof createI18n;
       createAPI: typeof createAPI;
@@ -74,13 +76,14 @@ declare global {
       login: (target: HTMLElement, context: LoginContext) => void;
       backups: (target: HTMLElement, context: BackupContext) => void;
       accounts: (target: HTMLElement, context: AccountContext) => void;
+      users: (target: HTMLElement, context: UsersContext) => void;
       disposePage: () => void;
-      history: (path: string, replace: boolean) => Promise<void>;
+      history: (path: string, replace: boolean, shallow?: boolean) => Promise<void>;
     };
   }
 }
 
-export function installMigrationBridge() {
+export function installViewRenderers() {
   const healthWidget = widgetRenderer(DashboardHealth);
   const hardwareWidget = widgetRenderer(DashboardHardware);
   const liveWidget = widgetRenderer(DashboardLiveStreams);
@@ -97,7 +100,7 @@ export function installMigrationBridge() {
     healthWidget.dispose(); hardwareWidget.dispose(); liveWidget.dispose();
     if (page) { void unmount(page); page = undefined; }
   };
-  window.JellyTrackMigration = {
+  window.JellyTrackUI = {
     createTheme,
     createI18n,
     createAPI,
@@ -115,8 +118,8 @@ export function installMigrationBridge() {
       disposeDashboardKpis();
       kpis = flushSync(() => mount(DashboardKpis, { target, props: { context } }));
     },
-    history(path, replace) {
-      return goto(path, { state: {}, shallow: true, replace });
+    history(path, replace, shallow = true) {
+      return goto(path, { state: {}, shallow, replace });
     },
     sidebar(target, config, icon, logo) {
       const component = flushSync(() => mount(Sidebar, { target, props: { config, icon, logo } }));
@@ -148,6 +151,11 @@ export function installMigrationBridge() {
       disposePage();
       target.replaceChildren();
       page = flushSync(() => mount(Accounts, { target, props: { context } }));
+    },
+    users(target, context) {
+      disposePage();
+      target.replaceChildren();
+      page = flushSync(() => mount(Users, { target, props: { context } }));
     },
     disposePage
   };

@@ -214,11 +214,8 @@ func TestStaticAssetsAreServed(t *testing.T) {
 		contentType string
 	}{
 		{"/assets/app.css", "text/css"},
-		{"/assets/app.js", "javascript"},
 		{"/assets/navigation.css", "text/css"},
-		{"/assets/navigation.js", "javascript"},
 		{"/assets/flags/fr.png", "image/png"},
-		{"/assets/chart.min.js", "javascript"},
 		{"/assets/logo.svg", "image/svg+xml"},
 		{"/assets/icon.svg", "image/svg+xml"},
 		{"/assets/messages/fr.json", "application/json"},

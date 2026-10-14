@@ -6,8 +6,8 @@
     "node": ">=22.17.0"
   },
   "scripts": {
-    "prepare": "node scripts/sync-legacy.mjs && svelte-kit sync",
-    "dev": "node scripts/sync-legacy.mjs && vite dev --host 127.0.0.1",
+    "prepare": "node scripts/prepare-assets.mjs && svelte-kit sync",
+    "dev": "node scripts/prepare-assets.mjs && vite dev --host 127.0.0.1",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test:browser": "node scripts/browser-parity.mjs",
     "test:login": "node scripts/login-parity.mjs",
@@ -15,7 +15,9 @@
     "test:dashboard": "node scripts/dashboard-parity.mjs",
     "test:backups": "node scripts/backups-parity.mjs",
     "test:accounts": "node scripts/accounts-parity.mjs",
-    "build": "node scripts/sync-legacy.mjs && vite build && node scripts/externalize-bootstrap.mjs",
+    "test:users": "node scripts/users-parity.mjs",
+    "test:integration": "node scripts/integration-parity.mjs",
+    "build": "node scripts/prepare-assets.mjs && vite build && node scripts/externalize-bootstrap.mjs && node scripts/install-build.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },
   "devDependencies": {

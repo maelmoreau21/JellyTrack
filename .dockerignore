@@ -26,3 +26,6 @@ logs
 *.sqlite*
 *.exe
 *.exe~
+frontend/node_modules
+frontend/.svelte-kit
+frontend/build

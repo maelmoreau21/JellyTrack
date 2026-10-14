@@ -13,14 +13,31 @@ import (
 
 func TestTextAssetsTransferAndRevalidation(t *testing.T) {
 	h := NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil)), nil, "sqlite")
-	for _, name := range []string{"app.js", "app.css", "chart.min.js"} {
+	names := []string{"assets/app.css"}
+	chunks, err := fs.Glob(frontend, "svelte/_app/immutable/chunks/*.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, chunk := range chunks {
+		data, err := fs.ReadFile(frontend, chunk)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(data) > 20000 && len(names) < 4 {
+			names = append(names, chunk[len("svelte/"):])
+		}
+	}
+	if len(names) != 4 {
+		t.Fatal("compiled JavaScript chunks missing")
+	}
+	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
-			original, err := fs.ReadFile(frontend, "dist/assets/"+name)
+			original, err := fs.ReadFile(frontend, "svelte/"+name)
 			if err != nil {
 				t.Fatal(err)
 			}
 			request := func(encoding, etag, method, span string) *httptest.ResponseRecorder {
-				r := httptest.NewRequest(method, "/assets/"+name, nil)
+				r := httptest.NewRequest(method, "/"+name, nil)
 				r.Header.Set("Accept-Encoding", encoding)
 				r.Header.Set("If-None-Match", etag)
 				r.Header.Set("Range", span)

@@ -1,4 +1,4 @@
-import type { Translate } from './migration-bridge';
+import type { Translate } from './view-renderers';
 
 /** Fields consumed by the overview cards from stats.FullDashboardResult. */
 export interface DashboardKpiData {

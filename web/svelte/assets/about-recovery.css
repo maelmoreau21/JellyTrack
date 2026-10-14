@@ -1,0 +1,40 @@
+/* main AboutPage: max-w-4xl, historical header/cards/feature and technology grids. */
+#app-main:has(>.about-historical){padding:0;display:block;max-width:none}
+.about-historical{box-sizing:border-box;max-width:896px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:24px;min-width:0;color:var(--foreground)}
+.about-historical-heading{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px}
+.about-historical-brand{display:flex;align-items:center;justify-content:center;gap:12px}
+.about-historical-brand img{width:40px;height:40px;flex-shrink:0}
+.about-historical-brand h1{font-size:30px;line-height:36px;letter-spacing:-.025em;font-weight:700;margin:0}
+.about-historical-heading>p{font-size:18px;line-height:28px;color:var(--muted-foreground);max-width:672px;margin:0}
+.about-historical-version{display:inline-flex;gap:8px;padding:8px 16px;border:1px solid color-mix(in srgb,var(--primary) 20%,transparent);border-radius:999px;background:color-mix(in srgb,var(--primary) 10%,transparent);color:var(--primary);font-size:14px;font-weight:500;line-height:20px}
+.about-historical-card{display:flex;flex-direction:column;gap:24px;padding:24px 0;border:1px solid var(--border);border-radius:16px;background:var(--surface-card);box-shadow:var(--card-shadow);backdrop-filter:blur(4px);min-width:0}
+.about-historical-card>header,.about-historical-content{padding:0 24px}
+.about-historical-card h2{display:flex;align-items:center;gap:8px;margin:0;font-size:16px;font-weight:600;line-height:1}
+.about-historical svg{width:20px;height:20px;flex-shrink:0}
+.about-historical .about-heart>svg{color:#fb7185}
+.about-historical .about-server>svg{color:#38bdf8}
+.about-historical-features{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;list-style:none;padding:0;margin:0}
+.about-historical-features li{display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:20px;color:color-mix(in srgb,var(--foreground) 80%,transparent)}
+.dark .about-historical-features li{color:#cbd5e1}
+.about-historical-features li>span{margin-top:2px;flex-shrink:0;color:var(--primary)}
+.about-historical-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.about-historical-stack>article{display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid #e4e4e780;border-radius:12px;background:#f4f4f580;min-width:0}
+.dark .about-historical-stack>article{background:#0f172a99;border-color:#ffffff1a}
+.about-historical-stack>article>svg{color:var(--primary);margin-top:2px}
+.about-historical-tech-name{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.about-historical-tech-name strong{font-size:14px;line-height:20px;font-weight:500}
+.about-historical-tech-name small{font-size:11px;line-height:16px;color:#71717a}
+.about-historical-stack p{font-size:12px;line-height:16px;color:var(--muted-foreground);margin:2px 0 0}
+.about-historical-links{display:flex;flex-direction:column;gap:12px}
+.about-historical-links>a{display:flex;align-items:center;gap:8px;font-size:14px;line-height:20px;color:color-mix(in srgb,var(--foreground) 80%,transparent);text-decoration:none}
+.dark .about-historical-links>a{color:#cbd5e1}
+.about-historical-links>a:hover{color:var(--primary)}
+.about-historical-links svg{width:16px;height:16px}
+.about-historical-links svg:last-child{width:12px;height:12px;color:#71717a}
+.about-historical-credit{margin:16px 0 0;padding-top:16px;border-top:1px solid color-mix(in srgb,var(--border) 50%,transparent);font-size:12px;line-height:16px;color:#71717a;text-align:center}
+.about-historical-extras{border-top:1px solid var(--border);padding-top:16px;font-size:14px;color:var(--muted-foreground)}
+.about-historical-extras summary{cursor:pointer;color:var(--foreground)}
+.about-historical-extras ul{margin:12px 0 0;padding-left:20px;line-height:1.6}
+.about-historical a:focus-visible,.about-historical summary:focus-visible{outline:2px solid var(--primary);outline-offset:3px}
+@media(min-width:768px){.about-historical{padding:24px 32px 32px;gap:32px}.about-historical-brand img{width:48px;height:48px}.about-historical-brand h1{font-size:36px;line-height:40px}.about-historical-features,.about-historical-stack{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1024px){.about-historical-stack{grid-template-columns:repeat(3,minmax(0,1fr))}}

@@ -1,4 +1,4 @@
-import type { Translate } from './migration-bridge';
+import type { Translate } from './view-renderers';
 export interface SidebarConfig {
   user(): { isAdmin?: boolean; jellyfinUserId?: string; authServerIsPrimary?: boolean; authServerName?: string } | null;
   context(): { multiServer?: boolean; wrappedVisible?: boolean; appVersion?: string };

@@ -1,148 +1,78 @@
-# Migration frontend JellyTrack
+# Frontend JellyTrack — SvelteKit
 
-Branche : `codex/frontend-sveltekit`, créée depuis `develop` au commit
-`325af151d16d267c5a1c6d32712daca5c45c9051`.
+Le frontend livré est compilé avec SvelteKit 3 / Svelte 5 / TypeScript puis
+embarqué dans le binaire Go. Node/npm servent uniquement à la compilation et aux
+tests. Les trois Dockerfiles compilent ces sources avant le binaire ; le runtime
+reste Go, sans serveur Node.
 
-## Socle et conversion progressive de l'interface
+## Sources
 
-La référence visuelle est le frontend courant de `develop`, pas une nouvelle
-maquette. Les styles, polices, icônes, traductions et HTML sont repris depuis
-`web/dist`. Les corrections et ajouts Go actuels doivent être conservés.
+- `src/document.html` : document de l'application, avec les styles historiques.
+- `static/assets` : CSS, polices, icônes et traductions, sans anciens scripts.
+- `src/lib/components` : structure, navigation, connexion, À propos, widgets du
+  dashboard, comptes, sauvegardes et utilisateurs en composants Svelte.
+- `src/lib/runtime/application.js` et `src/lib/pages` : contrôleurs JavaScript
+  historiques repris comme modules compilés et chargés par SvelteKit. Ils gardent
+  les graphiques, filtres, télémétrie, profils, médias, Wrapped, paramètres et
+  administration. Toutes les vues ne sont pas réécrites en templates Svelte.
+- `src/lib/view-renderers.ts` : montage, actualisation et démontage des composants.
+- `src/lib/runtime/modules.ts` : chargement différé des modules de pages.
 
-Le layout, la structure principale, la barre latérale complète, la page
-À propos et la connexion sont des composants Svelte 5. Thème, traductions et
-client API sont des modules TypeScript. Une passerelle temporaire
-conserve le routeur existant pour les autres pages. Le script de préparation copie
-les assets publics et raccorde le démarrage, le routeur et les services de la
-copie de `app.js` aux composants et modules nouveaux. Les sources historiques restent la
-référence. Ne pas modifier les copies générées.
+Les sources ne sont plus produites par remplacement de texte dans `web/dist`.
+`sync-legacy.mjs` et le chargement de scripts DOM ont été supprimés.
+`web/dist` reste une référence historique pour les tests, hors du frontend livré.
+Les droits, sessions, données et API restent gérés par Go.
 
-Le tableau de bord est partiellement converti : structure, bandeau du jour et
-cinq cartes KPI sont en Svelte. Les graphiques, analyses, flux et autres blocs
-conservent leur contrôleur historique. Les composants KPI sont démontés avant
-chaque réordonnancement ou actualisation pour éviter des composants détachés.
+## Compiler
 
-Versions stables vérifiées dans le registre npm le 14 octobre 2026 :
-
-| Dépendance | Version retenue |
-|---|---|
-| SvelteKit | 3.0.1 |
-| Svelte | 5.57.2 |
-| TypeScript | 6.0.3 |
-| Vite | 8.3.4 |
-| Plugin Svelte Vite | 7.3.1 |
-| Adaptateur statique | 4.0.0 |
-| Svelte Check | 4.7.6 |
-
-TypeScript 7.0.2 est la dernière stable absolue, mais les peer dependencies de
-SvelteKit 3.0.1 et Svelte Check 4.7.6 excluent encore cette version. La dernière
-stable compatible retenue est donc 6.0.3, sans contournement des dépendances.
-Les versions exactes et le verrou npm assurent une installation reproductible.
-
-## Commandes
-
-Depuis la racine du dépôt, avec Node >= 22.17 :
+Depuis la racine, Node 24 et les dépendances verrouillées :
 
 ```powershell
-cd frontend
-npm ci
-npm run check
-npm run build
-npm run dev
+npm ci --prefix frontend
+npm run check --prefix frontend
+npm run build --prefix frontend
+go build ./...
 ```
 
-La compilation produit `frontend/build`, sans remplacer `web/dist`. Aucun
-serveur Node n'est nécessaire pour la livraison statique future. Le serveur Go
-reste responsable des sessions, droits, données, API et événements plugin.
-
-Le build externalise le démarrage JavaScript généré par SvelteKit pour respecter
-la politique Go `script-src 'self'`, sans autoriser les scripts inline.
-
-Tests de présentation reproductibles (dans un second terminal si le serveur de
-développement est utilisé) :
+Le build produit `frontend/build` et installe le résultat dans `web/svelte`,
+avec un manifeste SHA-256. Go embarque uniquement `web/svelte`. Les modules
+`/_app` sont servis avec la même CSP stricte, gzip et revalidation que les assets
+publics. Les modules inexistants renvoient 404.
 
 ```powershell
-npx playwright install chromium
-npm run test:browser
-npm run test:browser -- --production
-npm run test:browser -- --production --smoke
-npm run test:browser -- --production --sidebar
-npm run test:login
-npm run test:login -- --contracts
-npm run test:runtime
-npm run test:dashboard
-npm run test:dashboard -- --production
-npm run test:backups
-npm run test:accounts
-python scripts/compare-page-pixels.py backups
-python scripts/compare-page-pixels.py accounts
+npm run dev --prefix frontend
 ```
 
-Les pages Sauvegardes et Mes comptes sont désormais des composants Svelte.
-Leurs 24 scénarios comparatifs couvrent les mutations simulées, les erreurs et
-le démontage ; les captures complètes ont zéro pixel différent. Les contrôles
-SvelteKit et ces comparaisons sont ajoutés à `.github/workflows/ci.yml`.
-La migration reste partielle ; `DEV_STATE.md` précise les vues encore historiques.
+Le développement écoute sur 127.0.0.1:5173 et transmet les API à un backend Go
+sur 127.0.0.1:8080. Utiliser un backend et une base de test séparés.
 
-Le second test sert uniquement le build local sous une CSP stricte. Toutes les
-réponses API sont simulées. Les résultats et captures sont écrits dans
-`scratch/frontend-sveltekit-qa`. Ces scénarios comparent liens du menu, titres,
-fonctionnalités, largeurs et positions horizontales des cartes sur quatre
-largeurs, deux thèmes et deux rôles. Ils vérifient aussi thème, langue et reload.
-Ils ne constituent pas une certification pixel par pixel des pages restantes.
-Le contrôle `--smoke` exerce aussi la navigation interne et les boutons
-précédent/suivant après passage à l'historique compatible SvelteKit.
+## Validation
 
-Le développement écoute sur 127.0.0.1:5173 et transmet `/api` à un backend Go
-sur 127.0.0.1:8080. Il faut lancer un backend de test séparé pour les données.
-Ne pas utiliser la configuration ou la base de production. Les mutations,
-cookies et OIDC demandent une validation de même origine avant de considérer
-ce mode comme fonctionnel ; ne pas désactiver la protection Origin pour le tester.
-`npm run preview` sert seulement les fichiers compilés, sans proxy API.
+```powershell
+npm run test:runtime --prefix frontend
+npm run test:browser --prefix frontend -- --production --sidebar
+npm run test:login --prefix frontend -- --production --contracts
+npm run test:dashboard --prefix frontend -- --production --widgets
+npm run test:backups --prefix frontend
+npm run test:accounts --prefix frontend
+npm run test:users --prefix frontend
+python frontend/scripts/compare-dashboard-pixels.py --widgets
+python frontend/scripts/compare-page-pixels.py backups
+python frontend/scripts/compare-page-pixels.py accounts
+python frontend/scripts/compare-page-pixels.py users
+```
 
-## Suite prévue, avec validation entre les phases
+L'intégration complète construit un serveur Go puis compare 34 routes à la
+référence, avec une base SQLite jetable et des réponses API enregistrées :
 
-1. Valider ce socle : compilation, démarrage navigateur, session et comparaison
-   des captures de la référence et de la passerelle. Contrôler thèmes clair/sombre,
-   langues, administrateur/utilisateur et largeurs 320, 390, 768 et 1440 px.
-2. Convertir le layout, navigation, thème et traductions en composants Svelte
-   et client API typé. Retirer progressivement les responsabilités équivalentes
-   du routeur historique ; ne pas laisser deux routeurs gérer les mêmes liens.
-3. Migrer les pages par famille : connexion, dashboard, médias, utilisateurs,
-   historique, paramètres, administration, Wrapped. Préserver filtres, graphiques,
-   interactions, permissions et isolation par serveur. Relever pour chaque page
-   les critères de `docs/final-audit/PARITY_MATRIX.md`, en utilisant le frontend
-   courant comme nouvelle référence.
-4. Intégrer le build statique aux images Docker et à Go après validation des
-   routes directes, erreurs assets, CSP, cookies, Origin et retours OIDC.
-   Prévoir le retour vers le frontend précédent avant la bascule.
+```powershell
+go build -o scratch/frontend-integration-qa/jellytrack.exe ./cmd/jellytrack
+npm run test:integration --prefix frontend
+```
 
-## Validation actuelle et limites
-
-Installation npm : zéro vulnérabilité signalée. Vérification Svelte/TypeScript :
-zéro erreur et zéro avertissement. Compilation frontend, `go test ./...`,
-`go vet ./...` et `go build ./...` réussis.
-
-La navigation par rôle et À propos passent 16 scénarios de présentation sur le
-serveur de développement et 16 sur le build statique avec CSP stricte. Les captures
-ont été inspectées sur mobile. Les contrôles comparent les textes et la géométrie
-horizontale, sans revendiquer une égalité pixel par pixel de toute l'application.
-Le libellé de technologie sur À propos décrit désormais SvelteKit/Svelte/TypeScript.
-
-La connexion passe 20 comparaisons d'affichage (local, SSO manuel, SSO seul, erreur
-groupe, déconnexion ; mobile/desktop ; clair/sombre) et 14 scénarios API simulés
-(remember/serverId, callback autorisé/refusé, échec, SSO sélectionné/automatique).
-Les preuves sont dans `scratch/frontend-sveltekit-login-qa`. Elles ne valident pas
-une session ou un fournisseur OIDC réel.
-La barre latérale, la recherche et les menus sont désormais en Svelte ; thème,
-traductions et client API sont en TypeScript. Huit scénarios comparatifs couvrent
-les contrôles de recherche, clavier, focus, langue, thème et repli du menu.
-Sept contrats API isolés couvrent CSRF, données binaires/formulaires, annulation,
-signal explicite, expiration de session, erreurs HTTP et délai de 30 secondes
-avec une horloge accélérée. Aucun appel réseau réel n'est effectué dans ce test.
-
-Les pages restantes et les raccords session/routeur demeurent dans le code
-historique. Quelques listeners de démarrage raccordent encore les boutons
-thème, repli et déconnexion à ces services. Les images Docker et le frontend
-servi actuellement par Go ne sont pas basculés. Cette phase ne valide ni Jellyfin,
-ni OIDC réel, ni les données de production.
+Les preuves vont dans `scratch/frontend-sveltekit-*-qa`, ignoré par Git, et dans
+les artefacts CI. Les tests contrôlent les API, textes, liens, graphiques et
+interactions. Les comparaisons strictes des pages converties ont zéro pixel
+modifié dans les scénarios testés. Les captures intégrales conservent quelques
+variations de rasterisation/états transitoires ; elles ne certifient pas chaque
+pixel de chaque page, ni une instance réelle Jellyfin/SSO.

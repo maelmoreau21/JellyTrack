@@ -33,6 +33,7 @@ jobs:
       - run: npm run test:dashboard -- --production --widgets
       - run: npm run test:backups
       - run: npm run test:accounts
+      - run: npm run test:users
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -40,6 +41,16 @@ jobs:
       - run: python3 scripts/compare-dashboard-pixels.py --widgets
       - run: python3 scripts/compare-page-pixels.py backups
       - run: python3 scripts/compare-page-pixels.py accounts
+      - run: python3 scripts/compare-page-pixels.py users
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: Build the embedded frontend integration server
+        run: |
+          mkdir -p ../scratch/frontend-integration-qa
+          go build -o ../scratch/frontend-integration-qa/jellytrack ../cmd/jellytrack
+      - run: npm run test:integration
       - name: Preserve frontend evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -82,6 +93,14 @@ jobs:
       - name: Go Vet
         run: go vet ./...
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build frontend from its canonical sources
+        run: npm ci --prefix frontend && npm run build --prefix frontend
+
       - name: Create isolated multi-server test database
         run: docker exec ${{ job.services.postgres.id }} createdb -U qa jellytrack_multi_test
 
@@ -102,6 +121,13 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Compile the frontend used by the browser security workflow
+        run: npm ci --prefix frontend && npm run build --prefix frontend
       - name: Build disposable QA server
         run: |
           mkdir -p scratch/security-qa

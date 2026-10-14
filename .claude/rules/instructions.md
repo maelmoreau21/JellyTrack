@@ -13,18 +13,19 @@ Read this document before changing the project.
 
 - The Jellyfin companion plugin is required. JellyTrack does not collect useful data without it.
 - Docker Compose is the canonical install mode.
-- The project is 100% Go native. No Node.js, npm, pnpm, or external frontend build tools are used.
+- Go is the application runtime. Node/npm are build and QA dependencies for the embedded SvelteKit frontend.
 - Do not commit, push, create branches, or merge without an explicit user request.
 - `.env.example` contains placeholders only. Never add real secrets.
 
-## Frontend migration in progress
+## Frontend source and delivery
 
 The user authorized a SvelteKit 3 / Svelte 5 / TypeScript migration on
 `codex/frontend-sveltekit`. `frontend/README.md` and `frontend/DEV_STATE.md`
-describe its scope and evidence. Node/npm are build and QA tools for this isolated
-frontend; Go remains the runtime. `web/dist` is still the delivered frontend and
-visual reference. Do not overwrite it or switch Docker delivery before the
-integration phase is validated. Preserve current appearance, API contracts,
+describe its scope and evidence. `frontend` owns the sources; `npm run build`
+produces `frontend/build` and installs `web/svelte`, which Go embeds. All three
+Dockerfiles build this frontend before Go. `web/dist` is a historical QA reference,
+not a delivery input. Some pages retain their JavaScript controllers as compiled
+modules; do not claim every template is native Svelte. Preserve API contracts,
 permissions, multi-server identity and data. Use the compatible stable versions
 locked in `frontend/package-lock.json`; do not force incompatible peer versions.
 
@@ -32,7 +33,7 @@ locked in `frontend/package-lock.json`; do not force incompatible peer versions.
 
 - Language: Go 1.26+
 - Server: Standard library `net/http` with `embed.FS`
-- Frontend: Embedded SPA in `web/` (HTML5, Vanilla CSS, Vanilla JS, Chart.js)
+- Frontend: SvelteKit 3 / Svelte 5 / TypeScript, compiled page controllers, historical CSS and Chart.js; Go embeds `web/svelte`.
 - Database: Dual driver support - PostgreSQL (`jackc/pgx/v5`) and SQLite (`modernc.org/sqlite`)
 - Schema Migrations: Embedded SQL scripts in `migrations/`
 - Auth: Custom session management, local admin bcrypt authentication, and OIDC Single Sign-On with PKCE

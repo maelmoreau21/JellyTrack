@@ -42,6 +42,3 @@
   <div id="toast-container" aria-live="polite"></div>
 
   <!-- Main Vanilla JS Client Application -->
-  
-  
-

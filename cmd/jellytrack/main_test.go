@@ -83,7 +83,7 @@ func TestEndToEndServerLifecycle(t *testing.T) {
 	}
 
 	// 3. Static Assets
-	for _, asset := range []string{"/assets/app.js", "/assets/app.css", "/assets/messages/fr.json"} {
+	for _, asset := range []string{"/frontend-manifest.json", "/assets/app.css", "/assets/messages/fr.json"} {
 		resp, err = client.Get(ts.URL + asset)
 		if err != nil {
 			t.Fatalf("GET %s failed: %v", asset, err)

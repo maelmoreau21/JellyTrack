@@ -1,4 +1,4 @@
-import type { Translate } from './migration-bridge';
+import type { Translate } from './view-renderers';
 
 /** Raw fields used by the historical dashboard stream renderer. */
 export interface DashboardLiveStream {

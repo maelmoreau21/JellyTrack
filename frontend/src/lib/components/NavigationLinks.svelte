@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { NavigationContext } from '../migration-bridge';
+  import type { NavigationContext } from '../view-renderers';
   let { user, context, t, icon }: NavigationContext = $props();
   const uid = $derived(user?.jellyfinUserId && user.jellyfinUserId !== 'local-admin' && !user.jellyfinUserId.startsWith('oidc-') ? user.jellyfinUserId : '');
   const items = $derived.by(() => {

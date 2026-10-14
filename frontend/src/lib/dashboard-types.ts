@@ -1,4 +1,4 @@
-import type { Translate } from './migration-bridge';
+import type { Translate } from './view-renderers';
 
 export interface DashboardFrameProps {
   t: Translate;

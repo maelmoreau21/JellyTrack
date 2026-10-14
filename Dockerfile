@@ -1,3 +1,9 @@
+# Compile the complete frontend; Node is only a build dependency.
+FROM --platform=$BUILDPLATFORM node:24-alpine AS frontend-build
+WORKDIR /src/frontend
+COPY frontend/ ./
+RUN npm ci && npm run check && npm run build
+
 # ── STAGE 1: Build static Go executable ──
 FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder
 
@@ -19,6 +25,8 @@ RUN attempt=1; \
 
 # Copy the entire Go source tree (including web/dist and migrations)
 COPY . .
+RUN rm -rf /src/web/svelte
+COPY --from=frontend-build /src/web/svelte ./web/svelte
 
 # Target architecture provided by Docker Buildx
 ARG TARGETOS

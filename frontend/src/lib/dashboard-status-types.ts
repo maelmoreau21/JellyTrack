@@ -1,4 +1,4 @@
-import type { Translate } from './migration-bridge';
+import type { Translate } from './view-renderers';
 export interface DashboardHealthData {
   status?: { monitor?: { status?: string; lastPollAt?: string | null }; sync?: { lastSuccessAt?: string | null }; backup?: { lastSuccessAt?: string | null } };
   counts?: { activeStreams?: number; openPlaybackOrphans?: number; dbStreamsWithoutValkey?: number };

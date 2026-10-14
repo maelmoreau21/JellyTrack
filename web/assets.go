@@ -23,30 +23,32 @@ type staticAsset struct {
 // compression per request. HTML and private API responses stay outside this cache.
 func textAssets(files fs.FS, fallback http.Handler) http.Handler {
 	assets := map[string]staticAsset{}
-	_ = fs.WalkDir(files, "assets", func(name string, entry fs.DirEntry, err error) error {
-		if err != nil || entry.IsDir() {
+	for _, root := range []string{"assets", "_app"} {
+		_ = fs.WalkDir(files, root, func(name string, entry fs.DirEntry, err error) error {
+			if err != nil || entry.IsDir() {
+				return nil
+			}
+			switch path.Ext(name) {
+			case ".js", ".css", ".json", ".svg":
+			default:
+				return nil
+			}
+			data, err := fs.ReadFile(files, name)
+			if err != nil {
+				return nil
+			}
+			var compressed bytes.Buffer
+			writer := gzip.NewWriter(&compressed)
+			_, _ = writer.Write(data)
+			_ = writer.Close()
+			asset := staticAsset{plain: data, etag: fmt.Sprintf(`"%x"`, sha256.Sum256(data)), contentType: mime.TypeByExtension(path.Ext(name))}
+			if compressed.Len() < len(data) {
+				asset.compressed = compressed.Bytes()
+			}
+			assets["/"+name] = asset
 			return nil
-		}
-		switch path.Ext(name) {
-		case ".js", ".css", ".json", ".svg":
-		default:
-			return nil
-		}
-		data, err := fs.ReadFile(files, name)
-		if err != nil {
-			return nil
-		}
-		var compressed bytes.Buffer
-		writer := gzip.NewWriter(&compressed)
-		_, _ = writer.Write(data)
-		_ = writer.Close()
-		asset := staticAsset{plain: data, etag: fmt.Sprintf(`"%x"`, sha256.Sum256(data)), contentType: mime.TypeByExtension(path.Ext(name))}
-		if compressed.Len() < len(data) {
-			asset.compressed = compressed.Bytes()
-		}
-		assets["/"+name] = asset
-		return nil
-	})
+		})
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		asset, found := assets[r.URL.Path]
 		if !found || (r.Method != http.MethodGet && r.Method != http.MethodHead) {
