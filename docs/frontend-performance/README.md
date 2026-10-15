@@ -1,18 +1,89 @@
 # Chargement des pages — vérification locale
 
+## Optimisations du 15 octobre : temps complet et allocations
+
+Les calculs communs aux catalogues, bibliothèques et fiches médias agrègent
+désormais des colonnes étroites sans matérialiser les lignes complètes de
+l'historique. SQLite utilise les identifiants médias autorisés pour ses recherches
+indexées ; PostgreSQL conserve ses jointures. Les filtres de serveur, compte et
+bibliothèque restent appliqués. Aucun index ni schéma n'est modifié.
+
+Les six panneaux statistiques d'une fiche utilisent un seul regroupement SQL,
+puis des agrégats en mémoire. L'analyse comportementale évite les sessions sans
+signal et ne conserve plus un ensemble de tous les identifiants de lecture.
+Les profils parcourent les résultats progressivement sans tableau de toutes les
+sessions ni seconde copie pour le filtre serveur ; les genres ne sont plus
+redécodés pour chaque lecture du même média.
+
+Comparaison avec les fonctions exactes de `2e5ac06` sur les mêmes bases jetables :
+
+| Cas | Avant | Après |
+| --- | ---: | ---: |
+| Fiche complète, 100 000 lectures, allocations/requête | 108,7 Mio | 25,4 Mio |
+| Fiche complète, médiane de 3 appels alternés | 8,87 s | 4,90 s |
+| Profil, 100 000 lectures, allocations/requête | 263,7 Mio | 126,6 Mio |
+| Dashboard, 100 000 lectures, allocations/opération | 74,7 Mio | 51,8 Mio |
+| Dashboard, moyenne de 3 opérations du benchmark | 2,39 s | 1,49 s |
+
+Les réponses complètes avant/après ont été comparées : mêmes données pour les
+fiches et profils, résultat dashboard identique. La fixture dashboard couvre
+100 000 lectures réparties dans le temps ; la fixture média concentre 100 000
+lectures sur dix pistes avec 15 000 événements. Les allocations sont le cumul
+alloué pendant l'appel, pas le pic RAM ni la mémoire résidente du processus.
+La charge Windows varie fortement : les trois appels média optimisés vont de
+3,18 à 8,35 s et ceux d'avant de 8,75 à 9,71 s. Aucun gain de temps stable n'est
+établi pour le profil ; son amélioration démontrée concerne la mémoire.
+Les comparateurs temporaires ont été retirés ; les journaux locaux restent sous
+`scratch/media-performance-qa/`. Ces chiffres ne mesurent pas le NAS/Jellyfin réel.
+
+Mesure reproductible de la version courante :
+`go test ./internal/stats -run '^$' -bench BenchmarkDashboardLargeHistory -benchtime=3x -benchmem`.
+
+Le client évite la requête intermédiaire de compteurs sur les fiches : en-tête
+local puis réponse complète optimisée. L'API `part=overview` reste compatible.
+Les contrôles d'événements cachés sont construits à la première ouverture et
+les observateurs/graphiques sont libérés en quittant une page média. Le contenu
+final et les interactions restent identiques. L'intégration compare aussi le
+contenu développé à la référence historique.
+
+Le test `TestHistoryLargeFixture` mesure également catalogue, bibliothèques,
+dashboard sans cache, historique et profils à 3 000 et 100 000 lectures. Sur la
+fixture 3 000, les appels catalogue/bibliothèques prennent environ 20 ms, le
+dashboard 67 ms et l'historique avec 10 000 événements visibles 209 ms. Ce dernier
+conserve ses détails et son contrat ; aucun gain nouveau n'est revendiqué pour
+cet endpoint dans ce lot. La pagination et la limite de 200 événements/session
+restent en place.
+
+Les tests de panneaux indépendants et de pics simultanés passent sur SQLite et
+PostgreSQL, notamment langues NULL/vides, compteurs qui s'annulent, collisions
+serveur et démarrage à la seconde exacte de fin d'une autre lecture.
+
+Validation du lot : `go test ./...`, `go vet ./...`, `go build ./...`, Svelte
+Check (0 erreur/avertissement), build embarqué, 34 parcours d'intégration et
+4 scénarios progressifs réussis. Les tests PostgreSQL ciblés vérifient aussi le
+compte personnel après optimisation. L'analyse compare les observateurs avant
+et après navigation : seul l'observateur global de thème doit subsister.
+Sur les 31 captures comparables à la référence (hors paramètres déjà redessinés),
+les dimensions sont identiques : 20 images strictement identiques, 11 avec au
+plus 28 pixels différents sur 1 296 000, sans déplacement de mise en page.
+La tentative locale `-race` n'a pas pu démarrer : CGO est désactivé et aucun
+compilateur C n'est disponible dans le PATH. Ce contrôle n'est pas compté comme
+réussi ; la CI conserve son test race complet sur Linux.
+
 ## Albums et bibliothèques : chargement progressif
 
 Les pages médias ne bloquent plus leur affichage sur le téléchargement de
 Chart.js. Bibliothèques charge d'abord les groupes, volumes et nombres exacts
 (`part=overview`), puis les classements et vignettes. Un album charge d'abord sa
 fiche locale (`/api/media-metadata/:id?part=header`, sans appel Jellyfin distant
-ni historique), ensuite les pistes et compteurs (`part=overview`), enfin
-l'historique paginé, les analyses et graphiques. Le contrat complet sans `part`
+ni historique), puis les pistes, compteurs, l'historique paginé, les analyses et
+graphiques dans la réponse complète optimisée. Le contrat complet sans `part`
 reste identique. Les requêtes conservent les mêmes contrôles de bibliothèques,
 d'identité et de serveur. Une erreur tardive conserve la fiche et propose de
 réessayer ; quitter la page empêche une réponse tardive de remplacer la suivante.
 
-Mesures locales SQLite, un album de dix pistes :
+Mesures historiques du 14 octobre, avant les optimisations du 15 octobre,
+SQLite, un album de dix pistes (charge CPU variable) :
 
 | Réponse | 3 000 lectures / 1 500 événements | 100 000 lectures / 15 000 événements |
 | --- | ---: | ---: |
@@ -26,8 +97,8 @@ Le premier affichage n'attend donc plus les réponses lourdes. Ces temps sont
 ceux des handlers sur une base jetable, hors authentification/réseau, sous charge
 CPU variable ; ils ne garantissent pas un temps sur le serveur de l'utilisateur.
 Les phases finales restent plus coûteuses sur l'album extrême. Les expériences
-de changement du plan SQLite n'ont pas montré de gain suffisamment net et n'ont
-pas été retenues : aucune modification d'index ni de filtres pour ce correctif.
+de changement du plan SQLite n'avaient pas été retenues dans ce premier lot.
+Le lot du 15 octobre est détaillé ci-dessus.
 
 Test normal : `go test ./internal/api -run TestProgressivePopularAlbumAndLibraries -count=1 -v`.
 Charge extrême PowerShell :
@@ -44,7 +115,7 @@ la disponibilité du premier affichage, le réessai et l'annulation de navigatio
 Les 34 routes et quatre scénarios progressifs passent. Avec ce serveur Go jetable,
 le navigateur atteint le premier affichage utilisable en 346 ms pour les
 bibliothèques et 499 ms pour l'album (fiche et compteurs disponibles alors que
-la réponse d'activité reste volontairement bloquée). Ce sont des mesures de
+la réponse d'activité reste volontairement bloquée dans l'ancien parcours). Ce sont des mesures de
 fixture locale, distinctes des temps de handlers du tableau et du serveur réel.
 
 ## Mesures complémentaires du 14 octobre : historique et profils

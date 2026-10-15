@@ -1,4 +1,4 @@
-# État frontend — 14 octobre 2026
+# État frontend — 15 octobre 2026
 
 ## Livraison
 
@@ -12,11 +12,27 @@ plus embarqué ni utilisé pour servir l'application.
 
 Albums/bibliothèques : premier affichage indépendant de Chart.js et des
 réponses lourdes. Bibliothèques sépare l'inventaire de ses aperçus ; les fiches
-médias séparent la fiche locale, les pistes/compteurs, puis l'activité complète.
+médias séparent la fiche locale puis la réponse complète optimisée ; la requête
+intermédiaire qui recalculait les compteurs est supprimée.
 Le rendu final est conservé. Erreur tardive avec réessai et réponse obsolète après
 navigation sont couvertes par l'intégration navigateur. Les mesures des fixtures
 3 000 et 100 000 lectures sont dans `docs/frontend-performance/README.md` ; les
-phases finales restent coûteuses sur l'album extrême, sans preuve serveur réel.
+temps restent variables sur l'album extrême, sans preuve serveur réel.
+
+Optimisations mémoire/temps : agrégations étroites communes aux pages médias et
+bibliothèques, regroupement unique des panneaux statistiques, profils traités
+progressivement sans tableau de toutes les lectures, dashboard lisant seulement
+ses colonnes utiles et stockant ses frontières de concurrence sur un entier.
+Sur 100 000 lectures : allocations média 108,7→25,4 Mio, profil 263,7→126,6 Mio,
+dashboard 74,7→51,8 Mio. Ce sont des allocations cumulées, pas le pic RAM.
+Le contenu des réponses a été comparé à HEAD ; les détails et limites de temps
+sont documentés dans `docs/frontend-performance/README.md`.
+Les chronologies média cachées se construisent à l'ouverture et les observateurs
+de thème des graphiques sont déconnectés en quittant la page.
+Validation du lot : Go tests/vet/build, Svelte Check/build et 34 parcours +
+4 scénarios progressifs réussis ; contrats ciblés SQLite/PostgreSQL réussis.
+Le contrôle race local n'a pas démarré (CGO désactivé, compilateur C absent du
+PATH) ; aucun résultat race complet n'est revendiqué pour ce lot.
 
 Toutes les routes passent par le frontend SvelteKit et ses modules compilés.
 La préparation ne copie plus ni ne réécrit les scripts de web/dist.

@@ -41,15 +41,22 @@ func (h *Handler) recoveredMediaBase(r *http.Request) (string, []any, error) {
 		clauses = append(clauses, `m."serverId" IN (`+strings.Join(marks, ",")+`)`)
 	}
 	playback := history.ZappingClause("p")
+	identityCTE := ""
 	if principal, ok := auth.PrincipalFromContext(r.Context()); ok && !principal.IsAdmin() {
 		uid, sid, err := h.historyIdentity(r, principal)
 		if err != nil {
 			return "", nil, err
 		}
-		playback += ` AND p."userId"=? AND p."serverId"=?`
+		identityCTE = `playback_identity AS (SELECT CAST(? AS TEXT) AS "userId",CAST(? AS TEXT) AS "serverId"), `
+		playback += ` AND p."userId"=(SELECT "userId" FROM playback_identity) AND p."serverId"=(SELECT "serverId" FROM playback_identity)`
 		args = append(args, uid, sid)
 	}
-	cte := `WITH RECURSIVE catalog AS (SELECT m.*,s."name" AS "server",COALESCE((SELECT a."title" FROM "Media" a WHERE a."serverId"=m."serverId" AND a."id"=m."parentId" LIMIT 1),(SELECT a."title" FROM "Media" a WHERE a."serverId"=m."serverId" AND a."jellyfinMediaId"=m."parentId" LIMIT 1)) AS "parentTitle" FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE ` + strings.Join(clauses, " AND ") + `), edges("parent","child") AS (SELECT p."id",c."id" FROM catalog p JOIN catalog c ON c."serverId"=p."serverId" AND c."parentId"=p."id" UNION SELECT p."id",c."id" FROM catalog p JOIN catalog c ON c."serverId"=p."serverId" AND c."parentId"=p."jellyfinMediaId"), family("root","member") AS (SELECT "id","id" FROM catalog UNION SELECT f."root",e."child" FROM family f JOIN edges e ON e."parent"=f."member"), valid AS (SELECT p.* FROM "PlaybackHistory" p JOIN catalog m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE ` + playback + `), per_media AS (SELECT "mediaId",COUNT(*) AS "plays",SUM("durationWatched")*1000 AS "watchTimeMs",MAX("startedAt") AS "lastPlayed",SUM(CASE WHEN "playMethod"='DirectPlay' THEN 1 ELSE 0 END) AS "directPlays" FROM valid GROUP BY "mediaId"), agg AS (SELECT f."root",COALESCE(SUM(p."plays"),0) AS "plays",COALESCE(SUM(p."watchTimeMs"),0) AS "watchTimeMs",MAX(p."lastPlayed") AS "lastPlayed",COALESCE(SUM(p."directPlays"),0) AS "directPlays" FROM family f LEFT JOIN per_media p ON p."mediaId"=f."member" GROUP BY f."root") `
+	cte := `WITH RECURSIVE catalog AS (SELECT m.*,s."name" AS "server",COALESCE((SELECT a."title" FROM "Media" a WHERE a."serverId"=m."serverId" AND a."id"=m."parentId" LIMIT 1),(SELECT a."title" FROM "Media" a WHERE a."serverId"=m."serverId" AND a."jellyfinMediaId"=m."parentId" LIMIT 1)) AS "parentTitle" FROM "Media" m LEFT JOIN "Server" s ON s."id"=m."serverId" WHERE ` + strings.Join(clauses, " AND ") + `), edges("parent","child") AS (SELECT p."id",c."id" FROM catalog p JOIN catalog c ON c."serverId"=p."serverId" AND c."parentId"=p."id" UNION SELECT p."id",c."id" FROM catalog p JOIN catalog c ON c."serverId"=p."serverId" AND c."parentId"=p."jellyfinMediaId"), family("root","member") AS (SELECT "id","id" FROM catalog UNION SELECT f."root",e."child" FROM family f JOIN edges e ON e."parent"=f."member"), ` + identityCTE + `valid AS (SELECT p.* FROM "PlaybackHistory" p JOIN catalog m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE ` + playback + `), per_media AS (SELECT p."mediaId",COUNT(*) AS "plays",SUM(p."durationWatched")*1000 AS "watchTimeMs",MAX(p."startedAt") AS "lastPlayed",SUM(CASE WHEN p."playMethod"='DirectPlay' THEN 1 ELSE 0 END) AS "directPlays" FROM "PlaybackHistory" p JOIN catalog m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE ` + playback + ` GROUP BY p."mediaId"), agg AS (SELECT f."root",COALESCE(SUM(p."plays"),0) AS "plays",COALESCE(SUM(p."watchTimeMs"),0) AS "watchTimeMs",MAX(p."lastPlayed") AS "lastPlayed",COALESCE(SUM(p."directPlays"),0) AS "directPlays" FROM family f LEFT JOIN per_media p ON p."mediaId"=f."member" GROUP BY f."root") `
+	if h.driver != "postgres" {
+		// Explicit permitted IDs let SQLite seek the mediaId index. A join can
+		// instead walk the server/date index and materialize every wide row.
+		cte = strings.ReplaceAll(cte, `FROM "PlaybackHistory" p JOIN catalog m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE `, `FROM "PlaybackHistory" p WHERE p."mediaId" IN (SELECT "id" FROM catalog) AND p."serverId"=(SELECT m."serverId" FROM catalog m WHERE m."id"=p."mediaId") AND `)
+	}
 	return cte, args, nil
 }
 
@@ -433,7 +440,7 @@ func (h *Handler) recoveredMediaList(w http.ResponseWriter, r *http.Request) {
 		// catalog for their descendants. Expanding every unrelated family before
 		// pagination makes small pages increasingly expensive on large libraries.
 		itemBase = strings.Replace(base, `SELECT "id","id" FROM catalog UNION`, `SELECT "id","id" FROM catalog WHERE "id" IN (SELECT m."id" FROM catalog m WHERE `+where+` ORDER BY `+order+` LIMIT ? OFFSET ?) UNION`, 1)
-		itemBase = strings.Replace(itemBase, `FROM valid GROUP BY "mediaId"`, `FROM valid WHERE "mediaId" IN (SELECT "member" FROM family) GROUP BY "mediaId"`, 1)
+		itemBase = strings.Replace(itemBase, ` GROUP BY p."mediaId"), agg AS`, ` AND p."mediaId" IN (SELECT "member" FROM family) GROUP BY p."mediaId"), agg AS`, 1)
 		baseArgs := args[:len(args)-len(filters)]
 		catalogArgCount := len(baseArgs)
 		if principal, ok := auth.PrincipalFromContext(r.Context()); ok && !principal.IsAdmin() {
@@ -566,50 +573,32 @@ func (h *Handler) recoveredMediaDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	item["hierarchy"] = hierarchy
 	familyWhere := ` FROM valid p LEFT JOIN "User" u ON u."id"=p."userId" JOIN catalog c ON c."id"=p."mediaId" WHERE p."mediaId" IN (SELECT "member" FROM family WHERE "root"=?)`
-	summary, err := read(`SELECT COALESCE(SUM(p."pauseCount"),0) AS "pauseCount",COALESCE(SUM(p."audioChanges"),0) AS "audioChanges",COALESCE(SUM(p."subtitleChanges"),0) AS "subtitleChanges",COALESCE(SUM(p."seekCount"),0) AS "seekCount",COALESCE(SUM(p."rewatchCount"),0) AS "rewatchCount",COALESCE(SUM(p."speedChangeCount"),0) AS "speedChangeCount",MAX(p."maxPlaybackRate") AS "maxPlaybackRate"`+familyWhere, id)
+	// Panels that do not use aggregate media totals need only the authorized
+	// catalog/family/history definitions, without the unused aggregate CTEs.
+	activityBase, _, found := strings.Cut(base, `, per_media AS (`)
+	if !found {
+		jsonError(w, 500, "Impossible de charger les statistiques.")
+		return
+	}
+	activityBase += " "
+	full := r.URL.Query().Get("part") != "overview"
+	metrics, err := h.recoveredDetailMetrics(r, activityBase, args, id, mediaNumber(item["durationMs"]), full)
 	if err != nil {
 		jsonError(w, 500, "Impossible de charger les statistiques.")
 		return
 	}
-	for k, v := range summary[0] {
-		item[k] = v
+	for key, value := range metrics {
+		item[key] = value
 	}
-	// First paint omits history, distributions and telemetry, preserving the
-	// existing full response for callers that do not request an overview.
-	if r.URL.Query().Get("part") == "overview" {
+	if !full {
+		for _, key := range []string{"viewers", "audioDistribution", "subtitleDistribution", "completion", "counterTimeline"} {
+			delete(item, key)
+		}
 		item["metadataAvailable"] = map[string]bool{"peoplePortraits": false, "peopleRoles": false, "versions": false, "backdrop": false, "logo": false}
 		jsonResponse(w, 200, item)
 		return
 	}
-	viewers, err := read(`SELECT u."id" AS "userId",u."username",COUNT(*) AS "plays",SUM(p."durationWatched")*1000 AS "watchTimeMs"`+familyWhere+` GROUP BY u."id",u."username" ORDER BY SUM(p."durationWatched") DESC,u."username"`, id)
-	if err != nil {
-		jsonError(w, 500, "Impossible de charger les spectateurs.")
-		return
-	}
-	item["viewers"] = viewers
-	for _, lang := range []string{"audio", "subtitle"} {
-		distribution, e := read(`SELECT COALESCE(p."`+lang+`Language",'') AS "language",COALESCE(p."`+lang+`Codec",'') AS "codec",COUNT(*) AS "count"`+familyWhere+` GROUP BY p."`+lang+`Language",p."`+lang+`Codec" ORDER BY COUNT(*) DESC`, id)
-		if e != nil {
-			jsonError(w, 500, "Impossible de charger les langues.")
-			return
-		}
-		item[lang+"Distribution"] = distribution
-	}
-	completion := []map[string]any{}
-	if runtime := mediaNumber(item["durationMs"]); runtime > 0 {
-		completion, err = read(`SELECT CASE WHEN p."durationWatched"*1000>=? THEN 90 ELSE CAST((p."durationWatched"*1000.0/?)/10 AS INTEGER)*10 END AS "percent",COUNT(*) AS "count"`+familyWhere+` GROUP BY CASE WHEN p."durationWatched"*1000>=? THEN 90 ELSE CAST((p."durationWatched"*1000.0/?)/10 AS INTEGER)*10 END ORDER BY "percent"`, runtime, runtime, id, runtime, runtime)
-		if err != nil {
-			jsonError(w, 500, "Impossible de charger la complétion.")
-			return
-		}
-	}
-	item["completion"] = completion
-	counters, err := read(`SELECT p."startedAt",SUM(p."pauseCount") AS "pauseCount",SUM(p."seekCount") AS "seekCount",SUM(p."rewatchCount") AS "rewatchCount",SUM(p."speedChangeCount") AS "speedChangeCount",SUM(p."audioChanges") AS "audioChanges",SUM(p."subtitleChanges") AS "subtitleChanges"`+familyWhere+` GROUP BY p."startedAt" HAVING SUM(p."pauseCount"+p."seekCount"+p."rewatchCount"+p."speedChangeCount"+p."audioChanges"+p."subtitleChanges")>0 ORDER BY p."startedAt" ASC`, id)
-	if err != nil {
-		jsonError(w, 500, "Impossible de charger les compteurs.")
-		return
-	}
-	item["counterTimeline"] = counters
+	base = activityBase
 	limit := boundedInt(r.URL.Query().Get("historyLimit"), 25, 1, 100)
 	pg := boundedInt(r.URL.Query().Get("historyPage"), 1, 1, 1000000)
 	total := int(mediaNumber(item["plays"]))
@@ -694,7 +683,7 @@ func recoveredChangeLabel(v any) string {
 // Stream in playback/position order, retain only aggregate counters and the
 // current session. No full-history or full-event payload is sent to the browser.
 func (h *Handler) recoveredMediaBehavior(r *http.Request, base string, args []any, id string) (map[string]any, error) {
-	query := base + `SELECT p."id",p."durationWatched",p."audioLanguage",p."audioCodec",p."subtitleLanguage",p."subtitleCodec",e."eventType",e."positionMs",e."metadata" FROM valid p LEFT JOIN "TelemetryEvent" e ON e."playbackId"=p."id" AND e."serverId"=p."serverId" WHERE p."mediaId" IN (SELECT "member" FROM family WHERE "root"=?) ORDER BY p."id",e."positionMs",e."id"`
+	query := base + `SELECT p."id",p."durationWatched",p."audioLanguage",p."audioCodec",p."subtitleLanguage",p."subtitleCodec",e."eventType",e."positionMs",e."metadata" FROM valid p LEFT JOIN "TelemetryEvent" e ON e."playbackId"=p."id" AND e."serverId"=p."serverId" WHERE p."mediaId" IN (SELECT "member" FROM family WHERE "root"=?) AND (e."id" IS NOT NULL OR COALESCE(p."audioLanguage",'')<>'' OR COALESCE(p."subtitleLanguage",'')<>'') ORDER BY p."id",e."positionMs",e."id"`
 	rows, err := h.db.QueryContext(r.Context(), database.Bind(query, h.driver), append(append([]any{}, args...), id)...)
 	if err != nil {
 		return nil, err
@@ -703,7 +692,8 @@ func (h *Handler) recoveredMediaBehavior(r *http.Request, base string, args []an
 	type signal struct {
 		label, kind string
 		count       int
-		sessions    map[string]bool
+		sessions    int
+		lastSession string
 	}
 	ranges := map[string]*signal{}
 	speeds := map[string]*signal{}
@@ -712,24 +702,33 @@ func (h *Handler) recoveredMediaBehavior(r *http.Request, base string, args []an
 	add := func(target map[string]*signal, key, label, kind, sid string) {
 		s := target[key]
 		if s == nil {
-			s = &signal{label: label, kind: kind, sessions: map[string]bool{}}
+			s = &signal{label: label, kind: kind}
 			target[key] = s
 		}
 		s.count++
-		s.sessions[sid] = true
+		// Rows arrive in session order; a signal only needs its last session,
+		// not a growing set containing every playback ID.
+		if s.sessions == 0 || s.lastSession != sid {
+			s.sessions++
+			s.lastSession = sid
+		}
 	}
 	current := ""
 	duration := float64(0)
-	labels := map[string]string{}
-	starts := map[string]float64{}
+	labels := [2]string{}
+	starts := [2]float64{}
 	furthest := float64(0)
 	segment := func(kind string, end float64) {
-		if labels[kind] == "" || end <= starts[kind] {
+		index := 0
+		if kind == "subtitle" {
+			index = 1
+		}
+		if labels[index] == "" || end <= starts[index] {
 			return
 		}
-		label := labels[kind]
-		key := fmt.Sprintf("%s:%s:%g:%g", kind, label, starts[kind], end)
-		add(segments, key, fmt.Sprintf("%s · %.0f–%.0f s", label, starts[kind]/1000, end/1000), kind, current)
+		label := labels[index]
+		key := fmt.Sprintf("%s:%s:%g:%g", kind, label, starts[index], end)
+		add(segments, key, fmt.Sprintf("%s · %.0f–%.0f s", label, starts[index]/1000, end/1000), kind, current)
 	}
 	flush := func() {
 		if current != "" {
@@ -754,14 +753,14 @@ func (h *Handler) recoveredMediaBehavior(r *http.Request, base string, args []an
 			current = sid
 			duration = float64(watched) * 1000
 			furthest = 0
-			labels = map[string]string{"audio": audio.String, "subtitle": subtitle.String}
-			if labels["audio"] != "" && audioCodec.String != "" {
-				labels["audio"] += " (" + audioCodec.String + ")"
+			labels = [2]string{audio.String, subtitle.String}
+			if labels[0] != "" && audioCodec.String != "" {
+				labels[0] += " (" + audioCodec.String + ")"
 			}
-			if labels["subtitle"] != "" && subtitleCodec.String != "" {
-				labels["subtitle"] += " (" + subtitleCodec.String + ")"
+			if labels[1] != "" && subtitleCodec.String != "" {
+				labels[1] += " (" + subtitleCodec.String + ")"
 			}
-			starts = map[string]float64{"audio": 0, "subtitle": 0}
+			starts = [2]float64{}
 		}
 		if !eventType.Valid {
 			continue
@@ -793,17 +792,21 @@ func (h *Handler) recoveredMediaBehavior(r *http.Request, base string, args []an
 			}
 		case "audio_change", "subtitle_change":
 			kind := strings.TrimSuffix(eventType.String, "_change")
+			index := 0
+			if kind == "subtitle" {
+				index = 1
+			}
 			from, to := recoveredChangeLabel(m["from"]), recoveredChangeLabel(m["to"])
 			if from != "" || to != "" {
 				label := from + " → " + to
 				add(switches, kind+":"+label, label, kind, sid)
 			}
-			if labels[kind] == "" && from != "" {
-				labels[kind] = from
+			if labels[index] == "" && from != "" {
+				labels[index] = from
 			}
 			segment(kind, pos)
-			labels[kind] = to
-			starts[kind] = pos
+			labels[index] = to
+			starts[index] = pos
 		}
 	}
 	if err = rows.Err(); err != nil {
@@ -813,7 +816,7 @@ func (h *Handler) recoveredMediaBehavior(r *http.Request, base string, args []an
 	list := func(signals map[string]*signal) []map[string]any {
 		out := []map[string]any{}
 		for _, s := range signals {
-			out = append(out, map[string]any{"label": s.label, "kind": s.kind, "count": s.count, "sessions": len(s.sessions)})
+			out = append(out, map[string]any{"label": s.label, "kind": s.kind, "count": s.count, "sessions": s.sessions})
 		}
 		sort.Slice(out, func(i, j int) bool {
 			if out[i]["count"] == out[j]["count"] {

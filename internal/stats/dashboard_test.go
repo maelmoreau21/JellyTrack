@@ -9,7 +9,45 @@ import (
 
 	"github.com/maelmoreau21/jellytrack/internal/config"
 	"github.com/maelmoreau21/jellytrack/internal/database"
+	"github.com/maelmoreau21/jellytrack/internal/testdb"
 )
+
+func TestDashboardConcurrentBoundaryParity(t *testing.T) {
+	for _, driver := range []string{"sqlite", "postgres"} {
+		t.Run(driver, func(t *testing.T) {
+			var db *sql.DB
+			if driver == "postgres" {
+				db = testdb.Postgres(t)
+			} else {
+				db = statsDB(t)
+			}
+			for _, q := range []string{
+				`INSERT INTO "Server"("id","jellyfinServerId","name","url") VALUES('s','js','S','http://fixture')`,
+				`INSERT INTO "User"("id","serverId","jellyfinUserId","username") VALUES('u','s','ju','U')`,
+				`INSERT INTO "Media"("id","serverId","jellyfinMediaId","title","type","durationMs") VALUES('m','s','jm','M','Movie',60000)`,
+				`INSERT INTO "PlaybackHistory"("id","serverId","userId","mediaId","playMethod","durationWatched","startedAt","endedAt") VALUES('a','s','u','m','DirectPlay',60,'1969-12-31T23:59:00Z','1970-01-01T00:00:00Z'),('b','s','u','m','DirectPlay',60,'1970-01-01T00:00:00Z','1970-01-01T00:01:00Z')`,
+			} {
+				if _, err := db.Exec(q); err != nil {
+					t.Fatal(err)
+				}
+			}
+			result, err := GetFullDashboard(context.Background(), db, driver, DashboardFilter{TimeRange: "all"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result.TotalPlays != 2 || result.PeakConcurrentStreams != 2 {
+				t.Fatalf("boundary totals: plays=%d peak=%d", result.TotalPlays, result.PeakConcurrentStreams)
+			}
+			loads := map[string]int{}
+			for _, point := range result.ServerLoadData {
+				loads[point.Time] = point.PeakStreams
+			}
+			if loads["12/1969"] != 1 || loads["01/1970"] != 2 {
+				t.Fatalf("boundary buckets: %v", loads)
+			}
+		})
+	}
+}
 
 func statsDB(t *testing.T) *sql.DB {
 	t.Helper()

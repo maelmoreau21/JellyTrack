@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"iter"
 	"math"
 	"net/http"
 	"os"
@@ -53,43 +54,45 @@ func (h *Handler) userProfileData(r *http.Request, userID, serverID string) (map
 	if err != nil {
 		return nil, err
 	}
-	sessions := []profileSession{}
-	for rows.Next() {
-		var s profileSession
-		if err := rows.Scan(&s.id, &s.mediaID, &s.duration, &s.started, &s.ended, &s.source, &s.method, &s.client, &s.device, &s.bitrate, &s.jellyfinMediaID, &s.title, &s.kind, &s.runtime, &s.genres, &s.userID, &s.serverID); err != nil {
-			rows.Close()
-			return nil, err
-		}
-		sessions = append(sessions, s)
-	}
-	err = rows.Err()
-	rows.Close()
-	if err != nil {
-		return nil, err
-	}
-	stats, activity, charts := aggregateProfileSessions(sessions, time.Now(), profileLocation())
-	if selected := getServerScope(r); len(selected) > 0 {
-		servers := map[string]bool{}
-		for _, id := range selected {
-			servers[id] = true
-		}
-		scoped := []profileSession{}
-		for _, s := range sessions {
-			if servers[s.serverID] {
-				scoped = append(scoped, s)
+	var scanErr error
+	var totalDuration int64
+	totalPlays := 0
+	sessions := func(yield func(profileSession) bool) {
+		for rows.Next() {
+			var s profileSession
+			if err := rows.Scan(&s.id, &s.mediaID, &s.duration, &s.started, &s.ended, &s.source, &s.method, &s.client, &s.device, &s.bitrate, &s.jellyfinMediaID, &s.title, &s.kind, &s.runtime, &s.genres, &s.userID, &s.serverID); err != nil {
+				scanErr = err
+				return
+			}
+			totalPlays++
+			totalDuration += s.duration
+			if !yield(s) {
+				return
 			}
 		}
-		_, _, charts = aggregateProfileSessions(scoped, time.Now(), profileLocation())
+		scanErr = rows.Err()
+	}
+	stats, activity, charts := aggregateProfileStream(sessions, time.Now(), profileLocation())
+	rows.Close()
+	if scanErr != nil {
+		return nil, scanErr
+	}
+	if selected := getServerScope(r); len(selected) > 0 {
+		includesAccount := false
+		for _, id := range selected {
+			includesAccount = includesAccount || id == serverID
+		}
+		// The SQL already contains one exact account/server. No second copy or
+		// aggregate pass over its entire history is needed for a server filter.
+		if !includesAccount {
+			_, _, charts = aggregateProfileSessions(nil, time.Now(), profileLocation())
+		}
 	}
 	hist, err := h.profileHistory(r, userID, serverID)
 	if err != nil {
 		return nil, err
 	}
-	var totalDuration int64
-	for _, s := range sessions {
-		totalDuration += s.duration
-	}
-	return map[string]any{"stats": stats, "activity30d": activity, "charts": charts, "history": hist, "totalPlays": len(sessions), "totalDurationMs": totalDuration * 1000}, nil
+	return map[string]any{"stats": stats, "activity30d": activity, "charts": charts, "history": hist, "totalPlays": totalPlays, "totalDurationMs": totalDuration * 1000}, nil
 }
 
 type profileCount struct {
@@ -148,6 +151,16 @@ func profileCompletion(watched, runtime int64, kind string) (float64, string) {
 }
 
 func aggregateProfileSessions(sessions []profileSession, now time.Time, loc *time.Location) (map[string]any, []map[string]any, map[string]any) {
+	return aggregateProfileStream(func(yield func(profileSession) bool) {
+		for _, session := range sessions {
+			if !yield(session) {
+				return
+			}
+		}
+	}, now, loc)
+}
+
+func aggregateProfileStream(sessions iter.Seq[profileSession], now time.Time, loc *time.Location) (map[string]any, []map[string]any, map[string]any) {
 	clients, devices, genres, formats, allClients, allGenres := map[string]int{}, map[string]int{}, map[string]int{}, map[string]int{}, map[string]int{}, map[string]int{}
 	clientOrder, deviceOrder, genreOrder, formatOrder, allClientOrder, allGenreOrder := []string{}, []string{}, []string{}, []string{}, []string{}, []string{}
 	dayOrder, hourOrder, mostOrder := []int{}, []int{}, []string{}
@@ -165,16 +178,19 @@ func aggregateProfileSessions(sessions []profileSession, now time.Time, loc *tim
 		seconds, runtime int64
 		title, jid, kind string
 		count            int
+		genres           []string
+		genreSource      string
 	}
 	allMedia, cardMedia, mostMedia := map[string]*totalMedia{}, map[string]*totalMedia{}, map[string]*totalMedia{}
 	var seconds int64
-	count, direct, bitrateCount := 0, 0, 0
+	count, direct, bitrateCount, allCount := 0, 0, 0, 0
 	bitrateSum := 0.0
 	lastActive := ""
 	today := now.In(loc)
 	today = time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, loc)
 	activitySeconds := map[string]int64{}
-	for _, s := range sessions {
+	for s := range sessions {
+		allCount++
 		completionKey := s.userID + "::" + s.serverID + "::" + s.mediaID
 		startedMS := parseTimeMs(s.started)
 		date := time.UnixMilli(startedMS).In(loc)
@@ -198,15 +214,20 @@ func aggregateProfileSessions(sessions []profileSession, now time.Time, loc *tim
 			bitrateSum += math.Round(b)
 			bitrateCount++
 		}
-		var gs []string
-		_ = json.Unmarshal([]byte(s.genres.String), &gs)
+		if allMedia[completionKey] == nil {
+			allMedia[completionKey] = &totalMedia{runtime: s.runtime, kind: s.kind}
+		}
+		if allMedia[completionKey].genreSource != s.genres.String {
+			var parsed []string
+			_ = json.Unmarshal([]byte(s.genres.String), &parsed)
+			allMedia[completionKey].genres = parsed
+			allMedia[completionKey].genreSource = s.genres.String
+		}
+		gs := allMedia[completionKey].genres
 		for _, g := range gs {
 			if g != "" {
 				add(allGenres, &allGenreOrder, g)
 			}
-		}
-		if allMedia[completionKey] == nil {
-			allMedia[completionKey] = &totalMedia{runtime: s.runtime, kind: s.kind}
 		}
 		allMedia[completionKey].seconds += s.duration
 		if startedMS > 0 && !date.Before(today.AddDate(0, 0, -29)) && date.Before(today.AddDate(0, 0, 1)) {
@@ -364,14 +385,14 @@ func aggregateProfileSessions(sessions []profileSession, now time.Time, loc *tim
 		chartGenres = chartGenres[:10]
 	}
 	ratio := 100
-	if len(sessions) > 0 {
-		ratio = int(math.Round(float64(direct) * 100 / float64(len(sessions))))
+	if allCount > 0 {
+		ratio = int(math.Round(float64(direct) * 100 / float64(allCount)))
 	}
 	var avgBitrate any
 	if bitrateCount > 0 {
 		avgBitrate = math.Round(bitrateSum / float64(bitrateCount))
 	}
-	charts := map[string]any{"hasHistory": len(sessions) > 0, "dayOfWeek": dayData, "hours": hourData, "completion": completion, "genres": chartGenres, "favoriteClient": topProfileCount(allClients, "Aucun", allClientOrder), "directPlayRatio": ratio, "averageBitrateKbps": avgBitrate}
+	charts := map[string]any{"hasHistory": allCount > 0, "dayOfWeek": dayData, "hours": hourData, "completion": completion, "genres": chartGenres, "favoriteClient": topProfileCount(allClients, "Aucun", allClientOrder), "directPlayRatio": ratio, "averageBitrateKbps": avgBitrate}
 	return stats, activity, charts
 }
 

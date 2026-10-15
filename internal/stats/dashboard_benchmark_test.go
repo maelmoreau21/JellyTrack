@@ -12,6 +12,12 @@ import (
 )
 
 func BenchmarkDashboardLargeHistory(b *testing.B) {
+	for _, count := range []int{10000, 100000} {
+		b.Run(fmt.Sprint(count), func(b *testing.B) { benchmarkDashboardHistory(b, count) })
+	}
+}
+
+func benchmarkDashboardHistory(b *testing.B, count int) {
 	ctx := context.Background()
 	db, err := database.Open(ctx, config.Config{DatabaseDriver: "sqlite", DatabasePath: filepath.Join(b.TempDir(), "benchmark.db")})
 	if err != nil {
@@ -32,7 +38,7 @@ func BenchmarkDashboardLargeHistory(b *testing.B) {
 		b.Fatal(err)
 	}
 	first := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < count; i++ {
 		date := first.Add(time.Duration(i) * time.Hour)
 		if _, err = statement.Exec(fmt.Sprint(i), date.Format(time.RFC3339Nano), date.Add(10*time.Minute).Format(time.RFC3339Nano)); err != nil {
 			b.Fatal(err)
@@ -46,7 +52,7 @@ func BenchmarkDashboardLargeHistory(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		result, err := GetFullDashboard(ctx, db, "sqlite", DashboardFilter{TimeRange: "all"})
-		if err != nil || result.TotalPlays != 10000 {
+		if err != nil || result.TotalPlays != int64(count) {
 			b.Fatalf("incorrect benchmark totals: %d %v", result.TotalPlays, err)
 		}
 	}

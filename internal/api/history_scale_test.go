@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"testing"
 	"time"
 
@@ -31,6 +33,30 @@ func measureHistoryFixture(t *testing.T, count int) {
 		}
 	}
 	h := New(db, "sqlite")
+	// Include whole-page API costs in the scale fixture, not only the first
+	// visible header. These requests share the same data and authorization.
+	for _, endpoint := range []struct {
+		path    string
+		handler func(http.ResponseWriter, *http.Request)
+	}{
+		{"/api/media?limit=50", h.recoveredMediaList},
+		{"/api/media/collections", h.recoveredMediaCollections},
+		{"/api/dashboard?days=all", h.dashboard},
+	} {
+		r := httptest.NewRequest("GET", endpoint.path, nil)
+		r = r.WithContext(context.WithValue(r.Context(), auth.PrincipalContextKey, auth.Principal{Role: "super_admin"}))
+		w := httptest.NewRecorder()
+		runtime.GC()
+		var before, after runtime.MemStats
+		runtime.ReadMemStats(&before)
+		start := time.Now()
+		endpoint.handler(w, r)
+		runtime.ReadMemStats(&after)
+		t.Logf("%s sessions=%d elapsed=%s allocated=%.2f MiB bytes=%d", endpoint.path, count, time.Since(start), float64(after.TotalAlloc-before.TotalAlloc)/1048576, w.Body.Len())
+		if w.Code != 200 {
+			t.Fatalf("%s: %d %s", endpoint.path, w.Code, w.Body.String())
+		}
+	}
 	for _, path := range []string{"/api/logs?days=all&limit=50", "/api/logs?days=all&limit=50&sort=duration_desc", "/api/logs?days=all&limit=50&q=Movie"} {
 		for attempt := 0; attempt < 1; attempt++ {
 			r := httptest.NewRequest("GET", path, nil)

@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/maelmoreau21/jellytrack/internal/database"
 	"net/http/httptest"
 	"os"
 	"reflect"
@@ -30,6 +31,37 @@ func TestProgressivePopularAlbumAndLibraries(t *testing.T) {
 		}
 	}
 	h := New(db, "sqlite")
+	if os.Getenv("JELLYTRACK_MEDIA_QUERY_PLAN") == "true" {
+		r := httptest.NewRequest("GET", "/api/media/album", nil)
+		r.SetPathValue("id", "album")
+		base, args, err := h.recoveredMediaDetailBase(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		previous := strings.ReplaceAll(base, `FROM "PlaybackHistory" p WHERE p."mediaId" IN (SELECT "id" FROM catalog) AND p."serverId"=(SELECT m."serverId" FROM catalog m WHERE m."id"=p."mediaId") AND `, `FROM "PlaybackHistory" p JOIN catalog m ON m."id"=p."mediaId" AND m."serverId"=p."serverId" WHERE `)
+		for _, variant := range []struct{ name, base string }{{"previous join", previous}, {"scoped seeks", base}} {
+			query := variant.base + recoveredItemSelect + `WHERE m."id"='album'`
+			plan, err := db.Query(database.Bind("EXPLAIN QUERY PLAN "+query, "sqlite"), args...)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for plan.Next() {
+				var id, parent, unused int
+				var detail string
+				_ = plan.Scan(&id, &parent, &unused, &detail)
+				if strings.Contains(detail, "Playback") || strings.Contains(detail, "SCAN p") || strings.Contains(detail, "SEARCH p") {
+					t.Logf("%s plan: %s", variant.name, detail)
+				}
+			}
+			plan.Close()
+			start := time.Now()
+			data, err := h.recoveredRows(r, query, args...)
+			if err != nil || len(data) != 1 || mediaNumber(data[0]["plays"]) != float64(plays) {
+				t.Fatalf("plan regression: %v %v", data, err)
+			}
+			t.Logf("%s root query: %s", variant.name, time.Since(start))
+		}
+	}
 	read := func(path string, collections bool) (map[string]any, int) {
 		r := httptest.NewRequest("GET", path, nil)
 		r.SetPathValue("id", "album")

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -221,12 +222,7 @@ type playbackRawItem struct {
 	userId          string
 	username        string
 	jellyfinUserId  string
-	mediaId         string
 	mediaType       string
-	mediaTitle      string
-	mediaDurationMs int64
-	libraryName     string
-	collectionType  string
 	parentId        string
 }
 
@@ -333,9 +329,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 		SELECT p."startedAt", p."durationWatched", COALESCE(p."playMethod", 'DirectPlay'),
 		       COALESCE(p."clientName", '?'), COALESCE(p."userId", ''),
 		       COALESCE(u."username", ''), COALESCE(u."jellyfinUserId", ''),
-		       p."mediaId", COALESCE(m."type", 'Unknown'), COALESCE(m."title", 'Unknown'),
-		       COALESCE(m."durationMs", 0), COALESCE(m."libraryName", ''),
-		       COALESCE(m."collectionType", ''), COALESCE(m."parentId", '')
+		       COALESCE(m."type", 'Unknown'), COALESCE(m."parentId", '')
 		FROM "PlaybackHistory" p
 		LEFT JOIN "Media" m ON m."id" = p."mediaId" AND m."serverId"=p."serverId"
 		LEFT JOIN "User" u ON u."id" = p."userId" AND u."serverId"=p."serverId"
@@ -395,11 +389,10 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 	// Completion counts
 	var completedCount, partialCount, abandonedCount int64
 
-	type event struct {
-		ts  int64
-		val int
-	}
-	var events []event
+	// Encode the boundary kind in the low bit: starts sort before ends at
+	// the same second, preserving the historical inclusive concurrency count.
+	// One integer halves storage and permits the faster typed integer sort.
+	var events []int64
 	rows, err := db.QueryContext(ctx, database.Bind(historyQuery, driver), args...)
 	if err != nil {
 		return FullDashboardResult{}, err
@@ -418,9 +411,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 			&startedStr, &item.durationWatched, &item.playMethod,
 			&item.clientName, &item.userId,
 			&item.username, &item.jellyfinUserId,
-			&item.mediaId, &item.mediaType, &item.mediaTitle,
-			&item.mediaDurationMs, &item.libraryName,
-			&item.collectionType, &item.parentId,
+			&item.mediaType, &item.parentId,
 		); err == nil {
 			t, pErr := time.Parse(time.RFC3339Nano, startedStr)
 			if pErr != nil {
@@ -439,8 +430,7 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 				if endUnix <= startUnix {
 					endUnix = startUnix + 60
 				}
-				events = append(events, event{ts: startUnix, val: 1})
-				events = append(events, event{ts: endUnix, val: -1})
+				events = append(events, startUnix*2, endUnix*2+1)
 
 				// Category breakdown
 				mType := strings.ToLower(h.mediaType)
@@ -626,22 +616,21 @@ func GetFullDashboard(ctx context.Context, db *sql.DB, driver string, filter Das
 
 	// 5. Sweep-line for Peak Concurrent Streams & Server Load Timeline
 
-	sort.Slice(events, func(i, j int) bool {
-		if events[i].ts == events[j].ts {
-			return events[i].val > events[j].val
-		}
-		return events[i].ts < events[j].ts
-	})
+	slices.Sort(events)
 
 	var peakConcurrentStreams, currentStreams int
 	serverLoadMap := make(map[string]int)
 
 	for _, evt := range events {
-		currentStreams += evt.val
+		if evt&1 == 0 {
+			currentStreams++
+		} else {
+			currentStreams--
+		}
 		if currentStreams > peakConcurrentStreams {
 			peakConcurrentStreams = currentStreams
 		}
-		k := getBucketKey(time.Unix(evt.ts, 0).UTC())
+		k := getBucketKey(time.Unix(evt>>1, 0).UTC())
 		if currentStreams > serverLoadMap[k] {
 			serverLoadMap[k] = currentStreams
 		}

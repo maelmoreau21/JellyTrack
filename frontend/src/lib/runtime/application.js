@@ -4193,6 +4193,7 @@ export function startApplication() {
     async renderCurrent() {
       window.JellyTrackUI.disposePage();
       State.pageController?.abort();
+      window.MediaUI?.destroy({ ChartHelper, Modal });
       State.pageCleanups.splice(0).forEach(cleanup => cleanup());
       StreamsPoller.stop();
       Object.keys(ChartHelper.instances).forEach(id => ChartHelper.destroy(id));

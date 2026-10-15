@@ -108,6 +108,10 @@ try {
         for(const input of document.querySelectorAll('input,textarea'))input.value=input.value.replaceAll(origin,canonical);
       },origin);
       await new Promise(resolve=>setTimeout(resolve,150));
+      // Compare the expanded contents too, even when the compiled client
+      // creates hidden event controls only on first use.
+      await page.locator('.mr-timeline-explorer').evaluateAll(nodes=>nodes.forEach(node=>node.open=true));
+      await page.waitForFunction(()=>!document.querySelector('.mr-lazy-session-timeline'));
       const snapshot=await page.locator('#app-main').evaluate(main=>({
         texts:[...main.querySelectorAll('h1,h2,h3,p,th,td,button,a,label')].map(node=>node.textContent.replace(/\s+/g,' ').trim()),
         links:[...main.querySelectorAll('a')].map(node=>node.getAttribute('href')),
@@ -115,6 +119,7 @@ try {
         classes:[...main.querySelectorAll('section,article')].map(node=>node.className)
       }));
       snapshots.push(snapshot);
+      await page.locator('.mr-timeline-explorer').evaluateAll(nodes=>nodes.forEach(node=>node.open=false));
       await writeFile(path.join(evidence,`${name}-${String(routeIndex).padStart(2,'0')}-geometry.json`),JSON.stringify(await page.locator('#app-main h1,#app-main .profile-wrapped,#app-main .mr-server-filter,#app-main .mr-tabs').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect(),s=getComputedStyle(node);return{text:node.textContent,x:r.x,y:r.y,width:r.width,height:r.height,font:s.font,fontFamily:s.fontFamily,letterSpacing:s.letterSpacing};})),null,2));
       await page.screenshot({path:path.join(evidence,`${name}-${String(routeIndex).padStart(2,'0')}.png`),fullPage:true});
       assert.deepEqual(errors,[],`${name} ${uri} JavaScript errors`);
@@ -149,14 +154,23 @@ try {
   report.progressive=[];
   for(const mode of ['album','libraries','retry','leave']){
     const context=await browser.newContext({viewport:{width:1440,height:900}});
-    await context.addInitScript(()=>{localStorage.setItem('jt_locale','fr');localStorage.setItem('jt_theme','dark');});
-    const errors=[];let releaseOverview,releaseFull,fullCalls=0;
-    const overviewGate=new Promise(resolve=>releaseOverview=resolve),fullGate=new Promise(resolve=>releaseFull=resolve);
+    await context.addInitScript(()=>{
+      localStorage.setItem('jt_locale','fr');localStorage.setItem('jt_theme','dark');
+      const active=new Set(),observe=MutationObserver.prototype.observe,disconnect=MutationObserver.prototype.disconnect;
+      MutationObserver.prototype.observe=function(target,options){
+        if(target===document.documentElement&&options.attributeFilter?.includes('class'))active.add(this);
+        return observe.call(this,target,options);
+      };
+      MutationObserver.prototype.disconnect=function(){active.delete(this);return disconnect.call(this);};
+      window.fixtureClassObservers=()=>active.size;
+    });
+    const errors=[];let releaseFull,fullCalls=0,detailOverviewCalls=0;
+    const fullGate=new Promise(resolve=>releaseFull=resolve);
     await context.route('**/api/**',async route=>{
       const url=new URL(route.request().url()),part=url.searchParams.get('part');
       const gated=mode==='libraries'?url.pathname==='/api/media/collections':url.pathname==='/api/media/qa-primary-album';
       if(gated){
-        if(part==='overview'&&mode!=='libraries')await overviewGate;
+        if(part==='overview'&&mode!=='libraries')detailOverviewCalls++;
         if(!part){fullCalls++;await fullGate;if(mode==='retry'&&fullCalls===1)return route.fulfill({status:503,json:{error:'Fixture activity temporarily unavailable'}});}
       }
       const response=await backend.get(url.pathname+url.search);
@@ -173,7 +187,7 @@ try {
       }else{
         assert.match(await page.locator('.mr-media-hero').innerText(),/Album principal QA/);
         assert.equal(await page.locator('.mr-detail-layout > .mr-stats').count(),0,'header precedes expensive counters');
-        releaseOverview();await page.locator('.mr-detail-layout > .mr-stats').waitFor();await page.locator('.mr-deferred').waitFor();
+        await page.locator('.mr-deferred').waitFor();
       }
       const firstPaintMs=Date.now()-started;
       if(mode==='leave'){
@@ -186,11 +200,26 @@ try {
           await page.locator('.mr-deferred button').click();
         }
         await page.waitForFunction(libraries=>!document.querySelector(libraries?'.mr-library-preview[aria-busy=true]':'.mr-deferred'),mode==='libraries');
-        if(mode!=='libraries')await page.locator('.mr-historical-timeline').waitFor();
+        if(mode!=='libraries'){
+          await page.locator('.mr-historical-timeline').waitFor();
+          const explorer=page.locator('.mr-timeline-explorer');
+          assert.equal(await explorer.locator('[data-event-id]').count(),0,'closed explorer does not allocate event buttons');
+          await explorer.locator('summary').click();
+          await page.waitForFunction(()=>!document.querySelector('.mr-lazy-session-timeline'));
+          assert.ok(await explorer.locator('[data-event-id]').count(),'opening explorer builds interactive events');
+          assert.equal(detailOverviewCalls,0,'detail does not recalculate counters in an intermediate request');
+          if(mode==='album'){
+            await page.locator('a[href="/media/analysis"]').first().click();
+            await page.waitForFunction(()=>window.fixtureClassObservers()>1);
+          }
+          await page.locator('#nav-version').click();await page.locator('.about-historical').waitFor();
+          assert.equal(await page.evaluate(()=>Object.keys(window.Chart.instances).length),0,'leaving media releases charts');
+          assert.equal(await page.evaluate(()=>window.fixtureClassObservers()),1,'only the application theme observer survives navigation');
+        }
       }
       assert.deepEqual(errors,[],mode+' progressive JS errors');
       report.progressive.push({mode,passed:true,firstPaintMs,fullCalls});console.log('PASS progressive '+mode);
-    }finally{releaseOverview();releaseFull();await context.unrouteAll({behavior:'wait'});await context.close();}
+    }finally{releaseFull();await context.unrouteAll({behavior:'wait'});await context.close();}
   }
 } finally {
   await writeFile(path.join(evidence,'results.json'),JSON.stringify(report,null,2));
