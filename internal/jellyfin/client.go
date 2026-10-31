@@ -189,7 +189,7 @@ func Authenticate(ctx context.Context, baseURL, username, password string) (Auth
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="3.0.0"`)
+	req.Header.Set("Authorization", `MediaBrowser Client="JellyTrack", Device="Server", DeviceId="JellyTrack-1", Version="3.1.0"`)
 	resp, err := security.ServerHTTPClient(12 * time.Second).Do(req)
 	if err != nil {
 		return AuthenticatedUser{}, err

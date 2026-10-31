@@ -30,7 +30,7 @@ func (h *Handler) navigation(w http.ResponseWriter, r *http.Request) {
 		if content, err := os.ReadFile("VERSION"); err == nil && len(strings.TrimSpace(string(content))) > 0 {
 			version = strings.TrimSpace(string(content))
 		} else {
-			version = "3.0.0"
+			version = "3.1.0"
 		}
 	}
 	var servers int

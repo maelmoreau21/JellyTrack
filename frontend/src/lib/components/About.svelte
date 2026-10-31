@@ -18,7 +18,7 @@
 <div class="about-historical">
   <header class="about-historical-heading">
     <div class="about-historical-brand"><img src="/assets/logo.svg" alt="Logo" width="48" height="48"><h1>JellyTrack</h1></div>
-    <p>{text('description')}</p><div class="about-historical-version">{text('version', { version: version || '3.0.0' })}</div>
+    <p>{text('description')}</p><div class="about-historical-version">{text('version', { version: version || '3.1.0' })}</div>
   </header>
   <section class="about-historical-card">
     <header><h2 class="about-heart"><AboutIcon name="heart" /><span>{text('features')}</span></h2></header>
